@@ -2,8 +2,7 @@ package org.tmt.csw.cs.git
 
 import org.scalatest.FunSuite
 import java.io.File
-import org.eclipse.jgit.errors.RepositoryNotFoundException
-import org.tmt.csw.cs.ConfigString
+import org.tmt.csw.cs.{ConfigFileInfo, ConfigString}
 
 /**
  * Tests the GitConfigManager class
@@ -20,8 +19,8 @@ class TestGitConfigManager2 extends FunSuite {
 
     // Test list
     val list = manager.list
-    list.foreach {
-      case (id, path) => println("XXX id = " + id + ", path = " + path)
+    for(info <- list) {
+      println("XXX path = " + info.path + ", id = " + info.id)
     }
   }
 }

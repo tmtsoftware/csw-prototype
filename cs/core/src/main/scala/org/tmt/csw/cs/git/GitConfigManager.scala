@@ -1,12 +1,13 @@
 package org.tmt.csw.cs.git
 
 import java.io.{FileWriter, File}
-import org.tmt.csw.cs.{ConfigBytes, ConfigFile, ConfigData, ConfigManager}
+import org.tmt.csw.cs._
 import org.eclipse.jgit.api.Git
 import scalax.io.Resource
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.lib.{Constants, FileMode, ObjectId}
 import org.eclipse.jgit.treewalk.TreeWalk
+import scala.Some
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -106,7 +107,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
   /**
    * Returns a list containing all known configuration files
    */
-  def list(): List[(String,String)] = {
+  def list(): List[ConfigFileInfo] = {
     val repo = git.getRepository
 
     // Resolve the revision specification
@@ -123,7 +124,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     treeWalk.setRecursive(true);
     treeWalk.addTree(tree)
 
-    var result : List[(String,String)] = List()
+    var result : List[ConfigFileInfo] = List()
     while(treeWalk.next) {
 //      val mode = treeWalk.getFileMode(0);
 ////      if (mode == FileMode.TREE) {
@@ -132,7 +133,11 @@ class GitConfigManager(val git: Git) extends ConfigManager {
 //        println("XXX type = " + Constants.typeString(mode.getObjectType()))
 //        println("XXX -------")
 ////      }
-      result = (treeWalk.getObjectId(0).name(), treeWalk.getPathString()) :: result
+
+      val objectId = treeWalk.getObjectId(0)
+      val info = new ConfigFileInfo(treeWalk.getPathString(), objectId.name(),
+        "")
+      result = info :: result
     }
 
     result

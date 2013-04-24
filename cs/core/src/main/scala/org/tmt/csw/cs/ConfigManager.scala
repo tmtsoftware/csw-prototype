@@ -37,7 +37,7 @@ trait ConfigManager {
    * Returns a list containing all known configuration files
    * @return a list of tuples (id, path)
    */
-  def list(): List[(String,String)]
+  def list(): List[ConfigFileInfo]
 
   /**
    * Returns a list of tuples (id, comment) containing all known version ids and the associated comments
