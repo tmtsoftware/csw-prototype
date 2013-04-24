@@ -5,7 +5,7 @@ import org.tmt.csw.cs.{ConfigBytes, ConfigFile, ConfigData, ConfigManager}
 import org.eclipse.jgit.api.Git
 import scalax.io.Resource
 import org.eclipse.jgit.revwalk.RevWalk
-import org.eclipse.jgit.lib.ObjectId
+import org.eclipse.jgit.lib.{Constants, FileMode, ObjectId}
 import org.eclipse.jgit.treewalk.TreeWalk
 
 /**
@@ -64,13 +64,13 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def put(path: String, configData: ConfigData, comment: String): String = {
+  override def put(path: String, configData: ConfigData, comment: String): String = {
     val file = fileForPath(path)
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path).call()
     git.commit().setMessage(comment).call
     dirCache.getEntry(path).getObjectId.getName
-//    idForPathInHead(path).get
+    //    idForPathInHead(path).get
   }
 
   /**
@@ -79,7 +79,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param path the configuration path
    * @param comment an optional comment
    */
-  def delete(path: String, configData: ConfigData, comment: String) {
+  override def delete(path: String, configData: ConfigData, comment: String) {
     // TODO
   }
 
@@ -91,7 +91,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    *           (by default the latest version is returned)
    * @return an object containing the configuration data, if found
    */
-  def get(path: String, id: Option[String]): Option[ConfigData] = {
+  override def get(path: String, id: Option[String]): Option[ConfigData] = {
 
     if (!id.isEmpty) {
       // return the file for the given id
@@ -106,9 +106,36 @@ class GitConfigManager(val git: Git) extends ConfigManager {
   /**
    * Returns a list containing all known configuration files
    */
-  def list(): List[String] = {
-    // TODO
-    List()
+  def list(): List[(String,String)] = {
+    val repo = git.getRepository
+
+    // Resolve the revision specification
+    val id = repo.resolve("HEAD")
+
+    // Get the commit object for that revision
+    val walk = new RevWalk(repo)
+    val commit = walk.parseCommit(id)
+
+    // Get the commit's file tree
+    val tree = commit.getTree()
+
+    val treeWalk = new TreeWalk(repo)
+    treeWalk.setRecursive(true);
+    treeWalk.addTree(tree)
+
+    var result : List[(String,String)] = List()
+    while(treeWalk.next) {
+//      val mode = treeWalk.getFileMode(0);
+////      if (mode == FileMode.TREE) {
+//        println("XXX id = " + treeWalk.getObjectId(0).name())
+//        println("XXX path = " + treeWalk.getPathString())
+//        println("XXX type = " + Constants.typeString(mode.getObjectType()))
+//        println("XXX -------")
+////      }
+      result = (treeWalk.getObjectId(0).name(), treeWalk.getPathString()) :: result
+    }
+
+    result
   }
 
   /**
@@ -118,7 +145,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param path the configuration path
    * @return a list containing one tuple (id, comment) for each version of the given configuration path
    */
-  def versions(path: String): List[(String, String)] = {
+  override def history(path: String): List[(String, String)] = {
     // TODO
     List()
   }
@@ -129,32 +156,33 @@ class GitConfigManager(val git: Git) extends ConfigManager {
   }
 
   private def writeToFile(file: File, configData: ConfigData) {
+    println("XXX writeToFile " + file.getName + ": " + (new String(configData.getBytes)))
     Resource.fromFile(file).write(configData.getBytes)
   }
 
-//  private def idForPathInHead(path: String): Option[String] = {
-//    val repo = git.getRepository
-//
-//    // Resolve the revision specification
-//    val id = repo.resolve("HEAD")
-//
-//    // Get the commit object for that revision
-//    val walk = new RevWalk(repo)
-//    val commit = walk.parseCommit(id)
-//
-//    // Get the commit's file tree
-//    val tree = commit.getTree()
-//
-//    // .. and narrow it down to the single file's path
-//    val treewalk = TreeWalk.forPath(repo, path, tree)
-//
-//    if (treewalk != null) {
-//      // if the file exists in that commit
-//      // use the blob id to read the file's data
-//      Some(treewalk.getObjectId(0).getName)
-//    } else {
-//      None
-//    }
-//  }
+  //  private def idForPathInHead(path: String): Option[String] = {
+  //    val repo = git.getRepository
+  //
+  //    // Resolve the revision specification
+  //    val id = repo.resolve("HEAD")
+  //
+  //    // Get the commit object for that revision
+  //    val walk = new RevWalk(repo)
+  //    val commit = walk.parseCommit(id)
+  //
+  //    // Get the commit's file tree
+  //    val tree = commit.getTree()
+  //
+  //    // .. and narrow it down to the single file's path
+  //    val treewalk = TreeWalk.forPath(repo, path, tree)
+  //
+  //    if (treewalk != null) {
+  //      // if the file exists in that commit
+  //      // use the blob id to read the file's data
+  //      Some(treewalk.getObjectId(0).getName)
+  //    } else {
+  //      None
+  //    }
+  //  }
 
 }

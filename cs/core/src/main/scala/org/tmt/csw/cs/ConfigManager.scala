@@ -15,24 +15,6 @@ trait ConfigManager {
    */
   def put(path: String, configData: ConfigData, comment: String = "") : String
 
-//  /**
-//   * Updates the given config file
-//   *
-//   * @param path the config file path
-//   * @param configData the file contents
-//   * @param comment an optional comment to associate with this version
-//   * @return an id that can be used to fetch this version of the config file at a later time
-//   */
-//  def update(path: String, configData: ConfigData, comment: String = "") : String
-
-  /**
-   * Deletes the given config file (older versions will still be available)
-   *
-   * @param path the configuration path
-   * @param comment an optional comment
-   */
-  def delete(path: String, configData: ConfigData, comment: String = "")
-
   /**
    * Gets and returns the config file stored under the given path.
    *
@@ -44,17 +26,26 @@ trait ConfigManager {
   def get(path: String, id: Option[String] = None) : Option[ConfigData]
 
   /**
-   * Returns a list containing all known configuration files
+   * Deletes the given config file (older versions will still be available)
+   *
+   * @param path the configuration path
+   * @param comment an optional comment
    */
-  def list() : List[String] // TODO: return list of tuple (name, id, description)?
+  def delete(path: String, configData: ConfigData, comment: String = "")
+
+  /**
+   * Returns a list containing all known configuration files
+   * @return a list of tuples (id, path)
+   */
+  def list(): List[(String,String)]
 
   /**
    * Returns a list of tuples (id, comment) containing all known version ids and the associated comments
-   * for the given configuration path
+   * for the given path
    *
    * @param path the configuration path
    * @return a list containing one tuple (id, comment) for each version of the given configuration path
    */
-  def versions(path: String) : List[(String, String)]
+  def history(path: String) : List[(String, String)]
 
 }
