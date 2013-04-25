@@ -35,17 +35,14 @@ trait ConfigManager {
 
   /**
    * Returns a list containing all known configuration files
-   * @return a list of tuples (id, path)
+   * @return a list containing one ConfigFileInfo object for each known config file
    */
   def list(): List[ConfigFileInfo]
 
   /**
-   * Returns a list of tuples (id, comment) containing all known version ids and the associated comments
-   * for the given path
-   *
-   * @param path the configuration path
-   * @return a list containing one tuple (id, comment) for each version of the given configuration path
+   * Returns a list of all known versions of a given path
+   * @return a list containing one ConfigFileHistory object for each version of path
    */
-  def history(path: String) : List[(String, String)]
+  def history(path: String) : List[ConfigFileHistory]
 
 }

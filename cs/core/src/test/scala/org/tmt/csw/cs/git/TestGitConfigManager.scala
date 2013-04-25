@@ -15,16 +15,10 @@ class TestGitConfigManager extends FunSuite {
     val gitDir = new File(tmpDir, "testGitConfigManager")
     println("Test repo = " + gitDir)
 
-
     GitConfigManager.delete(gitDir)
 
-//    // doesn't exist yet, should throw exception
-//    intercept[RepositoryNotFoundException] {
-//      GitConfigManager(gitDir)
-//    }
-
     // create a new repo
-    val manager = GitConfigManager(gitDir, true)
+    val manager = GitConfigManager(gitDir)
     val path1 = "some/test1/TestConfig1"
     val path2 = "some/test2/TestConfig2"
 

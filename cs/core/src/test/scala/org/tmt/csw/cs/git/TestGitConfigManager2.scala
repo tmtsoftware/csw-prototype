@@ -15,12 +15,22 @@ class TestGitConfigManager2 extends FunSuite {
     println("Test repo = " + gitDir)
 
     // create a new repo
-    val manager = GitConfigManager(gitDir, true)
+    val manager = GitConfigManager(gitDir)
 
     // Test list
     val list = manager.list
     for(info <- list) {
       println("XXX path = " + info.path + ", id = " + info.id)
+      val configData1 = manager.get(info.path, Some(info.id)).get
+      println("    XXX contents1 = " + configData1.toString)
+
+      // Test history
+      val history = manager.history(info.path)
+      for(h <- history) {
+        println("    XXX version from " + h.time + " with id " + h.id + " and comment " + h.comment)
+        val configData2 = manager.get(info.path, Some(h.id)).get
+        println("    XXX contents2 = " + configData2.toString)
+      }
     }
   }
 }

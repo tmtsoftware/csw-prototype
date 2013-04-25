@@ -8,6 +8,9 @@ import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.lib.{Constants, FileMode, ObjectId}
 import org.eclipse.jgit.treewalk.TreeWalk
 import scala.Some
+import java.util.Date
+import org.eclipse.jgit.storage.file.FileRepository
+import org.gitective.core.TreeUtils
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -15,19 +18,21 @@ import scala.Some
 object GitConfigManager {
 
   /**
-   * Initializes with the directory path of the existing Git repository to use to store the configuration files.
-   * Can be called like this, for example: def configManager = GitConfigManager(new File("/my/dir"))
+   * Creates and returns a GitConfigManager instance using the given directory as the
+   * Git repository root (directory containing .git dir).
+   * If the repository already exists, it is opened, otherwise it is created.
    *
    * @param gitWorkDir top level directory to use for storing configuration files and the local git repository (under .git)
-   * @param create if true, the Git repository is created (if it does not exist)
    *
    * @return a new GitConfigManager configured to use the given directory
    */
-  def apply(gitWorkDir: File, create: Boolean = false): GitConfigManager = {
-    if (create && !gitWorkDir.exists()) {
-      new GitConfigManager(Git.init().setDirectory(gitWorkDir).call())
+  def apply(gitWorkDir: File): GitConfigManager = {
+    val gitDir = new File(gitWorkDir, ".git")
+    if (gitDir.exists()) {
+//      new GitConfigManager(Git.open(gitWorkDir))
+      new GitConfigManager(new Git(new FileRepository(gitDir.getPath)))
     } else {
-      new GitConfigManager(Git.open(gitWorkDir))
+      new GitConfigManager(Git.init().setDirectory(gitWorkDir).call())
     }
   }
 
@@ -71,7 +76,6 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     val dirCache = git.add.addFilepattern(path).call()
     git.commit().setMessage(comment).call
     dirCache.getEntry(path).getObjectId.getName
-    //    idForPathInHead(path).get
   }
 
   /**
@@ -106,6 +110,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
 
   /**
    * Returns a list containing all known configuration files
+   * @return a list containing one ConfigFileInfo object for each known config file
    */
   def list(): List[ConfigFileInfo] = {
     val repo = git.getRepository
@@ -121,22 +126,21 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     val tree = commit.getTree()
 
     val treeWalk = new TreeWalk(repo)
-    treeWalk.setRecursive(true);
+    treeWalk.setRecursive(true)
     treeWalk.addTree(tree)
 
-    var result : List[ConfigFileInfo] = List()
-    while(treeWalk.next) {
-//      val mode = treeWalk.getFileMode(0);
-////      if (mode == FileMode.TREE) {
-//        println("XXX id = " + treeWalk.getObjectId(0).name())
-//        println("XXX path = " + treeWalk.getPathString())
-//        println("XXX type = " + Constants.typeString(mode.getObjectType()))
-//        println("XXX -------")
-////      }
+    var result: List[ConfigFileInfo] = List()
+    while (treeWalk.next) {
+      //      val mode = treeWalk.getFileMode(0);
+      ////      if (mode == FileMode.TREE) {
+      //        println("XXX id = " + treeWalk.getObjectId(0).name())
+      //        println("XXX path = " + treeWalk.getPathString())
+      //        println("XXX type = " + Constants.typeString(mode.getObjectType()))
+      //        println("XXX -------")
+      ////      }
 
       val objectId = treeWalk.getObjectId(0)
-      val info = new ConfigFileInfo(treeWalk.getPathString(), objectId.name(),
-        "")
+      val info = new ConfigFileInfo(treeWalk.getPathString(), objectId.name(), commit.getShortMessage)
       result = info :: result
     }
 
@@ -144,50 +148,33 @@ class GitConfigManager(val git: Git) extends ConfigManager {
   }
 
   /**
-   * Returns a list of tuples (id, comment) containing all known version ids and the associated comments
-   * for the given configuration path
-   *
-   * @param path the configuration path
-   * @return a list containing one tuple (id, comment) for each version of the given configuration path
+   * Returns a list of all known versions of a given path
+   * @return a list containing one ConfigFileHistory object for each version of path
    */
-  override def history(path: String): List[(String, String)] = {
-    // TODO
-    List()
-  }
+  def history(path: String): List[ConfigFileHistory] = {
+    val logCommand = git.log
+      .add(git.getRepository().resolve(Constants.HEAD))
+      .addPath(path)
 
+    val it = logCommand.call.iterator()
+    var result: List[ConfigFileHistory] = List()
+    while (it.hasNext) {
+      val revCommit = it.next()
+      val tree = revCommit.getTree
+      val id = TreeWalk.forPath(git.getRepository, path, tree).getObjectId(0).name
+      val comment = revCommit.getShortMessage
+      val time = new Date(revCommit.getCommitTime*1000L)
+      val info = new ConfigFileHistory(id, comment, time)
+      result = info :: result
+    }
+    result
+  }
 
   private def fileForPath(path: String): File = {
     new File(git.getRepository.getWorkTree, path)
   }
 
   private def writeToFile(file: File, configData: ConfigData) {
-    println("XXX writeToFile " + file.getName + ": " + (new String(configData.getBytes)))
     Resource.fromFile(file).write(configData.getBytes)
   }
-
-  //  private def idForPathInHead(path: String): Option[String] = {
-  //    val repo = git.getRepository
-  //
-  //    // Resolve the revision specification
-  //    val id = repo.resolve("HEAD")
-  //
-  //    // Get the commit object for that revision
-  //    val walk = new RevWalk(repo)
-  //    val commit = walk.parseCommit(id)
-  //
-  //    // Get the commit's file tree
-  //    val tree = commit.getTree()
-  //
-  //    // .. and narrow it down to the single file's path
-  //    val treewalk = TreeWalk.forPath(repo, path, tree)
-  //
-  //    if (treewalk != null) {
-  //      // if the file exists in that commit
-  //      // use the blob id to read the file's data
-  //      Some(treewalk.getObjectId(0).getName)
-  //    } else {
-  //      None
-  //    }
-  //  }
-
 }
