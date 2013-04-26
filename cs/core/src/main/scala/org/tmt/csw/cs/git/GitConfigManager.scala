@@ -130,9 +130,10 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     var result: List[ConfigFileInfo] = List()
     while (treeWalk.next) {
       val path = treeWalk.getPathString()
-      val hist = history(path).last
-//      val objectId = treeWalk.getObjectId(0)
-      val info = new ConfigFileInfo(path, hist.id, hist.comment)
+      val objectId = treeWalk.getObjectId(0).name
+      // TODO: Include create comment (history(path)(0).comment)
+      // or latest comment (history(path).last.comment)?
+      val info = new ConfigFileInfo(path, objectId, history(path).last.comment)
       result = info :: result
     }
 
