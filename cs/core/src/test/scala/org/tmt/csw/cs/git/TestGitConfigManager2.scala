@@ -23,6 +23,9 @@ class TestGitConfigManager2 extends FunSuite {
       println("XXX path = " + info.path + ", id = " + info.id)
       val configData1 = manager.get(info.path, Some(info.id)).get
       println("    XXX contents1 = " + configData1.toString)
+      val updateId = manager.put(info.path, new ConfigString(configData1.toString + " XXX"), "Added XXX")
+      println("    XXX updateId = " + updateId)
+
 
       // Test history
       val history = manager.history(info.path)

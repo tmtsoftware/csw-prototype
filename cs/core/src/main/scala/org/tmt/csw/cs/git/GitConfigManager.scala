@@ -75,6 +75,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path).call()
     git.commit().setMessage(comment).call
+    println("XXX path = " + path + ", id = " + dirCache.getEntry(path).getObjectId.getName)
     dirCache.getEntry(path).getObjectId.getName
   }
 
@@ -175,6 +176,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
   }
 
   private def writeToFile(file: File, configData: ConfigData) {
+    Resource.fromFile(file).truncate(0L); // XXX FIXME: according to docs, this should happen below, but does not!
     Resource.fromFile(file).write(configData.getBytes)
   }
 }
