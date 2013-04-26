@@ -1,16 +1,15 @@
 package org.tmt.csw.cs.git
 
-import java.io.{FileWriter, File}
+import java.io.{FileOutputStream, File}
 import org.tmt.csw.cs._
 import org.eclipse.jgit.api.Git
-import scalax.io.Resource
 import org.eclipse.jgit.revwalk.RevWalk
-import org.eclipse.jgit.lib.{Constants, FileMode, ObjectId}
+import org.eclipse.jgit.lib.{Constants, ObjectId}
 import org.eclipse.jgit.treewalk.TreeWalk
 import scala.Some
 import java.util.Date
 import org.eclipse.jgit.storage.file.FileRepository
-import org.gitective.core.TreeUtils
+import scalax.io.Resource
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -29,7 +28,6 @@ object GitConfigManager {
   def apply(gitWorkDir: File): GitConfigManager = {
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
-//      new GitConfigManager(Git.open(gitWorkDir))
       new GitConfigManager(new Git(new FileRepository(gitDir.getPath)))
     } else {
       new GitConfigManager(Git.init().setDirectory(gitWorkDir).call())
@@ -75,7 +73,6 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path).call()
     git.commit().setMessage(comment).call
-    println("XXX path = " + path + ", id = " + dirCache.getEntry(path).getObjectId.getName)
     dirCache.getEntry(path).getObjectId.getName
   }
 
@@ -132,16 +129,10 @@ class GitConfigManager(val git: Git) extends ConfigManager {
 
     var result: List[ConfigFileInfo] = List()
     while (treeWalk.next) {
-      //      val mode = treeWalk.getFileMode(0);
-      ////      if (mode == FileMode.TREE) {
-      //        println("XXX id = " + treeWalk.getObjectId(0).name())
-      //        println("XXX path = " + treeWalk.getPathString())
-      //        println("XXX type = " + Constants.typeString(mode.getObjectType()))
-      //        println("XXX -------")
-      ////      }
-
-      val objectId = treeWalk.getObjectId(0)
-      val info = new ConfigFileInfo(treeWalk.getPathString(), objectId.name(), commit.getShortMessage)
+      val path = treeWalk.getPathString()
+      val hist = history(path).last
+//      val objectId = treeWalk.getObjectId(0)
+      val info = new ConfigFileInfo(path, hist.id, hist.comment)
       result = info :: result
     }
 
@@ -163,6 +154,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
       val revCommit = it.next()
       val tree = revCommit.getTree
       val id = TreeWalk.forPath(git.getRepository, path, tree).getObjectId(0).name
+      // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
       val comment = revCommit.getShortMessage
       val time = new Date(revCommit.getCommitTime*1000L)
       val info = new ConfigFileHistory(id, comment, time)

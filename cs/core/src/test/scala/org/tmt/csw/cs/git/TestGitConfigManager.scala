@@ -2,15 +2,24 @@ package org.tmt.csw.cs.git
 
 import org.scalatest.FunSuite
 import java.io.File
-import org.eclipse.jgit.errors.RepositoryNotFoundException
-import org.tmt.csw.cs.ConfigString
+import org.tmt.csw.cs.{ConfigFileInfo, ConfigString}
 
 /**
  * Tests the GitConfigManager class
  */
 class TestGitConfigManager extends FunSuite {
+  val path1 = "some/test1/TestConfig1"
+  val path2 = "some/test2/TestConfig2"
 
-  test("Test creating a GitConfigManager, storing and retrieving a file") {
+  val contents1 = "Contents of some file...\n"
+  val contents2 = "New contents of some file...\n"
+  val contents3 = "Even newer contents of some file...\n"
+
+  val comment1 = "create comment"
+  val comment2 = "update 1 comment"
+  val comment3 = "update 2 comment"
+
+  test("Test creating a GitConfigManager, storing and retrieving some files") {
     val tmpDir = System.getProperty("java.io.tmpdir")
     val gitDir = new File(tmpDir, "testGitConfigManager")
     println("Test repo = " + gitDir)
@@ -19,16 +28,6 @@ class TestGitConfigManager extends FunSuite {
 
     // create a new repo
     val manager = GitConfigManager(gitDir)
-    val path1 = "some/test1/TestConfig1"
-    val path2 = "some/test2/TestConfig2"
-
-    val contents1 = "Contents of some file...\n"
-    val contents2 = "New contents of some file...\n"
-    val contents3 = "Even newer contents of some file...\n"
-
-    val comment1 = "create comment\n"
-    val comment2 = "update 1 comment\n"
-    val comment3 = "update 2 comment\n"
 
     // Add, then update the file twice
     val createId1 = manager.put(path1, new ConfigString(contents1), comment1)
@@ -60,5 +59,32 @@ class TestGitConfigManager extends FunSuite {
     val option6 = manager.get(path2, Some(createId2))
     assert(!option6.isEmpty)
     assert(option6.get.toString == contents1)
+
+
+    // Test list()
+    val list = manager.list
+    assert(list.size == 2)
+    for (info <- list) {
+      info.path match {
+        case this.path1 => {
+          assert(info.comment == this.comment3)
+        }
+        case this.path2 => {
+          assert(info.comment == this.comment1)
+        }
+        case _ => sys.error("Test failed for " + info)
+      }
+    }
+
+
+    // test history()
+    val historyList1 = manager.history(path1)
+    val historyList2 = manager.history(path2)
+    assert(historyList1.size == 3)
+    assert(historyList2.size == 1)
+    assert(historyList1(0).comment == comment1)
+    assert(historyList2(0).comment == comment1)
+    assert(historyList1(1).comment == comment2)
+    assert(historyList1(2).comment == comment3)
   }
 }
