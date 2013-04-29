@@ -1,6 +1,6 @@
 package org.tmt.csw.cs.git
 
-import java.io.{FileOutputStream, File}
+import java.io.{FileNotFoundException, IOException, FileOutputStream, File}
 import org.tmt.csw.cs._
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevWalk
@@ -60,6 +60,37 @@ object GitConfigManager {
  */
 class GitConfigManager(val git: Git) extends ConfigManager {
 
+
+  /**
+   * Creates a config file with the given path and data and optional comment.
+   * An IOException is thrown if the file already exists.
+   *
+   * @param path the config file path
+   * @param configData the contents of the file
+   * @param comment an optional comment to associate with this file
+   * @return a unique id that can be used to refer to the file
+   */
+  override def create(path: String, configData: ConfigData, comment: String): String = {
+    val file = fileForPath(path)
+    if (file.exists()) throw new IOException("File already exists in repository: " + path)
+    put(path, configData, comment)
+  }
+
+  /**
+   * Updates the config file with the given path and data and optional comment.
+   * An FileNotFoundException is thrown if the file does not exists.
+   *
+   * @param path the config file path
+   * @param configData the contents of the file
+   * @param comment an optional comment to associate with this file
+   * @return a unique id that can be used to refer to the file
+   */
+  override def update(path: String, configData: ConfigData, comment: String): String = {
+    val file = fileForPath(path)
+    if (!file.exists()) throw new FileNotFoundException("File not found: " + path)
+    put(path, configData, comment)
+  }
+
   /**
    * Creates or updates a config file with the given path and data and optional comment.
    *
@@ -68,7 +99,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  override def put(path: String, configData: ConfigData, comment: String): String = {
+  private def put(path: String, configData: ConfigData, comment: String): String = {
     val file = fileForPath(path)
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path).call()

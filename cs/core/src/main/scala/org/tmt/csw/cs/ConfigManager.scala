@@ -6,14 +6,26 @@ package org.tmt.csw.cs
 trait ConfigManager {
 
   /**
-   * Creates or updates a config file with the given path and data and optional comment.
+   * Creates a config file with the given path and data and optional comment.
+   * An IOException is thrown if the file already exists.
    *
    * @param path the config file path
    * @param configData the contents of the file
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def put(path: String, configData: ConfigData, comment: String = "") : String
+  def create(path: String, configData: ConfigData, comment: String = "") : String
+
+  /**
+   * Updates the config file with the given path and data and optional comment.
+   * An FileNotFoundException is thrown if the file does not exists.
+   *
+   * @param path the config file path
+   * @param configData the contents of the file
+   * @param comment an optional comment to associate with this file
+   * @return a unique id that can be used to refer to the file
+   */
+  def update(path: String, configData: ConfigData, comment: String = "") : String
 
   /**
    * Gets and returns the config file stored under the given path.

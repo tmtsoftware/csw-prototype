@@ -30,10 +30,10 @@ class TestGitConfigManager extends FunSuite {
     val manager = GitConfigManager(gitDir)
 
     // Add, then update the file twice
-    val createId1 = manager.put(path1, new ConfigString(contents1), comment1)
-    val createId2 = manager.put(path2, new ConfigString(contents1), comment1)
-    val updateId1 = manager.put(path1, new ConfigString(contents2), comment2)
-    val updateId2 = manager.put(path1, new ConfigString(contents3), comment3)
+    val createId1 = manager.create(path1, new ConfigString(contents1), comment1)
+    val createId2 = manager.create(path2, new ConfigString(contents1), comment1)
+    val updateId1 = manager.update(path1, new ConfigString(contents2), comment2)
+    val updateId2 = manager.update(path1, new ConfigString(contents3), comment3)
 
     // Check that we can access each version
     val option1 = manager.get(path1)
