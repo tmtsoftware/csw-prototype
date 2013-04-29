@@ -1,4 +1,4 @@
-package org.tmt.csw.cs
+package org.tmt.csw.cs.core
 
 /**
  * Interface implemented by the configuration data objects being managed

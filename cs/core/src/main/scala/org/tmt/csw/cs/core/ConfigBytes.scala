@@ -1,5 +1,4 @@
-package org.tmt.csw.cs
-
+package org.tmt.csw.cs.core
 
 /**
  * Represents a configuration file

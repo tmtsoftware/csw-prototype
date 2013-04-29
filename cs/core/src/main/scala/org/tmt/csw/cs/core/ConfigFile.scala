@@ -1,4 +1,4 @@
-package org.tmt.csw.cs
+package org.tmt.csw.cs.core
 
 import java.io.File
 import scalax.io.Resource

@@ -1,4 +1,4 @@
-package org.tmt.csw.cs
+package org.tmt.csw.cs.core
 
 /**
  * Defines an interface for storing and retrieving configuration information

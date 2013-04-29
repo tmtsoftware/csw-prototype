@@ -1,4 +1,4 @@
-name := "org.tmt.csw.config.core"
+name := "org.tmt.csw.cs.core"
 
 organization := "org.tmt"
 
@@ -18,6 +18,9 @@ libraryDependencies ++= Seq(
 
 osgiSettings
 
-OsgiKeys.exportPackage := Seq("org.tmt.csw.config")
+OsgiKeys.exportPackage := Seq(
+    "org.tmt.csw.cs.core",
+    "org.tmt.csw.cs.core.git"
+)
 
-// OsgiKeys.bundleActivator := Option("org.tmt.csw.config.core.osgi.Activator")
+// OsgiKeys.bundleActivator := Option("org.tmt.csw.cs.core.osgi.Activator")

@@ -2,7 +2,7 @@ package org.tmt.csw.cs.git
 
 import org.scalatest.FunSuite
 import java.io.File
-import org.tmt.csw.cs.{ConfigFileInfo, ConfigString}
+import org.tmt.csw.cs.core.ConfigString
 
 /**
  * Tests the GitConfigManager class
