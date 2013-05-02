@@ -1,4 +1,4 @@
-package org.tmt.csw.cs.git
+package org.tmt.csw.cs.core.git
 
 import org.scalatest.FunSuite
 import java.io.File
@@ -21,13 +21,26 @@ class TestGitConfigManager extends FunSuite {
 
   test("Test creating a GitConfigManager, storing and retrieving some files") {
     val tmpDir = System.getProperty("java.io.tmpdir")
-    val gitDir = new File(tmpDir, "testGitConfigManager")
-    println("Test repo = " + gitDir)
+    val gitDir = new File(tmpDir, "cstest")
 
-    GitConfigManager.delete(gitDir)
+//    val gitMainRepo = "git@localhost:project.git"
+    val gitMainRepo = new File(tmpDir, "cstestMainRepo")
+    GitConfigManager.deleteLocalRepo(gitMainRepo)
+    GitConfigManager.initBareRepo(gitMainRepo)
+
+    println("Local repo = " + gitDir + ", remote = " + gitMainRepo)
+
+    // Start with an empty repo
+    GitConfigManager.deleteLocalRepo(gitDir)
 
     // create a new repo
-    val manager = GitConfigManager(gitDir)
+    val manager = GitConfigManager(gitDir, gitMainRepo.getPath)
+    if (manager.exists(path1)) {
+      manager.delete(path1)
+    }
+    if (manager.exists(path2)) {
+      manager.delete(path2)
+    }
 
     // Add, then update the file twice
     val createId1 = manager.create(path1, new ConfigString(contents1), comment1)
@@ -60,9 +73,18 @@ class TestGitConfigManager extends FunSuite {
     assert(!option6.isEmpty)
     assert(option6.get.toString == contents1)
 
+    // test history()
+    val historyList1 = manager.history(path1)
+    val historyList2 = manager.history(path2)
+    assert(historyList1.size >= 3)
+    assert(historyList2.size >= 1)
+    assert(historyList1(0).comment == comment1)
+    assert(historyList2(0).comment == comment1)
+    assert(historyList1(1).comment == comment2)
+    assert(historyList1(2).comment == comment3)
 
     // Test list()
-    val list = manager.list
+    val list = manager.list()
     assert(list.size == 2)
     for (info <- list) {
       info.path match {
@@ -75,16 +97,5 @@ class TestGitConfigManager extends FunSuite {
         case _ => sys.error("Test failed for " + info)
       }
     }
-
-
-    // test history()
-    val historyList1 = manager.history(path1)
-    val historyList2 = manager.history(path2)
-    assert(historyList1.size == 3)
-    assert(historyList2.size == 1)
-    assert(historyList1(0).comment == comment1)
-    assert(historyList2(0).comment == comment1)
-    assert(historyList1(1).comment == comment2)
-    assert(historyList1(2).comment == comment3)
   }
 }

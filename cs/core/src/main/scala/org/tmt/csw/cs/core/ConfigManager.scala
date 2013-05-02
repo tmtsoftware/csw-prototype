@@ -38,12 +38,18 @@ trait ConfigManager {
   def get(path: String, id: Option[String] = None) : Option[ConfigData]
 
   /**
+   * Returns true if the given path exists and is being managed
+   * @param path the configuration path
+   * @return true if the file exists
+   */
+  def exists(path: String) : Boolean
+
+  /**
    * Deletes the given config file (older versions will still be available)
    *
    * @param path the configuration path
-   * @param comment an optional comment
    */
-  def delete(path: String, configData: ConfigData, comment: String = "")
+  def delete(path: String, comment: String = "deleted")
 
   /**
    * Returns a list containing all known configuration files

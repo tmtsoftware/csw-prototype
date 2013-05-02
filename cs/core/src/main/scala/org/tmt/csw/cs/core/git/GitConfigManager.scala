@@ -1,12 +1,10 @@
-package org.tmt.csw.cs.git
+package org.tmt.csw.cs.core.git
 
-import java.io.{FileNotFoundException, IOException, FileOutputStream, File}
-import org.tmt.csw.cs._
+import java.io.{FileNotFoundException, IOException, File}
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevWalk
 import org.eclipse.jgit.lib.{Constants, ObjectId}
 import org.eclipse.jgit.treewalk.TreeWalk
-import scala.Some
 import java.util.Date
 import org.eclipse.jgit.storage.file.FileRepository
 import scalax.io.Resource
@@ -21,34 +19,41 @@ object GitConfigManager {
 
   /**
    * Creates and returns a GitConfigManager instance using the given directory as the
-   * Git repository root (directory containing .git dir).
-   * If the repository already exists, it is opened, otherwise it is created.
+   * local Git repository root (directory containing .git dir) and the given
+   * URI as the remote, central Git repository.
+   * If the local repository already exists, it is opened, otherwise it is created.
+   * An exception is thrown if the remote repository does not exist.
    *
    * @param gitWorkDir top level directory to use for storing configuration files and the local git repository (under .git)
+   * @param remoteRepo the URI of the remote, main repository
    *
-   * @return a new GitConfigManager configured to use the given directory
+   * @return a new GitConfigManager configured to use the given local and remote repositories
    */
-  def apply(gitWorkDir: File): GitConfigManager = {
+  def apply(gitWorkDir: File, remoteRepo: String): GitConfigManager = {
+    // Init local repo
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
-      new GitConfigManager(new Git(new FileRepository(gitDir.getPath)))
+      val git = new Git(new FileRepository(gitDir.getPath))
+      val result = git.pull.call
+      if (!result.isSuccessful) throw new IOException(result.toString)
+      new GitConfigManager(git)
     } else {
-      new GitConfigManager(Git.init().setDirectory(gitWorkDir).call())
+      val git = Git.cloneRepository.setDirectory(gitWorkDir).setURI(remoteRepo.toString).call
+      new GitConfigManager(git)
     }
   }
 
   /**
-   * Deletes the contents of the given directory (recursively).
+   * FOR TESTING: Deletes the contents of the given directory (recursively).
    * This is meant for use by tests that need to always start with an empty Git repository.
-   * @param dir directory to delete
    */
-  def delete(dir: File) {
-    if (dir.isDirectory()) {
-      dir.list().foreach {
+  def deleteLocalRepo(dir: File) {
+    if (dir.isDirectory) {
+      dir.list.foreach {
         filePath =>
           val file = new File(dir, filePath)
-          if (file.isDirectory()) {
-            delete(file)
+          if (file.isDirectory) {
+            deleteLocalRepo(file)
           } else {
             file.delete()
           }
@@ -56,13 +61,20 @@ object GitConfigManager {
       dir.delete()
     }
   }
+
+  /**
+   * FOR TESTING: Initializes a bare repository in the given dir
+   * @param dir directory to contain the new bare repository
+   */
+  def initBareRepo(dir: File)  {
+    Git.init.setDirectory(dir).setBare(true).call
+  }
 }
 
 /**
  * Uses JGit to manage versions of configuration files
  */
 class GitConfigManager(val git: Git) extends ConfigManager {
-
 
   /**
    * Creates a config file with the given path and data and optional comment.
@@ -107,17 +119,28 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path).call()
     git.commit().setMessage(comment).call
+    git.push.call()
     dirCache.getEntry(path).getObjectId.getName
+  }
+
+  /**
+   * Returns true if the given path exists and is being managed
+   * @param path the configuration path
+   * @return true if the file exists
+   */
+  def exists(path: String): Boolean = {
+    fileForPath(path).exists
   }
 
   /**
    * Deletes the given config file (older versions will still be available)
    *
    * @param path the configuration path
-   * @param comment an optional comment
    */
-  override def delete(path: String, configData: ConfigData, comment: String) {
-    // TODO
+  override def delete(path: String, comment: String = "deleted") {
+    git.rm.addFilepattern(path).call()
+    git.commit().setMessage(comment).call
+    git.push.call()
   }
 
   /**
@@ -155,7 +178,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     val commit = walk.parseCommit(id)
 
     // Get the commit's file tree
-    val tree = commit.getTree()
+    val tree = commit.getTree
 
     val treeWalk = new TreeWalk(repo)
     treeWalk.setRecursive(true)
@@ -163,7 +186,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
 
     var result: List[ConfigFileInfo] = List()
     while (treeWalk.next) {
-      val path = treeWalk.getPathString()
+      val path = treeWalk.getPathString
       val objectId = treeWalk.getObjectId(0).name
       // TODO: Include create comment (history(path)(0).comment)
       // or latest comment (history(path).last.comment)?
@@ -180,7 +203,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    */
   def history(path: String): List[ConfigFileHistory] = {
     val logCommand = git.log
-      .add(git.getRepository().resolve(Constants.HEAD))
+      .add(git.getRepository.resolve(Constants.HEAD))
       .addPath(path)
 
     val it = logCommand.call.iterator()
@@ -188,12 +211,16 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     while (it.hasNext) {
       val revCommit = it.next()
       val tree = revCommit.getTree
-      val id = TreeWalk.forPath(git.getRepository, path, tree).getObjectId(0).name
-      // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
-      val comment = revCommit.getShortMessage
-      val time = new Date(revCommit.getCommitTime*1000L)
-      val info = new ConfigFileHistory(id, comment, time)
-      result = info :: result
+      val treeWalk = TreeWalk.forPath(git.getRepository, path, tree)
+      if (treeWalk != null) {
+        val objectId = treeWalk.getObjectId(0)
+        // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
+        val comment = revCommit.getShortMessage
+        val time = new Date(revCommit.getCommitTime * 1000L)
+        val info = new ConfigFileHistory(objectId.name, comment, time)
+        result = info :: result
+      }
+
     }
     result
   }
