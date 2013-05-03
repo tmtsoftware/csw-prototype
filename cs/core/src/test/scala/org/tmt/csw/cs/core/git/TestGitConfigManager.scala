@@ -3,6 +3,7 @@ package org.tmt.csw.cs.core.git
 import org.scalatest.FunSuite
 import java.io.{FileNotFoundException, IOException, File}
 import org.tmt.csw.cs.core.ConfigString
+import java.util.Date
 
 /**
  * Tests the GitConfigManager class
@@ -18,6 +19,8 @@ class TestGitConfigManager extends FunSuite {
   val comment1 = "create comment"
   val comment2 = "update 1 comment"
   val comment3 = "update 2 comment"
+
+  val startTime = new Date().getTime
 
   test("Test creating a GitConfigManager, storing and retrieving some files") {
     val tmpDir = System.getProperty("java.io.tmpdir")
@@ -101,12 +104,21 @@ class TestGitConfigManager extends FunSuite {
     // test history()
     val historyList1 = manager.history(path1)
     val historyList2 = manager.history(path2)
-    assert(historyList1.size >= 3)
-    assert(historyList2.size >= 1)
+
+    assert(historyList1.size == 3)
+    assert(historyList2.size == 1)
+
     assert(historyList1(0).comment == comment1)
     assert(historyList2(0).comment == comment1)
     assert(historyList1(1).comment == comment2)
     assert(historyList1(2).comment == comment3)
+
+    for(h <- historyList1) {
+      assert(h.time.getTime >= startTime)
+    }
+    for(h <- historyList2) {
+      assert(h.time.getTime >= startTime)
+    }
 
     // Test list()
     val list = manager.list()
@@ -122,5 +134,7 @@ class TestGitConfigManager extends FunSuite {
         case _ => sys.error("Test failed for " + info)
       }
     }
+
+    // Test getting history of document that has been deleted
   }
 }
