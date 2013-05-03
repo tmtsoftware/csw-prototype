@@ -113,13 +113,6 @@ class TestGitConfigManager extends FunSuite {
     assert(historyList1(1).comment == comment2)
     assert(historyList1(2).comment == comment3)
 
-    for(h <- historyList1) {
-      assert(h.time.getTime >= startTime)
-    }
-    for(h <- historyList2) {
-      assert(h.time.getTime >= startTime)
-    }
-
     // Test list()
     val list = manager.list()
     assert(list.size == 2)
@@ -136,5 +129,20 @@ class TestGitConfigManager extends FunSuite {
     }
 
     // Test getting history of document that has been deleted
+    manager.delete(path1, "test delete")
+    assert(!manager.exists(path1))
+    manager.delete(path2)
+    assert(!manager.exists(path2))
+    val historyList1d = manager.history(path1)
+    val historyList2d = manager.history(path2)
+
+    assert(historyList1d.size == 3)
+    assert(historyList2d.size == 1)
+
+    assert(historyList1d(0).comment == comment1)
+    assert(historyList2d(0).comment == comment1)
+    assert(historyList1d(1).comment == comment2)
+    assert(historyList1d(2).comment == comment3)
+
   }
 }
