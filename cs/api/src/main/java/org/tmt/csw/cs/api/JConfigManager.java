@@ -1,8 +1,4 @@
-package org.tmt.csw.cs.core;
-
-import org.tmt.csw.cs.api.ConfigData;
-import org.tmt.csw.cs.api.ConfigFileHistory;
-import org.tmt.csw.cs.api.ConfigFileInfo;
+package org.tmt.csw.cs.api;
 
 import java.util.List;
 

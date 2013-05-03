@@ -1,4 +1,4 @@
-package org.tmt.csw.cs.core
+package org.tmt.csw.cs.api
 
 import java.util.Date
 

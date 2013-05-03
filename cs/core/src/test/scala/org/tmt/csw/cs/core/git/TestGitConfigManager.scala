@@ -2,8 +2,8 @@ package org.tmt.csw.cs.core.git
 
 import org.scalatest.FunSuite
 import java.io.{FileNotFoundException, IOException, File}
-import org.tmt.csw.cs.core.ConfigString
 import java.util.Date
+import org.tmt.csw.cs.api.ConfigString
 
 /**
  * Tests the GitConfigManager class

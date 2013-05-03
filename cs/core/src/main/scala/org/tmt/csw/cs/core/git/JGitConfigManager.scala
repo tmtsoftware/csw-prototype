@@ -1,9 +1,10 @@
 package org.tmt.csw.cs.core.git
 
-import org.tmt.csw.cs.core.{ConfigData, ConfigFileInfo, ConfigFileHistory, JConfigManager}
+import org.tmt.csw.cs.core.{JConfigManager}
 import java.util
 import java.io.File
 import scala.collection.JavaConversions._
+import org.tmt.csw.cs.api.{ConfigFileInfo, ConfigFileHistory, ConfigData}
 
 /**
  * Uses JGit to manage versions of configuration files.

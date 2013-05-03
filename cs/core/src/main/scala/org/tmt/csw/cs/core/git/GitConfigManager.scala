@@ -10,12 +10,32 @@ import org.eclipse.jgit.storage.file.FileRepository
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
 import scala.Some
-import org.tmt.csw.cs.core.ConfigFileHistory
+import org.tmt.csw.cs.api._
+import scala.Some
+import org.tmt.csw.cs.api.ConfigFileHistory
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
  */
 object GitConfigManager {
+
+  // Name of the CS config file used to locate the Git repositories.
+  private final val csConfigFileName = "csconfig.prop"
+
+  /**
+   * Creates and returns a GitConfigManager instance using the default directory as the
+   * local Git repository root (directory containing .git dir) and the default
+   * URI as the remote, central Git repository.
+   * If the local repository already exists, it is opened, otherwise it is created.
+   * An exception is thrown if the remote repository does not exist.
+   *
+   * @return a new GitConfigManager configured to use the default local and remote repositories
+   */
+//  def apply(): GitConfigManager = {
+////    if (new File(csConfigFileName).exists) {
+////
+////    }
+//  }
 
   /**
    * Creates and returns a GitConfigManager instance using the given directory as the

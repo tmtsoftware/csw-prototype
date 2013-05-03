@@ -1,10 +1,10 @@
 package org.tmt.csw.cs.core.git;
 
 import org.junit.*;
-import org.tmt.csw.cs.core.ConfigData;
-import org.tmt.csw.cs.core.ConfigFileHistory;
-import org.tmt.csw.cs.core.ConfigFileInfo;
-import org.tmt.csw.cs.core.ConfigString;
+import org.tmt.csw.cs.api.ConfigData;
+import org.tmt.csw.cs.api.ConfigFileHistory;
+import org.tmt.csw.cs.api.ConfigFileInfo;
+import org.tmt.csw.cs.api.ConfigString;
 
 import java.io.File;
 import java.util.List;
