@@ -23,17 +23,17 @@ class TestGitConfigManager extends FunSuite {
     val tmpDir = System.getProperty("java.io.tmpdir")
     val gitDir = new File(tmpDir, "cstest")
 
-//    val gitMainRepo = "git@localhost:project.git"
+    // val gitMainRepo = "git@localhost:project.git"
     val gitMainRepo = new File(tmpDir, "cstestMainRepo")
-    GitConfigManager.deleteLocalRepo(gitMainRepo)
-    GitConfigManager.initBareRepo(gitMainRepo)
-
     println("Local repo = " + gitDir + ", remote = " + gitMainRepo)
 
-    // Start with an empty repo
+
+    // Delete the main and local test repositories (Only use this in test cases!)
+    GitConfigManager.deleteLocalRepo(gitMainRepo)
+    GitConfigManager.initBareRepo(gitMainRepo)
     GitConfigManager.deleteLocalRepo(gitDir)
 
-    // create a new repo
+    // create a new repository
     val manager = GitConfigManager(gitDir, gitMainRepo.getPath)
     if (manager.exists(path1)) {
       manager.delete(path1)
