@@ -1,7 +1,7 @@
 package org.tmt.csw.cs.core.git
 
 import org.scalatest.FunSuite
-import java.io.File
+import java.io.{FileNotFoundException, IOException, File}
 import org.tmt.csw.cs.core.ConfigString
 
 /**
@@ -42,11 +42,28 @@ class TestGitConfigManager extends FunSuite {
       manager.delete(path2)
     }
 
+    // Should get exception if we try to delete a file that does not exist
+    intercept[FileNotFoundException] {
+      manager.delete(path1)
+    }
+    intercept[FileNotFoundException] {
+      // Should get exception if we try to delete a file that does not exist
+      manager.delete(path2)
+    }
+
     // Add, then update the file twice
     val createId1 = manager.create(path1, new ConfigString(contents1), comment1)
     val createId2 = manager.create(path2, new ConfigString(contents1), comment1)
     val updateId1 = manager.update(path1, new ConfigString(contents2), comment2)
     val updateId2 = manager.update(path1, new ConfigString(contents3), comment3)
+
+    // Should throw exception if we try to create a file that exists
+    intercept[IOException] {
+      manager.create(path1, new ConfigString(contents2), comment2)
+    }
+    intercept[IOException] {
+      manager.create(path2, new ConfigString(contents2), comment2)
+    }
 
     // Check that we can access each version
     val option1 = manager.get(path1)

@@ -138,6 +138,9 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param path the configuration path
    */
   override def delete(path: String, comment: String = "deleted") {
+    if (!exists(path)) {
+      throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
+    }
     git.rm.addFilepattern(path).call()
     git.commit().setMessage(comment).call
     git.push.call()
