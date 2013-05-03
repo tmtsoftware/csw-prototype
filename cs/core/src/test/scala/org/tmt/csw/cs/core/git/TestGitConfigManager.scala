@@ -51,13 +51,21 @@ class TestGitConfigManager extends FunSuite {
       manager.delete(path2)
     }
 
+    // Should throw exception if we try to update a file that does not exist
+    intercept[IOException] {
+      manager.update(path1, new ConfigString(contents2), comment2)
+    }
+    intercept[IOException] {
+      manager.update(path1, new ConfigString(contents3), comment3)
+    }
+
     // Add, then update the file twice
     val createId1 = manager.create(path1, new ConfigString(contents1), comment1)
     val createId2 = manager.create(path2, new ConfigString(contents1), comment1)
     val updateId1 = manager.update(path1, new ConfigString(contents2), comment2)
     val updateId2 = manager.update(path1, new ConfigString(contents3), comment3)
 
-    // Should throw exception if we try to create a file that exists
+    // Should throw exception if we try to create a file that already exists
     intercept[IOException] {
       manager.create(path1, new ConfigString(contents2), comment2)
     }
