@@ -9,7 +9,6 @@ import java.util.Date
 import org.eclipse.jgit.storage.file.FileRepository
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
-import scala.Some
 import org.tmt.csw.cs.api._
 import scala.Some
 import org.tmt.csw.cs.api.ConfigFileHistory

@@ -1,4 +1,6 @@
-package org.tmt.csw.cs.api
+package org.tmt.csw.cs.core
+
+import org.tmt.csw.cs.api.ConfigData
 
 /**
  * Represents the contents of a config file

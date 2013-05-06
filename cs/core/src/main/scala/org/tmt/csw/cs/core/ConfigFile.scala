@@ -1,7 +1,8 @@
-package org.tmt.csw.cs.api
+package org.tmt.csw.cs.core
 
 import java.io.File
 import scalax.io.Resource
+import org.tmt.csw.cs.api.ConfigData
 
 /**
  * Represents a configuration file
