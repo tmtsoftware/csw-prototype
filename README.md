@@ -4,13 +4,23 @@ Common Software is the package of services and infrastructure software that inte
 
 http://www.tmt.org
 
+
 Build Instructions
 ==================
 
-There is no top level build yet.
-To build the individual bundles, cd to the directory containing build.sbt and run sbt.
-Some useful tasks:
+A hierarchical build is defined (see project/Csw.scala).
+To build, run 'sbt' and type one of the following commands:
 
-osgi-bundle	- compiles and builds the osgi bundle
-publish-local 	- copies the bundle to the local ivy repository (~/.ivy2) so it can be referenced by other bundles
-test 		- run the tests
+compile       - compiles the sources
+
+gen-idea      - generates the Idea project and modules
+
+osgi-bundle	  - compiles and builds the osgi bundles
+
+publish-local - copies the bundles to the local ivy repository (~/.ivy2) so they can be referenced by other bundles
+
+test 		  - run the tests
+
+Commands apply to the entire build unless otherwise specified.
+You can narrow the focus to a subproject with the sbt "project" command.
+For example: "project cs" sets the current project to "cs". The top level project is "csw".

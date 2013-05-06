@@ -22,10 +22,11 @@ OsgiKeys.exportPackage := Seq(
     "org.tmt.csw.cs.core.git"
 )
 
-// Configure the locations of the local and remote Git repos used here
+// Configure the locations of the local and remote Git repos used here (XXX TESTING)
 OsgiKeys.additionalHeaders := Map(
   "org.tmt.csw.cs.core.remoteRepo" -> "git@localhost:project.git",
   "org.tmt.csw.cs.core.gitWorkDir" -> "~/.csw/cs"
 )
 
+// XXX TESTING
 OsgiKeys.bundleActivator := Option("org.tmt.csw.cs.core.osgi.Activator")
