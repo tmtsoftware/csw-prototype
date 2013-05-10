@@ -16,5 +16,3 @@ osgiSettings
 OsgiKeys.exportPackage := Seq(
     "org.tmt.csw.cs.api"
 )
-
-// OsgiKeys.bundleActivator := Option("org.tmt.csw.cs.core.osgi.Activator")

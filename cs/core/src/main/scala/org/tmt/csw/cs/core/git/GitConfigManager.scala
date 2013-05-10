@@ -12,6 +12,7 @@ import org.tmt.csw.cs.core._
 import org.tmt.csw.cs.api._
 import scala.Some
 import org.tmt.csw.cs.api.ConfigFileHistory
+import aQute.bnd.annotation.component.Component
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -19,7 +20,7 @@ import org.tmt.csw.cs.api.ConfigFileHistory
 object GitConfigManager {
 
   // Name of the CS config file used to locate the Git repositories.
-  private final val csConfigFileName = "csconfig.prop"
+  private final val csConfigFileName = "csconfig.prop" // XXX TODO
 
   /**
    * Creates and returns a GitConfigManager instance using the default directory as the
@@ -30,11 +31,11 @@ object GitConfigManager {
    *
    * @return a new GitConfigManager configured to use the default local and remote repositories
    */
-//  def apply(): GitConfigManager = {
-////    if (new File(csConfigFileName).exists) {
-////
-////    }
-//  }
+  def apply(): GitConfigManager = {
+    // XXX TODO: Check if default repo exists and craete if needed
+    new GitConfigManager()
+  }
+
 
   /**
    * Creates and returns a GitConfigManager instance using the given directory as the
@@ -60,6 +61,17 @@ object GitConfigManager {
       val git = Git.cloneRepository.setDirectory(gitWorkDir).setURI(remoteRepo.toString).call
       new GitConfigManager(git)
     }
+  }
+
+  /**
+   * Returns the default Git repository
+   */
+  def defaultRepo : Git = {
+    // XXX TODO get default, preconfigured repo info
+    println("XXX Using dummy default Git repo")
+    val tmpDir = System.getProperty("java.io.tmpdir")
+    val gitDir = new File(tmpDir, "cstest")
+    new Git(new FileRepository(gitDir.getPath))
   }
 
   /**
@@ -93,7 +105,15 @@ object GitConfigManager {
 /**
  * Uses JGit to manage versions of configuration files
  */
+@Component
 class GitConfigManager(val git: Git) extends ConfigManager {
+
+  /**
+   * Alternate constructor that uses the default, preconfigured Git repository
+   */
+  def this() {
+    this(GitConfigManager.defaultRepo)
+  }
 
   /**
    * Creates a config file with the given path and data and optional comment.

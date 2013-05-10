@@ -1,6 +1,6 @@
 package org.tmt.csw.cs.core.git
 
-import org.tmt.csw.cs.core.{JConfigManager}
+import org.tmt.csw.cs.api.JConfigManager
 import java.util
 import java.io.File
 import scala.collection.JavaConversions._
