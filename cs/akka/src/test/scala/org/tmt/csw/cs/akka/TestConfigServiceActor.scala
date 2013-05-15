@@ -61,7 +61,7 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
         duration).asInstanceOf[UpdateResult].result
     }
 
-//    // Add, then update the file twice
+    // Add, then update the file twice
     val createId1 = Await.result(configServiceActor ?
       CreateRequest(path1, new ConfigString(contents1), comment1),
       duration).asInstanceOf[CreateResult].result
@@ -176,5 +176,9 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
     assert(historyList2d(0).comment == comment1)
     assert(historyList1d(1).comment == comment2)
     assert(historyList1d(2).comment == comment3)
+  }
+
+  override def afterAll {
+    system.shutdown()
   }
 }

@@ -14,12 +14,6 @@ libraryDependencies ++= Seq(
     "org.osgi" % "org.osgi.core" % "4.3.0" % "provided"
 )
 
-    //"org.eclipse.jgit" % "org.eclipse.jgit" % "2.3.1.201302201838-r",
-    //"com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2",
-    //"biz.aQute" % "bndlib" % "2.0.0.20130123-133441",
-    //"junit" % "junit" % "4.10" % "test"
-
-
 osgiSettings
 
 OsgiKeys.exportPackage := Seq(

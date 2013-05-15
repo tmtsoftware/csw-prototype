@@ -21,7 +21,7 @@ case class CreateResult(result: ConfigId) extends ConfigServiceResult
 case class UpdateResult(result: ConfigId) extends ConfigServiceResult
 case class GetResult(result: Option[ConfigData]) extends ConfigServiceResult
 case class ExistsResult(result: Boolean) extends ConfigServiceResult
-case class DeleteResult(result: Unit) extends ConfigServiceResult
+case object DeleteResult extends ConfigServiceResult
 case class ListResult(result: List[ConfigFileInfo]) extends ConfigServiceResult
 case class HistoryResult(result: List[ConfigFileHistory]) extends ConfigServiceResult
 
@@ -51,14 +51,14 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor {
         case UpdateRequest(path, configData, comment) => sender ! UpdateResult(configManager.update(path, configData, comment))
         case GetRequest(path, id) => sender ! GetResult(configManager.get(path, id))
         case ExistsRequest(path) => sender ! ExistsResult(configManager.exists(path))
-        case DeleteRequest(path, comment) => sender ! DeleteResult(configManager.delete(path, comment))
+        case DeleteRequest(path, comment) => configManager.delete(path, comment); sender ! DeleteResult
         case ListRequest() => sender ! ListResult(configManager.list())
         case HistoryRequest(path) => sender ! HistoryResult(configManager.history(path))
       }
     } catch {
       case e: Exception =>
-        sender ! akka.actor.Status.Failure(e)
-        throw e
+        sender ! Status.Failure(e)
+//        throw e
     }
   }
 }
