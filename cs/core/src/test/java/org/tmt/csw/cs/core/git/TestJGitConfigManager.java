@@ -4,6 +4,7 @@ import org.junit.*;
 import org.tmt.csw.cs.api.ConfigData;
 import org.tmt.csw.cs.api.ConfigFileHistory;
 import org.tmt.csw.cs.api.ConfigFileInfo;
+import org.tmt.csw.cs.api.ConfigId;
 import org.tmt.csw.cs.core.ConfigString;
 
 import java.io.File;
@@ -48,10 +49,10 @@ public class TestJGitConfigManager {
         }
 
         // Add, then update the file twice
-        String createId1 = manager.create(path1, new ConfigString(contents1), comment1);
-        String createId2 = manager.create(path2, new ConfigString(contents1), comment1);
-        String updateId1 = manager.update(path1, new ConfigString(contents2), comment2);
-        String updateId2 = manager.update(path1, new ConfigString(contents3), comment3);
+        ConfigId createId1 = manager.create(path1, new ConfigString(contents1), comment1);
+        ConfigId createId2 = manager.create(path2, new ConfigString(contents1), comment1);
+        ConfigId updateId1 = manager.update(path1, new ConfigString(contents2), comment2);
+        ConfigId updateId2 = manager.update(path1, new ConfigString(contents3), comment3);
 
         // Check that we can access each version
         ConfigData data1 = manager.get(path1);

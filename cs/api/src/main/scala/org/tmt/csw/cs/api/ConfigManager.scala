@@ -1,5 +1,7 @@
 package org.tmt.csw.cs.api
 
+import java.util.Date
+
 /**
  * Defines an interface for storing and retrieving configuration information
  */
@@ -14,7 +16,7 @@ trait ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def create(path: String, configData: ConfigData, comment: String = "") : String
+  def create(path: String, configData: ConfigData, comment: String = "") : ConfigId
 
   /**
    * Updates the config file with the given path and data and optional comment.
@@ -25,7 +27,7 @@ trait ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def update(path: String, configData: ConfigData, comment: String = "") : String
+  def update(path: String, configData: ConfigData, comment: String = "") : ConfigId
 
   /**
    * Gets and returns the config file stored under the given path.
@@ -35,7 +37,7 @@ trait ConfigManager {
    *            (by default the latest version is returned)
    * @return an object containing the configuration data, if found
    */
-  def get(path: String, id: Option[String] = None) : Option[ConfigData]
+  def get(path: String, id: Option[ConfigId] = None) : Option[ConfigData]
 
   /**
    * Returns true if the given path exists and is being managed
@@ -62,5 +64,30 @@ trait ConfigManager {
    * @return a list containing one ConfigFileHistory object for each version of path
    */
   def history(path: String) : List[ConfigFileHistory]
-
 }
+
+/**
+ * Type of an id returned from ConfigManager create or update methods
+ */
+trait ConfigId
+
+/**
+ * Interface implemented by the configuration data objects being managed
+ */
+trait ConfigData {
+  /**
+   * @return a representation of the object as a byte array
+   */
+  def getBytes : Array[Byte]
+}
+
+/**
+ * Holds information about a specific version of a config file
+ */
+case class ConfigFileHistory(id: ConfigId, comment: String, time: Date)
+
+/**
+ * Contains information about a config file stored in the config service
+ */
+case class ConfigFileInfo(path: String, id: ConfigId, comment: String)
+

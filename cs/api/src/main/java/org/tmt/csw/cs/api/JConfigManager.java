@@ -16,7 +16,7 @@ public interface JConfigManager {
      * @param comment    a comment to associate with this file
      * @return a unique id that can be used to refer to the file
      */
-    public String create(String path, ConfigData configData, String comment);
+    public ConfigId create(String path, ConfigData configData, String comment);
 
     /**
      * Updates the config file with the given path and data and optional comment.
@@ -27,7 +27,7 @@ public interface JConfigManager {
      * @param comment    a comment to associate with this file
      * @return a unique id that can be used to refer to the file
      */
-    public String update(String path, ConfigData configData, String comment);
+    public ConfigId update(String path, ConfigData configData, String comment);
 
     /**
      * Gets and returns the latest version of the config file stored under the given path.
@@ -44,7 +44,7 @@ public interface JConfigManager {
      * @param id   id used to specify a specific version to fetch
      * @return an object containing the configuration data, if found
      */
-    public ConfigData get(String path, String id);
+    public ConfigData get(String path, ConfigId id);
 
     /**
      * Returns true if the given path exists and is being managed

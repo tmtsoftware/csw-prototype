@@ -124,7 +124,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  override def create(path: String, configData: ConfigData, comment: String): String = {
+  override def create(path: String, configData: ConfigData, comment: String): ConfigId = {
     val file = fileForPath(path)
     if (file.exists()) throw new IOException("File already exists in repository: " + path)
     put(path, configData, comment)
@@ -139,7 +139,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  override def update(path: String, configData: ConfigData, comment: String): String = {
+  override def update(path: String, configData: ConfigData, comment: String): ConfigId = {
     val file = fileForPath(path)
     if (!file.exists()) throw new FileNotFoundException("File not found: " + path)
     put(path, configData, comment)
@@ -153,13 +153,13 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  private def put(path: String, configData: ConfigData, comment: String): String = {
+  private def put(path: String, configData: ConfigData, comment: String): ConfigId = {
     val file = fileForPath(path)
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path).call()
     git.commit().setMessage(comment).call
     git.push.call()
-    dirCache.getEntry(path).getObjectId.getName
+    GitConfigId(dirCache.getEntry(path).getObjectId.getName)
   }
 
   /**
@@ -193,11 +193,11 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    *           (by default the latest version is returned)
    * @return an object containing the configuration data, if found
    */
-  override def get(path: String, id: Option[String]): Option[ConfigData] = {
+  override def get(path: String, id: Option[ConfigId]): Option[ConfigData] = {
 
     if (!id.isEmpty) {
       // return the file for the given id
-      val objId = ObjectId.fromString(id.get)
+      val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)
       Some(new ConfigBytes(git.getRepository.open(objId).getBytes))
     } else {
       // return the latest version of the file (without checking Git)
@@ -232,7 +232,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
       val objectId = treeWalk.getObjectId(0).name
       // TODO: Include create comment (history(path)(0).comment)
       // or latest comment (history(path).last.comment)?
-      val info = new ConfigFileInfo(path, objectId, history(path).last.comment)
+      val info = new ConfigFileInfo(path, GitConfigId(objectId), history(path).last.comment)
       result = info :: result
     }
 
@@ -259,7 +259,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
         // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
         val comment = revCommit.getShortMessage
         val time = new Date(revCommit.getCommitTime * 1000L)
-        val info = new ConfigFileHistory(objectId.name, comment, time)
+        val info = new ConfigFileHistory(GitConfigId(objectId.name), comment, time)
         result = info :: result
       }
 

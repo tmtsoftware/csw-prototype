@@ -1,10 +1,12 @@
 package org.tmt.csw.cs.core.git
 
-import org.tmt.csw.cs.api.JConfigManager
+import org.tmt.csw.cs.api._
 import java.util
 import java.io.File
 import scala.collection.JavaConversions._
-import org.tmt.csw.cs.api.{ConfigFileInfo, ConfigFileHistory, ConfigData}
+import org.tmt.csw.cs.api.ConfigFileHistory
+import org.tmt.csw.cs.api.ConfigFileInfo
+import scala.Some
 
 /**
  * Uses JGit to manage versions of configuration files.
@@ -15,11 +17,11 @@ import org.tmt.csw.cs.api.{ConfigFileInfo, ConfigFileHistory, ConfigData}
 class JGitConfigManager(gitWorkDir: File, remoteRepo: String) extends JConfigManager {
   private val manager = GitConfigManager(gitWorkDir, remoteRepo)
 
-  override def create(path: String, configData: ConfigData, comment: String): String = {
+  override def create(path: String, configData: ConfigData, comment: String): ConfigId = {
     manager.create(path, configData, comment)
   }
 
-  override def update(path: String, configData: ConfigData, comment: String): String = {
+  override def update(path: String, configData: ConfigData, comment: String): ConfigId = {
     manager.update(path, configData, comment)
   }
 
@@ -27,7 +29,7 @@ class JGitConfigManager(gitWorkDir: File, remoteRepo: String) extends JConfigMan
     manager.get(path).orNull
   }
 
-  override def get(path: String, id: String): ConfigData = {
+  override def get(path: String, id: ConfigId): ConfigData = {
     manager.get(path, Some(id)).orNull
   }
 
