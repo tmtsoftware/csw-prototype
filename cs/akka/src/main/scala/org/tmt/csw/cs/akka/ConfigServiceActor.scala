@@ -1,7 +1,8 @@
 package org.tmt.csw.cs.akka
 
-import akka.actor.{Status, ActorRef, Actor}
+import akka.actor._
 import org.tmt.csw.cs.api._
+import org.tmt.csw.cs.core.git.GitConfigManager
 import org.tmt.csw.cs.api.ConfigFileHistory
 import org.tmt.csw.cs.api.ConfigFileInfo
 
@@ -25,14 +26,32 @@ case object DeleteResult extends ConfigServiceResult
 case class ListResult(result: List[ConfigFileInfo]) extends ConfigServiceResult
 case class HistoryResult(result: List[ConfigFileHistory]) extends ConfigServiceResult
 
+object ConfigServiceActor {
+
+  def apply(configManager: ConfigManager) : ConfigServiceActor = new ConfigServiceActor(Some(configManager))
+  def apply() : ConfigServiceActor = new ConfigServiceActor(None)
+
+  /**
+   * Returns the default config manager, using the given settings
+   * @param settings read from resources/reference.conf
+   */
+  def defaultConfigManager(settings: Settings) : ConfigManager = {
+    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
+  }
+}
+
 
 /**
  * An Akka actor class implementing the Config Service.
- * <p>
- * Note: To pass in argument to the constructor, use:
- * val configServiceActor = system.actorOf(Props(new ConfigServiceActor(configManager)), name = "configManager")
+ * @param configManagerOpt specify the configManager to use for tests, use None for production to get default
  */
-class ConfigServiceActor(configManager: ConfigManager) extends Actor {
+class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor {
+
+  val configManager = {
+    if (configManagerOpt.isEmpty)
+      ConfigServiceActor.defaultConfigManager(Settings(context.system))
+    else configManagerOpt.get
+  }
 
   def receive = {
     case request: ConfigServiceRequest => reply(sender, request)

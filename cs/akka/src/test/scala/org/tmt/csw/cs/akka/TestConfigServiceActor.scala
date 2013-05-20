@@ -2,8 +2,7 @@ package org.tmt.csw.cs.akka
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.util.Date
-import java.io.{IOException, File}
-import org.tmt.csw.cs.core.git.GitConfigManager
+import java.io.{File, IOException}
 import org.tmt.csw.cs.core.ConfigString
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
@@ -11,6 +10,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.pattern.ask
 import akka.util.Timeout
+import scala.Some
+import org.tmt.csw.cs.core.git.GitConfigManager
+import org.tmt.csw.cs.api.ConfigManager
 
 /**
  * Tests the Config Service actor
@@ -33,8 +35,8 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
 
-  // Note: Using blocking (Await) for this test, so we can compare return values easily
-  test("Test the ConfigServiceActor, storing and retrieving some files") {
+  // Create a temporary test Git repository and a bare main repository for push/pull
+  private def getTestRepo : ConfigManager = {
     // Create the temporary Git repos for the test
     val tmpDir = System.getProperty("java.io.tmpdir")
     val gitDir = new File(tmpDir, "cstest")
@@ -49,10 +51,17 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
     GitConfigManager.deleteLocalRepo(gitDir)
 
     // create a new repository and use it to create the actor
-    val manager = GitConfigManager(gitDir, gitMainRepo.getPath)
+    GitConfigManager(gitDir, gitMainRepo.getPath)
+  }
 
-    // Create the actor (TODO: Non-test usages should not need to provide the manager argument)
-    val configServiceActor = system.actorOf(Props(new ConfigServiceActor(manager)), name = "configManager")
+  // Note: Using blocking (Await) for this test, so we can compare return values easily.
+  // Applications won't always need to block while waiting...
+  test("Test the ConfigServiceActor, storing and retrieving some files") {
+    // create a test repository and use it to create the actor
+    val manager = getTestRepo
+
+    // Create the actor
+    val configServiceActor = system.actorOf(Props(ConfigServiceActor(manager)), name = "configManager")
 
     // Should throw exception if we try to update a file that does not exist
     intercept[IOException] {
@@ -130,8 +139,8 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
       HistoryRequest(path2),
       duration).asInstanceOf[HistoryResult].result
 
-    assert(historyList1.size == 3)
-    assert(historyList2.size == 1)
+    assert(historyList1.size >= 3)
+    assert(historyList2.size >= 1)
 
     assert(historyList1(0).comment == comment1)
     assert(historyList2(0).comment == comment1)
@@ -178,7 +187,35 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
     assert(historyList1d(2).comment == comment3)
   }
 
-  override def afterAll {
+
+//  test("Test updating files in default repo") {
+//    val contents = "Other contents of some file...\n"
+//    val comment = "Other create comment"
+//
+//    // Create the actor
+//    val configServiceActor = system.actorOf(Props(ConfigServiceActor()), name = "configManager")
+//
+//    val exists1 = Await.result(configServiceActor ?
+//      ExistsRequest(path1),
+//      duration).asInstanceOf[ExistsResult].result
+//
+//    if (!exists1) {
+//      val createId1 = Await.result(configServiceActor ?
+//        CreateRequest(path1, new ConfigString(contents), comment),
+//        duration).asInstanceOf[CreateResult].result
+//    } else {
+//      val updateId1 = Await.result(configServiceActor ?
+//        UpdateRequest(path1, new ConfigString(contents), comment),
+//        duration).asInstanceOf[UpdateResult].result
+//    }
+//    val option = Await.result(configServiceActor ?
+//      GetRequest(path1),
+//      duration).asInstanceOf[GetResult].result
+//    assert(!option.isEmpty)
+//    assert(option.get.toString == contents)
+//  }
+
+  override def afterAll() {
     system.shutdown()
   }
 }

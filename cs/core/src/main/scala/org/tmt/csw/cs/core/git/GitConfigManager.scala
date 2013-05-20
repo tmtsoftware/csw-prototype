@@ -13,6 +13,7 @@ import org.tmt.csw.cs.api._
 import scala.Some
 import org.tmt.csw.cs.api.ConfigFileHistory
 import aQute.bnd.annotation.component.Component
+import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -54,6 +55,7 @@ object GitConfigManager {
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
       val git = new Git(new FileRepository(gitDir.getPath))
+      trackMaster(git)
       val result = git.pull.call
       if (!result.isSuccessful) throw new IOException(result.toString)
       new GitConfigManager(git)
@@ -61,6 +63,16 @@ object GitConfigManager {
       val git = Git.cloneRepository.setDirectory(gitWorkDir).setURI(remoteRepo.toString).call
       new GitConfigManager(git)
     }
+  }
+
+  // Sets the master repository (needed for git push/pull commands)
+  private def trackMaster(git: Git) {
+    git.branchCreate()
+      .setName("master")
+      .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
+      .setStartPoint("origin/master")
+      .setForce(true)
+      .call()
   }
 
   /**
