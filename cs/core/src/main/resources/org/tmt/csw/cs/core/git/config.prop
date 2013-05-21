@@ -1,0 +1,8 @@
+# The URL of the main GIT repository used by the Config Service
+git-main-repository = /tmp/cstest
+
+# Path to the local GIT repository, which will sync with the main Git repository
+git-local-repository = ~/.csw/cs/repo
+
+xxx = bla bla
+

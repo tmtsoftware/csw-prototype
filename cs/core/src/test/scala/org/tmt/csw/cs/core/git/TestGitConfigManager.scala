@@ -23,21 +23,23 @@ class TestGitConfigManager extends FunSuite {
   val startTime = new Date().getTime
 
   test("Test creating a GitConfigManager, storing and retrieving some files") {
-    val tmpDir = System.getProperty("java.io.tmpdir")
-    val gitDir = new File(tmpDir, "cstest")
+//    val tmpDir = System.getProperty("java.io.tmpdir")
+//    val gitDir = new File(tmpDir, "cstest")
+//
+//    // val gitMainRepo = "git@localhost:project.git"
+//    val gitMainRepo = new File(tmpDir, "cstestMainRepo")
+//    println("Local repo = " + gitDir + ", remote = " + gitMainRepo)
+//
+//
+//    // Delete the main and local test repositories (Only use this in test cases!)
+//    GitConfigManager.deleteLocalRepo(gitMainRepo)
+//    GitConfigManager.initBareRepo(gitMainRepo)
+//    GitConfigManager.deleteLocalRepo(gitDir)
+//
+//    // create a new repository
+//    val manager = GitConfigManager(gitDir, gitMainRepo.getPath)
 
-    // val gitMainRepo = "git@localhost:project.git"
-    val gitMainRepo = new File(tmpDir, "cstestMainRepo")
-    println("Local repo = " + gitDir + ", remote = " + gitMainRepo)
-
-
-    // Delete the main and local test repositories (Only use this in test cases!)
-    GitConfigManager.deleteLocalRepo(gitMainRepo)
-    GitConfigManager.initBareRepo(gitMainRepo)
-    GitConfigManager.deleteLocalRepo(gitDir)
-
-    // create a new repository
-    val manager = GitConfigManager(gitDir, gitMainRepo.getPath)
+    val manager = GitConfigManager()
     if (manager.exists(path1)) {
       manager.delete(path1)
     }
@@ -105,8 +107,8 @@ class TestGitConfigManager extends FunSuite {
     val historyList1 = manager.history(path1)
     val historyList2 = manager.history(path2)
 
-    assert(historyList1.size == 3)
-    assert(historyList2.size == 1)
+    assert(historyList1.size >= 3)
+    assert(historyList2.size >= 1)
 
     assert(historyList1(0).comment == comment1)
     assert(historyList2(0).comment == comment1)
@@ -136,8 +138,8 @@ class TestGitConfigManager extends FunSuite {
     val historyList1d = manager.history(path1)
     val historyList2d = manager.history(path2)
 
-    assert(historyList1d.size == 3)
-    assert(historyList2d.size == 1)
+    assert(historyList1d.size >= 3)
+    assert(historyList2d.size >= 1)
 
     assert(historyList1d(0).comment == comment1)
     assert(historyList2d(0).comment == comment1)

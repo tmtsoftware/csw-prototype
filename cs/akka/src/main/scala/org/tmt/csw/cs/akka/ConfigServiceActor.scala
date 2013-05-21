@@ -77,7 +77,6 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor 
     } catch {
       case e: Exception =>
         sender ! Status.Failure(e)
-//        throw e
     }
   }
 }

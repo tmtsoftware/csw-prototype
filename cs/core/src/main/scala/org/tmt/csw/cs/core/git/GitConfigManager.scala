@@ -3,25 +3,24 @@ package org.tmt.csw.cs.core.git
 import java.io.{FileNotFoundException, IOException, File}
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.RevWalk
-import org.eclipse.jgit.lib.{Constants, ObjectId}
+import org.eclipse.jgit.lib._
 import org.eclipse.jgit.treewalk.TreeWalk
-import java.util.Date
+import java.util.{Properties, Date}
 import org.eclipse.jgit.storage.file.FileRepository
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
 import org.tmt.csw.cs.api._
-import scala.Some
-import org.tmt.csw.cs.api.ConfigFileHistory
 import aQute.bnd.annotation.component.Component
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
+import org.tmt.csw.cs.core.GitConfigId
+import scala.Some
+import org.tmt.csw.cs.api.ConfigFileHistory
+import org.tmt.csw.cs.api.ConfigFileInfo
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
  */
 object GitConfigManager {
-
-  // Name of the CS config file used to locate the Git repositories.
-  private final val csConfigFileName = "csconfig.prop" // XXX TODO
 
   /**
    * Creates and returns a GitConfigManager instance using the default directory as the
@@ -29,12 +28,15 @@ object GitConfigManager {
    * URI as the remote, central Git repository.
    * If the local repository already exists, it is opened, otherwise it is created.
    * An exception is thrown if the remote repository does not exist.
+   * <p>
+   * The defaults in this case are stored in the config.prop file in this package under resources.
    *
    * @return a new GitConfigManager configured to use the default local and remote repositories
    */
   def apply(): GitConfigManager = {
-    // XXX TODO: Check if default repo exists and craete if needed
-    new GitConfigManager()
+    val props = new Properties
+    props.load(Thread.currentThread.getContextClassLoader.getResourceAsStream("org/tmt/csw/cs/core/git/config.prop"))
+    apply(new File(props.getProperty("git-local-repository")), props.getProperty("git-main-repository"))
   }
 
 
@@ -76,17 +78,6 @@ object GitConfigManager {
   }
 
   /**
-   * Returns the default Git repository
-   */
-  def defaultRepo : Git = {
-    // XXX TODO get default, preconfigured repo info
-    println("XXX Using dummy default Git repo")
-    val tmpDir = System.getProperty("java.io.tmpdir")
-    val gitDir = new File(tmpDir, "cstest")
-    new Git(new FileRepository(gitDir.getPath))
-  }
-
-  /**
    * FOR TESTING: Deletes the contents of the given directory (recursively).
    * This is meant for use by tests that need to always start with an empty Git repository.
    */
@@ -119,13 +110,6 @@ object GitConfigManager {
  */
 @Component
 class GitConfigManager(val git: Git) extends ConfigManager {
-
-  /**
-   * Alternate constructor that uses the default, preconfigured Git repository
-   */
-  def this() {
-    this(GitConfigManager.defaultRepo)
-  }
 
   /**
    * Creates a config file with the given path and data and optional comment.
