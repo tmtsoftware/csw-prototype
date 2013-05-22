@@ -14,6 +14,8 @@ trait Test extends Build with Settings with Cs {
     "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
     "com.typesafe.akka" %% "akka-kernel" % AkkaVersion,
     "org.tmt" %% "org.tmt.csw.cs.akka" % Version,
+    "org.tmt" %% "org.tmt.csw.cs.api" % Version,
+    "org.tmt" %% "org.tmt.csw.cs.core" % Version,
     "org.osgi" % "org.osgi.core" % "4.3.0" % "provided"
   )
 

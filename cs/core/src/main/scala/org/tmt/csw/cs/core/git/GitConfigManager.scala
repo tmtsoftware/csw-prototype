@@ -190,7 +190,9 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @return an object containing the configuration data, if found
    */
   override def get(path: String, id: Option[ConfigId]): Option[ConfigData] = {
-
+    if (! exists(path)) {
+      return None;
+    }
     if (!id.isEmpty) {
       // return the file for the given id
       val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)

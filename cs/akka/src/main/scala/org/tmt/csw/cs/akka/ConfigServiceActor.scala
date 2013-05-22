@@ -5,6 +5,7 @@ import org.tmt.csw.cs.api._
 import org.tmt.csw.cs.core.git.GitConfigManager
 import org.tmt.csw.cs.api.ConfigFileHistory
 import org.tmt.csw.cs.api.ConfigFileInfo
+import java.io.File
 
 // Messages received by the Config Service actor
 sealed trait ConfigServiceRequest
@@ -26,20 +27,24 @@ case object DeleteResult extends ConfigServiceResult
 case class ListResult(result: List[ConfigFileInfo]) extends ConfigServiceResult
 case class HistoryResult(result: List[ConfigFileHistory]) extends ConfigServiceResult
 
+
 object ConfigServiceActor {
 
   def apply(configManager: ConfigManager) : ConfigServiceActor = new ConfigServiceActor(Some(configManager))
+
+  def apply(gitLocalRepository: File, gitMainRepository: String) : ConfigServiceActor
+    = new ConfigServiceActor(Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
+
   def apply() : ConfigServiceActor = new ConfigServiceActor(None)
 
   /**
    * Returns the default config manager, using the given settings
    * @param settings read from resources/reference.conf
    */
-  def defaultConfigManager(settings: Settings) : ConfigManager = {
+  private def defaultConfigManager(settings: Settings) : ConfigManager = {
     GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
   }
 }
-
 
 /**
  * An Akka actor class implementing the Config Service.
@@ -48,9 +53,10 @@ object ConfigServiceActor {
 class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor {
 
   val configManager = {
-    if (configManagerOpt.isEmpty)
-      ConfigServiceActor.defaultConfigManager(Settings(context.system))
-    else configManagerOpt.get
+    configManagerOpt match {
+      case Some(m) => m
+      case None => ConfigServiceActor.defaultConfigManager(Settings(context.system))
+    }
   }
 
   def receive = {
