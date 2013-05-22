@@ -1,14 +1,14 @@
 name := "org.tmt.csw.cs.akka"
 
-organization := "org.tmt"
+organization := Organization
 
-version := "1.0"
+version := Version
 
-scalaVersion := "2.10.1"
+scalaVersion := SrcScalaVersion
 
 libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-actor" % "2.1.4",
-    "com.typesafe.akka" %% "akka-testkit" % "2.1.4" % "test",
+    "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
+    "com.typesafe.akka" %% "akka-testkit" % AkkaVersion % "test",
     "org.scalatest" % "scalatest_2.10" % "2.0.M5b" % "test",
     "org.tmt" %% "org.tmt.csw.cs.core" % "1.0",
     "org.osgi" % "org.osgi.core" % "4.3.0" % "provided"

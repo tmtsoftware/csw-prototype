@@ -1,10 +1,10 @@
 name := "org.tmt.csw.cs.core"
 
-organization := "org.tmt"
+organization := Organization
 
-version := "1.0"
+version := Version
 
-scalaVersion := "2.10.1"
+scalaVersion := SrcScalaVersion
 
 libraryDependencies ++= Seq(
     "org.tmt" %% "org.tmt.csw.cs.api" % "1.0",

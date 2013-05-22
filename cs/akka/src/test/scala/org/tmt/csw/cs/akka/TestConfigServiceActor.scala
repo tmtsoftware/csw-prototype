@@ -61,7 +61,7 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
     val manager = getTestRepo
 
     // Create the actor
-    val configServiceActor = system.actorOf(Props(ConfigServiceActor(manager)), name = "configManager")
+    val configServiceActor = system.actorOf(Props(ConfigServiceActor(manager)), name = "configService")
 
     // Should throw exception if we try to update a file that does not exist
     intercept[IOException] {
