@@ -1,4 +1,4 @@
-// Defines the global build settings so they don't need to be repeated everywhere
+// Defines the global build settings so they don't need to be edited everywhere
 trait Settings {
   val Organization = "org.tmt"
   val Version = "1.0"

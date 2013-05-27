@@ -17,24 +17,25 @@ case class DeleteRequest(path: String, comment: String = "deleted") extends Conf
 case class ListRequest() extends ConfigServiceRequest
 case class HistoryRequest(path: String) extends ConfigServiceRequest
 
-// Result messages sent by the Config Service actor
-sealed trait ConfigServiceResult
-case class CreateResult(result: ConfigId) extends ConfigServiceResult
-case class UpdateResult(result: ConfigId) extends ConfigServiceResult
-case class GetResult(result: Option[ConfigData]) extends ConfigServiceResult
-case class ExistsResult(result: Boolean) extends ConfigServiceResult
-case object DeleteResult extends ConfigServiceResult
-case class ListResult(result: List[ConfigFileInfo]) extends ConfigServiceResult
-case class HistoryResult(result: List[ConfigFileHistory]) extends ConfigServiceResult
-
-
+/**
+ * Defines apply methods for creating a ConfigServiceActor instance
+ */
 object ConfigServiceActor {
 
+  /**
+   * Initialize with the given ConfigManager
+   */
   def apply(configManager: ConfigManager) : ConfigServiceActor = new ConfigServiceActor(Some(configManager))
 
+  /**
+   * Initialize with the local repository directory and the path or URI for the main repository
+   */
   def apply(gitLocalRepository: File, gitMainRepository: String) : ConfigServiceActor
     = new ConfigServiceActor(Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
 
+  /**
+   * Initializes using the default Git repository (configured in resources/reference.conf)
+   */
   def apply() : ConfigServiceActor = new ConfigServiceActor(None)
 
   /**
@@ -52,6 +53,7 @@ object ConfigServiceActor {
  */
 class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor {
 
+  // The ConfigManager instance used to access the Git repository
   val configManager = {
     configManagerOpt match {
       case Some(m) => m
@@ -59,6 +61,10 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor 
     }
   }
 
+  /**
+   * Receive actor messages and send replies (via reply method).
+   * The senders should use "?" (ask) and the response will be a Future containing the result (or an exception).
+   */
   def receive = {
     case request: ConfigServiceRequest => reply(sender, request)
     case _ => sender ! Status.Failure(new IllegalArgumentException)
@@ -72,13 +78,13 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor 
   def reply(sender: ActorRef, request: ConfigServiceRequest) {
     try {
       request match {
-        case CreateRequest(path, configData, comment) => sender ! CreateResult(configManager.create(path, configData, comment))
-        case UpdateRequest(path, configData, comment) => sender ! UpdateResult(configManager.update(path, configData, comment))
-        case GetRequest(path, id) => sender ! GetResult(configManager.get(path, id))
-        case ExistsRequest(path) => sender ! ExistsResult(configManager.exists(path))
-        case DeleteRequest(path, comment) => configManager.delete(path, comment); sender ! DeleteResult
-        case ListRequest() => sender ! ListResult(configManager.list())
-        case HistoryRequest(path) => sender ! HistoryResult(configManager.history(path))
+        case CreateRequest(path, configData, comment) => sender ! configManager.create(path, configData, comment)
+        case UpdateRequest(path, configData, comment) => sender ! configManager.update(path, configData, comment)
+        case GetRequest(path, id) => sender ! configManager.get(path, id)
+        case ExistsRequest(path) => sender ! configManager.exists(path)
+        case DeleteRequest(path, comment) => sender ! configManager.delete(path, comment)
+        case ListRequest() => sender ! configManager.list()
+        case HistoryRequest(path) => sender ! configManager.history(path)
       }
     } catch {
       case e: Exception =>

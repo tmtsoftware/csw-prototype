@@ -3,11 +3,11 @@ package org.tmt.csw.test.app
 import akka.actor.Actor
 import akka.util.Timeout
 import scala.concurrent.duration._
-import org.tmt.csw.cs.akka.{CreateResult, CreateRequest, GetResult, GetRequest}
+import org.tmt.csw.cs.akka._
 import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.Option
-import org.tmt.csw.cs.api.ConfigData
+import org.tmt.csw.cs.api.{ConfigId, ConfigData}
 import org.tmt.csw.cs.core.ConfigString
 
 // A test actor used to send messages to the config service
@@ -20,26 +20,16 @@ class TestActor extends Actor {
   def receive = {
     case Start =>
       val future = ActorFactory.configServiceActor ? GetRequest(configFileName)
-      future.onSuccess {
-//        case GetResult(Some(configData)) => readConfigFile(configData)
-//        case GetResult(None) => createNewConfigFile()
-          case GetResult(opt) => readConfigFile(opt)
+      future onSuccess {
+        case Some(configData) => readConfigFile(configData.asInstanceOf[ConfigData])
         case _ => println("XXX unexpected result?")
       }
-      future.onFailure {
+      future onFailure {
         case e: Exception => {
           println("XXX Get got exception: " + e)
           e.printStackTrace()
         }
       }
-  }
-
-  def readConfigFile(configData: Option[ConfigData]) {
-    println("XXX Get => " + configData)
-    configData match {
-      case Some(configData) => readConfigFile(configData)
-      case None => createNewConfigFile()
-    }
   }
 
   def readConfigFile(configData: ConfigData) {
@@ -50,11 +40,11 @@ class TestActor extends Actor {
     println("XXX Get => None: make new config file")
     val configData = new ConfigString("# TestApp Settings\n\nkey1 = value1\nkey2 = value2\n")
     val future = ActorFactory.configServiceActor ? CreateRequest(configFileName, configData)
-    future.onSuccess {
-      case CreateResult(id) => println("XXX created new config file")
+    future onSuccess {
+      case id: ConfigId => println("XXX created new config file")
       case _ => println("XXX unexpected result?")
     }
-    future.onFailure {
+    future onFailure {
       case e: Exception => {
         println("XXX Create got exception: " + e)
         e.printStackTrace()

@@ -1,8 +1,7 @@
 package org.tmt.csw.cs.akka
 
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import java.util.Date
-import java.io.{File, IOException}
+import java.io.IOException
 import org.tmt.csw.cs.core.ConfigString
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
@@ -11,8 +10,7 @@ import scala.concurrent.duration._
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.Some
-import org.tmt.csw.cs.core.git.GitConfigManager
-import org.tmt.csw.cs.api.ConfigManager
+import org.tmt.csw.cs.api._
 
 /**
  * Tests the Config Service actor
@@ -30,35 +28,15 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
   val comment2 = "update 1 comment"
   val comment3 = "update 2 comment"
 
-  val startTime = new Date().getTime
-
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
 
-  // Create a temporary test Git repository and a bare main repository for push/pull
-  private def getTestRepo : ConfigManager = {
-    // Create the temporary Git repos for the test
-    val tmpDir = System.getProperty("java.io.tmpdir")
-    val gitDir = new File(tmpDir, "cstest")
-
-    // val gitMainRepo = "git@localhost:project.git"
-    val gitMainRepo = new File(tmpDir, "cstestMainRepo")
-    println("Local repo = " + gitDir + ", remote = " + gitMainRepo)
-
-    // Delete the main and local test repositories (Only use this in test cases!)
-    GitConfigManager.deleteLocalRepo(gitMainRepo)
-    GitConfigManager.initBareRepo(gitMainRepo)
-    GitConfigManager.deleteLocalRepo(gitDir)
-
-    // create a new repository and use it to create the actor
-    GitConfigManager(gitDir, gitMainRepo.getPath)
-  }
-
   // Note: Using blocking (Await) for this test, so we can compare return values easily.
-  // Applications won't always need to block while waiting...
+  // Applications should not need to block while waiting. See TestConfigServiceClient in this directory
+  // for a different way of doing it.
   test("Test the ConfigServiceActor, storing and retrieving some files") {
     // create a test repository and use it to create the actor
-    val manager = getTestRepo
+    val manager = TestRepo.getConfigManager("test1")
 
     // Create the actor
     val configServiceActor = system.actorOf(Props(ConfigServiceActor(manager)), name = "configService")
@@ -67,77 +45,77 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
     intercept[IOException] {
       Await.result(configServiceActor ?
         UpdateRequest(path1, new ConfigString(contents2), comment2),
-        duration).asInstanceOf[UpdateResult].result
+        duration).asInstanceOf[ConfigId]
     }
 
     // Add, then update the file twice
     val createId1 = Await.result(configServiceActor ?
       CreateRequest(path1, new ConfigString(contents1), comment1),
-      duration).asInstanceOf[CreateResult].result
+      duration).asInstanceOf[ConfigId]
 
     val createId2 = Await.result(configServiceActor ?
       CreateRequest(path2, new ConfigString(contents1), comment1),
-      duration).asInstanceOf[CreateResult].result
+      duration).asInstanceOf[ConfigId]
 
     val updateId1 = Await.result(configServiceActor ?
       UpdateRequest(path1, new ConfigString(contents2), comment2),
-      duration).asInstanceOf[UpdateResult].result
+      duration).asInstanceOf[ConfigId]
 
     val updateId2 = Await.result(configServiceActor ?
       UpdateRequest(path1, new ConfigString(contents3), comment3),
-      duration).asInstanceOf[UpdateResult].result
+      duration).asInstanceOf[ConfigId]
 
     // Should throw exception if we try to create a file that already exists
     intercept[IOException] {
       Await.result(configServiceActor ?
         CreateRequest(path1, new ConfigString(contents2), comment2),
-        duration).asInstanceOf[CreateResult].result
+        duration).asInstanceOf[ConfigId]
     }
 
     // Check that we can access each version
     val option1 = Await.result(configServiceActor ?
       GetRequest(path1),
-      duration).asInstanceOf[GetResult].result
+      duration).asInstanceOf[Option[ConfigData]]
     assert(!option1.isEmpty)
     assert(option1.get.toString == contents3)
 
     val option2 = Await.result(configServiceActor ?
       GetRequest(path1, Some(createId1)),
-      duration).asInstanceOf[GetResult].result
+      duration).asInstanceOf[Option[ConfigData]]
     assert(!option2.isEmpty)
     assert(option2.get.toString == contents1)
 
     val option3 = Await.result(configServiceActor ?
       GetRequest(path1, Some(updateId1)),
-      duration).asInstanceOf[GetResult].result
+      duration).asInstanceOf[Option[ConfigData]]
     assert(!option3.isEmpty)
     assert(option3.get.toString == contents2)
 
     val option4 = Await.result(configServiceActor ?
       GetRequest(path1, Some(updateId2)),
-      duration).asInstanceOf[GetResult].result
+      duration).asInstanceOf[Option[ConfigData]]
     assert(!option4.isEmpty)
     assert(option4.get.toString == contents3)
 
     val option5 = Await.result(configServiceActor ?
       GetRequest(path2),
-      duration).asInstanceOf[GetResult].result
+      duration).asInstanceOf[Option[ConfigData]]
     assert(!option5.isEmpty)
     assert(option5.get.toString == contents1)
 
     val option6 = Await.result(configServiceActor ?
       GetRequest(path2, Some(createId2)),
-      duration).asInstanceOf[GetResult].result
+      duration).asInstanceOf[Option[ConfigData]]
     assert(!option6.isEmpty)
     assert(option6.get.toString == contents1)
 
     // test history()
     val historyList1 = Await.result(configServiceActor ?
       HistoryRequest(path1),
-      duration).asInstanceOf[HistoryResult].result
+      duration).asInstanceOf[List[ConfigFileHistory]]
     val historyList2 = Await.result(configServiceActor ?
       HistoryRequest(path2),
-      duration).asInstanceOf[HistoryResult].result
+      duration).asInstanceOf[List[ConfigFileHistory]]
 
     assert(historyList1.size >= 3)
     assert(historyList2.size >= 1)
@@ -150,7 +128,7 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
     // Test list()
     val list = Await.result(configServiceActor ?
       ListRequest(),
-      duration).asInstanceOf[ListResult].result
+      duration).asInstanceOf[List[ConfigFileInfo]]
     assert(list.size == 2)
     for (info <- list) {
       info.path match {
@@ -166,17 +144,17 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
 
     // Test getting history of document that has been deleted
     Await.result(configServiceActor ? DeleteRequest(path1, "test delete"), duration)
-    assert(!Await.result(configServiceActor ? ExistsRequest(path1), duration).asInstanceOf[ExistsResult].result)
+    assert(!Await.result(configServiceActor ? ExistsRequest(path1), duration).asInstanceOf[Boolean])
 
     Await.result(configServiceActor ? DeleteRequest(path2), duration)
-    assert(!Await.result(configServiceActor ? ExistsRequest(path2), duration).asInstanceOf[ExistsResult].result)
+    assert(!Await.result(configServiceActor ? ExistsRequest(path2), duration).asInstanceOf[Boolean])
 
     val historyList1d = Await.result(configServiceActor ?
       HistoryRequest(path1),
-      duration).asInstanceOf[HistoryResult].result
+      duration).asInstanceOf[List[ConfigFileHistory]]
     val historyList2d = Await.result(configServiceActor ?
       HistoryRequest(path2),
-      duration).asInstanceOf[HistoryResult].result
+      duration).asInstanceOf[List[ConfigFileHistory]]
 
     assert(historyList1d.size == 3)
     assert(historyList2d.size == 1)
@@ -197,20 +175,20 @@ class TestConfigServiceActor extends TestKit(ActorSystem("mySystem")) with Impli
 //
 //    val exists1 = Await.result(configServiceActor ?
 //      ExistsRequest(path1),
-//      duration).asInstanceOf[ExistsResult].result
+//      duration).asInstanceOf[ExistsResult]
 //
 //    if (!exists1) {
 //      val createId1 = Await.result(configServiceActor ?
 //        CreateRequest(path1, new ConfigString(contents), comment),
-//        duration).asInstanceOf[CreateResult].result
+//        duration).asInstanceOf[CreateResult]
 //    } else {
 //      val updateId1 = Await.result(configServiceActor ?
 //        UpdateRequest(path1, new ConfigString(contents), comment),
-//        duration).asInstanceOf[UpdateResult].result
+//        duration).asInstanceOf[UpdateResult]
 //    }
 //    val option = Await.result(configServiceActor ?
 //      GetRequest(path1),
-//      duration).asInstanceOf[GetResult].result
+//      duration).asInstanceOf[GetResult]
 //    assert(!option.isEmpty)
 //    assert(option.get.toString == contents)
 //  }

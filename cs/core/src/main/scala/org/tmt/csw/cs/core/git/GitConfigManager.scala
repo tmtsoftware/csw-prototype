@@ -28,7 +28,7 @@ object GitConfigManager {
    * URI as the remote, central Git repository.
    * If the local repository already exists, it is opened, otherwise it is created.
    * An exception is thrown if the remote repository does not exist.
-   * <p>
+   *
    * The defaults in this case are stored in the config.prop file in this package under resources.
    *
    * @return a new GitConfigManager configured to use the default local and remote repositories
@@ -153,6 +153,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     val file = fileForPath(path)
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path).call()
+//    git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfigfor now
     git.commit().setMessage(comment).call
     git.push.call()
     GitConfigId(dirCache.getEntry(path).getObjectId.getName)
@@ -228,8 +229,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
     while (treeWalk.next) {
       val path = treeWalk.getPathString
       val objectId = treeWalk.getObjectId(0).name
-      // TODO: Include create comment (history(path)(0).comment)
-      // or latest comment (history(path).last.comment)?
+      // TODO: Include create comment (history(path)(0).comment) or latest comment (history(path).last.comment)?
       val info = new ConfigFileInfo(path, GitConfigId(objectId), history(path).last.comment)
       result = info :: result
     }
@@ -270,7 +270,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
   }
 
   private def writeToFile(file: File, configData: ConfigData) {
-    Resource.fromFile(file).truncate(0L); // XXX FIXME: according to docs, this should happen below, but does not!
+    Resource.fromFile(file).truncate(0L); // according to docs, this should happen below, but does not!
     Resource.fromFile(file).write(configData.getBytes)
   }
 }
