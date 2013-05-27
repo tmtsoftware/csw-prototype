@@ -10,12 +10,14 @@ import org.eclipse.jgit.storage.file.FileRepository
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
 import org.tmt.csw.cs.api._
-import aQute.bnd.annotation.component.Component
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
 import org.tmt.csw.cs.core.GitConfigId
 import scala.Some
 import org.tmt.csw.cs.api.ConfigFileHistory
 import org.tmt.csw.cs.api.ConfigFileInfo
+
+//import aQute.bnd.annotation.component.Component
+
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -108,7 +110,7 @@ object GitConfigManager {
 /**
  * Uses JGit to manage versions of configuration files
  */
-@Component
+//@Component
 class GitConfigManager(val git: Git) extends ConfigManager {
 
   /**

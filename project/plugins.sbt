@@ -5,7 +5,5 @@ resolvers ++= Seq(
 
 addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.3.0")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.5.0")
-
 addSbtPlugin("com.typesafe.akka" % "akka-sbt-plugin" % "2.2-SNAPSHOT")
 
