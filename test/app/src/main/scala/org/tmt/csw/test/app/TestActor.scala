@@ -3,12 +3,11 @@ package org.tmt.csw.test.app
 import akka.actor.Actor
 import akka.util.Timeout
 import scala.concurrent.duration._
-import org.tmt.csw.cs.akka._
 import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.Option
 import org.tmt.csw.cs.api.{ConfigId, ConfigData}
 import org.tmt.csw.cs.core.ConfigString
+import org.tmt.csw.cs.akka.ConfigServiceActor._
 
 // A test actor used to send messages to the config service
 class TestActor extends Actor {

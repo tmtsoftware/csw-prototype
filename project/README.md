@@ -7,6 +7,7 @@ Note that a build trait extends the traits of any other builds that it depends o
 
 * Csw - top level build
 * Cs - top level build for the Configuration Service subproject
+* Cmd - top level build for the Command Service subproject
 * Settings - defines global settings used in all build files
 * Test - defines an example standalone test application based on the Akka microkernel
 * build.properties - defines the sbt version

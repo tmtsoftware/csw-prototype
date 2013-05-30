@@ -1,7 +1,7 @@
-Configuration Service
+Command Service
 =====================
 
-This module implements the Configuration Service, which is used to manage configuration files by storing them in a Git repository.
+This module implements the Command Service, which is used to send commands to actors.
 
 Modules:
 --------

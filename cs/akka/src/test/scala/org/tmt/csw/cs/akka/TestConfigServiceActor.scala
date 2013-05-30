@@ -11,6 +11,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.Some
 import org.tmt.csw.cs.api._
+import ConfigServiceActor._
 
 /**
  * Tests the Config Service actor

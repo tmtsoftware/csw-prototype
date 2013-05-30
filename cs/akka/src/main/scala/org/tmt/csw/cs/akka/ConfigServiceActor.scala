@@ -3,24 +3,22 @@ package org.tmt.csw.cs.akka
 import akka.actor._
 import org.tmt.csw.cs.api._
 import org.tmt.csw.cs.core.git.GitConfigManager
-import org.tmt.csw.cs.api.ConfigFileHistory
-import org.tmt.csw.cs.api.ConfigFileInfo
 import java.io.File
-
-// Messages received by the Config Service actor
-sealed trait ConfigServiceRequest
-case class CreateRequest(path: String, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
-case class UpdateRequest(path: String, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
-case class GetRequest(path: String, id: Option[ConfigId] = None) extends ConfigServiceRequest
-case class ExistsRequest(path: String) extends ConfigServiceRequest
-case class DeleteRequest(path: String, comment: String = "deleted") extends ConfigServiceRequest
-case class ListRequest() extends ConfigServiceRequest
-case class HistoryRequest(path: String) extends ConfigServiceRequest
+import ConfigServiceActor._
 
 /**
  * Defines apply methods for creating a ConfigServiceActor instance
  */
 object ConfigServiceActor {
+  // Messages received by the Config Service actor
+  sealed trait ConfigServiceRequest
+  case class CreateRequest(path: String, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
+  case class UpdateRequest(path: String, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
+  case class GetRequest(path: String, id: Option[ConfigId] = None) extends ConfigServiceRequest
+  case class ExistsRequest(path: String) extends ConfigServiceRequest
+  case class DeleteRequest(path: String, comment: String = "deleted") extends ConfigServiceRequest
+  case class ListRequest() extends ConfigServiceRequest
+  case class HistoryRequest(path: String) extends ConfigServiceRequest
 
   /**
    * Initialize with the given ConfigManager
@@ -57,7 +55,7 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor 
   val configManager = {
     configManagerOpt match {
       case Some(m) => m
-      case None => ConfigServiceActor.defaultConfigManager(Settings(context.system))
+      case None => defaultConfigManager(Settings(context.system))
     }
   }
 
