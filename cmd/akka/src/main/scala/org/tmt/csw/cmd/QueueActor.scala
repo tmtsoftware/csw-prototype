@@ -8,8 +8,8 @@ import QueueActor._
 object QueueActor {
   // Actor messages received
   sealed trait QueueActorMessage
-  case class QueueSubmit(commandConfig : CommandConfig) extends QueueActorMessage
-  case class QueueRequest(commandConfig : CommandConfig) extends QueueActorMessage
+  case class QueueSubmit(queueConfig : QueueConfig) extends QueueActorMessage
+  case class QueueRequest(queueConfig : QueueConfig) extends QueueActorMessage
   case class QueueStop() extends QueueActorMessage
   case class QueuePause() extends QueueActorMessage
   case class QueueStart() extends QueueActorMessage
@@ -25,7 +25,7 @@ object QueueActor {
 
 /**
  * Manages the command queue for the given OMOA component.
- * CommandConfig objects are placed on the queue when received.
+ * QueueConfig objects are placed on the queue when received.
  * Later, each config is dequeued and passed to the component for processing.
  */
 class QueueActor(component: OmoaComponent) extends Actor {
@@ -36,9 +36,9 @@ class QueueActor(component: OmoaComponent) extends Actor {
   private var queueState : QueueState = Started()
 
   def receive = {
-    case QueueSubmit(commandConfig) => queueSubmit(commandConfig)
+    case QueueSubmit(queueConfig) => queueSubmit(queueConfig)
     case CheckQueue => checkQueue()
-    case QueueRequest(config) => queueRequest(config)
+    case QueueRequest(queueConfig) => queueRequest(queueConfig)
     case QueueStop() => queueStop()
     case QueuePause() => queuePause()
     case QueueStart() => queueStart()
@@ -47,7 +47,7 @@ class QueueActor(component: OmoaComponent) extends Actor {
   }
 
   // Queue the given config for later execution and return the runId to the sender
-  private def queueSubmit(config: CommandConfig) {
+  private def queueSubmit(config: QueueConfig) {
     if (queueState != Stopped()) {
       queueMap(config.runId) = config.configs
       sender ! CommandStatus.StatusQueued(config.runId)
@@ -70,12 +70,12 @@ class QueueActor(component: OmoaComponent) extends Actor {
   }
 
   // Request immediate execution of the given configs
-  private def queueRequest(msg: CommandConfig) {
+  private def queueRequest(msg: QueueConfig) {
     matchConfigs(msg.runId, msg.configs)
   }
 
   // Request immediate execution of the given configs
-  // XXX TODO: this be done in an worker actor?
+  // XXX TODO: should this be done in an worker actor (so it can be killed)?
   private def matchConfigs(runId: RunId, configs: Seq[Config]) {
     try {
       configs.foreach {

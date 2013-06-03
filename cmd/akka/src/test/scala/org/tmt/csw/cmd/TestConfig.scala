@@ -1,10 +1,11 @@
 package org.tmt.csw.cmd
 
 import org.scalatest.FunSuite
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ConfigRenderOptions, ConfigFactory}
 import java.io.StringReader
+import scala.collection.JavaConverters._
 
-object TestSettings {
+object TestConfig {
   val testConfig =
     """
       |    # In this file you can override any option defined in the reference files.
@@ -45,15 +46,33 @@ object TestSettings {
 /**
  * Test the Confog object
   */
-class TestSettings extends FunSuite {
+class TestConfig extends FunSuite {
 
 
   test("Test using the Akka Config classes to parse a config from a string") {
     // A test config file taken from the Akka docs
 
-    val config = ConfigFactory.parseReader(new StringReader(TestSettings.testConfig))
+    val config = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
     assert(config.getStringList("akka.loggers").get(0) == "akka.event.slf4j.Slf4jLogger")
     assert(config.getString("akka.loglevel") == "DEBUG")
     assert(config.getInt("akka.actor.default-dispatcher.throughput") == 10)
+  }
+
+
+
+  test("Test creating a config in code") {
+    val simplePathMapValue = Map("x.y" -> 4, "z" -> 5).asInstanceOf[Map[String, AnyRef]].asJava
+    val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
+
+    val conf = ConfigFactory.parseMap(pathMapValue)
+
+    assert(2 == conf.root.size)
+    assert(4 == conf.getInt("b.x.y"))
+    assert(5 == conf.getInt("b.z"))
+    assert(1 == conf.getInt("a.c"))
+
+    val options = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
+    assert("b{z=5,x{y=4}},a{c=1}" == conf.root.render(options))
+    assert("z=5,x{y=4}" == conf.root.get("b").render(options))
   }
 }

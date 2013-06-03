@@ -7,8 +7,12 @@ import akka.actor.{Status, Actor}
 /**
  * Interface for OMOA components that carry out queued commands
  */
-abstract class OmoaComponent {
+trait OmoaComponent {
 
+  /**
+   * The unique name of the component
+   */
+  def getName : String
 
   /**
    * A target OMOA component uses the Setup Config information to configure the target OMOA component.

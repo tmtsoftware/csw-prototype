@@ -6,12 +6,17 @@ import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ConfigRenderOptions, Config, ConfigFactory}
 import java.io.StringReader
 import scala.concurrent.Await
 
 
 class TestComponent extends OmoaComponent {
+  /**
+   * The unique name of the component
+   */
+  def getName: String = "TestComponent"
+
   /**
    * A target OMOA component uses the Setup Config information to configure the target OMOA component.
    * The phrase used to describe this is a component must match the Config. In a recursive way, it can
@@ -21,8 +26,10 @@ class TestComponent extends OmoaComponent {
    * and Submits the new Configs to other SECs, Assemblies or HCDs and tracks their progress.
    */
   def matchConfig(config: Config) {
-    println("XXX TestComponent: matchConfig: " + config.toString)
+    val options = ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setJson(false).setFormatted(false)
+    println("XXX TestComponent: matchConfig: " + config.root.render(options))
   }
+
 }
 
 /**
@@ -35,13 +42,13 @@ class TestCommandServiceActor extends TestKit(ActorSystem("mySystem")) with Impl
   test("Test the CommandServiceActor") {
 
     // Create the actor
-    val commandServiceActor = system.actorOf(Props(new CommandServiceActor()), name = "commandService")
+    val component = new TestComponent()
+    val commandServiceActor = system.actorOf(Props(new CommandServiceActor(component)), name = "commandService")
 
     // Queue a command
-    val config = ConfigFactory.parseReader(new StringReader(TestSettings.testConfig))
-    val component = new TestComponent()
+    val config = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
     val runId = Await.result(commandServiceActor ?
-      CommandServiceActor.QueueSubmit(component, config),
+      CommandServiceActor.QueueSubmit(config),
       duration).asInstanceOf[RunId]
 
     println("XXX got runId: " + runId)
