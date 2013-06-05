@@ -1,4 +1,4 @@
-package org.tmt.csw.cmd
+package org.tmt.csw.cmd.akka
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{Props, ActorSystem}
@@ -9,6 +9,7 @@ import akka.pattern.ask
 import com.typesafe.config.{ConfigRenderOptions, Config, ConfigFactory}
 import java.io.StringReader
 import scala.concurrent.Await
+import org.tmt.csw.cmd.{RunId, CommandServiceActor}
 
 
 class TestComponent extends OmoaComponent {
@@ -28,6 +29,10 @@ class TestComponent extends OmoaComponent {
   def matchConfig(config: Config) {
     val options = ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setJson(false).setFormatted(false)
     println("XXX TestComponent: matchConfig: " + config.root.render(options))
+    for( a <- 1 to 3){
+      Thread.sleep(1000)
+      println("XXX Sleeping")
+    }
   }
 
 }
@@ -38,6 +43,7 @@ class TestComponent extends OmoaComponent {
 class TestCommandServiceActor extends TestKit(ActorSystem("mySystem")) with ImplicitSender with FunSuite with BeforeAndAfterAll {
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
+  implicit val dispatcher = system.dispatcher
 
   test("Test the CommandServiceActor") {
 
@@ -47,11 +53,27 @@ class TestCommandServiceActor extends TestKit(ActorSystem("mySystem")) with Impl
 
     // Queue a command
     val config = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
-    val runId = Await.result(commandServiceActor ?
-      CommandServiceActor.QueueSubmit(config),
-      duration).asInstanceOf[RunId]
+//    val runId = Await.result(commandServiceActor ?
+//      CommandServiceActor.QueueSubmit(config),
+//      duration).asInstanceOf[RunId]
+//    println("XXX got runId: " + runId)
 
-    println("XXX got runId: " + runId)
+    val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config)
+    f onSuccess {
+      case runId: RunId =>
+        println("XXX got runId: " + runId)
+        Thread.sleep(3000)
+        commandServiceActor ! CommandServiceActor.QueueStop
+        system.shutdown()
+    }
+    f onFailure {
+      case e: Exception =>
+        e.printStackTrace()
+        system.shutdown()
+    }
+
+     // Wait for above to complete!
+     system.awaitTermination()
   }
 
 }

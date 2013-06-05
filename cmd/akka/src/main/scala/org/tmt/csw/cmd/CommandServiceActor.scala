@@ -1,13 +1,17 @@
 package org.tmt.csw.cmd
 
-import akka.actor.{ActorRef, Props, Status, Actor}
+import akka.actor._
 import com.typesafe.config.Config
-import scala.collection.mutable
 import akka.pattern.ask
 import scala.concurrent.Future
-import CommandServiceActor._
 import akka.util.Timeout
 import scala.concurrent.duration._
+import org.tmt.csw.cmd.CommandServiceActor.QueuePause
+import org.tmt.csw.cmd.CommandServiceActor.QueueStop
+import org.tmt.csw.cmd.CommandServiceActor.QueueDelete
+import org.tmt.csw.cmd.CommandServiceActor.QueueStart
+import org.tmt.csw.cmd.CommandServiceActor.QueueSubmit
+import org.tmt.csw.cmd.CommandServiceActor.QueueRequest
 
 /**
  * Contains actor messages received
@@ -76,6 +80,7 @@ class CommandServiceActor(component: OmoaComponent) extends Actor {
    */
   private def queueStop() {
     queueActor ! QueueActor.QueueStop()
+    queueActor ! Kill
   }
 
   /**

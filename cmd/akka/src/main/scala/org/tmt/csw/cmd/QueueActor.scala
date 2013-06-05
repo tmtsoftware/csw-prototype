@@ -63,7 +63,6 @@ class QueueActor(component: OmoaComponent) extends Actor {
       while (!queueMap.isEmpty) {
         val (runId, configs) = queueMap.iterator.next()
         queueMap.remove(runId)
-        sender ! CommandStatus.StatusBusy(runId)
         matchConfigs(runId, configs)
       }
     }
@@ -77,6 +76,7 @@ class QueueActor(component: OmoaComponent) extends Actor {
   // Request immediate execution of the given configs
   // XXX TODO: should this be done in an worker actor (so it can be killed)?
   private def matchConfigs(runId: RunId, configs: Seq[Config]) {
+    sender ! CommandStatus.StatusBusy(runId)
     try {
       configs.foreach {
         component.matchConfig(_)
