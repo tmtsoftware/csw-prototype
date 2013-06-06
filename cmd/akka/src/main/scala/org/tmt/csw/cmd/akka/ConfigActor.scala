@@ -1,8 +1,8 @@
-package org.tmt.csw.cmd
+package org.tmt.csw.cmd.akka
 
 import akka.actor.Actor
 import ConfigActor._
-import com.typesafe.config.Config
+import org.tmt.csw.cmd.core.Configuration
 
 object ConfigActor {
   // TMT Standard Configuration Interaction Commands
@@ -30,7 +30,7 @@ class ConfigActor(component: OmoaComponent) extends Actor {
 
   // Request immediate execution of the given configs
   // XXX TODO: should this be done in an worker actor (so it can be killed)?
-  private def configSubmit(runId: RunId, configs: Seq[Config]) {
+  private def configSubmit(runId: RunId, configs: Seq[Configuration]) {
     sender ! CommandStatus.StatusBusy(runId)
     try {
       configs.foreach {

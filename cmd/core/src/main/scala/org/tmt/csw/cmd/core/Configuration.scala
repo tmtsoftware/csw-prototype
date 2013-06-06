@@ -92,7 +92,8 @@ class Configuration(config : Config) {
   def getBytesList(path: String) = config.getBytesList(path)
   def getMillisecondsList(path: String) = config.getMillisecondsList(path)
   def getNanosecondsList(path: String) = config.getNanosecondsList(path)
-  def format = config.root.render(Configuration.formatOptions)
+  def format() = config.root.render(Configuration.formatOptions)
+  def asMap(path: String) = config.getConfig(path).root().unwrapped()
   override def toString = config.root.render(Configuration.toStringOptions)
 
   /**
@@ -110,8 +111,15 @@ class Configuration(config : Config) {
   }
 
   /**
+   * Returns a new Configuration with the given path set to the given map of values
+   */
+  def withValue(path: String, value: Map[String, Any]) : Configuration = {
+    Configuration(config.withValue(path, ConfigValueFactory.fromMap(Configuration.toJavaMap(value))))
+  }
+
+  /**
    * Returns a new Configuration with configId set to the given value
-   * in the $root.info section (where $root is the top level key).
+   * in the root.info section (where root is the top level key).
    * For wait configs, the value is put in the top level.
    */
   def withConfigId(configId: Int) : Configuration = {
@@ -122,7 +130,7 @@ class Configuration(config : Config) {
 
   /**
    * Returns a new Configuration with obsId set to the given value
-   * in the $root.info section (where $root is the top level key).
+   * in the root.info section (where root is the top level key).
    * For wait configs, the value is put in the top level.
    */
   def withObsId(obsId: String) : Configuration = {

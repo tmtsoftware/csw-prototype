@@ -1,4 +1,4 @@
-package org.tmt.csw.cmd
+package org.tmt.csw.cmd.akka
 
 /**
  * Command Status Messages

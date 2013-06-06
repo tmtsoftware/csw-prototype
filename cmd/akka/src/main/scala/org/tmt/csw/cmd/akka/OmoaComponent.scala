@@ -1,8 +1,6 @@
-package org.tmt.csw.cmd
+package org.tmt.csw.cmd.akka
 
-import com.typesafe.config.Config
-import scala.collection.mutable
-import akka.actor.{Status, Actor}
+import org.tmt.csw.cmd.core.Configuration
 
 /**
  * Interface for OMOA components that carry out queued commands
@@ -22,6 +20,6 @@ trait OmoaComponent {
    * in one or more Assemblies or HCDs. To pass it on, the SEC breaks the Config apart into new Configs
    * and Submits the new Configs to other SECs, Assemblies or HCDs and tracks their progress.
    */
-  def matchConfig(config: Config)
+  def matchConfig(config: Configuration)
 }
 

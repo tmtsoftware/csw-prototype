@@ -1,9 +1,9 @@
-package org.tmt.csw.cmd
+package org.tmt.csw.cmd.akka
 
 import akka.actor.{Status, Actor}
 import scala.collection.mutable
-import com.typesafe.config.Config
 import QueueActor._
+import org.tmt.csw.cmd.core.Configuration
 
 object QueueActor {
   // Actor messages received
@@ -31,7 +31,7 @@ object QueueActor {
 class QueueActor(component: OmoaComponent) extends Actor {
 
   // The queue for this OMOA component
-  private val queueMap = mutable.LinkedHashMap[RunId, Seq[Config]]()
+  private val queueMap = mutable.LinkedHashMap[RunId, Seq[Configuration]]()
 
   private var queueState : QueueState = Started()
 
@@ -75,7 +75,7 @@ class QueueActor(component: OmoaComponent) extends Actor {
 
   // Request immediate execution of the given configs
   // XXX TODO: should this be done in an worker actor (so it can be killed)?
-  private def matchConfigs(runId: RunId, configs: Seq[Config]) {
+  private def matchConfigs(runId: RunId, configs: Seq[Configuration]) {
     sender ! CommandStatus.StatusBusy(runId)
     try {
       configs.foreach {

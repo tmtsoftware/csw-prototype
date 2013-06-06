@@ -102,4 +102,21 @@ class TestConfiguration extends FunSuite {
     assert("wait{obsId=\"TMT-2021A-C-2-1\",forResume=true,configId=1000233}" == conf.toString)
   }
 
+  test("Adding values to a Configuration") {
+    val conf = Configuration(
+      Map("config" ->
+        Map("tmt.tel.base.pos" -> Map("posName" -> "NGC738B", "c1" -> "22:35:58.530", "c2" -> "33:57:55.40", "equinox" -> "J2000"))))
+
+    val map = conf.asMap("config.tmt.tel.base.pos") ++ Map("key1" -> "value1", "key2" -> 42)
+    val conf2 = conf.withValue("config.tmt.tel.base.pos", map.toMap)
+    assert("value1" == conf2.getString("config.tmt.tel.base.pos.key1"))
+    assert(42 == conf2.getInt("config.tmt.tel.base.pos.key2"))
+
+    val conf3 = conf2.withValue("config.tmt.tel.ao.pos.one", Map("c1" -> "22:356:01.066", "c2" -> "33:58:21.69", "equinox" -> "J2000"))
+
+    assert("NGC738B" == conf3.getString("config.tmt.tel.base.pos.posName"))
+    assert("22:356:01.066" == conf3.getString("config.tmt.tel.ao.pos.one.c1"))
+    assert("33:58:21.69" == conf3.getString("config.tmt.tel.ao.pos.one.c2"))
+    assert("J2000" == conf3.getString("config.tmt.tel.ao.pos.one.equinox"))
+  }
 }
