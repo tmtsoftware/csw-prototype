@@ -8,9 +8,9 @@ object Configuration {
   val toStringOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
   val formatOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
 
-//  def waitConfig() : Configuration {
-//
-//  }
+  def waitConfig(forResume: Boolean, configId: Int, obsId: String) : Configuration = {
+    Configuration(Map("wait" -> Map("forResume" -> forResume, "configId" -> configId, "obsId" -> obsId)))
+  }
 
   /**
    * Initialize with an existing typesafe Config object
@@ -112,17 +112,23 @@ class Configuration(config : Config) {
   /**
    * Returns a new Configuration with configId set to the given value
    * in the $root.info section (where $root is the top level key).
+   * For wait configs, the value is put in the top level.
    */
   def withConfigId(configId: Int) : Configuration = {
-    withValue(rootKey() + "." + "info.configId", configId)
+    val root = rootKey()
+    val info = if (rootKey == "wait") "" else ".info"
+    withValue(root + info + ".configId", configId)
   }
 
   /**
    * Returns a new Configuration with obsId set to the given value
    * in the $root.info section (where $root is the top level key).
+   * For wait configs, the value is put in the top level.
    */
   def withObsId(obsId: String) : Configuration = {
-    withValue(rootKey() + "." + "info.obsId", obsId)
+    val root = rootKey()
+    val info = if (rootKey == "wait") "" else ".info"
+    withValue(root + info + ".obsId", obsId)
   }
 }
 

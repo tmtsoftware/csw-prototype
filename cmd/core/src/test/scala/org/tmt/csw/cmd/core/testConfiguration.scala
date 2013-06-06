@@ -97,5 +97,9 @@ class TestConfiguration extends FunSuite {
     assert("1000233" == conf.getString("config.info.configId"))
   }
 
+  test("Wait config") {
+    val conf = Configuration.waitConfig(true, 1000233, "TMT-2021A-C-2-1")
+    assert("wait{obsId=\"TMT-2021A-C-2-1\",forResume=true,configId=1000233}" == conf.toString)
+  }
 
 }
