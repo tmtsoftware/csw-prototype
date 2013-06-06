@@ -1,12 +1,16 @@
 package org.tmt.csw.cmd.core
 
-import com.typesafe.config.{ConfigRenderOptions, ConfigFactory, Config}
-import java.io.{FileReader, File, StringReader}
+import com.typesafe.config._
+import java.io.{Reader, FileReader, File, StringReader}
 import scala.collection.JavaConverters._
 
 object Configuration {
   val toStringOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
   val formatOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
+
+//  def waitConfig() : Configuration {
+//
+//  }
 
   /**
    * Initialize with an existing typesafe Config object
@@ -18,6 +22,12 @@ object Configuration {
    * @param s a string in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
   def apply(s : String) = new Configuration(ConfigFactory.parseReader(new StringReader(s)))
+
+  /**
+   * Reads the configuration from the given Reader
+   * @param reader reader for a file or stream in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
+   */
+  def apply(reader : Reader) = new Configuration(ConfigFactory.parseReader(reader))
 
   /**
    * Initializes with a java Map, where the values may be other java Maps
@@ -57,7 +67,8 @@ object Configuration {
  * Represents a telescope configuration
  */
 class Configuration(config : Config) {
-  def root(): Configuration = new Configuration(config.root.toConfig)
+  def root() = new Configuration(config.root.toConfig)
+  def rootKey() = config.root().keySet().iterator().next()
   def getConfig(path: String) = new Configuration(config.getConfig(path))
   def size() : Int = config.root().size()
   def hasPath(path: String) = config.hasPath(path)
@@ -83,4 +94,35 @@ class Configuration(config : Config) {
   def getNanosecondsList(path: String) = config.getNanosecondsList(path)
   def format = config.root.render(Configuration.formatOptions)
   override def toString = config.root.render(Configuration.toStringOptions)
+
+  /**
+   * Returns a new Configuration with the given path set to the given value
+   */
+  def withValue(path: String, value: String) : Configuration = {
+    Configuration(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
+  }
+
+  /**
+   * Returns a new Configuration with the given path set to the given value
+   */
+  def withValue(path: String, value: Number) : Configuration = {
+    Configuration(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
+  }
+
+  /**
+   * Returns a new Configuration with configId set to the given value
+   * in the $root.info section (where $root is the top level key).
+   */
+  def withConfigId(configId: Int) : Configuration = {
+    withValue(rootKey() + "." + "info.configId", configId)
+  }
+
+  /**
+   * Returns a new Configuration with obsId set to the given value
+   * in the $root.info section (where $root is the top level key).
+   */
+  def withObsId(obsId: String) : Configuration = {
+    withValue(rootKey() + "." + "info.obsId", obsId)
+  }
 }
+
