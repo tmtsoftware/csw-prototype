@@ -1,21 +1,55 @@
 package org.tmt.csw.cmd.core
 
 import com.typesafe.config.{ConfigRenderOptions, ConfigFactory, Config}
-import java.io.StringReader
+import java.io.{FileReader, File, StringReader}
 import scala.collection.JavaConverters._
-//import scala.collection.JavaConversions._
 
 object Configuration {
   val toStringOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
   val formatOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
 
+  /**
+   * Initialize with an existing typesafe Config object
+   */
   def apply(config : Config) = new Configuration(config)
-  def apply(s : String) = new Configuration(ConfigFactory.parseReader(new StringReader(s)))
-  def apply(map : java.util.Map[java.lang.String, java.lang.Object]) = new Configuration(ConfigFactory.parseMap(map))
-  def apply(map : Map[String, AnyRef]) = new Configuration(ConfigFactory.parseMap(toJavaMap(map)))
 
-  def toJavaMap(map: Map[String, AnyRef]): java.util.Map[java.lang.String, java.lang.Object] = {
-    map.asJava
+  /**
+   * Reads the configuration from the given string
+   * @param s a string in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
+   */
+  def apply(s : String) = new Configuration(ConfigFactory.parseReader(new StringReader(s)))
+
+  /**
+   * Initializes with a java Map, where the values may be other java Maps
+   */
+  def apply(map : java.util.Map[java.lang.String, java.lang.Object]) = new Configuration(ConfigFactory.parseMap(map))
+
+  /**
+   * Initializes with a scala Map, where the values may be other scala or java Maps
+   */
+  def apply(map : Map[String, Any]) = new Configuration(ConfigFactory.parseMap(toJavaMap(map)))
+
+  /**
+   * Reads the configuration from the given file
+   * @param file a file in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
+   */
+  def apply(file : File) {
+    val reader = new FileReader(file)
+    try {
+      new Configuration(ConfigFactory.parseReader(reader))
+    } finally {
+      reader.close()
+    }
+  }
+
+  // Converts a scala.Map to a java.util.Map recursively
+  private def toJavaMap(map: Map[String, Any]): java.util.Map[java.lang.String, java.lang.Object] = {
+    map.mapValues {
+      case subMap: Map[_, _] => toJavaMap(subMap.asInstanceOf[Map[String, Any]])
+      case list: List[_] => list.asJava
+      case array: Array[_] => array.toList.asJava
+      case x => x
+    }.asJava.asInstanceOf[java.util.Map[java.lang.String, java.lang.Object]]
   }
 }
 
@@ -26,27 +60,27 @@ class Configuration(config : Config) {
   def root(): Configuration = new Configuration(config.root.toConfig)
   def getConfig(path: String) = new Configuration(config.getConfig(path))
   def size() : Int = config.root().size()
-  def hasPath(path: String): Boolean = config.hasPath(path)
+  def hasPath(path: String) = config.hasPath(path)
   def isEmpty: Boolean = config.isEmpty
-  def getBoolean(path: String): Boolean = config.getBoolean(path)
-  def getNumber(path: String): Number = config.getNumber(path)
-  def getInt(path: String): Int = config.getInt(path)
-  def getLong(path: String): Long = config.getLong(path)
-  def getDouble(path: String): Double = config.getDouble(path)
-  def getString(path: String): String = config.getString(path)
-  def getBytes(path: String): Long = config.getBytes(path)
-  def getMilliseconds(path: String): Long = config.getMilliseconds(path)
-  def getNanoseconds(path: String): Long = config.getNanoseconds(path)
-  def getBooleanList(path: String): List[Boolean] = config.getBooleanList(path).asInstanceOf[List[Boolean]]
-  def getNumberList(path: String): List[Number] = config.getNumberList(path).asInstanceOf[List[Number]]
-  def getIntList(path: String): List[Int] = config.getIntList(path).asInstanceOf[List[Int]]
-  def getLongList(path: String): List[Long] = config.getLongList(path).asInstanceOf[List[Long]]
-  def getDoubleList(path: String): List[Double] = config.getDoubleList(path).asInstanceOf[List[Double]]
-  def getStringList(path: String): List[String] = config.getStringList(path).asInstanceOf[List[String]]
-  def getAnyRefList(path: String): List[_ <: AnyRef] = config.getAnyRefList(path).asInstanceOf[List[AnyRef]]
-  def getBytesList(path: String): List[Long] = config.getBytesList(path).asInstanceOf[List[Long]]
-  def getMillisecondsList(path: String): List[Long] = config.getMillisecondsList(path).asInstanceOf[List[Long]]
-  def getNanosecondsList(path: String): List[Long] = config.getNanosecondsList(path).asInstanceOf[List[Long]]
-  def format : String = config.root.render(Configuration.formatOptions)
-  override def toString : String = config.root.render(Configuration.toStringOptions)
+  def getBoolean(path: String) = config.getBoolean(path)
+  def getNumber(path: String) = config.getNumber(path)
+  def getInt(path: String) = config.getInt(path)
+  def getLong(path: String) = config.getLong(path)
+  def getDouble(path: String) = config.getDouble(path)
+  def getString(path: String) = config.getString(path)
+  def getBytes(path: String) = config.getBytes(path)
+  def getMilliseconds(path: String) = config.getMilliseconds(path)
+  def getNanoseconds(path: String) = config.getNanoseconds(path)
+  def getBooleanList(path: String) = config.getBooleanList(path)
+  def getNumberList(path: String) = config.getNumberList(path)
+  def getIntList(path: String) = config.getIntList(path)
+  def getLongList(path: String) = config.getLongList(path)
+  def getDoubleList(path: String) = config.getDoubleList(path)
+  def getStringList(path: String) = config.getStringList(path)
+  def getAnyRefList(path: String) = config.getAnyRefList(path)
+  def getBytesList(path: String) = config.getBytesList(path)
+  def getMillisecondsList(path: String) = config.getMillisecondsList(path)
+  def getNanosecondsList(path: String) = config.getNanosecondsList(path)
+  def format = config.root.render(Configuration.formatOptions)
+  override def toString = config.root.render(Configuration.toStringOptions)
 }
