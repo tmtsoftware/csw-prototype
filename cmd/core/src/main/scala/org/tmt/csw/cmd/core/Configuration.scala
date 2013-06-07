@@ -138,5 +138,10 @@ class Configuration(config : Config) {
     val info = if (rootKey == "wait") "" else ".info"
     withValue(root + info + ".obsId", obsId)
   }
+
+  /**
+   * Returns true if this is a wait config
+   */
+  def isWaitConfig = rootKey() == "wait"
 }
 

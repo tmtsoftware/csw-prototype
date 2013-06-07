@@ -1,13 +1,21 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.Actor
+import akka.actor.{ActorRef, Actor}
 import ConfigActor._
 import org.tmt.csw.cmd.core.Configuration
 
 object ConfigActor {
   // TMT Standard Configuration Interaction Commands
   sealed trait ConfigInteractionCommand
-  case class ConfigSubmit(queueConfig : QueueConfig) extends ConfigInteractionCommand
+
+  /**
+   * Command to submit a configuration to the component
+   * @param runId the runId for this configuration
+   * @param config the configuration
+   * @param statusActor send status messages to this actor
+   * @param lastConfig true if this is the last config in the list for this runId
+   */
+  case class ConfigSubmit(runId: RunId, config: Configuration, statusActor: ActorRef, lastConfig: Boolean) extends ConfigInteractionCommand
   case class ConfigCancel() extends ConfigInteractionCommand
   case class ConfigAbort() extends ConfigInteractionCommand
   case class ConfigPause() extends ConfigInteractionCommand
@@ -21,7 +29,7 @@ object ConfigActor {
  */
 class ConfigActor(component: OmoaComponent) extends Actor {
   def receive = {
-    case ConfigSubmit(queueConfig) => configSubmit(queueConfig.runId, queueConfig.configs)
+    case ConfigSubmit(runId, config, statusActor, lastConfig) => configSubmit(runId, config, statusActor, lastConfig)
     case ConfigCancel =>
     case ConfigAbort =>
     case ConfigPause =>
@@ -30,16 +38,15 @@ class ConfigActor(component: OmoaComponent) extends Actor {
 
   // Request immediate execution of the given configs
   // XXX TODO: should this be done in an worker actor (so it can be killed)?
-  private def configSubmit(runId: RunId, configs: Seq[Configuration]) {
-    sender ! CommandStatus.StatusBusy(runId)
+  private def configSubmit(runId: RunId, config: Configuration, statusActor: ActorRef, lastConfig: Boolean) {
     try {
-      configs.foreach {
-        component.matchConfig(_)
+      component.matchConfig(config)
+      if (lastConfig) {
+        sender ! CommandStatus.StatusComplete(runId)
       }
-      sender ! CommandStatus.StatusComplete(runId)
     } catch {
       case e: Exception => {
-        sender ! CommandStatus.StatusError(runId)
+        sender ! CommandStatus.StatusError(runId, e)
       }
     }
   }

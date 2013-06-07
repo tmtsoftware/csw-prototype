@@ -13,6 +13,6 @@ object CommandStatus {
   case class StatusQueued(runId: RunId) extends CommandStatus
   case class StatusBusy(runId: RunId) extends CommandStatus
   case class StatusComplete(runId: RunId) extends CommandStatus
-  case class StatusError(runId: RunId) extends CommandStatus
+  case class StatusError(runId: RunId, ex: Exception) extends CommandStatus
   case class StatusAborted(runId: RunId) extends CommandStatus
 }

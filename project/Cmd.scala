@@ -8,5 +8,5 @@ trait Cmd extends Build with Settings {
 
   // Cmd subprojects with dependency information
   lazy val cmd_core = Project(id = "cmd-core", base = file("cmd/core"))
-  lazy val cmd_akka = Project(id = "cmd-akka", base = file("cmd/akka"))
+  lazy val cmd_akka = Project(id = "cmd-akka", base = file("cmd/akka")) dependsOn(cmd_core)
 }

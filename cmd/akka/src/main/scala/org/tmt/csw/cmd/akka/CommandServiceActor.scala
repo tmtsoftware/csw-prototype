@@ -44,7 +44,7 @@ class CommandServiceActor(component: OmoaComponent) extends Actor {
     case CommandStatus.StatusQueued =>
     case CommandStatus.StatusBusy =>
     case CommandStatus.StatusComplete =>
-    case CommandStatus.StatusError =>
+    case CommandStatus.StatusError(runId, ex) =>
     case CommandStatus.StatusAborted =>
 
     case _ => sender ! Status.Failure(new IllegalArgumentException)
