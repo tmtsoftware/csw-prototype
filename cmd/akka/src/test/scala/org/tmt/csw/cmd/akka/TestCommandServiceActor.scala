@@ -32,28 +32,29 @@ object TestConfig {
     """.stripMargin
 }
 
-class TestComponent extends OmoaComponent {
-  /**
-   * The unique name of the component
-   */
-  def getName: String = "TestComponent"
+class TestConfigActor extends ConfigActor {
+  def getName() = "Test Component"
 
   /**
-   * A target OMOA component uses the Setup Config information to configure the target OMOA component.
-   * The phrase used to describe this is a component must match the Config. In a recursive way, it can
-   * either match the Config itself or pass all or part of the Config on to another OMOA component
-   * (or create a new Config). To match a Setup Config, an SEC performs calculations or starts actions
-   * in one or more Assemblies or HCDs. To pass it on, the SEC breaks the Config apart into new Configs
-   * and Submits the new Configs to other SECs, Assemblies or HCDs and tracks their progress.
+   * Submits the given configuration
+   * @param runId identifies the configuration
+   * @param config the configuration to execute
    */
-  def matchConfig(config: Configuration) {
+  def configSubmit(runId: RunId, config: Configuration) {
     println("XXX TestComponent: matchConfig: " + config.toString())
-    for( a <- 1 to 3){
+    for (a <- 1 to 3) {
       Thread.sleep(1000)
       println("XXX Sleeping")
     }
   }
 
+  def configAbort(runId: RunId) {}
+
+  def configCancel(runId: RunId) {}
+
+  def configPause(runId: RunId) {}
+
+  def configResume(runId: RunId) {}
 }
 
 /**
@@ -67,8 +68,8 @@ class TestCommandServiceActor extends TestKit(ActorSystem("mySystem")) with Impl
   test("Test the CommandServiceActor") {
 
     // Create the actor
-    val component = new TestComponent()
-    val commandServiceActor = system.actorOf(Props(new CommandServiceActor(component)), name = "commandService")
+    val configActor = system.actorOf(Props(new TestConfigActor()), name = "testActor")
+    val commandServiceActor = system.actorOf(Props(new CommandServiceActor(configActor, "testActor")), name = "commandService")
 
     // Queue a command
     val config = Configuration(TestConfig.testConfig)

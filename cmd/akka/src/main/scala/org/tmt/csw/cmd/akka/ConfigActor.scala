@@ -7,48 +7,43 @@ import org.tmt.csw.cmd.core.Configuration
 object ConfigActor {
   // TMT Standard Configuration Interaction Commands
   sealed trait ConfigInteractionCommand
-
-  /**
-   * Command to submit a configuration to the component
-   * @param runId the runId for this configuration
-   * @param config the configuration
-   * @param statusActor send status messages to this actor
-   * @param lastConfig true if this is the last config in the list for this runId
-   */
-  case class ConfigSubmit(runId: RunId, config: Configuration, statusActor: ActorRef, lastConfig: Boolean) extends ConfigInteractionCommand
-  case class ConfigCancel() extends ConfigInteractionCommand
-  case class ConfigAbort() extends ConfigInteractionCommand
-  case class ConfigPause() extends ConfigInteractionCommand
-  case class ConfigResume() extends ConfigInteractionCommand
+  case class ConfigSubmit(runId: RunId, config: Configuration) extends ConfigInteractionCommand
+  case class ConfigCancel(runId: RunId) extends ConfigInteractionCommand
+  case class ConfigAbort(runId: RunId) extends ConfigInteractionCommand
+  case class ConfigPause(runId: RunId) extends ConfigInteractionCommand
+  case class ConfigResume(runId: RunId) extends ConfigInteractionCommand
 }
 
 /**
- * Manages the command queue for the given OMOA component.
- * CommandConfig objects are placed on the queue when received.
- * Later, each config is dequeued and passed to the component for processing.
+ * Base class for command service targets.
+ * Subclasses can implement the abstract methods declared here to implement the commands.
  */
-class ConfigActor(component: OmoaComponent) extends Actor {
+abstract class ConfigActor extends Actor {
   def receive = {
-    case ConfigSubmit(runId, config, statusActor, lastConfig) => configSubmit(runId, config, statusActor, lastConfig)
-    case ConfigCancel =>
-    case ConfigAbort =>
-    case ConfigPause =>
-    case ConfigResume =>
+    case ConfigSubmit(runId, config) => configSubmit(runId, config)
+    case ConfigCancel(runId) => configCancel(runId)
+    case ConfigAbort(runId) => configAbort(runId)
+    case ConfigPause(runId) => configPause(runId)
+    case ConfigResume(runId) => configResume(runId)
   }
 
-  // Request immediate execution of the given configs
-  // XXX TODO: should this be done in an worker actor (so it can be killed)?
-  private def configSubmit(runId: RunId, config: Configuration, statusActor: ActorRef, lastConfig: Boolean) {
-    try {
-      component.matchConfig(config)
-      if (lastConfig) {
-        sender ! CommandStatus.StatusComplete(runId)
-      }
-    } catch {
-      case e: Exception => {
-        sender ! CommandStatus.StatusError(runId, e)
-      }
-    }
-  }
+  /**
+   * The name of the target component
+   */
+  def getName() : String
 
+  /**
+   * Submits the given configuration
+   * @param runId identifies the configuration
+   * @param config the configuration to execute
+   */
+  def configSubmit(runId: RunId, config: Configuration)
+
+  def configAbort(runId: RunId)
+
+  def configCancel(runId: RunId)
+
+  def configPause(runId: RunId)
+
+  def configResume(runId: RunId)
 }

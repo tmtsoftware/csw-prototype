@@ -4,7 +4,6 @@ import _root_.akka.actor._
 import _root_.akka.pattern.ask
 import scala.concurrent.Future
 import _root_.akka.util.Timeout
-import scala.concurrent.duration._
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandServiceActor._
 
@@ -14,8 +13,8 @@ import org.tmt.csw.cmd.akka.CommandServiceActor._
 object CommandServiceActor {
   // TMT Standard Queue Interaction Commands
   sealed trait QueueInteractionCommand
-  case class QueueSubmit(configs: Configuration*) extends QueueInteractionCommand
-  case class QueueRequest(configs: Configuration*) extends QueueInteractionCommand
+  case class QueueSubmit(configs: Configuration) extends QueueInteractionCommand
+  case class QueueRequest(configs: Configuration, timeout: Timeout) extends QueueInteractionCommand
   case class QueueStop() extends QueueInteractionCommand
   case class QueuePause() extends QueueInteractionCommand
   case class QueueStart() extends QueueInteractionCommand
@@ -25,20 +24,22 @@ object CommandServiceActor {
 /**
  * Implements the TMT Command Service
  */
-class CommandServiceActor(component: OmoaComponent) extends Actor {
 
-  val queueActor = context.actorOf(Props(new QueueActor(component)), name = "queueActorFor" + component.getName)
+/**
+ * Implements the TMT Command Service.
+ * @param configActor the target actor for the command
+ */
+class CommandServiceActor(configActor: ActorRef, componentName: String) extends Actor {
 
+  val queueActor = context.actorOf(Props(new QueueActor(configActor)), name = componentName)
 
   def receive = {
-    case QueueSubmit(configs) => sender ! queueSubmit(configs)
-    case QueueRequest(configs) => sender ! queueRequest(configs)
+    case QueueSubmit(config) => sender ! queueSubmit(config)
+    case QueueRequest(config, timeout) => sender ! queueRequest(config, timeout)
     case QueueStop() => queueStop()
     case QueuePause() => queuePause()
     case QueueStart() => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
-
-    // TODO add other message types here ...
 
     // Status Messages (XXX TODO: send events for these? Or send them directly to the original sender?)
     case CommandStatus.StatusQueued =>
@@ -53,10 +54,9 @@ class CommandServiceActor(component: OmoaComponent) extends Actor {
   /**
    * Submit one or more configs to the component's command queue and return the run id.
    */
-  private def queueSubmit(configs: Configuration*): RunId = {
+  private def queueSubmit(config: Configuration): RunId = {
     val runId = RunId()
-    queueActor ! QueueActor.QueueSubmit(QueueConfig(runId, configs))
-    // XXX TODO: send status pending event?
+    queueActor ! QueueActor.QueueSubmit(QueueConfig(runId, config))
     runId
   }
 
@@ -64,9 +64,9 @@ class CommandServiceActor(component: OmoaComponent) extends Actor {
    * Request immediate execution of one or more configs on the component and return a future with the status
    * (which should be
    */
-  private def queueRequest(configs: Configuration*): Future[CommandStatus] = {
-    implicit val timeout = Timeout(5.seconds)
-    (queueActor ? QueueActor.QueueRequest(QueueConfig(RunId(), configs))).mapTo[CommandStatus]
+  private def queueRequest(config: Configuration, t: Timeout): Future[CommandStatus] = {
+    implicit val timeout = t
+    (queueActor ? QueueActor.QueueRequest(QueueConfig(RunId(), config), t)).mapTo[CommandStatus]
   }
 
   /**
@@ -75,7 +75,7 @@ class CommandServiceActor(component: OmoaComponent) extends Actor {
    */
   private def queueStop() {
     queueActor ! QueueActor.QueueStop()
-    queueActor ! Kill
+    context.stop(self)
   }
 
   /**

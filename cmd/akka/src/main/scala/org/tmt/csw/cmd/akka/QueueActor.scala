@@ -1,21 +1,22 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{Props, Status, Actor}
+import akka.actor.{ActorRef, Props, Status, Actor}
 import scala.collection.mutable
 import QueueActor._
 import org.tmt.csw.cmd.core.Configuration
 import _root_.akka.pattern.ask
+import akka.actor.Status.{Success, Failure}
+import akka.util.Timeout
 
 object QueueActor {
   // Actor messages received
   sealed trait QueueActorMessage
   case class QueueSubmit(queueConfig : QueueConfig) extends QueueActorMessage
-  case class QueueRequest(queueConfig : QueueConfig) extends QueueActorMessage
+  case class QueueRequest(queueConfig : QueueConfig, t: Timeout) extends QueueActorMessage
   case class QueueStop() extends QueueActorMessage
   case class QueuePause() extends QueueActorMessage
   case class QueueStart() extends QueueActorMessage
   case class QueueDelete(runId : RunId) extends QueueActorMessage
-  private case class CheckQueue() extends QueueActorMessage
 
   // Queue states
   sealed trait QueueState
@@ -25,24 +26,22 @@ object QueueActor {
 }
 
 /**
- * Manages the command queue for the given OMOA component.
+ * Manages the command queue for a component.
  * QueueConfig objects are placed on the queue when received.
  * Later, each config is dequeued and passed to the component for processing.
+ *
+ * @param configActor the target actor for the commands
  */
-class QueueActor(component: OmoaComponent) extends Actor {
+class QueueActor(configActor: ActorRef) extends Actor {
 
   // The queue for this OMOA component
-  private val queueMap = mutable.LinkedHashMap[RunId, Seq[Configuration]]()
+  private val queueMap = mutable.LinkedHashMap[RunId, Configuration]()
 
   private var queueState : QueueState = Started()
 
-  val configActor = context.actorOf(Props(new ConfigActor(component)), name = "configActorFor" + component.getName)
-
-
   def receive = {
     case QueueSubmit(queueConfig) => queueSubmit(queueConfig)
-    case CheckQueue => checkQueue()
-    case QueueRequest(queueConfig) => queueRequest(queueConfig)
+    case QueueRequest(queueConfig, timeout) => queueRequest(queueConfig, timeout)
     case QueueStop() => queueStop()
     case QueuePause() => queuePause(None)
     case QueueStart() => queueStart()
@@ -51,12 +50,12 @@ class QueueActor(component: OmoaComponent) extends Actor {
   }
 
   // Queue the given config for later execution and return the runId to the sender
-  private def queueSubmit(config: QueueConfig) {
+  private def queueSubmit(qc: QueueConfig) {
     if (queueState != Stopped()) {
-      queueMap(config.runId) = config.configs
-      sender ! CommandStatus.StatusQueued(config.runId)
+      queueMap(qc.runId) = qc.config
+      sender ! CommandStatus.StatusQueued(qc.runId)
       if (queueState != Paused()) {
-        self ! CheckQueue
+        checkQueue()
       }
     }
   }
@@ -64,37 +63,31 @@ class QueueActor(component: OmoaComponent) extends Actor {
   // Execute any configs in the queue
   private def checkQueue() {
     while (queueState == Started() && !queueMap.isEmpty) {
-      val (runId, configs) = queueMap.iterator.next()
+      val (runId, config) = queueMap.iterator.next()
       queueMap.remove(runId)
-      matchConfigs(runId, configs)
+      sender ! CommandStatus.StatusBusy(runId)
+      if (config.isWaitConfig) {
+        queuePause(Some(config))
+      } else {
+        configActor ! ConfigActor.ConfigSubmit(runId, config)
+      }
     }
   }
 
   // Request immediate execution of the given configs
-  private def queueRequest(msg: QueueConfig) {
-    sender ! CommandStatus.StatusBusy(msg.runId)
-    try {
-      msg.configs.foreach {
-        component.matchConfig(_)
+  private def queueRequest(qc: QueueConfig, t: Timeout) {
+    if (qc.config.isWaitConfig) {
+      queuePause(Some(qc.config))
+    } else {
+      implicit val timeout = t
+      implicit val execContext = context.dispatcher
+      val f = configActor ? ConfigActor.ConfigSubmit(qc.runId, qc.config)
+      f onSuccess {
+        case _ => sender ! CommandStatus.StatusComplete(qc.runId)
       }
-      sender ! CommandStatus.StatusComplete(msg.runId)
-    } catch {
-      case e: Exception => {
-        sender ! CommandStatus.StatusError(msg.runId, e)
+      f onFailure {
+        case e: Exception => sender ! CommandStatus.StatusError(qc.runId, e)
       }
-    }
-  }
-
-  // Send config to configActor to execute
-  private def matchConfigs(runId: RunId, configs: Seq[Configuration]) {
-    sender ! CommandStatus.StatusBusy(runId)
-    configs.foreach {
-      config =>
-        if (config.isWaitConfig) {
-          queuePause(Some(config))
-        } else {
-          configActor ! ConfigActor.ConfigSubmit(runId, config, sender, config == configs.last)
-        }
     }
   }
 
@@ -104,6 +97,7 @@ class QueueActor(component: OmoaComponent) extends Actor {
   private def queueStop() {
     queueState = Stopped()
     queueMap.clear()
+    context.stop(self)
   }
 
   // Pause the processing of a component’s queue after the completion
@@ -116,7 +110,7 @@ class QueueActor(component: OmoaComponent) extends Actor {
   // Processing of component’s queue is started.
   private def queueStart() {
     queueState = Started()
-    self ! CheckQueue
+    checkQueue()
   }
 
   // Delete a config from the queue
