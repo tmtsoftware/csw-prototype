@@ -13,7 +13,6 @@ object TestConfig {
     """
       |      config {
       |        info {
-      |          configId = 1000233
       |          obsId = TMT-2021A-C-2-1
       |        }
       |        tmt.tel.base.pos {

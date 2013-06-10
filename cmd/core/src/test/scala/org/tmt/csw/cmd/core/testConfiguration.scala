@@ -15,13 +15,13 @@ class TestConfiguration extends FunSuite {
 
     val conf = Configuration(pathMapValue)
 
-    assert(2 == conf.size)
     assert(4 == conf.getInt("b.x.y"))
     assert(5 == conf.getInt("b.z"))
     assert(1 == conf.getInt("a.c"))
 
-    assert("b{z=5,x{y=4}},a{c=1}" == conf.toString)
-    assert("z=5,x{y=4}" == conf.getConfig("b").toString)
+    assert("b{z=5,x{y=4}},a{c=1}" == conf.toTestString)
+    assert("z=5,x{y=4}" == conf.getConfig("b").toTestString)
+    assert(conf.getConfigId.length() != 0)
   }
 
   test("Test creating a config in code using java Maps and Lists") {
@@ -30,14 +30,13 @@ class TestConfiguration extends FunSuite {
 
     val conf = Configuration(pathMapValue)
 
-    assert(2 == conf.size)
     assert(1 == conf.getIntList("b.x.y").get(0))
     assert(2 == conf.getIntList("b.x.y").get(1))
     assert(3 == conf.getIntList("b.x.y").get(2))
     assert(List("a", "b", "c") == (for (i <- conf.getStringList("b.z")) yield i))
     assert(1 == conf.getInt("a.c"))
-    assert("b{z=[a,b,c],x{y=[1,2,3]}},a{c=1}" == conf.toString)
-    assert("z=[a,b,c],x{y=[1,2,3]}" == conf.getConfig("b").toString)
+    assert("b{z=[a,b,c],x{y=[1,2,3]}},a{c=1}" == conf.toTestString)
+    assert("z=[a,b,c],x{y=[1,2,3]}" == conf.getConfig("b").toTestString)
   }
 
   test("Test creating a config using a scala.Map") {
@@ -45,41 +44,46 @@ class TestConfiguration extends FunSuite {
 
     val conf = Configuration(pathMapValue)
 
-    assert(2 == conf.size)
     assert(4 == conf.getInt("b.x.y"))
     assert(5 == conf.getInt("b.z"))
     assert(1 == conf.getInt("a.c"))
 
-    assert("b{z=5,x{y=4}},a{c=1}" == conf.toString)
-    assert("z=5,x{y=4}" == conf.getConfig("b").toString)
+    assert("b{z=5,x{y=4}},a{c=1}" == conf.toTestString)
+    assert("z=5,x{y=4}" == conf.getConfig("b").toTestString)
   }
 
   test("Another test with scala.map") {
     val conf = Configuration(
       Map("config" ->
         Map(
-          "info" -> Map("configId" -> 1000233, "obsId" -> "TMT-2021A-C-2-1"),
+          "info" -> Map("obsId" -> "TMT-2021A-C-2-1"),
           "tmt.tel.base.pos" -> Map("posName" -> "NGC738B", "c1" -> "22:35:58.530", "c2" -> "33:57:55.40", "equinox" -> "J2000"),
           "tmt.tel.ao.pos.one" -> Map("c1" -> "22:356:01.066", "c2" -> "33:58:21.69", "equinox" -> "J2000")
         )
       )
     )
 
+    assert("config" == conf.rootKey().get)
+    assert("tel" == conf.getConfig("config.tmt").rootKey().get)
     assert("TMT-2021A-C-2-1" == conf.getString("config.info.obsId"))
     assert("NGC738B" == conf.getString("config.tmt.tel.base.pos.posName"))
-    assert("1000233" == conf.getString("config.info.configId"))
+    assert("22:35:58.530" == conf.getString("config.tmt.tel.base.pos.c1"))
+    assert("33:57:55.40" == conf.getString("config.tmt.tel.base.pos.c2"))
+    assert("J2000" == conf.getString("config.tmt.tel.base.pos.equinox"))
+    assert("22:356:01.066" == conf.getString("config.tmt.tel.ao.pos.one.c1"))
+    assert("33:58:21.69" == conf.getString("config.tmt.tel.ao.pos.one.c2"))
+    assert("J2000" == conf.getString("config.tmt.tel.ao.pos.one.equinox"))
   }
 
   test("Test with scala maps, lists, arrays") {
     val conf = Configuration(Map("a.c" -> 1, "b" -> Map("x.y" -> List(1,2,3), "z" -> Array("a","b","c"))))
-    assert(2 == conf.size)
     assert(1 == conf.getIntList("b.x.y").get(0))
     assert(2 == conf.getIntList("b.x.y").get(1))
     assert(3 == conf.getIntList("b.x.y").get(2))
     assert(List("a", "b", "c") == (for (i <- conf.getStringList("b.z")) yield i))
     assert(1 == conf.getInt("a.c"))
-    assert("b{z=[a,b,c],x{y=[1,2,3]}},a{c=1}" == conf.toString)
-    assert("z=[a,b,c],x{y=[1,2,3]}" == conf.getConfig("b").toString)
+    assert("b{z=[a,b,c],x{y=[1,2,3]}},a{c=1}" == conf.toTestString)
+    assert("z=[a,b,c],x{y=[1,2,3]}" == conf.getConfig("b").toTestString)
   }
 
   test("Test adding configId and obsId to a config") {
@@ -90,7 +94,7 @@ class TestConfiguration extends FunSuite {
           "tmt.tel.ao.pos.one" -> Map("c1" -> "22:356:01.066", "c2" -> "33:58:21.69", "equinox" -> "J2000")
         )
       )
-    ).withConfigId(1000233).withObsId("TMT-2021A-C-2-1")
+    ).withConfigId("1000233").withObsId("TMT-2021A-C-2-1")
 
     assert("TMT-2021A-C-2-1" == conf.getString("config.info.obsId"))
     assert("NGC738B" == conf.getString("config.tmt.tel.base.pos.posName"))
@@ -98,8 +102,8 @@ class TestConfiguration extends FunSuite {
   }
 
   test("Wait config") {
-    val conf = Configuration.waitConfig(true, 1000233, "TMT-2021A-C-2-1")
-    assert("wait{obsId=\"TMT-2021A-C-2-1\",forResume=true,configId=1000233}" == conf.toString)
+    val conf = Configuration.waitConfig(forResume=true, "TMT-2021A-C-2-1")
+    assert("wait{obsId=\"TMT-2021A-C-2-1\",forResume=true}" == conf.withoutPath("wait.configId").toString)
   }
 
   test("Adding values to a Configuration") {
