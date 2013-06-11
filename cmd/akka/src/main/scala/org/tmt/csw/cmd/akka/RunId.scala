@@ -17,5 +17,6 @@ object RunId {
 
 private case class UuidRunId(id : String) extends RunId {
   def this() = this(UUID.randomUUID().toString)
+  override def toString = id
 }
 

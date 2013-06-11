@@ -31,35 +31,12 @@ object TestConfig {
     """.stripMargin
 }
 
-class TestConfigActor extends ConfigActor {
-  def getName() = "Test Component"
-
-  /**
-   * Submits the given configuration
-   * @param runId identifies the configuration
-   * @param config the configuration to execute
-   */
-  def configSubmit(runId: RunId, config: Configuration) {
-    println("XXX TestComponent: matchConfig: " + config.toString())
-    for (a <- 1 to 3) {
-      Thread.sleep(1000)
-      println("XXX Sleeping")
-    }
-  }
-
-  def configAbort(runId: RunId) {}
-
-  def configCancel(runId: RunId) {}
-
-  def configPause(runId: RunId) {}
-
-  def configResume(runId: RunId) {}
-}
-
 /**
  * Tests the Command Service actor
  */
-class TestCommandServiceActor extends TestKit(ActorSystem("mySystem")) with ImplicitSender with FunSuite with BeforeAndAfterAll {
+class TestCommandServiceActor extends TestKit(ActorSystem("mySystem"))
+  with ImplicitSender with FunSuite with BeforeAndAfterAll {
+
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
   implicit val dispatcher = system.dispatcher
@@ -67,15 +44,15 @@ class TestCommandServiceActor extends TestKit(ActorSystem("mySystem")) with Impl
   test("Test the CommandServiceActor") {
 
     // Create the actor
-    val configActor = system.actorOf(Props(new TestConfigActor()), name = "testActor")
-    val commandServiceActor = system.actorOf(Props(new CommandServiceActor(configActor, "testActor")), name = "commandService")
+    val configActor = system.actorOf(Props(new TestConfigActor("testActor", 3)), name = "testActor")
+    val commandServiceActor = system.actorOf(Props(new CommandServiceActor(configActor, "test")), name = "commandService")
 
     // Queue a command
     val config = Configuration(TestConfig.testConfig)
     val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config)
     f onSuccess {
       case runId: RunId =>
-        println("XXX got runId: " + runId)
+        println(s"got runId: $runId")
         Thread.sleep(3000)
         commandServiceActor ! CommandServiceActor.QueueStop
         system.shutdown()

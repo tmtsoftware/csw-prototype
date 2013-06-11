@@ -22,14 +22,10 @@ object CommandServiceActor {
 }
 
 /**
- * Implements the TMT Command Service
- */
-
-/**
  * Implements the TMT Command Service.
  * @param configActor the target actor for the command
  */
-class CommandServiceActor(configActor: ActorRef, componentName: String) extends Actor {
+class CommandServiceActor(configActor: ActorRef, componentName: String) extends Actor with ActorLogging {
 
   val queueActor = context.actorOf(Props(new QueueActor(configActor)), name = componentName)
 
@@ -56,6 +52,7 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    */
   private def queueSubmit(config: Configuration): RunId = {
     val runId = RunId()
+    log.debug(s"Submit config with runId: $runId: $config")
     queueActor ! QueueActor.QueueSubmit(QueueConfig(runId, config))
     runId
   }
@@ -66,6 +63,7 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    */
   private def queueRequest(config: Configuration, t: Timeout): Future[CommandStatus] = {
     implicit val timeout = t
+    log.debug(s"Request config: $config")
     (queueActor ? QueueActor.QueueRequest(QueueConfig(RunId(), config), t)).mapTo[CommandStatus]
   }
 
@@ -74,6 +72,7 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    * queue are removed. No components are accepted or processed while stopped.
    */
   private def queueStop() {
+    log.debug("Stop")
     queueActor ! QueueActor.QueueStop()
     context.stop(self)
   }
@@ -83,6 +82,7 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    * No changes are made to the queue.
    */
   private def queuePause() {
+    log.debug("Pause")
     queueActor ! QueueActor.QueuePause()
   }
 
@@ -90,6 +90,7 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    * Processing of component’s queue is started.
    */
   private def queueStart() {
+    log.debug("Start")
     queueActor ! QueueActor.QueueStart()
   }
 
@@ -97,6 +98,7 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    * Allows removal of a config in the queued execution state.
    */
   private def queueDelete(runId: RunId) {
+    log.debug("Delete")
     queueActor ! QueueActor.QueueDelete(runId)
   }
 }

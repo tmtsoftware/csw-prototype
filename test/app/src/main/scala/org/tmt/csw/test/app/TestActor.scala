@@ -1,6 +1,6 @@
 package org.tmt.csw.test.app
 
-import akka.actor.Actor
+import akka.actor.{ActorLogging, Actor}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -10,7 +10,7 @@ import org.tmt.csw.cs.core.ConfigString
 import org.tmt.csw.cs.akka.ConfigServiceActor._
 
 // A test actor used to send messages to the config service
-class TestActor extends Actor {
+class TestActor extends Actor with ActorLogging {
 
   val configFileName = "testApp/config.conf"
   val duration = 5.seconds
@@ -21,31 +21,33 @@ class TestActor extends Actor {
       val future = ActorFactory.configServiceActor ? GetRequest(configFileName)
       future onSuccess {
         case Some(configData) => readConfigFile(configData.asInstanceOf[ConfigData])
-        case _ => println("XXX unexpected result?")
+        case None => createNewConfigFile()
+        case x => log.info(s"unexpected result: $x")
       }
       future onFailure {
         case e: Exception => {
-          println("XXX Get got exception: " + e)
-          e.printStackTrace()
+          log.error(e, "Get got exception")
         }
       }
   }
 
   def readConfigFile(configData: ConfigData) {
-    println("XXX Get => " + configData)
+    log.info(s"Get => $configData")
   }
 
   def createNewConfigFile() {
-    println("XXX Get => None: make new config file")
+    log.info("Get => None: make new config file")
     val configData = new ConfigString("# TestApp Settings\n\nkey1 = value1\nkey2 = value2\n")
     val future = ActorFactory.configServiceActor ? CreateRequest(configFileName, configData)
     future onSuccess {
-      case id: ConfigId => println("XXX created new config file")
-      case _ => println("XXX unexpected result?")
+      case id: ConfigId =>
+        log.info("created new config file")
+        self ! Start
+      case x => log.info(s"unexpected result: $x")
     }
     future onFailure {
       case e: Exception => {
-        println("XXX Create got exception: " + e)
+        log.error(e, "Create got exception")
         e.printStackTrace()
       }
     }

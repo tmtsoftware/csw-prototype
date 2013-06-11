@@ -19,9 +19,9 @@ object ActorFactory {
   private def makeTestConfigServiceActor() : ConfigServiceActor = {
     val mainRepoDir = new File(settings.testMainRepository)
 
-//    GitConfigManager.deleteLocalRepo(mainRepoDir)
-//    GitConfigManager.initBareRepo(mainRepoDir)
-//    GitConfigManager.deleteLocalRepo(settings.testLocalRepository)
+    GitConfigManager.deleteLocalRepo(mainRepoDir)
+    GitConfigManager.initBareRepo(mainRepoDir)
+    GitConfigManager.deleteLocalRepo(settings.testLocalRepository)
 
     if (!mainRepoDir.isDirectory) {
       GitConfigManager.initBareRepo(mainRepoDir)

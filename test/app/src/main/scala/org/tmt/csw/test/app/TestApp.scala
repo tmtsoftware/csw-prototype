@@ -1,6 +1,6 @@
 package org.tmt.csw.test.app
 
-import akka.actor.{ActorSystem, Actor, Props, Terminated}
+import akka.actor.Props
 import akka.kernel.Bootable
 
 case object Start

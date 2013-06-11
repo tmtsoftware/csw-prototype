@@ -5,11 +5,6 @@ import java.io.StringReader
 import scala.collection.JavaConverters._
 import com.typesafe.config.{ConfigSyntax, ConfigParseOptions, ConfigRenderOptions, ConfigFactory}
 
-//import org.json4s.JsonDSL._
-//import org.json4s._
-//import native.Printer
-//import native.JsonMethods._
-
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 

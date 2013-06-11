@@ -11,11 +11,13 @@ trait Test extends Build with Settings with Cs {
   lazy val test = Project(id = "test", base = file("test")) aggregate (test_app)
 
   val testAppDependencies = Seq(
-    "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
-    "com.typesafe.akka" %% "akka-kernel" % AkkaVersion,
-    "org.tmt" %% "org.tmt.csw.cs.akka" % Version,
-    "org.tmt" %% "org.tmt.csw.cs.api" % Version,
-    "org.tmt" %% "org.tmt.csw.cs.core" % Version
+    akkaActor,
+    akkaKernel,
+    csAkka,
+    csApi,
+    csCore,
+    scalaLogging,
+    logback
   )
 
   // Test subprojects with dependency information

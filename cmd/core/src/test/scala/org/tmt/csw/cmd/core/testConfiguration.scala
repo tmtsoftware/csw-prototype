@@ -102,7 +102,7 @@ class TestConfiguration extends FunSuite {
   }
 
   test("Wait config") {
-    val conf = Configuration.waitConfig(forResume=true, "TMT-2021A-C-2-1")
+    val conf = Configuration.waitConfig(forResume=true, obsId="TMT-2021A-C-2-1")
     assert("wait{obsId=\"TMT-2021A-C-2-1\",forResume=true}" == conf.withoutPath("wait.configId").toString)
   }
 

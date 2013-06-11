@@ -6,6 +6,7 @@ import org.tmt.csw.cs.core.git.GitConfigManager
 import java.io.File
 import ConfigServiceActor._
 
+
 /**
  * Defines apply methods for creating a ConfigServiceActor instance
  */
@@ -49,7 +50,7 @@ object ConfigServiceActor {
  * An Akka actor class implementing the Config Service.
  * @param configManagerOpt specify the configManager to use for tests, use None for production to get default
  */
-class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor {
+class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor with ActorLogging {
 
   // The ConfigManager instance used to access the Git repository
   val configManager = {
@@ -74,6 +75,7 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor 
    * @param request the request
    */
   def reply(sender: ActorRef, request: ConfigServiceRequest) {
+    log.debug(s"Replying to request: ${request.getClass.getSimpleName}")
     try {
       request match {
         case CreateRequest(path, configData, comment) => sender ! configManager.create(path, configData, comment)

@@ -1,11 +1,10 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{ActorRef, Props, Status, Actor}
+import akka.actor.{ActorLogging, ActorRef, Status, Actor}
 import scala.collection.mutable
 import QueueActor._
 import org.tmt.csw.cmd.core.Configuration
 import _root_.akka.pattern.ask
-import akka.actor.Status.{Success, Failure}
 import akka.util.Timeout
 
 object QueueActor {
@@ -32,7 +31,7 @@ object QueueActor {
  *
  * @param configActor the target actor for the commands
  */
-class QueueActor(configActor: ActorRef) extends Actor {
+class QueueActor(configActor: ActorRef) extends Actor with ActorLogging {
 
   // The queue for this OMOA component
   private val queueMap = mutable.LinkedHashMap[RunId, Configuration]()
@@ -53,6 +52,7 @@ class QueueActor(configActor: ActorRef) extends Actor {
   private def queueSubmit(qc: QueueConfig) {
     if (queueState != Stopped()) {
       queueMap(qc.runId) = qc.config
+      log.debug(s"Queued config with runId: ${qc.runId}")
       sender ! CommandStatus.StatusQueued(qc.runId)
       if (queueState != Paused()) {
         checkQueue()
@@ -62,13 +62,16 @@ class QueueActor(configActor: ActorRef) extends Actor {
 
   // Execute any configs in the queue
   private def checkQueue() {
+    log.debug("Check Queue")
     while (queueState == Started() && !queueMap.isEmpty) {
       val (runId, config) = queueMap.iterator.next()
       queueMap.remove(runId)
       sender ! CommandStatus.StatusBusy(runId)
       if (config.isWaitConfig) {
+        log.debug("Pausing due to Wait config")
         queuePause(Some(config))
       } else {
+        log.debug(s"Submitting config with runId: $runId")
         configActor ! ConfigActor.ConfigSubmit(runId, config)
       }
     }
@@ -76,6 +79,7 @@ class QueueActor(configActor: ActorRef) extends Actor {
 
   // Request immediate execution of the given configs
   private def queueRequest(qc: QueueConfig, t: Timeout) {
+    log.debug(s"Queue request: ${qc.runId}")
     if (qc.config.isWaitConfig) {
       queuePause(Some(qc.config))
     } else {
@@ -95,27 +99,31 @@ class QueueActor(configActor: ActorRef) extends Actor {
   // All Configurations currently in the queue are removed.
   // No components are accepted or processed while stopped.
   private def queueStop() {
+    log.debug("Queue stopped")
     queueState = Stopped()
     queueMap.clear()
-    context.stop(self)
+//    context.stop(self)
   }
 
   // Pause the processing of a component’s queue after the completion
   // of the current Configuration. No changes are made to the queue.
   private def queuePause(optionalWaitConfig: Option[Configuration]) {
     // XXX TODO: handle different types of wait configs
+    log.debug("Queue paused")
     queueState = Paused()
   }
 
   // Processing of component’s queue is started.
   private def queueStart() {
+    log.debug("Queue started")
     queueState = Started()
     checkQueue()
   }
 
   // Delete a config from the queue
   private def queueDelete(runId : RunId) {
-      queueMap.remove(runId)
+    log.debug(s"Queue delete: $runId")
+    queueMap.remove(runId)
   }
 }
 

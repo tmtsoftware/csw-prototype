@@ -12,9 +12,9 @@ import org.tmt.csw.cs.core._
 import org.tmt.csw.cs.api._
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
 import org.tmt.csw.cs.core.GitConfigId
-import scala.Some
 import org.tmt.csw.cs.api.ConfigFileHistory
 import org.tmt.csw.cs.api.ConfigFileInfo
+import com.typesafe.scalalogging.slf4j.Logging
 
 //import aQute.bnd.annotation.component.Component
 
@@ -111,7 +111,7 @@ object GitConfigManager {
  * Uses JGit to manage versions of configuration files
  */
 //@Component
-class GitConfigManager(val git: Git) extends ConfigManager {
+class GitConfigManager(val git: Git) extends ConfigManager with Logging {
 
   /**
    * Creates a config file with the given path and data and optional comment.
@@ -123,8 +123,11 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @return a unique id that can be used to refer to the file
    */
   override def create(path: String, configData: ConfigData, comment: String): ConfigId = {
+    logger.debug(s"create $path")
     val file = fileForPath(path)
-    if (file.exists()) throw new IOException("File already exists in repository: " + path)
+    if (file.exists()) {
+      throw new IOException("File already exists in repository: " + path)
+    }
     put(path, configData, comment)
   }
 
@@ -138,6 +141,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @return a unique id that can be used to refer to the file
    */
   override def update(path: String, configData: ConfigData, comment: String): ConfigId = {
+    logger.debug(s"update $path")
     val file = fileForPath(path)
     if (!file.exists()) throw new FileNotFoundException("File not found: " + path)
     put(path, configData, comment)
@@ -167,6 +171,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @return true if the file exists
    */
   def exists(path: String): Boolean = {
+    logger.debug(s"exists $path")
     fileForPath(path).exists
   }
 
@@ -176,6 +181,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @param path the configuration path
    */
   override def delete(path: String, comment: String = "deleted") {
+    logger.debug(s"delete $path")
     if (!exists(path)) {
       throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
     }
@@ -193,6 +199,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @return an object containing the configuration data, if found
    */
   override def get(path: String, id: Option[ConfigId]): Option[ConfigData] = {
+    logger.debug(s"get $path")
     if (! exists(path)) {
       return None;
     }
@@ -211,6 +218,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @return a list containing one ConfigFileInfo object for each known config file
    */
   def list(): List[ConfigFileInfo] = {
+    logger.debug(s"list")
     val repo = git.getRepository
 
     // Resolve the revision specification
@@ -244,6 +252,7 @@ class GitConfigManager(val git: Git) extends ConfigManager {
    * @return a list containing one ConfigFileHistory object for each version of path
    */
   def history(path: String): List[ConfigFileHistory] = {
+    logger.debug(s"history $path")
     val logCommand = git.log
       .add(git.getRepository.resolve(Constants.HEAD))
       .addPath(path)
