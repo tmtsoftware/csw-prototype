@@ -1,11 +1,5 @@
 name := "org.tmt.csw.cmd.core"
 
-organization := Organization
-
-version := Version
-
-scalaVersion := SrcScalaVersion
-
 libraryDependencies ++= Seq(
     typesafeConfig,
     scalaLogging,

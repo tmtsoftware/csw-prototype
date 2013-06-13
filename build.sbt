@@ -1,8 +1,0 @@
-name := "org.tmt.csw"
-
-organization := "org.tmt"
-
-version := "1.0"
-
-scalaVersion := "2.10.1"
-

@@ -1,11 +1,22 @@
 import sbt._
+import Keys._
 
 // Defines the global build settings so they don't need to be edited everywhere
 trait Settings {
-  val Organization = "org.tmt"
   val Version = "1.0"
   val SrcScalaVersion = "2.10.1"
-  val AkkaVersion = "2.1.4"
+  val AkkaVersion = "2.2-SNAPSHOT"
+
+  val buildSettings = Defaults.defaultSettings ++ Seq (
+    organization := "org.tmt",
+    organizationName := "TMT",
+    organizationHomepage := Some(url("http://www.tmt.org")),
+    version := Version,
+    scalaVersion := SrcScalaVersion,
+    crossPaths := false,
+    resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
+    resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
+  )
 
   // Dependencies
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % AkkaVersion
@@ -23,9 +34,7 @@ trait Settings {
   val junit = "com.novocode" % "junit-interface" % "0.10-M4" % "test"
 
   // Local dependencies
-  val csAkka = "org.tmt" %% "org.tmt.csw.cs.akka" % Version
-  val csApi = "org.tmt" %% "org.tmt.csw.cs.api" % Version
-  val csCore = "org.tmt" %% "org.tmt.csw.cs.core" % Version
-
-
+  val csAkka = "org.tmt" % "org.tmt.csw.cs.akka" % Version
+  val csApi = "org.tmt" % "org.tmt.csw.cs.api" % Version
+  val csCore = "org.tmt" % "org.tmt.csw.cs.core" % Version
 }

@@ -1,8 +1,9 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ActorRef, Status, ActorLogging, Actor}
 import ConfigActor._
 import org.tmt.csw.cmd.core.Configuration
+import scala.concurrent.Future
 
 /**
  * Defines messages and states for use by actors that are command service targets.
@@ -10,11 +11,11 @@ import org.tmt.csw.cmd.core.Configuration
 object ConfigActor {
   // TMT Standard Configuration Interaction Commands
   sealed trait ConfigInteractionCommand
-  case class ConfigSubmit(runId: RunId, config: Configuration) extends ConfigInteractionCommand
-  case class ConfigCancel(runId: RunId) extends ConfigInteractionCommand
-  case class ConfigAbort(runId: RunId) extends ConfigInteractionCommand
-  case class ConfigPause(runId: RunId) extends ConfigInteractionCommand
-  case class ConfigResume(runId: RunId) extends ConfigInteractionCommand
+  case class ConfigSubmit(config: Configuration) extends ConfigInteractionCommand
+  case class ConfigCancel() extends ConfigInteractionCommand
+  case class ConfigAbort() extends ConfigInteractionCommand
+  case class ConfigPause() extends ConfigInteractionCommand
+  case class ConfigResume() extends ConfigInteractionCommand
 
   // Config states
   sealed trait ConfigState
@@ -22,69 +23,72 @@ object ConfigActor {
   case class Submitted() extends ConfigState
   case class Canceled() extends ConfigState
   case class Aborted() extends ConfigState
-  case class Stopped() extends ConfigState
   case class Paused() extends ConfigState
   case class Resumed() extends ConfigState
+  case class Completed() extends ConfigState
 }
 
 /**
  * Command service targets can implement this trait, which defines
  * methods for implementing the standard configuration control messages.
+ * One instance of this actor is created for each submitted config.
+ * The specifics of how to submit or pause a config are left to the
+ * implementing class, which is expected to have a worker actor that
+ * receives Configuration objects to execute.
  */
-abstract class ConfigActor(val name: String) extends Actor with ActorLogging {
-  protected var configState : ConfigState = Initialized()
+abstract class ConfigActor extends Actor with ActorLogging {
 
-  def receive = {
-    case ConfigSubmit(runId, config) => configSubmit(runId, config)
-    case ConfigCancel(runId) => configCancel(runId)
-    case ConfigAbort(runId) => configAbort(runId)
-    case ConfigPause(runId) => configPause(runId)
-    case ConfigResume(runId) => configResume(runId)
+  implicit val execContext = context.dispatcher
+
+  private var status: ConfigState = Initialized()
+
+  private def setStatus(s: ConfigState) {
+    status = s
+    log.debug(s"Status: ${s.getClass.getSimpleName}")
   }
 
   /**
-   * Submits the given configuration for execution (to "match" the configuration).
-   * @param runId unique id for this run
-   * @param config the configuration to execute
+   * Returns the current status, which is set from the received messages
    */
-  def configSubmit(runId: RunId, config: Configuration) {
-    log.debug(s"Submit config with runId: $runId")
-    configState = Submitted()
+  def getStatus = status
+
+  def receive = {
+    case ConfigSubmit(config) => setStatus(Submitted()); getWorkerActor forward config
+    case ConfigCancel() => setStatus(Canceled()); configCancel()
+    case ConfigAbort() => setStatus(Aborted()); configAbort()
+    case ConfigPause() => setStatus(Paused()); configPause()
+    case ConfigResume() => setStatus(Resumed()); configResume()
+    case x => log.error(s"Unknown ConfigActor message: $x")
   }
+
+  /**
+   * Return a reference to a worker actor that receives [Configuration] objects in the background
+   * (so that this actor is always ready to receive other messages, such as ConfigPause or ConfigAbort).
+   * The worker actor should reply with the message Completed() when done.
+   */
+  def getWorkerActor : ActorRef
 
   /**
    * Actions due to a previous request should be stopped immediately without completing.
-   * @param runId unique id for this run
    */
-  def configAbort(runId: RunId) {
-    log.debug(s"Abort config with runId: $runId")
-    configState = Aborted()
+  def configAbort() {
   }
 
   /**
    * Actions due to a Configuration should be stopped cleanly as soon as convenient without necessarily completing.
-   * @param runId unique id for this run
    */
-  def configCancel(runId: RunId) {
-    log.debug(s"Cancel config with runId: $runId")
-    configState = Canceled()
+  def configCancel() {
   }
 
   /**
    * Pause the actions associated with a specific Configuration.
-   * @param runId unique id for this run
    */
-  def configPause(runId: RunId){
-    log.debug(s"Pause config with runId: $runId")
-    configState = Paused()
+  def configPause() {
   }
 
   /**
    * Resume the paused actions associated with a specific Configuration.
-   * @param runId unique id for this run
    */
-  def configResume(runId: RunId) {
-    log.debug(s"Resume config with runId: $runId")
-    configState = Resumed()
+  def configResume() {
   }
 }

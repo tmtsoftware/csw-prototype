@@ -1,9 +1,9 @@
 package org.tmt.csw.cmd.akka
 
-import _root_.akka.actor._
-import _root_.akka.pattern.ask
+import akka.actor._
+import akka.pattern.ask
 import scala.concurrent.Future
-import _root_.akka.util.Timeout
+import akka.util.Timeout
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandServiceActor._
 
@@ -14,7 +14,7 @@ object CommandServiceActor {
   // TMT Standard Queue Interaction Commands
   sealed trait QueueInteractionCommand
   case class QueueSubmit(configs: Configuration) extends QueueInteractionCommand
-  case class QueueRequest(configs: Configuration, timeout: Timeout) extends QueueInteractionCommand
+  case class QueueBypassRequest(configs: Configuration, timeout: Timeout) extends QueueInteractionCommand
   case class QueueStop() extends QueueInteractionCommand
   case class QueuePause() extends QueueInteractionCommand
   case class QueueStart() extends QueueInteractionCommand
@@ -23,28 +23,28 @@ object CommandServiceActor {
 
 /**
  * Implements the TMT Command Service.
- * @param configActor the target actor for the command
+ * @param configActorProps used to create the target actor for the command
  */
-class CommandServiceActor(configActor: ActorRef, componentName: String) extends Actor with ActorLogging {
+class CommandServiceActor(configActorProps: Props, componentName: String) extends Actor with ActorLogging {
 
-  val queueActor = context.actorOf(Props(new QueueActor(configActor)), name = componentName)
+  // Create the actor that manages the queue for this component
+  val queueActor = context.actorOf(Props(new QueueActor(configActorProps)), name = componentName + "Actor")
 
   def receive = {
     case QueueSubmit(config) => sender ! queueSubmit(config)
-    case QueueRequest(config, timeout) => sender ! queueRequest(config, timeout)
+    case QueueBypassRequest(config, timeout) => sender ! queueBypassRequest(config, timeout)
     case QueueStop() => queueStop()
     case QueuePause() => queuePause()
     case QueueStart() => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
 
     // Status Messages (XXX TODO: send events for these? Or send them directly to the original sender?)
-    case CommandStatus.StatusQueued =>
-    case CommandStatus.StatusBusy =>
-    case CommandStatus.StatusComplete =>
-    case CommandStatus.StatusError(runId, ex) =>
-    case CommandStatus.StatusAborted =>
-
-    case _ => sender ! Status.Failure(new IllegalArgumentException)
+    case CommandStatus.StatusQueued(runId) => log.debug(s"Status: Queued runId: $runId")
+    case CommandStatus.StatusBusy(runId) => log.debug(s"Status: Busy runId: $runId")
+    case CommandStatus.StatusComplete(runId) => log.debug(s"Status: Complete runId: $runId")
+    case CommandStatus.StatusError(runId, ex) => log.error(ex, s"Received error for runId: $runId")
+    case CommandStatus.StatusAborted(runId) => log.info(s"Status: Aborted runId: $runId")
+    case x => log.error(s"Unknown CommandServiceActor message: $x"); sender ! Status.Failure(new IllegalArgumentException)
   }
 
   /**
@@ -52,7 +52,7 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    */
   private def queueSubmit(config: Configuration): RunId = {
     val runId = RunId()
-    log.debug(s"Submit config with runId: $runId: $config")
+    log.debug(s"Submit config with runId: $runId")
     queueActor ! QueueActor.QueueSubmit(QueueConfig(runId, config))
     runId
   }
@@ -61,10 +61,10 @@ class CommandServiceActor(configActor: ActorRef, componentName: String) extends 
    * Request immediate execution of one or more configs on the component and return a future with the status
    * (which should be
    */
-  private def queueRequest(config: Configuration, t: Timeout): Future[CommandStatus] = {
+  private def queueBypassRequest(config: Configuration, t: Timeout): Future[CommandStatus] = {
     implicit val timeout = t
     log.debug(s"Request config: $config")
-    (queueActor ? QueueActor.QueueRequest(QueueConfig(RunId(), config), t)).mapTo[CommandStatus]
+    (queueActor ? QueueActor.QueueBypassRequest(QueueConfig(RunId(), config), t)).mapTo[CommandStatus]
   }
 
   /**

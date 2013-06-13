@@ -7,6 +7,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
 import org.tmt.csw.cmd.core.Configuration
+import com.typesafe.scalalogging.slf4j.Logging
 
 object TestConfig {
   val testConfig =
@@ -34,8 +35,8 @@ object TestConfig {
 /**
  * Tests the Command Service actor
  */
-class TestCommandServiceActor extends TestKit(ActorSystem("mySystem"))
-  with ImplicitSender with FunSuite with BeforeAndAfterAll {
+class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
+  with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
 
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
@@ -43,23 +44,31 @@ class TestCommandServiceActor extends TestKit(ActorSystem("mySystem"))
 
   test("Test the CommandServiceActor") {
 
-    // Create the actor
-    val configActor = system.actorOf(Props(new TestConfigActor("testActor", 3)), name = "testActor")
-    val commandServiceActor = system.actorOf(Props(new CommandServiceActor(configActor, "test")), name = "commandService")
+    val configActorProps = Props {new TestConfigActor(100)}
+    val commandServiceActor = system.actorOf(Props {new CommandServiceActor(configActorProps, "test")}, name = "commandService")
+    val config = Configuration(TestConfig.testConfig)
 
     // Queue a command
-    val config = Configuration(TestConfig.testConfig)
+
     val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config)
     f onSuccess {
       case runId: RunId =>
-        println(s"got runId: $runId")
+        logger.info(s"got runId: $runId")
+        Thread.sleep(1000)
+        commandServiceActor ! CommandServiceActor.QueuePause()
+        commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-2"))
+        commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-3"))
+        commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-4"))
         Thread.sleep(3000)
-        commandServiceActor ! CommandServiceActor.QueueStop
+        commandServiceActor ! CommandServiceActor.QueueStart()
+        Thread.sleep(3000)
+        commandServiceActor ! CommandServiceActor.QueueStop()
+        Thread.sleep(1000)
         system.shutdown()
     }
     f onFailure {
       case e: Exception =>
-        e.printStackTrace()
+        logger.error("Command failed: ", e)
         system.shutdown()
     }
 

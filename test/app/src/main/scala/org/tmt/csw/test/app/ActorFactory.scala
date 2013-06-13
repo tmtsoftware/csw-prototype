@@ -10,6 +10,7 @@ import java.io.File
  * Manages access to singleton actors
  */
 object ActorFactory {
+  // XXX TODO FIXME: See http://doc.akka.io/docs/akka/2.1.4/scala/actors.html about "actor factory"
   val system = ActorSystem("TestApp")
   val settings = Settings(system)
 //  val configServiceActor = system.actorOf(Props(ConfigServiceActor()), name = "configService")

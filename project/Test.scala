@@ -32,18 +32,7 @@ trait Test extends Build with Settings with Cs {
     )
   ) dependsOn(cs_akka, cs_api, cs_core)
 
-  lazy val buildSettings = Defaults.defaultSettings ++ Seq(
-    organization := Organization,
-    version := Version,
-    scalaVersion := SrcScalaVersion,
-    crossPaths := false,
-    organizationName := "TMT",
-    organizationHomepage := Some(url("http://www.tmt.org"))
-  )
-
   lazy val defaultSettings = buildSettings ++ Seq(
-    resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
-
     // compile options
     scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
     javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")

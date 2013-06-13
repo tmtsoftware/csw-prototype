@@ -1,17 +1,19 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{ActorLogging, ActorRef, Status, Actor}
+import akka.actor._
 import scala.collection.mutable
-import QueueActor._
 import org.tmt.csw.cmd.core.Configuration
-import _root_.akka.pattern.ask
+import akka.pattern.ask
 import akka.util.Timeout
+import org.tmt.csw.cmd.akka.QueueActor._
+import scala.concurrent.duration._
+import scala.Some
 
 object QueueActor {
   // Actor messages received
   sealed trait QueueActorMessage
   case class QueueSubmit(queueConfig : QueueConfig) extends QueueActorMessage
-  case class QueueRequest(queueConfig : QueueConfig, t: Timeout) extends QueueActorMessage
+  case class QueueBypassRequest(queueConfig : QueueConfig, t: Timeout) extends QueueActorMessage
   case class QueueStop() extends QueueActorMessage
   case class QueuePause() extends QueueActorMessage
   case class QueueStart() extends QueueActorMessage
@@ -29,23 +31,27 @@ object QueueActor {
  * QueueConfig objects are placed on the queue when received.
  * Later, each config is dequeued and passed to the component for processing.
  *
- * @param configActor the target actor for the commands
+ * @param configActorProps used to create the target actor for the command
  */
-class QueueActor(configActor: ActorRef) extends Actor with ActorLogging {
+class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
 
-  // The queue for this OMOA component
+  // The queue for this OMOA component: maps runId to the configuration being executed
   private val queueMap = mutable.LinkedHashMap[RunId, Configuration]()
+
+  // Maps runId to the actor that is executing it
+  private val configMap = mutable.LinkedHashMap[RunId, ActorRef]()
 
   private var queueState : QueueState = Started()
 
   def receive = {
     case QueueSubmit(queueConfig) => queueSubmit(queueConfig)
-    case QueueRequest(queueConfig, timeout) => queueRequest(queueConfig, timeout)
+    case QueueBypassRequest(queueConfig, timeout) => queueBypassRequest(queueConfig, timeout)
     case QueueStop() => queueStop()
     case QueuePause() => queuePause(None)
     case QueueStart() => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
-    case _ => sender ! Status.Failure(new IllegalArgumentException)
+    case x => log.error(s"Unknown QueueActor message: $x"); sender ! Status.Failure(new IllegalArgumentException)
+
   }
 
   // Queue the given config for later execution and return the runId to the sender
@@ -60,7 +66,7 @@ class QueueActor(configActor: ActorRef) extends Actor with ActorLogging {
     }
   }
 
-  // Execute any configs in the queue
+  // Execute any configs in the queue, unless paused or stopped
   private def checkQueue() {
     log.debug("Check Queue")
     while (queueState == Started() && !queueMap.isEmpty) {
@@ -72,27 +78,45 @@ class QueueActor(configActor: ActorRef) extends Actor with ActorLogging {
         queuePause(Some(config))
       } else {
         log.debug(s"Submitting config with runId: $runId")
-        configActor ! ConfigActor.ConfigSubmit(runId, config)
+        // We need to specify a timeout here, but don't have any idea how long, so just use a large value (24 hours)
+        submitConfig(runId, config, 24.hours)
       }
     }
   }
 
-  // Request immediate execution of the given configs
-  private def queueRequest(qc: QueueConfig, t: Timeout) {
-    log.debug(s"Queue request: ${qc.runId}")
+  // Request immediate execution of the given config
+  private def queueBypassRequest(qc: QueueConfig, t: Timeout) {
     if (qc.config.isWaitConfig) {
+      log.debug(s"Queue bypass request: wait config: ${qc.runId}")
       queuePause(Some(qc.config))
+      sender ! CommandStatus.StatusComplete(qc.runId)
     } else {
-      implicit val timeout = t
-      implicit val execContext = context.dispatcher
-      val f = configActor ? ConfigActor.ConfigSubmit(qc.runId, qc.config)
-      f onSuccess {
-        case _ => sender ! CommandStatus.StatusComplete(qc.runId)
-      }
-      f onFailure {
-        case e: Exception => sender ! CommandStatus.StatusError(qc.runId, e)
-      }
+      log.debug(s"Queue bypass request: ${qc.runId}")
+      submitConfig(qc.runId, qc.config, t)
     }
+  }
+
+  // Submit the config to a new config actor for execution.
+  // The config actor is only used once for this config and then killed.
+  // The sender is notified of the status when done.
+  private def submitConfig(runId: RunId, config: Configuration, t: Timeout) {
+    implicit val timeout = t
+    implicit val execContext = context.dispatcher
+    val configActor = context.actorOf(configActorProps)
+    configMap(runId) = configActor
+    val f = configActor ? ConfigActor.ConfigSubmit(config)
+    f onSuccess {
+      case _ => sender ! CommandStatus.StatusComplete(runId); stopActor(runId, configActor)
+    }
+    f onFailure {
+      case e: Exception => sender ! CommandStatus.StatusError(runId, e); stopActor(runId, configActor)
+    }
+  }
+
+  // Clean up after an actor is done
+  private def stopActor(runId: RunId, configActor: ActorRef) {
+    configActor ! PoisonPill
+    configMap.remove(runId)
   }
 
   // Processing of Configurations in a components queue is stopped.
@@ -102,7 +126,6 @@ class QueueActor(configActor: ActorRef) extends Actor with ActorLogging {
     log.debug("Queue stopped")
     queueState = Stopped()
     queueMap.clear()
-//    context.stop(self)
   }
 
   // Pause the processing of a component’s queue after the completion
