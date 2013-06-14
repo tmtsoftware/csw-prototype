@@ -14,10 +14,10 @@ object ConfigActor {
   // TMT Standard Configuration Interaction Commands
   sealed trait ConfigInteractionCommand
   case class ConfigSubmit(config: Configuration, timeout: Timeout) extends ConfigInteractionCommand
-  case class ConfigCancel() extends ConfigInteractionCommand
-  case class ConfigAbort() extends ConfigInteractionCommand
-  case class ConfigPause() extends ConfigInteractionCommand
-  case class ConfigResume() extends ConfigInteractionCommand
+  case object ConfigCancel extends ConfigInteractionCommand
+  case object ConfigAbort extends ConfigInteractionCommand
+  case object ConfigPause extends ConfigInteractionCommand
+  case object ConfigResume extends ConfigInteractionCommand
 }
 
 /**
@@ -65,10 +65,10 @@ abstract class ConfigActor extends Actor with ActorLogging {
 
   def receive = {
     case ConfigSubmit(config, timeout) => setStatus(Submitted); configSubmit(sender, config, timeout)
-    case ConfigCancel() => setStatus(Canceled); configCancel()
-    case ConfigAbort() => setStatus(Aborted); configAbort()
-    case ConfigPause() => setStatus(Paused); configPause()
-    case ConfigResume() => setStatus(Resumed); configResume()
+    case ConfigCancel => setStatus(Canceled); configCancel()
+    case ConfigAbort => setStatus(Aborted); configAbort()
+    case ConfigPause => setStatus(Paused); configPause()
+    case ConfigResume => setStatus(Resumed); configResume()
     case x => log.error(s"Unknown ConfigActor message: $x")
   }
 

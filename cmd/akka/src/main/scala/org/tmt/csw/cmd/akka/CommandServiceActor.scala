@@ -19,10 +19,17 @@ object CommandServiceActor {
   sealed trait QueueInteractionCommand
   case class QueueSubmit(configs: Configuration) extends QueueInteractionCommand
   case class QueueBypassRequest(configs: Configuration, timeout: Timeout) extends QueueInteractionCommand
-  case class QueueStop() extends QueueInteractionCommand
-  case class QueuePause() extends QueueInteractionCommand
-  case class QueueStart() extends QueueInteractionCommand
+  case object QueueStop extends QueueInteractionCommand
+  case object QueuePause extends QueueInteractionCommand
+  case object QueueStart extends QueueInteractionCommand
   case class QueueDelete(runId: RunId) extends QueueInteractionCommand
+
+  // Messages that deal with running configs
+  sealed trait ConfigInteractionCommand
+  case class ConfigCancel(runId : RunId) extends ConfigInteractionCommand
+  case class ConfigAbort(runId : RunId) extends ConfigInteractionCommand
+  case class ConfigPause(runId : RunId) extends ConfigInteractionCommand
+  case class ConfigResume(runId : RunId) extends ConfigInteractionCommand
 }
 
 /**
@@ -35,12 +42,19 @@ class CommandServiceActor(configActorProps: Props, componentName: String) extend
   val queueActor = context.actorOf(QueueActor.props(configActorProps), name = componentName + "Actor")
 
   def receive = {
+    // Queue related commands
     case QueueSubmit(config) => queueSubmit(config)
     case QueueBypassRequest(config, timeout) => queueBypassRequest(config, timeout)
-    case QueueStop() => queueStop()
-    case QueuePause() => queuePause()
-    case QueueStart() => queueStart()
+    case QueueStop => queueStop()
+    case QueuePause => queuePause()
+    case QueueStart => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
+
+    // Commands that act on a running config
+    case ConfigAbort(runId) => configAbort(runId)
+    case ConfigCancel(runId) => configCancel(runId)
+    case ConfigPause(runId) => configPause(runId)
+    case ConfigResume(runId) => configResume(runId)
 
     // Status Messages (XXX TODO: send events for these? Or send them directly to the original sender?)
     case CommandStatus.Pending(runId) => log.debug(s"Status: Pending runId: $runId")
@@ -76,8 +90,8 @@ class CommandServiceActor(configActorProps: Props, componentName: String) extend
    * queue are removed. No components are accepted or processed while stopped.
    */
   private def queueStop() {
-    log.debug("Stop")
-    queueActor ! QueueActor.QueueStop()
+    log.debug("Queue Stop")
+    queueActor ! QueueActor.QueueStop
     context.stop(self)
   }
 
@@ -86,23 +100,56 @@ class CommandServiceActor(configActorProps: Props, componentName: String) extend
    * No changes are made to the queue.
    */
   private def queuePause() {
-    log.debug("Pause")
-    queueActor ! QueueActor.QueuePause()
+    log.debug("Queue Pause")
+    queueActor ! QueueActor.QueuePause
   }
 
   /**
    * Processing of component’s queue is started.
    */
   private def queueStart() {
-    log.debug("Start")
-    queueActor ! QueueActor.QueueStart()
+    log.debug("Queue Start")
+    queueActor ! QueueActor.QueueStart
   }
 
   /**
    * Allows removal of a config in the queued execution state.
    */
   private def queueDelete(runId: RunId) {
-    log.debug("Delete")
+    log.debug(s"Queue Delete: runId = $runId")
     queueActor ! QueueActor.QueueDelete(runId)
+  }
+
+  /**
+   * Actions due to a Configuration should be stopped cleanly as soon
+   * as convenient without necessarily completing
+   */
+  private def configCancel(runId: RunId) {
+    log.debug(s"Config Cancel: runId = $runId")
+    queueActor ! QueueActor.ConfigCancel(runId)
+  }
+
+  /**
+   * Actions due to a previous request should be stopped immediately without completing
+   */
+  private def configAbort(runId: RunId) {
+    log.debug(s"Config Abort: runId = $runId")
+    queueActor ! QueueActor.ConfigAbort(runId)
+  }
+
+  /**
+   * Pause the actions associated with a specific Configuration
+   */
+  private def configPause(runId: RunId) {
+    log.debug(s"Config Pause: runId = $runId")
+    queueActor ! QueueActor.ConfigPause(runId)
+  }
+
+  /**
+   * Resume the paused actions associated with a specific Configuration
+   */
+  private def configResume(runId: RunId) {
+    log.debug(s"Config Resume: runId = $runId")
+    queueActor ! QueueActor.ConfigResume(runId)
   }
 }

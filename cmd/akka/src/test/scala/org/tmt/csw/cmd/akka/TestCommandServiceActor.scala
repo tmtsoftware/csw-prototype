@@ -42,7 +42,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
   implicit val timeout = Timeout(5.seconds)
   implicit val dispatcher = system.dispatcher
 
-  test("Test the CommandServiceActor") {
+  test("Test basic CommandServiceActor queue commands") {
 
     val configActorProps = TestConfigActor.props(100)
     val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
@@ -55,14 +55,14 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
       case runId: RunId =>
         logger.info(s"got runId: $runId")
         Thread.sleep(1000)
-        commandServiceActor ! CommandServiceActor.QueuePause()
+        commandServiceActor ! CommandServiceActor.QueuePause
         commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-2"))
         commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-3"))
         commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-4"))
         Thread.sleep(3000)
-        commandServiceActor ! CommandServiceActor.QueueStart()
+        commandServiceActor ! CommandServiceActor.QueueStart
         Thread.sleep(3000)
-        commandServiceActor ! CommandServiceActor.QueueStop()
+        commandServiceActor ! CommandServiceActor.QueueStop
         Thread.sleep(1000)
         system.shutdown()
     }
@@ -75,5 +75,32 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
      // Wait for above to complete!
      system.awaitTermination()
   }
+
+  test("Test basic CommandServiceActor config commands") {
+
+    val configActorProps = TestConfigActor.props(100)
+    val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
+    val config = Configuration(TestConfig.testConfig)
+
+    // Queue a command
+
+    val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config)
+    f onSuccess {
+      case runId: RunId =>
+        logger.info(s"got runId: $runId")
+        commandServiceActor ! CommandServiceActor.ConfigAbort(runId)
+        Thread.sleep(3000)
+        system.shutdown()
+    }
+    f onFailure {
+      case e: Exception =>
+        logger.error("Command failed: ", e)
+        system.shutdown()
+    }
+
+    // Wait for above to complete!
+    system.awaitTermination()
+  }
+
 
 }

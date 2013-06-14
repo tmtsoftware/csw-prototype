@@ -29,18 +29,25 @@ object QueueActor {
 
   // Actor messages received
   sealed trait QueueActorMessage
+
+  // Messages that operate on the queue
   case class QueueSubmit(queueConfig : QueueConfig) extends QueueActorMessage
   case class QueueBypassRequest(queueConfig : QueueConfig, t: Timeout) extends QueueActorMessage
-  case class QueueStop() extends QueueActorMessage
-  case class QueuePause() extends QueueActorMessage
-  case class QueueStart() extends QueueActorMessage
+  case object QueueStop extends QueueActorMessage
+  case object QueuePause extends QueueActorMessage
+  case object QueueStart extends QueueActorMessage
   case class QueueDelete(runId : RunId) extends QueueActorMessage
+
+  case class ConfigCancel(runId : RunId) extends QueueActorMessage
+  case class ConfigAbort(runId : RunId) extends QueueActorMessage
+  case class ConfigPause(runId : RunId) extends QueueActorMessage
+  case class ConfigResume(runId : RunId) extends QueueActorMessage
 
   // Queue states
   sealed trait QueueState
-  case class Started() extends QueueState
-  case class Stopped() extends QueueState
-  case class Paused() extends QueueState
+  case object Started extends QueueState
+  case object Stopped extends QueueState
+  case object Paused extends QueueState
 }
 
 /**
@@ -59,17 +66,25 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
   private val actorRefForRunId = mutable.LinkedHashMap[RunId, ActorRef]()
   private val runIdForActorRef = mutable.LinkedHashMap[ActorRef, RunId]()
 
-  private var queueState : QueueState = Started()
+  private var queueState : QueueState = Started
 
   implicit val execContext = context.dispatcher
 
   def receive = {
+    // Queue related commands
     case QueueSubmit(queueConfig) => queueSubmit(queueConfig)
     case QueueBypassRequest(queueConfig, timeout) => queueBypassRequest(queueConfig, timeout)
-    case QueueStop() => queueStop()
-    case QueuePause() => queuePause(None)
-    case QueueStart() => queueStart()
+    case QueueStop => queueStop()
+    case QueuePause => queuePause(None)
+    case QueueStart => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
+
+    // Commands that act on a running config
+    case ConfigAbort(runId) => configAbort(runId)
+    case ConfigCancel(runId) => configCancel(runId)
+    case ConfigPause(runId) => configPause(runId)
+    case ConfigResume(runId) => configResume(runId)
+
     case Terminated(configActor)  => cleanupConfigActor(configActor)
     case x => log.error(s"Unknown QueueActor message: $x")
 
@@ -87,11 +102,11 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
 
   // Queue the given config for later execution and return the runId to the sender
   private def queueSubmit(qc: QueueConfig) {
-    if (queueState != Stopped()) {
+    if (queueState != Stopped) {
       queueMap(qc.runId) = qc.config
       log.debug(s"Queued config with runId: ${qc.runId}")
       sender ! CommandStatus.Queued(qc.runId)
-      if (queueState != Paused()) {
+      if (queueState != Paused) {
         checkQueue()
       }
     }
@@ -100,7 +115,7 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
   // Execute any configs in the queue, unless paused or stopped
   private def checkQueue() {
     log.debug("Check Queue")
-    while (queueState == Started() && !queueMap.isEmpty) {
+    while (queueState == Started && !queueMap.isEmpty) {
       val (runId, config) = queueMap.iterator.next()
       queueMap.remove(runId)
       sender ! CommandStatus.Busy(runId)
@@ -158,7 +173,7 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
   // No components are accepted or processed while stopped.
   private def queueStop() {
     log.debug("Queue stopped")
-    queueState = Stopped()
+    queueState = Stopped
     queueMap.clear()
   }
 
@@ -167,13 +182,13 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
   private def queuePause(optionalWaitConfig: Option[Configuration]) {
     // XXX TODO: handle different types of wait configs
     log.debug("Queue paused")
-    queueState = Paused()
+    queueState = Paused
   }
 
   // Processing of component’s queue is started.
   private def queueStart() {
     log.debug("Queue started")
-    queueState = Started()
+    queueState = Started
     checkQueue()
   }
 
@@ -181,6 +196,51 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
   private def queueDelete(runId : RunId) {
     log.debug(s"Queue delete: $runId")
     queueMap.remove(runId)
+  }
+
+  /**
+   * Actions due to a Configuration should be stopped cleanly as soon
+   * as convenient without necessarily completing
+   */
+  private def configCancel(runId: RunId) {
+    log.debug(s"Config Cancel: runId = $runId")
+    actorRefForRunId.get(runId) match {
+      case Some(configActor) => configActor ! ConfigActor.ConfigCancel
+      case None => log.info(s"Can't cancel (may be done already): RunId = $runId")
+    }
+  }
+
+  /**
+   * Actions due to a previous request should be stopped immediately without completing
+   */
+  private def configAbort(runId: RunId) {
+    log.debug(s"Config Abort: runId = $runId")
+    actorRefForRunId.get(runId) match {
+      case Some(configActor) => configActor ! ConfigActor.ConfigAbort
+      case None => log.info(s"Can't abort (may be done already): RunId = $runId")
+    }
+  }
+
+  /**
+   * Pause the actions associated with a specific Configuration
+   */
+  private def configPause(runId: RunId) {
+    log.debug(s"Config Pause: runId = $runId")
+    actorRefForRunId.get(runId) match {
+      case Some(configActor) => configActor ! ConfigActor.ConfigPause
+      case None => log.info(s"Can't pause (may be done already): RunId = $runId")
+    }
+  }
+
+  /**
+   * Resume the paused actions associated with a specific Configuration
+   */
+  private def configResume(runId: RunId) {
+    log.debug(s"Config Resume: runId = $runId")
+    actorRefForRunId.get(runId) match {
+      case Some(configActor) => configActor ! ConfigActor.ConfigResume
+      case None => log.info(s"Can't resume (may be done already): RunId = $runId")
+    }
   }
 }
 
