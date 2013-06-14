@@ -22,20 +22,20 @@ object ConfigServiceActor {
   case class HistoryRequest(path: String) extends ConfigServiceRequest
 
   /**
-   * Initialize with the given ConfigManager
+   * Use this Props instance to initialize with the given ConfigManager
    */
-  def apply(configManager: ConfigManager) : ConfigServiceActor = new ConfigServiceActor(Some(configManager))
+  def props(configManager: ConfigManager) = Props(classOf[ConfigServiceActor], Some(configManager))
 
   /**
-   * Initialize with the local repository directory and the path or URI for the main repository
+   * Use this Props instance to initialize with the local repository directory and the path or URI for the main repository
    */
-  def apply(gitLocalRepository: File, gitMainRepository: String) : ConfigServiceActor
-    = new ConfigServiceActor(Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
+  def props(gitLocalRepository: File, gitMainRepository: String)
+    = Props(classOf[ConfigServiceActor], Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
 
   /**
-   * Initializes using the default Git repository (configured in resources/reference.conf)
+   * Use this Props instance to initialize using the default Git repository (configured in resources/reference.conf)
    */
-  def apply() : ConfigServiceActor = new ConfigServiceActor(None)
+  def props() = Props[ConfigServiceActor]
 
   /**
    * Returns the default config manager, using the given settings
@@ -50,7 +50,7 @@ object ConfigServiceActor {
  * An Akka actor class implementing the Config Service.
  * @param configManagerOpt specify the configManager to use for tests, use None for production to get default
  */
-class ConfigServiceActor(configManagerOpt: Option[ConfigManager]) extends Actor with ActorLogging {
+class ConfigServiceActor(configManagerOpt: Option[ConfigManager] = None) extends Actor with ActorLogging {
 
   // The ConfigManager instance used to access the Git repository
   val configManager = {

@@ -1,6 +1,6 @@
 package org.tmt.csw.test.app
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ActorRef, Props, ActorLogging, Actor}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -9,8 +9,13 @@ import org.tmt.csw.cs.api.{ConfigId, ConfigData}
 import org.tmt.csw.cs.core.ConfigString
 import org.tmt.csw.cs.akka.ConfigServiceActor._
 
+object TestActor {
+  def props(configServiceActor: ActorRef) = Props(classOf[TestActor], configServiceActor)
+}
+
+
 // A test actor used to send messages to the config service
-class TestActor extends Actor with ActorLogging {
+class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
 
   val configFileName = "testApp/config.conf"
   val duration = 5.seconds
@@ -18,7 +23,7 @@ class TestActor extends Actor with ActorLogging {
 
   def receive = {
     case Start =>
-      val future = ActorFactory.configServiceActor ? GetRequest(configFileName)
+      val future = configServiceActor ? GetRequest(configFileName)
       future onSuccess {
         case Some(configData) => readConfigFile(configData.asInstanceOf[ConfigData])
         case None => createNewConfigFile()
@@ -38,7 +43,7 @@ class TestActor extends Actor with ActorLogging {
   def createNewConfigFile() {
     log.info("Get => None: make new config file")
     val configData = new ConfigString("# TestApp Settings\n\nkey1 = value1\nkey2 = value2\n")
-    val future = ActorFactory.configServiceActor ? CreateRequest(configFileName, configData)
+    val future = configServiceActor ? CreateRequest(configFileName, configData)
     future onSuccess {
       case id: ConfigId =>
         log.info("created new config file")
@@ -48,7 +53,6 @@ class TestActor extends Actor with ActorLogging {
     future onFailure {
       case e: Exception => {
         log.error(e, "Create got exception")
-        e.printStackTrace()
       }
     }
   }

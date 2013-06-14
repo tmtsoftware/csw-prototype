@@ -44,8 +44,8 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
 
   test("Test the CommandServiceActor") {
 
-    val configActorProps = Props {new TestConfigActor(100)}
-    val commandServiceActor = system.actorOf(Props {new CommandServiceActor(configActorProps, "test")}, name = "commandService")
+    val configActorProps = TestConfigActor.props(100)
+    val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
     val config = Configuration(TestConfig.testConfig)
 
     // Queue a command

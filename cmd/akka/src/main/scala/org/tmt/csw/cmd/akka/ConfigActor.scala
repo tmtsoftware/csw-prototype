@@ -1,9 +1,11 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{ActorRef, Status, ActorLogging, Actor}
+import akka.actor._
 import ConfigActor._
+import ConfigState._
 import org.tmt.csw.cmd.core.Configuration
-import scala.concurrent.Future
+import akka.pattern._
+import akka.util.Timeout
 
 /**
  * Defines messages and states for use by actors that are command service targets.
@@ -11,21 +13,11 @@ import scala.concurrent.Future
 object ConfigActor {
   // TMT Standard Configuration Interaction Commands
   sealed trait ConfigInteractionCommand
-  case class ConfigSubmit(config: Configuration) extends ConfigInteractionCommand
+  case class ConfigSubmit(config: Configuration, timeout: Timeout) extends ConfigInteractionCommand
   case class ConfigCancel() extends ConfigInteractionCommand
   case class ConfigAbort() extends ConfigInteractionCommand
   case class ConfigPause() extends ConfigInteractionCommand
   case class ConfigResume() extends ConfigInteractionCommand
-
-  // Config states
-  sealed trait ConfigState
-  case class Initialized() extends ConfigState
-  case class Submitted() extends ConfigState
-  case class Canceled() extends ConfigState
-  case class Aborted() extends ConfigState
-  case class Paused() extends ConfigState
-  case class Resumed() extends ConfigState
-  case class Completed() extends ConfigState
 }
 
 /**
@@ -40,11 +32,30 @@ abstract class ConfigActor extends Actor with ActorLogging {
 
   implicit val execContext = context.dispatcher
 
-  private var status: ConfigState = Initialized()
+  private var status: ConfigState = Initialized
 
   private def setStatus(s: ConfigState) {
     status = s
     log.debug(s"Status: ${s.getClass.getSimpleName}")
+  }
+
+  private def configSubmit(sender: ActorRef, config: Configuration, timeout: Timeout) {
+    implicit val t = timeout
+    getWorkerActor ? config map {
+      case state: ConfigState =>
+        self ! PoisonPill
+        status match {
+          case Canceled => status
+          case Aborted => status
+          case _ => Completed
+        }
+      case x => log.error(s"Received unknown message: $x")
+    } recover {
+      case ex: Exception =>
+        log.error("Error returned from submit", ex)
+        self ! PoisonPill
+        ex
+    } pipeTo sender
   }
 
   /**
@@ -53,11 +64,11 @@ abstract class ConfigActor extends Actor with ActorLogging {
   def getStatus = status
 
   def receive = {
-    case ConfigSubmit(config) => setStatus(Submitted()); getWorkerActor forward config
-    case ConfigCancel() => setStatus(Canceled()); configCancel()
-    case ConfigAbort() => setStatus(Aborted()); configAbort()
-    case ConfigPause() => setStatus(Paused()); configPause()
-    case ConfigResume() => setStatus(Resumed()); configResume()
+    case ConfigSubmit(config, timeout) => setStatus(Submitted); configSubmit(sender, config, timeout)
+    case ConfigCancel() => setStatus(Canceled); configCancel()
+    case ConfigAbort() => setStatus(Aborted); configAbort()
+    case ConfigPause() => setStatus(Paused); configPause()
+    case ConfigResume() => setStatus(Resumed); configResume()
     case x => log.error(s"Unknown ConfigActor message: $x")
   }
 
@@ -71,24 +82,20 @@ abstract class ConfigActor extends Actor with ActorLogging {
   /**
    * Actions due to a previous request should be stopped immediately without completing.
    */
-  def configAbort() {
-  }
+  def configAbort()
 
   /**
    * Actions due to a Configuration should be stopped cleanly as soon as convenient without necessarily completing.
    */
-  def configCancel() {
-  }
+  def configCancel(){}
 
   /**
    * Pause the actions associated with a specific Configuration.
    */
-  def configPause() {
-  }
+  def configPause(){}
 
   /**
    * Resume the paused actions associated with a specific Configuration.
    */
-  def configResume() {
-  }
+  def configResume(){}
 }

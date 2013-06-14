@@ -3,7 +3,7 @@ package org.tmt.csw.cs.akka
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.io.{FileNotFoundException, IOException}
 import org.tmt.csw.cs.core.ConfigString
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.Some
 import scala.concurrent.duration._
@@ -31,7 +31,7 @@ class TestConfigServiceClient extends TestKit(ActorSystem("mySystem")) with Impl
     val manager = TestRepo.getConfigManager("test2")
 
     // Create the actor
-    val csActor = system.actorOf(Props(ConfigServiceActor(manager)), name = "configService")
+    val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
     val csClient = new ConfigServiceClient(csActor)
 
     val duration = 5.seconds

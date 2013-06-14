@@ -3,13 +3,30 @@ package org.tmt.csw.cmd.akka
 import akka.actor._
 import scala.collection.mutable
 import org.tmt.csw.cmd.core.Configuration
-import akka.pattern.ask
+import akka.pattern._
 import akka.util.Timeout
 import org.tmt.csw.cmd.akka.QueueActor._
 import scala.concurrent.duration._
 import scala.Some
+import org.tmt.csw.cmd.akka.ConfigState.ConfigState
+import org.tmt.csw.cmd.akka.CommandStatus.CommandStatus
 
 object QueueActor {
+  /**
+   * Use this to create a queue actor
+   * @param configActorProps Props used to create the actor to execute the config
+   * @return the Props instance to use to create the queue actor
+   */
+  def props(configActorProps: Props)  = Props(classOf[QueueActor], configActorProps)
+
+  /**
+   * Combines a RunId with a Configuration object.
+   * Objects of this type are placed in the command queue.
+   */
+  case class QueueConfig(runId: RunId, config: Configuration) extends Comparable[QueueConfig] {
+    def compareTo(that: QueueConfig): Int = this.runId.id.compareTo(that.runId.id)
+  }
+
   // Actor messages received
   sealed trait QueueActorMessage
   case class QueueSubmit(queueConfig : QueueConfig) extends QueueActorMessage
@@ -38,10 +55,13 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
   // The queue for this OMOA component: maps runId to the configuration being executed
   private val queueMap = mutable.LinkedHashMap[RunId, Configuration]()
 
-  // Maps runId to the actor that is executing it
-  private val configMap = mutable.LinkedHashMap[RunId, ActorRef]()
+  // Links the runId and the actor that is executing it
+  private val actorRefForRunId = mutable.LinkedHashMap[RunId, ActorRef]()
+  private val runIdForActorRef = mutable.LinkedHashMap[ActorRef, RunId]()
 
   private var queueState : QueueState = Started()
+
+  implicit val execContext = context.dispatcher
 
   def receive = {
     case QueueSubmit(queueConfig) => queueSubmit(queueConfig)
@@ -50,8 +70,19 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
     case QueuePause() => queuePause(None)
     case QueueStart() => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
-    case x => log.error(s"Unknown QueueActor message: $x"); sender ! Status.Failure(new IllegalArgumentException)
+    case Terminated(configActor)  => cleanupConfigActor(configActor)
+    case x => log.error(s"Unknown QueueActor message: $x")
 
+  }
+
+  // Clean up after an config actor is done
+  private def cleanupConfigActor(configActor: ActorRef) {
+    runIdForActorRef.get(configActor) match {
+      case Some(runId) =>
+        actorRefForRunId.remove(runId)
+        runIdForActorRef.remove(configActor)
+      case None => log.error("Unknown configActor died")
+    }
   }
 
   // Queue the given config for later execution and return the runId to the sender
@@ -59,7 +90,7 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
     if (queueState != Stopped()) {
       queueMap(qc.runId) = qc.config
       log.debug(s"Queued config with runId: ${qc.runId}")
-      sender ! CommandStatus.StatusQueued(qc.runId)
+      sender ! CommandStatus.Queued(qc.runId)
       if (queueState != Paused()) {
         checkQueue()
       }
@@ -72,7 +103,7 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
     while (queueState == Started() && !queueMap.isEmpty) {
       val (runId, config) = queueMap.iterator.next()
       queueMap.remove(runId)
-      sender ! CommandStatus.StatusBusy(runId)
+      sender ! CommandStatus.Busy(runId)
       if (config.isWaitConfig) {
         log.debug("Pausing due to Wait config")
         queuePause(Some(config))
@@ -89,34 +120,37 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
     if (qc.config.isWaitConfig) {
       log.debug(s"Queue bypass request: wait config: ${qc.runId}")
       queuePause(Some(qc.config))
-      sender ! CommandStatus.StatusComplete(qc.runId)
+      sender ! CommandStatus.Complete(qc.runId)
     } else {
       log.debug(s"Queue bypass request: ${qc.runId}")
       submitConfig(qc.runId, qc.config, t)
     }
   }
 
-  // Submit the config to a new config actor for execution.
-  // The config actor is only used once for this config and then killed.
-  // The sender is notified of the status when done.
-  private def submitConfig(runId: RunId, config: Configuration, t: Timeout) {
-    implicit val timeout = t
-    implicit val execContext = context.dispatcher
-    val configActor = context.actorOf(configActorProps)
-    configMap(runId) = configActor
-    val f = configActor ? ConfigActor.ConfigSubmit(config)
-    f onSuccess {
-      case _ => sender ! CommandStatus.StatusComplete(runId); stopActor(runId, configActor)
-    }
-    f onFailure {
-      case e: Exception => sender ! CommandStatus.StatusError(runId, e); stopActor(runId, configActor)
+  // Returns a CommandStatus for the given ConfigState
+  private def returnStatus(state: ConfigState, runId: RunId): CommandStatus = {
+    state match {
+      case ConfigState.Completed => CommandStatus.Complete(runId)
+      case ConfigState.Canceled => CommandStatus.Aborted(runId)
+      case ConfigState.Aborted => CommandStatus.Aborted(runId)
+      case x => CommandStatus.Error(runId, new RuntimeException(s"Unexpected message: $x"))
     }
   }
 
-  // Clean up after an actor is done
-  private def stopActor(runId: RunId, configActor: ActorRef) {
-    configActor ! PoisonPill
-    configMap.remove(runId)
+  // Submit the config to a new config actor for execution.
+  // The config actor is only used once for this config and then killed.
+  // The sender is notified of the status when done.
+  private def submitConfig(runId: RunId, config: Configuration, timeout: Timeout) {
+    val configActor = context.actorOf(configActorProps)
+    actorRefForRunId(runId) = configActor
+    runIdForActorRef(configActor) = runId
+    context.watch(configActor)
+    implicit val t = timeout
+    configActor ? ConfigActor.ConfigSubmit(config, t) map {
+      case status: ConfigState => returnStatus(status, runId)
+    } recover {
+      case ex: Exception => CommandStatus.Error(runId, ex)
+    } pipeTo sender
   }
 
   // Processing of Configurations in a components queue is stopped.

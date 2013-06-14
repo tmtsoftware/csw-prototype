@@ -3,7 +3,7 @@ package org.tmt.csw.cs.akka
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.io.IOException
 import org.tmt.csw.cs.core.ConfigString
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -40,7 +40,7 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys")) with Implic
     val manager = TestRepo.getConfigManager("test1")
 
     // Create the actor
-    val configServiceActor = system.actorOf(Props(ConfigServiceActor(manager)), name = "configService")
+    val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
 
     // Should throw exception if we try to update a file that does not exist
     intercept[IOException] {
@@ -172,7 +172,7 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys")) with Implic
 //    val comment = "Other create comment"
 //
 //    // Create the actor
-//    val configServiceActor = system.actorOf(Props(ConfigServiceActor()), name = "configManager")
+//    val configServiceActor = system.actorOf(ConfigServiceActor.props("configManager"))
 //
 //    val exists1 = Await.result(configServiceActor ?
 //      ExistsRequest(path1),
