@@ -1,7 +1,7 @@
 package org.tmt.csw.cmd.akka
 
 import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{Props, ActorSystem}
+import akka.actor.ActorSystem
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -32,6 +32,8 @@ object TestConfig {
     """.stripMargin
 }
 
+// XXX TODO: Add more tests, deal with shutting down Akka at the end instead of in each test...
+
 /**
  * Tests the Command Service actor
  */
@@ -42,29 +44,21 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
   implicit val timeout = Timeout(5.seconds)
   implicit val dispatcher = system.dispatcher
 
-  test("Test basic CommandServiceActor queue commands") {
+  test("Test basic CommandServiceActor queue request") {
 
-    val configActorProps = TestConfigActor.props(100)
+    val configActorProps = TestConfigActor.props(3)
     val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
     val config = Configuration(TestConfig.testConfig)
 
     // Queue a command
 
-    val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config)
+    val f = commandServiceActor ? CommandServiceActor.QueueBypassRequest(config, timeout)
     f onSuccess {
-      case runId: RunId =>
-        logger.info(s"got runId: $runId")
-        Thread.sleep(1000)
-        commandServiceActor ! CommandServiceActor.QueuePause
-        commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-2"))
-        commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-3"))
-        commandServiceActor ? CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-4"))
-        Thread.sleep(3000)
-        commandServiceActor ! CommandServiceActor.QueueStart
-        Thread.sleep(3000)
-        commandServiceActor ! CommandServiceActor.QueueStop
+      case CommandStatus.Complete(runId) =>
+        logger.info(s"Status: Complete runId: $runId")
         Thread.sleep(1000)
         system.shutdown()
+      case x => logger.error(s"Received unexpected reply to queue request: $x")
     }
     f onFailure {
       case e: Exception =>
@@ -76,9 +70,9 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
      system.awaitTermination()
   }
 
-  test("Test basic CommandServiceActor config commands") {
+  test("Test basic CommandServiceActor queue submit  with config abort") {
 
-    val configActorProps = TestConfigActor.props(100)
+    val configActorProps = TestConfigActor.props(10)
     val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
     val config = Configuration(TestConfig.testConfig)
 
@@ -87,9 +81,9 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
     val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config)
     f onSuccess {
       case runId: RunId =>
-        logger.info(s"got runId: $runId")
+        logger.info(s"Status: in progress: runId: $runId")
         commandServiceActor ! CommandServiceActor.ConfigAbort(runId)
-        Thread.sleep(3000)
+        Thread.sleep(2000)
         system.shutdown()
     }
     f onFailure {
@@ -102,5 +96,15 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
     system.awaitTermination()
   }
 
+
+  //        commandServiceActor ! CommandServiceActor.QueuePause
+  //        commandServiceActor ! CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-2"))
+  //        commandServiceActor ! CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-3"))
+  //        commandServiceActor ! CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-4"))
+  //        Thread.sleep(3000)
+  //        commandServiceActor ! CommandServiceActor.QueueStart
+  //        Thread.sleep(3000)
+  //        commandServiceActor ! CommandServiceActor.QueueStop
+  //        Thread.sleep(1000)
 
 }

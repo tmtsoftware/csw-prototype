@@ -8,6 +8,7 @@ import akka.util.Timeout
 import org.tmt.csw.cmd.akka.QueueActor._
 import scala.concurrent.duration._
 import scala.Some
+import java.util.concurrent.atomic.AtomicReference
 import org.tmt.csw.cmd.akka.ConfigState.ConfigState
 import org.tmt.csw.cmd.akka.CommandStatus.CommandStatus
 
@@ -59,15 +60,20 @@ object QueueActor {
  */
 class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
 
-  // The queue for this OMOA component: maps runId to the configuration being executed
+  // The queue for this component: maps runId to the configuration being executed
   private val queueMap = mutable.LinkedHashMap[RunId, Configuration]()
 
-  // Links the runId and the actor that is executing it
-  private val actorRefForRunId = mutable.LinkedHashMap[RunId, ActorRef]()
-  private val runIdForActorRef = mutable.LinkedHashMap[ActorRef, RunId]()
+  // Stores information about a currently executing config
+  private case class ConfigInfo(config: Configuration, actor: ActorRef, state: AtomicReference[ConfigState])
+  private var configInfoMap = Map[RunId, ConfigInfo]()
 
+  // Links the actor to the runId for the config it is currently executing
+  private var runIdForActorRef = Map[ActorRef, RunId]()
+
+  // The current state of the queue
   private var queueState : QueueState = Started
 
+  // Needed for "ask"
   implicit val execContext = context.dispatcher
 
   def receive = {
@@ -85,18 +91,27 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
     case ConfigPause(runId) => configPause(runId)
     case ConfigResume(runId) => configResume(runId)
 
-    case Terminated(configActor)  => cleanupConfigActor(configActor)
-    case x => log.error(s"Unknown QueueActor message: $x")
+    // Results from ConfigActor
+    case state: ConfigState =>
+      runIdForActorRef.get(sender) match {
+        case Some(actorRef) => returnStatus(state, actorRef)
+        case None => log.error(s"Received status from unknown actor: $state")
+      }
 
+    // An actor was terminated (normal when done)
+    case Terminated(configActor) => cleanupConfigActor(configActor)
+
+    case x => log.error(s"Unknown QueueActor message: $x")
   }
 
   // Clean up after an config actor is done
   private def cleanupConfigActor(configActor: ActorRef) {
     runIdForActorRef.get(configActor) match {
       case Some(runId) =>
-        actorRefForRunId.remove(runId)
-        runIdForActorRef.remove(configActor)
-      case None => log.error("Unknown configActor died")
+        configInfoMap -= runId
+        runIdForActorRef -= configActor
+        log.debug(s"Cleanup up after runId: $runId")
+      case None => log.error("Unknown configActor terminated")
     }
   }
 
@@ -124,30 +139,29 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
         queuePause(Some(config))
       } else {
         log.debug(s"Submitting config with runId: $runId")
-        // We need to specify a timeout here, but don't have any idea how long, so just use a large value (24 hours)
-        submitConfig(runId, config, 24.hours)
+        submitConfig(runId, config, None)
       }
     }
   }
 
   // Request immediate execution of the given config
-  private def queueBypassRequest(qc: QueueConfig, t: Timeout) {
+  private def queueBypassRequest(qc: QueueConfig, timeout: Timeout) {
     if (qc.config.isWaitConfig) {
       log.debug(s"Queue bypass request: wait config: ${qc.runId}")
       queuePause(Some(qc.config))
       sender ! CommandStatus.Complete(qc.runId)
     } else {
       log.debug(s"Queue bypass request: ${qc.runId}")
-      submitConfig(qc.runId, qc.config, t)
+      submitConfig(qc.runId, qc.config, Some(timeout))
     }
   }
 
   // Returns a CommandStatus for the given ConfigState
   private def returnStatus(state: ConfigState, runId: RunId): CommandStatus = {
     state match {
-      case ConfigState.Completed => CommandStatus.Complete(runId)
-      case ConfigState.Canceled => CommandStatus.Aborted(runId)
-      case ConfigState.Aborted => CommandStatus.Aborted(runId)
+      case ConfigState.Completed() => CommandStatus.Complete(runId)
+      case ConfigState.Canceled() => CommandStatus.Aborted(runId)
+      case ConfigState.Aborted() => CommandStatus.Aborted(runId)
       case x => CommandStatus.Error(runId, new RuntimeException(s"Unexpected message: $x"))
     }
   }
@@ -155,17 +169,23 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
   // Submit the config to a new config actor for execution.
   // The config actor is only used once for this config and then killed.
   // The sender is notified of the status when done.
-  private def submitConfig(runId: RunId, config: Configuration, timeout: Timeout) {
+  private def submitConfig(runId: RunId, config: Configuration, timeoutOpt: Option[Timeout]) {
     val configActor = context.actorOf(configActorProps)
-    actorRefForRunId(runId) = configActor
-    runIdForActorRef(configActor) = runId
+    runIdForActorRef += (configActor -> runId)
     context.watch(configActor)
-    implicit val t = timeout
-    configActor ? ConfigActor.ConfigSubmit(config, t) map {
-      case status: ConfigState => returnStatus(status, runId)
-    } recover {
-      case ex: Exception => CommandStatus.Error(runId, ex)
-    } pipeTo sender
+    val state: AtomicReference[ConfigState] = new AtomicReference(ConfigState.Submitted())
+    configInfoMap += (runId -> ConfigInfo(config, configActor, state))
+    timeoutOpt match {
+      case Some(timeout) =>
+        implicit val t = timeout
+        configActor ? ConfigActor.ConfigSubmit(config, state) map {
+          case status: ConfigState => returnStatus(status, runId)
+        } recover {
+          case ex: Exception => CommandStatus.Error(runId, ex)
+        } pipeTo sender
+      case None =>
+        configActor ! ConfigActor.ConfigSubmit(config, state)
+    }
   }
 
   // Processing of Configurations in a components queue is stopped.
@@ -204,8 +224,10 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
    */
   private def configCancel(runId: RunId) {
     log.debug(s"Config Cancel: runId = $runId")
-    actorRefForRunId.get(runId) match {
-      case Some(configActor) => configActor ! ConfigActor.ConfigCancel
+    configInfoMap.get(runId) match {
+      case Some(configInfo) =>
+        configInfo.state.set(ConfigState.Canceled())
+        configInfo.actor ! ConfigActor.ConfigCancel
       case None => log.info(s"Can't cancel (may be done already): RunId = $runId")
     }
   }
@@ -215,8 +237,10 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
    */
   private def configAbort(runId: RunId) {
     log.debug(s"Config Abort: runId = $runId")
-    actorRefForRunId.get(runId) match {
-      case Some(configActor) => configActor ! ConfigActor.ConfigAbort
+    configInfoMap.get(runId) match {
+      case Some(configInfo) =>
+        configInfo.state.set(ConfigState.Aborted())
+        configInfo.actor ! ConfigActor.ConfigAbort
       case None => log.info(s"Can't abort (may be done already): RunId = $runId")
     }
   }
@@ -226,8 +250,10 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
    */
   private def configPause(runId: RunId) {
     log.debug(s"Config Pause: runId = $runId")
-    actorRefForRunId.get(runId) match {
-      case Some(configActor) => configActor ! ConfigActor.ConfigPause
+    configInfoMap.get(runId) match {
+      case Some(configInfo) =>
+        configInfo.state.set(ConfigState.Paused())
+        configInfo.actor ! ConfigActor.ConfigPause
       case None => log.info(s"Can't pause (may be done already): RunId = $runId")
     }
   }
@@ -237,8 +263,10 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
    */
   private def configResume(runId: RunId) {
     log.debug(s"Config Resume: runId = $runId")
-    actorRefForRunId.get(runId) match {
-      case Some(configActor) => configActor ! ConfigActor.ConfigResume
+    configInfoMap.get(runId) match {
+      case Some(configInfo) =>
+        configInfo.state.set(ConfigState.Resumed())
+        configInfo.actor ! ConfigActor.ConfigResume(configInfo.config, configInfo.state)
       case None => log.info(s"Can't resume (may be done already): RunId = $runId")
     }
   }

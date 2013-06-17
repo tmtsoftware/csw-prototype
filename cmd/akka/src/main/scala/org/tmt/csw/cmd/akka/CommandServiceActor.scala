@@ -1,8 +1,6 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor._
-import akka.pattern.ask
-import scala.concurrent.Future
 import akka.util.Timeout
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandServiceActor._

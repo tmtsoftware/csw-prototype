@@ -2,10 +2,9 @@ package org.tmt.csw.cmd.akka
 
 import akka.actor._
 import ConfigActor._
-import ConfigState._
 import org.tmt.csw.cmd.core.Configuration
-import akka.pattern._
-import akka.util.Timeout
+import java.util.concurrent.atomic.AtomicReference
+import org.tmt.csw.cmd.akka.ConfigState.ConfigState
 
 /**
  * Defines messages and states for use by actors that are command service targets.
@@ -13,89 +12,83 @@ import akka.util.Timeout
 object ConfigActor {
   // TMT Standard Configuration Interaction Commands
   sealed trait ConfigInteractionCommand
-  case class ConfigSubmit(config: Configuration, timeout: Timeout) extends ConfigInteractionCommand
+  case class ConfigSubmit(config: Configuration, state: AtomicReference[ConfigState]) extends ConfigInteractionCommand
   case object ConfigCancel extends ConfigInteractionCommand
   case object ConfigAbort extends ConfigInteractionCommand
   case object ConfigPause extends ConfigInteractionCommand
-  case object ConfigResume extends ConfigInteractionCommand
+  case class ConfigResume(config: Configuration, state: AtomicReference[ConfigState]) extends ConfigInteractionCommand
 }
 
 /**
  * Command service targets can implement this trait, which defines
  * methods for implementing the standard configuration control messages.
  * One instance of this actor is created for each submitted config.
- * The specifics of how to submit or pause a config are left to the
- * implementing class, which is expected to have a worker actor that
- * receives Configuration objects to execute.
  */
 abstract class ConfigActor extends Actor with ActorLogging {
 
-  implicit val execContext = context.dispatcher
-
-  private var status: ConfigState = Initialized
-
-  private def setStatus(s: ConfigState) {
-    status = s
-    log.debug(s"Status: ${s.getClass.getSimpleName}")
-  }
-
-  private def configSubmit(sender: ActorRef, config: Configuration, timeout: Timeout) {
-    implicit val t = timeout
-    getWorkerActor ? config map {
-      case state: ConfigState =>
-        self ! PoisonPill
-        status match {
-          case Canceled => status
-          case Aborted => status
-          case _ => Completed
-        }
-      case x => log.error(s"Received unknown message: $x")
-    } recover {
-      case ex: Exception =>
-        log.error("Error returned from submit", ex)
-        self ! PoisonPill
-        ex
-    } pipeTo sender
-  }
-
   /**
-   * Returns the current status, which is set from the received messages
+   * Messages received in the normal state.
    */
-  def getStatus = status
-
   def receive = {
-    case ConfigSubmit(config, timeout) => setStatus(Submitted); configSubmit(sender, config, timeout)
-    case ConfigCancel => setStatus(Canceled); configCancel()
-    case ConfigAbort => setStatus(Aborted); configAbort()
-    case ConfigPause => setStatus(Paused); configPause()
-    case ConfigResume => setStatus(Resumed); configResume()
-    case x => log.error(s"Unknown ConfigActor message: $x")
+    case ConfigSubmit(config, state) => configSubmit(config, state)
+    case ConfigCancel => self ! PoisonPill; cancel()
+    case ConfigAbort => self ! Kill; abort()
+    case ConfigPause => context.become(paused); pause()
+    case x => log.error(s"Unexpected ConfigActor message: $x")
   }
 
   /**
-   * Return a reference to a worker actor that receives [Configuration] objects in the background
-   * (so that this actor is always ready to receive other messages, such as ConfigPause or ConfigAbort).
-   * The worker actor should reply with the message Completed() when done.
+   * Messages received when paused.
    */
-  def getWorkerActor : ActorRef
+  def paused: Receive = {
+    case ConfigResume(config, state) => configResume(config, state)
+    case ConfigCancel => self ! PoisonPill; cancel()
+    case ConfigAbort => self ! Kill; abort()
+    case x => log.error(s"Unexpected ConfigActor message while paused: $x")
+  }
+
+  private def configSubmit(config: Configuration, state: AtomicReference[ConfigState]) {
+    submit(config, state) match {
+      case ConfigState.Paused() => log.debug(s"Config Paused")
+      case otherState => sender ! otherState
+    }
+  }
+
+  private def configResume(config: Configuration, state: AtomicReference[ConfigState]) {
+    context.become(receive)
+    resume(config, state) match {
+      case ConfigState.Paused() => log.debug(s"Config Paused again")
+      case otherState => sender ! otherState
+    }
+  }
 
   /**
-   * Actions due to a previous request should be stopped immediately without completing.
+   * Execute the given config.
+   * Implementations should monitor the state variable and stop work if needed,
+   * due to a change of state to Aborted, Canceled or Paused.
+   *
+   * @param config the configuration to execute
+   * @param state the current configuration state
    */
-  def configAbort()
-
-  /**
-   * Actions due to a Configuration should be stopped cleanly as soon as convenient without necessarily completing.
-   */
-  def configCancel(){}
-
-  /**
-   * Pause the actions associated with a specific Configuration.
-   */
-  def configPause(){}
+  def submit(config: Configuration, state: AtomicReference[ConfigState]) : ConfigState
 
   /**
    * Resume the paused actions associated with a specific Configuration.
    */
-  def configResume(){}
+  def resume(config: Configuration, state: AtomicReference[ConfigState]) : ConfigState
+
+  /**
+   * Called when the config was paused. At this point context.become(paused) has already been called.
+   */
+  def pause() {}
+
+  /**
+   * Called when the config was canceled. The actor will be terminated (do optional cleanup here).
+   */
+  def cancel() {}
+
+  /**
+   * Called when the config was aborted. The actor will be terminated (do optional cleanup here).
+   */
+  def abort() {}
 }

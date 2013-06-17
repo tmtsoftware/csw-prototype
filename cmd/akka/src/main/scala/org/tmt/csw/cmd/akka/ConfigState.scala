@@ -1,15 +1,21 @@
 package org.tmt.csw.cmd.akka
 
-/**
- * Configuration execution states
- */
 object ConfigState {
-  sealed trait ConfigState
-  case object Initialized extends ConfigState
-  case object Submitted extends ConfigState
-  case object Canceled extends ConfigState
-  case object Aborted extends ConfigState
-  case object Paused extends ConfigState
-  case object Resumed extends ConfigState
-  case object Completed extends ConfigState
+  /**
+   * Configuration execution states
+   */
+  sealed trait ConfigState {
+    /**
+     * Returns true if the action should stop
+     */
+    def stop() : Boolean
+  }
+
+  case class Initialized() extends ConfigState {def stop() = false}
+  case class Submitted() extends ConfigState {def stop() = false}
+  case class Canceled() extends ConfigState {def stop() = true}
+  case class Aborted() extends ConfigState {def stop() = true}
+  case class Paused() extends ConfigState {def stop() = true}
+  case class Resumed() extends ConfigState {def stop() = false}
+  case class Completed() extends ConfigState {def stop() = false}
 }
