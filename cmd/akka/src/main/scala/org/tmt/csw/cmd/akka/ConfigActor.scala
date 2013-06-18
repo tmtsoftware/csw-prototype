@@ -31,8 +31,8 @@ abstract class ConfigActor extends Actor with ActorLogging {
    */
   def receive = {
     case ConfigSubmit(config, state) => configSubmit(config, state)
-    case ConfigCancel => self ! PoisonPill; cancel()
-    case ConfigAbort => self ! Kill; abort()
+    case ConfigCancel => cancel()
+    case ConfigAbort => abort()
     case ConfigPause => context.become(paused); pause()
     case x => log.error(s"Unexpected ConfigActor message: $x")
   }
@@ -42,8 +42,8 @@ abstract class ConfigActor extends Actor with ActorLogging {
    */
   def paused: Receive = {
     case ConfigResume(config, state) => configResume(config, state)
-    case ConfigCancel => self ! PoisonPill; cancel()
-    case ConfigAbort => self ! Kill; abort()
+    case ConfigCancel => cancel()
+    case ConfigAbort => abort()
     case x => log.error(s"Unexpected ConfigActor message while paused: $x")
   }
 
@@ -91,4 +91,14 @@ abstract class ConfigActor extends Actor with ActorLogging {
    * Called when the config was aborted. The actor will be terminated (do optional cleanup here).
    */
   def abort() {}
+
+  override def postStop() {
+    super.postStop()
+    log.debug("ConfigActor stopped")
+  }
+
+  override def preRestart(reason: Throwable, message: Option[Any]) {
+    super.preRestart(reason, message)
+    log.error("ConfigActor restarted")
+  }
 }

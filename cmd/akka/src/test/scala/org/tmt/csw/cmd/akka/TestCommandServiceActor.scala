@@ -8,6 +8,7 @@ import scala.concurrent.duration._
 import akka.pattern.ask
 import org.tmt.csw.cmd.core.Configuration
 import com.typesafe.scalalogging.slf4j.Logging
+import scala.concurrent.Await
 
 object TestConfig {
   val testConfig =
@@ -38,64 +39,50 @@ object TestConfig {
  * Tests the Command Service actor
  */
 class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
-  with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
+with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
 
-  val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
   implicit val dispatcher = system.dispatcher
 
   test("Test basic CommandServiceActor queue request") {
+    val configActorProps = TestConfigActor.props(3)
+    val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
+    val config = Configuration(TestConfig.testConfig)
 
+    // Request a command without being queued
+    val status =  Await.result(commandServiceActor ? CommandServiceActor.QueueBypassRequest(config, timeout),
+      5.seconds).asInstanceOf[CommandStatus.Complete]
+    logger.info(s"Received command status: $status")
+  }
+
+  test("Test basic CommandServiceActor queue submit") {
     val configActorProps = TestConfigActor.props(3)
     val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
     val config = Configuration(TestConfig.testConfig)
 
     // Queue a command
-
-    val f = commandServiceActor ? CommandServiceActor.QueueBypassRequest(config, timeout)
-    f onSuccess {
-      case CommandStatus.Complete(runId) =>
-        logger.info(s"Status: Complete runId: $runId")
-        Thread.sleep(1000)
-        system.shutdown()
-      case x => logger.error(s"Received unexpected reply to queue request: $x")
-    }
-    f onFailure {
-      case e: Exception =>
-        logger.error("Command failed: ", e)
-        system.shutdown()
-    }
-
-     // Wait for above to complete!
-     system.awaitTermination()
+    val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config, self)
+    val runId = Await.result(f, 5.seconds).asInstanceOf[RunId]
+    logger.info(s"Received runId for command: $runId")
+    expectMsgType[CommandStatus.Queued](5.seconds)
+    expectMsgType[CommandStatus.Busy](5.seconds)
+    expectMsgType[CommandStatus.Complete](5.seconds)
   }
 
   test("Test basic CommandServiceActor queue submit  with config abort") {
-
-    val configActorProps = TestConfigActor.props(10)
+    val configActorProps = TestConfigActor.props(3)
     val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor")
     val config = Configuration(TestConfig.testConfig)
 
     // Queue a command
-
-    val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config)
-    f onSuccess {
-      case runId: RunId =>
-        logger.info(s"Status: in progress: runId: $runId")
-        commandServiceActor ! CommandServiceActor.ConfigAbort(runId)
-        Thread.sleep(2000)
-        system.shutdown()
-    }
-    f onFailure {
-      case e: Exception =>
-        logger.error("Command failed: ", e)
-        system.shutdown()
-    }
-
-    // Wait for above to complete!
-    system.awaitTermination()
+    val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config, self)
+    val runId = Await.result(f, 5.seconds).asInstanceOf[RunId]
+    logger.info(s"Received runId for command: $runId")
+    commandServiceActor ! CommandServiceActor.ConfigAbort(runId)
+    expectMsgType[CommandStatus.Queued](5.seconds)
+    expectMsgType[CommandStatus.Busy](5.seconds)
+    expectMsgType[CommandStatus.Aborted](5.seconds)
   }
-
 
   //        commandServiceActor ! CommandServiceActor.QueuePause
   //        commandServiceActor ! CommandServiceActor.QueueSubmit(config.withObsId("TMT-2021A-C-2-2"))
@@ -107,4 +94,9 @@ class TestCommandServiceActor extends TestKit(ActorSystem("testsys"))
   //        commandServiceActor ! CommandServiceActor.QueueStop
   //        Thread.sleep(1000)
 
+
+  override protected def afterAll() {
+    logger.info("Shutting down test actor system")
+    TestKit.shutdownActorSystem(system)
+  }
 }

@@ -4,6 +4,7 @@ import akka.actor._
 import akka.util.Timeout
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandServiceActor._
+import org.tmt.csw.cmd.akka.CommandStatus.CommandStatus
 
 /**
  * Contains actor messages received
@@ -15,7 +16,7 @@ object CommandServiceActor {
 
   // TMT Standard Queue Interaction Commands
   sealed trait QueueInteractionCommand
-  case class QueueSubmit(configs: Configuration) extends QueueInteractionCommand
+  case class QueueSubmit(configs: Configuration, sender: ActorRef) extends QueueInteractionCommand
   case class QueueBypassRequest(configs: Configuration, timeout: Timeout) extends QueueInteractionCommand
   case object QueueStop extends QueueInteractionCommand
   case object QueuePause extends QueueInteractionCommand
@@ -37,11 +38,14 @@ object CommandServiceActor {
 class CommandServiceActor(configActorProps: Props, componentName: String) extends Actor with ActorLogging {
 
   // Create the actor that manages the queue for this component
-  val queueActor = context.actorOf(QueueActor.props(configActorProps), name = componentName + "Actor")
+  private val queueActor = context.actorOf(QueueActor.props(configActorProps, self), name = componentName + "Actor")
+
+  // Maps RunId for a command to the actor that submitted or requested it
+  private var senderMap = Map[RunId, ActorRef]()
 
   def receive = {
     // Queue related commands
-    case QueueSubmit(config) => queueSubmit(config)
+    case QueueSubmit(config, actorRef) => queueSubmit(config, actorRef)
     case QueueBypassRequest(config, timeout) => queueBypassRequest(config, timeout)
     case QueueStop => queueStop()
     case QueuePause => queuePause()
@@ -54,33 +58,54 @@ class CommandServiceActor(configActorProps: Props, componentName: String) extend
     case ConfigPause(runId) => configPause(runId)
     case ConfigResume(runId) => configResume(runId)
 
-    // Status Messages (XXX TODO: send events for these? Or send them directly to the original sender?)
-    case CommandStatus.Pending(runId) => log.debug(s"Status: Pending runId: $runId")
-    case CommandStatus.Queued(runId) => log.debug(s"Status: Queued runId: $runId")
-    case CommandStatus.Busy(runId) => log.debug(s"Status: Busy runId: $runId")
-    case CommandStatus.Complete(runId) => log.debug(s"Status: Complete runId: $runId")
-    case CommandStatus.Error(runId, ex) => log.error(ex, s"Received error for runId: $runId")
-    case CommandStatus.Aborted(runId) => log.info(s"Status: Aborted runId: $runId")
+    // Status Messages
+    case status: CommandStatus => replyToSender(status)
+
+//    case CommandStatus.Pending(runId) => log.debug(s"Status: Pending runId: $runId")
+//    case CommandStatus.Queued(runId) => log.debug(s"Status: Queued runId: $runId")
+//    case CommandStatus.Busy(runId) => log.debug(s"Status: Busy runId: $runId")
+//    case CommandStatus.Complete(runId) => log.debug(s"XXX Status: Complete runId: $runId")
+//    case CommandStatus.Error(runId, ex) => log.error(ex, s"Received error for runId: $runId")
+//    case CommandStatus.Aborted(runId) => log.info(s"Status: Aborted runId: $runId")
+
     case x => log.error(s"Unknown CommandServiceActor message: $x"); sender ! Status.Failure(new IllegalArgumentException)
   }
 
   /**
-   * Submit one or more configs to the component's command queue and return the run id.
+   * Submit the given config to the component's command queue and return the run id.
+   * @param config the config to queue for execution
+   * @param actorRef the actor that should receive status messages for this runId
    */
-  private def queueSubmit(config: Configuration) {
+  private def queueSubmit(config: Configuration, actorRef: ActorRef) {
     val runId = RunId()
-    log.debug(s"Submit config with runId: $runId")
-    queueActor ! QueueActor.QueueSubmit(QueueActor.QueueConfig(runId, config))
+    senderMap += (runId -> actorRef)
+    log.debug(s"Submit config with runId: $runId from sender $sender")
     sender ! runId
+    queueActor ! QueueActor.QueueSubmit(QueueActor.QueueConfig(runId, config))
   }
 
   /**
-   * Request immediate execution of one or more configs on the component and return a future with the status
-   * (which should be
+   * Request immediate execution of the given config and return a future with the status
    */
   private def queueBypassRequest(config: Configuration, t: Timeout) {
     log.debug(s"Request config: $config")
     queueActor forward QueueActor.QueueBypassRequest(QueueActor.QueueConfig(RunId(), config), t)
+  }
+
+  /**
+   * Reply to the original sender of the command with the command status
+   */
+  private def replyToSender(status: CommandStatus) {
+    val senderOpt = senderMap.get(status.runId)
+    senderOpt match {
+      case Some(actorRef) =>
+        log.debug(s"Reply to sender: $actorRef with status: $status")
+        actorRef ! status
+      case None => log.error("Unknown orginal sender")
+    }
+    if (status.done) {
+      senderMap -= status.runId
+    }
   }
 
   /**

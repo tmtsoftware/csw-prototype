@@ -42,9 +42,6 @@ class TestConfigActor(numberOfSecondsToRun: Int) extends ConfigActor {
       Thread.sleep(1000) // do some work...
     }
 
-    // We're done
-    self ! PoisonPill
-
     // This value will be sent back to the original sender
     ConfigState.Completed()
   }

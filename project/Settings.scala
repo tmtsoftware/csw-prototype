@@ -5,7 +5,7 @@ import Keys._
 trait Settings {
   val Version = "1.0"
   val SrcScalaVersion = "2.10.1"
-  val AkkaVersion = "2.2-SNAPSHOT"
+  val AkkaVersion = "2.2.0-RC1"
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := "org.tmt",

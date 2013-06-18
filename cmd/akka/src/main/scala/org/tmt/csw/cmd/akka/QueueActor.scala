@@ -16,9 +16,10 @@ object QueueActor {
   /**
    * Use this to create a queue actor
    * @param configActorProps Props used to create the actor to execute the config
+   * @param statusActorRef send status messages to this actor
    * @return the Props instance to use to create the queue actor
    */
-  def props(configActorProps: Props)  = Props(classOf[QueueActor], configActorProps)
+  def props(configActorProps: Props, statusActorRef: ActorRef)  = Props(classOf[QueueActor], configActorProps, statusActorRef)
 
   /**
    * Combines a RunId with a Configuration object.
@@ -39,6 +40,7 @@ object QueueActor {
   case object QueueStart extends QueueActorMessage
   case class QueueDelete(runId : RunId) extends QueueActorMessage
 
+  // Messages that operate on an executing configuration
   case class ConfigCancel(runId : RunId) extends QueueActorMessage
   case class ConfigAbort(runId : RunId) extends QueueActorMessage
   case class ConfigPause(runId : RunId) extends QueueActorMessage
@@ -57,8 +59,9 @@ object QueueActor {
  * Later, each config is dequeued and passed to the component for processing.
  *
  * @param configActorProps used to create the target actor for the command
+ * @param statusActorRef send status messages to this actor
  */
-class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
+class QueueActor(configActorProps: Props, statusActorRef: ActorRef) extends Actor with ActorLogging {
 
   // The queue for this component: maps runId to the configuration being executed
   private val queueMap = mutable.LinkedHashMap[RunId, Configuration]()
@@ -94,8 +97,13 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
     // Results from ConfigActor
     case state: ConfigState =>
       runIdForActorRef.get(sender) match {
-        case Some(actorRef) => returnStatus(state, actorRef)
+        case Some(actorRef) =>
+          statusActorRef ! returnStatus(state, actorRef)
         case None => log.error(s"Received status from unknown actor: $state")
+      }
+      if (state == ConfigState.Completed()) {
+        log.debug("ConfigActor completed: stopping it now")
+        context.system.stop(sender)
       }
 
     // An actor was terminated (normal when done)
@@ -158,9 +166,10 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
 
   // Returns a CommandStatus for the given ConfigState
   private def returnStatus(state: ConfigState, runId: RunId): CommandStatus = {
+    log.debug(s"Return status: $state")
     state match {
       case ConfigState.Completed() => CommandStatus.Complete(runId)
-      case ConfigState.Canceled() => CommandStatus.Aborted(runId)
+      case ConfigState.Canceled() => CommandStatus.Canceled(runId)
       case ConfigState.Aborted() => CommandStatus.Aborted(runId)
       case x => CommandStatus.Error(runId, new RuntimeException(s"Unexpected message: $x"))
     }
@@ -228,6 +237,7 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
       case Some(configInfo) =>
         configInfo.state.set(ConfigState.Canceled())
         configInfo.actor ! ConfigActor.ConfigCancel
+        context.system.stop(configInfo.actor)
       case None => log.info(s"Can't cancel (may be done already): RunId = $runId")
     }
   }
@@ -241,6 +251,7 @@ class QueueActor(configActorProps: Props) extends Actor with ActorLogging {
       case Some(configInfo) =>
         configInfo.state.set(ConfigState.Aborted())
         configInfo.actor ! ConfigActor.ConfigAbort
+        context.system.stop(configInfo.actor)
       case None => log.info(s"Can't abort (may be done already): RunId = $runId")
     }
   }
