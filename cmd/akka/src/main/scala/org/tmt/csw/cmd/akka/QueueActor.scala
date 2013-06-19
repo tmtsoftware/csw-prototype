@@ -6,12 +6,14 @@ import org.tmt.csw.cmd.core.Configuration
 import akka.pattern._
 import akka.util.Timeout
 import org.tmt.csw.cmd.akka.QueueActor._
-import scala.concurrent.duration._
 import scala.Some
 import java.util.concurrent.atomic.AtomicReference
 import org.tmt.csw.cmd.akka.ConfigState.ConfigState
 import org.tmt.csw.cmd.akka.CommandStatus.CommandStatus
 
+/**
+ * Defines the messages received by the Queue actor as well as the props used to create it.
+ */
 object QueueActor {
   /**
    * Use this to create a queue actor
@@ -56,18 +58,23 @@ object QueueActor {
 /**
  * Manages the command queue for a component.
  * QueueConfig objects are placed on the queue when received.
- * Later, each config is dequeued and passed to the component for processing.
+ * Later, each object is dequeued and the config is passed to the config actor for processing.
  *
- * @param configActorProps used to create the target actor for the command
+ * @param configActorProps used to create the target actor for the command (the one that processes the configuration)
  * @param statusActorRef send status messages to this actor
  */
 class QueueActor(configActorProps: Props, statusActorRef: ActorRef) extends Actor with ActorLogging {
 
-  // The queue for this component: maps runId to the configuration being executed
+  // The queue for this component: maps runId to the configuration being executed, so that configs can
+  // also be selectively removed from the queue (via the QueueDelete message)
   private val queueMap = mutable.LinkedHashMap[RunId, Configuration]()
 
-  // Stores information about a currently executing config
+  // Stores information about a currently executing config.
+  // The actorRef points to the actor currently processing the config.
+  // The state is something that the actor can check to see if it should stop or pause.
   private case class ConfigInfo(config: Configuration, actor: ActorRef, state: AtomicReference[ConfigState])
+
+  // Used to find the relevant information about a running config based on the runId
   private var configInfoMap = Map[RunId, ConfigInfo]()
 
   // Links the actor to the runId for the config it is currently executing
@@ -79,6 +86,7 @@ class QueueActor(configActorProps: Props, statusActorRef: ActorRef) extends Acto
   // Needed for "ask"
   implicit val execContext = context.dispatcher
 
+  // Receive messages
   def receive = {
     // Queue related commands
     case QueueSubmit(queueConfig) => queueSubmit(queueConfig)
@@ -94,11 +102,10 @@ class QueueActor(configActorProps: Props, statusActorRef: ActorRef) extends Acto
     case ConfigPause(runId) => configPause(runId)
     case ConfigResume(runId) => configResume(runId)
 
-    // Results from ConfigActor
+    // Status Results from ConfigActor: Send the command status with runId to statusActorRef
     case state: ConfigState =>
       runIdForActorRef.get(sender) match {
-        case Some(actorRef) =>
-          statusActorRef ! returnStatus(state, actorRef)
+        case Some(actorRef) => statusActorRef ! returnStatus(state, actorRef)
         case None => log.error(s"Received status from unknown actor: $state")
       }
       if (state == ConfigState.Completed()) {
@@ -177,7 +184,8 @@ class QueueActor(configActorProps: Props, statusActorRef: ActorRef) extends Acto
 
   // Submit the config to a new config actor for execution.
   // The config actor is only used once for this config and then killed.
-  // The sender is notified of the status when done.
+  // If a timeout was specified, "ask" (?) is used and the sender is notified of the status when done.
+  // Otherwise the config is submitted and the status is later sent to statusActorRef.
   private def submitConfig(runId: RunId, config: Configuration, timeoutOpt: Option[Timeout]) {
     val configActor = context.actorOf(configActorProps)
     runIdForActorRef += (configActor -> runId)

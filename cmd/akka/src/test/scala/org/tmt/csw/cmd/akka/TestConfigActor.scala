@@ -6,13 +6,17 @@ import org.tmt.csw.cmd.akka.ConfigState.ConfigState
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Test of an actor that executes configurations
+ * Test actor that executes configurations
  */
 object TestConfigActor {
+  /**
+   * Used to create instances of this actor.
+   */
   def props(numberOfSecondsToRun: Int) = Props(classOf[TestConfigActor], numberOfSecondsToRun: Int)
 }
 
 /**
+ * A test config actor.
  * @param numberOfSecondsToRun Tells the actor how many seconds to run
  */
 class TestConfigActor(numberOfSecondsToRun: Int) extends ConfigActor {
@@ -46,6 +50,7 @@ class TestConfigActor(numberOfSecondsToRun: Int) extends ConfigActor {
     ConfigState.Completed()
   }
 
+  // Save the current state so we can resume processing later (when resume is called)
   private def saveState(a: Int) {
     savedPos = a
   }

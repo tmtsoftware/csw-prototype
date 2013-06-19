@@ -7,7 +7,7 @@ import org.tmt.csw.cmd.akka.CommandServiceActor._
 import org.tmt.csw.cmd.akka.CommandStatus.CommandStatus
 
 /**
- * Contains actor messages received
+ * Defines the messages received as well as the props for creating this actor.
  */
 object CommandServiceActor {
 
@@ -16,8 +16,8 @@ object CommandServiceActor {
 
   // TMT Standard Queue Interaction Commands
   sealed trait QueueInteractionCommand
-  case class QueueSubmit(configs: Configuration, sender: ActorRef) extends QueueInteractionCommand
-  case class QueueBypassRequest(configs: Configuration, timeout: Timeout) extends QueueInteractionCommand
+  case class QueueSubmit(config: Configuration, sender: ActorRef) extends QueueInteractionCommand
+  case class QueueBypassRequest(config: Configuration, timeout: Timeout) extends QueueInteractionCommand
   case object QueueStop extends QueueInteractionCommand
   case object QueuePause extends QueueInteractionCommand
   case object QueueStart extends QueueInteractionCommand
@@ -32,8 +32,9 @@ object CommandServiceActor {
 }
 
 /**
- * Implements the TMT Command Service.
+ * Implements the TMT Command Service actor.
  * @param configActorProps used to create the target actor for the command
+ * @param componentName the name of the component that is the target of the commands
  */
 class CommandServiceActor(configActorProps: Props, componentName: String) extends Actor with ActorLogging {
 
@@ -58,15 +59,8 @@ class CommandServiceActor(configActorProps: Props, componentName: String) extend
     case ConfigPause(runId) => configPause(runId)
     case ConfigResume(runId) => configResume(runId)
 
-    // Status Messages
+    // Status Messages from completed, canceled or aborted configs
     case status: CommandStatus => replyToSender(status)
-
-//    case CommandStatus.Pending(runId) => log.debug(s"Status: Pending runId: $runId")
-//    case CommandStatus.Queued(runId) => log.debug(s"Status: Queued runId: $runId")
-//    case CommandStatus.Busy(runId) => log.debug(s"Status: Busy runId: $runId")
-//    case CommandStatus.Complete(runId) => log.debug(s"XXX Status: Complete runId: $runId")
-//    case CommandStatus.Error(runId, ex) => log.error(ex, s"Received error for runId: $runId")
-//    case CommandStatus.Aborted(runId) => log.info(s"Status: Aborted runId: $runId")
 
     case x => log.error(s"Unknown CommandServiceActor message: $x"); sender ! Status.Failure(new IllegalArgumentException)
   }
@@ -88,12 +82,13 @@ class CommandServiceActor(configActorProps: Props, componentName: String) extend
    * Request immediate execution of the given config and return a future with the status
    */
   private def queueBypassRequest(config: Configuration, t: Timeout) {
-    log.debug(s"Request config: $config")
-    queueActor forward QueueActor.QueueBypassRequest(QueueActor.QueueConfig(RunId(), config), t)
+    val runId = RunId()
+    log.debug(s"(Queue bypass) Request config with runId: $runId from sender $sender")
+    queueActor forward QueueActor.QueueBypassRequest(QueueActor.QueueConfig(runId, config), t)
   }
 
   /**
-   * Reply to the original sender of the command with the command status
+   * Reply to the original sender of the command with the command status.
    */
   private def replyToSender(status: CommandStatus) {
     val senderOpt = senderMap.get(status.runId)
@@ -115,7 +110,6 @@ class CommandServiceActor(configActorProps: Props, componentName: String) extend
   private def queueStop() {
     log.debug("Queue Stop")
     queueActor ! QueueActor.QueueStop
-    context.stop(self)
   }
 
   /**

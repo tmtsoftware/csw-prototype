@@ -3,7 +3,7 @@ package org.tmt.csw.cmd.akka
 import java.util.UUID
 
 /**
- * Token returned from a command queue submit
+ * Unique id for each running command (returned from a queue submit).
  */
 sealed trait RunId {
   def id : String

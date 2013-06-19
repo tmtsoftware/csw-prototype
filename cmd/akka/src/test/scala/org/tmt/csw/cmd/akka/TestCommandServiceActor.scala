@@ -33,8 +33,6 @@ object TestConfig {
     """.stripMargin
 }
 
-// XXX TODO: Add more tests, deal with shutting down Akka at the end instead of in each test...
-
 /**
  * Tests the Command Service actor
  */
@@ -44,6 +42,7 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
   val duration : FiniteDuration = 5.seconds
   implicit val timeout = Timeout(duration)
   implicit val dispatcher = system.dispatcher
+
 
   test("Test basic CommandServiceActor queue request") {
     val configActorProps = TestConfigActor.props(3)
@@ -55,6 +54,7 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
       duration).asInstanceOf[CommandStatus.Complete]
     logger.info(s"Received command status: $status")
   }
+
 
   test("Test basic CommandServiceActor queue submit") {
     val configActorProps = TestConfigActor.props(3)
@@ -69,6 +69,7 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
     expectMsgType[CommandStatus.Busy](duration)
     expectMsgType[CommandStatus.Complete](duration)
   }
+
 
   test("Test basic CommandServiceActor queue submit with config abort") {
     val configActorProps = TestConfigActor.props(3)
@@ -85,6 +86,7 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
     expectMsgType[CommandStatus.Aborted](duration)
   }
 
+
   test("Test basic CommandServiceActor queue submit followed by config pause and resume") {
     val configActorProps = TestConfigActor.props(3)
     val commandServiceActor = system.actorOf(CommandServiceActor.props(configActorProps, "test"), name = "commandServiceActor4")
@@ -94,11 +96,11 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
     val f = commandServiceActor ? CommandServiceActor.QueueSubmit(config, self)
     val runId = Await.result(f, duration).asInstanceOf[RunId]
     logger.info(s"Received runId for command: $runId")
-    commandServiceActor ! CommandServiceActor.ConfigPause(runId)
-    Thread.sleep(1000)
-    commandServiceActor ! CommandServiceActor.ConfigResume(runId)
     expectMsgType[CommandStatus.Queued](duration)
     expectMsgType[CommandStatus.Busy](duration)
+    commandServiceActor ! CommandServiceActor.ConfigPause(runId)
+    expectNoMsg(5.seconds)
+    commandServiceActor ! CommandServiceActor.ConfigResume(runId)
     expectMsgType[CommandStatus.Complete](duration)
   }
 

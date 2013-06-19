@@ -7,7 +7,8 @@ import java.util.concurrent.atomic.AtomicReference
 import org.tmt.csw.cmd.akka.ConfigState.ConfigState
 
 /**
- * Defines messages and states for use by actors that are command service targets.
+ * Defines messages and states for use by actors that are command service targets
+ * (i.e.: actors that process Configuration messages.)
  */
 object ConfigActor {
   // TMT Standard Configuration Interaction Commands
@@ -47,18 +48,22 @@ abstract class ConfigActor extends Actor with ActorLogging {
     case x => log.error(s"Unexpected ConfigActor message while paused: $x")
   }
 
+  // Calls the derived class implementation of submit() and sends the returned config state
+  // to the sender (Paused and Resumed states are not currently sent).
   private def configSubmit(config: Configuration, state: AtomicReference[ConfigState]) {
     submit(config, state) match {
       case ConfigState.Paused() => log.debug(s"Config Paused")
-      case otherState => sender ! otherState
+      case configState: ConfigState => sender ! configState
     }
   }
 
+  // Goes back to receive mode, then calls the derived class implementation of resume()
+  // and sends the returned config state to the sender (Paused and Resumed states are not currently sent).
   private def configResume(config: Configuration, state: AtomicReference[ConfigState]) {
     context.become(receive)
     resume(config, state) match {
       case ConfigState.Paused() => log.debug(s"Config Paused again")
-      case otherState => sender ! otherState
+      case configState: ConfigState => sender ! configState
     }
   }
 
@@ -74,6 +79,7 @@ abstract class ConfigActor extends Actor with ActorLogging {
 
   /**
    * Resume the paused actions associated with a specific Configuration.
+   * This is like submit, but starting at the point where processing was paused.
    */
   def resume(config: Configuration, state: AtomicReference[ConfigState]) : ConfigState
 
