@@ -5,6 +5,9 @@ import java.io.{Reader, FileReader, File, StringReader}
 import scala.collection.JavaConverters._
 import java.util.UUID
 
+/**
+ * Used for building Configuration instances.
+ */
 object Configuration {
   val toStringOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
   val formatOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
@@ -86,10 +89,27 @@ class Configuration private (private val config : Config) {
     if (rootKeys.size == 1) Some(rootKeys.iterator().next()) else None
   }
 
+  /**
+   * Returns the nested Configuration at the requested path and throws an exception if not found
+   */
   def getConfig(path: String) = new Configuration(config.getConfig(path))
+
+  /**
+   * Returns the number of top level elements in the configuration
+   */
   def size() : Int = config.root().size()
+
+  /**
+   * Returns true if this config contains the given path
+   */
   def hasPath(path: String) = config.hasPath(path)
+
+
+  /**
+   * Returns true if this config is empty
+   */
   def isEmpty: Boolean = config.isEmpty
+
   def getBoolean(path: String) = config.getBoolean(path)
   def getNumber(path: String) = config.getNumber(path)
   def getInt(path: String) = config.getInt(path)
@@ -109,6 +129,10 @@ class Configuration private (private val config : Config) {
   def getBytesList(path: String) = config.getBytesList(path)
   def getMillisecondsList(path: String) = config.getMillisecondsList(path)
   def getNanosecondsList(path: String) = config.getNanosecondsList(path)
+
+  /**
+   * Returns a Map containing the contents of this object at the given path.
+   */
   def asMap(path: String) = config.getConfig(path).root().unwrapped()
 
   /**
@@ -238,6 +262,17 @@ class Configuration private (private val config : Config) {
    */
   def isWaitConfig : Boolean = {
     rootKey().getOrElse("") == "wait"
+  }
+
+  override def hashCode(): Int = config.hashCode()
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case configuration: Configuration =>
+        this.config.equals(configuration.config)
+      case _ =>
+        false
+    }
   }
 }
 

@@ -3,7 +3,7 @@ package org.tmt.csw.cs.akka
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import java.io.{FileNotFoundException, IOException}
 import org.tmt.csw.cs.core.ConfigString
-import akka.actor.{ActorSystem}
+import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.Some
 import scala.concurrent.duration._
