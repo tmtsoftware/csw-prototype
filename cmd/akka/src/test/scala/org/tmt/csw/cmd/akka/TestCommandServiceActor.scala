@@ -40,33 +40,40 @@ object TestConfig {
 class TestCommandServiceActor extends TestKit(ActorSystem("test"))
     with ImplicitSender with FunSuite with BeforeAndAfterEach with BeforeAndAfterAll with Logging {
 
-  var commandServiceActor: ActorRef = null
-  var configActor: ActorRef = null
+//  var commandServiceActor: ActorRef = null
+//  var configActor: ActorRef = null
   val config = Configuration(TestConfig.testConfig)
 
   val duration : FiniteDuration = 5.seconds
   implicit val timeout = Timeout(duration)
   implicit val dispatcher = system.dispatcher
 
-  // Creates the actors before each test.
-  // Tests run concurrently, so give each test actor a unique name.
-  override protected def beforeEach() {
-    val n = Random.nextInt()
-    commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
-    configActor = system.actorOf(TestConfigActor.props(n), name = s"TestConfigActor$n")
-  }
-
-  // Kills the actors after each test.
-  override protected def afterEach() {
-    system.stop(commandServiceActor)
-    system.stop(configActor)
-  }
+//  // Creates the actors before each test.
+//  // Tests run concurrently, so give each test actor a unique name.
+//  override protected def beforeEach() {
+//    val n = Random.nextInt()
+//    commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
+//    configActor = system.actorOf(TestConfigActor.props(n), name = s"TestConfigActor$n")
+//  }
+//
+//  // Kills the actors after each test.
+//  override protected def afterEach() {
+//    system.stop(commandServiceActor)
+//    system.stop(configActor)
+//  }
 
 
   // -- Tests --
 
+  def getCommandService(n: Int) : ActorRef = {
+    val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
+    system.actorOf(TestConfigActor.props(n), name = s"TestConfigActor$n")
+    Thread.sleep(100) // XXX wait for register: FIXME: Send a message when registered...
+    commandServiceActor
+  }
 
   test("Test simple queue (bypass) request") {
+    val commandServiceActor = getCommandService(1)
     // Request a command without being queued
     val status =  Await.result(commandServiceActor ? CommandServiceMessage.QueueBypassRequest(config),
       duration).asInstanceOf[CommandStatus.Complete]
@@ -75,6 +82,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
 
   test("Test simple queue submit") {
+    val commandServiceActor = getCommandService(2)
     within(duration) {
       commandServiceActor ! CommandServiceMessage.Submit(config)
       val s1 = expectMsgType[CommandStatus.Queued]
@@ -87,6 +95,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
 
   test("Test queue submit with config abort") {
+    val commandServiceActor = getCommandService(3)
     within(duration) {
       commandServiceActor ! CommandServiceMessage.Submit(config)
       val s = expectMsgType[CommandStatus.Queued]
@@ -98,6 +107,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
 
   test("Test queue submit followed by config pause and resume") {
+    val commandServiceActor = getCommandService(4)
     within(duration) {
       commandServiceActor ! CommandServiceMessage.Submit(config)
       val s = expectMsgType[CommandStatus.Queued]
@@ -112,6 +122,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
 
   test("Test queue pause and start") {
+    val commandServiceActor = getCommandService(5)
     within(duration) {
       commandServiceActor ! CommandServiceMessage.QueuePause
       commandServiceActor ! CommandServiceMessage.Submit(config)
@@ -126,6 +137,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
   }
 
   test("Test queue stop and start") {
+    val commandServiceActor = getCommandService(6)
     within(duration) {
       // Start with the queue paused, so that the config stays in the queue
       commandServiceActor ! CommandServiceMessage.QueuePause
@@ -154,6 +166,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
 
   test("Test queue delete") {
+    val commandServiceActor = getCommandService(7)
     within(duration) {
       // Start with the queue paused, so that the config stays in the queue
       commandServiceActor ! CommandServiceMessage.QueuePause
@@ -181,6 +194,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
 
   test("Test submit with wait config") {
+    val commandServiceActor = getCommandService(8)
     within(duration) {
       val waitConfig = Configuration.waitConfig(forResume = true, obsId = "TMT-2021A-C-2-1")
 
@@ -202,6 +216,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
 
   test("Test request with wait config") {
+    val commandServiceActor = getCommandService(9)
     val waitConfig = Configuration.waitConfig(forResume=true, obsId="TMT-2021A-C-2-1")
 
     // Sending the wait config is like sending a Queue Pause command (in this case we bypass the queue)
