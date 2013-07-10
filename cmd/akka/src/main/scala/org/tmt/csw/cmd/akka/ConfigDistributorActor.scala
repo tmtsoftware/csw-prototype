@@ -1,6 +1,6 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
+import akka.actor.{Terminated, ActorRef, ActorLogging, Actor}
 import org.tmt.csw.cmd.akka.CommandServiceMessage._
 import org.tmt.csw.cmd.akka.ConfigDistributorActor._
 
@@ -31,9 +31,10 @@ object ConfigDistributorActor {
  */
 class ConfigDistributorActor extends Actor with ActorLogging {
 
-  // Set of config paths and the actors that registered to handle them
+  // Describes a config path and the actor that registered to handle it
   case class RegistryEntry(path: String, actorRef: ActorRef)
 
+  // Set of config paths and the actors that registered to handle them
   private var registry = Set[RegistryEntry]()
 
   // Combines a Submit object with a reference to the target actor
@@ -61,12 +62,25 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     // Status Results for a config part from a ConfigActor
     case state: ConfigState => checkIfDone(state)
 
+    case Terminated(actorRef) => unregister(actorRef)
+
     case x => log.error(s"Unexpected ConfigActor message: $x")
   }
 
-  def register(configPaths: Set[String], ref: ActorRef) {
-    configPaths.foreach(path => registry += RegistryEntry(path, ref))
+  def register(configPaths: Set[String], actorRef: ActorRef) {
+    configPaths.foreach(path => registry += RegistryEntry(path, actorRef))
     sender ! Registered()
+
+    // Add a listener in case the actor dies?
+    context.watch(actorRef)
+  }
+
+  def unregister(actorRef: ActorRef) {
+    registry.toList.foreach(entry =>
+      if (entry.actorRef == actorRef) {
+        registry -= entry
+        log.info(s"Actor $actorRef died: Unregistering it for ${entry.path}")
+      })
   }
 
   /**
