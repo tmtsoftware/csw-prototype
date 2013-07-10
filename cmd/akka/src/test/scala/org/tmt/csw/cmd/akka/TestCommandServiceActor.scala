@@ -2,7 +2,7 @@ package org.tmt.csw.cmd.akka
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{ActorRef, Props, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSuite}
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -53,12 +53,14 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
     // Create a config service actor
     val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
 
-    // Create a config actor, tell it to register with the command service actor and wait, before starting the test
+    // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
     // (If we start sending commands before the registration is complete, they won't get executed).
-    val configActor = system.actorOf(TestConfigActor.props(n), name = s"TestConfigActor$n")
-//    Await.result(configActor ? ConfigActor.Register(commandServiceActor), duration)
+    val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActor${n}A")
+    val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = s"TestConfigActor${n}B")
     within(duration) {
-      configActor ! ConfigActor.Register(commandServiceActor)
+      configActor1 ! ConfigActor.Register(commandServiceActor)
+      configActor2 ! ConfigActor.Register(commandServiceActor)
+      expectMsgType[ConfigActor.Registered]
       expectMsgType[ConfigActor.Registered]
     }
 
@@ -217,7 +219,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
     val waitConfig = Configuration.waitConfig(forResume=true, obsId="TMT-2021A-C-2-1")
 
     // Sending the wait config is like sending a Queue Pause command (in this case we bypass the queue)
-    val status =  Await.result(commandServiceActor ? CommandServiceMessage.QueueBypassRequest(waitConfig),
+    Await.result(commandServiceActor ? CommandServiceMessage.QueueBypassRequest(waitConfig),
       duration).asInstanceOf[CommandStatus.Complete]
     expectNoMsg(1.second)
 

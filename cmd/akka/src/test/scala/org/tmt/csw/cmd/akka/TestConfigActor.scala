@@ -4,14 +4,13 @@ import org.tmt.csw.cmd.akka.CommandServiceMessage._
 import akka.actor._
 
 object TestConfigActor {
-  def props(n: Int): Props = Props(classOf[TestConfigActor], n)
+  def props(configPath: String): Props = Props(classOf[TestConfigActor], configPath)
 }
 
 /**
  * A test config actor.
- * @param n When tests run concurrently, the actors being tested get unique names by appending -$n
  */
-class TestConfigActor(n: Int) extends ConfigActor("config.tmt.tel.base.pos") {
+class TestConfigActor(configPath: String) extends ConfigActor(configPath) {
 
   // Links the config worker actor to the runId for the config it is currently executing
   private var runIdForActorRef = Map[ActorRef, RunId]()
