@@ -11,14 +11,11 @@ object TestConfigActor {
  * A test config actor.
  * @param n When tests run concurrently, the actors being tested get unique names by appending -$n
  */
-class TestConfigActor(n: Int) extends ConfigActor {
+class TestConfigActor(n: Int) extends ConfigActor("config.tmt.tel.base.pos") {
 
   // Links the config worker actor to the runId for the config it is currently executing
   private var runIdForActorRef = Map[ActorRef, RunId]()
   private var actorRefForRunId = Map[RunId, ActorRef]()
-
-  // Register to receive
-  register(s"testCommandServiceActor$n", "config.tmt.tel.base.pos")
 
   /**
    * Called when a configuration is submitted

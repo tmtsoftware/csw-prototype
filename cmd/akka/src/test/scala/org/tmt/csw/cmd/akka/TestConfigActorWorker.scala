@@ -7,7 +7,7 @@ import scala.concurrent.Future
 /**
  * A test config worker actor.
  */
-class TestConfigActorWorker() extends ConfigActor {
+class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
   // Used as an example of one way to implement interrupting a running config
   val aState: AtomicReference[ConfigState] = new AtomicReference(null)
 

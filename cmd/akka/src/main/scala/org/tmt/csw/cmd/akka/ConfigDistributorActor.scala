@@ -4,16 +4,24 @@ import akka.actor.{ActorRef, ActorLogging, Actor}
 import org.tmt.csw.cmd.akka.CommandServiceMessage._
 import org.tmt.csw.cmd.akka.ConfigDistributorActor._
 
+sealed trait ConfigDistributorMessage
+
+/**
+ * Defines the message types used by this actor.
+ */
 object ConfigDistributorActor {
 
   /**
-   * Message used by a config actor to register interest in the given path in a configuration.
-   * @param path a dot separated path expression referring to a hierarchy in a Configuration object
+   * Message used by a config actor to register interest in the given set of config paths.
+   * @param configPaths a set of dot separated path expressions, each referring to a hierarchy in a Configuration object
    * @param actorRef a reference to the sender (not the same as the implicit sender if 'ask' is used)
    */
-  case class Register(path: String, actorRef: ActorRef)
+  case class Register(configPaths: Set[String], actorRef: ActorRef) extends ConfigDistributorMessage
 
-  case class Registered(path: String)
+  /**
+   * Reply sent when registration is complete
+   */
+  case class Registered() extends ConfigDistributorMessage
 }
 
 
@@ -43,7 +51,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
    * Messages received in the normal state.
    */
   def receive = {
-    case Register(path, actorRef) => sender ! register(path, actorRef)
+    case Register(configPaths, actorRef) => register(configPaths, actorRef)
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)
     case ConfigAbort(runId) => abort(runId)
@@ -56,9 +64,9 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     case x => log.error(s"Unexpected ConfigActor message: $x")
   }
 
-  def register(path: String, ref: ActorRef): Registered = {
-    registry += RegistryEntry(path, ref)
-    Registered(path)
+  def register(configPaths: Set[String], ref: ActorRef) {
+    configPaths.foreach(path => registry += RegistryEntry(path, ref))
+    sender ! Registered()
   }
 
   /**

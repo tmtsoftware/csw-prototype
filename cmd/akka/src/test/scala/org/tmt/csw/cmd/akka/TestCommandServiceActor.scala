@@ -9,7 +9,6 @@ import akka.pattern.ask
 import org.tmt.csw.cmd.core.Configuration
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.concurrent.Await
-import scala.util.Random
 
 object TestConfig {
   val testConfig =
@@ -38,39 +37,37 @@ object TestConfig {
  * Tests the Command Service actor
  */
 class TestCommandServiceActor extends TestKit(ActorSystem("test"))
-    with ImplicitSender with FunSuite with BeforeAndAfterEach with BeforeAndAfterAll with Logging {
+    with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
 
-//  var commandServiceActor: ActorRef = null
-//  var configActor: ActorRef = null
+  // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
 
   val duration : FiniteDuration = 5.seconds
   implicit val timeout = Timeout(duration)
   implicit val dispatcher = system.dispatcher
 
-//  // Creates the actors before each test.
-//  // Tests run concurrently, so give each test actor a unique name.
-//  override protected def beforeEach() {
-//    val n = Random.nextInt()
-//    commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
-//    configActor = system.actorOf(TestConfigActor.props(n), name = s"TestConfigActor$n")
-//  }
-//
-//  // Kills the actors after each test.
-//  override protected def afterEach() {
-//    system.stop(commandServiceActor)
-//    system.stop(configActor)
-//  }
+
+  // Called at the start of each test to get a new, unique command service and config actor
+  // (Note that all tests run at the same time, so each test needs a unique command service)
+  def getCommandService(n: Int) : ActorRef = {
+    // Create a config service actor
+    val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
+
+    // Create a config actor, tell it to register with the command service actor and wait, before starting the test
+    // (If we start sending commands before the registration is complete, they won't get executed).
+    val configActor = system.actorOf(TestConfigActor.props(n), name = s"TestConfigActor$n")
+//    Await.result(configActor ? ConfigActor.Register(commandServiceActor), duration)
+    within(duration) {
+      configActor ! ConfigActor.Register(commandServiceActor)
+      expectMsgType[ConfigActor.Registered]
+    }
+
+    commandServiceActor
+  }
 
 
   // -- Tests --
 
-  def getCommandService(n: Int) : ActorRef = {
-    val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
-    system.actorOf(TestConfigActor.props(n), name = s"TestConfigActor$n")
-    Thread.sleep(100) // XXX wait for register: FIXME: Send a message when registered...
-    commandServiceActor
-  }
 
   test("Test simple queue (bypass) request") {
     val commandServiceActor = getCommandService(1)
