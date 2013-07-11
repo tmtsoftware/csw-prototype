@@ -4,8 +4,9 @@ import Keys._
 // Defines the global build settings so they don't need to be edited everywhere
 trait Settings {
   val Version = "1.0"
-  val SrcScalaVersion = "2.10.1"
-  val AkkaVersion = "2.2.0-RC1"
+  val SrcScalaVersion = "2.10.2"
+  val AkkaVersion = "2.3-SNAPSHOT"
+//  val AkkaVersion = "2.2.0"
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := "org.tmt",
@@ -14,7 +15,8 @@ trait Settings {
     version := Version,
     scalaVersion := SrcScalaVersion,
     crossPaths := false,
-    resolvers += "Typesafe Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
+    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
+    resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
   )
 
@@ -37,4 +39,7 @@ trait Settings {
   val csAkka = "org.tmt" % "org.tmt.csw.cs.akka" % Version
   val csApi = "org.tmt" % "org.tmt.csw.cs.api" % Version
   val csCore = "org.tmt" % "org.tmt.csw.cs.core" % Version
+
+  val cmdAkka = "org.tmt" % "org.tmt.csw.cmd.akka" % Version
+  val cmdCore = "org.tmt" % "org.tmt.csw.cmd.core" % Version
 }

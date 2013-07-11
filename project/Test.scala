@@ -5,6 +5,7 @@ import Keys._
 // Defines the sbt build for the Test (Integration Test) subproject.
 // This can also serve as an example standalone application setup.
 // (See http://doc.akka.io/docs/akka/snapshot/scala/microkernel.html)
+//trait Test extends Build with Settings with Cs {
 trait Test extends Build with Settings with Cs {
 
   // top level Test project

@@ -55,9 +55,13 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 
     // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
     // (If we start sending commands before the registration is complete, they won't get executed).
+    // Each config actor is responsible for a different part of the configs (the path passed as an argument).
     val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActor${n}A")
     val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = s"TestConfigActor${n}B")
     within(duration) {
+      // Note: this tells configActor1 to register with the command service. It could do this on its own,
+      // (by using a known path to find the commandServiceActor) but doing it this way lets us know when
+      // the registration is complete, so we can start sending commands
       configActor1 ! ConfigActor.Register(commandServiceActor)
       configActor2 ! ConfigActor.Register(commandServiceActor)
       expectMsgType[ConfigActor.Registered]
