@@ -14,11 +14,14 @@ import scala.concurrent.duration._
  */
 class TestClientActor extends Actor with ActorLogging {
 
+  val settings = Settings(context.system)
+
   val configActor1 = context.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActorA")
   val configActor2 = context.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = s"TestConfigActorB")
 
   val identifyId = 1
-  val commandServiceActorSelection = context.actorSelection("akka.tcp://TestApp@127.0.0.1:2552/user/testActor/testAppCommandServiceActor")
+  val commandServiceActorSelection = context.actorSelection(
+    s"akka.tcp://TestApp@${settings.testCommandServerHost}:2552/user/testActor/testAppCommandServiceActor")
   commandServiceActorSelection ! Identify(identifyId)
 
   def receive = {
@@ -47,7 +50,7 @@ class TestClientActor extends Actor with ActorLogging {
         ack1 <- configActor1 ? ConfigActor.Register(commandServiceActor)
         ack2 <- configActor2 ? ConfigActor.Register(commandServiceActor)
     } {
-      context.actorSelection("akka.tcp://TestApp@127.0.0.1:2552/user/testActor") ! "Start"
+      context.actorSelection(s"akka.tcp://TestApp@${settings.testCommandServerHost}:2552/user/testActor") ! "Start"
     }
   }
 }
