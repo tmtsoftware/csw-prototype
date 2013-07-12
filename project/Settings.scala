@@ -22,6 +22,7 @@ trait Settings {
   // Dependencies
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % AkkaVersion
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % AkkaVersion
+  val akkaRemote = "com.typesafe.akka" %% "akka-remote" % AkkaVersion
   val typesafeConfig = "com.typesafe" % "config" % "1.0.1"
   val scalaLogging = "com.typesafe" %% "scalalogging-slf4j" % "1.0.1"
   val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"

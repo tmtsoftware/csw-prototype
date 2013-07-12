@@ -114,7 +114,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
    * @param configState the status of the config part from the worker actor
    */
   def checkIfDone(configState: ConfigState) {
-    log.info(s"Check if done: state = $configState")
+    log.debug(s"Check if done: state = $configState")
     if (configState.done()) {
       runIdMap.get(configState.runId()) match {
         case Some(runId) =>

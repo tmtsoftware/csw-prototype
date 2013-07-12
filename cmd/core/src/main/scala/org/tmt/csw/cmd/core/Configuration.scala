@@ -1,9 +1,10 @@
 package org.tmt.csw.cmd.core
 
 import com.typesafe.config._
-import java.io.{Reader, FileReader, File, StringReader}
+import java.io._
 import scala.collection.JavaConverters._
 import java.util.UUID
+import scala.Some
 
 /**
  * Used for building Configuration instances.
@@ -26,6 +27,12 @@ object Configuration {
    * @param s a string in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
   def apply(s : String): Configuration = apply(ConfigFactory.parseReader(new StringReader(s)))
+
+  /**
+   * Reads the configuration from the given byte array
+   * @param bytes an array of bytes containing the configuration (as for example the result of String.getBytes)
+   */
+  def apply(bytes : Array[Byte]): Configuration = apply(ConfigFactory.parseReader(new InputStreamReader(new ByteArrayInputStream(bytes))))
 
   /**
    * Reads the configuration from the given Reader
@@ -70,7 +77,7 @@ object Configuration {
 /**
  * Represents a telescope configuration
  */
-class Configuration private (private val config : Config) {
+class Configuration private (private val config : Config) extends Serializable {
   /**
    * Returns
    */

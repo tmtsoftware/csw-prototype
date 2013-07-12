@@ -6,9 +6,6 @@ import org.tmt.csw.cs.akka.ConfigServiceActor
 import java.io.File
 import org.tmt.csw.cs.core.git.GitConfigManager
 
-case object Start
-
-
 // This class is started by the Akka microkernel in standalone mode
 class TestApp extends Bootable {
 
@@ -20,7 +17,7 @@ class TestApp extends Bootable {
     makeTestGitRepository()
     val configServiceActor = system.actorOf(ConfigServiceActor.props(settings.testLocalRepository, settings.testMainRepository),
       name = "configServiceActor")
-    system.actorOf(TestActor.props(configServiceActor)) ! Start
+    system.actorOf(TestActor.props(configServiceActor), "testActor")
   }
 
   def shutdown() {

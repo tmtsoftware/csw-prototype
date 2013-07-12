@@ -24,6 +24,22 @@ class TestConfiguration extends FunSuite {
     assert(conf.getConfigId.length() != 0)
   }
 
+  test("Test creating a config from an array of bytes") {
+    val simplePathMapValue = Map("x.y" -> 4, "z" -> 5).asInstanceOf[Map[String, AnyRef]].asJava
+    val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
+
+    val conf1 = Configuration(pathMapValue)
+    val conf = Configuration(conf1.toString.getBytes);
+
+    assert(4 == conf.getInt("b.x.y"))
+    assert(5 == conf.getInt("b.z"))
+    assert(1 == conf.getInt("a.c"))
+
+    assert("b{z=5,x{y=4}},a{c=1}" == conf.toTestString)
+    assert("z=5,x{y=4}" == conf.getConfig("b").toTestString)
+    assert(conf.getConfigId.length() != 0)
+  }
+
   test("Test creating a config in code using java Maps and Lists") {
     val simplePathMapValue = Map("x.y" -> List(1,2,3).asJava, "z" -> List("a","b","c").asJava).asJava
     val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
