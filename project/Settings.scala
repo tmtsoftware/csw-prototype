@@ -4,20 +4,19 @@ import Keys._
 // Defines the global build settings so they don't need to be edited everywhere
 trait Settings {
   val Version = "1.0"
-  val SrcScalaVersion = "2.10.2"
-  val AkkaVersion = "2.3-SNAPSHOT"
-//  val AkkaVersion = "2.2.0"
+//  val AkkaVersion = "2.3-SNAPSHOT"
+  val AkkaVersion = "2.2.0"
 
   val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := "org.tmt",
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
     version := Version,
-    scalaVersion := SrcScalaVersion,
+    scalaVersion := "2.10.2",
     crossPaths := false,
-    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
+    resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
-    resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
+    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots"
   )
 
   // Dependencies
