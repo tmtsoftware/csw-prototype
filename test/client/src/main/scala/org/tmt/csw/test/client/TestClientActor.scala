@@ -34,8 +34,8 @@ class TestClientActor extends Actor with ActorLogging {
   def active(commandServiceActorRef: ActorRef): Actor.Receive = {
     case Terminated(`commandServiceActorRef`) =>
       // Just quit (could also retry and wait for another commandServiceActor to start...?)
-      context.stop(self)
-//      context.system.shutdown()
+//      context.stop(self)
+      context.system.shutdown()
   }
 
   def start(commandServiceActor: ActorRef) {

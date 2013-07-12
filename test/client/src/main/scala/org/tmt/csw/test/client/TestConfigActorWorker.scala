@@ -57,7 +57,7 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
         return state // Return the state to the sender
       } else {
         // Continue working
-        log.info(s"${self.path} busy working on part $a of $numberOfSecondsToRun")
+        log.debug(s"${self.path} busy working on part $a of $numberOfSecondsToRun")
         Thread.sleep(100) // do some work...
       }
     }

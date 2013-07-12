@@ -40,8 +40,8 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
     case status: CommandStatus =>
       log.info(s"Received command status: $status")
       if (status.done) {
-        context.stop(self)
-//        context.system.shutdown()
+//        context.stop(self)
+        context.system.shutdown()
       }
 
     case x => log.debug(s"Received unknown message")
@@ -49,6 +49,10 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
 
   def readConfigFile(configData: ConfigData) {
     log.info(s"Get => $configData")
+
+    // XXX could create an actor on the remote system also, but then the jar for it needs to be in the classpath
+//    val configActor = context.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActorRemote")
+
 
     // Submit a configuration to the command service (need to specify self, since this is called from a Future?)
     commandServiceActor ! CommandServiceMessage.Submit(Configuration(configData.getBytes))
