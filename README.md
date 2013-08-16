@@ -9,7 +9,7 @@ http://www.tmt.org
 Build Instructions
 ------------------
 
-A hierarchical build is defined (see project/Csw.scala, which is the root of the build).
+A hierarchical build is defined (see project/Build.scala).
 To build, run 'sbt' in the top level directory and type one of the following commands:
 
 * compile - compiles the sources
