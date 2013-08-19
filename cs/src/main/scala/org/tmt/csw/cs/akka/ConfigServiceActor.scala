@@ -14,13 +14,13 @@ import java.net.URI
 object ConfigServiceActor {
   // Messages received by the Config Service actor
   sealed trait ConfigServiceRequest
-  case class CreateRequest(path: String, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
-  case class UpdateRequest(path: String, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
-  case class GetRequest(path: String, id: Option[ConfigId] = None) extends ConfigServiceRequest
-  case class ExistsRequest(path: String) extends ConfigServiceRequest
-  case class DeleteRequest(path: String, comment: String = "deleted") extends ConfigServiceRequest
+  case class CreateRequest(path: File, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
+  case class UpdateRequest(path: File, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
+  case class GetRequest(path: File, id: Option[ConfigId] = None) extends ConfigServiceRequest
+  case class ExistsRequest(path: File) extends ConfigServiceRequest
+  case class DeleteRequest(path: File, comment: String = "deleted") extends ConfigServiceRequest
   case object ListRequest extends ConfigServiceRequest
-  case class HistoryRequest(path: String) extends ConfigServiceRequest
+  case class HistoryRequest(path: File) extends ConfigServiceRequest
 
   /**
    * Use this Props instance to initialize with the given ConfigManager

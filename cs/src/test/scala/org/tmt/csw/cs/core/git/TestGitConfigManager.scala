@@ -9,8 +9,8 @@ import org.tmt.csw.cs.core.ConfigString
  * Tests the GitConfigManager class
  */
 class TestGitConfigManager extends FunSuite {
-  val path1 = "some/test1/TestConfig1"
-  val path2 = "some/test2/TestConfig2"
+  val path1 = new File("some/test1/TestConfig1")
+  val path2 = new File("some/test2/TestConfig2")
 
   val contents1 = "Contents of some file...\n"
   val contents2 = "New contents of some file...\n"

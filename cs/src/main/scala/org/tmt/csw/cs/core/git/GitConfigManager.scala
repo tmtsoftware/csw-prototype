@@ -121,7 +121,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  override def create(path: String, configData: ConfigData, comment: String): ConfigId = {
+  override def create(path: File, configData: ConfigData, comment: String): ConfigId = {
     logger.debug(s"create $path")
     val file = fileForPath(path)
     if (file.exists()) {
@@ -139,7 +139,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  override def update(path: String, configData: ConfigData, comment: String): ConfigId = {
+  override def update(path: File, configData: ConfigData, comment: String): ConfigId = {
     logger.debug(s"update $path")
     val file = fileForPath(path)
     if (!file.exists()) throw new FileNotFoundException("File not found: " + path)
@@ -154,14 +154,14 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  private def put(path: String, configData: ConfigData, comment: String): ConfigId = {
+  private def put(path: File, configData: ConfigData, comment: String): ConfigId = {
     val file = fileForPath(path)
     writeToFile(file, configData)
-    val dirCache = git.add.addFilepattern(path).call()
+    val dirCache = git.add.addFilepattern(path.getPath).call()
 //    git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfigfor now
     git.commit().setMessage(comment).call
     git.push.call()
-    GitConfigId(dirCache.getEntry(path).getObjectId.getName)
+    GitConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
   }
 
   /**
@@ -169,7 +169,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    * @param path the configuration path
    * @return true if the file exists
    */
-  def exists(path: String): Boolean = {
+  def exists(path: File): Boolean = {
     logger.debug(s"exists $path")
     fileForPath(path).exists
   }
@@ -179,12 +179,12 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    *
    * @param path the configuration path
    */
-  override def delete(path: String, comment: String = "deleted"): Unit = {
+  override def delete(path: File, comment: String = "deleted"): Unit = {
     logger.debug(s"delete $path")
     if (!exists(path)) {
       throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
     }
-    git.rm.addFilepattern(path).call()
+    git.rm.addFilepattern(path.getPath).call()
     git.commit().setMessage(comment).call
     git.push.call()
   }
@@ -197,7 +197,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    *           (by default the latest version is returned)
    * @return an object containing the configuration data, if found
    */
-  override def get(path: String, id: Option[ConfigId]): Option[ConfigData] = {
+  override def get(path: File, id: Option[ConfigId]): Option[ConfigData] = {
     logger.debug(s"get $path")
     if (! exists(path)) {
       return None
@@ -242,7 +242,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
   @tailrec
   private def list(treeWalk: TreeWalk, result: List[ConfigFileInfo]) : List[ConfigFileInfo] = {
     if (treeWalk.next()) {
-      val path = treeWalk.getPathString
+      val path = new File(treeWalk.getPathString)
       val objectId = treeWalk.getObjectId(0).name
       // TODO: Include create comment (history(path)(0).comment) or latest comment (history(path).last.comment)?
       val info = new ConfigFileInfo(path, GitConfigId(objectId), history(path).last.comment)
@@ -256,21 +256,21 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    * Returns a list of all known versions of a given path
    * @return a list containing one ConfigFileHistory object for each version of path
    */
-  def history(path: String): List[ConfigFileHistory] = {
+  def history(path: File): List[ConfigFileHistory] = {
     logger.debug(s"history $path")
     val logCommand = git.log
       .add(git.getRepository.resolve(Constants.HEAD))
-      .addPath(path)
+      .addPath(path.getPath)
     history(path, logCommand.call.iterator(), List())
   }
 
   // Returns a list of all known versions of a given path by recursively walking the Git history tree
   @tailrec
-  private def history(path: String, it: java.util.Iterator[RevCommit], result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
+  private def history(path: File, it: java.util.Iterator[RevCommit], result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
     if (it.hasNext) {
       val revCommit = it.next()
       val tree = revCommit.getTree
-      val treeWalk = TreeWalk.forPath(git.getRepository, path, tree)
+      val treeWalk = TreeWalk.forPath(git.getRepository, path.getPath, tree)
       if (treeWalk == null) {
         history(path, it, result)
       } else {
@@ -286,8 +286,8 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     }
   }
 
-  private def fileForPath(path: String): File = {
-    new File(git.getRepository.getWorkTree, path)
+  private def fileForPath(path: File): File = {
+    new File(git.getRepository.getWorkTree, path.getPath)
   }
 
   private def writeToFile(file: File, configData: ConfigData): Unit = {

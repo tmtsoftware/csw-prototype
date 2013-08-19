@@ -10,6 +10,7 @@ import org.tmt.csw.cs.core.ConfigString
 import org.tmt.csw.cs.akka.ConfigServiceActor._
 import org.tmt.csw.cmd.akka.{CommandStatus, CommandServiceMessage, CommandServiceActor}
 import org.tmt.csw.cmd.core.Configuration
+import java.io.File
 
 object TestActor {
   def props(configServiceActor: ActorRef): Props = Props(classOf[TestActor], configServiceActor)
@@ -18,7 +19,7 @@ object TestActor {
 // A test actor used to send messages to the config service
 class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
 
-  val configFileName = "testApp/config.conf"
+  val configFileName = new File("testApp/config.conf")
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
   val commandServiceActor = context.actorOf(Props[CommandServiceActor], name = s"testAppCommandServiceActor")

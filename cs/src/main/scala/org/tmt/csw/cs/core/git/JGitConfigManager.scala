@@ -18,31 +18,31 @@ import java.net.URI
 class JGitConfigManager(gitWorkDir: File, remoteRepo: URI) extends JConfigManager {
   private val manager = GitConfigManager(gitWorkDir, remoteRepo)
 
-  override def create(path: String, configData: ConfigData, comment: String): ConfigId = {
+  override def create(path: File, configData: ConfigData, comment: String): ConfigId = {
     manager.create(path, configData, comment)
   }
 
-  override def update(path: String, configData: ConfigData, comment: String): ConfigId = {
+  override def update(path: File, configData: ConfigData, comment: String): ConfigId = {
     manager.update(path, configData, comment)
   }
 
-  override def get(path: String): ConfigData = {
+  override def get(path: File): ConfigData = {
     manager.get(path).orNull
   }
 
-  override def get(path: String, id: ConfigId): ConfigData = {
+  override def get(path: File, id: ConfigId): ConfigData = {
     manager.get(path, Some(id)).orNull
   }
 
-  override def exists(path: String): Boolean = {
+  override def exists(path: File): Boolean = {
     manager.exists(path)
   }
 
-  override def delete(path: String): Unit = {
+  override def delete(path: File): Unit = {
     manager.delete(path)
   }
 
-  override def delete(path: String, comment: String): Unit = {
+  override def delete(path: File, comment: String): Unit = {
     manager.delete(path, comment)
   }
 
@@ -50,7 +50,7 @@ class JGitConfigManager(gitWorkDir: File, remoteRepo: URI) extends JConfigManage
     manager.list()
   }
 
-  override def history(path: String): util.List[ConfigFileHistory] = {
+  override def history(path: File): util.List[ConfigFileHistory] = {
     manager.history(path)
   }
 }
