@@ -31,6 +31,6 @@ object TestRepo {
     GitConfigManager.deleteLocalRepo(gitDir)
 
     // create a new repository and use it to create the actor
-    GitConfigManager(gitDir, gitMainRepo.getPath)
+    GitConfigManager(gitDir, gitMainRepo.toURI)
   }
 }

@@ -5,6 +5,7 @@ import org.tmt.csw.cs.api._
 import org.tmt.csw.cs.core.git.GitConfigManager
 import java.io.File
 import ConfigServiceActor._
+import java.net.URI
 
 
 /**
@@ -29,7 +30,7 @@ object ConfigServiceActor {
   /**
    * Use this Props instance to initialize with the local repository directory and the path or URI for the main repository
    */
-  def props(gitLocalRepository: File, gitMainRepository: String): Props
+  def props(gitLocalRepository: File, gitMainRepository: URI): Props
   = Props(classOf[ConfigServiceActor], Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
 
   /**

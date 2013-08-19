@@ -9,6 +9,7 @@ import akka.actor.ExtensionIdProvider
 import akka.actor.ExtendedActorSystem
 import com.typesafe.config.Config
 import java.io.File
+import java.net.URI
 
 object Settings extends ExtensionId[Settings] with ExtensionIdProvider {
   override def lookup(): Settings.type = Settings
@@ -16,7 +17,7 @@ object Settings extends ExtensionId[Settings] with ExtensionIdProvider {
 }
 
 class Settings(config: Config) extends Extension {
-  val testMainRepository = subst(config.getString("csw.test.test-main-repository"))
+  val testMainRepository = new URI(subst(config.getString("csw.test.test-main-repository")))
   val testLocalRepository = new File(subst(config.getString("csw.test.test-local-repository")))
 
   // Do any required substitution on the setting values

@@ -40,7 +40,7 @@ public class TestJGitConfigManager {
         GitConfigManager.deleteLocalRepo(gitDir);
 
         // create a new repository
-        JGitConfigManager manager = new JGitConfigManager(gitDir, gitMainRepo.getPath());
+        JGitConfigManager manager = new JGitConfigManager(gitDir, gitMainRepo.toURI());
         if (manager.exists(path1)) {
             manager.delete(path1, "deleted");
         }

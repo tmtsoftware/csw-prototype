@@ -16,6 +16,7 @@ import org.tmt.csw.cs.api.ConfigFileHistory
 import org.tmt.csw.cs.api.ConfigFileInfo
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.annotation.tailrec
+import java.net.URI
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -36,7 +37,7 @@ object GitConfigManager {
   def apply(): GitConfigManager = {
     val props = new Properties
     props.load(Thread.currentThread.getContextClassLoader.getResourceAsStream("org/tmt/csw/cs/core/git/config.prop"))
-    apply(new File(props.getProperty("git-local-repository")), props.getProperty("git-main-repository"))
+    apply(new File(props.getProperty("git-local-repository")), new URI(props.getProperty("git-main-repository")))
   }
 
 
@@ -52,7 +53,7 @@ object GitConfigManager {
    *
    * @return a new GitConfigManager configured to use the given local and remote repositories
    */
-  def apply(gitWorkDir: File, remoteRepo: String): GitConfigManager = {
+  def apply(gitWorkDir: File, remoteRepo: URI): GitConfigManager = {
     // Init local repo
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {

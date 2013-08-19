@@ -7,6 +7,7 @@ import scala.collection.JavaConversions._
 import org.tmt.csw.cs.api.ConfigFileHistory
 import org.tmt.csw.cs.api.ConfigFileInfo
 import scala.Some
+import java.net.URI
 
 /**
  * Uses JGit to manage versions of configuration files.
@@ -14,7 +15,7 @@ import scala.Some
  * Note: This version is for use by Java applications. Scala applications should use
  * [[org.tmt.csw.cs.core.git.GitConfigManager]].
  */
-class JGitConfigManager(gitWorkDir: File, remoteRepo: String) extends JConfigManager {
+class JGitConfigManager(gitWorkDir: File, remoteRepo: URI) extends JConfigManager {
   private val manager = GitConfigManager(gitWorkDir, remoteRepo)
 
   override def create(path: String, configData: ConfigData, comment: String): ConfigId = {
