@@ -18,7 +18,7 @@ object ConfigServiceActor {
   case class GetRequest(path: String, id: Option[ConfigId] = None) extends ConfigServiceRequest
   case class ExistsRequest(path: String) extends ConfigServiceRequest
   case class DeleteRequest(path: String, comment: String = "deleted") extends ConfigServiceRequest
-  case class ListRequest() extends ConfigServiceRequest
+  case object ListRequest extends ConfigServiceRequest
   case class HistoryRequest(path: String) extends ConfigServiceRequest
 
   /**
@@ -83,7 +83,7 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager] = None) extends
         case GetRequest(path, id) => sender ! configManager.get(path, id)
         case ExistsRequest(path) => sender ! configManager.exists(path)
         case DeleteRequest(path, comment) => sender ! configManager.delete(path, comment)
-        case ListRequest() => sender ! configManager.list()
+        case ListRequest => sender ! configManager.list()
         case HistoryRequest(path) => sender ! configManager.history(path)
       }
     } catch {

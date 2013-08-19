@@ -79,7 +79,7 @@ class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping a list containing one ConfigFileInfo object for each known config file
    */
   def list(): Future[List[ConfigFileInfo]] = {
-    (configServiceActor ? ListRequest()).mapTo[List[ConfigFileInfo]]
+    (configServiceActor ? ListRequest).mapTo[List[ConfigFileInfo]]
   }
 
   /**

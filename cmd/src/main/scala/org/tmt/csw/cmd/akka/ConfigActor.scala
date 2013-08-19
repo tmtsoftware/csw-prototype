@@ -19,7 +19,7 @@ object ConfigActor {
   /**
    * Reply message sent when the registration (see above) is acknowledged
    */
-  case class Registered() extends ConfigActorMessage
+  case object Registered extends ConfigActorMessage
 }
 
 
@@ -74,9 +74,9 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
         register(commandServiceActor, replyTo, configPaths)
     }
     f.onSuccess {
-      case ConfigDistributorActor.Registered() =>
+      case ConfigDistributorActor.Registered =>
         log.debug(s"Registered config paths $configPaths with $commandServiceActor")
-        replyTo ! ConfigActor.Registered()
+        replyTo ! ConfigActor.Registered
     }
   }
 

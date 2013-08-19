@@ -64,8 +64,8 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
       // the registration is complete, so we can start sending commands
       configActor1 ! ConfigActor.Register(commandServiceActor)
       configActor2 ! ConfigActor.Register(commandServiceActor)
-      expectMsgType[ConfigActor.Registered]
-      expectMsgType[ConfigActor.Registered]
+      expectMsgType[ConfigActor.Registered.type]
+      expectMsgType[ConfigActor.Registered.type]
     }
 
     commandServiceActor

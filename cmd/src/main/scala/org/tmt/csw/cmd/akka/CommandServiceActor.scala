@@ -37,8 +37,8 @@ class CommandServiceActor() extends Actor with ActorLogging {
   // Receive messages
   override def receive: Receive = {
     // Queue related commands
-    case submit: Submit => queueSubmit(SubmitWithRunId(submit.config, submit.submitter))
-    case request: QueueBypassRequest => queueBypassRequest(SubmitWithRunId(request.config, sender))
+    case Submit(config, submitter) => queueSubmit(SubmitWithRunId(config, submitter))
+    case QueueBypassRequest(config) => queueBypassRequest(SubmitWithRunId(config, sender))
     case QueueStop => queueStop()
     case QueuePause => queuePause(None)
     case QueueStart => queueStart()

@@ -62,8 +62,8 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
     }
     // Send the config state back to the original sender
     aState.get() match {
-      case s: ConfigState.Submitted => ConfigState.Completed(submit.runId)
-      case s: ConfigState.Resumed => ConfigState.Completed(submit.runId)
+      case ConfigState.Submitted(runId) => ConfigState.Completed(submit.runId)
+      case ConfigState.Resumed(runId) => ConfigState.Completed(submit.runId)
       case other => other // may have been aborted or canceled
     }
   }

@@ -128,7 +128,7 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys")) with Implic
 
     // Test list()
     val list = Await.result(configServiceActor ?
-      ListRequest(),
+      ListRequest,
       duration).asInstanceOf[List[ConfigFileInfo]]
     assert(list.size == 2)
     for (info <- list) {

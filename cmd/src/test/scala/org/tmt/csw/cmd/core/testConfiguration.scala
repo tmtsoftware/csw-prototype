@@ -29,7 +29,7 @@ class TestConfiguration extends FunSuite {
     val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
 
     val conf1 = Configuration(pathMapValue)
-    val conf = Configuration(conf1.toString.getBytes);
+    val conf = Configuration(conf1.toString.getBytes)
 
     assert(4 == conf.getInt("b.x.y"))
     assert(5 == conf.getInt("b.z"))

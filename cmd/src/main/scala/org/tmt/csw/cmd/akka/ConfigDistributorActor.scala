@@ -21,7 +21,7 @@ object ConfigDistributorActor {
   /**
    * Reply sent when registration is complete
    */
-  case class Registered() extends ConfigDistributorMessage
+  case object Registered extends ConfigDistributorMessage
 }
 
 
@@ -69,7 +69,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
 
   def register(configPaths: Set[String], actorRef: ActorRef): Unit = {
     configPaths.foreach(path => registry += RegistryEntry(path, actorRef))
-    sender ! Registered()
+    sender ! Registered
 
     // Add a listener in case the actor dies?
     context.watch(actorRef)
