@@ -5,6 +5,7 @@ import org.tmt.csw.cmd.core._
 import scala.Some
 import org.tmt.csw.cmd.akka.CommandServiceActor._
 import org.tmt.csw.cmd.akka.CommandServiceMessage._
+import scala.annotation.tailrec
 
 object CommandServiceActor {
   // Queue states
@@ -64,10 +65,11 @@ class CommandServiceActor() extends Actor with ActorLogging {
   }
 
   // Execute any configs in the queue, unless paused or stopped
+  @tailrec
   private def checkQueue(): Unit = {
     log.debug("Check Queue")
 
-    while (queueState == Started && !queueMap.isEmpty) {
+    if (queueState == Started && !queueMap.isEmpty) {
       val (runId, submit) = queueMap.iterator.next()
       queueMap = queueMap - runId
       sender ! CommandStatus.Busy(runId)
@@ -78,6 +80,7 @@ class CommandServiceActor() extends Actor with ActorLogging {
         log.debug(s"Submitting config with runId: $runId")
         configDistributorActor ! submit
       }
+      checkQueue()
     }
   }
 

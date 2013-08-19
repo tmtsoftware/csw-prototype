@@ -2,10 +2,10 @@ package org.tmt.csw.cs.core.git
 
 import java.io.{FileNotFoundException, IOException, File}
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.revwalk.RevWalk
+import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
 import org.eclipse.jgit.lib._
 import org.eclipse.jgit.treewalk.TreeWalk
-import java.util.{Properties, Date}
+import java.util.{Date, Properties}
 import org.eclipse.jgit.storage.file.FileRepository
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
@@ -15,9 +15,7 @@ import org.tmt.csw.cs.core.GitConfigId
 import org.tmt.csw.cs.api.ConfigFileHistory
 import org.tmt.csw.cs.api.ConfigFileInfo
 import com.typesafe.scalalogging.slf4j.Logging
-
-//import aQute.bnd.annotation.component.Component
-
+import scala.annotation.tailrec
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -235,16 +233,22 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     treeWalk.setRecursive(true)
     treeWalk.addTree(tree)
 
-    var result: List[ConfigFileInfo] = List()
-    while (treeWalk.next) {
+    list(treeWalk, List())
+  }
+
+  // Returns a list containing all known configuration files by walking the Git tree recursively and
+  // collecting the resulting file info.
+  @tailrec
+  private def list(treeWalk: TreeWalk, result: List[ConfigFileInfo]) : List[ConfigFileInfo] = {
+    if (treeWalk.next()) {
       val path = treeWalk.getPathString
       val objectId = treeWalk.getObjectId(0).name
       // TODO: Include create comment (history(path)(0).comment) or latest comment (history(path).last.comment)?
       val info = new ConfigFileInfo(path, GitConfigId(objectId), history(path).last.comment)
-      result = info :: result
+      list(treeWalk, info :: result)
+    } else {
+      result
     }
-
-    result
   }
 
   /**
@@ -256,24 +260,29 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     val logCommand = git.log
       .add(git.getRepository.resolve(Constants.HEAD))
       .addPath(path)
+    history(path, logCommand.call.iterator(), List())
+  }
 
-    val it = logCommand.call.iterator()
-    var result: List[ConfigFileHistory] = List()
-    while (it.hasNext) {
+  // Returns a list of all known versions of a given path by recursively walking the Git history tree
+  @tailrec
+  private def history(path: String, it: java.util.Iterator[RevCommit], result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
+    if (it.hasNext) {
       val revCommit = it.next()
       val tree = revCommit.getTree
       val treeWalk = TreeWalk.forPath(git.getRepository, path, tree)
-      if (treeWalk != null) {
+      if (treeWalk == null) {
+        history(path, it, result)
+      } else {
         val objectId = treeWalk.getObjectId(0)
         // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
         val comment = revCommit.getShortMessage
         val time = new Date(revCommit.getCommitTime * 1000L)
         val info = new ConfigFileHistory(GitConfigId(objectId.name), comment, time)
-        result = info :: result
+        history(path, it, info :: result)
       }
-
+    } else {
+      result
     }
-    result
   }
 
   private def fileForPath(path: String): File = {
