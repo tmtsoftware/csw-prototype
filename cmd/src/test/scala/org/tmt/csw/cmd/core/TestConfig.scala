@@ -94,28 +94,27 @@ class TestConfig extends FunSuite {
 
     // XXX Note: Using the JSON DSL makes it impossible to have unquoted keys (quotes make a difference in keys)
     val json =
-      ("config" ->
+      "config" ->
         ("info" ->
           ("configId" -> 1000233) ~
-          ("obsId" -> "TMT-2021A-C-2-1")
-        ) ~
-        ("tmt.tel.base.pos" ->
-          ("posName" -> "NGC738B") ~
-          ("c1" -> "22:35:58.530") ~
-          ("c2" -> "33:57:55.40") ~
-          ("equinox" -> "J2000")
-        ) ~
-        ("tmt.tel.ao.pos.one" ->
-          ("c1" -> "22:356:01.066") ~
-          ("c2" -> "33:58:21.69") ~
-          ("equinox" -> "J2000")
-        )
-      )
+            ("obsId" -> "TMT-2021A-C-2-1")
+          ) ~
+          ("tmt.tel.base.pos" ->
+            ("posName" -> "NGC738B") ~
+              ("c1" -> "22:35:58.530") ~
+              ("c2" -> "33:57:55.40") ~
+              ("equinox" -> "J2000")
+            ) ~
+          ("tmt.tel.ao.pos.one" ->
+            ("c1" -> "22:356:01.066") ~
+              ("c2" -> "33:58:21.69") ~
+              ("equinox" -> "J2000")
+            )
     val s = pretty(render(json))
     println("JSON from DSL:")
     println(s)
 
-    val parseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF);
+    val parseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF)
 //    val conf = ConfigFactory.parseReader(new StringReader(s), parseOptions)
     val conf = ConfigFactory.parseReader(new StringReader(jsonString), parseOptions)
 

@@ -20,7 +20,7 @@ object CommandServiceMessage {
     /**
      * Command service clients should normally use this method (only passing in the config argument)
      */
-    def apply(config: Configuration)(implicit submitter: ActorRef = Actor.noSender, ignore: Int = 0) =
+    def apply(config: Configuration)(implicit submitter: ActorRef = Actor.noSender, ignore: Int = 0): Submit =
       new Submit(config, submitter)
   }
   /**

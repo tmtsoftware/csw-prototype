@@ -51,7 +51,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
   /**
    * Messages received in the normal state.
    */
-  def receive = {
+  override def receive: Receive = {
     case Register(configPaths, actorRef) => register(configPaths, actorRef)
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)

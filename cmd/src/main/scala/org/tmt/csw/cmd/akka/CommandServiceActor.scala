@@ -31,11 +31,11 @@ class CommandServiceActor() extends Actor with ActorLogging {
   private val configDistributorActor = context.actorOf(Props[ConfigDistributorActor], name = "configDistributorActor")
 
   // Needed for "ask"
-  implicit val execContext = context.dispatcher
+  private implicit val execContext = context.dispatcher
 
 
   // Receive messages
-  def receive = {
+  override def receive: Receive = {
     // Queue related commands
     case submit: Submit => queueSubmit(SubmitWithRunId(submit.config, submit.submitter))
     case request: QueueBypassRequest => queueBypassRequest(SubmitWithRunId(request.config, sender))

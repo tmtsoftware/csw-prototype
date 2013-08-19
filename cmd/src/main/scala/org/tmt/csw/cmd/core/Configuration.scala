@@ -3,6 +3,7 @@ package org.tmt.csw.cmd.core
 import com.typesafe.config._
 import java.io._
 import scala.collection.JavaConverters._
+import scala.collection.JavaConversions._
 import java.util.UUID
 import scala.Some
 
@@ -13,48 +14,48 @@ object Configuration {
   val toStringOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
   val formatOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
 
-  def waitConfig(forResume: Boolean, obsId: String) : Configuration = {
+  def waitConfig(forResume: Boolean, obsId: String): Configuration = {
     Configuration(Map("wait" -> Map("forResume" -> forResume, "obsId" -> obsId)))
   }
 
   /**
    * Initialize with an existing typesafe Config object
    */
-  private def apply(config : Config) = new Configuration(config).withConfigId(UUID.randomUUID().toString)
+  private def apply(config: Config) = new Configuration(config).withConfigId(UUID.randomUUID().toString)
 
   /**
    * Reads the configuration from the given string
    * @param s a string in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
-  def apply(s : String): Configuration = apply(ConfigFactory.parseReader(new StringReader(s)))
+  def apply(s: String): Configuration = apply(ConfigFactory.parseReader(new StringReader(s)))
 
   /**
    * Reads the configuration from the given byte array
    * @param bytes an array of bytes containing the configuration (as for example the result of String.getBytes)
    */
-  def apply(bytes : Array[Byte]): Configuration = apply(ConfigFactory.parseReader(new InputStreamReader(new ByteArrayInputStream(bytes))))
+  def apply(bytes: Array[Byte]): Configuration = apply(ConfigFactory.parseReader(new InputStreamReader(new ByteArrayInputStream(bytes))))
 
   /**
    * Reads the configuration from the given Reader
    * @param reader reader for a file or stream in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
-  def apply(reader : Reader): Configuration = apply(ConfigFactory.parseReader(reader))
+  def apply(reader: Reader): Configuration = apply(ConfigFactory.parseReader(reader))
 
   /**
    * Initializes with a java Map, where the values may be Strings, some kind of Number, other java Maps or Lists
    */
-  def apply(map : java.util.Map[java.lang.String, java.lang.Object]): Configuration = apply(ConfigFactory.parseMap(map))
+  def apply(map: java.util.Map[java.lang.String, java.lang.Object]): Configuration = apply(ConfigFactory.parseMap(map))
 
   /**
    * Initializes with a scala Map, where the values may be Strings, some kind of Number, other java Maps or Lists
    */
-  def apply(map : Map[String, Any]): Configuration = apply(ConfigFactory.parseMap(toJavaMap(map)))
+  def apply(map: Map[String, Any]): Configuration = apply(ConfigFactory.parseMap(toJavaMap(map)))
 
   /**
    * Reads the configuration from the given file
    * @param file a file in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
-  def apply(file : File): Unit = {
+  def apply(file: File): Unit = {
     val reader = new FileReader(file)
     try {
       new Configuration(ConfigFactory.parseReader(reader))
@@ -77,21 +78,21 @@ object Configuration {
 /**
  * Represents a telescope configuration
  */
-class Configuration private (private val config : Config) extends Serializable {
+class Configuration private(private val config: Config) extends Serializable {
   /**
    * Returns
    */
-  def root() = new Configuration(config.root.toConfig)
+  def root(): Configuration = new Configuration(config.root.toConfig)
 
   /**
    * Returns the set of root keys
    */
-  def rootKeys() = config.root().keySet()
+  def rootKeys(): Set[String] = config.root().keySet().asScala.toSet
 
   /**
    * Returns the root key, if there is exactly one, otherwise None
    */
-  def rootKey() : Option[String] = {
+  def rootKey(): Option[String] = {
     val rootKeys = config.root().keySet()
     if (rootKeys.size == 1) Some(rootKeys.iterator().next()) else None
   }
@@ -99,64 +100,83 @@ class Configuration private (private val config : Config) extends Serializable {
   /**
    * Returns the nested Configuration at the requested path and throws an exception if not found
    */
-  def getConfig(path: String) = Configuration(config.getConfig(path))
+  def getConfig(path: String): Configuration = Configuration(config.getConfig(path))
 
   /**
    * Returns the number of top level elements in the configuration
    */
-  def size() : Int = config.root().size()
+  def size(): Int = config.root().size()
 
   /**
    * Returns true if this config contains the given path
    */
-  def hasPath(path: String) = config.hasPath(path)
+  def hasPath(path: String): Boolean = config.hasPath(path)
 
+  /**
+   * Returns the union of this configuration and the given one.
+   */
+  def merge(c2: Configuration): Configuration = Configuration(config.withFallback(c2.config))
 
-  def merge(c2: Configuration) = config.withFallback(c2.config)
   /**
    * Returns true if this config is empty
    */
   def isEmpty: Boolean = config.isEmpty
 
-  def getBoolean(path: String) = config.getBoolean(path)
-  def getNumber(path: String) = config.getNumber(path)
-  def getInt(path: String) = config.getInt(path)
-  def getLong(path: String) = config.getLong(path)
-  def getDouble(path: String) = config.getDouble(path)
-  def getString(path: String) = config.getString(path)
-  def getBytes(path: String) = config.getBytes(path)
-  def getMilliseconds(path: String) = config.getMilliseconds(path)
-  def getNanoseconds(path: String) = config.getNanoseconds(path)
-  def getBooleanList(path: String) = config.getBooleanList(path)
-  def getNumberList(path: String) = config.getNumberList(path)
-  def getIntList(path: String) = config.getIntList(path)
-  def getLongList(path: String) = config.getLongList(path)
-  def getDoubleList(path: String) = config.getDoubleList(path)
-  def getStringList(path: String) = config.getStringList(path)
-  def getAnyRefList(path: String) = config.getAnyRefList(path)
-  def getBytesList(path: String) = config.getBytesList(path)
-  def getMillisecondsList(path: String) = config.getMillisecondsList(path)
-  def getNanosecondsList(path: String) = config.getNanosecondsList(path)
+  def getBoolean(path: String): Boolean = config.getBoolean(path)
+
+  def getNumber(path: String): Number = config.getNumber(path)
+
+  def getInt(path: String): Int = config.getInt(path)
+
+  def getLong(path: String): Long = config.getLong(path)
+
+  def getDouble(path: String): Double = config.getDouble(path)
+
+  def getString(path: String): String = config.getString(path)
+
+  def getBytes(path: String): Long = config.getBytes(path)
+
+  def getMilliseconds(path: String): Long = config.getMilliseconds(path)
+
+  def getNanoseconds(path: String): Long = config.getNanoseconds(path)
+
+  def getBooleanList(path: String): List[Boolean] = config.getBooleanList(path).toList.map(b => b: Boolean)
+
+  def getNumberList(path: String): List[Number] = config.getNumberList(path).toList
+
+  def getIntList(path: String): List[Int] = config.getIntList(path).toList.map(i => i: Int)
+
+  def getLongList(path: String): List[Long] = config.getLongList(path).toList.map(l => l: Long)
+
+  def getDoubleList(path: String): List[Double] = config.getDoubleList(path).toList.map(d => d: Double)
+
+  def getStringList(path: String): List[String] = config.getStringList(path).toList
+
+  def getBytesList(path: String): List[Long] = config.getBytesList(path).toList.map(l => l: Long)
+
+  def getMillisecondsList(path: String): List[Long] = config.getMillisecondsList(path).toList.map(l => l: Long)
+
+  def getNanosecondsList(path: String): List[Long] = config.getNanosecondsList(path).toList.map(l => l: Long)
 
   /**
    * Returns a Map containing the contents of this object at the given path.
    */
-  def asMap(path: String) = config.getConfig(path).root().unwrapped()
+  def asMap(path: String): Map[String, AnyRef] = config.getConfig(path).root().unwrapped().toMap
 
   /**
    * Returns the configuration formatted on multiple lines.
    */
-  def format() = config.root.render(Configuration.formatOptions)
+  def format(): String = config.root.render(Configuration.formatOptions)
 
   /**
    * Returns configuration formatted on a single line
    */
-  override def toString = config.root.render(Configuration.toStringOptions)
+  override def toString: String = config.root.render(Configuration.toStringOptions)
 
   /**
    * Returns the config with the "info" section removed (for testing)
    */
-  private def withoutInfo() : Configuration = {
+  private def withoutInfo(): Configuration = {
     new Configuration(config.withoutPath(infoPath()))
   }
 
@@ -164,33 +184,33 @@ class Configuration private (private val config : Config) extends Serializable {
    * Returns configuration formatted on a single line, but not including the info section (with generated configId)
    * (For use in test cases where the unique configId makes it difficult to compare results.)
    */
-  def toTestString = withoutInfo().toString()
+  def toTestString: String = withoutInfo().toString()
 
   /**
    * Returns a new Configuration with the given path set to the given value
    */
-  def withValue(path: String, value: String) : Configuration = {
+  def withValue(path: String, value: String): Configuration = {
     new Configuration(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
   }
 
   /**
    * Returns a new Configuration with the given path set to the given value
    */
-  def withValue(path: String, value: Number) : Configuration = {
+  def withValue(path: String, value: Number): Configuration = {
     new Configuration(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
   }
 
   /**
    * Returns a new Configuration with the given path set to the given map of values
    */
-  def withValue(path: String, value: Map[String, Any]) : Configuration = {
+  def withValue(path: String, value: Map[String, Any]): Configuration = {
     new Configuration(config.withValue(path, ConfigValueFactory.fromMap(Configuration.toJavaMap(value))))
   }
 
   /**
    * Returns a new Configuration with the given path set to the given list of values
    */
-  def withValue(path: String, value: List[AnyRef]) : Configuration = {
+  def withValue(path: String, value: List[AnyRef]): Configuration = {
     new Configuration(config.withValue(path, ConfigValueFactory.fromIterable(value.asJavaCollection)))
   }
 
@@ -200,7 +220,7 @@ class Configuration private (private val config : Config) extends Serializable {
    * @param path path to remove
    * @return a copy of the config minus the specified path
    */
-  def withoutPath(path: String) : Configuration = {
+  def withoutPath(path: String): Configuration = {
     new Configuration(config.withoutPath(path))
   }
 
@@ -211,12 +231,12 @@ class Configuration private (private val config : Config) extends Serializable {
    * @param path path to keep
    * @return a copy of the config minus all paths except the one specified
    */
-  def withOnlyPath(path: String) : Configuration = {
+  def withOnlyPath(path: String): Configuration = {
     new Configuration(config.withOnlyPath(path))
   }
 
   // Path to section containing configId and obsId
-  private def infoPath() : String = {
+  private def infoPath(): String = {
     val root = rootKey().getOrElse("")
     if (isWaitConfig) {
       root
@@ -228,7 +248,7 @@ class Configuration private (private val config : Config) extends Serializable {
   }
 
   // Path to the configId item, which is automatically added to all Configurations.
-  private def configIdPath() : String = {
+  private def configIdPath(): String = {
     infoPath() + ".configId"
   }
 
@@ -237,17 +257,17 @@ class Configuration private (private val config : Config) extends Serializable {
    * in the root.info section (where root is the top level key).
    * For wait configs, the value is put in the top level.
    */
-  def withConfigId(configId: String) : Configuration = {
+  def withConfigId(configId: String): Configuration = {
     withValue(configIdPath(), configId)
   }
 
   /**
    * Returns the automatically added configId
    */
-  def getConfigId = getString(configIdPath())
+  def getConfigId: String = getString(configIdPath())
 
   // Path to the obsId item
-  private def obsIdPath() : String = {
+  private def obsIdPath(): String = {
     infoPath() + ".obsId"
   }
 
@@ -256,19 +276,19 @@ class Configuration private (private val config : Config) extends Serializable {
    * in the root.info section (where root is the top level key).
    * For wait configs, the value is put in the top level.
    */
-  def withObsId(obsId: String) : Configuration = {
+  def withObsId(obsId: String): Configuration = {
     withValue(obsIdPath(), obsId)
   }
 
   /**
    * Returns the obsId
    */
-  def getObsId = getString(obsIdPath())
+  def getObsId: String = getString(obsIdPath())
 
   /**
    * Returns true if this is a wait config
    */
-  def isWaitConfig : Boolean = {
+  def isWaitConfig: Boolean = {
     rootKey().getOrElse("") == "wait"
   }
 

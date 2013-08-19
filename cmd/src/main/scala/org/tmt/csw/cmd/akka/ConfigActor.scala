@@ -42,7 +42,7 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
   /**
    * Messages received in the normal state.
    */
-  def receive = {
+  override def receive: Receive = {
     case ConfigActor.Register(commandServiceActor) => register(commandServiceActor, sender, configPaths)
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)

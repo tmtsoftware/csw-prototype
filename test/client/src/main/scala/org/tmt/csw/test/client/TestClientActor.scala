@@ -24,7 +24,7 @@ class TestClientActor extends Actor with ActorLogging {
     s"akka.tcp://TestApp@${settings.testCommandServerHost}:2552/user/testActor/testAppCommandServiceActor")
   commandServiceActorSelection ! Identify(identifyId)
 
-  def receive = {
+  def receive: Receive = {
     case ActorIdentity(`identifyId`, Some(commandServiceActorRef)) =>
       log.debug(s"Received identity $commandServiceActorRef")
       context.watch(commandServiceActorRef)

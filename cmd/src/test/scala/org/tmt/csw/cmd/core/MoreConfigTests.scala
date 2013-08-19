@@ -64,7 +64,7 @@ class MoreConfigTests extends FunSuite {
 
     val conf2 = Map("f1" -> "Green", "grating" -> "GG483", "test" -> 22)
 
-    val xx = conf.getConfig("config.tmt.tel")
+    //val xx = conf.getConfig("config.tmt.tel")
     //println("xx1: " + xx.toTestString)
     //println("xx2: " + xx.format)
 

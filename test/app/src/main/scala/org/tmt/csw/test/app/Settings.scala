@@ -11,8 +11,8 @@ import com.typesafe.config.Config
 import java.io.File
 
 object Settings extends ExtensionId[Settings] with ExtensionIdProvider {
-  override def lookup() = Settings
-  override def createExtension(system: ExtendedActorSystem) = new Settings(system.settings.config)
+  override def lookup(): Settings.type = Settings
+  override def createExtension(system: ExtendedActorSystem): Settings = new Settings(system.settings.config)
 }
 
 class Settings(config: Config) extends Extension {

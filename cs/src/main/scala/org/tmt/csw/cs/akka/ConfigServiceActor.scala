@@ -24,18 +24,18 @@ object ConfigServiceActor {
   /**
    * Use this Props instance to initialize with the given ConfigManager
    */
-  def props(configManager: ConfigManager) = Props(classOf[ConfigServiceActor], Some(configManager))
+  def props(configManager: ConfigManager): Props = Props(classOf[ConfigServiceActor], Some(configManager))
 
   /**
    * Use this Props instance to initialize with the local repository directory and the path or URI for the main repository
    */
-  def props(gitLocalRepository: File, gitMainRepository: String)
-    = Props(classOf[ConfigServiceActor], Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
+  def props(gitLocalRepository: File, gitMainRepository: String): Props
+  = Props(classOf[ConfigServiceActor], Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
 
   /**
    * Use this Props instance to initialize using the default Git repository (configured in resources/reference.conf)
    */
-  def props() = Props[ConfigServiceActor]
+  def props(): Props = Props[ConfigServiceActor]
 
   /**
    * Returns the default config manager, using the given settings
@@ -64,7 +64,7 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager] = None) extends
    * Receive actor messages and send replies (via reply method).
    * The senders should use "?" (ask) and the response will be a Future containing the result (or an exception).
    */
-  def receive = {
+  override def receive: Receive = {
     case request: ConfigServiceRequest => reply(sender, request)
     case _ => sender ! Status.Failure(new IllegalArgumentException)
   }

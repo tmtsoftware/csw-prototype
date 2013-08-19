@@ -27,7 +27,7 @@ object Settings {
    )
 
    import scalariform.formatter.preferences._
-   def formattingPreferences =
+   def formattingPreferences: FormattingPreferences =
      FormattingPreferences()
        .setPreference(RewriteArrowSymbols, true)
        .setPreference(AlignParameters, true)
