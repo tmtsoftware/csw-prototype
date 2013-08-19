@@ -74,7 +74,7 @@ class ConfigServiceActor(configManagerOpt: Option[ConfigManager] = None) extends
    * @param sender the actor that made the request
    * @param request the request
    */
-  def reply(sender: ActorRef, request: ConfigServiceRequest) {
+  def reply(sender: ActorRef, request: ConfigServiceRequest): Unit = {
     log.debug(s"Replying to request: ${request.getClass.getSimpleName}")
     try {
       request match {

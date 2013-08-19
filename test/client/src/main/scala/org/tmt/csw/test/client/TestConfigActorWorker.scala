@@ -24,13 +24,13 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
   /**
    * Called when a configuration is submitted
    */
-  def submit(submit: SubmitWithRunId) {
+  def submit(submit: SubmitWithRunId): Unit = {
     savedSubmit = submit
     aState.set(ConfigState.Submitted(submit.runId))
     doSubmit(submit)
   }
 
-  def doSubmit(submit: SubmitWithRunId) {
+  def doSubmit(submit: SubmitWithRunId): Unit = {
     log.info(s"Processing config: ${submit.config}, reply when complete to ${submit.submitter}")
     implicit val dispatcher = context.system.dispatcher
     for {
@@ -70,21 +70,21 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
   }
 
   // Save the current position so we can resume processing later (when resume is called)
-  def savePos(a: Int) {
+  def savePos(a: Int): Unit = {
     savedPos = a
   }
 
   /**
    * Work on the config matching the given runId should be paused
    */
-  def pause(runId: RunId) {
+  def pause(runId: RunId): Unit = {
     aState.set(ConfigState.Paused(runId))
   }
 
   /**
    * Work on the config matching the given runId should be resumed
    */
-  def resume(runId: RunId) {
+  def resume(runId: RunId): Unit = {
     aState.set(ConfigState.Resumed(runId))
     doSubmit(savedSubmit)
   }
@@ -92,14 +92,14 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
   /**
    * Work on the config matching the given runId should be canceled
    */
-  def cancel(runId: RunId) {
+  def cancel(runId: RunId): Unit = {
     aState.set(ConfigState.Canceled(runId))
   }
 
   /**
    * Work on the config matching the given runId should be aborted
    */
-  def abort(runId: RunId) {
+  def abort(runId: RunId): Unit = {
     aState.set(ConfigState.Aborted(runId))
   }
 }

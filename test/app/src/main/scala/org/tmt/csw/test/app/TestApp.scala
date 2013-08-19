@@ -13,19 +13,19 @@ class TestApp extends Bootable {
   val settings = Settings(system)
 
 
-  def startup() {
+  def startup(): Unit = {
     makeTestGitRepository()
     val configServiceActor = system.actorOf(ConfigServiceActor.props(settings.testLocalRepository, settings.testMainRepository),
       name = "configServiceActor")
     system.actorOf(TestActor.props(configServiceActor), "testActor")
   }
 
-  def shutdown() {
+  def shutdown(): Unit = {
     system.shutdown()
   }
 
   // Make sure the main test Git repository exists and is empty (only needed for tests or first time: Should normally already exist.)
-  private def makeTestGitRepository() {
+  private def makeTestGitRepository(): Unit = {
     val mainRepoDir = new File(settings.testMainRepository)
     GitConfigManager.deleteLocalRepo(mainRepoDir)
     GitConfigManager.initBareRepo(mainRepoDir)

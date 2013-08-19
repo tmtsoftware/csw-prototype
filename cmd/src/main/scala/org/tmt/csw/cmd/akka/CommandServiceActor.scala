@@ -52,7 +52,7 @@ class CommandServiceActor() extends Actor with ActorLogging {
   }
 
   // Queue the given config for later execution and return the runId to the sender
-  private def queueSubmit(submit: SubmitWithRunId) {
+  private def queueSubmit(submit: SubmitWithRunId): Unit = {
     if (queueState != Stopped) {
       queueMap = queueMap + (submit.runId -> submit)
       log.debug(s"Queued config with runId: ${submit.runId}")
@@ -64,7 +64,7 @@ class CommandServiceActor() extends Actor with ActorLogging {
   }
 
   // Execute any configs in the queue, unless paused or stopped
-  private def checkQueue() {
+  private def checkQueue(): Unit = {
     log.debug("Check Queue")
 
     while (queueState == Started && !queueMap.isEmpty) {
@@ -82,7 +82,7 @@ class CommandServiceActor() extends Actor with ActorLogging {
   }
 
   // Request immediate execution of the given config
-  private def queueBypassRequest(request: SubmitWithRunId) {
+  private def queueBypassRequest(request: SubmitWithRunId): Unit = {
     if (request.config.isWaitConfig) {
       log.debug(s"Queue bypass request: wait config: ${request.runId}")
       queuePause(Some(request.config))
@@ -96,7 +96,7 @@ class CommandServiceActor() extends Actor with ActorLogging {
   // Processing of Configurations in a components queue is stopped.
   // All Configurations currently in the queue are removed.
   // No components are accepted or processed while stopped.
-  private def queueStop() {
+  private def queueStop(): Unit = {
     log.debug("Queue stopped")
     queueState = Stopped
     queueMap = Map.empty
@@ -104,21 +104,21 @@ class CommandServiceActor() extends Actor with ActorLogging {
 
   // Pause the processing of a component’s queue after the completion
   // of the current Configuration. No changes are made to the queue.
-  private def queuePause(optionalWaitConfig: Option[Configuration]) {
+  private def queuePause(optionalWaitConfig: Option[Configuration]): Unit = {
     // XXX TODO: handle different types of wait configs
     log.debug("Queue paused")
     queueState = Paused
   }
 
   // Processing of component’s queue is started.
-  private def queueStart() {
+  private def queueStart(): Unit = {
     log.debug("Queue started")
     queueState = Started
     checkQueue()
   }
 
   // Delete a config from the queue
-  private def queueDelete(runId : RunId) {
+  private def queueDelete(runId : RunId): Unit = {
     log.debug(s"Queue delete: $runId")
     queueMap = queueMap - runId
   }

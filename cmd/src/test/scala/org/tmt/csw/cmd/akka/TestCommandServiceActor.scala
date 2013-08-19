@@ -244,7 +244,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
 //
 //  }
 
-  override protected def afterAll() {
+  override protected def afterAll(): Unit = {
     logger.info("Shutting down test actor system")
     TestKit.shutdownActorSystem(system)
   }

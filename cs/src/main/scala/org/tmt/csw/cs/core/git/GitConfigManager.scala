@@ -70,7 +70,7 @@ object GitConfigManager {
   }
 
   // Sets the master repository (needed for git push/pull commands)
-  private def trackMaster(git: Git) {
+  private def trackMaster(git: Git): Unit = {
     git.branchCreate()
       .setName("master")
       .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
@@ -83,7 +83,7 @@ object GitConfigManager {
    * FOR TESTING: Deletes the contents of the given directory (recursively).
    * This is meant for use by tests that need to always start with an empty Git repository.
    */
-  def deleteLocalRepo(dir: File) {
+  def deleteLocalRepo(dir: File): Unit = {
     if (dir.isDirectory) {
       dir.list.foreach {
         filePath =>
@@ -102,7 +102,7 @@ object GitConfigManager {
    * FOR TESTING: Initializes a bare repository in the given dir
    * @param dir directory to contain the new bare repository
    */
-  def initBareRepo(dir: File)  {
+  def initBareRepo(dir: File): Unit = {
     Git.init.setDirectory(dir).setBare(true).call
   }
 }
@@ -180,7 +180,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
    *
    * @param path the configuration path
    */
-  override def delete(path: String, comment: String = "deleted") {
+  override def delete(path: String, comment: String = "deleted"): Unit = {
     logger.debug(s"delete $path")
     if (!exists(path)) {
       throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
@@ -201,7 +201,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
   override def get(path: String, id: Option[ConfigId]): Option[ConfigData] = {
     logger.debug(s"get $path")
     if (! exists(path)) {
-      return None;
+      return None
     }
     if (!id.isEmpty) {
       // return the file for the given id
@@ -280,7 +280,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     new File(git.getRepository.getWorkTree, path)
   }
 
-  private def writeToFile(file: File, configData: ConfigData) {
+  private def writeToFile(file: File, configData: ConfigData): Unit = {
     Resource.fromFile(file).truncate(0L); // according to docs, this should happen below, but does not!
     Resource.fromFile(file).write(configData.getBytes)
   }

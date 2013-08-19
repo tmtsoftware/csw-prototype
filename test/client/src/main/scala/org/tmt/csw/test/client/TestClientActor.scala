@@ -41,7 +41,7 @@ class TestClientActor extends Actor with ActorLogging {
       context.system.shutdown()
   }
 
-  def start(commandServiceActor: ActorRef) {
+  def start(commandServiceActor: ActorRef): Unit = {
     // Start two config actors and tell them to register to receive work from the command service,
     // then send a message to the test app to start sending a command
     implicit val timeout = Timeout(5.seconds)

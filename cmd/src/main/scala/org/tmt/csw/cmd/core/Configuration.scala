@@ -54,7 +54,7 @@ object Configuration {
    * Reads the configuration from the given file
    * @param file a file in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
-  def apply(file : File) {
+  def apply(file : File): Unit = {
     val reader = new FileReader(file)
     try {
       new Configuration(ConfigFactory.parseReader(reader))

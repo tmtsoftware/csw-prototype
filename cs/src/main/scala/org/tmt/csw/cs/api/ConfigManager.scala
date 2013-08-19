@@ -51,7 +51,7 @@ trait ConfigManager {
    *
    * @param path the configuration path
    */
-  def delete(path: String, comment: String = "deleted")
+  def delete(path: String, comment: String = "deleted"): Unit
 
   /**
    * Returns a list containing all known configuration files

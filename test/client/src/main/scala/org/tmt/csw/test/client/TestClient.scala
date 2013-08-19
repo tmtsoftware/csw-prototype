@@ -9,11 +9,11 @@ class TestClient extends Bootable {
 
   val system = ActorSystem("TestClient")
 
-  def startup() {
+  def startup(): Unit = {
     system.actorOf(Props[TestClientActor])
   }
 
-  def shutdown() {
+  def shutdown(): Unit = {
     system.shutdown()
   }
 }

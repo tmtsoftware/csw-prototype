@@ -123,7 +123,7 @@ class TestConfigServiceClient extends TestKit(ActorSystem("mySystem")) with Impl
     }
   }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     system.shutdown()
   }
 }

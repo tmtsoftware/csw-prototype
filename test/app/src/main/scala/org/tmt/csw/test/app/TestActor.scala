@@ -47,7 +47,7 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
     case x => log.debug(s"Received unknown message")
   }
 
-  def readConfigFile(configData: ConfigData) {
+  def readConfigFile(configData: ConfigData): Unit = {
     log.info(s"Get => $configData")
 
     // XXX could create an actor on the remote system also, but then the jar for it needs to be in the classpath
@@ -58,7 +58,7 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
     commandServiceActor ! CommandServiceMessage.Submit(Configuration(configData.getBytes))
   }
 
-  def createNewConfigFile() {
+  def createNewConfigFile(): Unit = {
     log.info("Get => None: make new config file")
     val testConfig =
       """

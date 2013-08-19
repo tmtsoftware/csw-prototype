@@ -194,7 +194,7 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys")) with Implic
 //    assert(option.get.toString == contents)
 //  }
 
-  override def afterAll() {
+  override def afterAll(): Unit = {
     system.shutdown()
   }
 }

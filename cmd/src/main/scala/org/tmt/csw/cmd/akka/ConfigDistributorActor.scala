@@ -215,7 +215,9 @@ class ConfigDistributorActor extends Actor with ActorLogging {
 
   }
 
-  def doComm(x:ActorRef, c:ConfigState) = x ! c
+  def doComm(x:ActorRef, c:ConfigState): Unit = {
+    x ! c
+  }
   /**
    * Called when the config is canceled.
    */

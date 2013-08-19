@@ -37,11 +37,11 @@ class JGitConfigManager(gitWorkDir: File, remoteRepo: String) extends JConfigMan
     manager.exists(path)
   }
 
-  override def delete(path: String) {
+  override def delete(path: String): Unit = {
     manager.delete(path)
   }
 
-  override def delete(path: String, comment: String) {
+  override def delete(path: String, comment: String): Unit = {
     manager.delete(path, comment)
   }
 

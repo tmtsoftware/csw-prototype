@@ -64,7 +64,7 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
    * @param configPaths if any configs containing any of these (dot separated) path are received, that
    *                    part of the config will be extracted and sent to this actor for processing
    */
-  def register(commandServiceActor: ActorRef, replyTo: ActorRef, configPaths: Set[String]) {
+  def register(commandServiceActor: ActorRef, replyTo: ActorRef, configPaths: Set[String]): Unit = {
     val configDistributorActor = context.actorSelection(commandServiceActor.path / "configDistributorActor")
     implicit val timeout = Timeout(3.seconds)
     implicit val dispatcher = context.system.dispatcher
@@ -83,32 +83,32 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
   /**
    * Called when a configuration is submitted
    */
-  def submit(submit: SubmitWithRunId)
+  def submit(submit: SubmitWithRunId): Unit
 
   /**
    * Work on the config matching the given runId should be paused
    */
-  def pause(runId: RunId)
+  def pause(runId: RunId): Unit
 
   /**
    * Work on the config matching the given runId should be resumed
    */
-  def resume(runId: RunId)
+  def resume(runId: RunId): Unit
 
   /**
    * Work on the config matching the given runId should be canceled
    */
-  def cancel(runId: RunId)
+  def cancel(runId: RunId): Unit
 
   /**
    * Work on the config matching the given runId should be aborted
    */
-  def abort(runId: RunId)
+  def abort(runId: RunId): Unit
 
   /**
    * Called when a child (worker) actor terminates
    */
-  def terminated(actorRef: ActorRef) {
+  def terminated(actorRef: ActorRef): Unit = {
     log.debug(s"Actor $actorRef terminated")
   }
 }
