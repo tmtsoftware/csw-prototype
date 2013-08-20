@@ -93,10 +93,14 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     // Add info to map indexed by runId is so we can determine when all parts are done and reply to the original sender
     configParts += (submit.runId -> ConfigPartInfo(submitInfoList, ConfigState.Submitted(submit.runId), submit))
 
-    // Keep a map of the runIds for later reference and send the submit messages to the target actors
+    // Keep a map of the runIds for later reference
+    runIdMap ++= submitInfoList.map {
+      submitInfo => (submitInfo.submit.runId, submit.runId)
+    }.toMap
+
+    // Send the submit messages to the target actors
     submitInfoList.foreach {
       submitInfo =>
-        runIdMap += (submitInfo.submit.runId -> submit.runId)
         log.debug(s"Sending config part to ${submitInfo.target}")
         submitInfo.target ! submitInfo.submit
     }
