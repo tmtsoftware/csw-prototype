@@ -68,7 +68,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
   }
 
   def register(configPaths: Set[String], actorRef: ActorRef): Unit = {
-    configPaths.foreach(path => registry += RegistryEntry(path, actorRef))
+    registry = registry ++ configPaths.map(RegistryEntry(_, actorRef))
     sender ! Registered
 
     // Add a listener in case the actor dies?
