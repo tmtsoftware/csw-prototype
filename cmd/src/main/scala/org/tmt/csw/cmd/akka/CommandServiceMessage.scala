@@ -18,10 +18,13 @@ object CommandServiceMessage {
    */
   object Submit {
     /**
-     * Command service clients should normally use this method (only passing in the config argument)
+     * Command service clients should normally use this method (only passing in the config argument).
+     * @param config the configuration to submit
+     * @param submitter the return address (defaults to the implicit sender defined for every actor)
+     * @param ignore not used: only needed to have a different argument list than the generated apply() method
      */
     def apply(config: Configuration)(implicit submitter: ActorRef = Actor.noSender, ignore: Int = 0): Submit =
-      new Submit(config, submitter)
+      Submit(config, submitter)
   }
   /**
    * Submit a configuration.

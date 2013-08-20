@@ -10,6 +10,7 @@ import scala.concurrent.duration._
 object ConfigActor {
 
   sealed trait ConfigActorMessage
+
   /**
    * Message used to tell a config actor to register with the given command service actor
    * @param commandServiceActor a reference to a CommandServiceActor

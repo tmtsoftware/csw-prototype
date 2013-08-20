@@ -20,7 +20,7 @@ object CommandServiceActor {
  * QueueConfig objects are placed on the queue when received.
  * Later, each object is dequeued and the config is passed to the config actor for processing.
  */
-class CommandServiceActor() extends Actor with ActorLogging {
+class CommandServiceActor extends Actor with ActorLogging {
 
   // The queue for this component (indexed by RunId, so selected items can be removed)
   private var queueMap = Map[RunId, SubmitWithRunId]()
