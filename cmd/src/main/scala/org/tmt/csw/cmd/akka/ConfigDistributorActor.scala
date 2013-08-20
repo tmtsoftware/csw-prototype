@@ -32,16 +32,16 @@ object ConfigDistributorActor {
 class ConfigDistributorActor extends Actor with ActorLogging {
 
   // Describes a config path and the actor that registered to handle it
-  case class RegistryEntry(path: String, actorRef: ActorRef)
+  private case class RegistryEntry(path: String, actorRef: ActorRef)
 
   // Set of config paths and the actors that registered to handle them
   private var registry = Set[RegistryEntry]()
 
   // Combines a Submit object with a reference to the target actor
-  case class SubmitInfo(submit: SubmitWithRunId, target: ActorRef)
+  private case class SubmitInfo(submit: SubmitWithRunId, target: ActorRef)
 
   // Maps runId to list of submitted config parts sent to the registered config actors
-  case class ConfigPartInfo(configParts: List[SubmitInfo], configState: ConfigState, originalSubmit: SubmitWithRunId)
+  private case class ConfigPartInfo(configParts: List[SubmitInfo], configState: ConfigState, originalSubmit: SubmitWithRunId)
 
   private var configParts = Map[RunId, ConfigPartInfo]()
 
@@ -67,7 +67,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     case x => log.error(s"Unexpected ConfigActor message: $x")
   }
 
-  def register(configPaths: Set[String], actorRef: ActorRef): Unit = {
+  private def register(configPaths: Set[String], actorRef: ActorRef): Unit = {
     registry = registry ++ configPaths.map(RegistryEntry(_, actorRef))
     sender ! Registered
 
@@ -75,7 +75,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     context.watch(actorRef)
   }
 
-  def unregister(actorRef: ActorRef): Unit = {
+  private def unregister(actorRef: ActorRef): Unit = {
     registry = registry.filterNot(entry => entry.actorRef == actorRef)
   }
 
@@ -121,49 +121,52 @@ class ConfigDistributorActor extends Actor with ActorLogging {
 
   /**
    * Called when a status message is received from a config actor.
-   * If all of the config parts are done, send the final status to the original sender.
    * @param configState the status of the config part from the worker actor
    */
-  def checkIfDone(configState: ConfigState): Unit = {
+  private def checkIfDone(configState: ConfigState): Unit = {
     log.debug(s"Check if done: state = $configState")
     if (configState.done()) {
-      runIdMap.get(configState.runId()) match {
-        case Some(runId) =>
+      val runIdOpt = runIdMap.get(configState.runId())
+      runIdOpt.fold(log.error(s"RunId for config part ${configState.runId()} not found")) {
           runIdMap -= configState.runId()
-          checkIfDone(configState, runId)
-        case None =>
-          log.error(s"RunId for config part ${configState.runId()} not found")
+          checkIfDone(configState, _)
       }
-    } else {
-      // Received other state for part: one of (Submitted, Paused, Resumed)
-      // XXX?
     }
+//    else {
+//      // Received other state for part: one of (Submitted, Paused, Resumed)
+//      // XXX?
+//    }
   }
 
   /**
    * Called when a status message is received from a config actor.
-   * If all of the config parts are done, send the final status to the original sender.
    * @param configState the status of the config part from the worker actor
    * @param runId the RunId of the original (complete) config
    */
-  def checkIfDone(configState: ConfigState, runId: RunId): Unit = {
-    configParts.get(runId) match {
-      case Some(configPartInfo) =>
-        val newConfigState = getConfigState(configState, configPartInfo)
-        val remainingParts = configPartInfo.configParts.filter(_.submit.runId != configState.runId())
-        if (remainingParts.isEmpty) {
-          // done, return status to sender
-          configParts -= runId
-          log.debug(s"All config parts done: Returning $newConfigState to ${configPartInfo.originalSubmit.submitter}")
-          configPartInfo.originalSubmit.submitter ! returnStatus(newConfigState, runId)
-        } else {
-          // one part is done, some still remaining: Update the map to remove the part that is done and update the status
-          log.debug(s"${remainingParts.length} parts left for runId $runId")
-          configParts += (runId -> ConfigPartInfo(remainingParts, newConfigState, configPartInfo.originalSubmit))
-        }
+  private def checkIfDone(configState: ConfigState, runId: RunId): Unit = {
+    configParts.get(runId).fold(log.error(s"Received status message for unknown runId: $runId")) {
+      checkIfDone(configState, runId, _)
+    }
+  }
 
-      case None =>
-        log.error(s"Received status message for unknown runId: $runId")
+  /**
+   * If all of the config parts are done, send the final status to the original sender.
+   * @param configState the status of the config part from the worker actor
+   * @param runId the RunId of the original (complete) config
+   * @param configPartInfo contains list of submitted config parts sent to the registered config actors
+   */
+  private def checkIfDone(configState: ConfigState, runId: RunId, configPartInfo: ConfigPartInfo): Unit = {
+    val newConfigState = getConfigState(configState, configPartInfo)
+    val remainingParts = configPartInfo.configParts.filter(_.submit.runId != configState.runId())
+    if (remainingParts.isEmpty) {
+      // done, return status to sender
+      configParts -= runId
+      log.debug(s"All config parts done: Returning $newConfigState to ${configPartInfo.originalSubmit.submitter}")
+      configPartInfo.originalSubmit.submitter ! returnStatus(newConfigState, runId)
+    } else {
+      // one part is done, some still remaining: Update the map to remove the part that is done and update the status
+      log.debug(s"${remainingParts.length} parts left for runId $runId")
+      configParts += (runId -> ConfigPartInfo(remainingParts, newConfigState, configPartInfo.originalSubmit))
     }
   }
 
@@ -171,7 +174,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
    * Returns a ConfigState with the runId for the original submit.
    * If the config was canceled or aborted,
    */
-  def getConfigState(configState: ConfigState, info: ConfigPartInfo): ConfigState = {
+  private def getConfigState(configState: ConfigState, info: ConfigPartInfo): ConfigState = {
     info.configState match {
       case ConfigState.Canceled(runId) => info.configState
       case ConfigState.Aborted(runId) => info.configState
@@ -180,7 +183,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
   }
 
   // Returns a CommandStatus for the given ConfigState
-  def returnStatus(state: ConfigState, runId: RunId): CommandStatus = {
+  private def returnStatus(state: ConfigState, runId: RunId): CommandStatus = {
     log.debug(s"Return status: $state")
     state match {
       case s: ConfigState.Completed => CommandStatus.Complete(runId)
@@ -194,77 +197,56 @@ class ConfigDistributorActor extends Actor with ActorLogging {
   /**
    * Called when a config is paused.
    */
-  def pause(runId: RunId): Unit = {
-    configParts.get(runId) match {
-      case Some(configPartInfo) =>
-        configPartInfo.configParts.foreach {
-          part =>
-            part.target ! ConfigPause(part.submit.runId)
-        }
-      case None =>
-        log.error(s"Received pause config command for unknown runId: $runId")
+  private def pause(runId: RunId): Unit = {
+    configParts.get(runId).fold(log.error(s"Received pause config command for unknown runId: $runId")) {
+      _.configParts.foreach {
+        part => part.target ! ConfigPause(part.submit.runId)
+      }
     }
-
   }
 
   /**
    * Called when a config is resumed.
    */
-  def resume(runId: RunId) : Unit = {
-    configParts.get(runId) match {
-      case Some(configPartInfo) =>
-        configPartInfo.configParts.foreach {
-          part =>
-            part.target ! ConfigResume(part.submit.runId)
-        }
-      case None =>
-        log.error(s"Received resume config command for unknown runId: $runId")
+  private def resume(runId: RunId): Unit = {
+    configParts.get(runId).fold(log.error(s"Received resume config command for unknown runId: $runId")) {
+      _.configParts.foreach {
+        part => part.target ! ConfigResume(part.submit.runId)
+      }
     }
   }
 
   /**
    * Called when the config is canceled.
    */
-  def cancel(runId: RunId) : Unit = {
+  private def cancel(runId: RunId) : Unit = {
     changeConfigState(runId, ConfigState.Canceled(runId), "cancel")
-
-    configParts.get(runId) match {
-      case Some(configPartInfo) =>
-        configPartInfo.configParts.foreach {
-          part =>
-            part.target ! ConfigCancel(part.submit.runId)
-        }
-      case None =>
-        log.error(s"Received cancel config command for unknown runId: $runId")
+    configParts.get(runId).fold(log.error(s"Received cancel config command for unknown runId: $runId")) {
+      _.configParts.foreach {
+        part => part.target ! ConfigCancel(part.submit.runId)
+      }
     }
   }
 
   /**
    * Called when the config is aborted.
    */
-  def abort(runId: RunId) : Unit = {
+  private def abort(runId: RunId) : Unit = {
     changeConfigState(runId, ConfigState.Aborted(runId), "abort")
-
-    configParts.get(runId) match {
-      case Some(configPartInfo) =>
-        configPartInfo.configParts.foreach {
-          part =>
-            part.target ! ConfigAbort(part.submit.runId)
-        }
-      case None =>
-        log.error(s"Received abort config command for unknown runId: $runId")
+    configParts.get(runId).fold(log.error(s"Received abort config command for unknown runId: $runId")) {
+      _.configParts.foreach {
+        part => part.target ! ConfigAbort(part.submit.runId)
+      }
     }
   }
 
   /**
    * Changes the ConfigState for the given runId
    */
-  def changeConfigState(runId: RunId, newConfigState: ConfigState, logName: String): Unit = {
-    configParts.get(runId) match {
-      case Some(configPartInfo) =>
+  private def changeConfigState(runId: RunId, newConfigState: ConfigState, logName: String): Unit = {
+    configParts.get(runId).fold(log.error(s"Received $logName config command for unknown runId: $runId")) {
+      configPartInfo =>
         configParts += (runId -> ConfigPartInfo(configPartInfo.configParts, newConfigState, configPartInfo.originalSubmit))
-      case None =>
-        log.error(s"Received $logName config command for unknown runId: $runId")
     }
   }
 }
