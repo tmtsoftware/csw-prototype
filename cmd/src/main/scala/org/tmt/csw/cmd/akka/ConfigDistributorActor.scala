@@ -220,12 +220,8 @@ class ConfigDistributorActor extends Actor with ActorLogging {
       case None =>
         log.error(s"Received resume config command for unknown runId: $runId")
     }
-
   }
 
-  def doComm(x:ActorRef, c:ConfigState): Unit = {
-    x ! c
-  }
   /**
    * Called when the config is canceled.
    */
@@ -234,13 +230,10 @@ class ConfigDistributorActor extends Actor with ActorLogging {
 
     configParts.get(runId) match {
       case Some(configPartInfo) =>
-        configPartInfo.configParts.map(x => doComm(x.target, ConfigState.Canceled(runId)))
-      /*
         configPartInfo.configParts.foreach {
           part =>
             part.target ! ConfigCancel(part.submit.runId)
         }
-        */
       case None =>
         log.error(s"Received cancel config command for unknown runId: $runId")
     }
