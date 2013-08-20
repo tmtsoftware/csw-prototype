@@ -42,7 +42,7 @@ object CommandServiceMessage {
   /**
    * Submit a configuration with an assigned runId (internal use only, not accepted by command service actor)
    * @param config the configuration
-   * @param submitter the actor submitting the config (normally implicit)
+   * @param submitter the actor submitting the config
    * @param runId the unique runId (normally generated automatically)
    */
   case class SubmitWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage

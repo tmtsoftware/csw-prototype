@@ -77,38 +77,42 @@ class ConfigDistributorActor extends Actor with ActorLogging {
 
   def unregister(actorRef: ActorRef): Unit = {
     registry = registry.filterNot(entry => entry.actorRef == actorRef)
-    /*
-    registry.toList.foreach(entry =>
-      if (entry.actorRef == actorRef) {
-        registry -= entry
-        log.info(s"Actor $actorRef died: Unregistering it for ${entry.path}")
-      })
-      */
   }
 
   /**
    * Called when a config is submitted.
+   * Send each actor that registered for a config path that part of the config, if found,
+   * and save a list so we can check if all are done later when the status messages are received.
    */
   private def submit(submit: SubmitWithRunId): Unit = {
-    // Send each actor that registered for a config path that part of the config, if found,
-    // and save a list so we can check if all are done later when the status messages are received.
-    val submitInfoList = registry.collect {
-      case registryEntry =>
-        log.debug(s"submit: checking registry entry $registryEntry")
-        submit.config.hasPath(registryEntry.path) match {
-          case true =>
-            // Give each config part a unique runid, so we can identify it later when the status is received
-            val runIdPart = RunId()
-            val submitPart = SubmitWithRunId(submit.config.getConfig(registryEntry.path), self, runIdPart)
-            runIdMap += (runIdPart -> submit.runId)
-            log.debug(s"Sending config part to ${registryEntry.actorRef}")
-            registryEntry.actorRef ! submitPart
-            Some(SubmitInfo(submitPart, registryEntry.actorRef))
-          case false => None
-        }
+    // First get a list of the config parts we need to send and the target actors that should get them
+    val submitInfoList = registry.map {
+      registryEntry => getSubmitInfo(submit, registryEntry)
     }.flatten.toList
+
     // Add info to map indexed by runId is so we can determine when all parts are done and reply to the original sender
     configParts += (submit.runId -> ConfigPartInfo(submitInfoList, ConfigState.Submitted(submit.runId), submit))
+
+    // Keep a map of the runIds for later reference and send the submit messages to the target actors
+    submitInfoList.foreach {
+      submitInfo =>
+        runIdMap += (submitInfo.submit.runId -> submit.runId)
+        log.debug(s"Sending config part to ${submitInfo.target}")
+        submitInfo.target ! submitInfo.submit
+    }
+  }
+
+  // Returns Some(SubmitInfo) if there is a matching path in the config to be submitted, otherwise None.
+  private def getSubmitInfo(submit: SubmitWithRunId, registryEntry: RegistryEntry): Option[SubmitInfo] = {
+    log.debug(s"submit: checking registry entry $registryEntry")
+    submit.config.hasPath(registryEntry.path) match {
+      case true =>
+        // Give each config part a unique runid, so we can identify it later when the status is received
+        val runIdPart = RunId()
+        val submitPart = SubmitWithRunId(submit.config.getConfig(registryEntry.path), self, runIdPart)
+        Some(SubmitInfo(submitPart, registryEntry.actorRef))
+      case false => None
+    }
   }
 
   /**
