@@ -18,7 +18,9 @@ object Settings {
     crossPaths := false,
     resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
-    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots"
+    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
+    resolvers += "Spray repo" at "http://repo.spray.io",
+    resolvers += "Spray nightlies" at "http://nightlies.spray.io"
   )
 
   lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(

@@ -3,8 +3,6 @@ import Keys._
 import akka.sbt.AkkaKernelPlugin._
 
 // This is the top level build object used by sbt.
-// It extends one trait for each subproject.
-// See Cs.scala as an example.
 object Build extends Build {
   import Settings._
   import Dependencies._
@@ -18,8 +16,8 @@ object Build extends Build {
   	.settings(buildSettings: _*)
   	.settings(libraryDependencies ++=
   		provided(akkaActor) ++
-      compile(jgit, scalaIoFile, scalaLogging, logback) ++
-      test(scalaTest, akkaTestKit, junit)
+      compile(jgit, scalaIoFile, scalaLogging, logback, sprayRouting, sprayJson, sprayCan) ++
+      test(scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
   	)
 
   lazy val cmd = Project(id = "cmd", base = file("cmd"))

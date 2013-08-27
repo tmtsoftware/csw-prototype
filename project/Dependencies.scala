@@ -6,6 +6,9 @@ object Dependencies {
 
   val AkkaVersion = "2.2.0"
 
+  // See http://spray.io/project-info/current-versions/#current-versions (was compatibility issue with Akka-2.2.0)
+  val SprayVersion = "1.2-20130712"
+
   def compile   (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
   def provided  (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "provided")
   def test      (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "test")
@@ -19,6 +22,11 @@ object Dependencies {
   val scalaLogging   = "com.typesafe"                  %% "scalalogging-slf4j"    % "1.0.1"
   val logback        = "ch.qos.logback"                 % "logback-classic"       % "1.0.13"
 
+  val sprayCan       = "io.spray"                       % "spray-can"             % SprayVersion
+  val sprayRouting   = "io.spray"                       % "spray-routing"         % SprayVersion
+  val sprayJson      = "io.spray"                      %% "spray-json"            % "1.2.3"
+  val sprayTestkit   = "io.spray"                       % "spray-testkit"         % SprayVersion
+
   val jgit           = "org.eclipse.jgit"               % "org.eclipse.jgit"      % "2.3.1.201302201838-r"
   val scalaIoFile    = "com.github.scala-incubator.io" %% "scala-io-file"         % "0.4.2"
 
@@ -26,18 +34,7 @@ object Dependencies {
   val akkaTestKit    = "com.typesafe.akka"             %% "akka-testkit"          % AkkaVersion
   val scalaTest      = "org.scalatest"                  % "scalatest_2.10"        % "2.0.M5b"
   val junit          = "com.novocode"                   % "junit-interface"       % "0.10-M4"
+  val specs2         = "org.specs2"                    %% "specs2"                % "1.14"
 
   val liftJSON       = "net.liftweb"                   %% "lift-json"             % "2.5"
-
-  // Local dependencies
-  /*
-  val csAkka         = "org.tmt.csw" % "cs.akka" % Version
-  val csApi          = "org.tmt.csw" % "cs.api" % Version
-  val csCore         = "org.tmt.csw" % "cs.core" % Version
-
-  val cmdAkka        = "org.tmt.csw" % "cmd.akka" % Version
-  val cmdCore        = "org.tmt.csw" % "cmd.core" % Version
-
-  val pkgAkka        = "org.tmt.csw" % "pkg.akka" % Version
-*/
 }
