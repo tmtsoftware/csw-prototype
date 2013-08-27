@@ -70,7 +70,9 @@ trait ConfigManager {
 /**
  * Type of an id returned from ConfigManager create or update methods
  */
-trait ConfigId
+trait ConfigId {
+  val id: String
+}
 
 /**
  * Interface implemented by the configuration data objects being managed
