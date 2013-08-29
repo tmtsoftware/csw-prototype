@@ -42,6 +42,7 @@ class TestConfig extends FunSuite {
     // A test config file taken from the Akka docs
 
     val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
+    println(conf.toString)
     assert(conf.getInt("config.info.configId") == 1000233)
     val pos = conf.getConfig("config.tmt.tel.base.pos")
     assert(pos.getString("posName") == "NGC738B")

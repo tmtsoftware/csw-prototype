@@ -13,6 +13,7 @@ import scala.Some
 object Configuration {
   val toStringOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
   val formatOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
+  val jsonOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(true).setFormatted(false)
 
   def waitConfig(forResume: Boolean, obsId: String): Configuration = {
     Configuration(Map("wait" -> Map("forResume" -> forResume, "obsId" -> obsId)))
@@ -172,6 +173,11 @@ class Configuration private(private val config: Config) extends Serializable {
    * Returns configuration formatted on a single line
    */
   override def toString: String = config.root.render(Configuration.toStringOptions)
+
+  /**
+   * Returns configuration formatted on a single line in JSON format
+   */
+  def toJson: String = config.root.render(Configuration.jsonOptions)
 
   /**
    * Returns the config with the "info" section removed (for testing)

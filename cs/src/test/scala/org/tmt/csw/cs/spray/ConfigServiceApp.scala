@@ -4,7 +4,6 @@ import akka.actor.{Props, ActorSystem}
 import akka.io.IO
 import spray.can.Http
 import org.tmt.csw.cs.akka.{ConfigServiceActor, TestRepo}
-import org.tmt.csw.cs.spray.services.RoutedHttpService
 import scala.concurrent.Await
 import org.tmt.csw.cs.akka.ConfigServiceActor.CreateRequest
 import org.tmt.csw.cs.core.ConfigString

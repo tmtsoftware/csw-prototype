@@ -21,6 +21,8 @@ object ConfigService {
   }
 }
 
+// XXX TODO FIXME Work in progress (may not be needed at all, focusing on CommandService now)
+
 class ConfigService(configServiceActor: ActorRef)(implicit executionContext: ExecutionContext)
   extends Directives with DefaultJsonFormats {
 

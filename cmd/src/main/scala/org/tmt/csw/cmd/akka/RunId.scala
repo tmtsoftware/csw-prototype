@@ -13,6 +13,10 @@ object RunId {
   def apply() : RunId = {
     new UuidRunId
   }
+
+  def apply(uuid: UUID) : RunId = {
+    new UuidRunId(uuid.toString)
+  }
 }
 
 private case class UuidRunId(id : String) extends RunId {

@@ -39,6 +39,7 @@ class CommandServiceActor extends Actor with ActorLogging {
   override def receive: Receive = {
     // Queue related commands
     case Submit(config, submitter) => queueSubmit(SubmitWithRunId(config, submitter))
+    case s@SubmitWithRunId(config, submitter, runId) => queueSubmit(s)
     case QueueBypassRequest(config) => queueBypassRequest(SubmitWithRunId(config, sender))
     case QueueStop => queueStop()
     case QueuePause => queuePause(None)
@@ -57,7 +58,7 @@ class CommandServiceActor extends Actor with ActorLogging {
     if (queueState != Stopped) {
       queueMap = queueMap + (submit.runId -> submit)
       log.debug(s"Queued config with runId: ${submit.runId}")
-      sender ! CommandStatus.Queued(submit.runId)
+      submit.submitter ! CommandStatus.Queued(submit.runId)
       if (queueState != Paused) {
         checkQueue()
       }
@@ -72,7 +73,7 @@ class CommandServiceActor extends Actor with ActorLogging {
     if (queueState == Started && !queueMap.isEmpty) {
       val (runId, submit) = queueMap.iterator.next()
       queueMap = queueMap - runId
-      sender ! CommandStatus.Busy(runId)
+      submit.submitter ! CommandStatus.Busy(runId)
       if (submit.config.isWaitConfig) {
         log.debug("Pausing due to Wait config")
         queuePause(Some(submit.config))

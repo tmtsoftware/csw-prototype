@@ -1,4 +1,4 @@
-package org.tmt.csw.cs.spray.services
+package org.tmt.csw.cmd.spray
 
 import spray.http.StatusCodes._
 import spray.http._

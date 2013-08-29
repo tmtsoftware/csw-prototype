@@ -1,13 +1,12 @@
-package org.tmt.csw.cs.spray
+package org.tmt.csw.cmd.spray
 
 import spray.json._
 import scala.reflect.ClassTag
 import spray.httpx.marshalling.{MetaMarshallers, Marshaller, CollectingMarshallingContext}
 import spray.http.StatusCode
 import spray.httpx.SprayJsonSupport
-import java.io.File
-import org.tmt.csw.cs.api.{ConfigId, ConfigData}
-import org.tmt.csw.cs.core.{GitConfigId, ConfigString}
+import org.tmt.csw.cmd.core.Configuration
+import org.tmt.csw.cmd.akka.CommandStatus
 
 /**
  * Contains useful JSON formats: ``j.u.Date``, ``j.u.UUID`` and others; it is useful
@@ -26,38 +25,24 @@ trait DefaultJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with 
   }
 
   /**
-   * Instance of RootJsonFormat for java.io.File
+   * Instance of RootJsonFormat for Configuration
    */
-  implicit object FileJsonFormat extends RootJsonFormat[File] {
-    def write(f: File): JsString = JsString(f.toString)
-    def read(value: JsValue): File = value match {
-      case JsString(f) => new File(f)
-      case f           => deserializationError("Expected File as JsString, but got " + f)
+  implicit object ConfigurationJsonFormat extends RootJsonFormat[Configuration] {
+    def write(config: Configuration): JsString = JsString(config.toJson)
+    def read(value: JsValue): Configuration = value match {
+      case obj: JsObject => Configuration(obj.toString())
+      case x             => deserializationError("Expected Configuration as JsObject, but got " + x.getClass)
     }
   }
 
   /**
-   * Instance of RootJsonFormat for ConfigData
+   * Instance of RootJsonFormat for CommandStatus
    */
-  implicit object ConfigDataJsonFormat extends RootJsonFormat[ConfigData] {
-    // XXX TODO FIXME (might be binary or different charset)
-    def write(configData: ConfigData): JsString = JsString(new String(configData.getBytes))
-    def read(value: JsValue): ConfigData = value match {
-      case JsString(s) => ConfigString(s)
-      case x           => deserializationError("Expected ConfigData as JsString, but got " + x)
-    }
+  implicit object CommandStatusJsonFormat extends RootJsonFormat[CommandStatus] {
+    def write(status: CommandStatus): JsString = JsString(status.getClass.getSimpleName) // ignore runId here
+    def read(value: JsValue): CommandStatus = deserializationError("Operation not supported on CommandStatus")
   }
 
-  /**
-   * Instance of RootJsonFormat for ConfigId
-   */
-  implicit object ConfigIdJsonFormat extends RootJsonFormat[ConfigId] {
-    def write(configId: ConfigId): JsString = JsString(configId.id)
-    def read(value: JsValue): ConfigId = value match {
-      case JsString(s) => GitConfigId(s)
-      case x           => deserializationError("Expected ConfigId as JsString, but got " + x)
-    }
-  }
 
   /**
    * Type alias for function that converts ``A`` to some ``StatusCode``
