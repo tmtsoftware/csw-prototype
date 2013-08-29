@@ -6,12 +6,11 @@ import scala.concurrent.duration.FiniteDuration
 import spray.can.Http
 import spray.routing.{HttpServiceActor, Route}
 import org.tmt.csw.cmd.core.Configuration
-import org.tmt.csw.cmd.akka.{UuidRunId, CommandStatus, RunId}
+import org.tmt.csw.cmd.akka.{CommandStatus, RunId}
 import spray.http.MediaTypes._
 import org.tmt.csw.cmd.akka.CommandServiceMessage.SubmitWithRunId
 import akka.actor.OneForOneStrategy
 import spray.http.StatusCodes
-import java.util.UUID
 
 /**
  * Messages and `akka.actor.Props` factories for the CommandService actor.
@@ -82,14 +81,14 @@ class CommandService(commandServiceActor: ActorRef, interface: String, port: Int
   }
 
   // Handles a command submit and returns the runId, which can be used to request the command status.
-  private def submitCommand(config: Configuration): String = {
+  private def submitCommand(config: Configuration): RunId = {
     log.debug(s"Received a configuration: $config")
     val runId = RunId()
     val monitor = newMonitorFor(runId)
     val submit = SubmitWithRunId(config, monitor, runId)
     // Submit to the command service actor using the monitor actor as the return address for status updates
     commandServiceActor ! submit
-    s"id = ${submit.runId.id}"
+    submit.runId
   }
 
   // creates a new CommandServiceMonitor actor to listen for status messages for the given runId

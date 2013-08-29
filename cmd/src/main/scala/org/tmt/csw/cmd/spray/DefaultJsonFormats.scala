@@ -6,7 +6,8 @@ import spray.httpx.marshalling.{MetaMarshallers, Marshaller, CollectingMarshalli
 import spray.http.StatusCode
 import spray.httpx.SprayJsonSupport
 import org.tmt.csw.cmd.core.Configuration
-import org.tmt.csw.cmd.akka.CommandStatus
+import org.tmt.csw.cmd.akka.{RunId, CommandStatus}
+import java.util.UUID
 
 /**
  * Contains useful JSON formats: ``j.u.Date``, ``j.u.UUID`` and others; it is useful
@@ -18,9 +19,11 @@ trait DefaultJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with 
   /**
    * Computes ``RootJsonFormat`` for type ``A`` if ``A`` is object
    */
-  def jsonObjectFormat[A : ClassTag]: RootJsonFormat[A] = new RootJsonFormat[A] {
+  def jsonObjectFormat[A: ClassTag]: RootJsonFormat[A] = new RootJsonFormat[A] {
     val ct = implicitly[ClassTag[A]]
+
     def write(obj: A): JsValue = JsObject("value" -> JsString(ct.runtimeClass.getSimpleName))
+
     def read(json: JsValue): A = ct.runtimeClass.newInstance().asInstanceOf[A]
   }
 
@@ -29,9 +32,10 @@ trait DefaultJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with 
    */
   implicit object ConfigurationJsonFormat extends RootJsonFormat[Configuration] {
     def write(config: Configuration): JsString = JsString(config.toJson)
+
     def read(value: JsValue): Configuration = value match {
       case obj: JsObject => Configuration(obj.toString())
-      case x             => deserializationError("Expected Configuration as JsObject, but got " + x.getClass)
+      case x => deserializationError("Expected Configuration as JsObject, but got " + x.getClass)
     }
   }
 
@@ -39,10 +43,26 @@ trait DefaultJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with 
    * Instance of RootJsonFormat for CommandStatus
    */
   implicit object CommandStatusJsonFormat extends RootJsonFormat[CommandStatus] {
-    def write(status: CommandStatus): JsString = JsString(status.getClass.getSimpleName) // ignore runId here
+    def write(status: CommandStatus): JsValue = JsObject(("status", JsString(status.getClass.getSimpleName)))
+
     def read(value: JsValue): CommandStatus = deserializationError("Operation not supported on CommandStatus")
   }
 
+  /**
+   * Instance of RootJsonFormat for RunId
+   */
+  implicit object RunIdJsonFormat extends RootJsonFormat[RunId] {
+    def write(runId: RunId): JsValue = JsObject(("runId", JsString(runId.id)))
+
+    def read(json: JsValue): RunId = json match {
+      case JsObject(fields) =>
+        fields("runId") match {
+          case s: JsString => RunId(UUID.fromString(s.toString()))
+          case _ => deserializationError("Expected a RunId")
+        }
+      case _ => deserializationError("Expected a RunId")
+    }
+  }
 
   /**
    * Type alias for function that converts ``A`` to some ``StatusCode``
@@ -63,15 +83,16 @@ trait DefaultJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with 
    * @return marshaller
    */
   implicit def errorSelectingEitherMarshaller[A, B](implicit ma: Marshaller[A], mb: Marshaller[B], esa: ErrorSelector[A]): Marshaller[Either[A, B]] =
-    Marshaller[Either[A, B]] { (value, ctx) =>
-      value match {
-        case Left(a) =>
-          val mc = new CollectingMarshallingContext()
-          ma(a, mc)
-          ctx.handleError(ErrorResponseException(esa(a), mc.entity))
-        case Right(b) =>
-          mb(b, ctx)
-      }
+    Marshaller[Either[A, B]] {
+      (value, ctx) =>
+        value match {
+          case Left(a) =>
+            val mc = new CollectingMarshallingContext()
+            ma(a, mc)
+            ctx.handleError(ErrorResponseException(esa(a), mc.entity))
+          case Right(b) =>
+            mb(b, ctx)
+        }
     }
 
 }
