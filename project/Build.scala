@@ -16,8 +16,8 @@ object Build extends Build {
   	.settings(buildSettings: _*)
   	.settings(libraryDependencies ++=
   		provided(akkaActor) ++
-      compile(jgit, scalaIoFile, scalaLogging, logback, sprayRouting, sprayJson, sprayCan) ++
-      test(scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
+      compile(jgit, scalaIoFile, scalaLogging, logback) ++
+      test(scalaTest, specs2, akkaTestKit, junit)
   	)
 
   lazy val cmd = Project(id = "cmd", base = file("cmd"))

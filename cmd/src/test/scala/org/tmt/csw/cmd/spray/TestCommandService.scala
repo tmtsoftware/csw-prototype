@@ -1,15 +1,11 @@
 package org.tmt.csw.cmd.spray
 
-import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{ActorRef, Props, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import akka.util.Timeout
-import scala.concurrent.duration._
-import akka.pattern.ask
+import akka.actor.{ActorRefFactory, Props}
 import org.tmt.csw.cmd.core.Configuration
-import com.typesafe.scalalogging.slf4j.Logging
-import scala.concurrent.Await
 import org.tmt.csw.cmd.akka._
+import org.specs2.mutable.Specification
+import spray.testkit.Specs2RouteTest
+import spray.routing.HttpService
 
 object TestConfig {
   val testConfig =
@@ -35,55 +31,44 @@ object TestConfig {
 }
 
 /**
- * Tests the Command Service actor
+ * Tests the Command Service
  */
-class TestCommandService extends TestKit(ActorSystem("test"))
-  with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
+class TestCommandService extends Specification with Specs2RouteTest with HttpService {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
 
-  val duration : FiniteDuration = 5.seconds
-  implicit val timeout = Timeout(duration)
   implicit val dispatcher = system.dispatcher
+  def actorRefFactory: ActorRefFactory = system
 
-  // Called at the start of each test to get a new, unique command service and config actor
-  // (Note that all tests run at the same time, so each test needs a unique command service)
-  def getCommandService(n: Int) : ActorRef = {
-    // Create a config service actor
-    val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
+  // Create a config service actor
+  val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = "testCommandServiceActor")
 
-    // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
-    // (If we start sending commands before the registration is complete, they won't get executed).
-    // Each config actor is responsible for a different part of the configs (the path passed as an argument).
-    val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActor${n}A")
-    val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = s"TestConfigActor${n}B")
-    within(duration) {
-      // Note: this tells configActor1 to register with the command service. It could do this on its own,
-      // (by using a known path to find the commandServiceActor) but doing it this way lets us know when
-      // the registration is complete, so we can start sending commands
-      configActor1 ! ConfigActor.Register(commandServiceActor)
-      configActor2 ! ConfigActor.Register(commandServiceActor)
-      expectMsgType[ConfigActor.Registered.type]
-      expectMsgType[ConfigActor.Registered.type]
-    }
+  // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
+  // (If we start sending commands before the registration is complete, they won't get executed).
+  // Each config actor is responsible for a different part of the configs (the path passed as an argument).
+  val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = "TestConfigActorA")
+  val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = "TestConfigActorB")
+  // XXX may need to wait here
 
-    commandServiceActor
-  }
+  val interface = CommandServiceSettings(system).interface
+  val port = CommandServiceSettings(system).port
+  val timeout = CommandServiceSettings(system).timeout
+  val commandService = system.actorOf(CommandService.props(commandServiceActor, interface, port, timeout), "commandService")
+
+  // XXX shouldn't normally do this...
+  val route = new CommandService(commandServiceActor, interface, port, timeout).route
 
 
   // -- Tests --
 
+  "The service" should {
 
-  test("Test simple queue submit") {
-    val commandServiceActor = getCommandService(2)
-    within(duration) {
-      commandServiceActor ! CommandServiceMessage.Submit(config)
-      val s1 = expectMsgType[CommandStatus.Queued]
-      val s2 = expectMsgType[CommandStatus.Busy]
-      val s3 = expectMsgType[CommandStatus.Complete]
-      assert(s1.runId == s2.runId)
-      assert(s3.runId == s2.runId)
+    "return a greeting for GET requests to the root path" in {
+      // XXX how to do a POST here?
+      Post("submit") ~> route ~> check {
+        entityAs[String] must contain("Say hello")
+      }
     }
   }
 

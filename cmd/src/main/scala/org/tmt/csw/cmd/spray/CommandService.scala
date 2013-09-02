@@ -40,7 +40,7 @@ class CommandService(commandServiceActor: ActorRef, interface: String, port: Int
 
   override def receive: Receive = runRoute(route)
 
-  private def route: Route =
+  def route: Route =
     path("status" / JavaUUID)(uuid =>
       get(
         respondWithMediaType(`application/json`) {
