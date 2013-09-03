@@ -84,6 +84,7 @@ final class CommandServiceMonitor(timeoutDuration: FiniteDuration) extends Actor
     completer(status)
     if (!status.isEmpty && status.get.done) {
       // We're done or timed out, so quit. If status was empty, the requester can try again later.
+      log.debug(s"completeAndWait: stopping")
       context.stop(self)
     } else {
       // Still waiting for the command to finish

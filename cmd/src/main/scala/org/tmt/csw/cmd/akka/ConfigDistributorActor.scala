@@ -189,7 +189,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
       case s: ConfigState.Completed => CommandStatus.Complete(runId)
       case s: ConfigState.Canceled => CommandStatus.Canceled(runId)
       case s: ConfigState.Aborted => CommandStatus.Aborted(runId)
-      case x => CommandStatus.Error(runId, new RuntimeException(s"Unexpected message: $x"))
+      case x => CommandStatus.Error(runId, s"Unexpected message: $x")
     }
   }
 

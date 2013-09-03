@@ -1,11 +1,12 @@
 package org.tmt.csw.cmd.spray
 
-import akka.actor.{ActorRefFactory, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka._
 import org.specs2.mutable.Specification
 import spray.testkit.Specs2RouteTest
-import spray.routing.HttpService
+import org.specs2.time.NoTimeConversions
+import scala.concurrent.duration._
 
 object TestConfig {
   val testConfig =
@@ -33,13 +34,15 @@ object TestConfig {
 /**
  * Tests the Command Service
  */
-class TestCommandService extends Specification with Specs2RouteTest with HttpService {
+class TestCommandService extends Specification with Specs2RouteTest with CommandServiceRoute with NoTimeConversions {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
 
-  implicit val dispatcher = system.dispatcher
-  def actorRefFactory: ActorRefFactory = system
+  // Required by the traits used
+  def actorRefFactory: ActorSystem = system
+
+  var actorMap = Map[RunId, ActorRef]()
 
   // Create a config service actor
   val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = "testCommandServiceActor")
@@ -49,29 +52,55 @@ class TestCommandService extends Specification with Specs2RouteTest with HttpSer
   // Each config actor is responsible for a different part of the configs (the path passed as an argument).
   val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = "TestConfigActorA")
   val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = "TestConfigActorB")
-  // XXX may need to wait here
+  // XXX FIXME may need to wait here
+  Thread.sleep(500)
 
-  val interface = CommandServiceSettings(system).interface
-  val port = CommandServiceSettings(system).port
   val timeout = CommandServiceSettings(system).timeout
-  val commandService = system.actorOf(CommandService.props(commandServiceActor, interface, port, timeout), "commandService")
 
-  // XXX shouldn't normally do this...
-  val route = new CommandService(commandServiceActor, interface, port, timeout).route
+  // creates a new CommandServiceMonitor actor to listen for status messages for the given runId
+  override def newMonitorFor(runId: RunId): ActorRef = {
+    val actorRef = system.actorOf(CommandServiceMonitor.props(timeout), monitorName(runId))
+    actorMap += (runId -> actorRef)
+    actorRef
+  }
+
+  // Gets an existing CommandServiceMonitor actor for the given runId
+  override def getMonitorFor(runId: RunId): Option[ActorRef] = {
+    actorMap.get(runId)
+  }
+
+  // Gets the name of the CommandServiceMonitor actor for the given runId
+  private def monitorName(runId: RunId): String = {
+    s"CommandServiceMonitor-${runId.id}"
+  }
 
 
   // -- Tests --
+  implicit val routeTestTimeout = RouteTestTimeout(5 seconds)
 
-  "The service" should {
-
-    "return a greeting for GET requests to the root path" in {
-      // XXX how to do a POST here?
-      Post("submit") ~> route ~> check {
-        entityAs[String] must contain("Say hello")
+  "The command service" should {
+    "return a runId for a POST /submit and return the status for GET /status/$runId" in {
+      val runId = Post("/submit", config) ~> route ~> check {
+        entityAs[RunId]
       }
+
+      val status = getStatus(runId)
+      println(s"XXX final status is $status")
+      assert(status.isInstanceOf[CommandStatus.Complete])
     }
   }
 
+  def getStatus(runId: RunId): CommandStatus = {
+    Get(s"/status/$runId") ~> route ~> check {
+      val status = entityAs[CommandStatus]
+      println(s"XXX status is $status")
+      if (status.done) {
+        status
+      } else {
+        getStatus(runId)
+      }
+    }
+  }
 }
 
 
