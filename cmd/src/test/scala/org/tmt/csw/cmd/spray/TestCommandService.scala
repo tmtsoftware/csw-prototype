@@ -91,6 +91,7 @@ class TestCommandService extends Specification with Specs2RouteTest with Command
     }
   }
 
+  // Polls the command status for the given runId until the command completes
   def getStatus(runId: RunId): CommandStatus = {
     Get(s"/status/$runId") ~> route ~> check {
       val status = entityAs[CommandStatus]

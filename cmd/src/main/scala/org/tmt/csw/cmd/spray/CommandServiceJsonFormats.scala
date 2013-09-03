@@ -73,35 +73,4 @@ trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSuppor
       }
   }
 
-  //  /**
-  //   * Type alias for function that converts ``A`` to some ``StatusCode``
-  //   * @tparam A the type of the input values
-  //   */
-  //  type ErrorSelector[A] = A => StatusCode
-  //
-  //  /**
-  //   * Marshals instances of ``Either[A, B]`` into appropriate HTTP responses by marshalling the values
-  //   * in the left or right projections; and by selecting the appropriate HTTP status code for the
-  //   * values in the left projection.
-  //   *
-  //   * @param ma marshaller for the left projection
-  //   * @param mb marshaller for the right projection
-  //   * @param esa the selector converting the left projection to HTTP status code
-  //   * @tparam A the left projection
-  //   * @tparam B the right projection
-  //   * @return marshaller
-  //   */
-  //  implicit def errorSelectingEitherMarshaller[A, B](implicit ma: Marshaller[A], mb: Marshaller[B], esa: ErrorSelector[A]): Marshaller[Either[A, B]] =
-  //    Marshaller[Either[A, B]] {
-  //      (value, ctx) =>
-  //        value match {
-  //          case Left(a) =>
-  //            val mc = new CollectingMarshallingContext()
-  //            ma(a, mc)
-  //            ctx.handleError(ErrorResponseException(esa(a), mc.entity))
-  //          case Right(b) =>
-  //            mb(b, ctx)
-  //        }
-  //    }
-
 }

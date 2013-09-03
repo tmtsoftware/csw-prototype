@@ -4,7 +4,26 @@ import akka.actor._
 import org.tmt.csw.cmd.akka.{ConfigActor, TestConfigActor, CommandServiceActor}
 
 /**
- * Standalone command service application
+ * Standalone command service application.
+ * Running this class starts an HTTP server (configured in resources/reference.conf)
+ * that runs the command service REST interface.
+ * You can then submit a configuration in JSON format with some HTTP client. For example:
+ *
+ * curl -H "Accept: application/json" -H "Content-type: application/json" -X POST -d "$json" http://localhost:8080/submit
+ *
+ * where $json is a telescope configuration in JSON (or the simplified Akka config format).
+ * The return value is the runId in JSON format, for example: {"runId": "373b13ec-c31b-446f-8482-6adebe64bcb0"}.
+ * You can use the runId to get the command status:
+ *
+ * curl http://localhost:8080/status/$runId
+ *
+ * The return value looks something like this:
+ *
+ * {
+ * "name": "Complete",
+ * "runId": "373b13ec-c31b-446f-8482-6adebe64bcb0",
+ * "message": ""
+ * }
  */
 object CommandServiceApp extends App {
   /**

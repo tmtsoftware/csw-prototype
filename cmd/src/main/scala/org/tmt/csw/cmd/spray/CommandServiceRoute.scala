@@ -26,10 +26,8 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
         respondWithMediaType(`application/json`) {
           val runId = RunId(uuid)
           if (getMonitorFor(runId).isEmpty) {
-            println("XXX Get /status: timed out?")
             complete(StatusCodes.Gone)
           } else {
-            println("XXX Get returning status")
             produce(instanceOf[Option[CommandStatus]]) {
               completer => _ => checkCommandStatus(runId, completer)
             }
@@ -41,7 +39,6 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
         post(
           entity(as[Configuration]) {
             config =>
-              println(s"XXX got config = $config")
               respondWithMediaType(`application/json`) {
                 complete(submitCommand(config))
               }
@@ -55,13 +52,10 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
   private def checkCommandStatus(runId: RunId, completer: CommandService.Completer): Unit = {
 //    log.debug(s"Checking status for $runId ...")
     // The actor monitoring the command should already be running, unless it timed out
-    println(s"XXX Get returning status for $runId")
     getMonitorFor(runId) match {
       case Some(monitor) =>
-        println(s"XXX Sending status request to $monitor")
         monitor ! completer
       case None =>
-        println(s"XXX No monitor found for $runId")
     }
   }
 
