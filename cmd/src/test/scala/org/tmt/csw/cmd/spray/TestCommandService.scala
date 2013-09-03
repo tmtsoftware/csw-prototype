@@ -52,7 +52,9 @@ class TestCommandService extends Specification with Specs2RouteTest with Command
   // Each config actor is responsible for a different part of the configs (the path passed as an argument).
   val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = "TestConfigActorA")
   val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = "TestConfigActorB")
-  // XXX FIXME may need to wait here
+  configActor1 ! ConfigActor.Register(commandServiceActor)
+  configActor2 ! ConfigActor.Register(commandServiceActor)
+  // may need to wait here (Since this class is not an actor we can't wait for the reply)
   Thread.sleep(500)
 
   val timeout = CommandServiceSettings(system).timeout
@@ -85,7 +87,6 @@ class TestCommandService extends Specification with Specs2RouteTest with Command
       }
 
       val status = getStatus(runId)
-      println(s"XXX final status is $status")
       assert(status.isInstanceOf[CommandStatus.Complete])
     }
   }
@@ -93,7 +94,7 @@ class TestCommandService extends Specification with Specs2RouteTest with Command
   def getStatus(runId: RunId): CommandStatus = {
     Get(s"/status/$runId") ~> route ~> check {
       val status = entityAs[CommandStatus]
-      println(s"XXX status is $status")
+      println(s"Command status is $status")
       if (status.done) {
         status
       } else {

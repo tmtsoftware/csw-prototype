@@ -28,26 +28,13 @@ trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSuppor
    * Instance of RootJsonFormat for Configuration
    */
   implicit object ConfigurationJsonFormat extends RootJsonFormat[Configuration] {
-    def write(config: Configuration): JsString = {
-      val json = JsString(config.toJson)
-      println(s"XXX json for config = $json")
-      json
-    }
+    def write(config: Configuration): JsString = JsString(config.toJson)
 
-    // XXX FIXME
+    // The unit tests in TestCommandService produce a JsString here, while testing a standalone app with
+    // an http client like curl produces a JsObject with the same contents
     def read(value: JsValue): Configuration = value match {
-      case JsString(json) =>
-        println(s"XXX ConfigurationJsonFormat: value = $value")
-        val config = Configuration(json)
-        println(s"XXX ConfigurationJsonFormat: config = $config")
-        config
-      case o: JsObject =>
-        val json = o.toString()
-        println(s"XXX ConfigurationJsonFormat: value = $value")
-        val config = Configuration(json)
-        println(s"XXX ConfigurationJsonFormat: config = $config")
-        config
-
+      case JsString(json) => Configuration(json)
+      case o: JsObject => Configuration(o.toString())
       case x => deserializationError(s"Expected Configuration as JsString, but got  + ${x.getClass} : $x")
     }
   }
@@ -61,10 +48,7 @@ trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSuppor
     def read(json: JsValue): RunId = json match {
       case JsObject(fields) =>
         fields("runId") match {
-          case JsString(s) => {
-            println(s"XXX got s = $s")
-            RunId(UUID.fromString(s))
-          }
+          case JsString(s) => RunId(UUID.fromString(s))
           case _ => deserializationError("Expected a RunId")
         }
       case _ => deserializationError("Expected a RunId")

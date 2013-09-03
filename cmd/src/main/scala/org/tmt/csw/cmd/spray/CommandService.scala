@@ -30,10 +30,9 @@ object CommandService {
  * A service providing a REST-ful API to the command service actor
  */
 case class CommandService(commandServiceActor: ActorRef, interface: String, port: Int, timeout: FiniteDuration)
-  extends HttpServiceActor with ActorLogging with CommandServiceRoute {
+  extends HttpServiceActor with CommandServiceRoute {
 
   IO(Http)(context.system) ! Http.Bind(self, interface, port)
-  context.child("XXX")
 
   override def receive: Receive = runRoute(route)
 
@@ -51,7 +50,6 @@ case class CommandService(commandServiceActor: ActorRef, interface: String, port
   private def monitorName(runId: RunId): String = {
     s"CommandServiceMonitor-${runId.id}"
   }
-
 
   override def supervisorStrategy: SupervisorStrategy =
     OneForOneStrategy() {
