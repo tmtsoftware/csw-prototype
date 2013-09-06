@@ -37,9 +37,9 @@ object CommandServiceApp extends App {
    */
   sys.addShutdownHook(system.shutdown())
 
-  val interface = CommandServiceSettings(system).interface
-  val port = CommandServiceSettings(system).port
-  val timeout = CommandServiceSettings(system).timeout
+  val interface = TestCommandServiceSettings(system).interface
+  val port = TestCommandServiceSettings(system).port
+  val timeout = TestCommandServiceSettings(system).timeout
   system.actorOf(Props[AppActor])
 
   class AppActor extends Actor with ActorLogging {

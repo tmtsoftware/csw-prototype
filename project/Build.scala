@@ -25,7 +25,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan) ++
-      test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
+      test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit, sprayClient)
     )
 
   lazy val pkg = Project(id = "pkg", base = file("pkg"))

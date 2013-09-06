@@ -1,108 +1,76 @@
 package org.tmt.csw.cmd.spray
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import org.tmt.csw.cmd.core.Configuration
-import org.tmt.csw.cmd.akka._
-import org.specs2.mutable.Specification
-import spray.testkit.Specs2RouteTest
-import org.specs2.time.NoTimeConversions
+import akka.testkit.{ImplicitSender, TestKit}
+import akka.actor.{Props, ActorSystem}
+import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import scala.concurrent.duration._
-
-object TestConfig {
-  val testConfig =
-    """
-      |      config {
-      |        info {
-      |          obsId = TMT-2021A-C-2-1
-      |        }
-      |        tmt.tel.base.pos {
-      |          posName = NGC738B
-      |          c1 = "22:35:58.530"
-      |          c2 = "33:57:55.40"
-      |          equinox = J2000
-      |        }
-      |        tmt.tel.ao.pos.one {
-      |          c1 = "22:356:01.066"
-      |          c2 = "33:58:21.69"
-      |          equinox = J2000
-      |        }
-      |      }
-      |
-    """.stripMargin
-}
+import org.tmt.csw.cmd.core.{TestConfig, Configuration}
+import com.typesafe.scalalogging.slf4j.Logging
+import org.tmt.csw.cmd.akka._
+import spray.client.pipelining._
+import spray.util._
 
 /**
- * Tests the Command Service
+ * Tests the Command Service actor
  */
-class TestCommandService extends Specification with Specs2RouteTest with CommandServiceRoute with NoTimeConversions {
+class TestCommandService extends TestKit(ActorSystem("test")) with CommandServiceJsonFormats
+    with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
 
-  // Required by the traits used
-  def actorRefFactory: ActorSystem = system
+  val duration : FiniteDuration = 5.seconds
+  implicit val dispatcher = system.dispatcher
 
-  var actorMap = Map[RunId, ActorRef]()
+  val interface = TestCommandServiceSettings(system).interface
+  val port = TestCommandServiceSettings(system).port
+  implicit val timeout = TestCommandServiceSettings(system).timeout
 
-  // Create a config service actor
-  val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = "testCommandServiceActor")
+  startCommandService()
 
-  // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
-  // (If we start sending commands before the registration is complete, they won't get executed).
-  // Each config actor is responsible for a different part of the configs (the path passed as an argument).
-  val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = "TestConfigActorA")
-  val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = "TestConfigActorB")
-  configActor1 ! ConfigActor.Register(commandServiceActor)
-  configActor2 ! ConfigActor.Register(commandServiceActor)
-  // may need to wait here (Since this class is not an actor we can't wait for the reply)
-  Thread.sleep(500)
 
-  val timeout = CommandServiceSettings(system).timeout
+  // Start the command service, passing it a command service actor, set up with two config actors that
+  // will implement the commands.
+  def startCommandService() : Unit = {
+    // Create a config service actor
+    val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor")
 
-  // creates a new CommandServiceMonitor actor to listen for status messages for the given runId
-  override def newMonitorFor(runId: RunId): ActorRef = {
-    val actorRef = system.actorOf(CommandServiceMonitor.props(timeout), monitorName(runId))
-    actorMap += (runId -> actorRef)
-    actorRef
-  }
+    // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
+    // (If we start sending commands before the registration is complete, they won't get executed).
+    // Each config actor is responsible for a different part of the configs (the path passed as an argument).
+    val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActorA")
+    val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = s"TestConfigActorB")
+    within(duration) {
+      // Note: this tells configActor1 to register with the command service. It could do this on its own,
+      // (by using a known path to find the commandServiceActor) but doing it this way lets us know when
+      // the registration is complete, so we can start sending commands
+      configActor1 ! ConfigActor.Register(commandServiceActor)
+      configActor2 ! ConfigActor.Register(commandServiceActor)
+      expectMsgType[ConfigActor.Registered.type]
+      expectMsgType[ConfigActor.Registered.type]
+    }
 
-  // Gets an existing CommandServiceMonitor actor for the given runId
-  override def getMonitorFor(runId: RunId): Option[ActorRef] = {
-    actorMap.get(runId)
-  }
-
-  // Gets the name of the CommandServiceMonitor actor for the given runId
-  private def monitorName(runId: RunId): String = {
-    s"CommandServiceMonitor-${runId.id}"
+    system.actorOf(CommandService.props(commandServiceActor, interface, port, timeout), "commandService")
   }
 
 
   // -- Tests --
-  implicit val routeTestTimeout = RouteTestTimeout(5 seconds)
 
-  "The command service" should {
-    "return a runId for a POST /submit and return the status for GET /status/$runId" in {
-      val runId = Post("/submit", config) ~> route ~> check {
-        entityAs[RunId]
-      }
-
-      val status = getStatus(runId)
-      assert(status.isInstanceOf[CommandStatus.Complete])
-    }
+  test("Test HTTP REST interface to Command Service") {
+    val pipeline = sendReceive ~> unmarshal[RunId]
+    val runId = pipeline {
+      Post(s"http://$interface:$port/queue/submit", config)
+    }.await()
+    logger.info(s"Received runId $runId for command request")
   }
 
-  // Polls the command status for the given runId until the command completes
-  def getStatus(runId: RunId): CommandStatus = {
-    Get(s"/status/$runId") ~> route ~> check {
-      val status = entityAs[CommandStatus]
-      println(s"Command status is $status")
-      if (status.done) {
-        status
-      } else {
-        getStatus(runId)
-      }
-    }
-  }
+  // --
+
+//  override protected def afterAll(): Unit = {
+//    logger.info("Shutting down test http server and actor system")
+//    IO(Http).ask(Http.CloseAll)(1.second).await
+//    TestKit.shutdownActorSystem(system)
+//    system.shutdown()
+//  }
 }
-
 

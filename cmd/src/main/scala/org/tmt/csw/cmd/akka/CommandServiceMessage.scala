@@ -34,18 +34,26 @@ object CommandServiceMessage {
   case class Submit(config: Configuration, submitter: ActorRef) extends CommandServiceMessage
 
   /**
+   * Submit a configuration with an assigned runId
+   * @param config the configuration
+   * @param submitter the actor submitting the config (will receive status messages)
+   * @param runId the unique runId
+   */
+  case class SubmitWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage
+
+  /**
    * Queue bypass request configuration.
    * @param config the configuration to send
    */
   case class QueueBypassRequest(config: Configuration) extends CommandServiceMessage
 
   /**
-   * Submit a configuration with an assigned runId (internal use only, not accepted by command service actor)
+   * Queue bypass request configuration with an assigned submitter and runId
    * @param config the configuration
-   * @param submitter the actor submitting the config
-   * @param runId the unique runId (normally generated automatically)
+   * @param submitter the actor submitting the config (will receive status messages)
+   * @param runId the unique runId
    */
-  case class SubmitWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage
+  case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage
 
   /**
    * Message to stop the command queue
@@ -67,6 +75,8 @@ object CommandServiceMessage {
    */
   case class QueueDelete(runId: RunId) extends CommandServiceMessage
 
+
+  // -- Messages that operate on a running configuration --
 
   /**
    * Message to cancel the running config with the given runId

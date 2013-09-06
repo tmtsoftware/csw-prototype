@@ -41,6 +41,7 @@ class CommandServiceActor extends Actor with ActorLogging {
     case Submit(config, submitter) => queueSubmit(SubmitWithRunId(config, submitter))
     case s@SubmitWithRunId(config, submitter, runId) => queueSubmit(s)
     case QueueBypassRequest(config) => queueBypassRequest(SubmitWithRunId(config, sender))
+    case QueueBypassRequestWithRunId(config, submitter, runId) => queueBypassRequest(SubmitWithRunId(config, submitter, runId))
     case QueueStop => queueStop()
     case QueuePause => queuePause(None)
     case QueueStart => queueStart()

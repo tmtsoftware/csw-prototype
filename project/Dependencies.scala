@@ -23,6 +23,7 @@ object Dependencies {
   val logback        = "ch.qos.logback"                 % "logback-classic"       % "1.0.13"
 
   val sprayCan       = "io.spray"                       % "spray-can"             % SprayVersion
+  val sprayClient    = "io.spray"                       % "spray-client"          % SprayVersion
   val sprayRouting   = "io.spray"                       % "spray-routing"         % SprayVersion
   val sprayJson      = "io.spray"                      %% "spray-json"            % "1.2.3"
   val sprayTestkit   = "io.spray"                       % "spray-testkit"         % SprayVersion
