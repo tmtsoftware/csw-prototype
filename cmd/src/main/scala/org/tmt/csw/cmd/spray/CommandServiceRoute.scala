@@ -47,25 +47,33 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
           path("stop")(
             // "POST /queue/stop stops the command queue
             post(
-              complete(queueStop())
+              respondWithStatus(StatusCodes.OK) {
+                complete(queueStop())
+              }
             )
           ) ~
           path("pause")(
             // "POST /queue/pause pauses the command queue
             post(
-              complete(queuePause())
+              respondWithStatus(StatusCodes.OK) {
+                complete(queuePause())
+              }
             )
           ) ~
           path("start")(
             // "POST /queue/start restarts the command queue
             post(
-              complete(queueStart())
+              respondWithStatus(StatusCodes.OK) {
+                complete(queueStart())
+              }
             )
           ) ~
           path(JavaUUID)(uuid =>
           // "DELETE /queue/$runId" deletes the command with the given $runId from the command queue
             delete(
-              complete(queueDelete(RunId(uuid)))
+              respondWithStatus(StatusCodes.OK) {
+                complete(queueDelete(RunId(uuid)))
+              }
             )
           )
       } ~
@@ -89,25 +97,33 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
             path("cancel")(
               // "POST /config/$runId/cancel" cancels the command with the given runId
               post(
-                complete(configCancel(runId))
+                respondWithStatus(StatusCodes.OK) {
+                  complete(configCancel(runId))
+                }
               )
             ) ~
             path("abort")(
               // "POST /config/$runId/abort" aborts the command with the given runId
               post(
-                complete(configAbort(runId))
+                respondWithStatus(StatusCodes.OK) {
+                  complete(configAbort(runId))
+                }
               )
             ) ~
             path("pause")(
               // "POST /config/$runId/pause" pauses the command with the given runId
               post(
-                complete(configPause(runId))
+                respondWithStatus(StatusCodes.OK) {
+                  complete(configPause(runId))
+                }
               )
             ) ~
             path("resume")(
               // "POST /config/$runId/resume" resumes the command with the given runId
               post(
-                complete(configResume(runId))
+                respondWithStatus(StatusCodes.OK) {
+                  complete(configResume(runId))
+                }
               )
             )
       }

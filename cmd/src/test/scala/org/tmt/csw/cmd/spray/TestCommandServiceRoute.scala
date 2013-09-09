@@ -10,7 +10,8 @@ import scala.Some
 import akka.actor.ActorSystem
 
 /**
- * Tests the command service HTTP route by overriding the implementation to run without using actors.
+ * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run
+ * without using actors.
  */
 class TestCommandServiceRoute extends Specification with Specs2RouteTest with CommandServiceRoute with NoTimeConversions {
 
@@ -21,52 +22,81 @@ class TestCommandServiceRoute extends Specification with Specs2RouteTest with Co
   val config = Configuration(TestConfig.testConfig)
 
   // Polls the command status for the given runId until the command completes
-  def getStatus(runId: RunId): CommandStatus = {
+  def getCommandStatus(runId: RunId): CommandStatus = {
     Get(s"/config/$runId/status") ~> route ~> check {
-      val status = entityAs[CommandStatus]
-      println(s"Command status is $status")
-      if (status.done) {
-        status
-      } else {
-        getStatus(runId)
-      }
+      assert(status == StatusCodes.OK)
+      entityAs[CommandStatus]
     }
   }
 
   // -- Tests --
 
   "The command service" should {
-    "return a runId for a POST /queue/submit and return the command status for GET /$runId/status" in {
+    "return a runId for a POST /queue/submit [$config] and return the command status for GET /$runId/status" in {
       val runId = Post("/queue/submit", config) ~> route ~> check {
+        assert(status == StatusCodes.Accepted)
         entityAs[RunId]
       }
 
-      val commandStatus = getStatus(runId)
+      val commandStatus = getCommandStatus(runId)
       assert(commandStatus.isInstanceOf[CommandStatus.Complete])
     }
   }
 
-//  "The command service" should {
-//    "return a runId for a POST /request and return the command status for GET /$runId/status" in {
-//      val runId = Post("/request", config) ~> route ~> check {
-//        entityAs[RunId]
-//      }
-//
-//      val commandStatus = getStatus(runId)
-//      assert(commandStatus.isInstanceOf[CommandStatus.Complete])
-//    }
-//  }
+  "The command service" should {
+    "return a runId for a POST /request [$config] and return the command status for GET /$runId/status" in {
+      val runId = Post("/request", config) ~> route ~> check {
+        assert(status == StatusCodes.Accepted)
+        entityAs[RunId]
+      }
 
+      val commandStatus = getCommandStatus(runId)
+      assert(commandStatus.isInstanceOf[CommandStatus.Complete])
 
-  // -- These methods are used by the command service HTTP route (Dummy versions are provided for testing) --
+    }
+  }
+
+  "The command service" should {
+    "return an OK status for other commands" in {
+
+      Post("/queue/stop") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+      Post("/queue/pause") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+      Post("/queue/start") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+
+      val runId = RunId()
+      Delete(s"/queue/$runId") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+
+      Post(s"/config/$runId/cancel") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+      Post(s"/config/$runId/abort") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+      Post(s"/config/$runId/pause") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+      Post(s"/config/$runId/resume") ~> route ~> check {
+        assert(status == StatusCodes.OK)
+      }
+    }
+  }
+
+  // -- Override CommandServiceRoute methods with stubs for testing --
 
   override def submitCommand(config: Configuration): RunId = RunId()
 
   override def requestCommand(config: Configuration): RunId = RunId()
 
-  override def checkCommandStatus(runId: RunId, completer: CommandService.Completer): Unit = {
+  override def checkCommandStatus(runId: RunId, completer: CommandService.Completer): Unit =
     completer(Some(CommandStatus.Complete(runId)))
-  }
 
   override def statusRequestTimedOut(runId: RunId): Boolean = false
 

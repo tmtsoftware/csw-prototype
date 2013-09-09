@@ -40,7 +40,7 @@ object CommandService {
  * A service providing a REST-ful API to the command service actor
  */
 case class CommandService(commandServiceActor: ActorRef, interface: String, port: Int, timeout: FiniteDuration)
-  extends HttpServiceActor with CommandServiceRoute {
+  extends HttpServiceActor with CommandServiceRoute with ActorLogging {
 
   // Starts the HTTP server for this service on the host and port configured in resources/reference.conf
   IO(Http)(context.system) ! Http.Bind(self, interface, port)
@@ -53,7 +53,6 @@ case class CommandService(commandServiceActor: ActorRef, interface: String, port
     OneForOneStrategy() {
       case _ => SupervisorStrategy.Stop
     }
-
 
   // -- Methods used to manage the monitor actors, which monitor the command status for a running command --
 
@@ -122,6 +121,7 @@ case class CommandService(commandServiceActor: ActorRef, interface: String, port
 
   /**
    * Returns true if the status request for the given runId timed out (and should be retried)
+   * or the runId is not known.
    */
   override def statusRequestTimedOut(runId: RunId): Boolean = {
     getMonitorFor(runId).isEmpty
