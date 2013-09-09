@@ -33,14 +33,13 @@ class TestCommandService extends TestKit(ActorSystem("test")) with CommandServic
 
   test("Test HTTP REST interface to Command Service") {
     for {
-      runId <- submit(config)
-      commandStatus <- pollCommandStatus(runId)
+      runId1 <- submit(config)
+      commandStatus1 <- pollCommandStatus(runId1)
+      runId2 <- request(config)
+      commandStatus2 <- pollCommandStatus(runId2)
     } {
-      logger.info(s"Received command status $commandStatus for submit command with runId $runId ")
-      commandStatus match {
-        case CommandStatus.Complete(_) =>
-        case _ => fail(s"Expected the command to complete normally, but got $commandStatus")
-      }
+      checkReturnStatus(1, commandStatus1, runId1)
+      checkReturnStatus(2, commandStatus2, runId2)
 
       // If we don't call this, the call to system.awaitTermination() below will hang
       system.shutdown()
@@ -51,11 +50,30 @@ class TestCommandService extends TestKit(ActorSystem("test")) with CommandServic
   }
 
 
+  // -- Helper methods --
+
+  // Checks the return status from a submit or request command
+  def checkReturnStatus(n: Int, commandStatus: CommandStatus, runId: RunId): Unit = {
+    logger.info(s"Received command$n status $commandStatus for submit command with runId $runId")
+    commandStatus match {
+      case CommandStatus.Complete(_) =>
+      case _ => fail(s"Expected the command to complete normally, but got $commandStatus")
+    }
+  }
+
+  // Posts a submit command with the given configuration
   def submit(config: Configuration): Future[RunId] = {
-    logger.info(s"Calling submit")
     val pipeline = sendReceive ~> unmarshal[RunId]
     pipeline {
       Post(s"http://$interface:$port/queue/submit", config)
+    }
+  }
+
+  // Posts a (queue bypass) request command with the given configuration
+  def request(config: Configuration): Future[RunId] = {
+    val pipeline = sendReceive ~> unmarshal[RunId]
+    pipeline {
+      Post(s"http://$interface:$port/request", config)
     }
   }
 
@@ -70,12 +88,12 @@ class TestCommandService extends TestKit(ActorSystem("test")) with CommandServic
         getCommandStatus(runId)
       }
     }
-    // Flatten the result, which is of type Future[Future[CommandStatus]]
+    // Flatten the result, which is of type Future[Future[CommandStatus]], to get a Future[CommandStatus]
     f.flatMap[CommandStatus] {x => x}
   }
 
 
-  // Gets the command status once
+  // Gets the command status (once)
   def getCommandStatus(runId: RunId): Future[CommandStatus] = {
     logger.info(s"Calling getCommandStatus for runId $runId")
     val pipeline = sendReceive ~> unmarshal[CommandStatus]
