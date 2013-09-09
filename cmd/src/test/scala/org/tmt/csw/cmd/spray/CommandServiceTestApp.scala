@@ -4,18 +4,19 @@ import akka.actor._
 import org.tmt.csw.cmd.akka.{ConfigActor, TestConfigActor, CommandServiceActor}
 
 /**
- * Standalone command service application.
- * Running this class starts an HTTP server (configured in resources/reference.conf)
+ * Standalone command service test application.
+ *
+ * Running this class starts an HTTP server (configured in resources/reference.conf under testCommandService)
  * that runs the command service REST interface.
  * You can then submit a configuration in JSON format with some HTTP client. For example:
  *
- * curl -H "Accept: application/json" -H "Content-type: application/json" -X POST -d "$json" http://localhost:8080/submit
+ * curl -H "Accept: application/json" -H "Content-type: application/json" -X POST -d "$json" http://$host:$port/submit
  *
  * where $json is a telescope configuration in JSON (or the simplified Akka config format).
  * The return value is the runId in JSON format, for example: {"runId": "373b13ec-c31b-446f-8482-6adebe64bcb0"}.
  * You can use the runId to get the command status:
  *
- * curl http://localhost:8080/status/$runId
+ * curl http://$host:$port/status/$runId
  *
  * The return value looks something like this:
  *
@@ -25,7 +26,7 @@ import org.tmt.csw.cmd.akka.{ConfigActor, TestConfigActor, CommandServiceActor}
  * "message": ""
  * }
  */
-object CommandServiceApp extends App {
+object CommandServiceTestApp extends App {
   /**
    * Construct the ActorSystem we will use in our application
    */
@@ -37,9 +38,9 @@ object CommandServiceApp extends App {
    */
   sys.addShutdownHook(system.shutdown())
 
-  val interface = TestCommandServiceSettings(system).interface
-  val port = TestCommandServiceSettings(system).port
-  val timeout = TestCommandServiceSettings(system).timeout
+  val interface = CommandServiceTestSettings(system).interface
+  val port = CommandServiceTestSettings(system).port
+  val timeout = CommandServiceTestSettings(system).timeout
   system.actorOf(Props[AppActor])
 
   class AppActor extends Actor with ActorLogging {

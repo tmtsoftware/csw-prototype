@@ -35,7 +35,6 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
           post(
             entity(as[Configuration]) {
               config =>
-                println(s"XXX config = $config")
                 respondWithMediaType(`application/json`) {
                   respondWithStatus(StatusCodes.Accepted) {
                     complete(submitCommand(config))

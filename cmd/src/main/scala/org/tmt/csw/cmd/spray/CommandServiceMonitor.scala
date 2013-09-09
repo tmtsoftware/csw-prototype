@@ -29,13 +29,10 @@ final class CommandServiceMonitor(timeoutDuration: FiniteDuration) extends Actor
   // Give up if nothing happens in the required time.
   private def waiting(timeout: Timeout): Receive = {
     case completer: Completer =>
-      log.debug(s"waiting: received completer: $completer")
       context become waitingForStatus(completer, newTimeout(timeout))
     case status: CommandStatus =>
-      log.debug(s"waiting: received status: $status")
       context become waitingForCompleter(status, timeout)
     case `timeout` =>
-      log.debug("waiting: received timeout")
       context.stop(self)
   }
 
@@ -44,13 +41,10 @@ final class CommandServiceMonitor(timeoutDuration: FiniteDuration) extends Actor
   // The requester should then try again later.
   private def waitingForStatus(completer: Completer, timeout: Timeout): Receive = {
     case completer: Completer =>
-      log.debug(s"waitingForStatus: received completer: $completer")
       context become waitingForStatus(completer, newTimeout(timeout))
     case status: CommandStatus =>
-      log.debug(s"waitingForStatus: received status: $status")
       completeAndWait(completer, Some(status), timeout)
     case `timeout` =>
-      log.debug("waitingForStatus: received timeout")
       completeAndWait(completer, None, timeout)
   }
 
@@ -59,13 +53,10 @@ final class CommandServiceMonitor(timeoutDuration: FiniteDuration) extends Actor
   // If we timeout, quit (maybe nobody is interested in the command status?).
   private def waitingForCompleter(status: CommandStatus, timeout: Timeout): Receive = {
     case completer: Completer =>
-      log.debug(s"waitingForCompleter: received completer: $completer")
       completeAndWait(completer, Some(status), timeout)
     case status: CommandStatus =>
-      log.debug(s"waitingForCompleter: received status: $status")
       context become waitingForCompleter(status, timeout)
     case `timeout` =>
-      log.debug("waitingForCompleter: received timeout")
       context.stop(self)
   }
 
@@ -80,11 +71,9 @@ final class CommandServiceMonitor(timeoutDuration: FiniteDuration) extends Actor
   // Complete the HTTP request and quit if the status indicates that the command has completed or is
   // otherwise done (was cancelled or had an error).
   private def completeAndWait(completer: Completer, status: Option[CommandStatus], timeout: Timeout): Unit = {
-    log.debug(s"completeAndWait: status: $status")
     completer(status)
     if (!status.isEmpty && status.get.done) {
       // We're done or timed out, so quit. If status was empty, the requester can try again later.
-      log.debug(s"completeAndWait: stopping")
       context.stop(self)
     } else {
       // Still waiting for the command to finish

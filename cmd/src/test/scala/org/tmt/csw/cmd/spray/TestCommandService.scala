@@ -8,10 +8,10 @@ import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import com.typesafe.scalalogging.slf4j.Logging
 import org.tmt.csw.cmd.akka._
 import spray.client.pipelining._
-import spray.util._
+import scala.concurrent.Future
 
 /**
- * Tests the Command Service actor
+ * Tests the Command Service HTTP/REST interface in an actor environment.
  */
 class TestCommandService extends TestKit(ActorSystem("test")) with CommandServiceJsonFormats
     with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
@@ -22,11 +22,67 @@ class TestCommandService extends TestKit(ActorSystem("test")) with CommandServic
   val duration : FiniteDuration = 5.seconds
   implicit val dispatcher = system.dispatcher
 
-  val interface = TestCommandServiceSettings(system).interface
-  val port = TestCommandServiceSettings(system).port
-  implicit val timeout = TestCommandServiceSettings(system).timeout
+  // Settings
+  val interface = CommandServiceTestSettings(system).interface
+  val port = CommandServiceTestSettings(system).port
+  implicit val timeout = CommandServiceTestSettings(system).timeout
 
   startCommandService()
+
+  // -- Tests --
+
+  test("Test HTTP REST interface to Command Service") {
+    for {
+      runId <- submit(config)
+      commandStatus <- pollCommandStatus(runId)
+    } {
+      logger.info(s"Received command status $commandStatus for submit command with runId $runId ")
+      commandStatus match {
+        case CommandStatus.Complete(_) =>
+        case _ => fail(s"Expected the command to complete normally, but got $commandStatus")
+      }
+
+      // If we don't call this, the call to system.awaitTermination() below will hang
+      system.shutdown()
+    }
+
+    // Wait for above to complete!
+    system.awaitTermination()
+  }
+
+
+  def submit(config: Configuration): Future[RunId] = {
+    logger.info(s"Calling submit")
+    val pipeline = sendReceive ~> unmarshal[RunId]
+    pipeline {
+      Post(s"http://$interface:$port/queue/submit", config)
+    }
+  }
+
+  // Polls the command status for the given runId until the command completes
+  def pollCommandStatus(runId: RunId): Future[CommandStatus] = {
+    logger.info(s"Calling pollCommandStatus with $runId")
+    val f = for (commandStatus <- getCommandStatus(runId)) yield {
+      if (commandStatus.done) {
+        logger.info(s"CommandStatus done: $commandStatus")
+        Future.successful(commandStatus)
+      } else {
+        getCommandStatus(runId)
+      }
+    }
+    // Flatten the result, which is of type Future[Future[CommandStatus]]
+    f.flatMap[CommandStatus] {x => x}
+  }
+
+
+  // Gets the command status once
+  def getCommandStatus(runId: RunId): Future[CommandStatus] = {
+    logger.info(s"Calling getCommandStatus for runId $runId")
+    val pipeline = sendReceive ~> unmarshal[CommandStatus]
+    pipeline {
+      Get(s"http://$interface:$port/config/$runId/status")
+    }
+  }
 
 
   // Start the command service, passing it a command service actor, set up with two config actors that
@@ -52,25 +108,5 @@ class TestCommandService extends TestKit(ActorSystem("test")) with CommandServic
 
     system.actorOf(CommandService.props(commandServiceActor, interface, port, timeout), "commandService")
   }
-
-
-  // -- Tests --
-
-  test("Test HTTP REST interface to Command Service") {
-    val pipeline = sendReceive ~> unmarshal[RunId]
-    val runId = pipeline {
-      Post(s"http://$interface:$port/queue/submit", config)
-    }.await()
-    logger.info(s"Received runId $runId for command request")
-  }
-
-  // --
-
-//  override protected def afterAll(): Unit = {
-//    logger.info("Shutting down test http server and actor system")
-//    IO(Http).ask(Http.CloseAll)(1.second).await
-//    TestKit.shutdownActorSystem(system)
-//    system.shutdown()
-//  }
 }
 

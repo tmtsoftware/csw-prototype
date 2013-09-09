@@ -3,7 +3,7 @@ package org.tmt.csw.cmd.spray
 import akka.actor.{ ExtendedActorSystem, Extension, ExtensionKey }
 import scala.concurrent.duration.{ Duration, FiniteDuration, MILLISECONDS }
 
-object TestCommandServiceSettings extends ExtensionKey[TestCommandServiceSettings]
+object CommandServiceTestSettings extends ExtensionKey[CommandServiceTestSettings]
 
 /**
  * The test settings for the command service as an Akka extension:
@@ -11,7 +11,7 @@ object TestCommandServiceSettings extends ExtensionKey[TestCommandServiceSetting
  *   - `port`: the port the service gets bound to, e.g. `8080`.
  *   - `timeout`: the amount of time to wait when polling for the command status
  */
-class TestCommandServiceSettings(system: ExtendedActorSystem) extends Extension {
+class CommandServiceTestSettings(system: ExtendedActorSystem) extends Extension {
 
   /**
    * The network interface the command service service gets bound to, e.g. `"localhost"`.
