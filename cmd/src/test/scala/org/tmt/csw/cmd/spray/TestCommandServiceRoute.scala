@@ -89,6 +89,16 @@ class TestCommandServiceRoute extends Specification with Specs2RouteTest with Co
     }
   }
 
+  "The command service" should {
+    "return an error status for unknown commands" in {
+
+      Post("/junk") ~> route ~> check {
+        assert(status == StatusCodes.BadRequest)
+      }
+    }
+  }
+
+
   // -- Override CommandServiceRoute methods with stubs for testing --
 
   override def submitCommand(config: Configuration): RunId = RunId()

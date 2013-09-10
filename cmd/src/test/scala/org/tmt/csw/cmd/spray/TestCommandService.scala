@@ -47,6 +47,9 @@ class TestCommandService extends TestKit(ActorSystem("test")) with CommandServic
       res2 <- queueStart()
       commandStatus3b <- pollCommandStatus(runId3)
 
+      // Attempting to get the status of an old or unknown command runId should an error
+      commandStatus3c <- getCommandStatus(runId3)
+
     } {
       // At this point all of the above futures have completed: check the results
       checkReturnStatus("1", commandStatus1, runId1, CommandStatus.Complete(runId1))
@@ -55,6 +58,7 @@ class TestCommandService extends TestKit(ActorSystem("test")) with CommandServic
       checkReturnStatus("3a", commandStatus3a, runId3, CommandStatus.Queued(runId3))
       assert(res2.status == StatusCodes.Accepted)
       checkReturnStatus("3b", commandStatus3b, runId3, CommandStatus.Complete(runId3))
+      checkReturnStatus("3c", commandStatus3c, runId3, CommandStatus.Error(runId3, CommandService.unknownRunIdMessage))
 
       // If we don't call this, the call to system.awaitTermination() below will hang
       system.shutdown()

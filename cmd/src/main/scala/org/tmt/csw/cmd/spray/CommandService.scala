@@ -24,6 +24,8 @@ import akka.actor.OneForOneStrategy
  */
 object CommandService {
 
+  val unknownRunIdMessage = "Unknown runId: Request may have timed out"
+
   /**
    * Function completing a request when given a list of CommandStatus objects.
    */
@@ -116,6 +118,7 @@ case class CommandService(commandServiceActor: ActorRef, interface: String, port
       case Some(monitor) =>
         monitor ! completer
       case None =>
+        completer(Some(CommandStatus.Error(runId, CommandService.unknownRunIdMessage).asInstanceOf[CommandStatus]))
     }
   }
 

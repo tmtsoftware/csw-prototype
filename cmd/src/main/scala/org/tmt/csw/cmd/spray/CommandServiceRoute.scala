@@ -73,12 +73,8 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
             // "GET /config/$runId/status" returns the CommandStatus for the given $runId
             get(
               respondWithMediaType(`application/json`) {
-                if (statusRequestTimedOut(runId)) {
-                  complete(StatusCodes.Gone)
-                } else {
-                  produce(instanceOf[Option[CommandStatus]]) {
-                    completer => _ => checkCommandStatus(runId, completer)
-                  }
+                produce(instanceOf[Option[CommandStatus]]) {
+                  completer => _ => checkCommandStatus(runId, completer)
                 }
               }
             )
@@ -109,7 +105,9 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
                   )
                 )
             }
-      }
+      } ~
+      // If none of the above paths matched, it must be a bad request
+      complete(StatusCodes.BadRequest)
 
 
   // -- Classes that extend this trait need to implement the methods below --
