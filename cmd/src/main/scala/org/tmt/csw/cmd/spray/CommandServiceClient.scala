@@ -59,26 +59,22 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
   }
 
   /**
+   * Posts a queue stop command
+   * @return a future http response
+   */
+  def queueStop(): Future[HttpResponse] = queuePost("stop")
+
+  /**
    * Posts a queue pause command
    * @return a future http response
    */
-  def queuePause(): Future[HttpResponse] = {
-    val pipeline = sendReceive
-    pipeline {
-      Post(s"http://$interface:$port/queue/pause")
-    }
-  }
+  def queuePause(): Future[HttpResponse] = queuePost("pause")
 
   /**
    * Posts a queue start command
    * @return a future http response
    */
-  def queueStart(): Future[HttpResponse] = {
-    val pipeline = sendReceive
-    pipeline {
-      Post(s"http://$interface:$port/queue/start")
-    }
-  }
+  def queueStart(): Future[HttpResponse] = queuePost("start")
 
   /**
    * Deletes an item from the command queue
@@ -100,19 +96,17 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
    * @return the future command status
    */
   def pollCommandStatus(runId: RunId): Future[CommandStatus] = {
-    logger.info(s"Calling pollCommandStatus with $runId")
     val f = for (commandStatus <- getCommandStatus(runId)) yield {
       if (commandStatus.done) {
-        logger.info(s"CommandStatus done: $commandStatus")
+        logger.info(s"Final command status for runId $runId is : $commandStatus")
         Future.successful(commandStatus)
       } else {
-        getCommandStatus(runId)
+        pollCommandStatus(runId)
       }
     }
     // Flatten the result, which is of type Future[Future[CommandStatus]], to get a Future[CommandStatus]
     f.flatMap[CommandStatus] {x => x}
   }
-
 
   /**
    * Gets the command status (once). This method returns the current command status.
@@ -120,11 +114,54 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
    * @return the future command status
    */
   def getCommandStatus(runId: RunId): Future[CommandStatus] = {
-    logger.info(s"Calling getCommandStatus for runId $runId")
+    logger.info(s"Attempting to get command status for runId $runId")
     val pipeline = sendReceive ~> unmarshal[CommandStatus]
     pipeline {
       Get(s"http://$interface:$port/config/$runId/status")
     }
   }
+
+  /**
+   * Posts a config cancel command with the given runId
+   * @return a future http response
+   */
+  def configCancel(runId: RunId): Future[HttpResponse] = configPost(runId, "cancel")
+
+  /**
+   * Posts a config abort command with the given runId
+   * @return a future http response
+   */
+  def configAbort(runId: RunId): Future[HttpResponse] = configPost(runId, "abort")
+
+  /**
+   * Posts a config pause command with the given runId
+   * @return a future http response
+   */
+  def configPause(runId: RunId): Future[HttpResponse] = configPost(runId, "pause")
+
+  /**
+   * Posts a config resume command with the given runId
+   * @return a future http response
+   */
+  def configResume(runId: RunId): Future[HttpResponse] = configPost(runId, "resume")
+
+
+  // Posts the queue command with the given name
+  private def queuePost(name: String): Future[HttpResponse] = {
+    val pipeline = sendReceive
+    pipeline {
+      Post(s"http://$interface:$port/queue/$name")
+    }
+  }
+
+  // Posts the config command with the given runId and name
+  private def configPost(runId: RunId, name: String): Future[HttpResponse] = {
+    val pipeline = sendReceive
+    pipeline {
+      Post(s"http://$interface:$port/config/$runId/$name")
+    }
+  }
+
+
 
 }
