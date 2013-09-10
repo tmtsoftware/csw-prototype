@@ -60,31 +60,31 @@ class TestCommandServiceRoute extends Specification with Specs2RouteTest with Co
     "return an OK status for other commands" in {
 
       Post("/queue/stop") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
       Post("/queue/pause") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
       Post("/queue/start") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
 
       val runId = RunId()
       Delete(s"/queue/$runId") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
 
       Post(s"/config/$runId/cancel") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
       Post(s"/config/$runId/abort") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
       Post(s"/config/$runId/pause") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
       Post(s"/config/$runId/resume") ~> route ~> check {
-        assert(status == StatusCodes.OK)
+        assert(status == StatusCodes.Accepted)
       }
     }
   }
