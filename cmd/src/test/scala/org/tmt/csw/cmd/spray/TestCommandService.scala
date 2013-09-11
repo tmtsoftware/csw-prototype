@@ -116,11 +116,16 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll {
     // Create a config service actor
     val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor")
 
+    val numberOfSecondsToRun = 12 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
+
     // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
     // (If we start sending commands before the registration is complete, they won't get executed).
     // Each config actor is responsible for a different part of the configs (the path passed as an argument).
-    val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActorA")
-    val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one"), name = s"TestConfigActorB")
+    val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun),
+        name = s"TestConfigActorA")
+    val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun),
+        name = s"TestConfigActorB")
+
     within(duration) {
       // Note: this tells configActor1 to register with the command service. It could do this on its own,
       // (by using a known path to find the commandServiceActor) but doing it this way lets us know when

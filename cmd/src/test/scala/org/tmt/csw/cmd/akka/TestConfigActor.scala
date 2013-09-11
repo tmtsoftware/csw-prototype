@@ -4,13 +4,17 @@ import org.tmt.csw.cmd.akka.CommandServiceMessage._
 import akka.actor._
 
 object TestConfigActor {
-  def props(configPath: String): Props = Props(classOf[TestConfigActor], configPath)
+  def props(configPath: String, numberOfSecondsToRun: Int = 2): Props = Props(classOf[TestConfigActor], configPath, numberOfSecondsToRun)
 }
 
 /**
- * A test config actor.
+ * A test config actor (simulates an actor that does the work of executing a configuration).
+ *
+ * @param configPath a dot-separated configuration key path: This actor will receive the parts
+ *                    of configs containing any of these paths
+ * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
-class TestConfigActor(configPath: String) extends ConfigActor(configPath) {
+class TestConfigActor(configPath: String, numberOfSecondsToRun: Int) extends ConfigActor(configPath) {
 
   // Links the config worker actor to the runId for the config it is currently executing
   private var runIdForActorRef = Map[ActorRef, RunId]()
@@ -20,7 +24,7 @@ class TestConfigActor(configPath: String) extends ConfigActor(configPath) {
    * Called when a configuration is submitted
    */
   def submit(submit: SubmitWithRunId): Unit = {
-    val configWorkerActor = context.actorOf(Props[TestConfigActorWorker], "testConfigActorWorker")
+    val configWorkerActor = context.actorOf(TestConfigActorWorker.props(numberOfSecondsToRun), "testConfigActorWorker")
     log.debug(s"Forwarding config ${submit.config} to worker $configWorkerActor")
     runIdForActorRef += (configWorkerActor -> submit.runId)
     actorRefForRunId += (submit.runId -> configWorkerActor)

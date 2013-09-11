@@ -3,11 +3,18 @@ package org.tmt.csw.cmd.akka
 import java.util.concurrent.atomic.AtomicReference
 import org.tmt.csw.cmd.akka.CommandServiceMessage.SubmitWithRunId
 import scala.concurrent.Future
+import akka.actor.Props
+
+object TestConfigActorWorker {
+  def props(numberOfSecondsToRun: Int): Props = Props(classOf[TestConfigActorWorker], numberOfSecondsToRun)
+}
 
 /**
  * A test config worker actor.
+ *
+ * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
-class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
+class TestConfigActorWorker(numberOfSecondsToRun: Int) extends ConfigActor(Set[String]()) {
   // Used as an example of one way to implement interrupting a running config
   val aState: AtomicReference[ConfigState] = new AtomicReference(null)
 
@@ -16,9 +23,6 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
 
   // Needed to implement the "resume" message
   var savedSubmit: SubmitWithRunId = null
-
-  // The number of seconds to run when a config is submitted
-  val numberOfSecondsToRun = 1
 
   /**
    * Called when a configuration is submitted

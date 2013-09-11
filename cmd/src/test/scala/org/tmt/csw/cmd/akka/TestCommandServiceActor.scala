@@ -19,7 +19,10 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test"))
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
 
-  val duration : FiniteDuration = 5.seconds
+  // Note: Adjust this value and the one used by TestConfigActor
+  // to match the time needed for the tests and avoid timeouts
+  val duration : FiniteDuration = 10.seconds
+
   implicit val timeout = Timeout(duration)
   implicit val dispatcher = system.dispatcher
 

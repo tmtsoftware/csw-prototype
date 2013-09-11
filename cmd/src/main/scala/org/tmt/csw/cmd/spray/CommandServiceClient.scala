@@ -98,7 +98,7 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
   def pollCommandStatus(runId: RunId): Future[CommandStatus] = {
     val f = for (commandStatus <- getCommandStatus(runId)) yield {
       if (commandStatus.done) {
-        logger.info(s"Final command status for runId $runId is : $commandStatus")
+        logger.debug(s"Final command status for runId $runId is : $commandStatus")
         Future.successful(commandStatus)
       } else {
         pollCommandStatus(runId)
@@ -114,7 +114,7 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
    * @return the future command status
    */
   def getCommandStatus(runId: RunId): Future[CommandStatus] = {
-    logger.info(s"Attempting to get command status for runId $runId")
+    logger.debug(s"Attempting to get command status for runId $runId")
     val pipeline = sendReceive ~> unmarshal[CommandStatus]
     pipeline {
       Get(s"http://$interface:$port/config/$runId/status")
