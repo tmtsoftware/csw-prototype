@@ -48,7 +48,7 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
 
   // Do some work (sleeping in a loop), and check for state changes
   def doWork(submit: SubmitWithRunId): ConfigState = {
-    for (a <- savedPos to numberOfSecondsToRun*10) {
+    for (a <- savedPos to numberOfSecondsToRun) {
       // Check if we should stop
       val state = aState.get
       if (state.stop()) {
@@ -57,7 +57,7 @@ class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
       } else {
         // Continue working
         log.info(s"${self.path} busy working on part $a of $numberOfSecondsToRun")
-        Thread.sleep(100) // do some work...
+        Thread.sleep(1000) // do some work...
       }
     }
     // Send the config state back to the original sender

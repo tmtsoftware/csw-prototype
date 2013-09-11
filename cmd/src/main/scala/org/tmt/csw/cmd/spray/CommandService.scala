@@ -60,7 +60,7 @@ case class CommandService(commandServiceActor: ActorRef, interface: String, port
 
   // creates a new CommandServiceMonitor actor to listen for status messages for the given runId
   private def newMonitorFor(runId: RunId): ActorRef = {
-    context.actorOf(CommandServiceMonitor.props(timeout), monitorName(runId))
+    context.actorOf(CommandServiceMonitor.props(timeout, runId), monitorName(runId))
   }
 
   // Gets an existing CommandServiceMonitor actor for the given runId
