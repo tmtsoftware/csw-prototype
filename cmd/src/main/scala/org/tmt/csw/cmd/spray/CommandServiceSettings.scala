@@ -10,6 +10,8 @@ object CommandServiceSettings extends ExtensionKey[CommandServiceSettings]
  *   - `interface`: the network interface the service gets bound to, e.g. `"localhost"`.
  *   - `port`: the port the service gets bound to, e.g. `8080`.
  *   - `timeout`: the amount of time to wait when polling for the command status
+ *
+ *  This class is set from the contents of the resources/reference.conf file.
  */
 class CommandServiceSettings(system: ExtendedActorSystem) extends Extension {
 

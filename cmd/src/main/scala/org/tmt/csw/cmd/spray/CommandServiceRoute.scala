@@ -7,7 +7,7 @@ import spray.http.StatusCodes
 import org.tmt.csw.cmd.core.Configuration
 
 /**
- * The command service spray route, defined as a trait, so that it can be used in tests
+ * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests
  * without actually running an HTTP server.
  */
 trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {

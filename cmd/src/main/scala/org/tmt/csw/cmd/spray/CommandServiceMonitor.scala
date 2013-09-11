@@ -12,13 +12,24 @@ object CommandServiceMonitor {
   // Used so we can cancel unused timers before they cause dead letter log messages
   private case class TimerInfo(timeout: Timeout, timer: Cancellable)
 
+  /**
+   * Props for creating this actor (see CommandServiceMonitor constructor)
+   */
   def props(timeout: FiniteDuration, runId: RunId): Props =
     Props(new CommandServiceMonitor(timeout, runId))
 }
 
 /**
- * Implements long polling requests on the command service actor.
- * (Original algorithm based on Spray example at http://hseeberger.github.io/blog/2013/07/22/gabbler-part3/)
+ * Implements long polling requests on the command service actor to get the status of a previously submitted command
+ * (Original algorithm based on Spray example at http://hseeberger.github.io/blog/2013/07/22/gabbler-part3/).
+ * This actor uses "become" to change state, depending on whether it is waiting for the command status message
+ * or for a request for it (called a "completer" here). The "completer" object can be used to complete the
+ * HTTP request for the command status, once it is known. If no status message is received within the given
+ * timeDuration, the previous command status is returned (for example, Pending or Busy).
+ *
+ * @param timeoutDuration automatically timeout requests for command status after this amount of time
+ *                        (should be some value less than the HTTP server's timeout)
+ * @param runId the runId for the command being monitored
  */
 final class CommandServiceMonitor(timeoutDuration: FiniteDuration, runId: RunId) extends Actor with ActorLogging {
 
