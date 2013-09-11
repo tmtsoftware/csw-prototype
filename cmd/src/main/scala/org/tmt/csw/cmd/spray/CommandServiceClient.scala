@@ -41,9 +41,7 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
    */
   def queueSubmit(config: Configuration): Future[RunId] = {
     val pipeline = sendReceive ~> unmarshal[RunId]
-    pipeline {
-      Post(s"http://$interface:$port/queue/submit", config)
-    }
+    pipeline(Post(s"http://$interface:$port/queue/submit", config))
   }
 
   /**
@@ -53,9 +51,7 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
    */
   def request(config: Configuration): Future[RunId] = {
     val pipeline = sendReceive ~> unmarshal[RunId]
-    pipeline {
-      Post(s"http://$interface:$port/request", config)
-    }
+    pipeline(Post(s"http://$interface:$port/request", config))
   }
 
   /**
@@ -83,9 +79,7 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
    */
   def queueDelete(runId: RunId): Future[HttpResponse] = {
     val pipeline = sendReceive
-    pipeline {
-      Delete(s"http://$interface:$port/queue/$runId")
-    }
+    pipeline(Delete(s"http://$interface:$port/queue/$runId"))
   }
 
   /**
@@ -116,10 +110,8 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
   def getCommandStatus(runId: RunId): Future[CommandStatus] = {
     logger.debug(s"Attempting to get command status for runId $runId")
     val pipeline = sendReceive ~> unmarshal[CommandStatus]
-    pipeline {
-      Get(s"http://$interface:$port/config/$runId/status")
-    }
-  }
+    pipeline(Get(s"http://$interface:$port/config/$runId/status"))
+}
 
   /**
    * Posts a config cancel command with the given runId
@@ -149,19 +141,12 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
   // Posts the queue command with the given name
   private def queuePost(name: String): Future[HttpResponse] = {
     val pipeline = sendReceive
-    pipeline {
-      Post(s"http://$interface:$port/queue/$name")
-    }
+    pipeline(Post(s"http://$interface:$port/queue/$name"))
   }
 
   // Posts the config command with the given runId and name
   private def configPost(runId: RunId, name: String): Future[HttpResponse] = {
     val pipeline = sendReceive
-    pipeline {
-      Post(s"http://$interface:$port/config/$runId/$name")
-    }
+    pipeline(Post(s"http://$interface:$port/config/$runId/$name"))
   }
-
-
-
 }
