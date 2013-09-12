@@ -83,6 +83,17 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
   }
 
   /**
+   * Posts a test/error command (will cause server to throw an exception), used for testing
+   * @return a future http response
+   */
+  def testError(): Future[HttpResponse] = {
+    val pipeline = sendReceive
+    pipeline(Post(s"http://$interface:$port/test/error"))
+  }
+
+
+
+  /**
    * Polls the command status for the given runId until the command completes (commandStatus.done is true).
    * The command status normally starts out as Queued, then becomes Busy and eventually Complete,
    * although other statuses are possible, such as Aborted or Canceled.

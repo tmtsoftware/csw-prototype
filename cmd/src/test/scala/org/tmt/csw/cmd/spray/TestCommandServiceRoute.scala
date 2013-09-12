@@ -92,8 +92,19 @@ class TestCommandServiceRoute extends Specification with Specs2RouteTest with Co
   "The command service" should {
     "return an error status for unknown commands" in {
 
+      // Unknown path
       Post("/junk") ~> route ~> check {
         assert(status == StatusCodes.BadRequest)
+      }
+
+      // Should be Post
+      Get("/queue/start") ~> route ~> check {
+        assert(status == StatusCodes.BadRequest)
+      }
+
+      // When the server (http route code) throws an exception, we should get a InternalServerError
+      Post("/test/error") ~> route ~> check {
+        assert(status == StatusCodes.InternalServerError)
       }
     }
   }

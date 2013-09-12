@@ -106,8 +106,26 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
                 )
             }
       } ~
+      respondWithStatus(StatusCodes.Accepted) {
+        pathPrefix("test") {
+          path("error") {
+            // "POST /test/error" throws an exception (for testing error handling)
+            post(
+              complete(testError())
+            )
+          }
+        }
+      } ~
       // If none of the above paths matched, it must be a bad request
       complete(StatusCodes.BadRequest)
+
+  /**
+   *
+   */
+  def testError(): StatusCodes.Success = {
+    if (true) throw new RuntimeException("Testing exception handling")
+    StatusCodes.Accepted
+  }
 
 
   // -- Classes that extend this trait need to implement the methods below --
