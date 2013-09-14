@@ -50,8 +50,7 @@ class CommandServiceActor extends Actor with ActorLogging {
     // Commands that act on a running config: forward to config actor
     case configMessage: ConfigMessage => configDistributorActor forward configMessage
 
-    // Status Results from ConfigActor: Send the command status with runId to statusActorRef
-    case x => log.error(s"Unknown QueueActor message: $x")
+    case x => log.error(s"Unknown CommandServiceActor message: $x")
   }
 
   // Queue the given config for later execution and return the runId to the sender

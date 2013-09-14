@@ -32,7 +32,7 @@ class TestConfigServiceClient extends TestKit(ActorSystem("mySystem")) with Impl
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
-    val csClient = new ConfigServiceClient(csActor)
+    val csClient = ConfigServiceClient(csActor)
 
     val duration = 5.seconds
     implicit val timeout = Timeout(duration)

@@ -1,10 +1,11 @@
-package org.tmt.csw.cmd.spray
+package org.tmt.csw.cmd.akka
 
 import akka.actor.{Cancellable, ActorLogging, Actor, Props}
 import scala.concurrent.duration.FiniteDuration
-import org.tmt.csw.cmd.akka.{RunId, CommandStatus}
+import scala.Some
+import org.tmt.csw.cmd.akka.CommandServiceActorClientHelper.Completer
 
-object CommandServiceMonitor {
+object CommandServiceStatusMonitor {
 
   // Object passed in timeout messages
   private case class Timeout(id: Int)
@@ -16,7 +17,7 @@ object CommandServiceMonitor {
    * Props for creating this actor (see CommandServiceMonitor constructor)
    */
   def props(timeout: FiniteDuration, runId: RunId): Props =
-    Props(new CommandServiceMonitor(timeout, runId))
+    Props(new CommandServiceStatusMonitor(timeout, runId))
 }
 
 /**
@@ -24,17 +25,15 @@ object CommandServiceMonitor {
  * (Original algorithm based on Spray example at http://hseeberger.github.io/blog/2013/07/22/gabbler-part3/).
  * This actor uses "become" to change state, depending on whether it is waiting for the command status message
  * or for a request for it (called a "completer" here). The "completer" object can be used to complete the
- * HTTP request for the command status, once it is known. If no status message is received within the given
+ * request for the command status, once it is known. If no status message is received within the given
  * timeDuration, the previous command status is returned (for example, Pending or Busy).
  *
  * @param timeoutDuration automatically timeout requests for command status after this amount of time
- *                        (should be some value less than the HTTP server's timeout)
  * @param runId the runId for the command being monitored
  */
-final class CommandServiceMonitor(timeoutDuration: FiniteDuration, runId: RunId) extends Actor with ActorLogging {
+final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: RunId) extends Actor with ActorLogging {
 
-  import CommandServiceMonitor._
-  import CommandService._
+  import CommandServiceStatusMonitor._
   import context.dispatcher
 
   def receive: Receive =
@@ -99,7 +98,7 @@ final class CommandServiceMonitor(timeoutDuration: FiniteDuration, runId: RunId)
     TimerInfo(timeout, timer)
   }
 
-  // Complete the HTTP request and quit if the status indicates that the command has completed or is
+  // Complete the request and quit if the status indicates that the command has completed or is
   // otherwise done (was cancelled or had an error).
   private def completeAndWait(completer: Completer, status: CommandStatus, timerInfo: TimerInfo): Unit = {
     log.debug(s"Completing with status $status")

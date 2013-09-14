@@ -1,8 +1,8 @@
 package org.tmt.csw.cmd.spray
 
-import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{Props, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import akka.testkit.TestKit
+import akka.actor.ActorSystem
+import org.scalatest.FunSuite
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import org.tmt.csw.cmd.akka._
@@ -11,8 +11,8 @@ import spray.http.StatusCodes
 /**
  * Tests the Command Service HTTP/REST interface in an actor environment.
  */
-class TestCommandService extends TestKit(ActorSystem("test")) with CommandServiceClient
-with ImplicitSender with FunSuite with BeforeAndAfterAll {
+class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with CommandServiceHttpClient
+  with TestHelper with FunSuite {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
@@ -28,7 +28,7 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll {
   // Need to save any exception that occurs in another thread, so we can fail the test in this thread
   var savedException: Option[Exception] = None
 
-  startCommandService()
+  startCommandServiceHttpServer()
 
 
   // -- Tests --
@@ -40,7 +40,7 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll {
       commandStatus1 <- pollCommandStatus(runId1)
 
       // test requesting immediate execution of a config
-      runId2 <- request(config)
+      runId2 <- queueBypassRequest(config)
       commandStatus2 <- pollCommandStatus(runId2)
 
       // test pausing the queue, submitting a config and then restarting the queue
@@ -74,14 +74,14 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll {
       checkReturnStatus("3a", commandStatus3a, runId3, CommandStatus.Queued(runId3))
       assert(res3b.status == StatusCodes.Accepted)
       checkReturnStatus("3b", commandStatus3b, runId3, CommandStatus.Complete(runId3))
-      checkReturnStatus("3c", commandStatus3c, runId3, CommandStatus.Error(runId3, CommandService.unknownRunIdMessage))
+      checkReturnStatus("3c", commandStatus3c, runId3, CommandStatus.Error(runId3, CommandServiceHttpServer.unknownRunIdMessage))
 
       assert(res4a.status == StatusCodes.Accepted)
       checkReturnStatus("4a", commandStatus4a, runId4, CommandStatus.Busy(runId4))
       assert(res4b.status == StatusCodes.Accepted)
       checkReturnStatus("4b", commandStatus4b, runId4, CommandStatus.Canceled(runId4))
       assert(res4c.status == StatusCodes.Accepted)
-      checkReturnStatus("4c", commandStatus4c, runId4, CommandStatus.Error(runId4, CommandService.unknownRunIdMessage))
+      checkReturnStatus("4c", commandStatus4c, runId4, CommandStatus.Error(runId4, CommandServiceHttpServer.unknownRunIdMessage))
     } catch {
       case e: Exception => savedException = Some(e)
     } finally {
@@ -112,33 +112,12 @@ with ImplicitSender with FunSuite with BeforeAndAfterAll {
 
   // Start the command service, passing it a command service actor, set up with two config actors that
   // will implement the commands.
-  def startCommandService(): Unit = {
-    // Create a config service actor
-    val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor")
-
-//    val numberOfSecondsToRun = 12 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
+  def startCommandServiceHttpServer(): Unit = {
+    // val numberOfSecondsToRun = 12 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
     val numberOfSecondsToRun = 1 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
 
-    // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
-    // (If we start sending commands before the registration is complete, they won't get executed).
-    // Each config actor is responsible for a different part of the configs (the path passed as an argument).
-    val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun),
-        name = s"TestConfigActorA")
-    val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun),
-        name = s"TestConfigActorB")
-
-    within(duration) {
-      // Note: this tells configActor1 to register with the command service. It could do this on its own,
-      // (by using a known path to find the commandServiceActor) but doing it this way lets us know when
-      // the registration is complete, so we can start sending commands
-      configActor1 ! ConfigActor.Register(commandServiceActor)
-      configActor2 ! ConfigActor.Register(commandServiceActor)
-      expectMsgType[ConfigActor.Registered.type]
-      expectMsgType[ConfigActor.Registered.type]
-    }
-
-    system.actorOf(CommandService.props(commandServiceActor, interface, port, timeout), "commandService")
-    Thread.sleep(1000) // XXX
+    system.actorOf(CommandServiceHttpServer.props(getCommandServiceActor(1, numberOfSecondsToRun), interface, port, timeout), "commandService")
+    Thread.sleep(1000) // XXX need a way to wait until the server is ready before proceeding
   }
 }
 

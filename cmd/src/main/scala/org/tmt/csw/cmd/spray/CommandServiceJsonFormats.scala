@@ -72,5 +72,4 @@ trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSuppor
         case x => deserializationError("Expected CommandStatus as JsObject, but got " + x.getClass)
       }
   }
-
 }

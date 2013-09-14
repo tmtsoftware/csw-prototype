@@ -11,7 +11,7 @@ import akka.actor.ActorSystem
 /**
  * Helper methods for command service clients
  */
-trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
+trait CommandServiceHttpClient extends CommandServiceJsonFormats with Logging {
 
   /**
    * The HTTP server host
@@ -49,7 +49,7 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
    * @param config the configuration to request for the command queue
    * @return a future runId with which to reference the command
    */
-  def request(config: Configuration): Future[RunId] = {
+  def queueBypassRequest(config: Configuration): Future[RunId] = {
     val pipeline = sendReceive ~> unmarshal[RunId]
     pipeline(Post(s"http://$interface:$port/request", config))
   }
@@ -91,7 +91,16 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
     pipeline(Post(s"http://$interface:$port/test/error"))
   }
 
-
+  /**
+   * Gets the command status (once). This method returns the current command status.
+   * @param runId identifies a configuration previously submitted or requested
+   * @return the future command status
+   */
+  def getCommandStatus(runId: RunId): Future[CommandStatus] = {
+    logger.debug(s"Attempting to get command status for runId $runId")
+    val pipeline = sendReceive ~> unmarshal[CommandStatus]
+    pipeline(Get(s"http://$interface:$port/config/$runId/status"))
+  }
 
   /**
    * Polls the command status for the given runId until the command completes (commandStatus.done is true).
@@ -103,7 +112,6 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
   def pollCommandStatus(runId: RunId): Future[CommandStatus] = {
     val f = for (commandStatus <- getCommandStatus(runId)) yield {
       if (commandStatus.done) {
-        logger.debug(s"Final command status for runId $runId is : $commandStatus")
         Future.successful(commandStatus)
       } else {
         pollCommandStatus(runId)
@@ -112,17 +120,6 @@ trait CommandServiceClient extends CommandServiceJsonFormats with Logging {
     // Flatten the result, which is of type Future[Future[CommandStatus]], to get a Future[CommandStatus]
     f.flatMap[CommandStatus] {x => x}
   }
-
-  /**
-   * Gets the command status (once). This method returns the current command status.
-   * @param runId identifies a configuration previously submitted or requested
-   * @return the future command status
-   */
-  def getCommandStatus(runId: RunId): Future[CommandStatus] = {
-    logger.debug(s"Attempting to get command status for runId $runId")
-    val pipeline = sendReceive ~> unmarshal[CommandStatus]
-    pipeline(Get(s"http://$interface:$port/config/$runId/status"))
-}
 
   /**
    * Posts a config cancel command with the given runId

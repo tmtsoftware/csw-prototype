@@ -13,7 +13,7 @@ import java.io.File
  * Adds a convenience layer over the Akka actor interface to the configuration service.
  * This is like the ConfigService API, but returns Akka Futures with the correct return types instead of objects.
  */
-class ConfigServiceClient(configServiceActor : ActorRef)  {
+case class ConfigServiceClient(configServiceActor : ActorRef)  {
 
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)

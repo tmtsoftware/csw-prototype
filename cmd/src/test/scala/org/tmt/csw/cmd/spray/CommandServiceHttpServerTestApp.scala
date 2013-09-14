@@ -26,7 +26,7 @@ import org.tmt.csw.cmd.akka.{ConfigActor, TestConfigActor, CommandServiceActor}
  * "message": ""
  * }
  */
-object CommandServiceTestApp extends App {
+object CommandServiceHttpServerTestApp extends App {
   /**
    * Construct the ActorSystem we will use in our application
    */
@@ -44,7 +44,7 @@ object CommandServiceTestApp extends App {
   system.actorOf(Props[AppActor])
 
   class AppActor extends Actor with ActorLogging {
-    system.actorOf(CommandService.props(getCommandServiceActor, interface, port, timeout), "commandService")
+    system.actorOf(CommandServiceHttpServer.props(getCommandServiceActor, interface, port, timeout), "commandService")
 
     override def receive: Receive = {
       case ConfigActor.Registered =>

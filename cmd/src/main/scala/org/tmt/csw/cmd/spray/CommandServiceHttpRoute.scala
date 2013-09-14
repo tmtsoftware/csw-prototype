@@ -10,7 +10,7 @@ import org.tmt.csw.cmd.core.Configuration
  * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests
  * without actually running an HTTP server.
  */
-trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
+trait CommandServiceHttpRoute extends HttpService with CommandServiceJsonFormats {
 
   /**
    * This defines the HTTP/REST interface for the command service.
@@ -28,43 +28,53 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
       )
     ) ~
       pathPrefix("queue") {
-        respondWithStatus(StatusCodes.Accepted) {
-          path("submit")(
-            // "POST /queue/submit {config: $config}" submits a config to the command service and returns the runId
+        path("submit")(
+          // "POST /queue/submit {config: $config}" submits a config to the command service and returns the runId
+          post(
+            entity(as[Configuration]) {
+              config =>
+                respondWithMediaType(`application/json`) {
+                  complete(StatusCodes.Accepted, submitCommand(config))
+                }
+            }
+          )
+        ) ~
+          path("stop")(
+            // "POST /queue/stop stops the command queue
             post(
-              entity(as[Configuration]) {
-                config =>
-                  respondWithMediaType(`application/json`) {
-                    complete(submitCommand(config))
-                  }
+              complete {
+                queueStop()
+                StatusCodes.Accepted
               }
             )
           ) ~
-            path("stop")(
-              // "POST /queue/stop stops the command queue
-              post(
-                complete(queueStop())
-              )
-            ) ~
-            path("pause")(
-              // "POST /queue/pause pauses the command queue
-              post(
-                complete(queuePause())
-              )
-            ) ~
-            path("start")(
-              // "POST /queue/start restarts the command queue
-              post(
-                complete(queueStart())
-              )
-            ) ~
-            path(JavaUUID)(uuid =>
-            // "DELETE /queue/$runId" deletes the command with the given $runId from the command queue
-              delete(
-                complete(queueDelete(RunId(uuid)))
-              )
+          path("pause")(
+            // "POST /queue/pause pauses the command queue
+            post(
+              complete {
+                queuePause()
+                StatusCodes.Accepted
+              }
             )
-        }
+          ) ~
+          path("start")(
+            // "POST /queue/start restarts the command queue
+            post(
+              complete {
+                queueStart()
+                StatusCodes.Accepted
+              }
+            )
+          ) ~
+          path(JavaUUID)(uuid =>
+          // "DELETE /queue/$runId" deletes the command with the given $runId from the command queue
+            delete(
+              complete {
+                queueDelete(RunId(uuid))
+                StatusCodes.Accepted
+              }
+            )
+          )
       } ~
       pathPrefix("config" / JavaUUID) {
         uuid =>
@@ -79,41 +89,49 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
               }
             )
           ) ~
-            respondWithStatus(StatusCodes.Accepted) {
-              path("cancel")(
-                // "POST /config/$runId/cancel" cancels the command with the given runId
-                post(
-                  complete(configCancel(runId))
-                )
-              ) ~
-                path("abort")(
-                  // "POST /config/$runId/abort" aborts the command with the given runId
-                  post(
-                    complete(configAbort(runId))
-                  )
-                ) ~
-                path("pause")(
-                  // "POST /config/$runId/pause" pauses the command with the given runId
-                  post(
-                    complete(configPause(runId))
-                  )
-                ) ~
-                path("resume")(
-                  // "POST /config/$runId/resume" resumes the command with the given runId
-                  post(
-                    complete(configResume(runId))
-                  )
-                )
-            }
-      } ~
-      respondWithStatus(StatusCodes.Accepted) {
-        pathPrefix("test") {
-          path("error") {
-            // "POST /test/error" throws an exception (for testing error handling)
-            post(
-              complete(testError())
+            path("cancel")(
+              // "POST /config/$runId/cancel" cancels the command with the given runId
+              post(
+                complete {
+                  configCancel(runId)
+                  StatusCodes.Accepted
+                }
+              )
+            ) ~
+            path("abort")(
+              // "POST /config/$runId/abort" aborts the command with the given runId
+              post(
+                complete {
+                  configAbort(runId)
+                  StatusCodes.Accepted
+                }
+              )
+            ) ~
+            path("pause")(
+              // "POST /config/$runId/pause" pauses the command with the given runId
+              post(
+                complete {
+                  configPause(runId)
+                  StatusCodes.Accepted
+                }
+              )
+            ) ~
+            path("resume")(
+              // "POST /config/$runId/resume" resumes the command with the given runId
+              post(
+                complete {
+                  configResume(runId)
+                  StatusCodes.Accepted
+                }
+              )
             )
-          }
+      } ~
+      pathPrefix("test") {
+        path("error") {
+          // "POST /test/error" throws an exception (for testing error handling)
+          post(
+            complete(testError())
+          )
         }
       } ~
       // If none of the above paths matched, it must be a bad request
@@ -150,7 +168,7 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
    * when the command status is known. If the HTTP request times out, nothing is done and the caller needs
    * to try again.
    */
-  def checkCommandStatus(runId: RunId, completer: CommandService.Completer): Unit
+  def checkCommandStatus(runId: RunId, completer: CommandServiceHttpServer.Completer): Unit
 
   /**
    * Returns true if the status request for the given runId timed out (and should be retried)
@@ -160,41 +178,41 @@ trait CommandServiceRoute extends HttpService with CommandServiceJsonFormats {
   /**
    * Handles a request to stop the command queue.
    */
-  def queueStop(): StatusCodes.Success
+  def queueStop(): Unit
 
   /**
    * Handles a request to pause the command queue.
    */
-  def queuePause(): StatusCodes.Success
+  def queuePause(): Unit
 
   //
   /**
    * Handles a request to restart the command queue.
    */
-  def queueStart(): StatusCodes.Success
+  def queueStart(): Unit
 
   /**
    * Handles a request to delete a command from the command queue.
    */
-  def queueDelete(runId: RunId): StatusCodes.Success
+  def queueDelete(runId: RunId): Unit
 
   /**
    * Handles a request to pause the config with the given runId
    */
-  def configCancel(runId: RunId): StatusCodes.Success
+  def configCancel(runId: RunId): Unit
 
   /**
    * Handles a request to pause the config with the given runId
    */
-  def configAbort(runId: RunId): StatusCodes.Success
+  def configAbort(runId: RunId): Unit
 
   /**
    * Handles a request to pause the config with the given runId
    */
-  def configPause(runId: RunId): StatusCodes.Success
+  def configPause(runId: RunId): Unit
 
   /**
    * Handles a request to pause the config with the given runId
    */
-  def configResume(runId: RunId): StatusCodes.Success
+  def configResume(runId: RunId): Unit
 }
