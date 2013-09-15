@@ -48,8 +48,8 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)
     case ConfigAbort(runId) => abort(runId)
-    case ConfigPause(runId) => pause(runId) // XXX use become(paused)
-    case ConfigResume(runId) => resume(runId) // XXX use become(receive)
+    case ConfigPause(runId) => pause(runId)
+    case ConfigResume(runId) => resume(runId)
 
     // An actor was terminated (normal when done)
     case Terminated(actor) => terminated(actor)
@@ -60,7 +60,7 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
   /**
    * Register with the given command service actor to receive the parts of configs with any of the given configPaths.
    *
-   * @param commandServiceActor the Akka name used to create the command service actor
+   * @param commandServiceActor the command service actor
    * @param replyTo reply to this actor when registration is acknowledged
    * @param configPaths if any configs containing any of these (dot separated) path are received, that
    *                    part of the config will be extracted and sent to this actor for processing

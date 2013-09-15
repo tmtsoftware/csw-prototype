@@ -46,14 +46,17 @@ case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeo
    * The command status normally starts out as Queued, then becomes Busy and eventually Complete,
    * although other statuses are possible, such as Aborted or Canceled.
    * @param runId identifies a configuration previously submitted or requested
+   * @param maxAttempts max number of times to ask for the command status before giving up if the command does not complete
    * @return the future command status
    */
-  def pollCommandStatus(runId: RunId): Future[CommandStatus] = {
+  def pollCommandStatus(runId: RunId, maxAttempts: Int = 10): Future[CommandStatus] = {
     val f = for (commandStatus <- getCommandStatus(runId)) yield {
       if (commandStatus.done) {
         Future.successful(commandStatus)
+      } else if (maxAttempts > 0) {
+        pollCommandStatus(runId, maxAttempts-1)
       } else {
-        pollCommandStatus(runId)
+        Future.successful(CommandStatus.Error(runId, "Timed out while waiting for command status"))
       }
     }
     // Flatten the result, which is of type Future[Future[CommandStatus]], to get a Future[CommandStatus]

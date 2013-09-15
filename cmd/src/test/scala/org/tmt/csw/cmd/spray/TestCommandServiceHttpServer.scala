@@ -35,34 +35,34 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
 
   test("Test HTTP REST interface to Command Service") {
     for {
-    // test submitting a config to the command queue
+      // test submitting a config to the command queue
       runId1 <- queueSubmit(config)
-      commandStatus1 <- pollCommandStatus(runId1)
+      commandStatus1 <- pollCommandStatus(runId1, 3)
 
       // test requesting immediate execution of a config
       runId2 <- queueBypassRequest(config)
-      commandStatus2 <- pollCommandStatus(runId2)
+      commandStatus2 <- pollCommandStatus(runId2, 3)
 
       // test pausing the queue, submitting a config and then restarting the queue
       res3a <- queuePause()
       runId3 <- queueSubmit(config)
       commandStatus3a <- getCommandStatus(runId3)
       res3b <- queueStart()
-      commandStatus3b <- pollCommandStatus(runId3)
+      commandStatus3b <- pollCommandStatus(runId3, 3)
 
       // Attempting to get the status of an old or unknown command runId should an error
-      commandStatus3c <- pollCommandStatus(runId3)
+      commandStatus3c <- pollCommandStatus(runId3, 3)
 
       // test submitting a config, pausing it and then canceling it (what is the status?)
       runId4 <- queueSubmit(config)
       res4a <- configPause(runId4)
       commandStatus4a <- getCommandStatus(runId4)
       res4b <- configCancel(runId4)
-      commandStatus4b <- pollCommandStatus(runId4)
+      commandStatus4b <- pollCommandStatus(runId4, 3)
 
       // abort should fail, since command was already canceled
       res4c <- configAbort(runId4)
-      commandStatus4c <- pollCommandStatus(runId4)
+      commandStatus4c <- pollCommandStatus(runId4, 3)
 
     } try {
       // At this point all of the above futures have completed: check the results
@@ -89,13 +89,13 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
       system.shutdown()
     }
 
+    // Wait for above to complete!
+    system.awaitTermination()
+
     savedException match {
       case None => // OK
       case Some(e) => fail(e)
     }
-
-    // Wait for above to complete!
-    system.awaitTermination()
   }
 
 
@@ -115,8 +115,8 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
   def startCommandServiceHttpServer(): Unit = {
     // val numberOfSecondsToRun = 12 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
     val numberOfSecondsToRun = 1 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
-
-    system.actorOf(CommandServiceHttpServer.props(getCommandServiceActor(1, numberOfSecondsToRun), interface, port, timeout), "commandService")
+    val commandServiceActor = getCommandServiceActor(1, numberOfSecondsToRun)
+    system.actorOf(CommandServiceHttpServer.props(commandServiceActor, interface, port, timeout), "commandService")
     Thread.sleep(1000) // XXX need a way to wait until the server is ready before proceeding
   }
 }

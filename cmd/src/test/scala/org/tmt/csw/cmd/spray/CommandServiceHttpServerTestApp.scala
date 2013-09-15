@@ -2,6 +2,7 @@ package org.tmt.csw.cmd.spray
 
 import akka.actor._
 import org.tmt.csw.cmd.akka.{ConfigActor, TestConfigActor, CommandServiceActor}
+import akka.io.Tcp
 
 /**
  * Standalone command service test application.
