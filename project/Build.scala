@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import akka.sbt.AkkaKernelPlugin._
+import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 
 // This is the top level build object used by sbt.
 object Build extends Build {
@@ -9,7 +10,7 @@ object Build extends Build {
 
   // Base project
   lazy val root = Project(id = "csw", base = file("."))
-    .aggregate(cs, cmd, test_app, test_client)
+    .aggregate(cs, cmd, pkg, test_app, test_client, container1, container2)
     .settings(buildSettings: _*)
 
   lazy val cs = Project(id = "cs", base = file("cs"))
@@ -30,26 +31,13 @@ object Build extends Build {
 
   lazy val pkg = Project(id = "pkg", base = file("pkg"))
     .settings(buildSettings: _*)
+    .settings(multiJvmSettings: _*)
     .dependsOn(cmd)
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback) ++
-      test(scalaTest, akkaTestKit)
-    )
-
-
-// top level Test project
-  lazy val defaultSettings = buildSettings ++ Seq(
-    // compile options
-    scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
-    javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
-  )
-
-  lazy val akkaKernelPluginSettings = Seq(
-    distJvmOptions in Dist := "-Xms256M -Xmx1024M",
-    distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
-    outputDirectory in Dist := file("target/test-app")
-  )
+      test(scalaTest, akkaTestKit, akkaMultiNodeTest)
+    ) configs MultiJvm
 
   // Test subprojects with dependency information
   // Test application
@@ -59,7 +47,7 @@ object Build extends Build {
     settings = defaultSettings ++ distSettings ++
       Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
           distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
-          outputDirectory in Dist := file("target/test-app"),
+          outputDirectory in Dist := file("test/test-app/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
             compile(akkaKernel, akkaRemote) ++
@@ -74,7 +62,7 @@ object Build extends Build {
     settings = defaultSettings ++ distSettings ++
       Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
           distBootClass in Dist := "org.tmt.csw.test.client.TestClient",
-          outputDirectory in Dist := file("target/test-client"),
+          outputDirectory in Dist := file("test/test-client/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
             compile(akkaKernel, akkaRemote) ++
@@ -82,7 +70,35 @@ object Build extends Build {
       )
     ) dependsOn(cs, cmd)
 
+  // pkg test: Container1
+  lazy val container1 = Project(
+    id = "container1",
+    base = file("test/pkg/container1"),
+    settings = defaultSettings ++ distSettings ++
+      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
+        distBootClass in Dist := "org.tmt.csw.test.container1.Container1",
+        outputDirectory in Dist := file("test/pkg/container1/target"),
+        libraryDependencies ++=
+          provided(akkaActor) ++
+            compile(akkaKernel, akkaRemote) ++
+            test(scalaLogging, logback)
+      )
+  ) dependsOn(pkg, cs, cmd)
 
+  // pkg test: Container1
+  lazy val container2 = Project(
+    id = "container2",
+    base = file("test/pkg/container2"),
+    settings = defaultSettings ++ distSettings ++
+      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
+        distBootClass in Dist := "org.tmt.csw.test.container2.Container2",
+        outputDirectory in Dist := file("test/pkg/container2/target"),
+        libraryDependencies ++=
+          provided(akkaActor) ++
+            compile(akkaKernel, akkaRemote) ++
+            test(scalaLogging, logback)
+      )
+  ) dependsOn(pkg, cs, cmd)
 
 }
 

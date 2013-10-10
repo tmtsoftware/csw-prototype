@@ -2,7 +2,10 @@ package org.tmt.csw.cmd.spray
 
 import akka.actor._
 import org.tmt.csw.cmd.akka.{ConfigActor, TestConfigActor, CommandServiceActor}
-import akka.io.Tcp
+
+class CommandServiceActorClass extends CommandServiceActor {
+  override def receive: Receive = receiveCommands
+}
 
 /**
  * Standalone command service test application.
@@ -48,15 +51,15 @@ object CommandServiceHttpServerTestApp extends App {
     system.actorOf(CommandServiceHttpServer.props(getCommandServiceActor, interface, port, timeout), "commandService")
 
     override def receive: Receive = {
-      case ConfigActor.Registered =>
-        log.debug("Received registered ack")
+      case ConfigActor.Registered(configActor) =>
+        log.debug(s"Received registered ack from $configActor")
     }
 
     // Called at the start of each test to get a new, unique command service and config actor
     // (Note that all tests run at the same time, so each test needs a unique command service)
     def getCommandServiceActor: ActorRef = {
       // Create a config service actor
-      val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = "testCommandServiceActor")
+      val commandServiceActor = system.actorOf(Props[CommandServiceActorClass], name = "testCommandServiceActor")
 
       // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
       // (If we start sending commands before the registration is complete, they won't get executed).

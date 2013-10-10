@@ -14,7 +14,15 @@ object TestConfigActorWorker {
  *
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
-class TestConfigActorWorker(numberOfSecondsToRun: Int) extends ConfigActor(Set[String]()) {
+class TestConfigActorWorker(numberOfSecondsToRun: Int) extends ConfigActor {
+
+  // Receive config messages
+  override def receive: Receive = receiveConfigs
+
+  // This is just a worker and doesn't need to register any config paths
+  override val configPaths = Set.empty[String]
+
+
   // Used as an example of one way to implement interrupting a running config
   val aState: AtomicReference[ConfigState] = new AtomicReference(null)
 
@@ -45,7 +53,7 @@ class TestConfigActorWorker(numberOfSecondsToRun: Int) extends ConfigActor(Set[S
     } {
       if (state != ConfigState.Paused(submit.runId)) {
         submit.submitter ! state
-        context.system.stop(self)
+        if (context != null) context.system.stop(self)
       }
     }
   }

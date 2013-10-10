@@ -19,9 +19,20 @@ object ConfigDistributorActor {
   case class Register(configPaths: Set[String], actorRef: ActorRef) extends ConfigDistributorMessage
 
   /**
+   * Message used by a config actor to deregister.
+   * @param actorRef a reference to the actor that was previously registered
+   */
+  case class Deregister(actorRef: ActorRef) extends ConfigDistributorMessage
+
+  /**
    * Reply sent when registration is complete
    */
   case object Registered extends ConfigDistributorMessage
+
+  /**
+   * Reply sent when deregistration is complete
+   */
+  case object Unregistered extends ConfigDistributorMessage
 }
 
 
@@ -53,6 +64,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
    */
   override def receive: Receive = {
     case Register(configPaths, actorRef) => register(configPaths, actorRef)
+    case Deregister(actorRef) => deregister(actorRef)
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)
     case ConfigAbort(runId) => abort(runId)
@@ -62,7 +74,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     // Status Results for a config part from a ConfigActor
     case state: ConfigState => checkIfDone(state)
 
-    case Terminated(actorRef) => unregister(actorRef)
+    case Terminated(actorRef) => deregister(actorRef)
 
     case x => log.error(s"Unexpected ConfigActor message: $x")
   }
@@ -75,7 +87,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     context.watch(actorRef)
   }
 
-  private def unregister(actorRef: ActorRef): Unit = {
+  private def deregister(actorRef: ActorRef): Unit = {
     registry = registry.filterNot(entry => entry.actorRef == actorRef)
   }
 

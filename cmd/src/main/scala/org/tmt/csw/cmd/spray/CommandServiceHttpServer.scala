@@ -24,7 +24,7 @@ object CommandServiceHttpServer {
    * Factory for `akka.actor.Props` for CommandService.
    */
   def props(commandServiceActor: ActorRef, interface: String, port: Int, timeout: FiniteDuration): Props =
-    Props(new CommandServiceHttpServer(commandServiceActor, interface, port, timeout))
+    Props(classOf[CommandServiceHttpServer], commandServiceActor, interface, port, timeout)
 }
 
 /**

@@ -4,6 +4,10 @@ import akka.actor.{Props, ActorRef}
 import akka.testkit.{TestKit, ImplicitSender}
 import scala.concurrent.duration._
 
+class CommandServiceActorClass extends CommandServiceActor {
+  override def receive: Receive = receiveCommands
+}
+
 /**
  * Helper class for starting a test command service actor
  */
@@ -17,7 +21,7 @@ trait TestHelper extends ImplicitSender { this: TestKit ⇒
    */
   def getCommandServiceActor(n: Int = 1, numberOfSecondsToRun: Int = 2): ActorRef = {
     // Create a config service actor
-    val commandServiceActor = system.actorOf(Props[CommandServiceActor], name = s"testCommandServiceActor$n")
+    val commandServiceActor = system.actorOf(Props[CommandServiceActorClass], name = s"testCommandServiceActor$n")
     val duration = (numberOfSecondsToRun * 3).seconds
 
     // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
@@ -30,9 +34,9 @@ trait TestHelper extends ImplicitSender { this: TestKit ⇒
       // (by using a known path to find the commandServiceActor) but doing it this way lets us know when
       // the registration is complete, so we can start sending commands
       configActor1 ! ConfigActor.Register(commandServiceActor)
+      expectMsg(ConfigActor.Registered(configActor1))
       configActor2 ! ConfigActor.Register(commandServiceActor)
-      expectMsgType[ConfigActor.Registered.type]
-      expectMsgType[ConfigActor.Registered.type]
+      expectMsg(ConfigActor.Registered(configActor2))
     }
 
     commandServiceActor

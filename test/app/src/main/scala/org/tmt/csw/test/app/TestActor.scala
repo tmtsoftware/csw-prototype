@@ -12,6 +12,10 @@ import org.tmt.csw.cmd.akka.{CommandStatus, CommandServiceMessage, CommandServic
 import org.tmt.csw.cmd.core.Configuration
 import java.io.File
 
+class TestCommandServiceActor extends CommandServiceActor {
+  override def receive: Receive = receiveCommands
+}
+
 object TestActor {
   def props(configServiceActor: ActorRef): Props = Props(classOf[TestActor], configServiceActor)
 }
@@ -22,7 +26,7 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
   val configFileName = new File("testApp/config.conf")
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
-  val commandServiceActor = context.actorOf(Props[CommandServiceActor], name = s"testAppCommandServiceActor")
+  val commandServiceActor = context.actorOf(Props[TestCommandServiceActor], name = s"testAppCommandServiceActor")
 
   override def receive: Receive = {
     case "Start" =>

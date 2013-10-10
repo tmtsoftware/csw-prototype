@@ -20,7 +20,7 @@ object CommandServiceActor {
  * QueueConfig objects are placed on the queue when received.
  * Later, each object is dequeued and the config is passed to the config actor for processing.
  */
-class CommandServiceActor extends Actor with ActorLogging {
+trait CommandServiceActor extends ConfigActor {
 
   // The queue for this component (indexed by RunId, so selected items can be removed)
   private var queueMap = Map[RunId, SubmitWithRunId]()
@@ -34,9 +34,12 @@ class CommandServiceActor extends Actor with ActorLogging {
   // Needed for "ask"
   private implicit val execContext = context.dispatcher
 
+  // By default command service actors can receive any config paths
+  // (override this if this actor is receiving parts of configs from another command service actor)
+  override val configPaths = Set.empty[String]
 
-  // Receive messages
-  override def receive: Receive = {
+  // Receive only the command server commands
+  private def receiveCmds: Receive = {
     // Queue related commands
     case Submit(config, submitter) => queueSubmit(SubmitWithRunId(config, submitter))
     case s@SubmitWithRunId(config, submitter, runId) => queueSubmit(s)
@@ -49,9 +52,10 @@ class CommandServiceActor extends Actor with ActorLogging {
 
     // Commands that act on a running config: forward to config actor
     case configMessage: ConfigMessage => configDistributorActor forward configMessage
-
-    case x => log.error(s"Unknown CommandServiceActor message: $x")
   }
+
+  // Receive command service and config actor messages
+  def receiveCommands: Receive = receiveCmds orElse receiveConfigs
 
   // Queue the given config for later execution and return the runId to the sender
   private def queueSubmit(submit: SubmitWithRunId): Unit = {
@@ -126,5 +130,15 @@ class CommandServiceActor extends Actor with ActorLogging {
     log.debug(s"Queue delete: $runId")
     queueMap = queueMap - runId
   }
+
+  // These should never be called here, since config messages are handled in receiveCommands above
+  // and forwarded to the command distributor actor. The inherited ConfigActor trait should only
+  // be handling register/deregister messages.
+  override def pause(runId: RunId): Unit = {log.error("pause should not be called here")}
+  override def resume(runId: RunId): Unit = {log.error("resume should not be called here")}
+  override def cancel(runId: RunId): Unit = {log.error("cancel should not be called here")}
+  override def abort(runId: RunId): Unit = {log.error("abort should not be called here")}
+  override def submit(submit: SubmitWithRunId): Unit = {log.error("submit should not be called here")}
+
 }
 

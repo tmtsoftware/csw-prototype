@@ -1,15 +1,17 @@
+import akka.sbt.AkkaKernelPlugin._
 import sbt._
 import Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import com.typesafe.sbt.SbtMultiJvm
+import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+import scala.Some
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
   val Version = "1.0"
-//  val AkkaVersion = "2.3-SNAPSHOT"
-  val AkkaVersion = "2.2.0"
 
-  val buildSettings = Defaults.defaultSettings ++ Seq (
+  val buildSettings = Defaults.defaultSettings ++ multiJvmSettings ++ Seq (
     organization := "org.tmt",
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
@@ -23,16 +25,46 @@ object Settings {
     resolvers += "Spray nightlies" at "http://nightlies.spray.io"
   )
 
-  lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(
-     ScalariformKeys.preferences in Compile := formattingPreferences,
-     ScalariformKeys.preferences in Test    := formattingPreferences
-   )
+  // top level Test project
+  lazy val defaultSettings = buildSettings ++ Seq(
+    // compile options
+    scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
+    javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
+  )
 
-   import scalariform.formatter.preferences._
-   def formattingPreferences: FormattingPreferences =
-     FormattingPreferences()
-       .setPreference(RewriteArrowSymbols, true)
-       .setPreference(AlignParameters, true)
-       .setPreference(AlignSingleLineCaseStatements, true)
-       .setPreference(DoubleIndentClassDeclaration, true)
+  lazy val akkaKernelPluginSettings = Seq(
+    distJvmOptions in Dist := "-Xms256M -Xmx1024M",
+    distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
+    outputDirectory in Dist := file("target/test-app")
+  )
+
+  lazy val multiJvmSettings = SbtMultiJvm.multiJvmSettings ++ Seq(
+    // make sure that MultiJvm test are compiled by the default test compilation
+    compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
+    // disable parallel tests
+    parallelExecution in Test := false,
+    executeTests in Test <<=
+      (executeTests in Test, executeTests in MultiJvm) map {
+        case ((testResults), (multiJvmResults)) =>
+          val overall =
+            if (testResults.overall.id < multiJvmResults.overall.id) multiJvmResults.overall
+            else testResults.overall
+          Tests.Output(overall,
+            testResults.events ++ multiJvmResults.events,
+            testResults.summaries ++ multiJvmResults.summaries)
+      }
+  )
+
+  lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(
+    ScalariformKeys.preferences in Compile := formattingPreferences,
+    ScalariformKeys.preferences in Test    := formattingPreferences
+  )
+
+  import scalariform.formatter.preferences._
+  def formattingPreferences: FormattingPreferences =
+    FormattingPreferences()
+      .setPreference(RewriteArrowSymbols, true)
+      .setPreference(AlignParameters, true)
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(DoubleIndentClassDeclaration, true)
 }

@@ -14,11 +14,17 @@ object TestConfigActor {
  *                    of configs containing any of these paths
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
-class TestConfigActor(configPath: String, numberOfSecondsToRun: Int) extends ConfigActor(configPath) {
+class TestConfigActor(configPath: String, numberOfSecondsToRun: Int) extends ConfigActor {
 
   // Links the config worker actor to the runId for the config it is currently executing
   private var runIdForActorRef = Map[ActorRef, RunId]()
   private var actorRefForRunId = Map[RunId, ActorRef]()
+
+  // Receive config messages
+  override def receive: Receive = receiveConfigs
+
+  // The set of config paths we will process
+  override val configPaths = Set(configPath)
 
   /**
    * Called when a configuration is submitted

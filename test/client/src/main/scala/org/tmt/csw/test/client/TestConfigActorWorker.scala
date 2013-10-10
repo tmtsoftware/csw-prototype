@@ -8,7 +8,15 @@ import org.tmt.csw.cmd.akka.{RunId, ConfigState, ConfigActor}
 /**
  * A test config worker actor.
  */
-class TestConfigActorWorker() extends ConfigActor(Set[String]()) {
+class TestConfigActorWorker extends ConfigActor {
+
+  // Receive config messages
+  override def receive: Receive = receiveConfigs
+
+  // This is just a worker and doesn't need to register any config paths
+  override val configPaths = Set.empty[String]
+
+
   // Used as an example of one way to implement interrupting a running config
   val aState: AtomicReference[ConfigState] = new AtomicReference(null)
 

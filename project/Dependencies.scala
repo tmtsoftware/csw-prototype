@@ -4,7 +4,7 @@ import sbt._
 
 object Dependencies {
 
-  val AkkaVersion = "2.2.0"
+  val AkkaVersion = "2.2.1"
 
   // See http://spray.io/project-info/current-versions/#current-versions (was compatibility issue with Akka-2.2.0)
   val SprayVersion = "1.2-20130712"
@@ -36,6 +36,7 @@ object Dependencies {
   val scalaTest      = "org.scalatest"                  % "scalatest_2.10"        % "2.0.M5b"
   val junit          = "com.novocode"                   % "junit-interface"       % "0.10-M4"
   val specs2         = "org.specs2"                    %% "specs2"                % "1.14"
-
   val liftJSON       = "net.liftweb"                   %% "lift-json"             % "2.5"
+
+  val akkaMultiNodeTest = "com.typesafe.akka"         %% "akka-remote-tests"        % AkkaVersion
 }

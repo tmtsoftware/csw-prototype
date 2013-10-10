@@ -18,33 +18,44 @@ object ConfigActor {
   case class Register(commandServiceActor: ActorRef) extends ConfigActorMessage
 
   /**
-   * Reply message sent when the registration (see above) is acknowledged
+   * Message used to tell a config actor to deregister with the given command service actor
+   * @param commandServiceActor a reference to a CommandServiceActor
    */
-  case object Registered extends ConfigActorMessage
+  case class Deregister(commandServiceActor: ActorRef) extends ConfigActorMessage
+
+  /**
+   * Reply message sent when the registration (see above) is acknowledged.
+   * @param configActor a reference to this actor
+   */
+  case class Registered(configActor: ActorRef) extends ConfigActorMessage
+
+  /**
+   * Reply message sent when the de-registration (see above) is acknowledged
+   * @param configActor a reference to this actor
+   */
+  case class Unregistered(configActor: ActorRef) extends ConfigActorMessage
 }
 
 
 /**
  * Command service targets can extend this class, which defines
  * methods for implementing the standard configuration control messages.
- *
- * @param configPaths a set of dot-separated paths: This actor will receive the parts
- *                    of configs containing any of these paths
  */
-abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLogging {
+trait ConfigActor extends Actor with ActorLogging {
 
   /**
-   * Initialize with a single config path
-   * @param configPath a dot-separated path in a Configuration object: This actor will receive this part
-   *                    of any configs containing this path
+   * a set of dot-separated paths:
+   * This actor will receive the parts of configs containing any of these paths.
+   * An empty set indicates that all messages can be handled.
    */
-  def this(configPath: String) = this(Set(configPath))
+  val configPaths: Set[String]
 
   /**
    * Messages received in the normal state.
    */
-  override def receive: Receive = {
+  def receiveConfigs: Receive = {
     case ConfigActor.Register(commandServiceActor) => register(commandServiceActor, sender, configPaths)
+    case ConfigActor.Deregister(commandServiceActor) => deregister(commandServiceActor, sender)
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)
     case ConfigAbort(runId) => abort(runId)
@@ -53,8 +64,6 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
 
     // An actor was terminated (normal when done)
     case Terminated(actor) => terminated(actor)
-
-    case x => log.error(s"Unexpected ConfigActor message: $x")
   }
 
   /**
@@ -65,7 +74,7 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
    * @param configPaths if any configs containing any of these (dot separated) path are received, that
    *                    part of the config will be extracted and sent to this actor for processing
    */
-  def register(commandServiceActor: ActorRef, replyTo: ActorRef, configPaths: Set[String]): Unit = {
+  private def register(commandServiceActor: ActorRef, replyTo: ActorRef, configPaths: Set[String]): Unit = {
     val configDistributorActor = context.actorSelection(commandServiceActor.path / "configDistributorActor")
     implicit val timeout = Timeout(3.seconds)
     implicit val dispatcher = context.system.dispatcher
@@ -77,7 +86,29 @@ abstract class ConfigActor(configPaths: Set[String]) extends Actor with ActorLog
     f.onSuccess {
       case ConfigDistributorActor.Registered =>
         log.debug(s"Registered config paths $configPaths with $commandServiceActor")
-        replyTo ! ConfigActor.Registered
+        replyTo ! ConfigActor.Registered(self)
+    }
+  }
+
+  /**
+   * De-register with the given command service actor.
+   *
+   * @param commandServiceActor the command service actor
+   * @param replyTo reply to this actor when de-registration is acknowledged
+   */
+  private def deregister(commandServiceActor: ActorRef, replyTo: ActorRef): Unit = {
+    val configDistributorActor = context.actorSelection(commandServiceActor.path / "configDistributorActor")
+    implicit val timeout = Timeout(3.seconds)
+    implicit val dispatcher = context.system.dispatcher
+    val f = (configDistributorActor ? ConfigDistributorActor.Deregister(self)).recover {
+      case ex =>
+        log.error(ex, s"Failed to deregister from $configDistributorActor, retrying...")
+        deregister(commandServiceActor, replyTo)
+    }
+    f.onSuccess {
+      case ConfigDistributorActor.Unregistered =>
+        log.debug(s"Deregistered config paths $configPaths with $commandServiceActor")
+        replyTo ! ConfigActor.Unregistered(self)
     }
   }
 
