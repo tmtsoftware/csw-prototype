@@ -47,7 +47,7 @@ object Build extends Build {
     settings = defaultSettings ++ distSettings ++
       Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
           distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
-          outputDirectory in Dist := file("test/test-app/target"),
+          outputDirectory in Dist := file("test/app/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
             compile(akkaKernel, akkaRemote) ++
@@ -62,7 +62,7 @@ object Build extends Build {
     settings = defaultSettings ++ distSettings ++
       Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
           distBootClass in Dist := "org.tmt.csw.test.client.TestClient",
-          outputDirectory in Dist := file("test/test-client/target"),
+          outputDirectory in Dist := file("test/client/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
             compile(akkaKernel, akkaRemote) ++

@@ -1,7 +1,6 @@
-package scala.org.tmt.csw.pkg
+package org.tmt.csw.pkg
 
-import org.tmt.csw.pkg.Hcd
-import org.tmt.csw.cmd.akka.RunId
+import org.tmt.csw.cmd.akka.{ConfigState, RunId}
 import org.tmt.csw.cmd.akka.CommandServiceMessage.SubmitWithRunId
 import akka.actor.Props
 
@@ -41,6 +40,9 @@ case class TestHcd(name: String, configPaths: Set[String]) extends Hcd {
   // -- Implement ConfigActor methods --
   override def submit(submit: SubmitWithRunId): Unit = {
     log.info(s"$name submit: ${submit.config}")
+    Thread.sleep(2000)
+    submit.submitter ! ConfigState.Completed(submit.runId)
+
   }
 
   override def pause(runId: RunId): Unit =  {

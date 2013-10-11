@@ -1,7 +1,7 @@
 package org.tmt.csw.test.container1
 
 import akka.actor._
-import org.tmt.csw.pkg.{Assembly, Container}
+import org.tmt.csw.pkg.{RemoteLookup, Assembly, Container}
 import org.tmt.csw.cmd.core.Configuration
 import akka.pattern.ask
 import org.tmt.csw.cmd.akka.{CommandStatus, CommandServiceMessage}
@@ -41,14 +41,15 @@ class Container1Actor extends Actor with ActorLogging {
   val config = Configuration(testConfig)
   implicit val dispatcher = context.system.dispatcher // XXX ???
 
-  //    val container = Container.create("Container-1")
-  val container = context.actorOf(Props[Container], "Container-1")
+  val container = Container.create("Container-1")
 
   val assembly1Props = Assembly1.props("Assembly-1")
 
+  // XXX TODO: This would normally be handled by the location service
   val hcd2aPath = ActorPath.fromString(Container1Settings(context.system).hcd2a)
   val hcd2bPath = ActorPath.fromString(Container1Settings(context.system).hcd2b)
-  var registeredCount = 0
+//  val hcd2a = context.actorOf(RemoteLookup.props(Container1Settings(context.system).hcd2a))
+//  val hcd2b = context.actorOf(RemoteLookup.props(Container1Settings(context.system).hcd2b))
 
   // Receive actor messages
   def receive: Receive = {
@@ -56,12 +57,12 @@ class Container1Actor extends Actor with ActorLogging {
     case x => log.warning(s"received unknown message $x")
   }
 
+
   for {
     assembly1 <- (container ? Container.CreateComponent(assembly1Props, "Assembly-1")).mapTo[ActorRef]
-    a <- assembly1 ? Assembly.AddComponentByPath(hcd2aPath)
-    b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
+    ack2a <- assembly1 ? Assembly.AddComponentByPath(hcd2aPath)
+    ack2b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
   } {
-      log.info(s"XXX a = $a, b = $b")
       // Send a test config
       assembly1 ! CommandServiceMessage.Submit(config)
 

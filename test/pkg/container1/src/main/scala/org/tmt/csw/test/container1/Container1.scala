@@ -11,10 +11,10 @@ import akka.kernel.Bootable
 // This class is started by the Akka microkernel in standalone mode
 class Container1 extends Bootable {
 
-  val system = ActorSystem("Container-1")
+  val system = ActorSystem("system")
 
   def startup(): Unit = {
-    system.actorOf(Props[Container1Actor], "Container1Actor")
+    system.actorOf(Props[Container1Actor], "Container-1-Actor")
   }
 
   def shutdown(): Unit = {

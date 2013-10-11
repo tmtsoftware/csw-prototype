@@ -1,4 +1,4 @@
-package scala.org.tmt.csw.pkg
+package org.tmt.csw.pkg
 
 import akka.remote.testkit.MultiNodeSpecCallbacks
 import org.scalatest.{BeforeAndAfterAll, WordSpec}

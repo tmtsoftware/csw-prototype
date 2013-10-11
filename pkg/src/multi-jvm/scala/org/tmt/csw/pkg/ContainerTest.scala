@@ -1,15 +1,13 @@
-package scala.org.tmt.csw.pkg
+package org.tmt.csw.pkg
 
 import akka.testkit.ImplicitSender
 import akka.actor._
-import org.tmt.csw.pkg.{RemoteLookup, Assembly, Container}
 import akka.pattern.ask
 import org.tmt.csw.cmd.akka.{CommandStatus, CommandServiceMessage, ConfigActor}
 import org.tmt.csw.cmd.core.Configuration
 import akka.util.Timeout
 import scala.concurrent.duration._
-import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
-import scala.concurrent.Future
+import akka.remote.testkit.MultiNodeSpec
 
 /**
  * A test that runs each of the classes below in a separate JVM (See the sbt-multi-jvm plugin)
@@ -36,7 +34,7 @@ object ContainerTest {
       |      }
       |
     """.stripMargin
-  }
+}
 
 
 class TestMultiJvmContainer1 extends ContainerSpec
@@ -47,7 +45,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
 
   import ContainerConfig._
 
-  val duration: FiniteDuration = 2.seconds
+  val duration: FiniteDuration = 5.seconds
   implicit val timeout = Timeout(duration)
 
   override def initialParticipants: Int = roles.size
@@ -64,56 +62,42 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val config = Configuration(ContainerTest.testConfig)
         implicit val dispatcher = system.dispatcher
 
-        //    val container = Container.create("Container-1")
-        val container = system.actorOf(Props[Container], "Container-1")
+        val container = Container.create("Container-1")
 
-        log.info(s"XXX container = $container")
         val assembly1Props = TestAssembly.props("Assembly-1")
 
-        val hcd2aPath = node(container2) / "user" / "Container-2" / "HCD-2A"
-        val hcd2bPath = node(container2) / "user" / "Container-2" / "HCD-2B"
-
-        log.info(s"XXX In Node 1: hcd2aPath = ${hcd2aPath.toString}")
+        val hcd2aPath = ActorPath.fromString(TestSettings(system).hcd2a)
+        val hcd2bPath = ActorPath.fromString(TestSettings(system).hcd2b)
 
         for {
           assembly1 <- (container ? Container.CreateComponent(assembly1Props, "Assembly-1")).mapTo[ActorRef]
+          ack2a <- assembly1 ? Assembly.AddComponentByPath(hcd2aPath)
+          ack2b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
         } {
-          log.info(s"XXX In Node 1: assembly1 = $assembly1")
-          assembly1 ! Assembly.AddComponentByPath(hcd2aPath)
-          expectMsgType[ConfigActor.Registered]
-          assembly1 ! Assembly.AddComponentByPath(hcd2bPath)
-          expectMsgType[ConfigActor.Registered]
-
-          within(duration) {
-            assembly1 ! CommandServiceMessage.Submit(config)
-            val s1 = expectMsgType[CommandStatus.Queued]
-            val s2 = expectMsgType[CommandStatus.Busy]
-            val s3 = expectMsgType[CommandStatus.Complete]
-            assert(s1.runId == s2.runId)
-            assert(s3.runId == s2.runId)
-          }
+          assembly1 ! CommandServiceMessage.Submit(config)
+          val s1 = expectMsgType[CommandStatus.Queued]
+          val s2 = expectMsgType[CommandStatus.Busy]
+          val s3 = expectMsgType[CommandStatus.Complete]
+          assert(s1.runId == s2.runId)
+          assert(s3.runId == s2.runId)
+          log.info(s"Command status: $s3")
         }
       }
 
       runOn(container2) {
-        log.info("XXX In Node 2: 1")
-        //    val container = Container.create("Container-2")
-        val container = system.actorOf(Props[Container], "Container-2")
+        val container = Container.create("Container-2")
 
-        log.info("XXX In Node 2: 2")
         val hcd2aProps = TestHcd.props("HCD-2A", Set("config.tmt.tel.base.pos"))
         val hcd2bProps = TestHcd.props("HCD-2B", Set("config.tmt.tel.ao.pos.one"))
-        log.info("XXX In Node 2: 3")
 
         container ! Container.CreateComponent(hcd2aProps, "HCD-2A")
-        log.info(s"XXX hcd2a = pending....")
         val hcd2a = expectMsgType[ActorRef]
-        log.info(s"XXX hcd2a = $hcd2a")
         container ! Container.CreateComponent(hcd2bProps, "HCD-2B")
         val hcd2b = expectMsgType[ActorRef]
         enterBarrier("deployed")
-        Thread.sleep(1000) // XXX how to stop from exiting too soon here?
+        Thread.sleep(3000) // XXX how to stop from exiting too soon here?
       }
+
       enterBarrier("finished")
     }
   }

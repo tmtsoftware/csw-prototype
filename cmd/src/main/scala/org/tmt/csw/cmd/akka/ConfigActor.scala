@@ -85,7 +85,7 @@ trait ConfigActor extends Actor with ActorLogging {
     }
     f.onSuccess {
       case ConfigDistributorActor.Registered =>
-        log.debug(s"Registered config paths $configPaths with $commandServiceActor")
+        log.info(s"Registered config paths $configPaths with $commandServiceActor, reply to $replyTo")
         replyTo ! ConfigActor.Registered(self)
     }
   }

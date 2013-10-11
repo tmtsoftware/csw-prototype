@@ -1,6 +1,5 @@
-package scala.org.tmt.csw.pkg
+package org.tmt.csw.pkg
 
-import org.tmt.csw.pkg.Assembly
 import akka.actor.Props
 
 object TestAssembly {

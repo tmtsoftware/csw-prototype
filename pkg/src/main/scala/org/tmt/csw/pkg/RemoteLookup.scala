@@ -6,6 +6,10 @@ import akka.actor.ActorIdentity
 import scala.Some
 import akka.actor.Identify
 
+object RemoteLookup {
+  def props(path: String): Props = Props(classOf[RemoteLookup], path)
+}
+
 /**
  * Modified example from Akka in Action book, might be useful here to deal with remote actors
  * @param path Akka URI of a remote actor
@@ -18,6 +22,7 @@ case class RemoteLookup(path: String) extends Actor with ActorLogging {
   sendIdentifyRequest()
 
   def sendIdentifyRequest(): Unit = {
+    log.info(s"sendIdentifyRequest $path")
     val selection = context.actorSelection(path)
     selection ! Identify(path)
   }
@@ -40,6 +45,7 @@ case class RemoteLookup(path: String) extends Actor with ActorLogging {
 
     case ActorIdentity(`path`, None) =>
       log.warning(s"Remote actor with path $path is not currently available (will keep trying).")
+      Thread.sleep(1000) // XXX?
       sendIdentifyRequest()
 
     case ReceiveTimeout =>
