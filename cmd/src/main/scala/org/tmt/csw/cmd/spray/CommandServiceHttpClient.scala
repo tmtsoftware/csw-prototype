@@ -112,6 +112,7 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with Logging {
    */
   def pollCommandStatus(runId: RunId, maxAttempts: Int = 10): Future[CommandStatus] = {
     val f = for (commandStatus <- getCommandStatus(runId)) yield {
+      logger.info(s"XXX pollCommandStatus: $commandStatus")
       if (commandStatus.done) {
         Future.successful(commandStatus)
       } else if (maxAttempts > 0) {

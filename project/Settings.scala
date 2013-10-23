@@ -18,6 +18,7 @@ object Settings {
     version := Version,
     scalaVersion := "2.10.2",
     crossPaths := false,
+    parallelExecution in Test := false,
     resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
@@ -25,7 +26,6 @@ object Settings {
     resolvers += "Spray nightlies" at "http://nightlies.spray.io"
   )
 
-  // top level Test project
   lazy val defaultSettings = buildSettings ++ Seq(
     // compile options
     scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),

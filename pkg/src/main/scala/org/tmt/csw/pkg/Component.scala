@@ -2,8 +2,6 @@ package org.tmt.csw.pkg
 
 import akka.actor._
 import com.typesafe.config.ConfigFactory
-import akka.event.{LoggingAdapter, Logging}
-import java.net.InetAddress
 
 /**
  * Represents an OMOA (Observing Mode Oriented Architecture) Component, such as an assembly,

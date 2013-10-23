@@ -1,12 +1,13 @@
-package org.tmt.csw.cmd.akka
+package org.tmt.csw.test.container2
 
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.Future
 import akka.actor.{ActorRef, Props}
+import org.tmt.csw.cmd.akka._
+import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 
 object TestConfigActorWorker {
-  def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int): Props =
-    Props(classOf[TestConfigActorWorker], commandStatusActor, numberOfSecondsToRun)
+  def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int): Props = Props(classOf[TestConfigActorWorker], numberOfSecondsToRun)
 }
 
 /**
@@ -16,7 +17,6 @@ object TestConfigActorWorker {
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
 class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int) extends ConfigActor {
-  import CommandQueueActor._
 
   // Receive config messages
   override def receive: Receive = receiveConfigs

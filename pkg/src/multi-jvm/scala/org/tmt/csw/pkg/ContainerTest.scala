@@ -3,11 +3,12 @@ package org.tmt.csw.pkg
 import akka.testkit.ImplicitSender
 import akka.actor._
 import akka.pattern.ask
-import org.tmt.csw.cmd.akka.{CommandStatus, CommandServiceMessage, ConfigActor}
+import org.tmt.csw.cmd.akka.CommandStatus
 import org.tmt.csw.cmd.core.Configuration
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.remote.testkit.MultiNodeSpec
+import org.tmt.csw.cmd.akka.CommandServiceActor.Submit
 
 /**
  * A test that runs each of the classes below in a separate JVM (See the sbt-multi-jvm plugin)
@@ -74,10 +75,10 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           ack2a <- assembly1 ? Assembly.AddComponentByPath(hcd2aPath)
           ack2b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
         } {
-          assembly1 ! CommandServiceMessage.Submit(config)
+          assembly1 ! Submit(config)
           val s1 = expectMsgType[CommandStatus.Queued]
           val s2 = expectMsgType[CommandStatus.Busy]
-          val s3 = expectMsgType[CommandStatus.Complete]
+          val s3 = expectMsgType[CommandStatus.Completed]
           assert(s1.runId == s2.runId)
           assert(s3.runId == s2.runId)
           log.info(s"Command status: $s3")
@@ -87,8 +88,8 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       runOn(container2) {
         val container = Container.create("Container-2")
 
-        val hcd2aProps = TestHcd.props("HCD-2A", Set("config.tmt.tel.base.pos"))
-        val hcd2bProps = TestHcd.props("HCD-2B", Set("config.tmt.tel.ao.pos.one"))
+        val hcd2aProps = TestHcd.props("HCD-2A", "config.tmt.tel.base.pos")
+        val hcd2bProps = TestHcd.props("HCD-2B", "config.tmt.tel.ao.pos.one")
 
         container ! Container.CreateComponent(hcd2aProps, "HCD-2A")
         val hcd2a = expectMsgType[ActorRef]

@@ -1,14 +1,7 @@
 package org.tmt.csw.cmd.akka
 
-import org.tmt.csw.cmd.core.Configuration
 import akka.actor._
 import scala.concurrent.duration._
-import org.tmt.csw.cmd.akka.CommandServiceMessage._
-import org.tmt.csw.cmd.akka.CommandServiceMessage.ConfigResume
-import org.tmt.csw.cmd.akka.CommandServiceMessage.ConfigAbort
-import org.tmt.csw.cmd.akka.CommandServiceMessage.QueueDelete
-import org.tmt.csw.cmd.akka.CommandServiceMessage.ConfigCancel
-import org.tmt.csw.cmd.akka.CommandServiceMessage.ConfigPause
 import scala.Some
 
 object CommandServiceClientActor {
@@ -27,6 +20,9 @@ class CommandServiceClientActor(val commandServiceActor: ActorRef, val timeout: 
     extends CommandServiceActorClientHelper {
 
   import CommandServiceClientActor._
+  import org.tmt.csw.cmd.akka.CommandServiceActor._
+  import org.tmt.csw.cmd.akka.CommandQueueActor._
+  import org.tmt.csw.cmd.akka.ConfigActor._
 
   // Receive messages
   override def receive: Receive = {

@@ -8,11 +8,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import org.tmt.csw.cs.api.{ConfigId, ConfigData}
 import org.tmt.csw.cs.core.ConfigString
 import org.tmt.csw.cs.akka.ConfigServiceActor._
-import org.tmt.csw.cmd.akka.{CommandStatus, CommandServiceMessage, CommandServiceActor}
+import org.tmt.csw.cmd.akka.{AssemblyCommandServiceActor, OneAtATimeCommandQueueController, CommandStatus}
 import org.tmt.csw.cmd.core.Configuration
 import java.io.File
+import org.tmt.csw.cmd.akka.CommandServiceActor.Submit
 
-class TestCommandServiceActor extends CommandServiceActor {
+class TestAssemblyCommandServiceActor extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
   override def receive: Receive = receiveCommands
 }
 
@@ -26,7 +27,7 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
   val configFileName = new File("testApp/config.conf")
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
-  val commandServiceActor = context.actorOf(Props[TestCommandServiceActor], name = s"testAppCommandServiceActor")
+  val commandServiceActor = context.actorOf(Props[TestAssemblyCommandServiceActor], name = s"testAppCommandServiceActor")
 
   override def receive: Receive = {
     case "Start" =>
@@ -34,7 +35,7 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
       future onSuccess {
         case Some(configData) => readConfigFile(configData.asInstanceOf[ConfigData])
         case None => createNewConfigFile()
-        case x => log.info(s"unexpected result: $x")
+        case x => log.info(s"unexpected result from $sender: $x")
       }
       future onFailure {
         case e: Exception => {
@@ -59,8 +60,8 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
 //    val configActor = context.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActorRemote")
 
 
-    // Submit a configuration to the command service (need to specify self, since this is called from a Future?)
-    commandServiceActor ! CommandServiceMessage.Submit(Configuration(configData.getBytes))
+    // Submit a configuration to the command service
+    commandServiceActor ! Submit(Configuration(configData.getBytes))
   }
 
   def createNewConfigFile(): Unit = {

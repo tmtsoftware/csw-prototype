@@ -1,6 +1,6 @@
 package org.tmt.csw.test.app
 
-import akka.actor.{ActorSystem}
+import akka.actor.ActorSystem
 import akka.kernel.Bootable
 import org.tmt.csw.cs.akka.ConfigServiceActor
 import java.io.File

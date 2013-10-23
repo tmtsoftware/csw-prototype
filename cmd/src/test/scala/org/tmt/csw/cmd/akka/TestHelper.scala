@@ -3,43 +3,62 @@ package org.tmt.csw.cmd.akka
 import akka.actor.{Props, ActorRef}
 import akka.testkit.{TestKit, ImplicitSender}
 import scala.concurrent.duration._
+import org.tmt.csw.cmd.akka.ConfigRegistrationActor._
 
-class CommandServiceActorClass extends CommandServiceActor {
+// Test HCD object
+object TestHcdCommandServiceActor {
+  /**
+   * Props to create the test HCD actor
+   * @param configPath the config keys that this HCD is interested in
+   * @param numberOfSecondsToRun number of seconds for processing the config
+   * @param name name of the ConfigActor to create
+   */
+  def props(configPath: String, numberOfSecondsToRun: Int, name: String): Props =
+    Props(classOf[TestHcdCommandServiceActor], configPath, numberOfSecondsToRun, name)
+}
+
+// Test HCD class
+class TestHcdCommandServiceActor(configPath: String, numberOfSecondsToRun: Int, name: String)
+  extends CommandServiceActor with OneAtATimeCommandQueueController {
+  override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, configPath, numberOfSecondsToRun), name)
+  override val configPaths = Set(configPath)
+  override def receive: Receive = receiveCommands
+}
+
+// Test assembly
+class TestAssemblyCommandServiceActor extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
   override def receive: Receive = receiveCommands
 }
 
 /**
- * Helper class for starting a test command service actor
+ * Helper class for starting a test master command service actor (assembly) with two slave command service actors (HCDs)
  */
-trait TestHelper extends ImplicitSender { this: TestKit ⇒
+trait TestHelper extends ImplicitSender {
+  this: TestKit ⇒
 
   /**
    * Creates and returns a new CommandServiceActor
    * @param n a unique number (needed if multiple command servers are running at once)
    * @param numberOfSecondsToRun number of seconds the worker actors should run
-   * @return the actor ref
+   * @return the actor ref of the assembly command server
    */
   def getCommandServiceActor(n: Int = 1, numberOfSecondsToRun: Int = 2): ActorRef = {
-    // Create a config service actor
-    val commandServiceActor = system.actorOf(Props[CommandServiceActorClass], name = s"testCommandServiceActor$n")
+    val assembly = system.actorOf(Props[TestAssemblyCommandServiceActor], name = s"Assembly$n")
     val duration = (numberOfSecondsToRun * 3).seconds
 
-    // Create 2 config actors, tell them to register with the command service actor and wait, before starting the test
-    // (If we start sending commands before the registration is complete, they won't get executed).
-    // Each config actor is responsible for a different part of the configs (the path passed as an argument).
-    val configActor1 = system.actorOf(TestConfigActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun), name = s"TestConfigActor${n}A")
-    val configActor2 = system.actorOf(TestConfigActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun), name = s"TestConfigActor${n}B")
-    within(duration) {
-      // Note: this tells configActor1 to register with the command service. It could do this on its own,
-      // (by using a known path to find the commandServiceActor) but doing it this way lets us know when
-      // the registration is complete, so we can start sending commands
-      configActor1 ! ConfigActor.Register(commandServiceActor)
-      expectMsg(ConfigActor.Registered(configActor1))
-      configActor2 ! ConfigActor.Register(commandServiceActor)
-      expectMsg(ConfigActor.Registered(configActor2))
-    }
+    val hcdA = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun, s"TestConfigActorA$n"),
+      name = s"HCD-A$n")
 
-    commandServiceActor
+    val hcdB = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB$n"),
+      name = s"HCD-B$n")
+
+    within(duration) {
+      hcdA ! RegisterRequest(assembly)
+      expectMsg(Registered(hcdA))
+      hcdB ! RegisterRequest(assembly)
+      expectMsg(Registered(hcdB))
+    }
+    assembly
   }
 
 }

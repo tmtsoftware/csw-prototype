@@ -1,39 +1,33 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{ActorRef, Terminated, ActorLogging, Actor}
-import org.tmt.csw.cmd.akka.CommandServiceMessage._
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration._
+import akka.actor.{ActorLogging, Actor, ActorRef, Terminated}
 
 
 object ConfigActor {
 
-  sealed trait ConfigActorMessage
+  // -- Messages that operate on a running configuration --
+  sealed trait ConfigMessage
 
   /**
-   * Message used to tell a config actor to register with the given command service actor
-   * @param commandServiceActor a reference to a CommandServiceActor
+   * Message to cancel the running config with the given runId
    */
-  case class Register(commandServiceActor: ActorRef) extends ConfigActorMessage
+  case class ConfigCancel(runId: RunId) extends ConfigMessage
 
   /**
-   * Message used to tell a config actor to deregister with the given command service actor
-   * @param commandServiceActor a reference to a CommandServiceActor
+   * Message to abort the running config with the given runId
    */
-  case class Deregister(commandServiceActor: ActorRef) extends ConfigActorMessage
+  case class ConfigAbort(runId: RunId) extends ConfigMessage
 
   /**
-   * Reply message sent when the registration (see above) is acknowledged.
-   * @param configActor a reference to this actor
+   * Message to pause the running config with the given runId
    */
-  case class Registered(configActor: ActorRef) extends ConfigActorMessage
+  case class ConfigPause(runId: RunId) extends ConfigMessage
 
   /**
-   * Reply message sent when the de-registration (see above) is acknowledged
-   * @param configActor a reference to this actor
+   * Message to resume the running config with the given runId
    */
-  case class Unregistered(configActor: ActorRef) extends ConfigActorMessage
+  case class ConfigResume(runId: RunId) extends ConfigMessage
+
 }
 
 
@@ -42,20 +36,25 @@ object ConfigActor {
  * methods for implementing the standard configuration control messages.
  */
 trait ConfigActor extends Actor with ActorLogging {
+  import ConfigActor._
+  import CommandQueueActor._
 
   /**
-   * a set of dot-separated paths:
+   * A set of dot-separated paths:
    * This actor will receive the parts of configs containing any of these paths.
    * An empty set indicates that all messages can be handled.
    */
-  val configPaths: Set[String]
+  def configPaths: Set[String]
+
+  /**
+   * A reference to this actor is needed to report the status of commands
+   */
+  def commandStatusActor: ActorRef
 
   /**
    * Messages received in the normal state.
    */
   def receiveConfigs: Receive = {
-    case ConfigActor.Register(commandServiceActor) => register(commandServiceActor, sender, configPaths)
-    case ConfigActor.Deregister(commandServiceActor) => deregister(commandServiceActor, sender)
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)
     case ConfigAbort(runId) => abort(runId)
@@ -67,55 +66,19 @@ trait ConfigActor extends Actor with ActorLogging {
   }
 
   /**
-   * Register with the given command service actor to receive the parts of configs with any of the given configPaths.
-   *
-   * @param commandServiceActor the command service actor
-   * @param replyTo reply to this actor when registration is acknowledged
-   * @param configPaths if any configs containing any of these (dot separated) path are received, that
-   *                    part of the config will be extracted and sent to this actor for processing
-   */
-  private def register(commandServiceActor: ActorRef, replyTo: ActorRef, configPaths: Set[String]): Unit = {
-    val configDistributorActor = context.actorSelection(commandServiceActor.path / "configDistributorActor")
-    implicit val timeout = Timeout(3.seconds)
-    implicit val dispatcher = context.system.dispatcher
-    val f = (configDistributorActor ? ConfigDistributorActor.Register(configPaths, self)).recover {
-      case ex =>
-        log.error(ex, s"Failed to register $configPaths with $configDistributorActor, retrying...")
-        register(commandServiceActor, replyTo, configPaths)
-    }
-    f.onSuccess {
-      case ConfigDistributorActor.Registered =>
-        log.info(s"Registered config paths $configPaths with $commandServiceActor, reply to $replyTo")
-        replyTo ! ConfigActor.Registered(self)
-    }
-  }
-
-  /**
-   * De-register with the given command service actor.
-   *
-   * @param commandServiceActor the command service actor
-   * @param replyTo reply to this actor when de-registration is acknowledged
-   */
-  private def deregister(commandServiceActor: ActorRef, replyTo: ActorRef): Unit = {
-    val configDistributorActor = context.actorSelection(commandServiceActor.path / "configDistributorActor")
-    implicit val timeout = Timeout(3.seconds)
-    implicit val dispatcher = context.system.dispatcher
-    val f = (configDistributorActor ? ConfigDistributorActor.Deregister(self)).recover {
-      case ex =>
-        log.error(ex, s"Failed to deregister from $configDistributorActor, retrying...")
-        deregister(commandServiceActor, replyTo)
-    }
-    f.onSuccess {
-      case ConfigDistributorActor.Unregistered =>
-        log.debug(s"Deregistered config paths $configPaths with $commandServiceActor")
-        replyTo ! ConfigActor.Unregistered(self)
-    }
-  }
-
-  /**
    * Called when a configuration is submitted
    */
   def submit(submit: SubmitWithRunId): Unit
+
+  /**
+   * Report the command status to the command status actor.
+   * All extending should call this to report the command status.
+   * @param status the command status
+   * @param submitter the (original) submitter of the command
+   */
+  def returnStatus(status: CommandStatus, submitter: ActorRef): Unit = {
+    commandStatusActor ! CommandStatusActor.StatusUpdate(status, submitter)
+  }
 
   /**
    * Work on the config matching the given runId should be paused

@@ -17,22 +17,73 @@ sealed trait CommandStatus {
   def done : Boolean = true
 
   /**
+   * True if the config execution should stop in this state (aborted, canceled, paused)
+   */
+  def stop : Boolean = false
+
+  /**
    * Optional message for the Error status
    */
   def message: String = ""
+
+  /**
+   * Returns the same config state type with a different runId (XXX needed?)
+   */
+  def withRunId(runId: RunId) : CommandStatus
 }
 
 /**
  * Command status
  */
 object CommandStatus {
-  case class Pending(runId: RunId) extends CommandStatus {override def done = false}
-  case class Queued(runId: RunId) extends CommandStatus {override def done = false}
-  case class Busy(runId: RunId) extends CommandStatus {override def done = false}
-  case class Complete(runId: RunId) extends CommandStatus
-  case class Error(runId: RunId, msg: String) extends CommandStatus {override def message: String = msg}
-  case class Aborted(runId: RunId) extends CommandStatus
-  case class Canceled(runId: RunId) extends CommandStatus
+
+  case class Submitted(runId: RunId) extends CommandStatus {
+    override val done = false
+    def withRunId(newRunId: RunId): Submitted = Submitted(newRunId)
+  }
+
+  case class Pending(runId: RunId) extends CommandStatus {
+    override val done = false
+    def withRunId(newRunId: RunId): Pending = Pending(newRunId)
+  }
+
+  case class Queued(runId: RunId) extends CommandStatus {
+    override val done = false
+    def withRunId(newRunId: RunId): Queued = Queued(newRunId)
+  }
+
+  case class Busy(runId: RunId) extends CommandStatus {
+    override val done = false
+    def withRunId(newRunId: RunId): Busy = Busy(newRunId)
+  }
+
+  case class Paused(runId: RunId) extends CommandStatus {
+    override val done = false
+    override val stop = true
+    def withRunId(newRunId: RunId): Paused = Paused(newRunId)
+  }
+
+  case class Resumed(runId: RunId) extends CommandStatus {
+    override val done = false
+    def withRunId(newRunId: RunId): Resumed = Resumed(newRunId)
+  }
+
+  case class Completed(runId: RunId) extends CommandStatus {
+    def withRunId(newRunId: RunId): Completed = Completed(newRunId)
+  }
+
+  case class Error(runId: RunId, msg: String) extends CommandStatus {
+    override val message: String = msg
+    def withRunId(newRunId: RunId): Error = Error(newRunId, msg)
+  }
+
+  case class Aborted(runId: RunId) extends CommandStatus {
+    def withRunId(newRunId: RunId): Aborted = Aborted(newRunId)
+  }
+
+  case class Canceled(runId: RunId) extends CommandStatus {
+    def withRunId(newRunId: RunId): Canceled = Canceled(newRunId)
+  }
 
 
   /**
@@ -46,7 +97,7 @@ object CommandStatus {
     case "Pending" => Pending(runId)
     case "Queued" => Queued(runId)
     case "Busy" => Busy(runId)
-    case "Complete" => Complete(runId)
+    case "Completed" => Completed(runId)
     case "Error" => Error(runId, message)
     case "Aborted" => Aborted(runId)
     case "Canceled" => Canceled(runId)

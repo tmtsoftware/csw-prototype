@@ -1,14 +1,23 @@
 package org.tmt.csw.test.client
 
 import java.util.concurrent.atomic.AtomicReference
-import org.tmt.csw.cmd.akka.CommandServiceMessage.SubmitWithRunId
 import scala.concurrent.Future
-import org.tmt.csw.cmd.akka.{RunId, ConfigState, ConfigActor}
+import org.tmt.csw.cmd.akka.{CommandStatusActor, RunId, CommandStatus, ConfigActor}
+import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
+import akka.actor.{Props, ActorRef}
+
+
+object TestConfigActorWorker {
+  def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int): Props = Props(classOf[TestConfigActorWorker], numberOfSecondsToRun)
+}
 
 /**
  * A test config worker actor.
+ *
+ * @param commandStatusActor actor that receives the command status messages
+ * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
-class TestConfigActorWorker extends ConfigActor {
+class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int) extends ConfigActor {
 
   // Receive config messages
   override def receive: Receive = receiveConfigs
@@ -18,7 +27,7 @@ class TestConfigActorWorker extends ConfigActor {
 
 
   // Used as an example of one way to implement interrupting a running config
-  val aState: AtomicReference[ConfigState] = new AtomicReference(null)
+  val aState: AtomicReference[CommandStatus] = new AtomicReference(null)
 
   // Saved position and config for Pause, so that we can continue on Resume
   var savedPos = 1
@@ -26,15 +35,12 @@ class TestConfigActorWorker extends ConfigActor {
   // Needed to implement the "resume" message
   var savedSubmit: SubmitWithRunId = null
 
-  // The number of seconds to run when a config is submitted
-  val numberOfSecondsToRun = 1
-
   /**
    * Called when a configuration is submitted
    */
   def submit(submit: SubmitWithRunId): Unit = {
     savedSubmit = submit
-    aState.set(ConfigState.Submitted(submit.runId))
+    aState.set(CommandStatus.Submitted(submit.runId))
     doSubmit(submit)
   }
 
@@ -42,37 +48,37 @@ class TestConfigActorWorker extends ConfigActor {
     log.info(s"Processing config: ${submit.config}, reply when complete to ${submit.submitter}")
     implicit val dispatcher = context.system.dispatcher
     for {
-      state <- Future {
+      status <- Future {
         doWork(submit)
       } recover {
-        case ex: Exception => ConfigState.Error(submit.runId)
+        case ex: Exception => CommandStatus.Error(submit.runId, ex.getMessage)
       }
     } {
-      if (state != ConfigState.Paused(submit.runId)) {
-        submit.submitter ! state
-        context.system.stop(self)
+      if (status != CommandStatus.Paused(submit.runId)) {
+        commandStatusActor ! CommandStatusActor.StatusUpdate(status, submit.submitter)
+        if (context != null) context.system.stop(self)
       }
     }
   }
 
   // Do some work (sleeping in a loop), and check for state changes
-  def doWork(submit: SubmitWithRunId): ConfigState = {
-    for (a <- savedPos to numberOfSecondsToRun*10) {
+  def doWork(submit: SubmitWithRunId): CommandStatus = {
+    for (a <- savedPos to numberOfSecondsToRun) {
       // Check if we should stop
       val state = aState.get
-      if (state.stop()) {
-        if (state == ConfigState.Paused(submit.runId)) savePos(a)
+      if (state.stop) {
+        if (state == CommandStatus.Paused(submit.runId)) savePos(a)
         return state // Return the state to the sender
       } else {
         // Continue working
-        log.debug(s"${self.path} busy working on part $a of $numberOfSecondsToRun")
-        Thread.sleep(100) // do some work...
+        log.info(s"${self.path} busy working on part $a of $numberOfSecondsToRun")
+        Thread.sleep(1000) // do some work...
       }
     }
     // Send the config state back to the original sender
     aState.get() match {
-      case ConfigState.Submitted(runId) => ConfigState.Completed(submit.runId)
-      case ConfigState.Resumed(runId) => ConfigState.Completed(submit.runId)
+      case CommandStatus.Submitted(runId) => CommandStatus.Completed(submit.runId)
+      case CommandStatus.Resumed(runId) => CommandStatus.Completed(submit.runId)
       case other => other // may have been aborted or canceled
     }
   }
@@ -86,14 +92,14 @@ class TestConfigActorWorker extends ConfigActor {
    * Work on the config matching the given runId should be paused
    */
   def pause(runId: RunId): Unit = {
-    aState.set(ConfigState.Paused(runId))
+    aState.set(CommandStatus.Paused(runId))
   }
 
   /**
    * Work on the config matching the given runId should be resumed
    */
   def resume(runId: RunId): Unit = {
-    aState.set(ConfigState.Resumed(runId))
+    aState.set(CommandStatus.Resumed(runId))
     doSubmit(savedSubmit)
   }
 
@@ -101,13 +107,13 @@ class TestConfigActorWorker extends ConfigActor {
    * Work on the config matching the given runId should be canceled
    */
   def cancel(runId: RunId): Unit = {
-    aState.set(ConfigState.Canceled(runId))
+    aState.set(CommandStatus.Canceled(runId))
   }
 
   /**
    * Work on the config matching the given runId should be aborted
    */
   def abort(runId: RunId): Unit = {
-    aState.set(ConfigState.Aborted(runId))
+    aState.set(CommandStatus.Aborted(runId))
   }
 }

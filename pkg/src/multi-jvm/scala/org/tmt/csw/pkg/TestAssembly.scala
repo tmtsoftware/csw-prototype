@@ -1,13 +1,14 @@
 package org.tmt.csw.pkg
 
 import akka.actor.Props
+import org.tmt.csw.cmd.akka.OneAtATimeCommandQueueController
 
 object TestAssembly {
   def props(name: String): Props = Props(classOf[TestAssembly], name)
 }
 
 // A test assembly
-case class TestAssembly(name: String) extends Assembly {
+case class TestAssembly(name: String) extends Assembly with OneAtATimeCommandQueueController {
 
   def receive: Receive = receiveAssemblyMessages
 

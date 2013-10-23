@@ -4,7 +4,6 @@ import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandServiceClientActor._
 import akka.actor.ActorRef
 import scala.concurrent.{ExecutionContext, Future}
-import org.tmt.csw.cmd.akka.CommandServiceMessage._
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -14,6 +13,9 @@ import ExecutionContext.Implicits.global
  * A simplified interface to the command service actor.
  */
 case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeout: FiniteDuration) {
+  import CommandServiceActor._
+  import CommandQueueActor._
+  import ConfigActor._
 
   implicit val timeout = Timeout(statusTimeout)
 

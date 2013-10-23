@@ -66,14 +66,14 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
 
     } try {
       // At this point all of the above futures have completed: check the results
-      checkReturnStatus("1", commandStatus1, runId1, CommandStatus.Complete(runId1))
+      checkReturnStatus("1", commandStatus1, runId1, CommandStatus.Completed(runId1))
 
-      checkReturnStatus("2", commandStatus2, runId2, CommandStatus.Complete(runId2))
+      checkReturnStatus("2", commandStatus2, runId2, CommandStatus.Completed(runId2))
 
       assert(res3a.status == StatusCodes.Accepted)
       checkReturnStatus("3a", commandStatus3a, runId3, CommandStatus.Queued(runId3))
       assert(res3b.status == StatusCodes.Accepted)
-      checkReturnStatus("3b", commandStatus3b, runId3, CommandStatus.Complete(runId3))
+      checkReturnStatus("3b", commandStatus3b, runId3, CommandStatus.Completed(runId3))
       checkReturnStatus("3c", commandStatus3c, runId3, CommandStatus.Error(runId3, CommandServiceHttpServer.unknownRunIdMessage))
 
       assert(res4a.status == StatusCodes.Accepted)

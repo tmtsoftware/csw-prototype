@@ -1,12 +1,13 @@
 package org.tmt.csw.test.container1
 
 import akka.actor._
-import org.tmt.csw.pkg.{RemoteLookup, Assembly, Container}
+import org.tmt.csw.pkg.{Assembly, Container}
 import org.tmt.csw.cmd.core.Configuration
 import akka.pattern.ask
-import org.tmt.csw.cmd.akka.{CommandStatus, CommandServiceMessage}
+import org.tmt.csw.cmd.akka.CommandStatus
 import org.tmt.csw.cmd.spray.CommandServiceHttpServer
 import akka.util.Timeout
+import org.tmt.csw.cmd.akka.CommandServiceActor.Submit
 
 object Container1Actor {
   val testConfig =
@@ -64,7 +65,7 @@ class Container1Actor extends Actor with ActorLogging {
     ack2b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
   } {
       // Send a test config
-      assembly1 ! CommandServiceMessage.Submit(config)
+      assembly1 ! Submit(config)
 
       // Start a HTTP server with the REST interface
       val interface = Container1Settings(context.system).interface

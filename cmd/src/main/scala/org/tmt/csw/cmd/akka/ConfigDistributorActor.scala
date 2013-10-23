@@ -1,70 +1,47 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{Terminated, ActorRef, ActorLogging, Actor}
-import org.tmt.csw.cmd.akka.CommandServiceMessage._
-import org.tmt.csw.cmd.akka.ConfigDistributorActor._
+import akka.actor.{Props, ActorRef, ActorLogging, Actor}
+import scala.Some
 
-sealed trait ConfigDistributorMessage
-
-/**
- * Defines the message types used by this actor.
- */
 object ConfigDistributorActor {
-
   /**
-   * Message used by a config actor to register interest in the given set of config paths.
-   * @param configPaths a set of dot separated path expressions, each referring to a hierarchy in a Configuration object
-   * @param actorRef a reference to the sender (not the same as the implicit sender if 'ask' is used)
+   * Used to create this actor.
+   * @param commandStatusActor reference to the command status actor, which receives the final status of commands
    */
-  case class Register(configPaths: Set[String], actorRef: ActorRef) extends ConfigDistributorMessage
-
-  /**
-   * Message used by a config actor to deregister.
-   * @param actorRef a reference to the actor that was previously registered
-   */
-  case class Deregister(actorRef: ActorRef) extends ConfigDistributorMessage
-
-  /**
-   * Reply sent when registration is complete
-   */
-  case object Registered extends ConfigDistributorMessage
-
-  /**
-   * Reply sent when deregistration is complete
-   */
-  case object Unregistered extends ConfigDistributorMessage
+  def props(commandStatusActor: ActorRef): Props = Props(classOf[ConfigDistributorActor], commandStatusActor)
 }
 
-
 /**
- * This actor receives configurations from the CommandServiceActor and sends
- * parts of them on to config actors who have registered for them.
+ * This actor receives configurations and sends parts of them on to actors who have registered for them.
+ * @param commandStatusActor reference to the command status actor, which receives the final status of commands
  */
-class ConfigDistributorActor extends Actor with ActorLogging {
+class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
 
-  // Describes a config path and the actor that registered to handle it
-  private case class RegistryEntry(path: String, actorRef: ActorRef)
-
-  // Set of config paths and the actors that registered to handle them
-  private var registry = Set[RegistryEntry]()
+  import ConfigRegistrationActor._
+  import CommandQueueActor._
+  import ConfigActor._
 
   // Combines a Submit object with a reference to the target actor
   private case class SubmitInfo(submit: SubmitWithRunId, target: ActorRef)
 
   // Maps runId to list of submitted config parts sent to the registered config actors
-  private case class ConfigPartInfo(configParts: List[SubmitInfo], configState: ConfigState, originalSubmit: SubmitWithRunId)
+  private case class ConfigPartInfo(configParts: List[SubmitInfo], commandStatus: CommandStatus, originalSubmit: SubmitWithRunId)
 
+  // Used to determine when all config parts are done and reply to the original sender
   private var configParts = Map[RunId, ConfigPartInfo]()
 
   // Maps the RunId for a config part to the RunId for the complete config
   private var runIdMap = Map[RunId, RunId]()
 
+  // Set of registry entries for actors that process configurations
+  private var registry = Set[RegistryEntry]()
+
   /**
    * Messages received in the normal state.
    */
   override def receive: Receive = {
-    case Register(configPaths, actorRef) => register(configPaths, actorRef)
-    case Deregister(actorRef) => deregister(actorRef)
+    case RegistryUpdate(reg) => registry = reg
+    case QueueWorkAvailable => queueWorkAvailable()
     case s: SubmitWithRunId => submit(s)
     case ConfigCancel(runId) => cancel(runId)
     case ConfigAbort(runId) => abort(runId)
@@ -72,23 +49,15 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     case ConfigResume(runId) => resume(runId)
 
     // Status Results for a config part from a ConfigActor
-    case state: ConfigState => checkIfDone(state)
+    case status: CommandStatus => checkIfDone(status)
 
-    case Terminated(actorRef) => deregister(actorRef)
-
-    case x => log.error(s"Unexpected ConfigActor message: $x")
+    case x => log.error(s"Unexpected ConfigDistributorActor message from $sender: $x")
   }
 
-  private def register(configPaths: Set[String], actorRef: ActorRef): Unit = {
-    registry = registry ++ configPaths.map(RegistryEntry(_, actorRef))
-    sender ! Registered
 
-    // Add a listener in case the actor dies?
-    context.watch(actorRef)
-  }
-
-  private def deregister(actorRef: ActorRef): Unit = {
-    registry = registry.filterNot(entry => entry.actorRef == actorRef)
+  // Tell all the registered actors that there is work available
+  private def queueWorkAvailable(): Unit = {
+    registry.foreach(_.actorRef ! QueueWorkAvailable)
   }
 
   /**
@@ -103,7 +72,7 @@ class ConfigDistributorActor extends Actor with ActorLogging {
     }.flatten.toList
 
     // Add info to map indexed by runId is so we can determine when all parts are done and reply to the original sender
-    configParts += (submit.runId -> ConfigPartInfo(submitInfoList, ConfigState.Submitted(submit.runId), submit))
+    configParts += (submit.runId -> ConfigPartInfo(submitInfoList, CommandStatus.Submitted(submit.runId), submit))
 
     // Keep a map of the runIds for later reference
     runIdMap ++= submitInfoList.map {
@@ -133,75 +102,79 @@ class ConfigDistributorActor extends Actor with ActorLogging {
 
   /**
    * Called when a status message is received from a config actor.
-   * @param configState the status of the config part from the worker actor
+   * @param commandStatus the status of the config part from the worker actor
    */
-  private def checkIfDone(configState: ConfigState): Unit = {
-    log.debug(s"Check if done: state = $configState")
-    if (configState.done()) {
-      val runIdOpt = runIdMap.get(configState.runId())
-      runIdOpt.fold(log.error(s"RunId for config part ${configState.runId()} not found")) {
-          runIdMap -= configState.runId()
-          checkIfDone(configState, _)
+  private def checkIfDone(commandStatus: CommandStatus): Unit = {
+    log.debug(s"Check if done: state = $commandStatus")
+    if (commandStatus.done) {
+      val runIdOpt = runIdMap.get(commandStatus.runId)
+      runIdOpt.fold(log.error(s"RunId for config part ${commandStatus.runId} not found")) {
+        runIdMap -= commandStatus.runId
+        checkIfDone(commandStatus, _)
       }
     }
-//    else {
-//      // Received other state for part: one of (Submitted, Paused, Resumed)
-//      // XXX?
-//    }
+    //    else {
+    //      // Received other state for part: one of (Submitted, Paused, Resumed)
+    //      // XXX?
+    //    }
   }
 
   /**
    * Called when a status message is received from a config actor.
-   * @param configState the status of the config part from the worker actor
+   * @param commandStatus the status of the config part from the worker actor
    * @param runId the RunId of the original (complete) config
    */
-  private def checkIfDone(configState: ConfigState, runId: RunId): Unit = {
+  private def checkIfDone(commandStatus: CommandStatus, runId: RunId): Unit = {
     configParts.get(runId).fold(log.error(s"Received status message for unknown runId: $runId")) {
-      checkIfDone(configState, runId, _)
+      checkIfDone(commandStatus, runId, _)
     }
   }
 
   /**
    * If all of the config parts are done, send the final status to the original sender.
-   * @param configState the status of the config part from the worker actor
+   * @param commandStatus the status of the config part from the worker actor
    * @param runId the RunId of the original (complete) config
    * @param configPartInfo contains list of submitted config parts sent to the registered config actors
    */
-  private def checkIfDone(configState: ConfigState, runId: RunId, configPartInfo: ConfigPartInfo): Unit = {
-    val newConfigState = getConfigState(configState, configPartInfo)
-    val remainingParts = configPartInfo.configParts.filter(_.submit.runId != configState.runId())
+  private def checkIfDone(commandStatus: CommandStatus, runId: RunId, configPartInfo: ConfigPartInfo): Unit = {
+    val newCommandStatus = getCommandStatus(commandStatus, configPartInfo)
+    val remainingParts = configPartInfo.configParts.filter(_.submit.runId != commandStatus.runId)
     if (remainingParts.isEmpty) {
       // done, return status to sender
       configParts -= runId
-      log.debug(s"All config parts done: Returning $newConfigState to ${configPartInfo.originalSubmit.submitter}")
-      configPartInfo.originalSubmit.submitter ! returnStatus(newConfigState, runId)
+      log.debug(s"All config parts done: Returning $newCommandStatus for submitter ${configPartInfo.originalSubmit.submitter}")
+      val status = returnStatus(newCommandStatus, runId)
+      val submitter = configPartInfo.originalSubmit.submitter
+      commandStatusActor ! CommandStatusActor.StatusUpdate(status, submitter)
     } else {
       // one part is done, some still remaining: Update the map to remove the part that is done and update the status
       log.debug(s"${remainingParts.length} parts left for runId $runId")
-      configParts += (runId -> ConfigPartInfo(remainingParts, newConfigState, configPartInfo.originalSubmit))
+      configParts += (runId -> ConfigPartInfo(remainingParts, newCommandStatus, configPartInfo.originalSubmit))
     }
   }
 
   /**
-   * Returns a ConfigState with the runId for the original submit.
+   * Returns a CommandStatus with the runId for the original submit.
    * If the config was canceled or aborted,
+   * XXX TODO FIXME
    */
-  private def getConfigState(configState: ConfigState, info: ConfigPartInfo): ConfigState = {
-    info.configState match {
-      case ConfigState.Canceled(runId) => info.configState
-      case ConfigState.Aborted(runId) => info.configState
-      case _ => configState.withRunId(info.originalSubmit.runId)
+  private def getCommandStatus(commandStatus: CommandStatus, info: ConfigPartInfo): CommandStatus = {
+    info.commandStatus match {
+      case CommandStatus.Canceled(runId) => info.commandStatus
+      case CommandStatus.Aborted(runId) => info.commandStatus
+      case _ => commandStatus.withRunId(info.originalSubmit.runId)
     }
   }
 
-  // Returns a CommandStatus for the given ConfigState
-  private def returnStatus(state: ConfigState, runId: RunId): CommandStatus = {
+  // Returns a CommandStatus for the given CommandStatus
+  // XXX TODO FIXME
+  private def returnStatus(state: CommandStatus, runId: RunId): CommandStatus = {
     log.debug(s"Return status: $state")
     state match {
-      case s: ConfigState.Completed => CommandStatus.Complete(runId)
-      case s: ConfigState.Canceled => CommandStatus.Canceled(runId)
-      case s: ConfigState.Aborted => CommandStatus.Aborted(runId)
-      case x => CommandStatus.Error(runId, s"Unexpected message: $x")
+      case s: CommandStatus.Completed => CommandStatus.Completed(runId)
+      case s: CommandStatus.Canceled => CommandStatus.Canceled(runId)
+      case s: CommandStatus.Aborted => CommandStatus.Aborted(runId)
+      case x => CommandStatus.Error(runId, s"Unexpected command status: $x")
     }
   }
 
@@ -231,8 +204,8 @@ class ConfigDistributorActor extends Actor with ActorLogging {
   /**
    * Called when the config is canceled.
    */
-  private def cancel(runId: RunId) : Unit = {
-    changeConfigState(runId, ConfigState.Canceled(runId), "cancel")
+  private def cancel(runId: RunId): Unit = {
+    changeCommandStatus(runId, CommandStatus.Canceled(runId), "cancel")
     configParts.get(runId).fold(log.error(s"Received cancel config command for unknown runId: $runId")) {
       _.configParts.foreach {
         part => part.target ! ConfigCancel(part.submit.runId)
@@ -243,8 +216,8 @@ class ConfigDistributorActor extends Actor with ActorLogging {
   /**
    * Called when the config is aborted.
    */
-  private def abort(runId: RunId) : Unit = {
-    changeConfigState(runId, ConfigState.Aborted(runId), "abort")
+  private def abort(runId: RunId): Unit = {
+    changeCommandStatus(runId, CommandStatus.Aborted(runId), "abort")
     configParts.get(runId).fold(log.error(s"Received abort config command for unknown runId: $runId")) {
       _.configParts.foreach {
         part => part.target ! ConfigAbort(part.submit.runId)
@@ -253,12 +226,12 @@ class ConfigDistributorActor extends Actor with ActorLogging {
   }
 
   /**
-   * Changes the ConfigState for the given runId
+   * Changes the CommandStatus for the given runId
    */
-  private def changeConfigState(runId: RunId, newConfigState: ConfigState, logName: String): Unit = {
+  private def changeCommandStatus(runId: RunId, newCommandStatus: CommandStatus, logName: String): Unit = {
     configParts.get(runId).fold(log.error(s"Received $logName config command for unknown runId: $runId")) {
       configPartInfo =>
-        configParts += (runId -> ConfigPartInfo(configPartInfo.configParts, newConfigState, configPartInfo.originalSubmit))
+        configParts += (runId -> ConfigPartInfo(configPartInfo.configParts, newCommandStatus, configPartInfo.originalSubmit))
     }
   }
 }

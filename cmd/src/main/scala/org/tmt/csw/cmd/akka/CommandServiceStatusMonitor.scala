@@ -3,7 +3,6 @@ package org.tmt.csw.cmd.akka
 import akka.actor.{Cancellable, ActorLogging, Actor, Props}
 import scala.concurrent.duration.FiniteDuration
 import scala.Some
-import org.tmt.csw.cmd.akka.CommandServiceActorClientHelper.Completer
 
 object CommandServiceStatusMonitor {
 
@@ -17,7 +16,7 @@ object CommandServiceStatusMonitor {
    * Props for creating this actor (see CommandServiceMonitor constructor)
    */
   def props(timeout: FiniteDuration, runId: RunId): Props =
-    Props(new CommandServiceStatusMonitor(timeout, runId))
+    Props(classOf[CommandServiceStatusMonitor], timeout, runId)
 }
 
 /**
@@ -32,7 +31,7 @@ object CommandServiceStatusMonitor {
  * @param runId the runId for the command being monitored
  */
 final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: RunId) extends Actor with ActorLogging {
-
+  import CommandServiceActorClientHelper._
   import CommandServiceStatusMonitor._
   import context.dispatcher
 

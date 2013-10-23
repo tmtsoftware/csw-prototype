@@ -1,9 +1,7 @@
 package org.tmt.csw.pkg
 
-import akka.actor.{ActorPath, ActorLogging, ActorRef, Actor}
-import org.tmt.csw.cmd.akka.{CommandServiceActor, ConfigActor}
-import akka.pattern.ask
-import scala.concurrent.duration.FiniteDuration
+import akka.actor.{ActorPath, ActorRef}
+import org.tmt.csw.cmd.akka.{ConfigRegistrationActor, AssemblyCommandServiceActor}
 import akka.util.Timeout
 import scala.concurrent.duration._
 
@@ -22,8 +20,7 @@ object Assembly {
 /**
  * Assemblies represent user-oriented devices and can be assembled from multiple HCDs
  */
-trait Assembly extends Component with CommandServiceActor {
-  this: Actor with ActorLogging =>
+trait Assembly extends Component with AssemblyCommandServiceActor {
   import Assembly._
 
   val duration: FiniteDuration = 5.seconds
@@ -44,7 +41,7 @@ trait Assembly extends Component with CommandServiceActor {
    * @param actorRef an Hcd or Assembly actor
    */
   def addComponent(actorRef: ActorRef): Unit = {
-    actorRef.tell(ConfigActor.Register(self), sender)
+    actorRef.tell(ConfigRegistrationActor.RegisterRequest(self), sender)
   }
 
   /**
@@ -55,7 +52,7 @@ trait Assembly extends Component with CommandServiceActor {
    */
   def addComponentByPath(actorPath: ActorPath): Unit = {
     log.info(s"XXX addComponent: actorSel=${context.actorSelection(actorPath)}, sender= $sender, self = $self")
-    context.actorSelection(actorPath).tell(ConfigActor.Register(self), sender)
+    context.actorSelection(actorPath).tell(ConfigRegistrationActor.RegisterRequest(self), sender)
   }
 
   /**
@@ -64,7 +61,7 @@ trait Assembly extends Component with CommandServiceActor {
    * The sender should receive a ConfigActor.Unregistered(actorRef) message.
    * @param actorRef a previously added Hcd or Assembly actor
    */
-  def removeComponent(actorRef: ActorRef): Unit = actorRef.tell(ConfigActor.Deregister(self), sender)
+  def removeComponent(actorRef: ActorRef): Unit = actorRef.tell(ConfigRegistrationActor.DeregisterRequest(self), sender)
 
   /**
    * Removes the component associated with the given actor from this assembly.
@@ -72,7 +69,7 @@ trait Assembly extends Component with CommandServiceActor {
    * The sender should receive a ConfigActor.Unregistered(actorRef) message.
    * @param actorPath a previously added Hcd or Assembly actor
    */
-  def removeComponentByPath(actorPath: ActorPath): Unit = context.actorSelection(actorPath).tell(ConfigActor.Deregister(self), sender)
+  def removeComponentByPath(actorPath: ActorPath): Unit = context.actorSelection(actorPath).tell(ConfigRegistrationActor.DeregisterRequest(self), sender)
 
   override def terminated(actorRef: ActorRef): Unit = log.info(s"Actor $actorRef terminated")
 }

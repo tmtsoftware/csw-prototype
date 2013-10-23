@@ -2,143 +2,132 @@ package org.tmt.csw.cmd.akka
 
 import akka.actor._
 import org.tmt.csw.cmd.core._
-import scala.Some
-import org.tmt.csw.cmd.akka.CommandServiceActor._
-import org.tmt.csw.cmd.akka.CommandServiceMessage._
-import scala.annotation.tailrec
+import org.tmt.csw.cmd.akka.CommandStatus.Busy
+import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
 
 object CommandServiceActor {
-  // Queue states
-  sealed trait QueueState
-  case object Started extends QueueState
-  case object Stopped extends QueueState
-  case object Paused extends QueueState
+  // Child actor names
+  val configDistributorActorName = "configDistributorActor"
+  val commandQueueActorName = "commandQueueActor"
+  val configRegistrationActorName = "configRegistrationActor"
+  val commandStatusActorName = "commandStatusActor"
+  val commandQueueControllerActorName = "commandQueueControllerActor"
+
+  sealed trait CommandServiceMessage
+
+  /**
+   * Submits a configuration without waiting for a reply. Status messages will be sent to the submitter.
+   */
+  object Submit {
+    /**
+     * Command service clients should normally use this method (only passing in the config argument).
+     * @param config the configuration to submit
+     * @param submitter the return address (defaults to the implicit sender defined for every actor)
+     * @param ignore not used: only needed to have a different argument list than the generated apply() method
+     */
+    def apply(config: Configuration)(implicit submitter: ActorRef = Actor.noSender, ignore: Int = 0): Submit =
+      Submit(config, submitter)
+  }
+
+  /**
+   * Submit a configuration.
+   * @param config the configuration
+   * @param submitter the actor submitting the config (normally implicit)
+   */
+  case class Submit(config: Configuration, submitter: ActorRef) extends CommandServiceMessage
+
+  /**
+   * Queue bypass request configuration.
+   * @param config the configuration to send
+   */
+  case class QueueBypassRequest(config: Configuration) extends CommandServiceMessage
+
+  /**
+   * Queue bypass request configuration with an assigned submitter and runId
+   * @param config the configuration
+   * @param submitter the actor submitting the config (will receive status messages)
+   * @param runId the unique runId
+   */
+  case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage
+
 }
 
 /**
- * Manages the command queue for a component.
- * QueueConfig objects are placed on the queue when received.
- * Later, each object is dequeued and the config is passed to the config actor for processing.
+ * The command service actor receives the submit command with the config
+ * (or other control commands) and passes it to the command queue actor.
+ *
+ * The command queue actor tells the command queue controller actor that
+ * there is work available.  This actor comes in various flavors so that
+ * it can implement "one at a time" behavior or concurrent behavior. The
+ * HDC or Assembly class can extend a trait that adds the correct queue
+ * controller actor to the system. The queue controller actor also
+ * receives command status info and uses that to decide when the next
+ * config should be taken from the queue and passed to the "queue
+ * client".  It does this by sending a "Dequeue" message to the queue
+ * actor. The queue actor then sends the config to the queue client. In
+ * the case of an HDC, the queue client is the config actor (For an
+ * assembly it is the config distributor actor).
+ *
+ * When the config actor receives the submit, it performs the work and
+ * then sends the status to the command status actor.
+ *
+ * The command status actor passes the status to subscribers (which
+ * include the queue controller) and also to the original submitter of
+ * the config (The sender is passed along with the submit message).
  */
-trait CommandServiceActor extends ConfigActor {
+trait CommandServiceActor extends ConfigRegistrationClient with Actor with ActorLogging {
 
-  // The queue for this component (indexed by RunId, so selected items can be removed)
-  private var queueMap = Map[RunId, SubmitWithRunId]()
+  import CommandServiceActor._
+  import CommandQueueActor._
+  import ConfigActor._
 
-  // The current state of the queue
-  private var queueState : QueueState = Started
+  // actor receiving config and command status messages and passing them to subscribers
+  val commandStatusActor = context.actorOf(Props[CommandStatusActor], name = commandStatusActorName)
 
-  // Configurations are sent to this actor when removed from the queue
-  private val configDistributorActor = context.actorOf(Props[ConfigDistributorActor], name = "configDistributorActor")
+  // Create the queue actor
+  val commandQueueActor = context.actorOf(CommandQueueActor.props(commandStatusActor), name = commandQueueActorName)
+
+  // The actor that will process the configs
+  def configActor: ActorRef
+
+  // Connect the config actor, which is defined later in a derived class, to the queue on start
+  override def preStart(): Unit = {
+    commandQueueActor ! CommandQueueActor.QueueClient(configActor)
+  }
+
+  // The queue controller actor (Derived classes extend a trait to define this, depending on the desired behavior)
+  def commandQueueControllerActor: ActorRef
 
   // Needed for "ask"
   private implicit val execContext = context.dispatcher
 
-  // By default command service actors can receive any config paths
-  // (override this if this actor is receiving parts of configs from another command service actor)
-  override val configPaths = Set.empty[String]
-
   // Receive only the command server commands
-  private def receiveCmds: Receive = {
+  def receiveCommands: Receive = receiveRegistrationRequest orElse {
     // Queue related commands
-    case Submit(config, submitter) => queueSubmit(SubmitWithRunId(config, submitter))
-    case s@SubmitWithRunId(config, submitter, runId) => queueSubmit(s)
-    case QueueBypassRequest(config) => queueBypassRequest(SubmitWithRunId(config, sender))
-    case QueueBypassRequestWithRunId(config, submitter, runId) => queueBypassRequest(SubmitWithRunId(config, submitter, runId))
-    case QueueStop => queueStop()
-    case QueuePause => queuePause(None)
-    case QueueStart => queueStart()
-    case QueueDelete(runId) => queueDelete(runId)
+    case Submit(config, submitter) =>
+      commandQueueActor ! SubmitWithRunId(config, submitter)
 
-    // Commands that act on a running config: forward to config actor
-    case configMessage: ConfigMessage => configDistributorActor forward configMessage
+    case s@SubmitWithRunId(config, submitter, runId) =>
+      commandQueueActor ! s
+
+    case QueueBypassRequest(config) =>
+      val runId = RunId()
+      commandStatusActor ! StatusUpdate(Busy(runId), sender)
+      configActor forward SubmitWithRunId(config, sender, runId)
+
+    case QueueBypassRequestWithRunId(config, submitter, runId) =>
+      commandStatusActor ! StatusUpdate(Busy(runId), submitter)
+      configActor ! SubmitWithRunId(config, submitter, runId)
+
+    case s@QueueStop => commandQueueActor forward s
+
+    case s@QueuePause => commandQueueActor forward s
+
+    case s@QueueStart => commandQueueActor forward s
+
+    case s@QueueDelete(runId) => commandQueueActor forward s
+
+    case configMessage: ConfigMessage => configActor forward configMessage
   }
-
-  // Receive command service and config actor messages
-  def receiveCommands: Receive = receiveCmds orElse receiveConfigs
-
-  // Queue the given config for later execution and return the runId to the sender
-  private def queueSubmit(submit: SubmitWithRunId): Unit = {
-    if (queueState != Stopped) {
-      queueMap = queueMap + (submit.runId -> submit)
-      log.debug(s"Queued config with runId: ${submit.runId}")
-      submit.submitter ! CommandStatus.Queued(submit.runId)
-      if (queueState != Paused) {
-        checkQueue()
-      }
-    }
-  }
-
-  // Execute any configs in the queue, unless paused or stopped
-  @tailrec
-  private def checkQueue(): Unit = {
-    log.debug("Check Queue")
-
-    if (queueState == Started && !queueMap.isEmpty) {
-      val (runId, submit) = queueMap.iterator.next()
-      queueMap = queueMap - runId
-      submit.submitter ! CommandStatus.Busy(runId)
-      if (submit.config.isWaitConfig) {
-        log.debug("Pausing due to Wait config")
-        queuePause(Some(submit.config))
-      } else {
-        log.debug(s"Submitting config with runId: $runId")
-        configDistributorActor ! submit
-      }
-      checkQueue()
-    }
-  }
-
-  // Request immediate execution of the given config
-  private def queueBypassRequest(request: SubmitWithRunId): Unit = {
-    if (request.config.isWaitConfig) {
-      log.debug(s"Queue bypass request: wait config: ${request.runId}")
-      queuePause(Some(request.config))
-      sender ! CommandStatus.Complete(request.runId)
-    } else {
-      log.debug(s"Queue bypass request: ${request.runId}")
-      configDistributorActor ! request
-    }
-  }
-
-  // Processing of Configurations in a components queue is stopped.
-  // All Configurations currently in the queue are removed.
-  // No components are accepted or processed while stopped.
-  private def queueStop(): Unit = {
-    log.debug("Queue stopped")
-    queueState = Stopped
-    queueMap = Map.empty
-  }
-
-  // Pause the processing of a component’s queue after the completion
-  // of the current Configuration. No changes are made to the queue.
-  private def queuePause(optionalWaitConfig: Option[Configuration]): Unit = {
-    // XXX TODO: handle different types of wait configs
-    log.debug("Queue paused")
-    queueState = Paused
-  }
-
-  // Processing of component’s queue is started.
-  private def queueStart(): Unit = {
-    log.debug("Queue started")
-    queueState = Started
-    checkQueue()
-  }
-
-  // Delete a config from the queue
-  private def queueDelete(runId : RunId): Unit = {
-    log.debug(s"Queue delete: $runId")
-    queueMap = queueMap - runId
-  }
-
-  // These should never be called here, since config messages are handled in receiveCommands above
-  // and forwarded to the command distributor actor. The inherited ConfigActor trait should only
-  // be handling register/deregister messages.
-  override def pause(runId: RunId): Unit = {log.error("pause should not be called here")}
-  override def resume(runId: RunId): Unit = {log.error("resume should not be called here")}
-  override def cancel(runId: RunId): Unit = {log.error("cancel should not be called here")}
-  override def abort(runId: RunId): Unit = {log.error("abort should not be called here")}
-  override def submit(submit: SubmitWithRunId): Unit = {log.error("submit should not be called here")}
-
 }
 

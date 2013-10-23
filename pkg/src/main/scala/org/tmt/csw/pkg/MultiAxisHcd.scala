@@ -1,12 +1,12 @@
 package org.tmt.csw.pkg
 
-import org.tmt.csw.cmd.akka.{ConfigActor, CommandServiceActor}
+import org.tmt.csw.cmd.akka.MultiAxisCommandServiceActor
 import akka.actor.ActorRef
 
 /**
- * Represents an HCD (Hardware Control Daemon) component.
+ * Represents a multi-axis HCD (Hardware Control Daemon) component.
  */
-trait Hcd extends Component with CommandServiceActor  {
+trait MultiAxisHcd extends Component with MultiAxisCommandServiceActor  {
 
   // Receive actor messages.
   def receiveHcdMessages: Receive = receiveComponentMessages orElse receiveCommands

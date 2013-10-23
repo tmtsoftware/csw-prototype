@@ -41,7 +41,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
       }
 
       val commandStatus = getCommandStatus(runId)
-      assert(commandStatus.isInstanceOf[CommandStatus.Complete])
+      assert(commandStatus.isInstanceOf[CommandStatus.Completed])
     }
   }
 
@@ -54,7 +54,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
       }
 
       val commandStatus = getCommandStatus(runId)
-      assert(commandStatus.isInstanceOf[CommandStatus.Complete])
+      assert(commandStatus.isInstanceOf[CommandStatus.Completed])
 
     }
   }
@@ -128,7 +128,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
   override def requestCommand(config: Configuration): RunId = RunId()
 
   override def checkCommandStatus(runId: RunId, completer: CommandServiceHttpServer.Completer): Unit =
-    completer(Some(CommandStatus.Complete(runId)))
+    completer(Some(CommandStatus.Completed(runId)))
 
   override def statusRequestTimedOut(runId: RunId): Boolean = false
 

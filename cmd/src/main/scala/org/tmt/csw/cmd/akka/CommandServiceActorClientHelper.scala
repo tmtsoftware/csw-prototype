@@ -2,10 +2,10 @@ package org.tmt.csw.cmd.akka
 
 import akka.actor._
 import org.tmt.csw.cmd.core.Configuration
-import org.tmt.csw.cmd.akka.CommandServiceMessage._
 import scala.Some
 import akka.actor.OneForOneStrategy
 import scala.concurrent.duration.FiniteDuration
+import org.tmt.csw.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
 
 
 object CommandServiceActorClientHelper {
@@ -20,8 +20,9 @@ object CommandServiceActorClientHelper {
  * A helper class for implementing command service actor clients.
  */
 trait CommandServiceActorClientHelper extends Actor with ActorLogging {
-
   import CommandServiceActorClientHelper._
+  import CommandQueueActor._
+  import ConfigActor._
 
   // The reference to the command service actor to use
   val commandServiceActor: ActorRef

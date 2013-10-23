@@ -51,9 +51,9 @@ class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHel
       status2b <- cmdClient.pollCommandStatus(runId2)
     } {
       try {
-        assert(status1 == CommandStatus.Complete(runId1))
+        assert(status1 == CommandStatus.Completed(runId1))
         assert(status2a == CommandStatus.Queued(runId2))
-        assert(status2b == CommandStatus.Complete(runId2))
+        assert(status2b == CommandStatus.Completed(runId2))
       } catch {
         case e: Exception => savedException = Some(e)
       } finally {
