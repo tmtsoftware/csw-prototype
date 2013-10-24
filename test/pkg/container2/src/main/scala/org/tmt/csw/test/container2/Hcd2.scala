@@ -6,12 +6,12 @@ import org.tmt.csw.cmd.akka.OneAtATimeCommandQueueController
 
 // A test HCD
 object Hcd2 {
-  def props(name: String, configPaths: Set[String]): Props = Props(classOf[Hcd2], name, configPaths)
+  def props(name: String, configPath: String): Props = Props(classOf[Hcd2], name, configPath)
 }
 
 case class Hcd2(name: String, configPath: String) extends Hcd with OneAtATimeCommandQueueController {
 
-  override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, configPath, 3), name)
+  override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, 3), name)
   override val configPaths = Set(configPath)
 
   override def receive: Receive = receiveHcdMessages

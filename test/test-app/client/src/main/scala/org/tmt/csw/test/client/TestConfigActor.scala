@@ -6,13 +6,13 @@ import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import org.tmt.csw.cmd.akka.ConfigActor.{ConfigAbort, ConfigCancel, ConfigResume, ConfigPause}
 
 object TestConfigActor {
-  def props(configPath: String, commandStatusActor: ActorRef): Props = Props(classOf[TestConfigActor], configPath, commandStatusActor)
+  def props(commandStatusActor: ActorRef): Props = Props(classOf[TestConfigActor], commandStatusActor)
 }
 
 /**
  * A test config actor.
  */
-class TestConfigActor(configPath: String, override val commandStatusActor: ActorRef) extends ConfigActor {
+class TestConfigActor(override val commandStatusActor: ActorRef) extends ConfigActor {
 
   // Links the config worker actor to the runId for the config it is currently executing
   private var runIdForActorRef = Map[ActorRef, RunId]()
@@ -20,10 +20,6 @@ class TestConfigActor(configPath: String, override val commandStatusActor: Actor
 
   // Receive config messages
   override def receive: Receive = receiveConfigs
-
-  // The set of config paths we will process
-  override val configPaths = Set(configPath)
-
 
   /**
    * Called when a configuration is submitted

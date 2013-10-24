@@ -21,10 +21,6 @@ class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfS
   // Receive config messages
   override def receive: Receive = receiveConfigs
 
-  // This is just a worker and doesn't need to register any config paths
-  override val configPaths = Set.empty[String]
-
-
   // Used as an example of one way to implement interrupting a running config
   val aState: AtomicReference[CommandStatus] = new AtomicReference(null)
 

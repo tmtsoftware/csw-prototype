@@ -11,14 +11,20 @@ run on separate hosts by editing an IP address in the client config file (resour
 Build it
 --------
 
-To build it run "sbt dist".
-The application is then insalled under csw/target/test-app and csw/target/test-client.
+To build it run "sbt" and type:
+
+* project test-app
+* dist
+* project test-client
+* dist
+
+The applications are then insalled under csw/test/test-app/app/target/bin and csw/test/test-app/client/target/bin
 
 Run it
 ------
 
-Start the test-app first by typing 'start' in target/test-app/bin.
-Then start the client by typing 'start' in target/test-client/bin.
+Start the test-app first by typing 'start' in test-app/app/target/bin.
+Then start the client by typing 'start' in test-app/client/target/bin.
 
 The log messages indicate that one config command was sent.
 After this both applications exit.

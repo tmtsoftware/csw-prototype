@@ -39,15 +39,16 @@ object Build extends Build {
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
     ) configs MultiJvm
 
-  // Test subprojects with dependency information
-  // Test application
+  // -- Test subprojects with dependency information --
+
+  // test-app/app (server)
   lazy val test_app = Project(
     id = "test-app",
-    base = file("test/app"),
+    base = file("test/test-app/app"),
     settings = defaultSettings ++ distSettings ++
       Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
           distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
-          outputDirectory in Dist := file("test/app/target"),
+          outputDirectory in Dist := file("test/test-app/app/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
             compile(akkaKernel, akkaRemote) ++
@@ -55,14 +56,14 @@ object Build extends Build {
       )
     ) dependsOn(cs, cmd)
 
-  // Test client
+  // test-app/client
   lazy val test_client = Project(
     id = "test-client",
-    base = file("test/client"),
+    base = file("test/test-app/client"),
     settings = defaultSettings ++ distSettings ++
       Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
           distBootClass in Dist := "org.tmt.csw.test.client.TestClient",
-          outputDirectory in Dist := file("test/client/target"),
+          outputDirectory in Dist := file("test/test-app/client/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
             compile(akkaKernel, akkaRemote) ++
@@ -85,7 +86,7 @@ object Build extends Build {
       )
   ) dependsOn(pkg, cs, cmd)
 
-  // pkg test: Container1
+  // pkg test: Container2
   lazy val container2 = Project(
     id = "container2",
     base = file("test/pkg/container2"),

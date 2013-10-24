@@ -10,22 +10,23 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.akka.ConfigRegistrationActor.RegisterRequest
 
+// -- Test command service --
+object TestCommandServiceActor {
+  def props(name: String, configPath: String): Props = Props(classOf[TestCommandServiceActor], name, configPath)
+}
+
+class TestCommandServiceActor(name: String, configPath: String) extends CommandServiceActor with OneAtATimeCommandQueueController {
+  override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor), name = name)
+  override val configPaths = Set(configPath)
+  override def receive: Receive = receiveCommands
+}
+
 /**
  * Main test client actor
  */
 class TestClientActor extends Actor with ActorLogging {
 
   val settings = Settings(context.system)
-
-  // -- Test command service --
-  object TestCommandServiceActor {
-    def props(name: String, configPath: String): Props = Props(classOf[TestCommandServiceActor], name, configPath)
-  }
-
-  class TestCommandServiceActor(name: String, configPath: String) extends CommandServiceActor with OneAtATimeCommandQueueController {
-    override val configActor = context.actorOf(TestConfigActor.props(configPath, commandStatusActor), name = name)
-    override def receive: Receive = receiveCommands
-  }
 
   // Create two test command service actors
   val commandServiceActor1 = context.actorOf(TestCommandServiceActor.props("TestConfigActorA", "config.tmt.tel.base.pos"))

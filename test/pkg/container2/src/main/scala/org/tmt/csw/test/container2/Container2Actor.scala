@@ -18,8 +18,8 @@ class Container2Actor extends Actor with ActorLogging {
   }
   val container = Container.create("Container-2")
 
-  val hcd2aProps = Hcd2.props("HCD-2A", Set("config.tmt.tel.base.pos"))
-  val hcd2bProps = Hcd2.props("HCD-2B", Set("config.tmt.tel.ao.pos.one"))
+  val hcd2aProps = Hcd2.props("HCD-2A", "config.tmt.tel.base.pos")
+  val hcd2bProps = Hcd2.props("HCD-2B", "config.tmt.tel.ao.pos.one")
 
   for {
     hcd2a <- (container ? Container.CreateComponent(hcd2aProps, "HCD-2A")).mapTo[ActorRef]

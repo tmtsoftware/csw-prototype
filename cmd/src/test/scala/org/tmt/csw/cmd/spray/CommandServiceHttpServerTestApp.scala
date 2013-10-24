@@ -68,7 +68,7 @@ object CommandServiceHttpServerTestApp extends App {
   // Test HCD class
   class TestHcdCommandServiceActor(configPath: String, numberOfSecondsToRun: Int, name: String)
     extends CommandServiceActor with OneAtATimeCommandQueueController {
-    override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, configPath, numberOfSecondsToRun), name)
+    override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, numberOfSecondsToRun), name)
     override val configPaths = Set(configPath)
 
     override def receive: Receive = receiveCommands

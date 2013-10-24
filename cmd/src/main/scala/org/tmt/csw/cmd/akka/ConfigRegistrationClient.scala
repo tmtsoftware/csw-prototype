@@ -18,7 +18,7 @@ trait ConfigRegistrationClient {
    * This actor will receive the parts of configs containing any of these paths.
    * An empty set indicates that all messages can be handled.
    */
-  def configPaths: Set[String] = Set.empty[String]
+  def configPaths: Set[String]
 
   /**
    * Messages received in the normal state.

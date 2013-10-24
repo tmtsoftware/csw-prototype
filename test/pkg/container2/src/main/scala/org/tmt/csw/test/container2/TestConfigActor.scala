@@ -6,19 +6,17 @@ import org.tmt.csw.cmd.akka.CommandQueueActor._
 import org.tmt.csw.cmd.akka.{ConfigActor, RunId}
 
 object TestConfigActor {
-  def props(commandStatusActor: ActorRef, configPath: String, numberOfSecondsToRun: Int = 2): Props =
-    Props(classOf[TestConfigActor], commandStatusActor, configPath, numberOfSecondsToRun)
+  def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int = 2): Props =
+    Props(classOf[TestConfigActor], commandStatusActor, numberOfSecondsToRun)
 }
 
 /**
  * A test config actor (simulates an actor that does the work of executing a configuration).
  *
  * @param commandStatusActor actor that receives the command status messages
- * @param configPath a dot-separated configuration key path: This actor will receive the parts
- *                    of configs containing any of these paths
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
-class TestConfigActor(override val commandStatusActor: ActorRef, configPath: String, numberOfSecondsToRun: Int) extends ConfigActor {
+class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int) extends ConfigActor {
 
   // Links the config worker actor to the runId for the config it is currently executing
   private var runIdForActorRef = Map[ActorRef, RunId]()
@@ -26,9 +24,6 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configPath: Str
 
   // Receive config messages
   override def receive: Receive = receiveConfigs
-
-  // The set of config paths we will process
-  override val configPaths = Set(configPath)
 
   /**
    * Called when a configuration is submitted

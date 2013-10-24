@@ -40,13 +40,6 @@ trait ConfigActor extends Actor with ActorLogging {
   import CommandQueueActor._
 
   /**
-   * A set of dot-separated paths:
-   * This actor will receive the parts of configs containing any of these paths.
-   * An empty set indicates that all messages can be handled.
-   */
-  def configPaths: Set[String]
-
-  /**
    * A reference to this actor is needed to report the status of commands
    */
   def commandStatusActor: ActorRef

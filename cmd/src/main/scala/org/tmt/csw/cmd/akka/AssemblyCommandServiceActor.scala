@@ -12,6 +12,7 @@ trait AssemblyCommandServiceActor extends CommandServiceActor {
   // Add a ConfigDistributorActor to distribute the configs to the HCDs
   val configDistributorActor = context.actorOf(ConfigDistributorActor.props(commandStatusActor), name = configDistributorActorName)
   override val configActor = configDistributorActor
+  override val configPaths = Set.empty[String]
 
   // Registry of actors that receive the configurations
   val configRegistrationActor = context.actorOf(Props[ConfigRegistrationActor], name = configRegistrationActorName)
