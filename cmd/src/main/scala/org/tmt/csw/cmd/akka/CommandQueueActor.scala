@@ -29,14 +29,6 @@ object CommandQueueActor {
    */
   case class SubmitWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends QueueMessage
 
-  //    /**
-  //     * Queue bypass request configuration with an assigned submitter and runId
-  //     * @param config the configuration
-  //     * @param submitter the actor submitting the config (will receive status messages)
-  //     * @param runId the unique runId
-  //     */
-  //    case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends QueueMessage
-
   /**
    * Message to stop the command queue
    */
@@ -100,7 +92,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
   private implicit val execContext = context.dispatcher
 
 
-  // Initial behavior while waiting for the queue client and controller actor references on startup
+  // Initial behavior while waiting for the queue client and controller actor references on startup.
   def waitingForInit: Receive = {
     case QueueClient(client) => initClient(client)
     case QueueController(controller) => initController(controller)
