@@ -11,7 +11,7 @@ Main Packages:
 * spray - The spray REST/HTTP interface
 
 
-HCD (Hardware Control Device) View
+HCD (Hardware Control Daemon) View
 ----------------------------------
 
 The command service actor receives a submit command with the config
@@ -49,6 +49,11 @@ and the MultiAxisOneAtATimeCommandQueueController.
 The actor graph for multi-axis HCDs is similar to the one for plain HCDs,
 except that there is one copy of the
 Command Queue, Command Queue Controller, Command Status and Config actors for each axis.
+Also the multi-axis command service actor may need to intercept the command status for multiple axes
+and return a single command status, if the original config accessed multiple axes at once, so that
+the original sender gets single status values as expected.
+
+![Multi-Axis HCD Actor graph](doc/Multi-Axis-HCD.jpg)
 
 
 Assembly View

@@ -54,6 +54,7 @@ trait MultiAxisCommandServiceActor extends ConfigRegistrationClient with Actor w
   private implicit val execContext = context.dispatcher
 
   // Receive only the command server commands
+  // XXX TODO: intercept command status so we can return a single status even if config references multiple axes!
   def receiveCommands: Receive = receiveRegistrationRequest orElse {
     // Queue related commands
     case Submit(config, submitter) =>
