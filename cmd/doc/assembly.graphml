@@ -20,7 +20,7 @@
           <y:Geometry height="89.35999999999999" width="112.25" x="-151.10418490700386" y="-298.27959724798905"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="32.265625" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="24.271484375" y="28.54718749999998">Command
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="32.265625" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="24.271484375" y="28.547187500000007">Command
 Queue
 <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
@@ -38,7 +38,8 @@ Queue
           <y:Geometry height="89.35999999999999" width="100.72" x="-418.1372100619974" y="-298.27959724798905"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="32.265625" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="18.506484375000014" y="28.54718749999998">Command
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="46.3984375" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="18.506484375000014" y="21.480781250000007">Assembly
+Command
 Service
 <y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
@@ -106,7 +107,7 @@ Distributor
           <y:Geometry height="89.35999999999999" width="112.25" x="-151.10418490700386" y="-50.94919449597805"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="46.3984375" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="24.271484375" y="21.48078124999998">Command
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="46.3984375" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="24.271484375" y="21.480781249999993">Command
 Queue
 Controller<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
@@ -124,7 +125,7 @@ Controller<y:LabelModel>
           <y:Geometry height="89.35999999999999" width="112.25" x="108.22942012399494" y="-50.94919449597808"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="32.265625" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="24.271484375" y="28.547187500000007">Command
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="32.265625" modelName="custom" textColor="#000000" visible="true" width="63.70703125" x="24.271484375" y="28.547187499999993">Command
 Status<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
@@ -158,9 +159,9 @@ Status<y:LabelModel>
           <y:Geometry height="89.35999999999999" width="129.6500000000001" x="-681.004184907004" y="-298.27959724798905"/>
           <y:Fill color="#FFFF00" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="46.3984375" modelName="custom" textColor="#000000" visible="true" width="109.4921875" x="10.078906250000045" y="21.48078124999998">Application
-or other 
-Config Distributor<y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="46.3984375" modelName="custom" textColor="#000000" visible="true" width="127.03515625" x="1.3074218750000455" y="21.480781250000007">Application
+(or other Assembly's 
+Config Distributor)<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
