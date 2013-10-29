@@ -96,7 +96,8 @@ object Build extends Build {
         outputDirectory in Dist := file("test/pkg/container2/target"),
         libraryDependencies ++=
           provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote) ++
+            compile(akkaKernel, akkaRemote, akkaZeromq) ++
+//            compile(akkaKernel, akkaRemote, scalaZeromq) ++
             test(scalaLogging, logback)
       )
   ) dependsOn(pkg, cs, cmd)
