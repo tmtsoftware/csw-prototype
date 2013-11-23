@@ -71,6 +71,11 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
       registryEntry => getSubmitInfo(submit, registryEntry)
     }.flatten.toList
 
+    if (submitInfoList.length == 0) {
+      log.error(s"No subscribers for submit: ${submit.config}")
+      commandStatusActor ! CommandStatusActor.StatusUpdate(CommandStatus.Error(submit.runId, "No subscribers"), submit.submitter)
+    }
+
     // Add info to map indexed by runId is so we can determine when all parts are done and reply to the original sender
     configParts += (submit.runId -> ConfigPartInfo(submitInfoList, CommandStatus.Submitted(submit.runId), submit))
 

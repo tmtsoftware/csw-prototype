@@ -63,6 +63,7 @@ trait CommandServiceActorClientHelper extends Actor with ActorLogging {
     val runId = RunId()
     val monitor = newMonitorFor(runId)
     val submit = SubmitWithRunId(config, monitor, runId)
+    log.info(s"Submitting $config")
     // Submit to the command service actor using the monitor actor as the return address for status updates
     commandServiceActor ! submit
     runId
@@ -92,6 +93,7 @@ trait CommandServiceActorClientHelper extends Actor with ActorLogging {
     // If the monitoring actor (which was started when the command was submitted) is still running,
     // send it the the "completer", which it can call to complete the request.
     // If it timed out and the actor quit, do nothing (This case is handled by the caller).
+    log.info(s"Checking status for $runId")
     getMonitorFor(runId) match {
       case Some(monitor) =>
         monitor ! completer

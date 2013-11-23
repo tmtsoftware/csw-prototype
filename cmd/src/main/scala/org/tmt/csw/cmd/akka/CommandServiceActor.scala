@@ -105,9 +105,11 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
   def receiveCommands: Receive = receiveRegistrationRequest orElse {
     // Queue related commands
     case Submit(config, submitter) =>
+      log.info(s"Submit $config")
       commandQueueActor ! SubmitWithRunId(config, submitter)
 
     case s@SubmitWithRunId(config, submitter, runId) =>
+      log.info(s"Submit with runId($runId) $config")
       commandQueueActor ! s
 
     case QueueBypassRequest(config) =>

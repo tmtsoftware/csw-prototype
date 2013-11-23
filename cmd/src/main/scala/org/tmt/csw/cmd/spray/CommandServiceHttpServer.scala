@@ -37,5 +37,7 @@ case class CommandServiceHttpServer(commandServiceActor: ActorRef, interface: St
   IO(Http)(context.system) ! Http.Bind(self, interface, port)
 
   // Entry point for the actor
-  override def receive: Receive = runRoute(route)
+  override def receive: Receive = runRoute(route) orElse {
+    case x => log.error(s"Received unexpected message from $sender: $x")
+  }
 }

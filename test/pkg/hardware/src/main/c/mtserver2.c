@@ -40,7 +40,7 @@ worker_routine (void *context) {
             printf ("Received request: [%s]\n", string);
             free (string);
             //  Do some 'work'
-            usleep (1000 * (randof (1000) + 1));
+            usleep (1000 * (randof (5000) + 1));
 //            sleep (1);
             //  Send reply back to client
             s_send (receiver, "OK");
