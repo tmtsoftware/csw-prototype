@@ -29,8 +29,6 @@ object HwClient {
     SocketType.Req,
     Listener(listener),
     Connect("tcp://localhost:6565")
-//    ,
-//    Identity("1234-5678".getBytes)
   )
 
 

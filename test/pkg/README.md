@@ -37,3 +37,19 @@ while the command is running.
 TODO: Add the ability to pause and restart the queue, pause, cancel or abort a command, etc.
 Display a busy cursor and disable the form while the command is running.
 
+The following diagram shows the relationships of the various containers, assemblies and HCDs in this demo:
+
+![PkgTest diagram](doc/PkgTest.jpg)
+
+When the user fills out the web form and presses Submit, a JSON config is sent to the Spray/REST HTTP server
+of the Assembly1 command service. It forwards different parts of the config to HCD1 and HCD2, which are in
+a different container and JVM, but are registered as components with Assembly1, so that it forwards parts of
+configs that match the keys they registered with.
+
+HCD1 and HCD2 both talk to the C/ZeroMQ based hardware simulation code and then return a command status to the
+original submitter (Assembly1).
+
+The Play Framework code uses long polling (to the Spray HTTP server) to get the command status and then
+uses a websocket and Javascript code to push the status to the web page.
+
+

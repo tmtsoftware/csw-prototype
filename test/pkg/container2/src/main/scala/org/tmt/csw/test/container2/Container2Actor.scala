@@ -6,6 +6,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 /**
+ * This container holds the two HCDs.
  */
 class Container2Actor extends Actor with ActorLogging {
   import scala.concurrent.duration._
@@ -18,8 +19,6 @@ class Container2Actor extends Actor with ActorLogging {
   }
   val container = Container.create("Container-2")
 
-//  val hcd2aProps = Hcd2.props("HCD-2A", "config.tmt.tel.base.pos")
-//  val hcd2bProps = Hcd2.props("HCD-2B", "config.tmt.tel.ao.pos.one")
   val hcd2aProps = Hcd2.props("HCD-2A", "config.basePos")
   val hcd2bProps = Hcd2.props("HCD-2B", "config.aoPos")
 
