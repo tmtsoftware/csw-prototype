@@ -6,6 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 import spray.can.Http
 import spray.routing.HttpServiceActor
 import org.tmt.csw.cmd.akka.{CommandServiceActorClientHelper, CommandStatus}
+import akka.io.Tcp.Bound
 
 /**
  * Messages and `akka.actor.Props` factories for the CommandService actor.
@@ -38,6 +39,7 @@ case class CommandServiceHttpServer(commandServiceActor: ActorRef, interface: St
 
   // Entry point for the actor
   override def receive: Receive = runRoute(route) orElse {
+    case Bound(localAddress) => log.info(s"Started Spray HTTP server on $localAddress")
     case x => log.error(s"Received unexpected message from $sender: $x")
   }
 }
