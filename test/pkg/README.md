@@ -18,11 +18,22 @@ To compile the Scala/Akka code, type "sbt" and then:
 * project container2
 * dist
 
-To run: Open terminal windows in the three directories and run these commands:
+For some reason, typing "dist" in the top level csw project appears to compile,
+but the resulting installation is missing dependencies.
+
+To run the demo: Open terminal windows or tabs in these directories and run these commands:
 
 * cd hardware/src/main/c; mtserver2
 * cd container2/target/bin; ./start
 * cd container1/target/bin; ./start
+* cd web/pkgtest; play run            # then open http://localhost:9000 in a browser
 
 Currently this is the order in which the applications must be started, but that will be changed in the future
 to allow any order.
+
+Enter the values in the form and press Submit. The status of the command is shown below the button and updated
+while the command is running.
+
+TODO: Add the ability to pause and restart the queue, pause, cancel or abort a command, etc.
+Display a busy cursor and disable the form while the command is running.
+
