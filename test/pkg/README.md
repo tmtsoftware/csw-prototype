@@ -13,6 +13,8 @@ That application needs to run first and can be compiled by typing "make" in hard
 
 To compile the Scala/Akka code, type "sbt" and then:
 
+* compile
+* publishLocal
 * project container1
 * dist
 * project container2
@@ -20,6 +22,7 @@ To compile the Scala/Akka code, type "sbt" and then:
 
 For some reason, typing "dist" in the top level csw project appears to compile,
 but the resulting installation is missing dependencies.
+The publishLocal task is needed to install the local dependencies for the Play app, which has a separate build file.
 
 To run the demo: Open terminal windows or tabs in these directories and run these commands:
 
