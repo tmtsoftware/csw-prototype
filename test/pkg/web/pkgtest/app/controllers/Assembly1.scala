@@ -82,7 +82,7 @@ object Assembly1 extends Controller {
 
       form.value.map {
         settings =>
-          val json = Json.toJson(Assembly1Config(settings))
+          val json = settings.getConfig.toJson
           WS.url(submitUrl).post(json).map {
             response =>
               val runIdOpt = runIdFromResponse(response)
@@ -135,7 +135,6 @@ object Assembly1 extends Controller {
 
   // Websocket action, used to push the command status to the browser
   def status(runId: String) = WebSocket.using[String] { implicit request =>
-    println(s"XXX in status WS for $runId")
     val statusChecker = StatusChecker(runId)
     val in = Iteratee.ignore[String]
     val out = Enumerator.generateM {
@@ -162,7 +161,6 @@ object Assembly1 extends Controller {
       if (!done && response.status == OK) {
         Json.fromJson[StatusResponse](Json.parse(response.body)) map {
           statusResponse: StatusResponse =>
-              println(s"XXX command status for $runId  = ${statusResponse.name}")
               done = statusIsFinal(statusResponse.name)
               Some(statusResponse.name)
         } recoverTotal {
@@ -179,7 +177,6 @@ object Assembly1 extends Controller {
     def getStatus(runId: String): Future[Option[String]] = {
       WS.url(statusUrl(runId)).get().map {
         response =>
-          println(s"XXX getStatus response = ${response.statusText} : ${response.body}")
           commandStatusFromResponse(response, runId)
       }
     }
