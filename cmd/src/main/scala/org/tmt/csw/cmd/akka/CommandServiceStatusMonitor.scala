@@ -31,7 +31,7 @@ object CommandServiceStatusMonitor {
  * @param runId the runId for the command being monitored
  */
 final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: RunId) extends Actor with ActorLogging {
-  import CommandServiceActorClientHelper._
+  import CommandServiceClientHelper._
   import CommandServiceStatusMonitor._
   import context.dispatcher
 
@@ -41,7 +41,7 @@ final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: 
   // Wait for the command status or for a request for it (completer).
   // Give up if nothing happens in the required time.
   private def waiting(timerInfo: TimerInfo, previouStatus: CommandStatus): Receive = {
-    case completer: Completer =>
+    case completer: CommandStatusCompleter =>
       log.debug(s"Received completer (waiting)")
       context become waitingForStatus(completer, newTimeout(timerInfo), previouStatus)
     case status: CommandStatus =>
@@ -56,8 +56,8 @@ final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: 
   // We have a request for command status (completer), but no status value to return yet.
   // Wait for a command status message to arrive and if we timeout, return None for the status.
   // The requester should then try again later.
-  private def waitingForStatus(completer: Completer, timerInfo: TimerInfo, previousStatus: CommandStatus): Receive = {
-    case completer: Completer =>
+  private def waitingForStatus(completer: CommandStatusCompleter, timerInfo: TimerInfo, previousStatus: CommandStatus): Receive = {
+    case completer: CommandStatusCompleter =>
       log.debug(s"Received completer (waiting for status)")
       context become waitingForStatus(completer, newTimeout(timerInfo), previousStatus)
     case status: CommandStatus =>
@@ -73,7 +73,7 @@ final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: 
   // The command status could be updated again and/or we could get a request for it (completer).
   // If we timeout, quit (maybe nobody is interested in the command status?).
   private def waitingForCompleter(status: CommandStatus, timerInfo: TimerInfo, previouStatus: CommandStatus): Receive = {
-    case completer: Completer =>
+    case completer: CommandStatusCompleter =>
       log.debug(s"Received completer (waiting for completer)")
       completeAndWait(completer, status, timerInfo)
     case status: CommandStatus =>
@@ -99,7 +99,7 @@ final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: 
 
   // Complete the request and quit if the status indicates that the command has completed or is
   // otherwise done (was cancelled or had an error).
-  private def completeAndWait(completer: Completer, status: CommandStatus, timerInfo: TimerInfo): Unit = {
+  private def completeAndWait(completer: CommandStatusCompleter, status: CommandStatus, timerInfo: TimerInfo): Unit = {
     log.debug(s"Completing with status $status")
     completer(Some(status))
     if (status.done) {

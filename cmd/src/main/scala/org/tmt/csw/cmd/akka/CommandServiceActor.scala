@@ -49,7 +49,6 @@ object CommandServiceActor {
    * @param runId the unique runId
    */
   case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage
-
 }
 
 /**

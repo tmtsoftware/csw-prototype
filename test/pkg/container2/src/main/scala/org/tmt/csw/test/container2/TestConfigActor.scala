@@ -6,6 +6,9 @@ import akka.zeromq._
 import akka.zeromq.Listener
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import akka.util.ByteString
+import org.tmt.csw.cmd.core.Configuration
+import scala.util.Success
+import org.tmt.csw.cmd.akka.ConfigActor._
 
 object TestConfigActor {
   def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int = 2): Props =
@@ -22,6 +25,9 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
 
   val clientSocket = ZeroMQExtension(context.system).newSocket(SocketType.Req,
     Listener(self), Connect("tcp://127.0.0.1:6565")) // XXX TODO make host and port configurable
+
+  // XXX temp: change to get values over ZMQ from hardware simulation
+  var savedConfig: Option[Configuration] = None
 
 
   // Receive config messages
@@ -95,6 +101,39 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    * Work on the config matching the given runId should be aborted
    */
   override def abort(runId: RunId): Unit = {
+  }
+
+  /**
+   * Query the current state of a device and reply to the sender with a ConfigResponse object.
+   * A config is passed in (the values are ignored) and the reply will be sent containing the
+   * same config with the current values filled out.
+   *
+   * @param config used to specify the keys for the values that should be returned
+   * @param replyTo reply to this actor with the config response
+   *
+   */
+  override def query(config: Configuration, replyTo: ActorRef): Unit = {
+    // XXX TODO: replace savedConfig and get values over ZMQ from hardware simulation
+    val conf = savedConfig match {
+      // XXX TODO: should only fill in the values that are passed in!
+      case Some(c)  => c
+      case None =>
+        if (config.hasPath("posName")) {
+          config.
+            withValue("posName", "NGC738B").
+            withValue("c1", "22:35:58.530").
+            withValue("c2", "33:57:55.40").
+            withValue("equinox", "J2000")
+        } else {
+          config.
+            withValue("c1", "22:356:01.066").
+            withValue("c2", "33:58:21.69").
+            withValue("equinox", "J2000")
+        }
+    }
+
+    sender ! ConfigResponse(Success(conf))
+    savedConfig = Some(config)
   }
 }
 

@@ -8,6 +8,10 @@ import org.tmt.csw.cmd.akka.{CommandStatus, RunId}
 import spray.http.{ContentTypes, StatusCodes}
 import scala.Some
 import akka.actor.ActorSystem
+import scala.util.Success
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
+import org.tmt.csw.cmd.akka.CommandServiceClientHelper._
+import scala.concurrent.Future
 
 /**
  * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run
@@ -127,8 +131,12 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
 
   override def requestCommand(config: Configuration): RunId = RunId()
 
-  override def checkCommandStatus(runId: RunId, completer: CommandServiceHttpServer.Completer): Unit =
+  override def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit =
     completer(Some(CommandStatus.Completed(runId)))
+
+//  override def checkConfigResponse(config: Configuration, completer: ConfigResponseCompleter): Unit = {
+//    completer(Some(ConfigResponse(Success(config))))
+//  }
 
   override def statusRequestTimedOut(runId: RunId): Boolean = false
 
@@ -139,6 +147,11 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
   override def queueStart(): Unit = {}
 
   override def queueDelete(runId: RunId): Unit = {}
+
+  override def configGet(config: Configuration): Future[ConfigResponse] = {
+    // dummy code, just returns the input config
+    Future.successful(ConfigResponse(Success(config)))
+  }
 
   override def configCancel(runId: RunId): Unit = {}
 

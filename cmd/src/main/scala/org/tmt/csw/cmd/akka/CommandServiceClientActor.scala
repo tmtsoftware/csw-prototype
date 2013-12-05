@@ -44,7 +44,7 @@ class CommandServiceClientActor(val commandServiceActor: ActorRef, val timeout: 
   }
 
   // Returns a function that takes a command status and sends it to the given actor
-  private def getCompleter(ref: ActorRef): CommandServiceActorClientHelper.Completer = {
+  private def getCompleter(ref: ActorRef): CommandServiceClientHelper.CommandStatusCompleter = {
     case Some(status) => ref ! status
     case None =>
   }

@@ -8,6 +8,8 @@ import scala.Some
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.Future
 import akka.actor.{ActorRef, Props}
+import org.tmt.csw.cmd.core.Configuration
+import scala.util.Success
 
 
 object TestConfigActor {
@@ -80,6 +82,18 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
       case Some(actorRef) => actorRef ! ConfigAbort(runId)
       case None => log.error(s"No worker actor found for runId: $runId")
     }
+  }
+
+  /**
+   * Query the current state of a device and reply to the sender with a ConfigResponse object.
+   * A config is passed in (the values are ignored) and the reply will be sent containing the
+   * same config with the current values filled out.
+   *
+   * @param config used to specify the keys for the values that should be returned
+   * @param replyTo reply to this actor with the config response
+   */
+  override def query(config: Configuration, replyTo: ActorRef): Unit = {
+    replyTo ! ConfigResponse(Success(config)) // XXX dummy implementation
   }
 
   /**
@@ -203,6 +217,10 @@ class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfS
    */
   def abort(runId: RunId): Unit = {
     aState.set(CommandStatus.Aborted(runId))
+  }
+
+  override def query(config: Configuration, replyTo: ActorRef): Unit = {
+    replyTo ! ConfigResponse(Success(config)) // XXX dummy implementation
   }
 }
 

@@ -80,6 +80,9 @@ object Configuration {
  * Represents a telescope configuration
  */
 class Configuration private(private val config: Config) extends Serializable {
+
+//  println(s"XXX Configuration: config = $config")
+
   /**
    * Returns
    */
@@ -162,7 +165,12 @@ class Configuration private(private val config: Config) extends Serializable {
   /**
    * Returns a Map containing the contents of this object at the given path.
    */
-  def asMap(path: String): Map[String, AnyRef] = config.getConfig(path).root().unwrapped().toMap
+  def asMap(path: String = ""): Map[String, AnyRef] =
+    if (path == "") {
+      config.root().unwrapped().toMap
+    } else {
+      config.getConfig(path).root().unwrapped().toMap
+    }
 
   /**
    * Returns the configuration formatted on multiple lines.

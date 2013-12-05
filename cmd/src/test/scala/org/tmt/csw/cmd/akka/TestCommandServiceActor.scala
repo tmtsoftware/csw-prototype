@@ -10,6 +10,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import org.tmt.csw.cmd.akka.CommandServiceActor._
 import org.tmt.csw.cmd.akka.ConfigActor._
 import org.tmt.csw.cmd.akka.CommandQueueActor._
+import scala.util._
 
 
 /**
@@ -38,7 +39,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
     val s2 = expectMsgType[CommandStatus.Completed]
     assert(s1.runId == s2.runId)
   }
-
 
   test("Test simple queue submit") {
     val commandServiceActor = getCommandServiceActor(2)
@@ -151,10 +151,51 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
     }
   }
 
+  test("Test get (query) request") {
+    val empty =
+      """
+        |      config {
+        |        tmt.tel.base.pos {
+        |          posName = ""
+        |          c1 = ""
+        |          c2 = ""
+        |          equinox = ""
+        |        }
+        |        tmt.tel.ao.pos.one {
+        |          c1 = ""
+        |          c2 = ""
+        |          equinox = ""
+        |        }
+        |      }
+        |
+      """.stripMargin
+    val emptyConfig = Configuration(empty)
+    val commandServiceActor = getCommandServiceActor(8)
+    commandServiceActor ! ConfigGet(emptyConfig)
+    val resp = expectMsgType[ConfigResponse]
+    resp.tryConfig match {
+      case Success(c) =>
+        logger.info(s"XXX GET returns: ${c.toJson.toString}")
+        for(s <- List(
+          "config.tmt.tel.base.pos.posName",
+          "config.tmt.tel.base.pos.c1",
+          "config.tmt.tel.base.pos.c2",
+          "config.tmt.tel.base.pos.equinox",
+          "config.tmt.tel.ao.pos.one.c1",
+          "config.tmt.tel.ao.pos.one.c2",
+          "config.tmt.tel.ao.pos.one.equinox"
+        )) {
+          assert(c.getString(s) == config.getString(s), s"Failed to match config key: $s")
+        }
+      case Failure(ex) => fail(ex)
+    }
+  }
+
+
   // XXX TODO: Wait configs...
 
 //  test("Test submit with wait config") {
-//    val commandServiceActor = getCommandServiceActor(8)
+//    val commandServiceActor = getCommandServiceActor(9)
 //    within(duration) {
 //      val waitConfig = Configuration.waitConfig(forResume = true, obsId = "TMT-2021A-C-2-1")
 //
@@ -176,7 +217,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
 
 
 //  test("Test request with wait config") {
-//    val commandServiceActor = getCommandServiceActor(9)
+//    val commandServiceActor = getCommandServiceActor(10)
 //    val waitConfig = Configuration.waitConfig(forResume=true, obsId="TMT-2021A-C-2-1")
 //
 //    // Sending the wait config is like sending a Queue Pause command (in this case we bypass the queue)
@@ -197,7 +238,8 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
 //  }
 
 
-//  test("Test error handling 1") {
+
+  //  test("Test error handling 1") {
 //
 //  }
 

@@ -82,12 +82,16 @@ object Assembly1 extends Controller {
 
       form.value.map {
         settings =>
-          val json = settings.getConfig.toJson
+          val json = Json.parse(settings.getConfig.toJson)
           WS.url(submitUrl).post(json).map {
             response =>
               val runIdOpt = runIdFromResponse(response)
-              val runId = if (runIdOpt.isEmpty) "" else runIdOpt.get
-              Redirect(routes.Assembly1.show(runId)).flashing(flashResponse(response, runIdOpt))
+              if (!runIdOpt.isEmpty) {
+                val runId = runIdOpt.get
+                Redirect(routes.Assembly1.show(runId)).flashing(flashResponse(response, runIdOpt))
+              } else {
+                Redirect(routes.Assembly1.edit).flashing(flashResponse(response, runIdOpt))
+              }
           }
       } getOrElse {
         // The form did not validate, redirect with flash error message

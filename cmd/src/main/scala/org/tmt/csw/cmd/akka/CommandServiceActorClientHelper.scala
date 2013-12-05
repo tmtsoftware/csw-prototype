@@ -4,23 +4,18 @@ import akka.actor._
 import org.tmt.csw.cmd.core.Configuration
 import scala.Some
 import akka.actor.OneForOneStrategy
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import org.tmt.csw.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
+import scala.concurrent.Future
+import akka.pattern.ask
+import akka.util.Timeout
 
-
-object CommandServiceActorClientHelper {
-
-  /**
-   * Function completing the request when given a CommandStatus object.
-   */
-  type Completer = Option[CommandStatus] => Unit
-}
 
 /**
- * A helper class for implementing command service actor clients.
+ * Defines helper methods for implementing command service actor clients.
  */
-trait CommandServiceActorClientHelper extends Actor with ActorLogging {
-  import CommandServiceActorClientHelper._
+trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Actor with ActorLogging {
+  import CommandServiceClientHelper._
   import CommandQueueActor._
   import ConfigActor._
 
@@ -29,7 +24,6 @@ trait CommandServiceActorClientHelper extends Actor with ActorLogging {
 
   // The timeout for polling for the command status of submitted commands
   val timeout: FiniteDuration
-
 
   // If there is an error in one of the monitor actors, stop it, but not the others
   override def supervisorStrategy: SupervisorStrategy =
@@ -89,7 +83,7 @@ trait CommandServiceActorClientHelper extends Actor with ActorLogging {
    * when the command status is known. If the request times out, nothing is done and the caller needs
    * to try again.
    */
-  def checkCommandStatus(runId: RunId, completer: Completer): Unit = {
+  def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit = {
     // If the monitoring actor (which was started when the command was submitted) is still running,
     // send it the the "completer", which it can call to complete the request.
     // If it timed out and the actor quit, do nothing (This case is handled by the caller).
@@ -137,6 +131,14 @@ trait CommandServiceActorClientHelper extends Actor with ActorLogging {
    */
   def queueDelete(runId: RunId): Unit = {
     commandServiceActor ! QueueDelete(runId)
+  }
+
+  /**
+   * Handles a request to fill in the blank values of the given config with the current values.
+   */
+  def configGet(config: Configuration): Future[ConfigResponse] = {
+    implicit val askTimeout = Timeout(3 seconds)
+    (commandServiceActor ? ConfigGet(config)).mapTo[ConfigResponse]
   }
 
   // Handles a request to pause the config with the given runId

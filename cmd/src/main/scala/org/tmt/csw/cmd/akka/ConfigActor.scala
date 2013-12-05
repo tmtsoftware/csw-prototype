@@ -1,6 +1,8 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor.{ActorLogging, Actor, ActorRef, Terminated}
+import org.tmt.csw.cmd.core.Configuration
+import scala.util.Try
 
 
 object ConfigActor {
@@ -28,6 +30,25 @@ object ConfigActor {
    */
   case class ConfigResume(runId: RunId) extends ConfigMessage
 
+  /**
+   * Used to query the current state of a device. A config is passed in (the values are ignored)
+   * and a reply will be sent containing the same config with the current values filled out.
+   *
+   * @param config used to specify the keys for the values that should be returned
+   */
+  case class ConfigGet(config: Configuration) extends ConfigMessage
+
+  /**
+   * The response from a ConfigGet command
+   * @param tryConfig if all the requested values could be retrieved, Success(config), otherwise Failure(ex)
+   */
+  case class ConfigResponse(tryConfig: Try[Configuration]) extends ConfigMessage
+
+  /**
+   * Can be used to configure the system (for internal use)
+   * @param config contains internal configuration values (to be defined)
+   */
+  case class ConfigPut(config: Configuration) extends ConfigMessage
 }
 
 
@@ -53,6 +74,9 @@ trait ConfigActor extends Actor with ActorLogging {
     case ConfigAbort(runId) => abort(runId)
     case ConfigPause(runId) => pause(runId)
     case ConfigResume(runId) => resume(runId)
+
+    case ConfigGet(config) => query(config, sender)
+    case ConfigPut(config) => internalConfig(config)
 
     // An actor was terminated (normal when done)
     case Terminated(actor) => terminated(actor)
@@ -92,6 +116,24 @@ trait ConfigActor extends Actor with ActorLogging {
    * Work on the config matching the given runId should be aborted
    */
   def abort(runId: RunId): Unit
+
+  /**
+   * Query the current state of a device and reply to the sender with a ConfigResponse object.
+   * A config is passed in (the values are ignored) and the reply will be sent containing the
+   * same config with the current values filled out.
+   *
+   * @param config used to specify the keys for the values that should be returned
+   * @param replyTo reply to this actor with the config response
+   */
+  def query(config: Configuration, replyTo: ActorRef): Unit
+
+  /**
+   * Used to configure the system (for internal use)
+   * @param config contains internal configuration values (to be defined)
+   */
+  def internalConfig(config: Configuration): Unit = {
+    // XXX TODO to be defined... (make abstract)
+  }
 
   /**
    * Called when a child (worker) actor terminates

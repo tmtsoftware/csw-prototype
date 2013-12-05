@@ -2,20 +2,34 @@ package org.tmt.csw.cmd.spray
 
 import spray.routing._
 import spray.http.MediaTypes._
-import org.tmt.csw.cmd.akka.{CommandStatus, RunId}
+import org.tmt.csw.cmd.akka.{CommandServiceClientHelper, ConfigActor, CommandStatus, RunId}
 import spray.http.StatusCodes
 import org.tmt.csw.cmd.core.Configuration
+import spray.routing.directives.DebuggingDirectives
+import akka.event.Logging
+import scala.util._
+import scala.concurrent.ExecutionContext
 
 /**
  * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests
  * without actually running an HTTP server.
  */
-trait CommandServiceHttpRoute extends HttpService with CommandServiceJsonFormats {
+trait CommandServiceHttpRoute extends HttpService with CommandServiceClientHelper with CommandServiceJsonFormats {
+  import ExecutionContext.Implicits.global
+
+  // marks with "get-user", log with info level, HttpRequest.toString
+  DebuggingDirectives.logRequest("get-user", Logging.InfoLevel)
+
+  /**
+   * Route for static web page
+   */
+  def staticRoute: Route =
+    path("")(getFromResource("web/index.html")) ~ getFromResourceDirectory("web")
 
   /**
    * This defines the HTTP/REST interface for the command service.
    */
-  def route: Route =
+  def apiRoute: Route =
     path("request")(
       // "POST /request {config: $config}" submits a config to the command service (bypassing the queue) and returns the runId
       post(
@@ -27,6 +41,24 @@ trait CommandServiceHttpRoute extends HttpService with CommandServiceJsonFormats
         }
       )
     ) ~
+    path("get")(
+        // "POST /get {config: $config}" submits a config to be filled in with the current values
+        post(
+          entity(as[Configuration]) {
+            config =>
+              respondWithMediaType(`application/json`) {
+                complete {
+                  configGet(config).map {
+                    resp => resp.tryConfig match {
+                      case Success(c) => c.toJson.toString
+                      case Failure(ex) => ""
+                    }
+                  }
+                }
+              }
+          }
+        )
+      ) ~
       pathPrefix("queue") {
         path("submit")(
           // "POST /queue/submit {config: $config}" submits a config to the command service and returns the runId
@@ -34,7 +66,7 @@ trait CommandServiceHttpRoute extends HttpService with CommandServiceJsonFormats
             entity(as[Configuration]) {
               config =>
                 respondWithMediaType(`application/json`) {
-                  complete(StatusCodes.Accepted, submitCommand(config))
+                    complete(StatusCodes.Accepted, submitCommand(config))
                 }
             }
           )
@@ -135,7 +167,13 @@ trait CommandServiceHttpRoute extends HttpService with CommandServiceJsonFormats
         }
       } ~
       // If none of the above paths matched, it must be a bad request
-      complete(StatusCodes.BadRequest)
+      logRequestResponse("XXX bad", Logging.InfoLevel) {
+        complete(StatusCodes.BadRequest)
+      }
+
+
+
+  def route: Route = staticRoute ~ apiRoute
 
   /**
    *
@@ -144,75 +182,4 @@ trait CommandServiceHttpRoute extends HttpService with CommandServiceJsonFormats
     if (true) throw new RuntimeException("Testing exception handling")
     StatusCodes.Accepted
   }
-
-
-  // -- Classes that extend this trait need to implement the methods below --
-
-  /**
-   * Handles a command submit and returns the runId, which can be used to request the command status.
-   * @param config the command configuration
-   * @return the runId for the command
-   */
-  def submitCommand(config: Configuration): RunId
-
-  /**
-   * Handles a command (queue bypass) request and returns the runId, which can be used to request the command status.
-   * @param config the command configuration
-   * @return the runId for the command
-   */
-  def requestCommand(config: Configuration): RunId
-
-  /**
-   * Handles a request for command status (using long polling). Since the command may take a long time to run
-   * and the HTTP request may time out, this method does not return the status, but calls the completer
-   * when the command status is known. If the HTTP request times out, nothing is done and the caller needs
-   * to try again.
-   */
-  def checkCommandStatus(runId: RunId, completer: CommandServiceHttpServer.Completer): Unit
-
-  /**
-   * Returns true if the status request for the given runId timed out (and should be retried)
-   */
-  def statusRequestTimedOut(runId: RunId): Boolean
-
-  /**
-   * Handles a request to stop the command queue.
-   */
-  def queueStop(): Unit
-
-  /**
-   * Handles a request to pause the command queue.
-   */
-  def queuePause(): Unit
-
-  //
-  /**
-   * Handles a request to restart the command queue.
-   */
-  def queueStart(): Unit
-
-  /**
-   * Handles a request to delete a command from the command queue.
-   */
-  def queueDelete(runId: RunId): Unit
-
-  /**
-   * Handles a request to pause the config with the given runId
-   */
-  def configCancel(runId: RunId): Unit
-
-  /**
-   * Handles a request to pause the config with the given runId
-   */
-  def configAbort(runId: RunId): Unit
-
-  /**
-   * Handles a request to pause the config with the given runId
-   */
-  def configPause(runId: RunId): Unit
-
-  /**
-   * Handles a request to pause the config with the given runId
-   */
-  def configResume(runId: RunId): Unit
 }

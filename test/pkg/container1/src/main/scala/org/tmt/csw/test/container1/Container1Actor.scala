@@ -40,3 +40,4 @@ class Container1Actor extends Actor with ActorLogging {
       context.actorOf(CommandServiceHttpServer.props(assembly1, interface, port, timeout), "commandService")
   }
 }
+

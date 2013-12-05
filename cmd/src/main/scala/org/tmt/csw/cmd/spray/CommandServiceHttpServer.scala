@@ -6,7 +6,8 @@ import scala.concurrent.duration.FiniteDuration
 import spray.can.Http
 import spray.routing.HttpServiceActor
 import org.tmt.csw.cmd.akka.{CommandServiceActorClientHelper, CommandStatus}
-import akka.io.Tcp.Bound
+import akka.io.Tcp.{PeerClosed, Bound}
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
 
 /**
  * Messages and `akka.actor.Props` factories for the CommandService actor.
@@ -15,11 +16,6 @@ import akka.io.Tcp.Bound
 object CommandServiceHttpServer {
 
   val unknownRunIdMessage = "Unknown runId: Request may have timed out"
-
-  /**
-   * Function completing a request when given a list of CommandStatus objects.
-   */
-  type Completer = Option[CommandStatus] => Unit
 
   /**
    * Factory for `akka.actor.Props` for CommandService.
@@ -40,6 +36,7 @@ case class CommandServiceHttpServer(commandServiceActor: ActorRef, interface: St
   // Entry point for the actor
   override def receive: Receive = runRoute(route) orElse {
     case Bound(localAddress) => log.info(s"Started Spray HTTP server on $localAddress")
+    case PeerClosed => log.info(s"Received PeerClosed")
     case x => log.error(s"Received unexpected message from $sender: $x")
   }
 }

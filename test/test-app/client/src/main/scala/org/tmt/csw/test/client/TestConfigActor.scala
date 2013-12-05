@@ -3,7 +3,15 @@ package org.tmt.csw.test.client
 import akka.actor._
 import org.tmt.csw.cmd.akka.{RunId, ConfigActor}
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
-import org.tmt.csw.cmd.akka.ConfigActor.{ConfigAbort, ConfigCancel, ConfigResume, ConfigPause}
+import org.tmt.csw.cmd.akka.ConfigActor._
+import org.tmt.csw.cmd.core.Configuration
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigResume
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigAbort
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigCancel
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigPause
+import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
+import scala.Some
+import scala.util.Success
 
 object TestConfigActor {
   def props(commandStatusActor: ActorRef): Props = Props(classOf[TestConfigActor], commandStatusActor)
@@ -24,7 +32,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef) extends ConfigA
   /**
    * Called when a configuration is submitted
    */
-  def submit(submit: SubmitWithRunId): Unit = {
+  override def submit(submit: SubmitWithRunId): Unit = {
     val configWorkerActor = context.actorOf(TestConfigActorWorker.props(commandStatusActor, 1), "testConfigActorWorker")
     log.debug(s"Forwarding config ${submit.config} to worker $configWorkerActor")
     runIdForActorRef += (configWorkerActor -> submit.runId)
@@ -36,7 +44,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef) extends ConfigA
   /**
    * Work on the config matching the given runId should be paused
    */
-  def pause(runId: RunId): Unit = {
+  override def pause(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigPause(runId)
       case None => log.error(s"No worker actor found for runId: $runId")
@@ -46,7 +54,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef) extends ConfigA
   /**
    * Work on the config matching the given runId should be resumed
    */
-  def resume(runId: RunId): Unit = {
+  override def resume(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigResume(runId)
       case None => log.error(s"No worker actor found for runId: $runId")
@@ -56,7 +64,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef) extends ConfigA
   /**
    * Work on the config matching the given runId should be canceled
    */
-  def cancel(runId: RunId): Unit = {
+  override def cancel(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigCancel(runId)
       case None => log.error(s"No worker actor found for runId: $runId")
@@ -66,11 +74,15 @@ class TestConfigActor(override val commandStatusActor: ActorRef) extends ConfigA
   /**
    * Work on the config matching the given runId should be aborted
    */
-  def abort(runId: RunId): Unit = {
+  override def abort(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigAbort(runId)
       case None => log.error(s"No worker actor found for runId: $runId")
     }
+  }
+
+  override def query(config: Configuration, replyTo: ActorRef): Unit = {
+    replyTo ! ConfigResponse(Success(config)) // XXX dummy implementation
   }
 
   /**

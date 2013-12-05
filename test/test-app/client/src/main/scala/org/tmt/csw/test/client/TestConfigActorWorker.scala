@@ -5,6 +5,9 @@ import scala.concurrent.Future
 import org.tmt.csw.cmd.akka.{CommandStatusActor, RunId, CommandStatus, ConfigActor}
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import akka.actor.{Props, ActorRef}
+import org.tmt.csw.cmd.core.Configuration
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
+import scala.util.Success
 
 
 object TestConfigActorWorker {
@@ -35,7 +38,7 @@ class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfS
   /**
    * Called when a configuration is submitted
    */
-  def submit(submit: SubmitWithRunId): Unit = {
+  override def submit(submit: SubmitWithRunId): Unit = {
     savedSubmit = submit
     aState.set(CommandStatus.Submitted(submit.runId))
     doSubmit(submit)
@@ -88,14 +91,14 @@ class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfS
   /**
    * Work on the config matching the given runId should be paused
    */
-  def pause(runId: RunId): Unit = {
+  override def pause(runId: RunId): Unit = {
     aState.set(CommandStatus.Paused(runId))
   }
 
   /**
    * Work on the config matching the given runId should be resumed
    */
-  def resume(runId: RunId): Unit = {
+  override def resume(runId: RunId): Unit = {
     aState.set(CommandStatus.Resumed(runId))
     doSubmit(savedSubmit)
   }
@@ -103,14 +106,18 @@ class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfS
   /**
    * Work on the config matching the given runId should be canceled
    */
-  def cancel(runId: RunId): Unit = {
+  override def cancel(runId: RunId): Unit = {
     aState.set(CommandStatus.Canceled(runId))
   }
 
   /**
    * Work on the config matching the given runId should be aborted
    */
-  def abort(runId: RunId): Unit = {
+  override def abort(runId: RunId): Unit = {
     aState.set(CommandStatus.Aborted(runId))
+  }
+
+  override def query(config: Configuration, replyTo: ActorRef): Unit = {
+    replyTo ! ConfigResponse(Success(config)) // XXX dummy implementation
   }
 }
