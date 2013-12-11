@@ -94,9 +94,12 @@ object CommandStatus {
    * @return the command status object with the given fields
    */
   def apply(name: String, runId: RunId, message: String = ""): CommandStatus = name match {
+    case "Submitted" => Submitted(runId)
     case "Pending" => Pending(runId)
     case "Queued" => Queued(runId)
     case "Busy" => Busy(runId)
+    case "Paused" => Paused(runId)
+    case "Resumed" => Resumed(runId)
     case "Completed" => Completed(runId)
     case "Error" => Error(runId, message)
     case "Aborted" => Aborted(runId)
