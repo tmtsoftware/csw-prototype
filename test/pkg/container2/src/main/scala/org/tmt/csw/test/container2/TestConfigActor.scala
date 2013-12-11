@@ -74,6 +74,8 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    * Called when a configuration is submitted
    */
   override def submit(submit: SubmitWithRunId): Unit = {
+    // Save the config for this test, so that query can return it later
+    savedConfig = Some(submit.config)
     log.info("XXX sending dummy message to hardware")
     clientSocket ! ZMQMessage(ByteString("Dummy Message from Akka"))
     context.become(waitingForStatus(submit))
@@ -126,14 +128,13 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
             withValue("equinox", "J2000")
         } else {
           config.
-            withValue("c1", "22:356:01.066").
+            withValue("c1", "22:35:01.066").
             withValue("c2", "33:58:21.69").
             withValue("equinox", "J2000")
         }
     }
 
     sender ! ConfigResponse(Success(conf))
-    savedConfig = Some(config)
   }
 }
 

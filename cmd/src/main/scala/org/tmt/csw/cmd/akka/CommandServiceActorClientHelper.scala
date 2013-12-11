@@ -137,6 +137,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * Handles a request to fill in the blank values of the given config with the current values.
    */
   def configGet(config: Configuration): Future[ConfigResponse] = {
+    log.info(s"XXX configGet ${config}")
     implicit val askTimeout = Timeout(3 seconds)
     (commandServiceActor ? ConfigGet(config)).mapTo[ConfigResponse]
   }
