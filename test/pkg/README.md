@@ -29,10 +29,17 @@ To run the demo: Open terminal windows or tabs in these directories and run thes
 * cd hardware/src/main/c; mtserver2
 * cd container2/target/bin; ./start
 * cd container1/target/bin; ./start
-* cd web/pkgtest; play run            # then open http://localhost:9000 in a browser
 
 Currently this is the order in which the applications must be started, but that will be changed in the future
 to allow any order.
+
+Optionally start the Play web app:
+
+* cd web/pkgtest; play run            # then open http://localhost:9000 in a browser
+
+Or: Access the Spray/ExtJS based web app:
+
+* open http://localhost:8089 in a browser for the Ext JS version.
 
 Enter the values in the form and press Submit. The status of the command is shown below the button and updated
 while the command is running.
