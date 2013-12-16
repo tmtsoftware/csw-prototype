@@ -56,10 +56,10 @@ worker_routine (void *context) {
 int main (int argc, char** argv)
 {
     if (argc != 2) {
-	printf("Expected one argument: filter or grating\n");
+	printf("Expected one argument: filter or disperser\n");
 	exit(1);
     }
-    // Use a different port depending on the argument (filter or grating)
+    // Use a different port depending on the argument (filter or disperser)
     char* url = "tcp://*:6565";
     if (strcmp(argv[1], "filter") != 0) url = "tcp://*:6566";
     printf("Listening for %s commands on %s\n", argv[1], url);

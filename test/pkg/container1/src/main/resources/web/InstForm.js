@@ -1,4 +1,4 @@
-// Demo showing tmt.mobie.blue.filter and tmt.mobie.blue.grating components
+// Demo showing tmt.mobie.blue.filter and tmt.mobie.blue.disperser components
 
 Ext.require([
     'Ext.form.*',
@@ -10,7 +10,7 @@ Ext.require([
 Ext.define("Tmt.mobie.blue.Model", {
     extend: "Ext.data.Model",
 
-    fields: ["filter", "pupilWheel", "grating", "exposureTime"]
+    fields: ["filter", "pupilWheel", "disperser", "exposureTime"]
 });
 
 // Sends an ajax query to the Spray/REST command server to get the current values to display
@@ -24,7 +24,7 @@ var refreshForm = function(formPanel){
                     mobie: {
                         blue: {
                             filter: {value: ""},
-                            grating: {value: ""}
+                            disperser: {value: ""}
                         }
                     }
                 }
@@ -35,7 +35,7 @@ var refreshForm = function(formPanel){
             console.log("XXX refreshForm: result = " + response.responseText)
             formPanel.getForm().setValues({
                 filter: result.config.tmt.mobie.blue.filter.value,
-                grating: result.config.tmt.mobie.blue.grating.value
+                disperser: result.config.tmt.mobie.blue.disperser.value
             });
         },
         failure: function(response, options){
@@ -98,7 +98,7 @@ var submitForm = function(formPanel){
                     mobie: {
                         blue: {
                             filter: {value: v.filter},
-                            grating: {value: v.grating}
+                            disperser: {value: v.disperser}
                         }
                     }
                 }
@@ -167,8 +167,8 @@ var filterStore = ({
     ]
 });
 
-// Grating list (TODO: make remote)
-var gratingStore = ({
+// Disperser list (TODO: make remote)
+var disperserStore = ({
     type: 'array',
     fields: ['name'],
     data: [
@@ -219,12 +219,12 @@ Ext.onReady(function(){
                 forceSelection: true
             },{
                 xtype: 'combobox',
-                name: 'grating',
+                name: 'disperser',
                 editable : false,
-                fieldLabel: 'Grating',
+                fieldLabel: 'Disperser',
                 displayField: 'name',
                 valueField: 'name',
-                store: gratingStore,
+                store: disperserStore,
                 queryMode: 'local', //or remote
                 forceSelection: true
             }]

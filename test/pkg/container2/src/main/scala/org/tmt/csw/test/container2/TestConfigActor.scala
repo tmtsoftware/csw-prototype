@@ -23,7 +23,7 @@ object TestConfigActor {
  *
  * @param commandStatusActor actor that receives the command status messages
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
- * @param configKey set to "filter" or "grating" in this test
+ * @param configKey set to "filter" or "disperser" in this test
  */
 class TestConfigActor(override val commandStatusActor: ActorRef, configKey: String,
                       numberOfSecondsToRun: Int) extends ConfigActor {
@@ -129,7 +129,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
       case None =>
         if (configKey == "filter") {
           config.withValue("value", "None")
-        } else if (configKey == "grating") {
+        } else if (configKey == "disperser") {
           config.withValue("value", "Mirror")
         } else config
     }

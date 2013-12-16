@@ -160,7 +160,7 @@ and Web UI<y:LabelModel>
           <y:Geometry height="56.359999999999985" width="96.72" x="1124.725579876005" y="201.94376104771672"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="32.265625" modelName="eight_pos" modelPosition="s" textColor="#000000" visible="true" width="124.626953125" x="-13.9534765625001" y="60.359999999999985">ZeroMQ Grating
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="32.265625" modelName="eight_pos" modelPosition="s" textColor="#000000" visible="true" width="124.626953125" x="-13.9534765625001" y="60.359999999999985">ZeroMQ Disperser
 Hardware Simulation</y:NodeLabel>
           <y:SVGNodeProperties usingVisualBounds="false"/>
           <y:SVGModel svgBoundsPolicy="0">
