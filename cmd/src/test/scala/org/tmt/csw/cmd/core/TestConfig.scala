@@ -3,10 +3,11 @@ package org.tmt.csw.cmd.core
 import org.scalatest.FunSuite
 import java.io.StringReader
 import scala.collection.JavaConverters._
-import com.typesafe.config.{ConfigSyntax, ConfigParseOptions, ConfigRenderOptions, ConfigFactory}
+import com.typesafe.config._
 
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
+import com.typesafe.config.ConfigException.WrongType
 
 object TestConfig {
   val testConfig =
@@ -39,8 +40,6 @@ class TestConfig extends FunSuite {
 
 
   test("Test using the Akka Config classes to parse a config from a string") {
-    // A test config file taken from the Akka docs
-
     val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
     println(conf.toString)
     assert(conf.getInt("config.info.configId") == 1000233)
@@ -52,6 +51,20 @@ class TestConfig extends FunSuite {
     assert(conf.getString("config.tmt.tel.ao.pos.one.equinox") == "J2000")
   }
 
+  test("Test Akka Config class extracting single values while keeping the hierarchy") {
+    val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
+    val path = "config.tmt.tel.base.pos.posName"
+    val x = try {
+      conf.getConfig(path)
+    } catch {
+      case e: WrongType =>
+        val ar = path.split('.')
+        val parentPath  = ar.init.mkString(".")
+        val key = ar.last
+        conf.getConfig(parentPath).withOnlyPath(key)
+    }
+    println(x.toString)
+  }
 
   test("Test creating a config in code") {
     val simplePathMapValue = Map("x.y" -> 4, "z" -> 5).asInstanceOf[Map[String, AnyRef]].asJava

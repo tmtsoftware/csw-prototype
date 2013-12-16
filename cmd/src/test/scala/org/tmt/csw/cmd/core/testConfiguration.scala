@@ -13,7 +13,7 @@ class TestConfiguration extends FunSuite {
     val simplePathMapValue = Map("x.y" -> 4, "z" -> 5).asInstanceOf[Map[String, AnyRef]].asJava
     val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
 
-    val conf = Configuration(pathMapValue)
+    val conf = Configuration(pathMapValue).withConfigId()
 
     assert(4 == conf.getInt("b.x.y"))
     assert(5 == conf.getInt("b.z"))
@@ -28,8 +28,8 @@ class TestConfiguration extends FunSuite {
     val simplePathMapValue = Map("x.y" -> 4, "z" -> 5).asInstanceOf[Map[String, AnyRef]].asJava
     val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
 
-    val conf1 = Configuration(pathMapValue)
-    val conf = Configuration(conf1.toString.getBytes)
+    val conf1 = Configuration(pathMapValue).withConfigId()
+    val conf = Configuration(conf1.toString.getBytes).withConfigId()
 
     assert(4 == conf.getInt("b.x.y"))
     assert(5 == conf.getInt("b.z"))
@@ -138,5 +138,24 @@ class TestConfiguration extends FunSuite {
     assert("22:356:01.066" == conf3.getString("config.tmt.tel.ao.pos.one.c1"))
     assert("33:58:21.69" == conf3.getString("config.tmt.tel.ao.pos.one.c2"))
     assert("J2000" == conf3.getString("config.tmt.tel.ao.pos.one.equinox"))
+  }
+
+
+  test("Test getting config from a simple key: value or a config subtree") {
+    val conf = Configuration(
+      Map("config" ->
+        Map("tmt.tel.base.pos" -> Map("posName" -> "NGC738B", "c1" -> "22:35:58.530", "c2" -> "33:57:55.40", "equinox" -> "J2000"))))
+
+    val posNameConf = conf.getConfig("config.tmt.tel.base.pos.posName")
+    val posConf = conf.getConfig("config.tmt.tel.base.pos")
+    assert("NGC738B" == posNameConf.getString("posName"))
+    assert("NGC738B" == posConf.getString("posName"))
+  }
+
+  test("Test merging a list of configurations") {
+    val c1 = Configuration().withValue("filter", "GG455")
+    val c2 = Configuration().withValue("grating", "T5422")
+    val c3 = Configuration.merge(List(c1, c2))
+    assert(c3.toString == "grating=T5422,filter=GG455")
   }
 }

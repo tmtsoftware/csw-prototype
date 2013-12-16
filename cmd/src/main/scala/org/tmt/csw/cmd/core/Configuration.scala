@@ -6,6 +6,7 @@ import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import java.util.UUID
 import scala.Some
+import com.typesafe.config.ConfigException.WrongType
 
 /**
  * Used for building Configuration instances.
@@ -22,7 +23,7 @@ object Configuration {
   /**
    * Initialize with an existing typesafe Config object
    */
-  private def apply(config: Config) = new Configuration(config).withConfigId(UUID.randomUUID().toString)
+  private def apply(config: Config) = new Configuration(config)
 
   /**
    * Reads the configuration from the given string
@@ -65,6 +66,12 @@ object Configuration {
     }
   }
 
+  /**
+   * Returns an empty configuration
+   */
+  def apply(): Configuration = apply(ConfigFactory.empty())
+
+
   // Converts a scala.Map to a java.util.Map recursively
   private def toJavaMap(map: Map[String, Any]): java.util.Map[java.lang.String, java.lang.Object] = {
     map.mapValues {
@@ -73,6 +80,16 @@ object Configuration {
       case array: Array[_] => array.toList.asJava
       case x => x
     }.asJava.asInstanceOf[java.util.Map[java.lang.String, java.lang.Object]]
+  }
+
+  /**
+   * Returns the merge of the configs in the list
+   */
+  def merge(configs: List[Configuration]): Configuration = {
+    configs match {
+      case head :: Nil => head
+      case head :: tail => head.merge(merge(tail))
+    }
   }
 }
 
@@ -104,7 +121,17 @@ class Configuration private(private val config: Config) extends Serializable {
   /**
    * Returns the nested Configuration at the requested path and throws an exception if not found
    */
-  def getConfig(path: String): Configuration = Configuration(config.getConfig(path))
+  def getConfig(path: String): Configuration =
+    Configuration(
+      try {
+        config.getConfig(path)
+      } catch {
+        case e: WrongType =>
+          // If path is for a simple key: value, include the key and value in the result
+          val ar = path.split('.')
+          config.getConfig(ar.init.mkString(".")).withOnlyPath(ar.last)
+      }
+    )
 
   /**
    * Returns the number of top level elements in the configuration
@@ -273,6 +300,15 @@ class Configuration private(private val config: Config) extends Serializable {
    */
   def withConfigId(configId: String): Configuration = {
     withValue(configIdPath(), configId)
+  }
+
+  /**
+   * Returns a new Configuration with configId set to a unique value
+   * in the root.info section (where root is the top level key).
+   * For wait configs, the value is put in the top level.
+   */
+  def withConfigId(): Configuration = {
+    withConfigId(UUID.randomUUID().toString)
   }
 
   /**

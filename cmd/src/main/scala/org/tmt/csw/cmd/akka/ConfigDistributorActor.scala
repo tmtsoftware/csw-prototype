@@ -5,7 +5,7 @@ import scala.Some
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import akka.pattern.ask
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -129,10 +129,6 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
         checkIfDone(commandStatus, _)
       }
     }
-    //    else {
-    //      // Received other state for part: one of (Submitted, Paused, Resumed)
-    //      // XXX?
-    //    }
   }
 
   /**
@@ -165,7 +161,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     } else {
       // one part is done, some still remaining: Update the map to remove the part that is done and update the status
       log.debug(s"${remainingParts.length} parts left for runId $runId")
-      configParts += (runId -> ConfigPartInfo(remainingParts, newCommandStatus, configPartInfo.originalSubmit))
+      configParts += (runId -> ConfigPartInfo(remainingParts.toList, newCommandStatus, configPartInfo.originalSubmit))
     }
   }
 
@@ -280,7 +276,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
         for((actorRef, msg, path) <- list) yield
           (actorRef ? msg).mapTo[ConfigResponse].map(insertPath(_, path))
       Future.sequence(listOfFutureResponses).onComplete {
-        case Success(responseList) => replyTo ! mergeConfigResponses(responseList)
+        case Success(responseList) => replyTo ! mergeConfigResponses(responseList.toList)
         case Failure(ex) => replyTo ! ConfigResponse(Failure(ex))
       }
     }
@@ -310,22 +306,16 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    * @return the merged response
    */
   private def mergeConfigResponses(responses: List[ConfigResponse]): ConfigResponse = {
-
-    // Recursive inner function: Merge the configs in the list
-    def merge(configs: List[Configuration]): Configuration = {
-      configs match {
-        case head :: Nil => head
-        case head :: tail => head.merge(merge(tail))
-      }
-    }
-
     // return first failure if found, otherwise the merged response
     val configs = for(resp <- responses) yield
       resp.tryConfig match {
-        case Success(config) => config
-        case Failure(ex) => return resp
+        case Success(config) =>
+          config
+        case Failure(ex) =>
+          return resp
       }
-    ConfigResponse(Success(merge(configs)))
+
+    ConfigResponse(Success(Configuration.merge(configs.toList)))
   }
 
 

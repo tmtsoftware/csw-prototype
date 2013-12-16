@@ -53,14 +53,23 @@ worker_routine (void *context) {
     return NULL;
 }
 
-int main (void)
+int main (int argc, char** argv)
 {
+    if (argc != 2) {
+	printf("Expected one argument: filter or grating\n");
+	exit(1);
+    }
+    // Use a different port depending on the argument (filter or grating)
+    char* url = "tcp://*:6565";
+    if (strcmp(argv[1], "filter") != 0) url = "tcp://*:6566";
+    printf("Listening for %s commands on %s\n", argv[1], url);
+
     void *context = zmq_init (1);
     s_catch_signals ();
 
     //  Socket to talk to clients
     void *clients = zmq_socket (context, ZMQ_ROUTER);
-    zmq_bind (clients, "tcp://*:6565");
+    zmq_bind (clients, url);
 
     //  Socket to talk to workers
     void *workers = zmq_socket (context, ZMQ_DEALER);

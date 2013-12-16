@@ -26,7 +26,8 @@ The publishLocal task is needed to install the local dependencies for the Play a
 
 To run the demo: Open terminal windows or tabs in these directories and run these commands:
 
-* cd hardware/src/main/c; mtserver2
+* cd hardware/src/main/c; mtserver2 filter
+* cd hardware/src/main/c; mtserver2 grating
 * cd container2/target/bin; ./start
 * cd container1/target/bin; ./start
 

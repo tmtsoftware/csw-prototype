@@ -35,8 +35,8 @@ case class CommandServiceHttpServer(commandServiceActor: ActorRef, interface: St
 
   // Entry point for the actor
   override def receive: Receive = runRoute(route) orElse {
-    case Bound(localAddress) => log.info(s"Started Spray HTTP server on $localAddress")
-    case PeerClosed => log.info(s"Received PeerClosed")
+    case Bound(localAddress) => // log.info(s"Started Spray HTTP server on $localAddress")
+    case PeerClosed => // log.info(s"Received PeerClosed")
     case x => log.error(s"Received unexpected message from $sender: $x")
   }
 }

@@ -9,10 +9,13 @@ import akka.util.ByteString
 import org.tmt.csw.cmd.core.Configuration
 import scala.util.Success
 import org.tmt.csw.cmd.akka.ConfigActor._
+import com.typesafe.config.ConfigFactory
 
 object TestConfigActor {
-  def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int = 2): Props =
-    Props(classOf[TestConfigActor], commandStatusActor, numberOfSecondsToRun)
+  def props(commandStatusActor: ActorRef, configKey: String, numberOfSecondsToRun: Int = 2): Props =
+    Props(classOf[TestConfigActor], commandStatusActor, configKey, numberOfSecondsToRun)
+
+  val config = ConfigFactory.load("TestConfigActor")
 }
 
 /**
@@ -20,11 +23,16 @@ object TestConfigActor {
  *
  * @param commandStatusActor actor that receives the command status messages
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
+ * @param configKey set to "filter" or "grating" in this test
  */
-class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int) extends ConfigActor {
+class TestConfigActor(override val commandStatusActor: ActorRef, configKey: String,
+                      numberOfSecondsToRun: Int) extends ConfigActor {
+
+  val url = TestConfigActor.config.getString(s"TestConfigActor.$configKey.url")
+  log.info(s"For $configKey: using ZMQ URL = $url")
 
   val clientSocket = ZeroMQExtension(context.system).newSocket(SocketType.Req,
-    Listener(self), Connect("tcp://127.0.0.1:6565")) // XXX TODO make host and port configurable
+    Listener(self), Connect(url))
 
   // XXX temp: change to get values over ZMQ from hardware simulation
   var savedConfig: Option[Configuration] = None
@@ -77,7 +85,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
     // Save the config for this test, so that query can return it later
     savedConfig = Some(submit.config)
     log.info("XXX sending dummy message to hardware")
-    clientSocket ! ZMQMessage(ByteString("Dummy Message from Akka"))
+    clientSocket ! ZMQMessage(ByteString(s"$configKey=${submit.config.getString("value")}"))
     context.become(waitingForStatus(submit))
   }
 
@@ -117,21 +125,13 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   override def query(config: Configuration, replyTo: ActorRef): Unit = {
     // XXX TODO: replace savedConfig and get values over ZMQ from hardware simulation
     val conf = savedConfig match {
-      // XXX TODO: should only fill in the values that are passed in!
       case Some(c)  => c
       case None =>
-        if (config.hasPath("posName")) {
-          config.
-            withValue("posName", "NGC738B").
-            withValue("c1", "22:35:58.530").
-            withValue("c2", "33:57:55.40").
-            withValue("equinox", "J2000")
-        } else {
-          config.
-            withValue("c1", "22:35:01.066").
-            withValue("c2", "33:58:21.69").
-            withValue("equinox", "J2000")
-        }
+        if (configKey == "filter") {
+          config.withValue("value", "GG455")
+        } else if (configKey == "grating") {
+          config.withValue("value", "T5422")
+        } else config
     }
 
     sender ! ConfigResponse(Success(conf))

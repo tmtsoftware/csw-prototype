@@ -1,9 +1,8 @@
 package org.tmt.csw.test.container2
 
-import akka.actor.{ActorLogging, Actor, Props}
+import akka.actor.Props
 import org.tmt.csw.pkg.Hcd
 import org.tmt.csw.cmd.akka.OneAtATimeCommandQueueController
-import akka.zeromq._
 
 // A test HCD
 object Hcd2 {
@@ -12,7 +11,8 @@ object Hcd2 {
 
 case class Hcd2(name: String, configPath: String) extends Hcd with OneAtATimeCommandQueueController {
 
-  override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, 3), name)
+  val configKey = configPath.split('.').last
+  override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, configKey, 3), name)
   override val configPaths = Set(configPath)
 
   override def receive: Receive = receiveHcdMessages orElse {

@@ -1,3 +1,5 @@
+// Original demo using base pos and AO pos (not used now)
+
 Ext.require([
     'Ext.form.*',
     'Ext.layout.container.Column',
