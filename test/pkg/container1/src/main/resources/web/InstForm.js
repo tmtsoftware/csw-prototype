@@ -132,6 +132,58 @@ var submitForm = function(formPanel){
     });
 };
 
+// Filter list (TODO: make remote)
+var filterStore = ({
+    type: 'array',
+    fields: ['name'],
+    data: [
+        ["None"],
+        ["g_G0301"],
+        ["r_G0303"],
+        ["i_G0302"],
+        ["z_G0304"],
+        ["Z_G0322"],
+        ["Y_G0323"],
+        ["GG455_G0305"],
+        ["OG515_G0306"],
+        ["RG610_G0307"],
+        ["CaT_G0309"],
+        ["Ha_G0310"],
+        ["HaC_G0311"],
+        ["DS920_G0312"],
+        ["SII_G0317"],
+        ["OIII_G0318"],
+        ["OIIIC_G0319"],
+        ["HeII_G0320"],
+        ["HeIIC_G0321"],
+        ["HartmannA_G0313 + r_G0303"],
+        ["HartmannB_G0314 + r_G0303"],
+        ["g_G0301 + GG455_G0305"],
+        ["g_G0301 + OG515_G0306"],
+        ["r_G0303 + RG610_G0307"],
+        ["i_G0302 + CaT_G0309"],
+        ["z_G0304 + CaT_G0309"],
+        ["u_G0308"]
+    ]
+});
+
+// Grating list (TODO: make remote)
+var gratingStore = ({
+    type: 'array',
+    fields: ['name'],
+    data: [
+        ["Mirror"],
+        ["B1200_G5301"],
+        ["R831_G5302"],
+        ["B600_G5303"],
+        ["B600_G5307"],
+        ["R600_G5304"],
+        ["R400_G5305"],
+        ["R150_G5306"]
+    ]
+});
+
+
 Ext.onReady(function(){
 
     Ext.QuickTips.init();
@@ -139,9 +191,9 @@ Ext.onReady(function(){
     var formPanel = Ext.create('Ext.form.Panel', {
         model: Tmt.mobie.blue.Model,
         name: 'Form',
-        frame:true,
+        frame: true,
         title: 'Assembly1 Configuration',
-        bodyStyle:'padding:5px 5px 0',
+        bodyPadding: 10,
         width: 350,
         fieldDefaults: {
             msgTarget: 'under',
@@ -156,13 +208,25 @@ Ext.onReady(function(){
             defaultType: 'textfield',
             layout: 'anchor',
             items: [{
-                fieldLabel: 'Filter',
+                xtype: 'combobox',
                 name: 'filter',
-                allowBlank:false
+                editable : false,
+                fieldLabel: 'Filter',
+                displayField: 'name',
+                valueField: 'name',
+                store: filterStore,
+                queryMode: 'local', //or remote
+                forceSelection: true
             },{
-                fieldLabel: 'Grating',
+                xtype: 'combobox',
                 name: 'grating',
-                allowBlank:false
+                editable : false,
+                fieldLabel: 'Grating',
+                displayField: 'name',
+                valueField: 'name',
+                store: gratingStore,
+                queryMode: 'local', //or remote
+                forceSelection: true
             }]
         }],
         buttons: [{

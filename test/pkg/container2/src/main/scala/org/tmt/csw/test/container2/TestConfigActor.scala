@@ -128,9 +128,9 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
       case Some(c)  => c
       case None =>
         if (configKey == "filter") {
-          config.withValue("value", "GG455")
+          config.withValue("value", "None")
         } else if (configKey == "grating") {
-          config.withValue("value", "T5422")
+          config.withValue("value", "Mirror")
         } else config
     }
 
