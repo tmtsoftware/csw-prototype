@@ -24,7 +24,9 @@ trait CommandServiceHttpRoute extends HttpService with CommandServiceClientHelpe
    * Route for static web page
    */
   def staticRoute: Route =
-    path("")(getFromResource("web/index.html")) ~ getFromResourceDirectory("web")
+    path("")(getFromResource("web/index.html")) ~
+      getFromResourceDirectory("web") ~
+      getFromResourceDirectory("META-INF/resources/webjars")
 
   /**
    * This defines the HTTP/REST interface for the command service.

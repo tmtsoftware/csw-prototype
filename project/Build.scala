@@ -39,6 +39,7 @@ object Build extends Build {
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
     ) configs MultiJvm
 
+
   // -- Test subprojects with dependency information --
 
   // test-app/app (server)
@@ -81,7 +82,7 @@ object Build extends Build {
         outputDirectory in Dist := file("test/pkg/container1/target"),
         libraryDependencies ++=
           provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote) ++
+            compile(akkaKernel, akkaRemote, extjs) ++
             test(scalaLogging, logback)
       )
   ) dependsOn(pkg, cs, cmd)
@@ -97,7 +98,6 @@ object Build extends Build {
         libraryDependencies ++=
           provided(akkaActor) ++
             compile(akkaKernel, akkaRemote, akkaZeromq) ++
-//            compile(akkaKernel, akkaRemote, scalaZeromq) ++
             test(scalaLogging, logback)
       )
   ) dependsOn(pkg, cs, cmd)
