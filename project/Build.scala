@@ -40,7 +40,7 @@ object Build extends Build {
     ) configs MultiJvm
 
 
-  lazy val extjsWorkspace = Project(id = "extjs", base = file("extjs"))
+//  lazy val extjsWorkspace = Project(id = "extjs", base = file("extjs"))
 
 
   // -- Test subprojects with dependency information --
@@ -88,7 +88,7 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-  ) dependsOn(pkg, cs, cmd, extjsWorkspace)
+  ) dependsOn(pkg, cs, cmd)
 
   // pkg test: Container2
   lazy val container2 = Project(

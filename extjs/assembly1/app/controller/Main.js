@@ -1,11 +1,9 @@
-
+/*
+  Main controller: implements the actions for the form
+ */
 
 Ext.define('Assembly1.controller.Main', {
     extend: 'Ext.app.Controller',
-
-    views : [
-        'Form'
-    ],
 
     // Initialize the callbacks
     init: function (application) {
@@ -14,7 +12,8 @@ Ext.define('Assembly1.controller.Main', {
                 click: this.submitForm
             },
             "button#refreshButton": {
-                click: this.refreshForm
+                click: this.refreshForm,
+                afterrender: this.refreshForm
             }
         });
     },

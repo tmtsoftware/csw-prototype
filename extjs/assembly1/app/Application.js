@@ -3,18 +3,15 @@ Ext.define('Assembly1.Application', {
     name: 'Assembly1',
 
     views: [
-        // TODO: add views here
         'Main',
         'Form'
     ],
 
     controllers: [
-        // TODO: add controllers here
         'Main'
     ],
 
     stores: [
-        // TODO: add stores here
         'Assembly1.store.Filters',
         'Assembly1.store.Dispersers'
     ],
