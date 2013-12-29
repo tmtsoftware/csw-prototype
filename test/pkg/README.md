@@ -24,7 +24,7 @@ For some reason, typing "dist" in the top level csw project appears to compile,
 but the resulting installation is missing dependencies.
 The publishLocal task is needed to install the local dependencies for the Play app, which has a separate build file.
 
-Note: See <a href="file://../../extjs/Readme.md">../../extjs/Readme.md</a> for how to setup the ExtJS
+Note: See <a href="../../extjs/Readme.md">../../extjs/Readme.md</a> for how to setup the ExtJS
 based web UI used below.
 
 To run the demo: Open terminal windows or tabs in these directories and run these commands:
@@ -46,7 +46,7 @@ Or: Access the Spray/ExtJS based web app:
 * open http://localhost:8089 in a browser for the Ext JS version and select the development
 (JavaScript source) or production (compiled, minified) version. Note that you need to
 compile the ExtJS code at least once to get the required CSS file generated.
-See <a href="file://../../extjs/Readme.md">../../extjs/Readme.md</a> for instructions.
+See <a href="../../extjs/Readme.md">../../extjs/Readme.md</a> for instructions.
 
 Enter the values in the form and press Submit. The status of the command is shown below the button and updated
 while the command is running.
