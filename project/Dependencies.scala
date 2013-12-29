@@ -31,7 +31,7 @@ object Dependencies {
   val sprayJson      = "io.spray"                      %% "spray-json"            % "1.2.3"
   val sprayTestkit   = "io.spray"                       % "spray-testkit"         % SprayVersion
 
-  val extjs          = "org.webjars"                    % "extjs"                 % "4.2.1.883"
+//  val extjs          = "org.webjars"                    % "extjs"                 % "4.2.1.883"
 
   val jgit           = "org.eclipse.jgit"               % "org.eclipse.jgit"      % "2.3.1.201302201838-r"
   val scalaIoFile    = "com.github.scala-incubator.io" %% "scala-io-file"         % "0.4.2"

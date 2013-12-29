@@ -16,7 +16,7 @@ object Settings {
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
     version := Version,
-    scalaVersion := "2.10.2",
+    scalaVersion := "2.10.3",
     crossPaths := false,
     parallelExecution in Test := false,
     resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",

@@ -2,31 +2,41 @@ package org.tmt.csw.cmd.spray
 
 import spray.routing._
 import spray.http.MediaTypes._
-import org.tmt.csw.cmd.akka.{CommandServiceClientHelper, ConfigActor, CommandStatus, RunId}
+import org.tmt.csw.cmd.akka.{CommandServiceClientHelper, CommandStatus, RunId}
 import spray.http.StatusCodes
 import org.tmt.csw.cmd.core.Configuration
 import spray.routing.directives.DebuggingDirectives
 import akka.event.Logging
 import scala.util._
 import scala.concurrent.ExecutionContext
+import com.typesafe.config.{ConfigFactory}
 
 /**
  * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests
  * without actually running an HTTP server.
  */
-trait CommandServiceHttpRoute extends HttpService with CommandServiceClientHelper with CommandServiceJsonFormats {
+trait CommandServiceHttpRoute extends HttpService
+  with CommandServiceClientHelper
+  with CommandServiceJsonFormats {
+
   import ExecutionContext.Implicits.global
 
   // marks with "get-user", log with info level, HttpRequest.toString
   DebuggingDirectives.logRequest("get-user", Logging.InfoLevel)
 
+  // the root of the ExtJS workspace, which contains all the ExtJS web apps.
+  // (use uncompiled sources during development, minified app.js from build dir in production release)
+  val extjsRoot = ConfigFactory.defaultReference().getString("csw.extjs.root")
+  ConfigFactory.defaultOverrides()
+  println(s"Using ExtJS root = $extjsRoot")
+
   /**
    * Route for static web page
+   * (default route is the top level index.html file that can provide links to the apps)
    */
   def staticRoute: Route =
-    path("")(getFromResource("web/index.html")) ~
-      getFromResourceDirectory("web") ~
-      getFromResourceDirectory("META-INF/resources/webjars")
+    path("")(getFromDirectory(s"$extjsRoot/index.html")) ~
+      getFromDirectory(extjsRoot)
 
   /**
    * This defines the HTTP/REST interface for the command service.
@@ -169,13 +179,14 @@ trait CommandServiceHttpRoute extends HttpService with CommandServiceClientHelpe
         }
       } ~
       // If none of the above paths matched, it must be a bad request
-      logRequestResponse("XXX bad", Logging.InfoLevel) {
+      logRequestResponse("Unrecognized path passed to Spray route: ", Logging.InfoLevel) {
         complete(StatusCodes.BadRequest)
       }
 
 
 
   def route: Route = staticRoute ~ apiRoute
+//  def route: Route = apiRoute
 
   /**
    *

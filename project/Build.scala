@@ -40,6 +40,9 @@ object Build extends Build {
     ) configs MultiJvm
 
 
+  lazy val extjsWorkspace = Project(id = "extjs", base = file("extjs"))
+
+
   // -- Test subprojects with dependency information --
 
   // test-app/app (server)
@@ -77,15 +80,15 @@ object Build extends Build {
     id = "container1",
     base = file("test/pkg/container1"),
     settings = defaultSettings ++ distSettings ++
-      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
+      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M -Dcsw.extjs.root=" + file("extjs").absolutePath,
         distBootClass in Dist := "org.tmt.csw.test.container1.Container1",
         outputDirectory in Dist := file("test/pkg/container1/target"),
         libraryDependencies ++=
           provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote, extjs) ++
+            compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-  ) dependsOn(pkg, cs, cmd)
+  ) dependsOn(pkg, cs, cmd, extjsWorkspace)
 
   // pkg test: Container2
   lazy val container2 = Project(
