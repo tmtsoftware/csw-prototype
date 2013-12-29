@@ -39,7 +39,7 @@ Ext.define('Assembly1.controller.Main', {
         );
         var json = Ext.encode(data);
         Ext.Ajax.request({
-            url: 'http://localhost:8089/get',
+            url: '/get',
             method: 'POST',
             jsonData: json,
             success: function(response, options){
@@ -90,7 +90,7 @@ Ext.define('Assembly1.controller.Main', {
         var pollCommandStatus = function (runId) {
             console.log("Poll Command status");
             Ext.Ajax.request({
-                url: 'http://localhost:8089/config/' + runId + '/status',
+                url: '/config/' + runId + '/status',
                 method: 'GET',
                 success: function (response, options) {
                     var result = JSON.parse(response.responseText);
@@ -119,7 +119,7 @@ Ext.define('Assembly1.controller.Main', {
         }
 
         Ext.Ajax.request({
-            url: 'http://localhost:8089/queue/submit',
+            url: '/queue/submit',
             method: 'POST',
             jsonData: json,
             success: function(response, options){
