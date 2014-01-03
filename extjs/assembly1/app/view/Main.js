@@ -8,15 +8,6 @@ Ext.define('Assembly1.view.Main', {
 
     xtype: 'app-main',
 
-//    layout: {
-//        type: 'border'
-//    },
-//
-//    items: [{
-//        region: 'center',
-//        xtype: 'assembly1Form'
-//    }]
-
     layout: {
         type: 'vbox',
         align: 'center',

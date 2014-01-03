@@ -13,7 +13,8 @@ Ext.define('Assembly1.Application', {
 
     stores: [
         'Assembly1.store.Filters',
-        'Assembly1.store.Dispersers'
+        'Assembly1.store.Dispersers',
+        'MobieBlues'
     ],
 
     launch: function() {

@@ -12,77 +12,41 @@ Ext.define('Assembly1.controller.Main', {
                 click: this.submitForm
             },
             "button#refreshButton": {
-                click: this.refreshForm,
-                afterrender: this.refreshForm
+                click: this.refreshForm
             }
         });
     },
 
     // Gets the current values to display
     refreshForm: function (button) {
-        var formPanel = button.up('form');
-        console.log("Refresh form!");
-
-        var data = Ext.apply(
-            {
-                config: {
-                    tmt: {
-                        mobie: {
-                            blue: {
-                                filter: {value: ""},
-                                disperser: {value: ""}
-                            }
-                        }
-                    }
-                }
-            }
-        );
-        var json = Ext.encode(data);
-        Ext.Ajax.request({
-            url: '/get',
-            method: 'POST',
-            jsonData: json,
-            success: function(response, options){
-                var result = Ext.decode(response.responseText);
-                console.log("XXX refreshForm: result = " + response.responseText)
-                formPanel.getForm().setValues({
-                    filter: result.config.tmt.mobie.blue.filter.value,
-                    disperser: result.config.tmt.mobie.blue.disperser.value
-                });
-            },
-            failure: function(response, options){
-                var statusCode = response.status;
-                var statusText = response.statusText;
-                alert("Error: " + statusCode + ' (' + statusText + ')');
-            }
-        });
+        this.application.getMobieBluesStore().load();
     },
 
     submitForm: function (button) {
         var formPanel = button.up('form');
         var progressBar = button.up('app-main').down('progressbar');
-        console.log("Submit form! " + button);
-
         var v = formPanel.getForm().getValues();
-        var data = Ext.apply(
+        var m = Ext.create("Assembly1.model.MobieBlue", { filter: v.filter, disperser: v.disperser });
+        m.save({
+            success: function(record, operation)
             {
-                config: {
-                    tmt: {
-                        mobie: {
-                            blue: {
-                                filter: {value: v.filter},
-                                disperser: {value: v.disperser}
-                            }
-                        }
-                    }
-                }
+                var result = Ext.decode(operation.response.responseText);
+                var runId = result["runId"];
+                console.log("Submitted command with runId: " + runId);
+                Ext.getCmp("applyButton").disabled = true;
+                progressBar.wait({
+                    text: 'Updating...'
+                });
+                pollCommandStatus(runId)
+            },
+            failure: function(record, operation)
+            {
+                var statusCode = operation.response.status;
+                var statusText = operation.response.statusText;
+                progressBar.reset();
+                progressBar.updateText("Error: " + statusCode + ' (' + statusText + ')');
+                Ext.getCmp("applyButton").disabled = false;
             }
-        );
-        var json = Ext.encode(data);
-
-        Ext.getCmp("applyButton").disabled = true;
-        progressBar.wait({
-            text: 'Updating...'
         });
 
         // Does long polling to the Spray/REST command server while waiting for the command to complete.
@@ -116,27 +80,6 @@ Ext.define('Assembly1.controller.Main', {
                     Ext.getCmp("applyButton").disabled = false;
                 }
             });
-        }
-
-        Ext.Ajax.request({
-            url: '/queue/submit',
-            method: 'POST',
-            jsonData: json,
-            success: function(response, options){
-                var result = Ext.decode(response.responseText);
-                var runId = result["runId"];
-                console.log("Submitted command with runId: " + runId);
-                pollCommandStatus(runId)
-            },
-            failure: function(response, options){
-                var statusCode = response.status;
-                var statusText = response.statusText;
-                progressBar.reset();
-                progressBar.updateText("Error: " + statusCode + ' (' + statusText + ')');
-                Ext.getCmp("applyButton").disabled = false;
-            }
-        });
-
+        };
     }
-
 });
