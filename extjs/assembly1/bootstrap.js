@@ -8,7 +8,8 @@ Ext.Loader.addClassPathMappings({
   "Assembly1": "app",
   "Ext": "../ext/src",
   "Ext.Msg": "../ext/src/window/MessageBox.js",
-  "Ext.rtl.EventObjectImpl": "../ext/src/rtl/EventObject.js"
+  "Ext.rtl.EventObjectImpl": "../ext/src/rtl/EventObject.js",
+  "common.CommandServiceProxy": "../packages/common/src/CommandServiceProxy.js"
 });
 Ext.ClassManager.addNameAlternateMappings({
   "Assembly1.Application": [],
@@ -18,6 +19,7 @@ Ext.ClassManager.addNameAlternateMappings({
   "Assembly1.model.MobieBlue": [],
   "Assembly1.store.Dispersers": [],
   "Assembly1.store.Filters": [],
+  "Assembly1.store.MobieBlues": [],
   "Assembly1.view.Form": [],
   "Assembly1.view.Main": [],
   "Assembly1.view.Viewport": [],
@@ -836,7 +838,8 @@ Ext.ClassManager.addNameAlternateMappings({
   "Ext.window.MessageBox": [],
   "Ext.window.Window": [
     "Ext.Window"
-  ]
+  ],
+  "common.CommandServiceProxy": []
 });
 Ext.ClassManager.addNameAliasMappings({
   "Assembly1.Application": [],
@@ -846,6 +849,7 @@ Ext.ClassManager.addNameAliasMappings({
   "Assembly1.model.MobieBlue": [],
   "Assembly1.store.Dispersers": [],
   "Assembly1.store.Filters": [],
+  "Assembly1.store.MobieBlues": [],
   "Assembly1.view.Form": [
     "widget.assembly1Form"
   ],
@@ -1836,8 +1840,12 @@ Ext.ClassManager.addNameAliasMappings({
   ],
   "Ext.window.Window": [
     "widget.window"
+  ],
+  "common.CommandServiceProxy": [
+    "proxy.cmdsvc"
   ]
 });
+Ext.setVersion("common", "1.0.0");
 Ext.setVersion("ext-theme-base", "4.2.1");
 Ext.setVersion("ext-theme-classic", "4.2.1");
 Ext.setVersion("ext-theme-neutral", "4.2.1");

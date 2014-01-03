@@ -8,6 +8,6 @@ Ext.application({
     name: 'Assembly1',
 
     extend: 'Assembly1.Application',
-    
+
     autoCreateViewport: true
 });

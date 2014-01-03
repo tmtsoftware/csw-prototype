@@ -2,6 +2,7 @@
     "name": "Assembly1",
 
     "requires": [
+        "common"
     ],
 
     "id": "4a10d8a5-e85e-40d7-8839-d11d85ba433a"
