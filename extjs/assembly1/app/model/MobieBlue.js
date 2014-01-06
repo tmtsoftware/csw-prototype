@@ -14,6 +14,10 @@ Ext.define('Assembly1.model.MobieBlue', {
         // Function used by the proxy to query the server (and also to submit the values)
         // TODO: Is there a better way? Can this be extracted from the form automatically?
         getModelData: function(scope) {
+
+//            var x = this.model.disperser;
+//            console.log("xxx data = " + x);
+
             var filter = scope.data['filter'];
             var disperser = scope.data.disperser;
             if (!filter) filter = "";
