@@ -59,9 +59,18 @@ int main (int argc, char** argv)
 	printf("Expected one argument: filter or disperser\n");
 	exit(1);
     }
-    // Use a different port depending on the argument (filter or disperser)
+    // Use a different port depending on the argument (filter, disperser, pos, one)
+    // Make sure this matches the values in resources/TestConfigActor.conf.
     char* url = "tcp://*:6565";
-    if (strcmp(argv[1], "filter") != 0) url = "tcp://*:6566";
+    if (strcmp(argv[1], "filter") == 0) {
+        url = "tcp://*:6565";
+    } else if (strcmp(argv[1], "disperser") == 0) {
+        url = "tcp://*:6566";
+    } else if (strcmp(argv[1], "pos") == 0) {
+        url = "tcp://*:6567";
+    } else if (strcmp(argv[1], "one") == 0) {
+        url = "tcp://*:6568";
+    }
     printf("Listening for %s commands on %s\n", argv[1], url);
 
     void *context = zmq_init (1);

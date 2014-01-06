@@ -31,6 +31,14 @@ To run the demo: Open terminal windows or tabs in these directories and run thes
 
 * cd hardware/src/main/c; mtserver2 filter
 * cd hardware/src/main/c; mtserver2 disperser
+
+Optionally, if you want to test the Play web app:
+
+* cd hardware/src/main/c; mtserver2 pos    # last part of config path for base pos and ao pos
+* cd hardware/src/main/c; mtserver2 one
+
+Then start the two Akka containers:
+
 * cd container2/target/bin; ./start
 * cd container1/target/bin; ./start
 

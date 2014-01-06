@@ -23,7 +23,7 @@ object TestConfigActor {
  *
  * @param commandStatusActor actor that receives the command status messages
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
- * @param configKey set to "filter" or "disperser" in this test
+ * @param configKey set to the last component of a key, for example: "filter" or "disperser" in this test
  */
 class TestConfigActor(override val commandStatusActor: ActorRef, configKey: String,
                       numberOfSecondsToRun: Int) extends ConfigActor {
@@ -85,7 +85,16 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
     // Save the config for this test, so that query can return it later
     savedConfig = Some(submit.config)
     log.info("XXX sending dummy message to hardware")
-    clientSocket ! ZMQMessage(ByteString(s"$configKey=${submit.config.getString("value")}"))
+    val value = configKey match {
+      case "filter" | "disperser" => submit.config.getString("value")
+      case "pos" | "one" =>
+        val c1 = submit.config.getString("c1")
+        val c2 = submit.config.getString("c2")
+        val equinox = submit.config.getString("equinox")
+        s"$c1 $c2 $equinox"
+      case _ => "error"
+    }
+    clientSocket ! ZMQMessage(ByteString(s"$configKey=$value"))
     context.become(waitingForStatus(submit))
   }
 
@@ -131,6 +140,10 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
           config.withValue("value", "None")
         } else if (configKey == "disperser") {
           config.withValue("value", "Mirror")
+        } else if (configKey == "pos") {
+          config.withValue("posName", "m653").withValue("c1", "03:19:34.2").withValue("c2", "31:23:21.5").withValue("equinox", "J2000")
+        } else if (configKey == "one") {
+          config.withValue("c1", "03:20:29.2").withValue("c2", "31:24:02.1").withValue("equinox", "J2000")
         } else config
     }
 

@@ -22,6 +22,10 @@ class Container1Actor extends Actor with ActorLogging {
   val hcd2aPath = ActorPath.fromString(Container1Settings(context.system).hcd2a)
   val hcd2bPath = ActorPath.fromString(Container1Settings(context.system).hcd2b)
 
+  // These are used by the Play Framework demo
+  val hcd2cPath = ActorPath.fromString(Container1Settings(context.system).hcd2c)
+  val hcd2dPath = ActorPath.fromString(Container1Settings(context.system).hcd2d)
+
   // Receive actor messages
   def receive: Receive = {
     case status: CommandStatus => log.info(s"received command status: $status")
@@ -32,6 +36,8 @@ class Container1Actor extends Actor with ActorLogging {
     assembly1 <- (container ? Container.CreateComponent(assembly1Props, "Assembly-1")).mapTo[ActorRef]
     ack2a <- assembly1 ? Assembly.AddComponentByPath(hcd2aPath)
     ack2b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
+    ack2c <- assembly1 ? Assembly.AddComponentByPath(hcd2cPath)
+    ack2d <- assembly1 ? Assembly.AddComponentByPath(hcd2dPath)
   } {
       // Start a HTTP server with the REST interface
       val interface = Container1Settings(context.system).interface
