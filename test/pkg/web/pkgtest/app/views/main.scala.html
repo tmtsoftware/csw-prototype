@@ -5,8 +5,7 @@
         <title>@title</title>
         <link rel="stylesheet" type="text/css" media="screen"
         href='@routes.Assets.at("stylesheets/bootstrap.css")'>
-        <link rel="stylesheet" media="screen"
-        href="@routes.Assets.at("stylesheets/main.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 
         @* Script used to update the command status via Websocket *@
@@ -15,7 +14,7 @@
                 var ws = new WebSocket("@routes.Assembly1.status(runId).webSocketURL()");
                 ws.onmessage = function (msg) {
                     $('#command-status').text(msg.data)
-                }
+                };
             })
         </script>
 

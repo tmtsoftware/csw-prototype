@@ -20,12 +20,41 @@ object Assembly1Settings {
   // The response from the command server for a status query
   case class StatusResponse(name: String, runId: String, message: String)
 
+  def defaultSettings = Assembly1Settings(
+    BasePos("", "00:00:00", "00:00:00", "J2000"),
+    TelescopePos("00:00:00", "00:00:00", "J2000"))
+
+
+  // Conversion from JSON to BasePos
+  implicit val basePosReads = (
+    (__ \ "posName").read[String] ~
+      (__ \ "c1").read[String] ~
+      (__ \ "c2").read[String] ~
+      (__ \ "equinox").read[String]
+    )(BasePos)
+
+  // Conversion from JSON to TelescopePos
+  implicit val telescopePosReads = (
+    (__ \ "c1").read[String] ~
+      (__ \ "c2").read[String] ~
+      (__ \ "equinox").read[String]
+    )(TelescopePos)
+
+
   // JSON formats
+//  implicit val assembly1SettingsFormat = Json.format[Assembly1Settings]
+  implicit val basePosFormat = Json.format[BasePos]
+  implicit val telescopePosFormat = Json.format[TelescopePos]
   implicit val submitResponseFormat = Json.format[SubmitResponse]
   implicit val statusResponseFormat = Json.format[StatusResponse]
 
-  def defaultSettings = Assembly1Settings(BasePos("", "00:00:00", "00:00:00", "J2000"),
-    TelescopePos("00:00:00", "00:00:00", "J2000"))
+  // Returns an Assembly1Settings object for the given JSON, wrapped in a JsResult
+  def fromJson(json: JsValue): JsResult[Assembly1Settings] = {
+    for {
+      basePos <- Json.fromJson[BasePos](json \ "config" \ "tmt" \ "tel" \ "base" \ "pos" )
+      telescopePos <- Json.fromJson[TelescopePos](json \ "config" \ "tmt" \ "tel" \ "ao" \ "pos" \ "one")
+    } yield Assembly1Settings(basePos, telescopePos)
+  }
 }
 
 // Corresponds to the form that is displayed for editing
