@@ -4,10 +4,11 @@ import sbt._
 
 object Dependencies {
 
-  val AkkaVersion = "2.2.1"
+  val AkkaVersion = "2.2.3"
 
   // See http://spray.io/project-info/current-versions/#current-versions (was compatibility issue with Akka-2.2.0)
-  val SprayVersion = "1.2-20130712"
+//  val SprayVersion = "1.2-20130712"
+  val SprayVersion = "1.2.0"
 
   def compile   (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
   def provided  (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "provided")
