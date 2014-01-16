@@ -202,7 +202,7 @@ object Assembly1 extends Controller {
 
     // Returns true if the status means that the command is done
     private def statusIsFinal(status: String) : Boolean = {
-      status == "Completed" || status == "Error" || status == "Aborted" || status == "Canceled"
+      status == "completed" || status == "error" || status == "aborted" || status == "canceled"
     }
 
     // Returns the command status from the command server JSON response, or None on error

@@ -81,7 +81,7 @@ Ext.define('Assembly1.controller.Main', {
 
                     // Display check mark for completed items (for the demo)
                     if (result["partiallyDone"]) {
-                        var path = result["path"];
+                        var path = result["message"];
                         var partialStatus = result["status"];
                         console.log("Partial Status for: " + path + " = " + partialStatus);
                         if (path.endsWith("filter")) {
