@@ -8,6 +8,7 @@ import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.{RunId, CommandStatus}
 import java.util.UUID
 import org.tmt.csw.cmd.akka.CommandStatus.PartiallyCompleted
+import org.tmt.csw.cmd.akka.CommandStatus.PartiallyCompleted
 
 /**
  * Defines JSON marshallers/unmarshallers for the objects used in REST messages.
@@ -63,32 +64,21 @@ trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSuppor
 
     // Object to JSON
     def write(status: CommandStatus): JsValue = {
-      status match {
-        case PartiallyCompleted(runId, path, partialStatus) =>
-          JsObject(
-            ("name", JsString(status.name)),
-            ("runId", JsString(runId.id)),
-            ("path", JsString(path)),
-            ("status", JsString(partialStatus)),
-            ("done", JsBoolean(status.done)),
-            ("partiallyDone", JsBoolean(status.partiallyDone))
-          )
-        case _ =>
-          JsObject(
-            ("name", JsString(status.name)),
-            ("runId", JsString(status.runId.id)),
-            ("message", JsString(status.message)),
-            ("done", JsBoolean(status.done)),
-            ("partiallyDone", JsBoolean(status.partiallyDone))
-          )
-      }
+      JsObject(
+        ("name", JsString(status.name)),
+        ("runId", JsString(status.runId.id)),
+        ("message", JsString(status.message)),
+        ("status", JsString(status.partialStatus)),
+        ("done", JsBoolean(status.done)),
+        ("partiallyDone", JsBoolean(status.partiallyDone))
+      )
     }
 
-    // JSON to object (don't need PartiallyCompleted here)
+    // JSON to object
     def read(value: JsValue): CommandStatus =
-      value.asJsObject.getFields("name", "runId", "message") match {
-        case Seq(JsString(name), JsString(uuid), JsString(message)) =>
-          CommandStatus(name, RunId(UUID.fromString(uuid)), message)
+      value.asJsObject.getFields("name", "runId", "message", "status") match {
+        case Seq(JsString(name), JsString(uuid), JsString(message), JsString(status)) =>
+          CommandStatus(name, RunId(UUID.fromString(uuid)), message, status)
         case x => deserializationError("Expected CommandStatus as JsObject, but got " + x.getClass)
       }
   }

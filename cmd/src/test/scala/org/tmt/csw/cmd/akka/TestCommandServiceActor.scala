@@ -36,8 +36,10 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
     val commandServiceActor = getCommandServiceActor(1)
     commandServiceActor ! QueueBypassRequest(config)
     val s1 = expectMsgType[CommandStatus.Busy]
+    val s2a = expectMsgType[CommandStatus.PartiallyCompleted]
     val s2 = expectMsgType[CommandStatus.Completed]
     assert(s1.runId == s2.runId)
+    assert(s2.runId == s2a.runId)
   }
 
   test("Test simple queue submit") {
@@ -46,6 +48,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       commandServiceActor ! Submit(config)
       val s1 = expectMsgType[CommandStatus.Queued]
       val s2 = expectMsgType[CommandStatus.Busy]
+      val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
       val s3 = expectMsgType[CommandStatus.Completed]
       assert(s1.runId == s2.runId)
       assert(s3.runId == s2.runId)
@@ -60,6 +63,8 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       val s = expectMsgType[CommandStatus.Queued]
       assert(expectMsgType[CommandStatus.Busy].runId == s.runId)
       commandServiceActor ! ConfigAbort(s.runId)
+      val sa = expectMsgType[CommandStatus.PartiallyCompleted]
+      assert(sa.status == "aborted")
       assert(expectMsgType[CommandStatus.Aborted].runId == s.runId)
     }
   }
@@ -75,6 +80,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       commandServiceActor ! ConfigPause(s.runId)
       expectNoMsg(1.second)
       commandServiceActor ! ConfigResume(s.runId)
+      assert(expectMsgType[CommandStatus.PartiallyCompleted].runId == s.runId)
       assert(expectMsgType[CommandStatus.Completed].runId == s.runId)
     }
   }
@@ -89,6 +95,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       expectNoMsg(1.second)
       commandServiceActor ! QueueStart
       val s2 = expectMsgType[CommandStatus.Busy]
+      val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
       val s3 = expectMsgType[CommandStatus.Completed]
       assert(s1.runId == s2.runId)
       assert(s3.runId == s2.runId)
@@ -116,6 +123,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       commandServiceActor ! Submit(config)
       val s2 = expectMsgType[CommandStatus.Queued]
       val s3 = expectMsgType[CommandStatus.Busy]
+      val s4a = expectMsgType[CommandStatus.PartiallyCompleted]
       val s4 = expectMsgType[CommandStatus.Completed]
       assert(s1.runId != s2.runId)
       assert(s3.runId == s2.runId)
@@ -147,6 +155,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       // Restart the queue (it should contain one config: runId3)
       commandServiceActor ! QueueStart
       assert(expectMsgType[CommandStatus.Busy].runId == s3.runId)
+      assert(expectMsgType[CommandStatus.PartiallyCompleted].runId == s3.runId)
       assert(expectMsgType[CommandStatus.Completed].runId == s3.runId)
     }
   }

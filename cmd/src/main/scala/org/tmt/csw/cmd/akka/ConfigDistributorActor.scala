@@ -37,10 +37,12 @@ object ConfigDistributorActor {
 class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
 
   import ConfigRegistrationActor._
-  import CommandQueueActor._
+//  import CommandQueueActor._
   import ConfigActor._
 
-  // Set of registry entries for actors that process configurations
+  // Set of registry entries for actors that process configurations.
+  // The actors register for the config paths they are interested in and when a message is received,
+  // those parts are extracted and sent to the relevant actors.
   private var registry = Set[RegistryEntry]()
 
   // Maps runId to the submit worker actor that is handling the submit
@@ -51,7 +53,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    */
   override def receive: Receive = {
     case RegistryUpdate(reg) => registry = reg
-    case QueueWorkAvailable => queueWorkAvailable()
+//    case QueueWorkAvailable => queueWorkAvailable()
     case s: SubmitWithRunId => submit(s)
     case status: CommandStatus =>
       if (status.done) {
@@ -75,10 +77,10 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     }
   }
 
-  // Tell all the registered actors that there is work available
-  private def queueWorkAvailable(): Unit = {
-    registry.foreach(_.actorRef ! QueueWorkAvailable)
-  }
+//  // Tell all the registered actors that there is work available
+//  private def queueWorkAvailable(): Unit = {
+//    registry.foreach(_.actorRef ! QueueWorkAvailable)
+//  }
 
   /**
    * Called when a config is submitted.
@@ -235,7 +237,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef,
 
       // send partially complete status (may be displayed by UI)
       completedParts.foreach { part =>
-        val partialStatus = CommandStatus.PartiallyCompleted(runId, part.path, commandStatus.getClass.getSimpleName)
+        val partialStatus = CommandStatus.PartiallyCompleted(runId, part.path, commandStatus.name)
         commandStatusActor ! CommandStatusActor.StatusUpdate(partialStatus, submitter)
         log.info(s"Status: PartiallyCompleted: path = ${part.path}")
       }

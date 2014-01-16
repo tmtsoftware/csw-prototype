@@ -22,12 +22,17 @@ sealed trait CommandStatus {
   def partiallyDone : Boolean = false
 
   /**
+   * Optional partial status name
+   */
+  def partialStatus: String = ""
+
+  /**
    * True if the command execution should stop in this state (aborted, canceled, paused)
    */
   def stop : Boolean = false
 
   /**
-   * Optional message
+   * Optional error message (or path, for PartiallyCompleted)
    */
   def message: String = ""
 
@@ -78,6 +83,7 @@ object CommandStatus {
     override val message = path
     override def withRunId(newRunId: RunId): PartiallyCompleted = PartiallyCompleted(newRunId, path, status)
     override def name = "partially completed"
+    override def partialStatus = status
   }
 
   case class Completed(runId: RunId) extends CommandStatus {
@@ -109,21 +115,22 @@ object CommandStatus {
    * Creates a command status by name
    * @param name simple name of the command status class
    * @param runId the runId to pass to the constructor
-   * @param message optional error message for the Error status
+   * @param message error message for the Error status, path for the partial status, or empty
+   * @param partialStatus partial status value (for PartiallyCompleted) or empty
    * @return the command status object with the given fields
    */
-  def apply(name: String, runId: RunId, message: String = ""): CommandStatus = name match {
-    case "Submitted" => Submitted(runId)
-    case "Pending" => Pending(runId)
-    case "Queued" => Queued(runId)
-    case "Busy" => Busy(runId)
-    case "Paused" => Paused(runId)
-    case "Resumed" => Resumed(runId)
-    // Not used
-    case "PartiallyCompleted" => PartiallyCompleted(runId, message, "Completed")
-    case "Completed" => Completed(runId)
-    case "Error" => Error(runId, message)
-    case "Aborted" => Aborted(runId)
-    case "Canceled" => Canceled(runId)
-  }
+  def apply(name: String, runId: RunId, message: String, partialStatus: String): CommandStatus =
+    name match {
+      case "submitted" => Submitted(runId)
+      case "pending" => Pending(runId)
+      case "queued" => Queued(runId)
+      case "busy" => Busy(runId)
+      case "paused" => Paused(runId)
+      case "resumed" => Resumed(runId)
+      case "partially completed" => PartiallyCompleted(runId, message, partialStatus)
+      case "completed" => Completed(runId)
+      case "error" => Error(runId, message)
+      case "aborted" => Aborted(runId)
+      case "canceled" => Canceled(runId)
+    }
 }
