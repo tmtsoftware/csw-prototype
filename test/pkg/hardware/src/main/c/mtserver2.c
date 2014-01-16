@@ -40,8 +40,10 @@ worker_routine (void *context) {
             printf ("Received request: [%s]\n", string);
             free (string);
             //  Do some 'work'
-            usleep (1000 * (randof (5000) + 1));
-//            sleep (1);
+	    srandomdev();
+            int ms = 1000 * (randof(5000) + 1);
+            printf ("Work will take request: %g secs\n", ms/1000.);
+            usleep (ms);
             //  Send reply back to client
             s_send (receiver, "OK");
         } else {
@@ -61,6 +63,7 @@ int main (int argc, char** argv)
     }
     // Use a different port depending on the argument (filter, disperser, pos, one)
     // Make sure this matches the values in resources/TestConfigActor.conf.
+    // Later on, this should be read from a config file or service.
     char* url = "tcp://*:6565";
     if (strcmp(argv[1], "filter") == 0) {
         url = "tcp://*:6565";

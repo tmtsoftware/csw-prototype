@@ -25,8 +25,22 @@ Ext.define('Assembly1.controller.Main', {
     submitForm: function (button) {
         var formPanel = button.up('form');
         var progressBar = button.up('app-main').down('progressbar');
+
+        // Check marks to show when one of the items has completed
+        var filterDone = formPanel.down('#filterDone');
+        filterDone.hide();
+        var disperserDone = formPanel.down('#disperserDone');
+        disperserDone.hide();
+
+        // Display a busy cursor over each item
+        var diperserCb = formPanel.down('#disperser');
+        var disperserMask = new Ext.LoadMask(diperserCb, {msg:""});
+        var filterCb = formPanel.down('#filter');
+        var filterMask = new Ext.LoadMask(filterCb, {msg:""});
+
         var v = formPanel.getForm().getValues();
         var m = Ext.create("Assembly1.model.MobieBlue", { filter: v.filter, disperser: v.disperser });
+
         m.save({
             success: function(record, operation)
             {
@@ -37,6 +51,8 @@ Ext.define('Assembly1.controller.Main', {
                 progressBar.wait({
                     text: 'Updating...'
                 });
+                filterMask.show();
+                disperserMask.show();
                 pollCommandStatus(runId)
             },
             failure: function(record, operation)
@@ -62,14 +78,34 @@ Ext.define('Assembly1.controller.Main', {
                     var status = result["name"];
                     progressBar.updateText("Status: " + status);
                     console.log("Command status: " + status);
-                    if (status != "Completed" && status != "Error" && status != "Aborted" && status != "Canceled") {
-                        pollCommandStatus(runId);
-                    } else {
+
+                    // Display check mark for completed items (for the demo)
+                    if (result["partiallyDone"]) {
+                        var path = result["path"];
+                        var partialStatus = result["status"];
+                        console.log("Partial Status for: " + path + " = " + partialStatus);
+                        if (path.endsWith("filter")) {
+                            filterDone.show();
+                            filterMask.hide();
+                        } else if (path.endsWith("disperser")) {
+                            disperserDone.show();
+                            disperserMask.hide();
+                        }
+                    }
+
+                    if (result["done"]) {
+                        filterDone.show();
+                        filterMask.hide();
+                        disperserDone.show();
+                        disperserMask.hide();
+
                         progressBar.reset();
                         Ext.getCmp("applyButton").disabled = false;
                         if (status == "Error") {
                             progressBar.updateText("Error: " + result["message"]);
                         }
+                    } else {
+                        pollCommandStatus(runId);
                     }
                 },
                 failure: function (response, options) {

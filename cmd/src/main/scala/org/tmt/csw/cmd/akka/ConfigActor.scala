@@ -10,25 +10,38 @@ object ConfigActor {
   // -- Messages that operate on a running configuration --
   sealed trait ConfigMessage
 
+  sealed trait ConfigControlMessage {
+    val runId: RunId
+    def withRunId(newRunId: RunId): ConfigControlMessage
+  }
+
   /**
    * Message to cancel the running config with the given runId
    */
-  case class ConfigCancel(runId: RunId) extends ConfigMessage
+  case class ConfigCancel(runId: RunId) extends ConfigMessage with ConfigControlMessage {
+    def withRunId(newRunId: RunId): ConfigControlMessage = ConfigCancel(newRunId)
+  }
 
   /**
    * Message to abort the running config with the given runId
    */
-  case class ConfigAbort(runId: RunId) extends ConfigMessage
+  case class ConfigAbort(runId: RunId) extends ConfigMessage with ConfigControlMessage {
+    def withRunId(newRunId: RunId): ConfigControlMessage = ConfigAbort(newRunId)
+  }
 
   /**
    * Message to pause the running config with the given runId
    */
-  case class ConfigPause(runId: RunId) extends ConfigMessage
+  case class ConfigPause(runId: RunId) extends ConfigMessage with ConfigControlMessage {
+    def withRunId(newRunId: RunId): ConfigControlMessage = ConfigPause(newRunId)
+  }
 
   /**
    * Message to resume the running config with the given runId
    */
-  case class ConfigResume(runId: RunId) extends ConfigMessage
+  case class ConfigResume(runId: RunId) extends ConfigMessage with ConfigControlMessage {
+    def withRunId(newRunId: RunId): ConfigControlMessage = ConfigResume(newRunId)
+  }
 
   /**
    * Used to query the current state of a device. A config is passed in (the values are ignored)

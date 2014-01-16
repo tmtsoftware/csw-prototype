@@ -7,6 +7,7 @@ import spray.httpx.SprayJsonSupport
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.{RunId, CommandStatus}
 import java.util.UUID
+import org.tmt.csw.cmd.akka.CommandStatus.PartiallyCompleted
 
 /**
  * Defines JSON marshallers/unmarshallers for the objects used in REST messages.
@@ -59,12 +60,31 @@ trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSuppor
    * Instance of RootJsonFormat for CommandStatus
    */
   implicit object CommandStatusJsonFormat extends RootJsonFormat[CommandStatus] {
-    def write(status: CommandStatus): JsValue = JsObject(
-      ("name", JsString(status.getClass.getSimpleName)),
-      ("runId", JsString(status.runId.id)),
-      ("message", JsString(status.message))
-    )
 
+    // Object to JSON
+    def write(status: CommandStatus): JsValue = {
+      status match {
+        case PartiallyCompleted(runId, path, partialStatus) =>
+          JsObject(
+            ("name", JsString(status.name)),
+            ("runId", JsString(runId.id)),
+            ("path", JsString(path)),
+            ("status", JsString(partialStatus)),
+            ("done", JsBoolean(status.done)),
+            ("partiallyDone", JsBoolean(status.partiallyDone))
+          )
+        case _ =>
+          JsObject(
+            ("name", JsString(status.name)),
+            ("runId", JsString(status.runId.id)),
+            ("message", JsString(status.message)),
+            ("done", JsBoolean(status.done)),
+            ("partiallyDone", JsBoolean(status.partiallyDone))
+          )
+      }
+    }
+
+    // JSON to object (don't need PartiallyCompleted here)
     def read(value: JsValue): CommandStatus =
       value.asJsObject.getFields("name", "runId", "message") match {
         case Seq(JsString(name), JsString(uuid), JsString(message)) =>

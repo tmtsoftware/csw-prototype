@@ -28,38 +28,57 @@ Ext.define("Assembly1.view.Form", {
     items: [{
         xtype:'fieldset',
         title: 'TMT Mobie Blue Configuration',
-        defaultType: 'textfield',
         layout: 'anchor',
         items: [{
-            xtype: 'combobox',
-            name: 'filter',
-            editable : false,
-            fieldLabel: 'Filter',
-            displayField: 'name',
-            valueField: 'name',
-            store: 'Assembly1.store.Filters',
-            queryMode: 'local', //or remote
-            forceSelection: true
+            xtype:'fieldcontainer',
+            layout:'hbox',
+            items: [{
+                xtype: 'combobox',
+                name: 'filter',
+                id: 'filter',
+                editable: false,
+                fieldLabel: 'Filter',
+                displayField: 'name',
+                valueField: 'name',
+                store: 'Assembly1.store.Filters',
+                queryMode: 'local', //or remote
+                forceSelection: true
+            }, {
+                xtype: 'label',
+                id: 'filterDone',
+                html: '&#x2713;', // Check mark to show when the item has completed
+                hidden: true,
+                margin: '0 0 0 10'
+            }]
         },{
-            xtype: 'combobox',
-            name: 'disperser',
-            editable : false,
-            fieldLabel: 'Disperser',
-            displayField: 'name',
-            valueField: 'name',
-            store: 'Assembly1.store.Dispersers',
-            queryMode: 'local', //or remote
-            forceSelection: true
+            xtype:'fieldcontainer',
+            layout:'hbox',
+            items: [{
+                xtype: 'combobox',
+                name: 'disperser',
+                id: 'disperser',
+                editable : false,
+                fieldLabel: 'Disperser',
+                displayField: 'name',
+                valueField: 'name',
+                store: 'Assembly1.store.Dispersers',
+                queryMode: 'local', //or remote
+                forceSelection: true
+            }, {
+
+                xtype: 'label',
+                id: 'disperserDone',
+                html: '&#x2713;', // Check mark to show when the item has completed
+                hidden: true,
+                margin: '0 0 0 10'
+            }]
         }]
     }],
-    buttons: [
-        {
+    buttons: [{
             text: 'Refresh',
             id: 'refreshButton'
-        },
-        {
+        }, {
             text: 'Apply',
             id: 'applyButton'
-        }
-    ]
+        }]
 });
