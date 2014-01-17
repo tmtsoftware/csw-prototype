@@ -9,7 +9,7 @@ import spray.routing.directives.DebuggingDirectives
 import akka.event.Logging
 import scala.util._
 import scala.concurrent.ExecutionContext
-import com.typesafe.config.{ConfigFactory}
+import com.typesafe.config.ConfigFactory
 
 /**
  * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests
@@ -186,7 +186,6 @@ trait CommandServiceHttpRoute extends HttpService
 
 
   def route: Route = staticRoute ~ apiRoute
-//  def route: Route = apiRoute
 
   /**
    *

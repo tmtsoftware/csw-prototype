@@ -77,7 +77,8 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
       checkReturnStatus("3c", commandStatus3c, runId3, CommandStatus.Error(runId3, CommandServiceHttpServer.unknownRunIdMessage))
 
       assert(res4a.status == StatusCodes.Accepted)
-      checkReturnStatus("4a", commandStatus4a, runId4, CommandStatus.Busy(runId4))
+      checkReturnStatus("4a", commandStatus4a, runId4, CommandStatus.PartiallyCompleted(runId4, "config.tmt.tel.base.pos", "completed"))
+//      checkReturnStatus("4a", commandStatus4a, runId4, CommandStatus.Busy(runId4))
       assert(res4b.status == StatusCodes.Accepted)
       checkReturnStatus("4b", commandStatus4b, runId4, CommandStatus.Canceled(runId4))
       assert(res4c.status == StatusCodes.Accepted)
