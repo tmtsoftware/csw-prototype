@@ -42,8 +42,9 @@ worker_routine (void *context) {
             //  Do some 'work'
 	    srandomdev();
             int ms = 1000 * (randof(5000) + 1);
-            printf ("Work will take request: %g secs\n", ms/1000000.);
+            printf ("This will take %g secs\n", ms/1000000.);
             usleep (ms);
+            printf ("Done: Sending OK reply back to sender\n");
             //  Send reply back to client
             s_send (receiver, "OK");
         } else {

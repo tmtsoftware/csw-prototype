@@ -61,7 +61,6 @@ Enter the values in the form and press Submit. The status of the command is show
 while the command is running.
 
 TODO: Add the ability to pause and restart the queue, pause, cancel or abort a command, etc.
-Display a busy cursor and disable the form while the command is running.
 
 The following diagram shows the relationships of the various containers, assemblies and HCDs in this demo:
 
