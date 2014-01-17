@@ -84,10 +84,10 @@ Ext.define('Assembly1.controller.Main', {
                         var path = result["message"];
                         var partialStatus = result["status"];
                         console.log("Partial Status for: " + path + " = " + partialStatus);
-                        if (path.endsWith("filter")) {
+                        if (path == "config.tmt.mobie.blue.filter") {
                             filterDone.show();
                             filterMask.hide();
-                        } else if (path.endsWith("disperser")) {
+                        } else if (path == "config.tmt.mobie.blue.disperser") {
                             disperserDone.show();
                             disperserMask.hide();
                         }
