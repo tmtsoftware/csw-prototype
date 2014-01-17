@@ -25,7 +25,8 @@ but the resulting installation is missing dependencies.
 The publishLocal task is needed to install the local dependencies for the Play app, which has a separate build file.
 
 Note: See <a href="../../extjs/Readme.md">../../extjs/Readme.md</a> for how to setup the ExtJS
-based web UI used below.
+based web UI used below. You need to install and run some "sencha" commands once to prepare the web app, otherwise
+the generated CSS file will not be found and the web app will not display properly.
 
 To run the demo: Open terminal windows or tabs in these directories and run these commands:
 

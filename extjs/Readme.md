@@ -45,4 +45,6 @@ Configuring the location of the ExtJS Applications
 
 In the Scala code, the static Spray route in CommandServiceHttpRoute needs to know where to find the
 JavaScript resources. This is defined in a config value "csw.extjs.root", which can normally be defined
-in the application's reference.conf. A default value is set in cmd/Currently the main sbt Build.scala file adds a -D
+in the application's reference.conf. A default value is set in cmd/src/main/resources/reference.con.
+Currently the main sbt Build.scala file adds a -Dcsw.extjs.root=... option for the container1 demo project,
+automatically inserting the correct path.
