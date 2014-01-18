@@ -84,7 +84,10 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
   override def submit(submit: SubmitWithRunId): Unit = {
     // Save the config for this test, so that query can return it later
     savedConfig = Some(submit.config)
-    log.info("XXX sending dummy message to hardware")
+    log.info("Sending dummy message to ØMQ hardware simulation")
+
+    // Note: We could just send the XML and let the C code parse it, but for now, keep it simple
+    // and extract the value here
     val value = configKey match {
       case "filter" | "disperser" => submit.config.getString("value")
       case "pos" | "one" =>
@@ -94,7 +97,17 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
         s"$c1 $c2 $equinox"
       case _ => "error"
     }
-    clientSocket ! ZMQMessage(ByteString(s"$configKey=$value"))
+
+    // For this test, a timestamp value is inserted by assembly1 (Later the XML can be just passed on to ZMQ)
+    val zmqMsg = configKey match {
+      case "filter" =>
+        val timestamp = submit.config.getString("timestamp")
+        ByteString(s"$configKey=$value, timestamp=$timestamp")
+      case _ =>
+        ByteString(s"$configKey=$value")
+    }
+
+    clientSocket ! ZMQMessage(zmqMsg)
     context.become(waitingForStatus(submit))
   }
 

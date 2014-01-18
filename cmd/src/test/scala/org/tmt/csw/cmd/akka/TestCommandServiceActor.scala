@@ -184,7 +184,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
     val resp = expectMsgType[ConfigResponse]
     resp.tryConfig match {
       case Success(c) =>
-        logger.info(s"XXX GET returns: ${c.toJson.toString}")
+        logger.info(s"GET returns: ${c.toJson.toString}")
         for(s <- List(
           "config.tmt.tel.base.pos.posName",
           "config.tmt.tel.base.pos.c1",

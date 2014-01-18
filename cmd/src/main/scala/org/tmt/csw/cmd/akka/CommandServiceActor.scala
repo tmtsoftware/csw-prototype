@@ -104,21 +104,16 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
   def receiveCommands: Receive = receiveRegistrationRequest orElse {
     // Queue related commands
     case Submit(config, submitter) =>
-      log.info(s"Submit $config")
-      commandQueueActor ! SubmitWithRunId(config, submitter)
+      submit(SubmitWithRunId(config, submitter))
 
     case s@SubmitWithRunId(config, submitter, runId) =>
-      log.info(s"Submit with runId($runId) $config")
-      commandQueueActor ! s
+      submit(s)
 
     case QueueBypassRequest(config) =>
-      val runId = RunId()
-      commandStatusActor ! StatusUpdate(Busy(runId), sender)
-      configActor forward SubmitWithRunId(config, sender, runId)
+      queueBypassRequest(SubmitWithRunId(config, sender, RunId()))
 
     case QueueBypassRequestWithRunId(config, submitter, runId) =>
-      commandStatusActor ! StatusUpdate(Busy(runId), submitter)
-      configActor ! SubmitWithRunId(config, submitter, runId)
+      queueBypassRequest(SubmitWithRunId(config, sender, runId))
 
     case s@QueueStop => commandQueueActor forward s
 
@@ -129,6 +124,24 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
     case s@QueueDelete(runId) => commandQueueActor forward s
 
     case configMessage: ConfigMessage => configActor forward configMessage
+  }
+
+  /**
+   * Called when a command is submitted
+   * @param s holds the config, runId and sender
+   */
+  def submit(s: SubmitWithRunId): Unit = {
+    log.info(s"Submit with runId(${s.runId}) ${s.config}")
+    commandQueueActor ! s
+  }
+
+  /**
+   * Submits a command directly, bypassing the command queue
+   * @param s holds the config, runId and sender
+   */
+  def queueBypassRequest(s: SubmitWithRunId): Unit = {
+    commandStatusActor ! StatusUpdate(Busy(s.runId), s.submitter)
+    configActor ! SubmitWithRunId(s.config, s.submitter, s.runId)
   }
 }
 

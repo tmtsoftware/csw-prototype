@@ -189,7 +189,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef,
   // Send the submit messages to the target actors
   submitInfoList.foreach {
     submitInfo =>
-      log.debug(s"Sending config part to ${submitInfo.target}")
+      log.info(s"Sending config part to ${submitInfo.target}: ${submitInfo.submit.config}")
       submitInfo.target ! submitInfo.submit
   }
 

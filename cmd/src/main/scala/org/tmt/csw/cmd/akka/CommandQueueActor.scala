@@ -138,6 +138,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
   private def queueSubmit(submit: SubmitWithRunId): Unit = {
     queueMap = queueMap + (submit.runId -> submit)
     log.debug(s"Queued config with runId: ${submit.runId}")
+    log.info(s"Queued config: ${submit.config}")
     commandStatusActor ! StatusUpdate(CommandStatus.Queued(submit.runId), submit.submitter)
   }
 

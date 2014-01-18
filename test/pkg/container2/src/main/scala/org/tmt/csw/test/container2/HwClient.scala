@@ -9,13 +9,13 @@ import akka.util.ByteString
 object HwClient {
   class Listener extends Actor {
     def receive: Receive = {
-      case Connecting    ⇒ println("XXX ZMQ Connecting")
+      case Connecting    ⇒ println("ZMQ Connecting")
 
       case m: ZMQMessage ⇒
-        println(s"XXX ZMQ Message: ${m.frame(0).utf8String}")
+        println(s"ZMQ Message: ${m.frame(0).utf8String}")
         sendMessage()
 
-      case x  ⇒ println(s"XXX ZMQ Unknown Message: $x")
+      case x  ⇒ println(s"ZMQ Unknown Message: $x")
     }
   }
 
@@ -33,7 +33,7 @@ object HwClient {
 
 
   def sendMessage(): Unit = {
-    println("XXX sending dummy message")
+    println("sending dummy message")
     clientSocket ! ZMQMessage(ByteString(s"Dummy Message $count from Akka"))
   }
 

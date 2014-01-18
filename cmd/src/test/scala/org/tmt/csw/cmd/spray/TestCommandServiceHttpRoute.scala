@@ -68,7 +68,6 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
 
       Post("/queue/stop") ~> route ~> check {
         assert(status == StatusCodes.Accepted)
-        println(s"XXX /queue/stop contentType = $contentType")
       }
       Post("/queue/pause") ~> route ~> check {
         assert(status == StatusCodes.Accepted)
