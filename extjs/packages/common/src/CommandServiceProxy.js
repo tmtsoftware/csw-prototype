@@ -1,5 +1,5 @@
 
-// Command base class for proxies that communicate with the Spray based command service web REST web server.
+// Common base class for proxies that communicate with the Spray based command service web REST web server.
 Ext.define('common.CommandServiceProxy', {
     extend:  'Ext.data.proxy.Ajax',
     alias : "proxy.cmdsvc",

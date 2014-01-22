@@ -1,5 +1,16 @@
 /*
-  Main controller: implements the actions for the form
+ * Main controller: implements the actions for the form.
+ *
+ * Note: This code is a bit more complicated that it would normally be, since we are not going with
+ * the normal ExtJS way of doing things. The "get" from the server has to POST the JSON for the
+ * requested form values (not normally done in ExtJS), and the JSON has multiple levels that also
+ * complicate things.
+ *
+ * For this demo, we are also displaying checkboxes for saved fields, only saving modified fields,
+ * displaying feedback for each field as it is updated, etc.
+ *
+ * It should be possible to extract most of this code into a reusable class.
+ *
  */
 
 Ext.define('Assembly1.controller.Main', {
@@ -22,8 +33,15 @@ Ext.define('Assembly1.controller.Main', {
         this.application.getMobieBluesStore().load();
     },
 
+    // Called for the Submit button: Get the form values and post them to the HTTP server in
+    // the correct JSON format.
+    // TODO: Factor out reusable parts
     submitForm: function (button) {
+        var me = this;
         var formPanel = button.up('form');
+        var filterCb = formPanel.down('#filterCb');
+        var disperserCb = formPanel.down('#disperserCb');
+        if (!filterCb.isDirty() && !disperserCb.isDirty()) return;
         var progressBar = button.up('app-main').down('progressbar');
 
         // Check marks to show when one of the items has completed
@@ -32,13 +50,11 @@ Ext.define('Assembly1.controller.Main', {
         var disperserDone = formPanel.down('#disperserDone');
         disperserDone.hide();
 
-        // Display a busy cursor over each item
-        var diperserCb = formPanel.down('#disperser');
-        var disperserMask = new Ext.LoadMask(diperserCb, {msg:""});
-        var filterCb = formPanel.down('#filter');
+        // Display a busy cursor (mask) over each item
+        var disperserMask = new Ext.LoadMask(disperserCb, {msg:""});
         var filterMask = new Ext.LoadMask(filterCb, {msg:""});
 
-        var v = formPanel.getForm().getValues();
+        var v = formPanel.getForm().getValues(false, true, false);
         var m = Ext.create("Assembly1.model.MobieBlue", { filter: v.filter, disperser: v.disperser });
 
         m.save({
@@ -51,8 +67,9 @@ Ext.define('Assembly1.controller.Main', {
                 progressBar.wait({
                     text: 'Updating...'
                 });
-                filterMask.show();
-                disperserMask.show();
+                if (filterCb.isDirty()) filterMask.show();
+                if (disperserCb.isDirty()) disperserMask.show();
+
                 pollCommandStatus(runId)
             },
             failure: function(record, operation)
@@ -68,13 +85,11 @@ Ext.define('Assembly1.controller.Main', {
         // Does long polling to the Spray/REST command server while waiting for the command to complete.
         // The command status is displayed in a progress bar.
         var pollCommandStatus = function (runId) {
-            console.log("Poll Command status");
             Ext.Ajax.request({
                 url: '/config/' + runId + '/status',
                 method: 'GET',
                 success: function (response, options) {
                     var result = JSON.parse(response.responseText);
-                    console.log("Command status JSON response: " + response.responseText);
                     var status = result["name"];
                     progressBar.updateText("Status: " + status);
                     console.log("Command status: " + status);
@@ -83,27 +98,39 @@ Ext.define('Assembly1.controller.Main', {
                     if (result["partiallyDone"]) {
                         var path = result["message"];
                         var partialStatus = result["status"];
-                        console.log("Partial Status for: " + path + " = " + partialStatus);
                         if (path == "config.tmt.mobie.blue.filter") {
-                            filterDone.show();
-                            filterMask.hide();
+                            if (filterCb.isDirty()) {
+                                filterDone.show();
+                                filterMask.hide();
+                            }
                         } else if (path == "config.tmt.mobie.blue.disperser") {
-                            disperserDone.show();
-                            disperserMask.hide();
+                            if (disperserCb.isDirty()) {
+                                disperserDone.show();
+                                disperserMask.hide();
+                            }
                         }
                     }
 
                     if (result["done"]) {
-                        filterDone.show();
-                        filterMask.hide();
-                        disperserDone.show();
-                        disperserMask.hide();
+                        if (filterCb.isDirty()) {
+                            filterDone.show();
+                            filterMask.hide();
+                        }
+                        if (disperserCb.isDirty()) {
+                            disperserDone.show();
+                            disperserMask.hide();
+                        }
 
                         progressBar.reset();
                         Ext.getCmp("applyButton").disabled = false;
                         if (status == "Error") {
                             progressBar.updateText("Error: " + result["message"]);
                         }
+
+                        // After submit, query the values to make sure we have the actual values.
+                        // (This also solves a problem handling the "dirty" state of the fields, since that is cleared
+                        //  when the values are set. We could also do this directly to save time...)
+                        me.refreshForm(button);
                     } else {
                         pollCommandStatus(runId);
                     }
