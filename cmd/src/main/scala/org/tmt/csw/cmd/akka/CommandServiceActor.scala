@@ -4,6 +4,8 @@ import akka.actor._
 import org.tmt.csw.cmd.core._
 import org.tmt.csw.cmd.akka.CommandStatus.Busy
 import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
+import org.tmt.csw.cmd.akka.CommandQueueActor.ConfigQueueStatus
+import org.tmt.csw.cmd.akka.ConfigRegistrationActor.RegistryStatus
 
 object CommandServiceActor {
   // Child actor names
@@ -48,7 +50,22 @@ object CommandServiceActor {
    * @param submitter the actor submitting the config (will receive status messages)
    * @param runId the unique runId
    */
-  case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage
+  case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef,
+                                         runId: RunId = RunId()) extends CommandServiceMessage
+
+  /**
+   * Requests that the command service return a CommandServiceStatus object to the sender containing information
+   * describing the command service.
+   */
+  case object StatusRequest extends CommandServiceMessage
+
+  /**
+   * Reply to StatusRequest message
+   */
+  case class CommandServiceStatus(name: String,
+                                  queueStatus: ConfigQueueStatus,
+                                  registryStatus: Option[RegistryStatus])
+
 }
 
 /**

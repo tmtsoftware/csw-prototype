@@ -55,7 +55,7 @@ object ConfigActor {
    * The response from a ConfigGet command
    * @param tryConfig if all the requested values could be retrieved, Success(config), otherwise Failure(ex)
    */
-  case class ConfigResponse(tryConfig: Try[Configuration]) extends ConfigMessage
+  case class ConfigResponse(tryConfig: Try[Configuration])
 
   /**
    * Can be used to configure the system (for internal use)

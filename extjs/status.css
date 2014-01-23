@@ -1,0 +1,45 @@
+/* CSS for index.scala.html, used to display command server status (under http://localhost:8089/status) */
+
+table {
+    width: 600px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    border-collapse: separate;
+    border-spacing: 5px;
+    table-layout: auto;
+}
+caption {
+    background: #444;
+    caption-side: top;
+    color: #fff;
+    font-weight: bold;
+    line-height: 1.4;
+    margin: 0 5px;
+    padding: 15px;
+}
+caption h2 {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+}
+caption p {
+    font-size: 16px;
+    margin: 0;
+}
+thead th,
+tfoot th,
+tfoot td {
+    background: #eee;
+}
+th, td {
+    padding: 10px;
+}
+thead th:first-child {
+    text-align: left;
+}
+tbody th,
+tfoot th {
+    text-align: left;
+}
+#column0 {
+    background: #ddd;
+}

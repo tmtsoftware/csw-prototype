@@ -1,6 +1,7 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor.{Terminated, ActorRef, ActorLogging, Actor}
+import org.tmt.csw.cmd.akka.CommandServiceActor.StatusRequest
 
 // Defines registration messages
 object ConfigRegistrationActor {
@@ -66,6 +67,11 @@ object ConfigRegistrationActor {
    * @param registry set of registry entries for actors that registered to receive configurations
    */
   case class RegistryUpdate(registry: Registry) extends RegistrationMessage
+
+  /**
+   * Reply to StatusRequest message
+   */
+  case class RegistryStatus(registry: Set[RegistryEntry])
 }
 
 
@@ -93,9 +99,7 @@ class ConfigRegistrationActor extends Actor with ActorLogging {
     case Subscribe(actorRef) => subscribe(actorRef)
     case Unsubscribe(actorRef) => unsubscribe(actorRef)
     case Terminated(actorRef) => deregister(actorRef); unsubscribe(actorRef)
-
-    // Commands that act on a running config: forward to config actors
-    case configMessage: ConfigMessage => registry.foreach(_.actorRef forward configMessage)
+    case StatusRequest => sender ! RegistryStatus(registry)
 
     case x => log.warning(s"Received unknown ConfigRegistrationActor message: $x")
   }

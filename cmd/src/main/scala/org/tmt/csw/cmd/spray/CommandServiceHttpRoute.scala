@@ -71,6 +71,16 @@ trait CommandServiceHttpRoute extends HttpService
           }
         )
       ) ~
+      path("status")(
+        // "GET /status" returns the internal status of the command server in HTML format
+        get(
+          respondWithMediaType(`text/html`) {
+            complete {
+              commandServiceStatus()
+            }
+          }
+        )
+      ) ~
       pathPrefix("queue") {
         path("submit")(
           // "POST /queue/submit {config: $config}" submits a config to the command service and returns the runId

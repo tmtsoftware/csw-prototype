@@ -23,6 +23,7 @@ object Build extends Build {
 
   lazy val cmd = Project(id = "cmd", base = file("cmd"))
     .settings(buildSettings: _*)
+    .settings(twirlSettings: _*)
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++

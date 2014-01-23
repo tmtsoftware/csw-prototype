@@ -3,6 +3,7 @@ package org.tmt.csw.cmd.akka
 import akka.actor.{Props, ActorRef, Actor, ActorLogging}
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
+import org.tmt.csw.cmd.akka.CommandServiceActor.StatusRequest
 
 
 object CommandQueueActor {
@@ -70,6 +71,10 @@ object CommandQueueActor {
    */
   case object QueueWorkAvailable extends QueueMessage
 
+  /**
+   * Reply to StatusRequest message
+   */
+  case class ConfigQueueStatus(status: String, queueMap: Map[RunId, SubmitWithRunId], count: Int)
 }
 
 /**
@@ -88,6 +93,9 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
   // The queue controller actor
   private var queueController: ActorRef = Actor.noSender
 
+  // The number of commands submitted
+  private var submitCount = 0
+
   // Needed for "ask"
   private implicit val execContext = context.dispatcher
 
@@ -96,6 +104,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
   def waitingForInit: Receive = {
     case QueueClient(client) => initClient(client)
     case QueueController(controller) => initController(controller)
+    case StatusRequest => sender ! ConfigQueueStatus("waiting for init", queueMap, submitCount)
     case x => unknownMessage(x, "waiting for queue client")
   }
 
@@ -105,6 +114,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
     case QueueStart => queueStart()
     case QueueStop =>
     case Dequeue =>
+    case StatusRequest => sender ! ConfigQueueStatus("stopped", queueMap, submitCount)
     case x => unknownMessage(x, "stopped")
   }
 
@@ -116,6 +126,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
     case QueueStart => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
     case Dequeue =>
+    case StatusRequest => sender ! ConfigQueueStatus("paused", queueMap, submitCount)
     case x => unknownMessage(x, "paused")
   }
 
@@ -129,6 +140,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
     case QueueStart =>
     case QueueDelete(runId) => queueDelete(runId)
     case Dequeue => dequeue()
+    case StatusRequest => sender ! ConfigQueueStatus("started", queueMap, submitCount)
     case x => unknownMessage(x, "started")
   }
 
@@ -140,6 +152,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
     log.debug(s"Queued config with runId: ${submit.runId}")
     log.info(s"Queued config: ${submit.config}")
     commandStatusActor ! StatusUpdate(CommandStatus.Queued(submit.runId), submit.submitter)
+    submitCount = submitCount + 1
   }
 
   // Processing of Configurations in a components queue is stopped.

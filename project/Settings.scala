@@ -62,6 +62,13 @@ object Settings {
     ScalariformKeys.preferences in Test    := formattingPreferences
   )
 
+  import twirl.sbt.TwirlPlugin._
+  lazy val twirlSettings = Twirl.settings ++ Seq(
+    Twirl.twirlImports := Seq(
+      "org.tmt.csw.cmd.akka.CommandServiceActor.CommandServiceStatus"
+    )
+  )
+
   import scalariform.formatter.preferences._
   def formattingPreferences: FormattingPreferences =
     FormattingPreferences()

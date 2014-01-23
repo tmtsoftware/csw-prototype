@@ -149,4 +149,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
   override def configPause(runId: RunId): Unit = {}
 
   override def configResume(runId: RunId): Unit = {}
+
+  override def commandServiceStatus(): Future[String] = {Future.successful("OK")}
+
 }

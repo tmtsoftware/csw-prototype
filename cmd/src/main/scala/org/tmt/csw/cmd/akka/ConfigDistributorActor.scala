@@ -37,8 +37,8 @@ object ConfigDistributorActor {
 class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
 
   import ConfigRegistrationActor._
-//  import CommandQueueActor._
   import ConfigActor._
+  import ConfigDistributorActor._
 
   // Set of registry entries for actors that process configurations.
   // The actors register for the config paths they are interested in and when a message is received,
@@ -53,8 +53,9 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    */
   override def receive: Receive = {
     case RegistryUpdate(reg) => registry = reg
-//    case QueueWorkAvailable => queueWorkAvailable()
+
     case s: SubmitWithRunId => submit(s)
+
     case status: CommandStatus =>
       if (status.done) {
         forwardToSubmitWorker(status.runId, status)
@@ -63,7 +64,6 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
     case ConfigGet(config) => query(config, sender)
     case ConfigPut(config) => internalConfig(config)
-    case ConfigResponse(_) => log.error("Received unexpected ConfigResponse message")
 
     case c: ConfigControlMessage => forwardToSubmitWorker(c.runId, c)
 
@@ -76,11 +76,6 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
       _ forward msg
     }
   }
-
-//  // Tell all the registered actors that there is work available
-//  private def queueWorkAvailable(): Unit = {
-//    registry.foreach(_.actorRef ! QueueWorkAvailable)
-//  }
 
   /**
    * Called when a config is submitted.
