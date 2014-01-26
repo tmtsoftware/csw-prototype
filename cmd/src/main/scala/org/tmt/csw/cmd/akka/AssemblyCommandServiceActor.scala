@@ -44,7 +44,7 @@ trait AssemblyCommandServiceActor extends CommandServiceActor {
       queueStatus  <- (commandQueueActor ? StatusRequest).mapTo[ConfigQueueStatus]
       registryStatus <- (configRegistrationActor ? StatusRequest).mapTo[RegistryStatus]
     } {
-      requester ! CommandServiceStatus(self.path.name, queueStatus, Some(registryStatus))
+      requester ! CommandServiceStatus(self.path.name, queueStatus, commandQueueControllerType, Some(registryStatus))
     }
   }
 }

@@ -82,6 +82,20 @@ Ext.define('Assembly1.controller.Main', {
             }
         });
 
+        // Shows a checkmark next to the combobox if the command completed, or an X if it failed
+        var showStatus = function (combobox, mask, label, status) {
+            if (combobox.isDirty()) {
+                label.show();
+                mask.hide();
+                console.log("showStatus: status = " + status);
+                if (status != "completed" && status != "partially completed") {
+                    label.setText('&#x2718;', false); // X
+                } else {
+                    label.setText('&#x2713;', false); // checkmark
+                }
+            }
+        };
+
         // Does long polling to the Spray/REST command server while waiting for the command to complete.
         // The command status is displayed in a progress bar.
         var pollCommandStatus = function (runId) {
@@ -92,45 +106,32 @@ Ext.define('Assembly1.controller.Main', {
                     var result = JSON.parse(response.responseText);
                     var status = result["name"];
                     progressBar.updateText("Status: " + status);
-                    console.log("Command status: " + status);
+                    console.log("Command status: " + status + ", message = " + result["message"]);
 
                     // Display check mark for completed items (for the demo)
                     if (result["partiallyDone"]) {
                         var path = result["message"];
                         var partialStatus = result["status"];
                         if (path == "config.tmt.mobie.blue.filter") {
-                            if (filterCb.isDirty()) {
-                                filterDone.show();
-                                filterMask.hide();
-                            }
+                            showStatus(filterCb, filterMask, filterDone, result['name']);
                         } else if (path == "config.tmt.mobie.blue.disperser") {
-                            if (disperserCb.isDirty()) {
-                                disperserDone.show();
-                                disperserMask.hide();
-                            }
+                            showStatus(disperserCb, disperserMask, disperserDone, result['name']);
                         }
                     }
 
                     if (result["done"]) {
-                        if (filterCb.isDirty()) {
-                            filterDone.show();
-                            filterMask.hide();
-                        }
-                        if (disperserCb.isDirty()) {
-                            disperserDone.show();
-                            disperserMask.hide();
-                        }
-
+                        showStatus(filterCb, filterMask, filterDone, result['name']);
+                        showStatus(disperserCb, disperserMask, disperserDone, result['name']);
                         progressBar.reset();
                         Ext.getCmp("applyButton").disabled = false;
-                        if (status == "Error") {
+                        if (status == "error") {
                             progressBar.updateText("Error: " + result["message"]);
+                        } else {
+                            // After submit, query the values to make sure we have the actual values.
+                            // (This also solves a problem handling the "dirty" state of the fields, since that is cleared
+                            //  when the values are set. We could also do this directly to save time...)
+                            me.refreshForm(button);
                         }
-
-                        // After submit, query the values to make sure we have the actual values.
-                        // (This also solves a problem handling the "dirty" state of the fields, since that is cleared
-                        //  when the values are set. We could also do this directly to save time...)
-                        me.refreshForm(button);
                     } else {
                         pollCommandStatus(runId);
                     }

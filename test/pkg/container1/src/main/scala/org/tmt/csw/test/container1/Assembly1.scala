@@ -14,7 +14,7 @@ object Assembly1 {
 // A test assembly
 case class Assembly1(name: String) extends Assembly with OneAtATimeCommandQueueController {
 
-  def receive: Receive = receiveAssemblyMessages
+  override def receive: Receive = receiveAssemblyMessages
 
   /**
    * Called when a command is submitted

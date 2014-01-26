@@ -3,13 +3,14 @@ package org.tmt.csw.test.container2
 import akka.actor._
 import org.tmt.csw.cmd.akka.{CommandStatusActor, CommandStatus, ConfigActor, RunId}
 import akka.zeromq._
-import akka.zeromq.Listener
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import akka.util.ByteString
 import org.tmt.csw.cmd.core.Configuration
-import scala.util.Success
+import scala.util.{Failure, Success}
 import org.tmt.csw.cmd.akka.ConfigActor._
 import com.typesafe.config.ConfigFactory
+import akka.pattern.ask
+import scala.concurrent.duration._
 
 object TestConfigActor {
   def props(commandStatusActor: ActorRef, configKey: String, numberOfSecondsToRun: Int = 2): Props =
@@ -28,55 +29,18 @@ object TestConfigActor {
 class TestConfigActor(override val commandStatusActor: ActorRef, configKey: String,
                       numberOfSecondsToRun: Int) extends ConfigActor {
 
+
   val url = TestConfigActor.config.getString(s"TestConfigActor.$configKey.url")
   log.info(s"For $configKey: using ZMQ URL = $url")
 
-  val clientSocket = ZeroMQExtension(context.system).newSocket(SocketType.Req,
-    Listener(self), Connect(url))
+  val zmqClient = context.actorOf(ZmqClient.props(url))
 
   // XXX temp: change to get values over ZMQ from hardware simulation
   var savedConfig: Option[Configuration] = None
 
 
-  // Receive config messages
-  def waitingForConfig: Receive = receiveConfigs
-
-  // Don't want any new configs until we are done with the current one
-  def noConfigs: Receive = {
-    case s: SubmitWithRunId => submitError(s)
-  }
-
-  // Wait for hardware status after sending a hardware command
-  def waitingForStatus(submit: SubmitWithRunId): Receive = noConfigs orElse receiveConfigs orElse {
-    case Connecting ⇒ log.info("Connecting to hardware via ZMQ")
-    case m: ZMQMessage ⇒ hardwareMessageReceived(m, submit)
-    case x ⇒ log.info(s"ZMQ Unknown Message: $x")
-  }
-
   // Receive
-  override def receive: Receive = waitingForConfig
-
-  // Called when a ØMQ message is received from the low level hardware server
-  def hardwareMessageReceived(m: ZMQMessage, submit: SubmitWithRunId): Unit = {
-    val msg = m.frame(0).utf8String
-    log.info(s"ZMQ Message: $msg")
-    val status = if (msg == "OK") {
-      CommandStatus.Completed(submit.runId)
-    } else {
-      CommandStatus.Error(submit.runId, msg)
-    }
-    returnStatus(status, submit.submitter)
-    context.become(waitingForConfig)
-  }
-
-  /**
-   * Called when a configuration is submitted while we a are waiting for the last one
-   * (an error in this case, assuming we want only one at a time)
-   */
-  def submitError(submit: SubmitWithRunId): Unit = {
-    val status = CommandStatus.Error(submit.runId, "Received config before completing the last one")
-    commandStatusActor ! CommandStatusActor.StatusUpdate(status, submit.submitter)
-  }
+  override def receive: Receive = receiveConfigs
 
   /**
    * Called when a configuration is submitted
@@ -84,9 +48,9 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
   override def submit(submit: SubmitWithRunId): Unit = {
     // Save the config for this test, so that query can return it later
     savedConfig = Some(submit.config)
-    log.info("Sending dummy message to ØMQ hardware simulation")
+    log.info("Sending dummy message to ZMQ hardware simulation")
 
-    // Note: We could just send the XML and let the C code parse it, but for now, keep it simple
+    // Note: We could just send the JSON and let the C code parse it, but for now, keep it simple
     // and extract the value here
     val value = configKey match {
       case "filter" | "disperser" => submit.config.getString("value")
@@ -98,7 +62,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
       case _ => "error"
     }
 
-    // For this test, a timestamp value is inserted by assembly1 (Later the XML can be just passed on to ZMQ)
+    // For this test, a timestamp value is inserted by assembly1 (Later the JSON can be just passed on to ZMQ)
     val zmqMsg = configKey match {
       case "filter" =>
         val timestamp = submit.config.getString("timestamp")
@@ -107,8 +71,26 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
         ByteString(s"$configKey=$value")
     }
 
-    clientSocket ! ZMQMessage(zmqMsg)
-    context.become(waitingForStatus(submit))
+    implicit val dispatcher = context.system.dispatcher
+    ask(zmqClient, ZmqClient.Command(zmqMsg))(6 seconds) onComplete {
+
+      case Success(ZMQMessage(frames)) =>
+        val msg = frames(0).utf8String
+        log.info(s"ZMQ Message: $msg")
+        val status = if (msg == "OK") {
+          CommandStatus.Completed(submit.runId)
+        } else {
+          CommandStatus.Error(submit.runId, msg)
+        }
+        returnStatus(status, submit.submitter)
+
+      case Success(m) => // should not happen
+        log.error(s"Unexpected ZMQ Message: $m")
+
+      case Failure(ex) =>
+        val status = CommandStatus.Error(submit.runId, ex.getMessage)
+        commandStatusActor ! CommandStatusActor.StatusUpdate(status, submit.submitter)
+    }
   }
 
   /**
@@ -147,7 +129,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
   override def query(config: Configuration, replyTo: ActorRef): Unit = {
     // XXX TODO: replace savedConfig and get values over ZMQ from hardware simulation
     val conf = savedConfig match {
-      case Some(c)  => c
+      case Some(c) => c
       case None =>
         if (configKey == "filter") {
           config.withValue("value", "None")

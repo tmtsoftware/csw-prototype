@@ -64,6 +64,7 @@ object CommandServiceActor {
    */
   case class CommandServiceStatus(name: String,
                                   queueStatus: ConfigQueueStatus,
+                                  queueControllerClass: String,
                                   registryStatus: Option[RegistryStatus])
 
 }
@@ -113,6 +114,10 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
 
   // The queue controller actor (Derived classes extend a trait to define this, depending on the desired behavior)
   def commandQueueControllerActor: ActorRef
+
+  // A name describing the queue controller (for display in the status web page)
+  def commandQueueControllerType: String
+
 
   // Needed for "ask"
   private implicit val execContext = context.dispatcher

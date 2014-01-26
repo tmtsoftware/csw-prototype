@@ -33,6 +33,10 @@
                     <th scope="row">Submit Count:</th>
                     <td>@status.queueStatus.count</td>
                 </tr>
+                <tr>
+                    <th scope="row">Queue Controller:</th>
+                    <td>@status.queueControllerClass</td>
+                </tr>
                 @if(!status.registryStatus.isEmpty) {
                     <tr>
                         <th scope="row">Registry Contents:</th>

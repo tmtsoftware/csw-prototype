@@ -38,9 +38,9 @@ worker_routine (void *context) {
         char *string = s_recv (receiver);
         if (string) {
             printf ("Received request: [%s]\n", string);
-            free (string);
             //  Do some 'work'
-	    srandomdev();
+            free (string);
+	        srandomdev();
             int ms = 1000 * (randof(5000) + 1);
             printf ("This will take %g secs\n", ms/1000000.);
             usleep (ms);
