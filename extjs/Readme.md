@@ -10,11 +10,12 @@ directory):
     sencha -sdk path/to/sdk generate workspace extjs
 
 Where /path/to/sdk is the path to the ExtJS SDK that you can download
-from the Sencha web site:
-http://www.sencha.com/products/extjs/download.
+from the Sencha web site: http://www.sencha.com/products/extjs/download.
+At the time of writing, this version used was ext-4.2.1.883.
 
 You also need to install the Sencha Cmd tools, available from:
 http://www.sencha.com/products/sencha-cmd/download.
+At the time of writing the Sencha Cmd version used was 4.0.1.45.
 
 The workspace contains all of the ExtJS based apps used here, so that
 they can share code and be compiled (minified). Currently, the only
