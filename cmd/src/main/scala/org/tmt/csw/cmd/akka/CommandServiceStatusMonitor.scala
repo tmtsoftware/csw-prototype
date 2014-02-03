@@ -54,7 +54,7 @@ final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: 
   }
 
   // We have a request for command status (completer), but no status value to return yet.
-  // Wait for a command status message to arrive and if we timeout, return None for the status.
+  // Wait for a command status message to arrive and if we timeout, return the previous status.
   // The requester should then try again later.
   private def waitingForStatus(completer: CommandStatusCompleter, timerInfo: TimerInfo, previousStatus: CommandStatus): Receive = {
     case completer: CommandStatusCompleter =>

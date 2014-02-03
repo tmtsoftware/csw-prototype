@@ -2,6 +2,7 @@ application.name = Pkg Test
 
 assembly1.form = Assembly 1 configuration
 assembly1.submit = Submit
+assembly1.refresh = Refresh
 
 basePos.posName = Base Pos Name
 basePos.c1 = RA

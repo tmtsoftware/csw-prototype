@@ -22,6 +22,10 @@ class Container1Settings(system: ExtendedActorSystem) extends Extension {
   // Paths for two remote HCDs
   val hcd2a: String = system.settings.config getString "csw.test.hcd2a"
   val hcd2b: String = system.settings.config getString "csw.test.hcd2b"
+
+  // These are used by the Play Framework demo
+  val hcd2c: String = system.settings.config getString "csw.test.hcd2c"
+  val hcd2d: String = system.settings.config getString "csw.test.hcd2d"
 }
 
 

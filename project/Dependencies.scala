@@ -4,10 +4,11 @@ import sbt._
 
 object Dependencies {
 
-  val AkkaVersion = "2.2.1"
+  val AkkaVersion = "2.2.3"
 
   // See http://spray.io/project-info/current-versions/#current-versions (was compatibility issue with Akka-2.2.0)
-  val SprayVersion = "1.2-20130712"
+//  val SprayVersion = "1.2-20130712"
+  val SprayVersion = "1.2.0"
 
   def compile   (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
   def provided  (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "provided")
@@ -30,8 +31,6 @@ object Dependencies {
   val sprayRouting   = "io.spray"                       % "spray-routing"         % SprayVersion
   val sprayJson      = "io.spray"                      %% "spray-json"            % "1.2.3"
   val sprayTestkit   = "io.spray"                       % "spray-testkit"         % SprayVersion
-
-  val extjs          = "org.webjars"                    % "extjs"                 % "4.2.1.883"
 
   val jgit           = "org.eclipse.jgit"               % "org.eclipse.jgit"      % "2.3.1.201302201838-r"
   val scalaIoFile    = "com.github.scala-incubator.io" %% "scala-io-file"         % "0.4.2"

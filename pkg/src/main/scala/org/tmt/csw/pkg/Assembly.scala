@@ -51,7 +51,7 @@ trait Assembly extends Component with AssemblyCommandServiceActor {
    * @param actorPath an Hcd or Assembly actor
    */
   def addComponentByPath(actorPath: ActorPath): Unit = {
-    log.info(s"XXX addComponent: actorSel=${context.actorSelection(actorPath)}, sender= $sender, self = $self")
+    log.info(s"addComponent: actorSel=${context.actorSelection(actorPath)}, sender= $sender, self = $self")
     context.actorSelection(actorPath).tell(ConfigRegistrationActor.RegisterRequest(self), sender)
   }
 

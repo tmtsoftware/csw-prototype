@@ -4,6 +4,8 @@ import akka.actor._
 import org.tmt.csw.cmd.core._
 import org.tmt.csw.cmd.akka.CommandStatus.Busy
 import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
+import org.tmt.csw.cmd.akka.CommandQueueActor.ConfigQueueStatus
+import org.tmt.csw.cmd.akka.ConfigRegistrationActor.RegistryStatus
 
 object CommandServiceActor {
   // Child actor names
@@ -48,7 +50,23 @@ object CommandServiceActor {
    * @param submitter the actor submitting the config (will receive status messages)
    * @param runId the unique runId
    */
-  case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends CommandServiceMessage
+  case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef,
+                                         runId: RunId = RunId()) extends CommandServiceMessage
+
+  /**
+   * Requests that the command service return a CommandServiceStatus object to the sender containing information
+   * describing the command service.
+   */
+  case object StatusRequest extends CommandServiceMessage
+
+  /**
+   * Reply to StatusRequest message
+   */
+  case class CommandServiceStatus(name: String,
+                                  queueStatus: ConfigQueueStatus,
+                                  queueControllerClass: String,
+                                  registryStatus: Option[RegistryStatus])
+
 }
 
 /**
@@ -97,6 +115,10 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
   // The queue controller actor (Derived classes extend a trait to define this, depending on the desired behavior)
   def commandQueueControllerActor: ActorRef
 
+  // A name describing the queue controller (for display in the status web page)
+  def commandQueueControllerType: String
+
+
   // Needed for "ask"
   private implicit val execContext = context.dispatcher
 
@@ -104,21 +126,16 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
   def receiveCommands: Receive = receiveRegistrationRequest orElse {
     // Queue related commands
     case Submit(config, submitter) =>
-      log.info(s"Submit $config")
-      commandQueueActor ! SubmitWithRunId(config, submitter)
+      submit(SubmitWithRunId(config, submitter))
 
     case s@SubmitWithRunId(config, submitter, runId) =>
-      log.info(s"Submit with runId($runId) $config")
-      commandQueueActor ! s
+      submit(s)
 
     case QueueBypassRequest(config) =>
-      val runId = RunId()
-      commandStatusActor ! StatusUpdate(Busy(runId), sender)
-      configActor forward SubmitWithRunId(config, sender, runId)
+      queueBypassRequest(SubmitWithRunId(config, sender, RunId()))
 
     case QueueBypassRequestWithRunId(config, submitter, runId) =>
-      commandStatusActor ! StatusUpdate(Busy(runId), submitter)
-      configActor ! SubmitWithRunId(config, submitter, runId)
+      queueBypassRequest(SubmitWithRunId(config, submitter, runId))
 
     case s@QueueStop => commandQueueActor forward s
 
@@ -129,6 +146,24 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
     case s@QueueDelete(runId) => commandQueueActor forward s
 
     case configMessage: ConfigMessage => configActor forward configMessage
+  }
+
+  /**
+   * Called when a command is submitted
+   * @param s holds the config, runId and sender
+   */
+  def submit(s: SubmitWithRunId): Unit = {
+    log.info(s"Submit with runId(${s.runId}) ${s.config}")
+    commandQueueActor ! s
+  }
+
+  /**
+   * Submits a command directly, bypassing the command queue
+   * @param s holds the config, runId and sender
+   */
+  def queueBypassRequest(s: SubmitWithRunId): Unit = {
+    commandStatusActor ! StatusUpdate(Busy(s.runId), s.submitter)
+    configActor ! SubmitWithRunId(s.config, s.submitter, s.runId)
   }
 }
 

@@ -90,4 +90,9 @@ trait CommandServiceClientHelper {
    */
   def configResume(runId: RunId): Unit
 
+  /**
+   * Returns a future generated HTML page with command server status information
+   */
+  def commandServiceStatus(): Future[String]
+
 }

@@ -6,6 +6,7 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import scala.Some
+import twirl.sbt.TwirlPlugin._
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
@@ -16,7 +17,7 @@ object Settings {
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
     version := Version,
-    scalaVersion := "2.10.2",
+    scalaVersion := "2.10.3",
     crossPaths := false,
     parallelExecution in Test := false,
     resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
@@ -60,6 +61,12 @@ object Settings {
   lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(
     ScalariformKeys.preferences in Compile := formattingPreferences,
     ScalariformKeys.preferences in Test    := formattingPreferences
+  )
+
+  lazy val twirlSettings = Twirl.settings ++ Seq(
+    Twirl.twirlImports := Seq(
+      "org.tmt.csw.cmd.akka.CommandServiceActor.CommandServiceStatus"
+    )
   )
 
   import scalariform.formatter.preferences._

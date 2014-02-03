@@ -1,14 +1,18 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor.{Props, ActorRef, ActorLogging, Actor}
-import scala.Some
 import org.tmt.csw.cmd.core.Configuration
-import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import akka.pattern.ask
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 import akka.util.Timeout
 import scala.concurrent.duration._
+import org.tmt.csw.cmd.akka.ConfigActor._
+import scala.util.Failure
+import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
+import scala.Some
+import scala.util.Success
+import org.tmt.csw.cmd.akka.ConfigDistributorActor.SubmitInfo
+import QueryWorkerActor._
 
 object ConfigDistributorActor {
   /**
@@ -17,11 +21,13 @@ object ConfigDistributorActor {
    */
   def props(commandStatusActor: ActorRef): Props = Props(classOf[ConfigDistributorActor], commandStatusActor)
 
-  // Combines a Submit object with a reference to the target actor
-  private case class SubmitInfo(submit: SubmitWithRunId, target: ActorRef)
-
-  // Maps runId to list of submitted config parts sent to the registered config actors
-  private case class ConfigPartInfo(configParts: List[SubmitInfo], commandStatus: CommandStatus, originalSubmit: SubmitWithRunId)
+  /**
+   * Combines a Submit object with a reference to the target actor
+   * @param path the path in the config that the target actor is interested in
+   * @param submit contains the config and runId
+   * @param target the target actor receiving the config
+   */
+  case class SubmitInfo(path: String, submit: SubmitWithRunId, target: ActorRef)
 }
 
 /**
@@ -31,46 +37,44 @@ object ConfigDistributorActor {
 class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
 
   import ConfigRegistrationActor._
-  import CommandQueueActor._
   import ConfigActor._
   import ConfigDistributorActor._
 
-  // Used to determine when all config parts are done and reply to the original sender
-  private var configParts = Map[RunId, ConfigPartInfo]()
-
-  // Maps the RunId for a config part to the RunId for the complete config
-  private var runIdMap = Map[RunId, RunId]()
-
-  // Set of registry entries for actors that process configurations
+  // Set of registry entries for actors that process configurations.
+  // The actors register for the config paths they are interested in and when a message is received,
+  // those parts are extracted and sent to the relevant actors.
   private var registry = Set[RegistryEntry]()
 
-  implicit val execContext = context.dispatcher
+  // Maps runId to the submit worker actor that is handling the submit
+  private var workers = Map[RunId, ActorRef]()
 
   /**
    * Messages received in the normal state.
    */
   override def receive: Receive = {
     case RegistryUpdate(reg) => registry = reg
-    case QueueWorkAvailable => queueWorkAvailable()
+
     case s: SubmitWithRunId => submit(s)
-    case ConfigCancel(runId) => cancel(runId)
-    case ConfigAbort(runId) => abort(runId)
-    case ConfigPause(runId) => pause(runId)
-    case ConfigResume(runId) => resume(runId)
+
+    case status: CommandStatus =>
+      if (status.done) {
+        forwardToSubmitWorker(status.runId, status)
+        workers -= status.runId
+      }
 
     case ConfigGet(config) => query(config, sender)
     case ConfigPut(config) => internalConfig(config)
 
-    // Status Results for a config part from a ConfigActor
-    case status: CommandStatus => checkIfDone(status)
+    case c: ConfigControlMessage => forwardToSubmitWorker(c.runId, c)
 
-    case x => log.error(s"Unexpected ConfigDistributorActor message from $sender: $x")
+    case x => log.error(s"Unexpected message from $sender: $x")
   }
 
-
-  // Tell all the registered actors that there is work available
-  private def queueWorkAvailable(): Unit = {
-    registry.foreach(_.actorRef ! QueueWorkAvailable)
+  // Forwards the given message to the submit worker actor
+  private def forwardToSubmitWorker(runId: RunId, msg: AnyRef) : Unit = {
+    workers.get(runId).fold(log.warning(s"Received message $msg for unknown or already completed runId: $runId")) {
+      _ forward msg
+    }
   }
 
   /**
@@ -85,21 +89,11 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     if (submitInfoList.length == 0) {
       log.error(s"No subscribers for submit: ${submit.config}")
       commandStatusActor ! CommandStatusActor.StatusUpdate(CommandStatus.Error(submit.runId, "No subscribers"), submit.submitter)
-    }
-
-    // Add info to map indexed by runId is so we can determine when all parts are done and reply to the original sender
-    configParts += (submit.runId -> ConfigPartInfo(submitInfoList, CommandStatus.Submitted(submit.runId), submit))
-
-    // Keep a map of the runIds for later reference
-    runIdMap ++= submitInfoList.map {
-      submitInfo => (submitInfo.submit.runId, submit.runId)
-    }.toMap
-
-    // Send the submit messages to the target actors
-    submitInfoList.foreach {
-      submitInfo =>
-        log.debug(s"Sending config part to ${submitInfo.target}")
-        submitInfo.target ! submitInfo.submit
+    } else {
+      // Create a dedicated submit worker actor to handle this command
+      val worker = context.actorOf(SubmitWorkerActor.props(commandStatusActor, submit.runId, submit.submitter, submitInfoList))
+      workers += (submit.runId -> worker)
+      submitInfoList.foreach(s => workers += (s.submit.runId -> worker))
     }
   }
 
@@ -111,139 +105,8 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
         // Give each config part a unique runid, so we can identify it later when the status is received
         val runIdPart = RunId()
         val submitPart = SubmitWithRunId(submit.config.getConfig(registryEntry.path), self, runIdPart)
-        Some(SubmitInfo(submitPart, registryEntry.actorRef))
+        Some(SubmitInfo(registryEntry.path, submitPart, registryEntry.actorRef))
       case false => None
-    }
-  }
-
-  /**
-   * Called when a status message is received from a config actor.
-   * @param commandStatus the status of the config part from the worker actor
-   */
-  private def checkIfDone(commandStatus: CommandStatus): Unit = {
-    log.debug(s"Check if done: state = $commandStatus")
-    if (commandStatus.done) {
-      val runIdOpt = runIdMap.get(commandStatus.runId)
-      runIdOpt.fold(log.error(s"RunId for config part ${commandStatus.runId} not found")) {
-        runIdMap -= commandStatus.runId
-        checkIfDone(commandStatus, _)
-      }
-    }
-  }
-
-  /**
-   * Called when a status message is received from a config actor.
-   * @param commandStatus the status of the config part from the worker actor
-   * @param runId the RunId of the original (complete) config
-   */
-  private def checkIfDone(commandStatus: CommandStatus, runId: RunId): Unit = {
-    configParts.get(runId).fold(log.error(s"Received status message for unknown runId: $runId")) {
-      checkIfDone(commandStatus, runId, _)
-    }
-  }
-
-  /**
-   * If all of the config parts are done, send the final status to the original sender.
-   * @param commandStatus the status of the config part from the worker actor
-   * @param runId the RunId of the original (complete) config
-   * @param configPartInfo contains list of submitted config parts sent to the registered config actors
-   */
-  private def checkIfDone(commandStatus: CommandStatus, runId: RunId, configPartInfo: ConfigPartInfo): Unit = {
-    val newCommandStatus = getCommandStatus(commandStatus, configPartInfo)
-    val remainingParts = configPartInfo.configParts.filter(_.submit.runId != commandStatus.runId)
-    if (remainingParts.isEmpty) {
-      // done, return status to sender
-      configParts -= runId
-      log.debug(s"All config parts done: Returning $newCommandStatus for submitter ${configPartInfo.originalSubmit.submitter}")
-      val status = returnStatus(newCommandStatus, runId)
-      val submitter = configPartInfo.originalSubmit.submitter
-      commandStatusActor ! CommandStatusActor.StatusUpdate(status, submitter)
-    } else {
-      // one part is done, some still remaining: Update the map to remove the part that is done and update the status
-      log.debug(s"${remainingParts.length} parts left for runId $runId")
-      configParts += (runId -> ConfigPartInfo(remainingParts.toList, newCommandStatus, configPartInfo.originalSubmit))
-    }
-  }
-
-  /**
-   * Returns a CommandStatus with the runId for the original submit.
-   * If the config was canceled or aborted,
-   * XXX TODO FIXME
-   */
-  private def getCommandStatus(commandStatus: CommandStatus, info: ConfigPartInfo): CommandStatus = {
-    info.commandStatus match {
-      case CommandStatus.Canceled(runId) => info.commandStatus
-      case CommandStatus.Aborted(runId) => info.commandStatus
-      case _ => commandStatus.withRunId(info.originalSubmit.runId)
-    }
-  }
-
-  // Returns a CommandStatus for the given CommandStatus
-  // XXX TODO FIXME
-  private def returnStatus(state: CommandStatus, runId: RunId): CommandStatus = {
-    log.debug(s"Return status: $state")
-    state match {
-      case s: CommandStatus.Completed => CommandStatus.Completed(runId)
-      case s: CommandStatus.Canceled => CommandStatus.Canceled(runId)
-      case s: CommandStatus.Aborted => CommandStatus.Aborted(runId)
-      case x => CommandStatus.Error(runId, s"Unexpected command status: $x")
-    }
-  }
-
-
-  /**
-   * Called when a config is paused.
-   */
-  private def pause(runId: RunId): Unit = {
-    configParts.get(runId).fold(log.error(s"Received pause config command for unknown runId: $runId")) {
-      _.configParts.foreach {
-        part => part.target ! ConfigPause(part.submit.runId)
-      }
-    }
-  }
-
-  /**
-   * Called when a config is resumed.
-   */
-  private def resume(runId: RunId): Unit = {
-    configParts.get(runId).fold(log.error(s"Received resume config command for unknown runId: $runId")) {
-      _.configParts.foreach {
-        part => part.target ! ConfigResume(part.submit.runId)
-      }
-    }
-  }
-
-  /**
-   * Called when the config is canceled.
-   */
-  private def cancel(runId: RunId): Unit = {
-    changeCommandStatus(runId, CommandStatus.Canceled(runId), "cancel")
-    configParts.get(runId).fold(log.error(s"Received cancel config command for unknown runId: $runId")) {
-      _.configParts.foreach {
-        part => part.target ! ConfigCancel(part.submit.runId)
-      }
-    }
-  }
-
-  /**
-   * Called when the config is aborted.
-   */
-  private def abort(runId: RunId): Unit = {
-    changeCommandStatus(runId, CommandStatus.Aborted(runId), "abort")
-    configParts.get(runId).fold(log.error(s"Received abort config command for unknown runId: $runId")) {
-      _.configParts.foreach {
-        part => part.target ! ConfigAbort(part.submit.runId)
-      }
-    }
-  }
-
-  /**
-   * Changes the CommandStatus for the given runId
-   */
-  private def changeCommandStatus(runId: RunId, newCommandStatus: CommandStatus, logName: String): Unit = {
-    configParts.get(runId).fold(log.error(s"Received $logName config command for unknown runId: $runId")) {
-      configPartInfo =>
-        configParts += (runId -> ConfigPartInfo(configPartInfo.configParts, newCommandStatus, configPartInfo.originalSubmit))
     }
   }
 
@@ -262,8 +125,11 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     val list = registry.map {
       registryEntry =>
         config.hasPath(registryEntry.path) match {
-          case true => Some(registryEntry.actorRef, ConfigGet(config.getConfig(registryEntry.path)), registryEntry.path)
-          case false => None
+          case true =>
+            val msg = ConfigGet(config.getConfig(registryEntry.path))
+            Some(QueryInfo(registryEntry.actorRef, msg, registryEntry.path))
+          case false =>
+            None
         }
     }.flatten.toList
 
@@ -271,14 +137,184 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
       log.error(s"No subscribers for config/get query: $config")
       replyTo ! ConfigResponse(Failure(new Error("No subscribers for config/get query")))
     } else {
-      implicit val askTimeout = Timeout(3 seconds)
-      val listOfFutureResponses =
-        for((actorRef, msg, path) <- list) yield
-          (actorRef ? msg).mapTo[ConfigResponse].map(insertPath(_, path))
-      Future.sequence(listOfFutureResponses).onComplete {
-        case Success(responseList) => replyTo ! mergeConfigResponses(responseList.toList)
-        case Failure(ex) => replyTo ! ConfigResponse(Failure(ex))
+      // Hand this off to a new query worker actor to gather the results from the target actors
+      context.actorOf(QueryWorkerActor.props(list, replyTo))
+    }
+  }
+
+  /**
+   * Used to configure the system (for internal use)
+   * @param config contains internal configuration values (to be defined)
+   */
+  private def internalConfig(config: Configuration): Unit = {
+    // XXX TODO to be defined...
+  }
+
+}
+
+
+// ---- SubmitWorkerActor ----
+
+
+/**
+ * Defines props to create the submit worker actor
+ */
+private object SubmitWorkerActor {
+  def props(commandStatusActor: ActorRef, runId: RunId, submitter: ActorRef, submitInfoList: List[SubmitInfo]): Props =
+    Props(classOf[SubmitWorkerActor], commandStatusActor, runId, submitter, submitInfoList)
+}
+
+/**
+ * One of these actors is created for each submitted command to wait for the different parts to complete and
+ * then send the status to the command status actor
+ *
+ * @param commandStatusActor reference to the command status actor, which receives the final status of command
+ *                           as well as partial status updates.
+ * @param runId the runId of the original command
+ * @param submitter: the original submitter
+ * @param submitInfoList list of subtasks (submit messages and the actors that should receive them)
+ */
+private class SubmitWorkerActor(commandStatusActor: ActorRef,
+                                runId: RunId, submitter: ActorRef,
+                                submitInfoList: List[SubmitInfo]) extends Actor with ActorLogging {
+
+  // Use waiting state to keep track of remaining parts and the final return status
+  context.become(waiting(submitInfoList, CommandStatus.Submitted(runId)))
+
+  // Send the submit messages to the target actors
+  submitInfoList.foreach {
+    submitInfo =>
+      log.info(s"Sending config part to ${submitInfo.target}: ${submitInfo.submit.config}")
+      submitInfo.target ! submitInfo.submit
+  }
+
+  /**
+   * State where we are waiting for the different parts of the config to complete.
+   * @param parts list of config message parts that were sent to different actors
+   * @param returnStatus the current return status (calculated from the status values received so far)
+   */
+  def waiting(parts: List[SubmitInfo], returnStatus: CommandStatus): Receive = {
+    // Status Results for a config part from a ConfigActor: check if all parts have completed
+    case status: CommandStatus if status.done =>
+      val newStatus = getCommandStatus(status, returnStatus)
+      val (completedParts, remainingParts) = parts.partition(_.submit.runId == status.runId)
+      checkIfDone(completedParts, remainingParts, newStatus)
+
+    // Forward any cancel, abort, pause, resume messages to the target actors
+    case c: ConfigControlMessage =>
+      parts.foreach {
+        part => part.target ! c.withRunId(part.submit.runId)
       }
+
+    case x => log.error(s"Unexpected message from $sender: $x")
+  }
+
+  // This state is not used here
+  override def receive: Receive = {
+    case x => log.error(s"Unexpected message received from $sender: $x")
+  }
+
+  /**
+   * If all of the config parts are done, send the final status to the original sender.
+   * @param completedParts list of the parts of the config that have just completed (normally just contains one item)
+   * @param remainingParts list of the parts of the config that have not yet completed
+   * @param commandStatus the status of the config part from the worker actor
+   */
+  private def checkIfDone(completedParts: List[SubmitInfo], remainingParts: List[SubmitInfo], commandStatus: CommandStatus): Unit = {
+    if (remainingParts.isEmpty) {
+      // done, return status to sender
+      log.debug(s"All config parts done: Returning $commandStatus for submitter $submitter")
+      commandStatusActor ! CommandStatusActor.StatusUpdate(commandStatus, submitter)
+      context.stop(self)
+    } else {
+      // There are still some parts remaining
+      log.debug(s"${remainingParts.length} parts left for runId $runId")
+
+      // send partially complete status (may be displayed by UI)
+      completedParts.foreach { part =>
+        val partialStatus = CommandStatus.PartiallyCompleted(runId, part.path, commandStatus.name)
+        commandStatusActor ! CommandStatusActor.StatusUpdate(partialStatus, submitter)
+        log.info(s"Status: PartiallyCompleted: path = ${part.path}")
+      }
+
+      context.become(waiting(remainingParts, commandStatus))
+    }
+  }
+
+  /**
+   * Returns a CommandStatus with the runId for the original submit.
+   * If a part of the config was canceled or aborted, or if there was an error, then that status is returned
+   * with the given runId.
+   */
+  private def getCommandStatus(newStatus: CommandStatus, oldStatus: CommandStatus): CommandStatus = {
+    val s = oldStatus match {
+      case CommandStatus.Canceled(_) => oldStatus.withRunId(runId)
+      case CommandStatus.Aborted(_) => oldStatus.withRunId(runId)
+      case CommandStatus.Error(_, msg) => oldStatus.withRunId(runId)
+      case _ => newStatus.withRunId(runId)
+    }
+    log.debug(s"Old status: $oldStatus, new status: $newStatus ==> $s")
+    s
+  }
+}
+
+
+
+
+// ---- QueryWorkerActor ----
+
+
+
+
+/**
+ * Defines props to create the query worker actor
+ */
+private object QueryWorkerActor {
+  // Query info broken down by target actor and path
+  case class QueryInfo(targetActor: ActorRef, msg: ConfigActor.ConfigGet, queryPath: String)
+
+  def props(list: List[QueryInfo], replyTo: ActorRef): Props = Props(classOf[QueryWorkerActor], list, replyTo)
+}
+
+/**
+ * One of these actors is created for each query command to wait for the different parts to reply and
+ * then send the result to the replyTo actor.
+ */
+private class QueryWorkerActor(list: List[QueryInfo], replyTo: ActorRef)
+  extends Actor with ActorLogging {
+
+  query(list, replyTo)
+
+  // This state is not used here (yet)
+  override def receive: Receive = {
+    case x => log.error(s"Unexpected message received from $sender: $x")
+  }
+
+  /**
+   * Query the current state of a device and reply to the given actor with a ConfigResponse object.
+   * A config is passed in (the values are ignored) and the reply will be sent containing the
+   * same config with the current values filled out.
+   *
+   * @param list list of query info for each target actor and path
+   * @param replyTo send the answer this actor
+   */
+  private def query(list: List[QueryInfo], replyTo: ActorRef): Unit = {
+    // Like submit, send parts of the query to the registered config actors and when all replies are in,
+    // combine and return to sender.
+
+    implicit val execContext = context.dispatcher
+    implicit val askTimeout = Timeout(3 seconds) // TODO: Implement this with tell or configure timeout?
+
+    val listOfFutureResponses =
+      for (queryInfo <- list) yield
+        (queryInfo.targetActor ? queryInfo.msg).mapTo[ConfigResponse].map(insertPath(_, queryInfo.queryPath))
+    Future.sequence(listOfFutureResponses).onComplete {
+      case Success(responseList) =>
+        replyTo ! mergeConfigResponses(responseList.toList)
+        context.stop(self)
+      case Failure(ex) =>
+        replyTo ! ConfigResponse(Failure(ex))
+        context.stop(self)
     }
   }
 
@@ -317,14 +353,4 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
     ConfigResponse(Success(Configuration.merge(configs.toList)))
   }
-
-
-  /**
-   * Used to configure the system (for internal use)
-   * @param config contains internal configuration values (to be defined)
-   */
-  private def internalConfig(config: Configuration): Unit = {
-    // XXX TODO to be defined...
-  }
-
 }

@@ -5,7 +5,7 @@ import org.tmt.csw.cmd.core.Configuration
 import scala.Some
 import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
-import org.tmt.csw.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
+import org.tmt.csw.cmd.akka.CommandServiceActor._
 import scala.concurrent.Future
 import akka.pattern.ask
 import akka.util.Timeout
@@ -53,7 +53,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * @param config the command configuration
    * @return the runId for the command
    */
-  def submitCommand(config: Configuration): RunId = {
+  override def submitCommand(config: Configuration): RunId = {
     val runId = RunId()
     val monitor = newMonitorFor(runId)
     val submit = SubmitWithRunId(config, monitor, runId)
@@ -68,7 +68,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * @param config the command configuration
    * @return the runId for the command
    */
-  def requestCommand(config: Configuration): RunId = {
+  override def requestCommand(config: Configuration): RunId = {
     val runId = RunId()
     val monitor = newMonitorFor(runId)
     val request = QueueBypassRequestWithRunId(config, monitor, runId)
@@ -83,7 +83,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * when the command status is known. If the request times out, nothing is done and the caller needs
    * to try again.
    */
-  def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit = {
+  override def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit = {
     // If the monitoring actor (which was started when the command was submitted) is still running,
     // send it the the "completer", which it can call to complete the request.
     // If it timed out and the actor quit, do nothing (This case is handled by the caller).
@@ -100,21 +100,21 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * Returns true if the status request for the given runId timed out (and should be retried)
    * or the runId is not known.
    */
-  def statusRequestTimedOut(runId: RunId): Boolean = {
+  override def statusRequestTimedOut(runId: RunId): Boolean = {
     getMonitorFor(runId).isEmpty
   }
 
   /**
    * Handles a request to stop the command queue.
    */
-  def queueStop(): Unit = {
+  override def queueStop(): Unit = {
     commandServiceActor ! QueueStop
   }
 
   /**
    * Handles a request to pause the command queue.
    */
-  def queuePause(): Unit = {
+  override def queuePause(): Unit = {
     commandServiceActor ! QueuePause
   }
 
@@ -129,42 +129,56 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
   /**
    * Handles a request to delete a command from the command queue.
    */
-  def queueDelete(runId: RunId): Unit = {
+  override def queueDelete(runId: RunId): Unit = {
     commandServiceActor ! QueueDelete(runId)
   }
 
   /**
    * Handles a request to fill in the blank values of the given config with the current values.
    */
-  def configGet(config: Configuration): Future[ConfigResponse] = {
-    log.info(s"XXX configGet ${config}")
+  override def configGet(config: Configuration): Future[ConfigResponse] = {
+    log.info(s"configGet $config")
     implicit val askTimeout = Timeout(3 seconds)
     (commandServiceActor ? ConfigGet(config)).mapTo[ConfigResponse]
   }
 
   // Handles a request to pause the config with the given runId
-  def configCancel(runId: RunId): Unit = {
+  override def configCancel(runId: RunId): Unit = {
     commandServiceActor ! ConfigCancel(runId)
   }
 
   /**
    * Handles a request to pause the config with the given runId
    */
-  def configAbort(runId: RunId): Unit = {
+  override def configAbort(runId: RunId): Unit = {
     commandServiceActor ! ConfigAbort(runId)
   }
 
   /**
    * Handles a request to pause the config with the given runId
    */
-  def configPause(runId: RunId): Unit = {
+  override def configPause(runId: RunId): Unit = {
     commandServiceActor ! ConfigPause(runId)
   }
 
   /**
    * Handles a request to pause the config with the given runId
    */
-  def configResume(runId: RunId): Unit = {
+  override def configResume(runId: RunId): Unit = {
     commandServiceActor ! ConfigResume(runId)
+  }
+
+  /**
+   * Returns a generated HTML page with command server status information
+   */
+  override def commandServiceStatus(): Future[String] = {
+    implicit val statusTimeout = Timeout(5.seconds)
+    implicit val dispatcher = context.system.dispatcher
+
+    // Fill in the variables in the Twirl (Play) template and return the resulting HTML page
+    // See src/main/twirl/org/tmt/csw/cmd/index.scala.html
+    for {
+      status <- (commandServiceActor ? StatusRequest).mapTo[CommandServiceStatus]
+    } yield org.tmt.csw.cmd.html.index(status).toString
   }
 }

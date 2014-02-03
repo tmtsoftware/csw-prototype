@@ -9,7 +9,7 @@ LIBS       =-lzmq.1
 
 all: mtserver2
 
-mtserver2: mtserver2.c
+mtserver2: mtserver2.c zhelpers2.h
 	gcc ${CPP_OPTS} ${CPP_DEFS} -o mtserver2 ${INCS_DIRS} mtserver2.c ${LIBS_DIRS} ${LIBS}
 
 clean:

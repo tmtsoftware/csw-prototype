@@ -30,5 +30,19 @@ Projects
 
 * cmd - the Command Service (for sending commands to HCDs and Assemblies)
 * cs - the Configuration Service (manages configuration files in Git repos)
+* extjs - the ExtJS web UI (JavaScript with Sencha Cmd/ant build, not a Scala project)
 * pkg - a packaging layer over the command service that provides HCD and Assembly classes
 * test - for integration tests
+
+ExtJS Build
+-----------
+
+To build the minified/optimized JavaScript for the applications in the extjs directory,
+you need to install Sencha Cmd from http://www.sencha.com/products/sencha-cmd/download
+and then run:
+
+    sencha app build
+
+in each application directory.
+(We may want to use or make an sbt plugin to do this automatically in the future).
+See <a href="extjs/Readme.md">extjs/Readme.md</a> for more details.

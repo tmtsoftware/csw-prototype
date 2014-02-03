@@ -6,7 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 import spray.can.Http
 import spray.routing.HttpServiceActor
 import org.tmt.csw.cmd.akka.{CommandServiceActorClientHelper, CommandStatus}
-import akka.io.Tcp.{PeerClosed, Bound}
+import akka.io.Tcp.{Event, PeerClosed, Bound}
 import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
 
 /**
@@ -35,8 +35,8 @@ case class CommandServiceHttpServer(commandServiceActor: ActorRef, interface: St
 
   // Entry point for the actor
   override def receive: Receive = runRoute(route) orElse {
-    case Bound(localAddress) => // log.info(s"Started Spray HTTP server on $localAddress")
-    case PeerClosed => // log.info(s"Received PeerClosed")
+    case e: Event => // ignore Akka Tcp events here
+    case s: CommandStatus => log.info(s"Received command status $s")
     case x => log.error(s"Received unexpected message from $sender: $x")
   }
 }

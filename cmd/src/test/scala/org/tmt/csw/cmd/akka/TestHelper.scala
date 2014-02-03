@@ -46,7 +46,7 @@ trait TestHelper extends ImplicitSender {
     val assembly = system.actorOf(Props[TestAssemblyCommandServiceActor], name = s"Assembly$n")
     val duration = (numberOfSecondsToRun * 3).seconds
 
-    val hcdA = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun, s"TestConfigActorA$n"),
+    val hcdA = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun-1, s"TestConfigActorA$n"),
       name = s"HCD-A$n")
 
     val hcdB = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB$n"),

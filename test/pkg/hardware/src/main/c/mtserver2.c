@@ -38,10 +38,13 @@ worker_routine (void *context) {
         char *string = s_recv (receiver);
         if (string) {
             printf ("Received request: [%s]\n", string);
-            free (string);
             //  Do some 'work'
-            usleep (1000 * (randof (5000) + 1));
-//            sleep (1);
+            free (string);
+	        srandomdev();
+            int ms = 1000 * (randof(5000) + 1);
+            printf ("This will take %g secs\n", ms/1000000.);
+            usleep (ms);
+            printf ("Done: Sending OK reply back to sender\n");
             //  Send reply back to client
             s_send (receiver, "OK");
         } else {
@@ -59,9 +62,19 @@ int main (int argc, char** argv)
 	printf("Expected one argument: filter or disperser\n");
 	exit(1);
     }
-    // Use a different port depending on the argument (filter or disperser)
+    // Use a different port depending on the argument (filter, disperser, pos, one)
+    // Make sure this matches the values in resources/TestConfigActor.conf.
+    // Later on, this should be read from a config file or service.
     char* url = "tcp://*:6565";
-    if (strcmp(argv[1], "filter") != 0) url = "tcp://*:6566";
+    if (strcmp(argv[1], "filter") == 0) {
+        url = "tcp://*:6565";
+    } else if (strcmp(argv[1], "disperser") == 0) {
+        url = "tcp://*:6566";
+    } else if (strcmp(argv[1], "pos") == 0) {
+        url = "tcp://*:6567";
+    } else if (strcmp(argv[1], "one") == 0) {
+        url = "tcp://*:6568";
+    }
     printf("Listening for %s commands on %s\n", argv[1], url);
 
     void *context = zmq_init (1);

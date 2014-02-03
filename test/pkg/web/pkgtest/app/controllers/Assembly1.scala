@@ -34,6 +34,9 @@ object Assembly1 extends Controller {
   // URL to use to post a submit command
   val submitUrl = s"http://$host:$port/queue/submit"
 
+  // URL to use to post a get command (to query the current values)
+  val getUrl = s"http://$host:$port/get"
+
   // URL to check the status for the given runId
   def statusUrl(runId: String) = s"http://$host:$port/config/$runId/status"
 
@@ -59,18 +62,43 @@ object Assembly1 extends Controller {
   ).fill(Assembly1Settings.defaultSettings)
 
 
+
+////  // Called when the form is displayed (before Submit is pressed)
+//  def edit = Action {
+//    implicit request =>
+//      val form = Cache.getAs[Map[String,String]](cacheKey) match {
+//        case Some(s) => assembly1SettingsForm.bind(s)
+//        case None => assembly1SettingsForm.bind(flash.data).fill(Assembly1Settings.defaultSettings)
+//      }
+//      Ok(views.html.assembly1(form, ""))
+//  }
+
+
   // Called when the form is displayed (before Submit is pressed)
-  def edit = Action {
+  def edit = Action.async {
     implicit request =>
-      val form = Cache.getAs[Map[String,String]](cacheKey) match {
-        case Some(s) => assembly1SettingsForm.bind(s)
-        case None => assembly1SettingsForm.bind(flash.data).fill(Assembly1Settings.defaultSettings)
+      Cache.getAs[Map[String,String]](cacheKey) match {
+        case Some(s) =>
+          val form = assembly1SettingsForm.bind(s)
+          Future.successful(Ok(views.html.assembly1(form, "")))
+        case None =>
+          val json = Json.parse(defaultSettings.getConfig.toJson)
+          // get the current values
+          WS.url(getUrl).post(json).map {
+            response =>
+              val opt = settingsFromResponse(response)
+              if (!opt.isEmpty) {
+                val form = assembly1SettingsForm.fill(opt.get)
+                Ok(views.html.assembly1(form, ""))
+              } else {
+                val form = assembly1SettingsForm.fill(Assembly1Settings.defaultSettings)
+                Ok(views.html.assembly1(form, ""))
+              }
+          }
       }
-      Ok(views.html.assembly1(form, ""))
   }
 
-
-  // Called for the submit form button
+    // Called for the submit form button
   def save = Action.async {
     implicit request =>
       val form = if (flash.get("error").isDefined)
@@ -124,6 +152,23 @@ object Assembly1 extends Controller {
     }
   }
 
+  // Returns the current settings from the command server response body where it is in json format
+  private def settingsFromResponse(response: Response): Option[Assembly1Settings] = {
+    if (response.status == OK) {
+      val json = Json.parse(response.body)
+      val jsResult = Assembly1Settings.fromJson(json)
+      jsResult.recoverTotal {
+        jserror: JsError =>
+          println(s"Error: JS error: $jserror")
+          None
+      }
+      jsResult.asOpt
+    } else {
+      None
+    }
+  }
+
+
   // Returns a key value pair to put in the flash data for the request
   private def flashResponse(response: Response, runIdOpt: Option[String]): (String, String) = {
     if (response.status == ACCEPTED) {
@@ -157,7 +202,7 @@ object Assembly1 extends Controller {
 
     // Returns true if the status means that the command is done
     private def statusIsFinal(status: String) : Boolean = {
-      status == "Completed" || status == "Error" || status == "Aborted" || status == "Canceled"
+      status == "completed" || status == "error" || status == "aborted" || status == "canceled"
     }
 
     // Returns the command status from the command server JSON response, or None on error
