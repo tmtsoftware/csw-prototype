@@ -5,9 +5,6 @@ Common Software is the package of services and infrastructure software that inte
 
 http://www.tmt.org
 
-Note: Please see the Github PkgTest branch for the latest development.
-
-
 Build Instructions
 ------------------
 
