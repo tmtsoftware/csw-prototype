@@ -28,7 +28,7 @@ class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfS
   val aState: AtomicReference[CommandStatus] = new AtomicReference(null)
 
   // Saved position and config for Pause, so that we can continue on Resume
-  var savedPos = 1
+  var savedPos = 0
 
   // Needed to implement the "resume" message
   var savedSubmit: SubmitWithRunId = null

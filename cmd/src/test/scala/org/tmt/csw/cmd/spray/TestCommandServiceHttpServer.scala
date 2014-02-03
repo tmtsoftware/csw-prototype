@@ -77,8 +77,7 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
       checkReturnStatus("3c", commandStatus3c, runId3, CommandStatus.Error(runId3, CommandServiceHttpServer.unknownRunIdMessage))
 
       assert(res4a.status == StatusCodes.Accepted)
-      checkReturnStatus("4a", commandStatus4a, runId4, CommandStatus.PartiallyCompleted(runId4, "config.tmt.tel.base.pos", "completed"))
-//      checkReturnStatus("4a", commandStatus4a, runId4, CommandStatus.Busy(runId4))
+      checkReturnStatus("4a", commandStatus4a, runId4, CommandStatus.Busy(runId4))
       assert(res4b.status == StatusCodes.Accepted)
       checkReturnStatus("4b", commandStatus4b, runId4, CommandStatus.Canceled(runId4))
       assert(res4c.status == StatusCodes.Accepted)
@@ -115,7 +114,7 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
   // will implement the commands.
   def startCommandServiceHttpServer(): Unit = {
     // val numberOfSecondsToRun = 12 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
-    val numberOfSecondsToRun = 1 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
+    val numberOfSecondsToRun = 2 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
     val commandServiceActor = getCommandServiceActor(1, numberOfSecondsToRun)
     system.actorOf(CommandServiceHttpServer.props(commandServiceActor, interface, port, timeout), "commandService")
     Thread.sleep(1000) // XXX need a way to wait until the server is ready before proceeding

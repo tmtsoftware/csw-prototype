@@ -135,7 +135,7 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
       queueBypassRequest(SubmitWithRunId(config, sender, RunId()))
 
     case QueueBypassRequestWithRunId(config, submitter, runId) =>
-      queueBypassRequest(SubmitWithRunId(config, sender, runId))
+      queueBypassRequest(SubmitWithRunId(config, submitter, runId))
 
     case s@QueueStop => commandQueueActor forward s
 

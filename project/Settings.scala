@@ -6,6 +6,7 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import scala.Some
+import twirl.sbt.TwirlPlugin._
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
@@ -62,7 +63,6 @@ object Settings {
     ScalariformKeys.preferences in Test    := formattingPreferences
   )
 
-  import twirl.sbt.TwirlPlugin._
   lazy val twirlSettings = Twirl.settings ++ Seq(
     Twirl.twirlImports := Seq(
       "org.tmt.csw.cmd.akka.CommandServiceActor.CommandServiceStatus"
