@@ -10,9 +10,10 @@ object Build extends Build {
 
   // Base project
   lazy val root = Project(id = "csw", base = file("."))
-    .aggregate(cs, cmd, pkg, test_app, test_client, container1, container2)
+    .aggregate(cs, cmd, pkg, ls, test_app, test_client, container1, container2)
     .settings(buildSettings: _*)
 
+  // Config Service
   lazy val cs = Project(id = "cs", base = file("cs"))
   	.settings(buildSettings: _*)
   	.settings(libraryDependencies ++=
@@ -21,6 +22,7 @@ object Build extends Build {
       test(scalaTest, specs2, akkaTestKit, junit)
   	)
 
+  // Command Service
   lazy val cmd = Project(id = "cmd", base = file("cmd"))
     .settings(buildSettings: _*)
     .settings(twirlSettings: _*)
@@ -30,6 +32,7 @@ object Build extends Build {
       test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
     )
 
+  // Package (Container, Component) classes
   lazy val pkg = Project(id = "pkg", base = file("pkg"))
     .settings(buildSettings: _*)
     .settings(multiJvmSettings: _*)
@@ -41,12 +44,24 @@ object Build extends Build {
     ) configs MultiJvm
 
 
-//  lazy val extjsWorkspace = Project(id = "extjs", base = file("extjs"))
-
+  // Location Service
+  lazy val ls = Project(
+    id = "ls",
+    base = file("ls"),
+    settings = defaultSettings ++ distSettings ++
+      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
+        distBootClass in Dist := "org.tmt.csw.ls.LocationService",
+        outputDirectory in Dist := file("ls/target"),
+        libraryDependencies ++=
+          provided(akkaActor) ++
+            compile(akkaKernel, akkaRemote, scalaLogging, logback) ++
+            test(scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
+      )
+  )
 
   // -- Test subprojects with dependency information --
 
-  // test-app/app (server)
+  // test-app/app (server, see ../test/test-app/README.md)
   lazy val test_app = Project(
     id = "test-app",
     base = file("test/test-app/app"),
@@ -61,7 +76,7 @@ object Build extends Build {
       )
     ) dependsOn(cs, cmd)
 
-  // test-app/client
+  // test-app/client (see ../test/test-app/README.md)
   lazy val test_client = Project(
     id = "test-client",
     base = file("test/test-app/client"),
@@ -76,7 +91,7 @@ object Build extends Build {
       )
     ) dependsOn(cs, cmd)
 
-  // pkg test: Container1
+  // pkg test/demo: Container1 (see ../test/pkg/README.md)
   lazy val container1 = Project(
     id = "container1",
     base = file("test/pkg/container1"),
@@ -91,7 +106,7 @@ object Build extends Build {
       )
   ) dependsOn(pkg, cs, cmd)
 
-  // pkg test: Container2
+  // pkg test/demo: Container2 (see ../test/pkg/README.md)
   lazy val container2 = Project(
     id = "container2",
     base = file("test/pkg/container2"),
@@ -105,7 +120,6 @@ object Build extends Build {
             test(scalaLogging, logback)
       )
   ) dependsOn(pkg, cs, cmd)
-
 }
 
 
