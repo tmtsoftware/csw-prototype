@@ -15,14 +15,10 @@ To compile the Scala/Akka code, type "sbt" and then:
 
 * compile
 * publishLocal
-* project container1
-* dist
-* project container2
 * dist
 
-For some reason, typing "dist" in the top level csw project appears to compile,
-but the resulting installation is missing dependencies.
 The publishLocal task is needed to install the local dependencies for the Play app, which has a separate build file.
+The dist task creates the distribution with the "start" scripts for the applications (found under the target/bin directories).
 
 Note: See <a href="../../extjs/Readme.md">../../extjs/Readme.md</a> for how to setup the ExtJS
 based web UI used below. You need to install and run some "sencha" commands once to prepare the web app, otherwise
