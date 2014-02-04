@@ -26,19 +26,12 @@ object Settings {
     resolvers += "Spray repo" at "http://repo.spray.io",
     resolvers += "Spray nightlies" at "http://nightlies.spray.io",
     resolvers += "Sonatype (releases)" at "https://oss.sonatype.org/content/repositories/releases/"
-//    resolvers += "mDialog releases" at "http://mdialog.github.io/releases/"
   )
 
   lazy val defaultSettings = buildSettings ++ Seq(
     // compile options
     scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
     javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
-  )
-
-  lazy val akkaKernelPluginSettings = Seq(
-    distJvmOptions in Dist := "-Xms256M -Xmx1024M",
-    distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
-    outputDirectory in Dist := file("target/test-app")
   )
 
   lazy val multiJvmSettings = SbtMultiJvm.multiJvmSettings ++ Seq(
