@@ -115,7 +115,7 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
   def startCommandServiceHttpServer(): Unit = {
     // val numberOfSecondsToRun = 12 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
     val numberOfSecondsToRun = 2 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
-    val commandServiceActor = getCommandServiceActor(1, numberOfSecondsToRun)
+    val commandServiceActor = getCommandServiceActor(numberOfSecondsToRun)
     system.actorOf(CommandServiceHttpServer.props(commandServiceActor, interface, port, timeout), "commandService")
     Thread.sleep(1000) // XXX need a way to wait until the server is ready before proceeding
   }

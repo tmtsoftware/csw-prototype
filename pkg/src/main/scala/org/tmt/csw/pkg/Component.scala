@@ -11,41 +11,16 @@ import com.typesafe.config.ConfigFactory
  */
 object Component {
 
-//  /**
-//   * Creates a component actor with a new ActorSystem using the given props and name and returns the ActorRef
-//   * @param props used to create the actor
-//   * @param name the name of the component
-//   * @param host the host or IP address under which this actor can be contacted from other actor systems
-//   * @param port the port number on the given host for remote access
-//   */
-//  def create(props: Props, name: String, host: String, port: Int): ActorRef = {
-//    val s = s"""  akka {
-//              |    actor {
-//              |      provider = "akka.remote.RemoteActorRefProvider"
-//              |    }
-//              |    remote {
-//              |      enabled-transports = ["akka.remote.netty.tcp"]
-//              |      netty.tcp {
-//              |        hostname = $host
-//              |        port = $port
-//              |      }
-//              |    }
-//              |  }
-//              |"""
-//
-//    val config = ConfigFactory.parseString(s)
-//    ActorSystem(s"$name", config).actorOf(props, name)
-//  }
-
-
   /**
    * Creates a component actor with a new ActorSystem using the given props and name and returns the ActorRef
    * @param props used to create the actor
    * @param name the name of the component
    */
   def create(props: Props, name: String): ActorRef = {
+//    ActorSystem(name).actorOf(props, name)
+
     val config = ConfigFactory.load(name)
-    ActorSystem(s"$name", config).actorOf(props, name)
+    ActorSystem(name, config).actorOf(props, name)
   }
 
   /**
@@ -64,7 +39,6 @@ trait   Component {
   this: Actor with ActorLogging =>
 
   import Component._
-
 
   /**
    * The component name

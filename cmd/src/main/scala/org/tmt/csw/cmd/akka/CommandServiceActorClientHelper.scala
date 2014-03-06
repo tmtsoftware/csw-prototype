@@ -179,6 +179,6 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
     // See src/main/twirl/org/tmt/csw/cmd/index.scala.html
     for {
       status <- (commandServiceActor ? StatusRequest).mapTo[CommandServiceStatus]
-    } yield org.tmt.csw.cmd.html.index(status).toString
+    } yield org.tmt.csw.cmd.html.index(status).toString()
   }
 }

@@ -5,10 +5,9 @@ import akka.actor.ActorIdentity
 import scala.Some
 import akka.actor.Identify
 import org.tmt.csw.cmd.akka.{OneAtATimeCommandQueueController, CommandServiceActor}
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration._
-import org.tmt.csw.cmd.akka.ConfigRegistrationActor.RegisterRequest
+import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
+import java.net.URI
+import org.tmt.csw.ls.LocationService
 
 // -- Test command service --
 object TestCommandServiceActor {
@@ -17,8 +16,11 @@ object TestCommandServiceActor {
 
 class TestCommandServiceActor(name: String, configPath: String) extends CommandServiceActor with OneAtATimeCommandQueueController {
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor), name = name)
-  override val configPaths = Set(configPath)
   override def receive: Receive = receiveCommands
+
+  // Register with the location service (which must be started as a separate process)
+  val serviceId = ServiceId(name, ServiceType.HCD)
+  LocationService.register(context.system, self, serviceId, Some(configPath))
 }
 
 /**
@@ -51,21 +53,10 @@ class TestClientActor extends Actor with ActorLogging {
 
   def active(commandServiceActorRef: ActorRef): Actor.Receive = {
     case Terminated(`commandServiceActorRef`) =>
-      // Just quit (could also retry and wait for another commandServiceActor to start...?)
-//      context.stop(self)
       context.system.shutdown()
   }
 
   def start(remoteCommandServiceActor: ActorRef): Unit = {
-    // Start two config actors and tell them to register to receive work from the command service,
-    // then send a message to the test app to start sending a command
-    implicit val timeout = Timeout(5.seconds)
-    implicit val dispatcher = context.dispatcher
-    for {
-        ack1 <- commandServiceActor1 ? RegisterRequest(remoteCommandServiceActor)
-        ack2 <- commandServiceActor2 ? RegisterRequest(remoteCommandServiceActor)
-    } {
       context.actorSelection(s"akka.tcp://TestApp@${settings.testCommandServerHost}:2552/user/testActor") ! "Start"
-    }
   }
 }

@@ -10,9 +10,10 @@ object TestHcd {
 case class TestHcd(name: String, configPath: String) extends Hcd with OneAtATimeCommandQueueController {
 
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, 3), name)
-  override val configPaths = Set(configPath)
 
   override def receive: Receive = receiveHcdMessages
+
+  registerWithLocationService(Some(configPath))
 
   // -- Implement Component methods --
   override def initialize(): Unit = {

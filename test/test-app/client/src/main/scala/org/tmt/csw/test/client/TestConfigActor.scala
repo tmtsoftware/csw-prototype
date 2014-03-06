@@ -2,7 +2,6 @@ package org.tmt.csw.test.client
 
 import akka.actor._
 import org.tmt.csw.cmd.akka.{RunId, ConfigActor}
-import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import org.tmt.csw.cmd.akka.ConfigActor._
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.ConfigActor.ConfigResume

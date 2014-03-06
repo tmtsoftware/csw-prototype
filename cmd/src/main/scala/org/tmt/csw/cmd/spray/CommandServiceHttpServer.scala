@@ -6,8 +6,7 @@ import scala.concurrent.duration.FiniteDuration
 import spray.can.Http
 import spray.routing.HttpServiceActor
 import org.tmt.csw.cmd.akka.{CommandServiceActorClientHelper, CommandStatus}
-import akka.io.Tcp.{Event, PeerClosed, Bound}
-import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
+import akka.io.Tcp.Event
 
 /**
  * Messages and `akka.actor.Props` factories for the CommandService actor.

@@ -39,12 +39,14 @@ class TestConfigActorWorker(override val commandStatusActor: ActorRef, numberOfS
   override def submit(submit: SubmitWithRunId): Unit = {
     savedSubmit = submit
     aState.set(CommandStatus.Submitted(submit.runId))
+    //commandStatusActor ! CommandStatusActor.StatusUpdate(CommandStatus.Busy(submit.runId), submit.submitter)
     doSubmit(submit)
   }
 
   def doSubmit(submit: SubmitWithRunId): Unit = {
     log.info(s"Processing config: ${submit.config}, reply when complete to ${submit.submitter}")
     implicit val dispatcher = context.system.dispatcher
+    // XXX TODO FIXME: Should not use a future here: send a message instead (but don't want to block!)
     for {
       status <- Future {
         doWork(submit)

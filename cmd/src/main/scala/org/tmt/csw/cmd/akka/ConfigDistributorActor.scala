@@ -1,18 +1,22 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{Props, ActorRef, ActorLogging, Actor}
+import akka.actor._
 import org.tmt.csw.cmd.core.Configuration
 import akka.pattern.ask
 import scala.concurrent.Future
 import akka.util.Timeout
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.akka.ConfigActor._
+import org.tmt.csw.cmd.akka.QueryWorkerActor.QueryInfo
+import org.tmt.csw.ls.LocationServiceActor.ServicesReady
 import scala.util.Failure
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import scala.Some
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
 import scala.util.Success
 import org.tmt.csw.cmd.akka.ConfigDistributorActor.SubmitInfo
-import QueryWorkerActor._
+import org.tmt.csw.ls.LocationServiceActor.LocationServiceInfo
+import org.tmt.csw.ls.LocationService
 
 object ConfigDistributorActor {
   /**
@@ -23,38 +27,51 @@ object ConfigDistributorActor {
 
   /**
    * Combines a Submit object with a reference to the target actor
-   * @param path the path in the config that the target actor is interested in
+   * @param path optional path in the config that the target actor is interested in (default: everything)
    * @param submit contains the config and runId
    * @param target the target actor receiving the config
    */
-  case class SubmitInfo(path: String, submit: SubmitWithRunId, target: ActorRef)
+  case class SubmitInfo(path: Option[String], submit: SubmitWithRunId, target: ActorRef)
 }
 
 /**
  * This actor receives configurations and sends parts of them on to actors who have registered for them.
  * @param commandStatusActor reference to the command status actor, which receives the final status of commands
  */
-class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
+class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging with Stash {
 
-  import ConfigRegistrationActor._
   import ConfigActor._
   import ConfigDistributorActor._
 
-  // Set of registry entries for actors that process configurations.
-  // The actors register for the config paths they are interested in and when a message is received,
-  // those parts are extracted and sent to the relevant actors.
-  private var registry = Set[RegistryEntry]()
-
   // Maps runId to the submit worker actor that is handling the submit
-  private var workers = Map[RunId, ActorRef]()
+  var workers = Map[RunId, ActorRef]()
 
-  /**
-   * Messages received in the normal state.
-   */
-  override def receive: Receive = {
-    case RegistryUpdate(reg) => registry = reg
+  // Start out in the waiting state
+  override def receive: Receive = waitingForServices
 
-    case s: SubmitWithRunId => submit(s)
+  // Initial state until we get a list of running services to use as target actors
+  def waitingForServices: Receive = {
+    case ServicesReady(services: List[LocationServiceInfo]) =>
+      val targetActors = for (service <- services if service.actorRef.isDefined) yield service.actorRef.get
+      if (targetActors.size == services.size) {
+        for(a <- targetActors) context.watch(a)
+        context.become(ready(services))
+      }
+
+    // save these messages for later when in the ready state
+    case s: SubmitWithRunId => stash()
+    case s: CommandStatus => stash()
+    case c: ConfigGet => stash()
+    case c: ConfigControlMessage => stash()
+
+    case ConfigPut(config) => internalConfig(config)
+
+    case x => log.error(s"Unexpected message from $sender (while waiting for services): $x")
+  }
+
+  // Messages received in the ready state.
+  def ready(services: List[LocationServiceInfo]): Receive = {
+    case s: SubmitWithRunId => submit(s, services)
 
     case status: CommandStatus =>
       if (status.done) {
@@ -62,10 +79,15 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
         workers -= status.runId
       }
 
-    case ConfigGet(config) => query(config, sender)
+    case ConfigGet(config) => query(config, services)
     case ConfigPut(config) => internalConfig(config)
 
     case c: ConfigControlMessage => forwardToSubmitWorker(c.runId, c)
+
+    // If a target actor died, go back and wait for it (and any others that are needed) to restart
+    case Terminated(actorRef) =>
+      LocationService.requestServices(context.system, self, services.map(_.serviceId))
+      context.become(waitingForServices)
 
     case x => log.error(s"Unexpected message from $sender: $x")
   }
@@ -82,9 +104,9 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    * Send each actor that registered for a config path that part of the config, if found,
    * and save a list so we can check if all are done later when the status messages are received.
    */
-  private def submit(submit: SubmitWithRunId): Unit = {
+  private def submit(submit: SubmitWithRunId, targetActors: List[LocationServiceInfo]): Unit = {
     // First get a list of the config parts we need to send and the target actors that should get them
-    val submitInfoList = registry.map(getSubmitInfo(submit, _)).flatten.toList
+    val submitInfoList = targetActors.map(getSubmitInfo(submit, _)).flatten.toList
 
     if (submitInfoList.length == 0) {
       log.error(s"No subscribers for submit: ${submit.config}")
@@ -94,20 +116,25 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
       val worker = context.actorOf(SubmitWorkerActor.props(commandStatusActor, submit.runId, submit.submitter, submitInfoList))
       workers += (submit.runId -> worker)
       submitInfoList.foreach(s => workers += (s.submit.runId -> worker))
+      commandStatusActor ! CommandStatusActor.StatusUpdate(CommandStatus.Busy(submit.runId), submit.submitter)
     }
   }
 
+  // Returns given config if pathOpt is None, otherwise the config at the given path in the given config.
+  private def getConfig(config: Configuration, pathOpt: Option[String]): Configuration = {
+    if (pathOpt.isEmpty) config else config.getConfig(pathOpt.get)
+  }
+
   // Returns Some(SubmitInfo) if there is a matching path in the config to be submitted, otherwise None.
-  private def getSubmitInfo(submit: SubmitWithRunId, registryEntry: RegistryEntry): Option[SubmitInfo] = {
-    log.debug(s"submit: checking registry entry $registryEntry")
-    submit.config.hasPath(registryEntry.path) match {
-      case true =>
-        // Give each config part a unique runid, so we can identify it later when the status is received
-        val runIdPart = RunId()
-        val submitPart = SubmitWithRunId(submit.config.getConfig(registryEntry.path), self, runIdPart)
-        Some(SubmitInfo(registryEntry.path, submitPart, registryEntry.actorRef))
-      case false => None
-    }
+  private def getSubmitInfo(submit: SubmitWithRunId, targetActor: LocationServiceInfo): Option[SubmitInfo] = {
+    val pathOpt = targetActor.configPath
+    if (targetActor.actorRef.isDefined && (pathOpt.isEmpty || submit.config.hasPath(pathOpt.get))) {
+      // Give each config part a unique runid, so we can identify it later when the status is received
+      val runIdPart = RunId()
+      val config = getConfig(submit.config, pathOpt)
+      val submitPart = SubmitWithRunId(config, self, runIdPart)
+      Some(SubmitInfo(pathOpt, submitPart, targetActor.actorRef.get))
+    } else None
   }
 
   /**
@@ -116,29 +143,28 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    * same config with the current values filled out.
    *
    * @param config used to specify the keys for the values that should be returned
+   * @param targetActors information about the target HCDs or assemblies
    */
-  private def query(config: Configuration, replyTo: ActorRef): Unit = {
-    // Like submit, send parts of the query to the registered config actors and when all replies are in,
+  private def query(config: Configuration, targetActors: List[LocationServiceInfo]): Unit = {
+    // Like submit, send parts of the query to the target actors and when all replies are in,
     // combine and return to sender.
 
     // First get a list of the config parts we need to send and the target actors that should get them.
-    val list = registry.map {
-      registryEntry =>
-        config.hasPath(registryEntry.path) match {
-          case true =>
-            val msg = ConfigGet(config.getConfig(registryEntry.path))
-            Some(QueryInfo(registryEntry.actorRef, msg, registryEntry.path))
-          case false =>
-            None
-        }
+    val list = targetActors.map {
+      targetActor =>
+        val pathOpt = targetActor.configPath
+        if (targetActor.actorRef.isDefined && (pathOpt.isEmpty || config.hasPath(pathOpt.get))) {
+          val msg = ConfigGet(getConfig(config, pathOpt))
+          Some(QueryInfo(targetActor.actorRef.get, msg, pathOpt))
+        } else None
     }.flatten.toList
 
     if (list.length == 0) {
       log.error(s"No subscribers for config/get query: $config")
-      replyTo ! ConfigResponse(Failure(new Error("No subscribers for config/get query")))
+      sender ! ConfigResponse(Failure(new Error("No subscribers for config/get query")))
     } else {
       // Hand this off to a new query worker actor to gather the results from the target actors
-      context.actorOf(QueryWorkerActor.props(list, replyTo))
+      context.actorOf(QueryWorkerActor.props(list, sender))
     }
   }
 
@@ -270,8 +296,8 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef,
  * Defines props to create the query worker actor
  */
 private object QueryWorkerActor {
-  // Query info broken down by target actor and path
-  case class QueryInfo(targetActor: ActorRef, msg: ConfigActor.ConfigGet, queryPath: String)
+  // Query info broken down by target actor and optional path
+  case class QueryInfo(targetActor: ActorRef, msg: ConfigActor.ConfigGet, queryPath: Option[String])
 
   def props(list: List[QueryInfo], replyTo: ActorRef): Props = Props(classOf[QueryWorkerActor], list, replyTo)
 }
@@ -323,14 +349,18 @@ private class QueryWorkerActor(list: List[QueryInfo], replyTo: ActorRef)
    * This is to make up for the fact that the config actor only received and filled out
    * a part of the config. This method puts that part back in its place in the config tree.
    * @param response the response to a "get" query from the config actor
-   * @param path a path in the config that the actor registered for
+   * @param path an optional path in the config that the actor registered for
    * @return the response with the config inserted at the given path
    */
-  private def insertPath(response: ConfigResponse, path: String): ConfigResponse = {
+  private def insertPath(response: ConfigResponse, path: Option[String]): ConfigResponse = {
     response.tryConfig match {
       case Success(config) =>
-        val map = Map(path -> config.asMap(""))
-        ConfigResponse(Success(Configuration(map)))
+        if (path.isEmpty) {
+          response
+        } else {
+          val map = Map(path.get -> config.asMap(""))
+          ConfigResponse(Success(Configuration(map)))
+        }
       case Failure(ex) =>
         response
     }

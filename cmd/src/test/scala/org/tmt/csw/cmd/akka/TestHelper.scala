@@ -2,10 +2,10 @@ package org.tmt.csw.cmd.akka
 
 import akka.actor.{Props, ActorRef}
 import akka.testkit.{TestKit, ImplicitSender}
-import scala.concurrent.duration._
-import org.tmt.csw.cmd.akka.ConfigRegistrationActor._
+import org.tmt.csw.ls.LocationServiceActor._
+import java.net.URI
 
-// Test HCD object
+// Test HCD
 object TestHcdCommandServiceActor {
   /**
    * Props to create the test HCD actor
@@ -16,18 +16,20 @@ object TestHcdCommandServiceActor {
   def props(configPath: String, numberOfSecondsToRun: Int, name: String): Props =
     Props(classOf[TestHcdCommandServiceActor], configPath, numberOfSecondsToRun, name)
 }
-
-// Test HCD class
 class TestHcdCommandServiceActor(configPath: String, numberOfSecondsToRun: Int, name: String)
   extends CommandServiceActor with OneAtATimeCommandQueueController {
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, numberOfSecondsToRun), name)
-  override val configPaths = Set(configPath)
   override def receive: Receive = receiveCommands
 }
 
 // Test assembly
-class TestAssemblyCommandServiceActor extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
+object TestAssemblyCommandServiceActor {
+  // Note: for testing we pass in the list of HCDs. Normally we would request them from the location service.
+  def props(hcds: List[LocationServiceInfo]): Props = Props(classOf[TestAssemblyCommandServiceActor], hcds)
+}
+class TestAssemblyCommandServiceActor(hcds: List[LocationServiceInfo]) extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
   override def receive: Receive = receiveCommands
+  configDistributorActor ! ServicesReady(hcds)
 }
 
 /**
@@ -38,27 +40,26 @@ trait TestHelper extends ImplicitSender {
 
   /**
    * Creates and returns a new CommandServiceActor
-   * @param n a unique number (needed if multiple command servers are running at once)
    * @param numberOfSecondsToRun number of seconds the worker actors should run
    * @return the actor ref of the assembly command server
    */
-  def getCommandServiceActor(n: Int = 1, numberOfSecondsToRun: Int = 2): ActorRef = {
-    val assembly = system.actorOf(Props[TestAssemblyCommandServiceActor], name = s"Assembly$n")
-    val duration = (numberOfSecondsToRun * 3).seconds
+  def getCommandServiceActor(numberOfSecondsToRun: Int = 2): ActorRef = {
+    val hcdA = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun-1, s"TestConfigActorA"),
+      name = s"HCD-A")
+    val hcdB = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB"),
+      name = s"HCD-B")
 
-    val hcdA = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun-1, s"TestConfigActorA$n"),
-      name = s"HCD-A$n")
+    // Normally this information would come from the location service, but for testing it is hard coded here
+    val hcds = List(
+      LocationServiceInfo(
+        ServiceId(s"HCD-A", ServiceType.HCD), List(new URI(hcdA.path.toString)),
+        Some("config.tmt.tel.base.pos"), Some(hcdA)),
+      LocationServiceInfo(
+        ServiceId(s"HCD-B", ServiceType.HCD), List(new URI(hcdB.path.toString)),
+        Some("config.tmt.tel.ao.pos.one"), Some(hcdB))
+    )
 
-    val hcdB = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB$n"),
-      name = s"HCD-B$n")
-
-    within(duration) {
-      hcdA ! RegisterRequest(assembly)
-      expectMsg(Registered(hcdA))
-      hcdB ! RegisterRequest(assembly)
-      expectMsg(Registered(hcdB))
-    }
-    assembly
+    system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly")
   }
 
 }

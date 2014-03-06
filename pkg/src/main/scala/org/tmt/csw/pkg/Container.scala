@@ -71,7 +71,6 @@ class Container extends Actor with ActorLogging {
       case None =>
         log.info(s"Container.createComponent($name)")
         val actorRef = Component.create(props, name)
-//        val actorRef = context.actorOf(props, name)
         log.info(s"Container.createComponent($name) -> $actorRef, reply to $sender")
         context.watch(actorRef)
         sender ! actorRef

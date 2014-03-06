@@ -4,137 +4,67 @@ import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor._
 import com.typesafe.scalalogging.slf4j.Logging
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import org.tmt.csw.ls.LocationService.{HCD, ServiceId}
-import akka.pattern.ask
-import org.tmt.csw.ls.LocationServiceActor.{QueryResult, LocationServiceInfo}
-import akka.util.Timeout
-import scala.util.{Failure, Success}
-import scala.concurrent.{Await, ExecutionContext}
-import ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import org.tmt.csw.ls.LocationService.ServiceId
-import org.tmt.csw.ls.LocationServiceActor.QueryResult
-import scala.util.Success
-import scala.util.Failure
-import scala.Some
-import org.tmt.csw.ls.LocationServiceActor.LocationServiceInfo
+import org.tmt.csw.ls.LocationServiceActor._
+import java.net.URI
 
 /**
- * Tests the location service
+  * Simple standalone test of local location service (normally it should be run as a remote actor)
   */
-class TestLocationService extends TestKit(ActorSystem(LocationService.locationServiceName))
-with ImplicitSender with FunSuite with Logging with BeforeAndAfterAll {
-
-  override def beforeAll(): Unit = {
-    system.actorOf(Props[LocationServiceActor], LocationService.locationServiceName)
-  }
+class TestLocationService extends TestKit(ActorSystem("Test"))
+  with ImplicitSender with FunSuite with Logging with BeforeAndAfterAll {
 
   test("Test location service") {
-    val serviceId = ServiceId("TestActor", HCD)
-    val actorRef = system.actorOf(Props(classOf[TestActor], serviceId))
-    val duration = 2.seconds
-    implicit val timeout = Timeout(2.seconds)
+    val ls = system.actorOf(Props[LocationServiceActor], LocationServiceActor.locationServiceName)
 
-    // Test Get with valid service id
-    Await.result(actorRef ? "testGet", duration).asInstanceOf[Option[LocationServiceInfo]] match {
-      case Some(LocationServiceInfo(svcId, actorPath, configPaths)) =>
-        assert(svcId == serviceId)
-        assert(configPaths == Set("a", "b"))
-      case None =>
-        fail("Location service did not find TestActor")
-    }
+    // register
+    val serviceId = ServiceId("TestActor", ServiceType.HCD)
+    val endpoints = List(new URI(self.path.toString))
+    val configPath = None
+    ls ! Register(serviceId, endpoints, configPath)
 
-    // Test Get with invalid service id
-    Await.result(actorRef ? "testGetInvalid", duration).asInstanceOf[Option[LocationServiceInfo]] match {
-      case s@Some(LocationServiceInfo(svcId, actorPath, configPaths)) =>
-        fail(s"Location service found nonexisting actor: $s")
-      case None =>
-    }
+    // resolve
+    ls ! Resolve(serviceId)
+    val info = expectMsgType[LocationServiceInfo]
+    assert(info.serviceId == serviceId)
+    assert(info.endpoints == endpoints)
+    assert(info.configPath == configPath)
+    assert(info.actorRef.get == self)
 
-    // Test Query with valid service id
-    val queryResult = Await.result(actorRef ? "testQuery", duration).asInstanceOf[QueryResult]
-    assert(queryResult.results.size == 1)
-    queryResult.results(0) match {
-      case LocationServiceInfo(svcId, actorPath, configPaths) =>
-        assert(svcId == serviceId)
-        assert(configPaths == Set("a", "b"))
-    }
+    // browse
+    ls ! Browse(None, None)
+    ls ! Browse(Some("TestActor"), None)
+    ls ! Browse(None, Some(ServiceType.HCD))
+    ls ! Browse(Some("TestActor"), Some(ServiceType.HCD))
+    val r1 = expectMsgType[BrowseResults]
+    val r2 = expectMsgType[BrowseResults]
+    val r3 = expectMsgType[BrowseResults]
+    val r4 = expectMsgType[BrowseResults]
+    logger.info(s"XXX r1 = $r1")
+    assert(r1.results.size == 1)
+    assert(r1.results(0) == info)
+    assert(r2 == r1)
+    assert(r3 == r1)
+    assert(r4 == r1)
+    ls ! Browse(Some("TestActor"), Some(ServiceType.Assembly))
+    ls ! Browse(Some("XXX"), None)
+    ls ! Browse(Some("XXX"), Some(ServiceType.HCD))
+    val r5 = expectMsgType[BrowseResults]
+    val r6 = expectMsgType[BrowseResults]
+    val r7 = expectMsgType[BrowseResults]
+    assert(r5.results.size == 0)
+    assert(r6.results.size == 0)
+    assert(r7.results.size == 0)
 
-    // Test Query with unknown service id
-    val queryResult2 = Await.result(actorRef ? "testQueryUnknown", duration).asInstanceOf[QueryResult]
-    assert(queryResult2.results.size == 0)
-
-    // Test Query with wildcard
-    val queryResult3 = Await.result(actorRef ? "testQueryWildcard", duration).asInstanceOf[QueryResult]
-    assert(queryResult.results.size == 1)
-    queryResult.results(0) match {
-      case LocationServiceInfo(svcId, actorPath, configPaths) =>
-        assert(svcId == serviceId)
-        assert(configPaths == Set("a", "b"))
-    }
+    // request services
+    ls ! RequestServices(List(serviceId))
+    val sr = expectMsgType[ServicesReady]
+    assert(sr.services.size == 1)
+    assert(sr.services(0) == info)
   }
 
   override def afterAll(): Unit = {
     system.shutdown()
   }
 }
-
-// Test actor: We need an actor in order to access the location service
-class TestActor(serviceId: ServiceId) extends Actor with ActorLogging {
-  LocationService.register(context, serviceId, self, Set("a", "b"))
-
-  override def receive: Receive = {
-    case "testGet" =>
-      val replyTo = sender
-      LocationService.get(context, serviceId).onComplete {
-        case Success(x) =>
-          replyTo ! x
-        case Failure(ex) =>
-          log.error("test get failed", ex)
-          replyTo ! None
-      }
-
-    case "testGetInvalid" =>
-      val replyTo = sender
-      LocationService.get(context, ServiceId("Invalid", HCD)).onComplete {
-        case Success(x) =>
-          replyTo ! x
-        case Failure(ex) =>
-          log.error("test invalid get failed", ex)
-          replyTo ! None
-      }
-
-    case "testQuery" =>
-      val replyTo = sender
-      LocationService.query(context, Some(serviceId.name), Some(serviceId.serviceType)).onComplete {
-        case Success(x) =>
-          replyTo ! x
-        case Failure(ex) =>
-          log.error("test query failed", ex)
-          replyTo ! QueryResult(List())
-      }
-
-    case "testQueryUnknown" =>
-      val replyTo = sender
-      LocationService.query(context, Some("XXX"), Some(serviceId.serviceType)).onComplete {
-        case Success(x) =>
-          replyTo ! x
-        case Failure(ex) =>
-          log.error("test query failed", ex)
-          replyTo ! QueryResult(List())
-      }
-
-    case "testQueryWildcard" =>
-      val replyTo = sender
-      LocationService.query(context, None, Some(serviceId.serviceType)).onComplete {
-        case Success(x) =>
-          replyTo ! x
-        case Failure(ex) =>
-          log.error("test query failed", ex)
-          replyTo ! QueryResult(List())
-      }
-  }
-}
-
 
 

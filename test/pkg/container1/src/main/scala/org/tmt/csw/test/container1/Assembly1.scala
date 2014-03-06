@@ -4,17 +4,27 @@ import akka.actor.Props
 import org.tmt.csw.pkg.Assembly
 import org.tmt.csw.cmd.akka.OneAtATimeCommandQueueController
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
-import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import java.util.Date
+import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
 
 object Assembly1 {
   def props(name: String): Props = Props(classOf[Assembly1], name)
 }
 
 // A test assembly
-case class Assembly1(name: String) extends Assembly with OneAtATimeCommandQueueController {
+case class Assembly1(name: String)
+    extends Assembly with OneAtATimeCommandQueueController {
 
   override def receive: Receive = receiveAssemblyMessages
+
+  // Define the HCDs we want to use
+  val serviceIds = List(
+    ServiceId("HCD-2A", ServiceType.HCD),
+    ServiceId("HCD-2B", ServiceType.HCD),
+    ServiceId("HCD-2C", ServiceType.HCD),
+    ServiceId("HCD-2D", ServiceType.HCD)
+  )
+  requestServices(serviceIds)
 
   /**
    * Called when a command is submitted

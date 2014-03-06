@@ -15,6 +15,9 @@ import scala.util._
 
 /**
  * Tests the Command Service actor
+ *
+ * Note: The build settings include "parallelExecution in Test := false", so the
+ * tests run one after the other.
  */
 class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelper
     with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
@@ -29,11 +32,11 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
   implicit val timeout = Timeout(duration)
   implicit val dispatcher = system.dispatcher
 
+  val commandServiceActor = getCommandServiceActor()
   // -- Tests --
 
 
   test("Test simple queue (bypass) request") {
-    val commandServiceActor = getCommandServiceActor(1)
     commandServiceActor ! QueueBypassRequest(config)
     val s1 = expectMsgType[CommandStatus.Busy]
     val s2a = expectMsgType[CommandStatus.PartiallyCompleted]
@@ -43,12 +46,11 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
   }
 
   test("Test simple queue submit") {
-    val commandServiceActor = getCommandServiceActor(2)
     within(duration) {
       commandServiceActor ! Submit(config)
       val s1 = expectMsgType[CommandStatus.Queued]
       val s2 = expectMsgType[CommandStatus.Busy]
-      val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
+      expectMsgType[CommandStatus.PartiallyCompleted]
       val s3 = expectMsgType[CommandStatus.Completed]
       assert(s1.runId == s2.runId)
       assert(s3.runId == s2.runId)
@@ -57,7 +59,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
 
 
   test("Test queue submit with config abort") {
-    val commandServiceActor = getCommandServiceActor(3)
     within(duration) {
       commandServiceActor ! Submit(config)
       val s = expectMsgType[CommandStatus.Queued]
@@ -71,7 +72,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
 
 
   test("Test queue submit followed by config pause and resume") {
-    val commandServiceActor = getCommandServiceActor(4)
     within(duration) {
       commandServiceActor ! Submit(config)
       val s = expectMsgType[CommandStatus.Queued]
@@ -87,7 +87,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
 
 
   test("Test queue pause and start") {
-    val commandServiceActor = getCommandServiceActor(5)
     within(duration) {
       commandServiceActor ! QueuePause
       commandServiceActor ! Submit(config)
@@ -95,7 +94,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       expectNoMsg(1.second)
       commandServiceActor ! QueueStart
       val s2 = expectMsgType[CommandStatus.Busy]
-      val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
+      expectMsgType[CommandStatus.PartiallyCompleted]
       val s3 = expectMsgType[CommandStatus.Completed]
       assert(s1.runId == s2.runId)
       assert(s3.runId == s2.runId)
@@ -103,7 +102,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
   }
 
   test("Test queue stop and start") {
-    val commandServiceActor = getCommandServiceActor(6)
     within(duration) {
       // Start with the queue paused, so that the config stays in the queue
       commandServiceActor ! QueuePause
@@ -113,7 +111,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       // Stop the queue (all configs should be removed from the queue and no new ones added)
       commandServiceActor ! QueueStop
       expectNoMsg(1.second)
-      // try adding a new config to the queue: A runId will be returned, but it will not be added to the queue
+      // try adding a new config to the queue while the queue is stopped (it should not be added to the queue)
       commandServiceActor ! Submit(config)
       expectNoMsg(1.second)
       // Restart the queue (it should still be empty)
@@ -123,7 +121,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       commandServiceActor ! Submit(config)
       val s2 = expectMsgType[CommandStatus.Queued]
       val s3 = expectMsgType[CommandStatus.Busy]
-      val s4a = expectMsgType[CommandStatus.PartiallyCompleted]
+      expectMsgType[CommandStatus.PartiallyCompleted]
       val s4 = expectMsgType[CommandStatus.Completed]
       assert(s1.runId != s2.runId)
       assert(s3.runId == s2.runId)
@@ -133,7 +131,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
 
 
   test("Test queue delete") {
-    val commandServiceActor = getCommandServiceActor(7)
     within(duration) {
       // Start with the queue paused, so that the config stays in the queue
       commandServiceActor ! QueuePause
@@ -179,7 +176,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
         |
       """.stripMargin
     val emptyConfig = Configuration(empty)
-    val commandServiceActor = getCommandServiceActor(8)
     commandServiceActor ! ConfigGet(emptyConfig)
     val resp = expectMsgType[ConfigResponse]
     resp.tryConfig match {

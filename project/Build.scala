@@ -9,12 +9,13 @@ object Build extends Build {
   import Dependencies._
 
   // Base project
-  lazy val root = Project(id = "csw", base = file("."))
+  lazy val csw = project.in(file("."))
     .aggregate(cs, cmd, pkg, ls, test_app, test_client, container1, container2)
     .settings(buildSettings: _*)
 
+
   // Config Service
-  lazy val cs = Project(id = "cs", base = file("cs"))
+  lazy val cs = project
   	.settings(buildSettings: _*)
   	.settings(libraryDependencies ++=
   		provided(akkaActor) ++
@@ -22,32 +23,8 @@ object Build extends Build {
       test(scalaTest, specs2, akkaTestKit, junit)
   	)
 
-  // Command Service
-  lazy val cmd = Project(id = "cmd", base = file("cmd"))
-    .settings(buildSettings: _*)
-    .settings(twirlSettings: _*)
-    .settings(libraryDependencies ++=
-      provided(akkaActor) ++
-      compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
-      test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
-    )
-
-  // Package (Container, Component) classes
-  lazy val pkg = Project(id = "pkg", base = file("pkg"))
-    .settings(buildSettings: _*)
-    .settings(multiJvmSettings: _*)
-    .dependsOn(cmd)
-    .settings(libraryDependencies ++=
-      provided(akkaActor) ++
-      compile(scalaLogging, logback) ++
-      test(scalaTest, akkaTestKit, akkaMultiNodeTest)
-    ) configs MultiJvm
-
-
   // Location Service
-  lazy val ls = Project(
-    id = "ls",
-    base = file("ls"),
+  lazy val ls = Project(id = "ls", base = file("ls"),
     settings = defaultSettings ++ distSettings ++
       Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
         distBootClass in Dist := "org.tmt.csw.ls.LocationService",
@@ -55,9 +32,32 @@ object Build extends Build {
         libraryDependencies ++=
           provided(akkaActor) ++
             compile(akkaKernel, akkaRemote, scalaLogging, logback) ++
-            test(scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
+            test(scalaTest, specs2, akkaTestKit, junit)
       )
   )
+
+  // Command Service
+  lazy val cmd = project
+    .settings(buildSettings: _*)
+    .settings(twirlSettings: _*)
+    .settings(libraryDependencies ++=
+      provided(akkaActor) ++
+      compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
+      test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
+    ) dependsOn ls
+
+
+  // Package (Container, Component) classes
+  lazy val pkg = project
+    .settings(buildSettings: _*)
+    .settings(multiJvmSettings: _*)
+    .dependsOn(cmd, ls)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(scalaLogging, logback) ++
+      test(scalaTest, akkaTestKit, akkaMultiNodeTest)
+    ) configs MultiJvm
+
 
   // -- Test subprojects with dependency information --
 
@@ -74,7 +74,8 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-    ) dependsOn(cs, cmd)
+    ) dependsOn(cs, cmd, ls)
+
 
   // test-app/client (see ../test/test-app/README.md)
   lazy val test_client = Project(
@@ -89,7 +90,8 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-    ) dependsOn(cs, cmd)
+    ) dependsOn(cs, cmd, ls)
+
 
   // pkg test/demo: Container1 (see ../test/pkg/README.md)
   lazy val container1 = Project(
@@ -104,7 +106,8 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-  ) dependsOn(pkg, cs, cmd)
+  ) dependsOn(pkg, cs, cmd, ls)
+
 
   // pkg test/demo: Container2 (see ../test/pkg/README.md)
   lazy val container2 = Project(
@@ -119,7 +122,7 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote, akkaZeromq) ++
             test(scalaLogging, logback)
       )
-  ) dependsOn(pkg, cs, cmd)
+  ) dependsOn(pkg, cs, cmd, ls)
 }
 
 

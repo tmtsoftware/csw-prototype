@@ -48,7 +48,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   override def pause(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigPause(runId)
-      case None => log.error(s"No worker actor found for runId: $runId")
+      case None => log.error(s"Can't pause config: No worker actor found for runId: $runId")
     }
   }
 
@@ -58,7 +58,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   override def resume(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigResume(runId)
-      case None => log.error(s"No worker actor found for runId: $runId")
+      case None => log.error(s"Can't resume config: No worker actor found for runId: $runId")
     }
   }
 
@@ -68,7 +68,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   override def cancel(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigCancel(runId)
-      case None => log.error(s"No worker actor found for runId: $runId")
+      case None => log.error(s"Can't cancel config: No worker actor found for runId: $runId")
     }
   }
 
@@ -78,7 +78,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   override def abort(runId: RunId): Unit = {
     actorRefForRunId.get(runId) match {
       case Some(actorRef) => actorRef ! ConfigAbort(runId)
-      case None => log.error(s"No worker actor found for runId: $runId")
+      case None => log.error(s"Can't abort config: No worker actor found for runId: $runId")
     }
   }
 

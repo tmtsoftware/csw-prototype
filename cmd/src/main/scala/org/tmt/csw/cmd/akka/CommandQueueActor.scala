@@ -1,13 +1,17 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{Props, ActorRef, Actor, ActorLogging}
+import akka.actor._
 import org.tmt.csw.cmd.core.Configuration
-import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
 import org.tmt.csw.cmd.akka.CommandServiceActor.StatusRequest
+import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
 
 
 object CommandQueueActor {
 
+  /**
+   * Used to create the CommandQueueActor.
+   * @param commandStatusActor reference to the commandStatusActor
+   */
   def props(commandStatusActor: ActorRef): Props = Props(classOf[CommandQueueActor], commandStatusActor)
 
   // Queue states
@@ -72,6 +76,11 @@ object CommandQueueActor {
   case object QueueWorkAvailable extends QueueMessage
 
   /**
+   * Message to optional listener that there is work to do in the queue
+   */
+  case object QueueReady extends QueueMessage
+
+  /**
    * Reply to StatusRequest message
    */
   case class ConfigQueueStatus(status: String, queueMap: Map[RunId, SubmitWithRunId], count: Int)
@@ -79,8 +88,10 @@ object CommandQueueActor {
 
 /**
  * Implements the queue for the command service.
+ * @param commandStatusActor reference to the commandStatusActor
  */
-class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
+class CommandQueueActor(commandStatusActor: ActorRef)
+  extends Actor with ActorLogging with Stash {
 
   import CommandQueueActor._
 
@@ -102,9 +113,11 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
 
   // Initial behavior while waiting for the queue client and controller actor references on startup.
   def waitingForInit: Receive = {
+    case s: SubmitWithRunId => queueSubmit(s)
     case QueueClient(client) => initClient(client)
     case QueueController(controller) => initController(controller)
     case StatusRequest => sender ! ConfigQueueStatus("waiting for init", queueMap, submitCount)
+    case m: QueueMessage => stash() // save other queue messages for later
     case x => unknownMessage(x, "waiting for queue client")
   }
 
@@ -120,7 +133,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
 
   // Behavior while the queue is in the paused state
   def queuePaused: Receive = {
-    case s@SubmitWithRunId(config, submitter, runId) => queueSubmit(s)
+    case s: SubmitWithRunId => queueSubmit(s)
     case QueueStop => queueStop()
     case QueuePause =>
     case QueueStart => queueStart()
@@ -132,7 +145,7 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
 
   // Behavior while the queue is in the started state
   def queueStarted: Receive = {
-    case s@SubmitWithRunId(config, submitter, runId) =>
+    case s: SubmitWithRunId =>
       queueSubmit(s)
       notifyQueueController()
     case QueueStop => queueStop()
@@ -193,7 +206,6 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
     if (!queueMap.isEmpty) {
       val (runId, submit) = queueMap.iterator.next()
       queueMap = queueMap - runId
-      commandStatusActor ! StatusUpdate(CommandStatus.Busy(submit.runId), submit.submitter)
       queueClient ! submit
     }
   }
@@ -211,7 +223,10 @@ class CommandQueueActor(commandStatusActor: ActorRef) extends Actor with ActorLo
   }
 
   private def maybeStartQueue(): Unit = {
-    if (queueClient != Actor.noSender && queueController != Actor.noSender) context become queueStarted
+    if (queueClient != Actor.noSender && queueController != Actor.noSender) {
+      unstashAll()
+      queueStart()
+    }
   }
 
   // Notify the queue controller if there are messages in the queue.

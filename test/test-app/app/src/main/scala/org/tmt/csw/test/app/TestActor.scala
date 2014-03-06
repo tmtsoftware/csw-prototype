@@ -1,20 +1,32 @@
 package org.tmt.csw.test.app
 
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import akka.actor._
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.tmt.csw.cs.api.{ConfigId, ConfigData}
-import org.tmt.csw.cs.core.ConfigString
-import org.tmt.csw.cs.akka.ConfigServiceActor._
 import org.tmt.csw.cmd.akka.{AssemblyCommandServiceActor, OneAtATimeCommandQueueController, CommandStatus}
 import org.tmt.csw.cmd.core.Configuration
 import java.io.File
 import org.tmt.csw.cmd.akka.CommandServiceActor.Submit
+import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
+import org.tmt.csw.ls.LocationService
+import org.tmt.csw.cs.akka.ConfigServiceActor.GetRequest
+import org.tmt.csw.cs.akka.ConfigServiceActor.CreateRequest
+import org.tmt.csw.cs.core.ConfigString
+import scala.Some
 
 class TestAssemblyCommandServiceActor extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
   override def receive: Receive = receiveCommands
+
+  // Request the client actors from the location service, which must be started separately.
+  // The configDistributorActor should receive a ServicesReady message.
+  val serviceIds = List(
+    ServiceId("TestConfigActorA", ServiceType.HCD), // See TestClientActor
+    ServiceId("TestConfigActorB", ServiceType.HCD)
+  )
+  LocationService.requestServices(context.system, configDistributorActor, serviceIds)
 }
 
 object TestActor {
@@ -38,9 +50,8 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
         case x => log.info(s"unexpected result from $sender: $x")
       }
       future onFailure {
-        case e: Exception => {
+        case e: Exception =>
           log.error(e, "Get got exception")
-        }
       }
 
     case status: CommandStatus =>
@@ -55,10 +66,6 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
 
   def readConfigFile(configData: ConfigData): Unit = {
     log.info(s"Get => $configData")
-
-    // XXX could create an actor on the remote system also, but then the jar for it needs to be in the classpath
-//    val configActor = context.actorOf(TestConfigActor.props("config.tmt.tel.base.pos"), name = s"TestConfigActorRemote")
-
 
     // Submit a configuration to the command service
     commandServiceActor ! Submit(Configuration(configData.getBytes))
@@ -95,9 +102,8 @@ class TestActor(configServiceActor: ActorRef) extends Actor with ActorLogging {
       case x => log.info(s"unexpected result: $x")
     }
     future onFailure {
-      case e: Exception => {
+      case e: Exception =>
         log.error(e, "Create got exception")
-      }
     }
   }
 }

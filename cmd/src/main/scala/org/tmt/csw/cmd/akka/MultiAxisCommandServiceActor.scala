@@ -7,7 +7,7 @@ import org.tmt.csw.cmd.core.Configuration
  * This is like [[org.tmt.csw.cmd.akka.CommandServiceActor]], but provides multiple separate queues
  * for use with multi-axis devices where each axis can do one thing at a time.
  */
-trait MultiAxisCommandServiceActor extends ConfigRegistrationClient with Actor with ActorLogging {
+trait MultiAxisCommandServiceActor extends Actor with ActorLogging {
   import CommandServiceActor._
   import CommandQueueActor._
   import ConfigActor._
@@ -55,7 +55,7 @@ trait MultiAxisCommandServiceActor extends ConfigRegistrationClient with Actor w
 
   // Receive only the command server commands
   // XXX TODO: intercept command status so we can return a single status even if config references multiple axes!
-  def receiveCommands: Receive = receiveRegistrationRequest orElse {
+  def receiveCommands: Receive = {
     // Queue related commands
     case Submit(config, submitter) =>
       val i = axisIndexForConfig(config)

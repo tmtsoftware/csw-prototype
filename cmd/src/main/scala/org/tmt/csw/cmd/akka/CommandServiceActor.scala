@@ -5,7 +5,6 @@ import org.tmt.csw.cmd.core._
 import org.tmt.csw.cmd.akka.CommandStatus.Busy
 import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
 import org.tmt.csw.cmd.akka.CommandQueueActor.ConfigQueueStatus
-import org.tmt.csw.cmd.akka.ConfigRegistrationActor.RegistryStatus
 
 object CommandServiceActor {
   // Child actor names
@@ -64,9 +63,7 @@ object CommandServiceActor {
    */
   case class CommandServiceStatus(name: String,
                                   queueStatus: ConfigQueueStatus,
-                                  queueControllerClass: String,
-                                  registryStatus: Option[RegistryStatus])
-
+                                  queueControllerClass: String)
 }
 
 /**
@@ -92,7 +89,7 @@ object CommandServiceActor {
  * include the queue controller) and also to the original submitter of
  * the config (The sender is passed along with the submit message).
  */
-trait CommandServiceActor extends ConfigRegistrationClient with Actor with ActorLogging {
+trait CommandServiceActor extends Actor with ActorLogging {
 
   import CommandServiceActor._
   import CommandQueueActor._
@@ -123,7 +120,7 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
   private implicit val execContext = context.dispatcher
 
   // Receive only the command server commands
-  def receiveCommands: Receive = receiveRegistrationRequest orElse {
+  def receiveCommands: Receive = {
     // Queue related commands
     case Submit(config, submitter) =>
       submit(SubmitWithRunId(config, submitter))
@@ -162,7 +159,6 @@ trait CommandServiceActor extends ConfigRegistrationClient with Actor with Actor
    * @param s holds the config, runId and sender
    */
   def queueBypassRequest(s: SubmitWithRunId): Unit = {
-    commandStatusActor ! StatusUpdate(Busy(s.runId), s.submitter)
     configActor ! SubmitWithRunId(s.config, s.submitter, s.runId)
   }
 }

@@ -30,7 +30,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
     Get(s"/config/$runId/status") ~> route ~> check {
       assert(status == StatusCodes.OK)
       assert(contentType == ContentTypes.`application/json`)
-      entityAs[CommandStatus]
+      responseAs[CommandStatus]
     }
   }
 
@@ -41,7 +41,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
       val runId = Post("/queue/submit", config) ~> route ~> check {
         assert(status == StatusCodes.Accepted)
         assert(contentType == ContentTypes.`application/json`)
-        entityAs[RunId]
+        responseAs[RunId]
       }
 
       val commandStatus = getCommandStatus(runId)
@@ -54,7 +54,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
       val runId = Post("/request", config) ~> route ~> check {
         assert(status == StatusCodes.Accepted)
         assert(contentType == ContentTypes.`application/json`)
-        entityAs[RunId]
+        responseAs[RunId]
       }
 
       val commandStatus = getCommandStatus(runId)

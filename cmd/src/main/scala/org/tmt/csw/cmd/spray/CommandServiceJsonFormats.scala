@@ -7,8 +7,6 @@ import spray.httpx.SprayJsonSupport
 import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.{RunId, CommandStatus}
 import java.util.UUID
-import org.tmt.csw.cmd.akka.CommandStatus.PartiallyCompleted
-import org.tmt.csw.cmd.akka.CommandStatus.PartiallyCompleted
 
 /**
  * Defines JSON marshallers/unmarshallers for the objects used in REST messages.

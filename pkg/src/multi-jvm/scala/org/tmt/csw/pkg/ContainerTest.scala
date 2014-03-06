@@ -67,13 +67,8 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
 
         val assembly1Props = TestAssembly.props("Assembly-1")
 
-        val hcd2aPath = ActorPath.fromString(TestSettings(system).hcd2a)
-        val hcd2bPath = ActorPath.fromString(TestSettings(system).hcd2b)
-
         for {
           assembly1 <- (container ? Container.CreateComponent(assembly1Props, "Assembly-1")).mapTo[ActorRef]
-          ack2a <- assembly1 ? Assembly.AddComponentByPath(hcd2aPath)
-          ack2b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
         } {
           assembly1 ! Submit(config)
           val s1 = expectMsgType[CommandStatus.Queued]
@@ -92,9 +87,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val hcd2bProps = TestHcd.props("HCD-2B", "config.tmt.tel.ao.pos.one")
 
         container ! Container.CreateComponent(hcd2aProps, "HCD-2A")
-        val hcd2a = expectMsgType[ActorRef]
+        expectMsgType[ActorRef]
         container ! Container.CreateComponent(hcd2bProps, "HCD-2B")
-        val hcd2b = expectMsgType[ActorRef]
+        expectMsgType[ActorRef]
         enterBarrier("deployed")
         Thread.sleep(3000) // XXX how to stop from exiting too soon here?
       }

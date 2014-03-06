@@ -6,6 +6,8 @@ import akka.pattern.ask
 import org.tmt.csw.cmd.akka.CommandStatus
 import org.tmt.csw.cmd.spray.CommandServiceHttpServer
 import akka.util.Timeout
+import org.tmt.csw.ls.LocationService
+import org.tmt.csw.ls.LocationServiceActor.{LocationServiceInfo, ServicesReady, ServiceType, ServiceId}
 
 
 class Container1Actor extends Actor with ActorLogging {
@@ -15,16 +17,7 @@ class Container1Actor extends Actor with ActorLogging {
   implicit val dispatcher = context.system.dispatcher
 
   val container = Container.create("Container-1")
-
   val assembly1Props = Assembly1.props("Assembly-1")
-
-  // XXX TODO: This would normally be handled by the location service
-  val hcd2aPath = ActorPath.fromString(Container1Settings(context.system).hcd2a)
-  val hcd2bPath = ActorPath.fromString(Container1Settings(context.system).hcd2b)
-
-  // These are used by the Play Framework demo
-  val hcd2cPath = ActorPath.fromString(Container1Settings(context.system).hcd2c)
-  val hcd2dPath = ActorPath.fromString(Container1Settings(context.system).hcd2d)
 
   // Receive actor messages
   def receive: Receive = {
@@ -34,10 +27,6 @@ class Container1Actor extends Actor with ActorLogging {
 
   for {
     assembly1 <- (container ? Container.CreateComponent(assembly1Props, "Assembly-1")).mapTo[ActorRef]
-    ack2a <- assembly1 ? Assembly.AddComponentByPath(hcd2aPath)
-    ack2b <- assembly1 ? Assembly.AddComponentByPath(hcd2bPath)
-    ack2c <- assembly1 ? Assembly.AddComponentByPath(hcd2cPath)
-    ack2d <- assembly1 ? Assembly.AddComponentByPath(hcd2dPath)
   } {
       // Start a HTTP server with the REST interface
       val interface = Container1Settings(context.system).interface

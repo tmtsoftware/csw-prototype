@@ -78,9 +78,9 @@ object CommandStatus {
   }
 
   // One part of a config is complete (see ConfigDistributorActor)
-  case class PartiallyCompleted(runId: RunId, path: String, status: String) extends CommandStatus {
+  case class PartiallyCompleted(runId: RunId, path: Option[String], status: String) extends CommandStatus {
     override val partiallyDone = true
-    override val message = path
+    override val message = if (path.isEmpty) "" else path.get
     override def withRunId(newRunId: RunId): PartiallyCompleted = PartiallyCompleted(newRunId, path, status)
     override def name = "partially completed"
     override def partialStatus = status
@@ -127,7 +127,7 @@ object CommandStatus {
       case "busy" => Busy(runId)
       case "paused" => Paused(runId)
       case "resumed" => Resumed(runId)
-      case "partially completed" => PartiallyCompleted(runId, message, partialStatus)
+      case "partially completed" => PartiallyCompleted(runId, Some(message), partialStatus)
       case "completed" => Completed(runId)
       case "error" => Error(runId, message)
       case "aborted" => Aborted(runId)

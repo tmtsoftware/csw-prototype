@@ -37,21 +37,6 @@
                     <th scope="row">Queue Controller:</th>
                     <td>@status.queueControllerClass</td>
                 </tr>
-                @if(!status.registryStatus.isEmpty) {
-                    <tr>
-                        <th scope="row">Registry Contents:</th>
-                        <td>
-                            <table>
-                            @for(entry <- status.registryStatus.get.registry) {
-                                <tr>
-                                    <td>@entry.path </td>
-                                    <td>@entry.actorRef.path</td>
-                                </tr>
-                            }
-                            </table>
-                        </td>
-                    </tr>
-                }
             </tbody>
         </table>
     </body>

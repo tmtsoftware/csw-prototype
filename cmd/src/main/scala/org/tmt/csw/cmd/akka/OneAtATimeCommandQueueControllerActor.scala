@@ -16,7 +16,8 @@ object OneAtATimeCommandQueueControllerActor {
  * Controls how configs are taken from the command queue.
  * This actor assumes the config actor can only handle one config at a time.
  */
-class OneAtATimeCommandQueueControllerActor(commandQueueActor: ActorRef, commandStatusActor: ActorRef) extends Actor with ActorLogging {
+class OneAtATimeCommandQueueControllerActor(commandQueueActor: ActorRef,
+                                            commandStatusActor: ActorRef) extends Actor with ActorLogging {
 
   import CommandQueueActor._
 

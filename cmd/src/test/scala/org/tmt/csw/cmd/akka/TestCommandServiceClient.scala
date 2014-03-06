@@ -10,7 +10,7 @@ import org.tmt.csw.cmd.spray.CommandServiceTestSettings
 import scala.concurrent.Future
 
 /**
- * Tests the Command Service actor
+ * Tests the Command Service Client actor
  */
 class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHelper
   with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
@@ -25,19 +25,19 @@ class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHel
   implicit val timeout = Timeout(duration)
   implicit val dispatcher = system.dispatcher
 
-  def getCommandServiceClientActor(n: Int = 1): ActorRef = {
-    system.actorOf(CommandServiceClientActor.props(getCommandServiceActor(n), duration), name = s"testCommandServiceClientActor$n")
+  def getCommandServiceClientActor: ActorRef = {
+    system.actorOf(CommandServiceClientActor.props(getCommandServiceActor(), duration), name = s"testCommandServiceClientActor")
   }
 
-  def getCommandServiceClient(n: Int = 1): CommandServiceClient = {
-    CommandServiceClient(getCommandServiceClientActor(n), duration)
+  def getCommandServiceClient: CommandServiceClient = {
+    CommandServiceClient(getCommandServiceClientActor, duration)
   }
 
   // -- Tests --
 
 
   test("Tests the command service client class") {
-    val cmdClient = getCommandServiceClient()
+    val cmdClient = getCommandServiceClient
     // Need to save any exception that occurs in another thread, so we can fail the test in this thread
     var savedException: Option[Exception] = None
     for {

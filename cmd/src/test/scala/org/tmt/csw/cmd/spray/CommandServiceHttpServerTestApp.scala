@@ -2,7 +2,8 @@ package org.tmt.csw.cmd.spray
 
 import akka.actor._
 import org.tmt.csw.cmd.akka._
-import org.tmt.csw.cmd.akka.ConfigRegistrationActor._
+import org.tmt.csw.ls.LocationServiceActor.{ServicesReady, ServiceType, ServiceId, LocationServiceInfo}
+import java.net.URI
 
 /**
  * Standalone command service test application.
@@ -42,18 +43,9 @@ object CommandServiceHttpServerTestApp extends App {
   val interface = CommandServiceTestSettings(system).interface
   val port = CommandServiceTestSettings(system).port
   val timeout = CommandServiceTestSettings(system).timeout
-  system.actorOf(Props[AppActor])
+  system.actorOf(CommandServiceHttpServer.props(getCommandServiceActor(), interface, port, timeout), "commandService")
 
-  class AppActor extends Actor with ActorLogging {
-    system.actorOf(CommandServiceHttpServer.props(getCommandServiceActor(), interface, port, timeout), "commandService")
-
-    override def receive: Receive = {
-      case Registered(actorRef) =>
-        log.debug(s"Received registered ack from $actorRef")
-    }
-  }
-
-  // Test HCD object
+  // Test HCD
   object TestHcdCommandServiceActor {
     /**
      * Props to create the test HCD actor
@@ -64,20 +56,23 @@ object CommandServiceHttpServerTestApp extends App {
     def props(configPath: String, numberOfSecondsToRun: Int, name: String): Props =
       Props(classOf[TestHcdCommandServiceActor], configPath, numberOfSecondsToRun, name)
   }
-
-  // Test HCD class
   class TestHcdCommandServiceActor(configPath: String, numberOfSecondsToRun: Int, name: String)
     extends CommandServiceActor with OneAtATimeCommandQueueController {
     override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, numberOfSecondsToRun), name)
-    override val configPaths = Set(configPath)
 
     override def receive: Receive = receiveCommands
   }
 
-  // Test assembly
-  class TestAssemblyCommandServiceActor extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
-    override def receive: Receive = receiveCommands
+//  // Test assembly
+  object TestAssemblyCommandServiceActor {
+    // Note: for testing we pass in the list of HCDs. Normally we would request them from the location service.
+    def props(hcds: List[LocationServiceInfo]): Props = Props(classOf[TestAssemblyCommandServiceActor], hcds)
   }
+  class TestAssemblyCommandServiceActor(hcds: List[LocationServiceInfo]) extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
+    override def receive: Receive = receiveCommands
+    configDistributorActor ! ServicesReady(hcds)
+  }
+
 
   /**
    * Creates and returns a new CommandServiceActor
@@ -86,16 +81,22 @@ object CommandServiceHttpServerTestApp extends App {
    * @return the actor ref of the assembly command server
    */
   def getCommandServiceActor(n: Int = 1, numberOfSecondsToRun: Int = 2): ActorRef = {
-    val assembly = system.actorOf(Props[TestAssemblyCommandServiceActor], name = s"Assembly$n")
-
     val hcdA = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun, s"TestConfigActorA$n"),
       name = s"HCD-A$n")
 
     val hcdB = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB$n"),
       name = s"HCD-B$n")
 
-    hcdA ! RegisterRequest(assembly)
-    hcdB ! RegisterRequest(assembly)
-    assembly
+    // Normally this information would come from the location service, but for testing it is hard coded here
+    val hcds = List(
+      LocationServiceInfo(
+        ServiceId("HCD-A", ServiceType.HCD), List(new URI(hcdA.path.toString)),
+        Some("config.tmt.tel.base.pos"), Some(hcdA)),
+      LocationServiceInfo(
+        ServiceId("HCD-B", ServiceType.HCD), List(new URI(hcdB.path.toString)),
+        Some("config.tmt.tel.ao.pos.one"), Some(hcdB))
+    )
+
+    system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly$n")
   }
 }
