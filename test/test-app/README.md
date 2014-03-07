@@ -18,7 +18,7 @@ To build it run "sbt" and type:
 * project test-client
 * dist
 
-The applications are then insalled under csw/test/test-app/app/target/bin and csw/test/test-app/client/target/bin
+The applications are then installed under csw/test/test-app/app/target/bin and csw/test/test-app/client/target/bin
 
 Run it
 ------

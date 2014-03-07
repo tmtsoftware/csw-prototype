@@ -17,10 +17,7 @@ object Component {
    * @param name the name of the component
    */
   def create(props: Props, name: String): ActorRef = {
-//    ActorSystem(name).actorOf(props, name)
-
-    val config = ConfigFactory.load(name)
-    ActorSystem(name, config).actorOf(props, name)
+    ActorSystem(name).actorOf(props, name)
   }
 
   /**

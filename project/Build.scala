@@ -53,7 +53,7 @@ object Build extends Build {
     .settings(multiJvmSettings: _*)
     .dependsOn(cmd, ls)
     .settings(libraryDependencies ++=
-    provided(akkaActor) ++
+      provided(akkaActor) ++
       compile(scalaLogging, logback) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
     ) configs MultiJvm

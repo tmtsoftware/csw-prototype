@@ -152,12 +152,12 @@ object LocationServiceActor {
    * Message sent in reply to Resolve(serviceId) (The reply is wrapped in an Option).
    * @param serviceId the name and service type of the actor
    * @param endpoints the HTTP and AKKA URIs for the actor registering
-   * @param configPath an optional dot separated path expression referring to a hierarchy in a
+   * @param configPathOpt an optional dot separated path expression referring to a hierarchy in a
    *                    Configuration object (Default is an empty set, meaning any/all)
-   * @param actorRef reference to the actor, if known and running
+   * @param actorRefOpt reference to the actor, if known and running
    */
-  case class LocationServiceInfo(serviceId: ServiceId, endpoints: List[URI], configPath: Option[String],
-                                 actorRef: Option[ActorRef])
+  case class LocationServiceInfo(serviceId: ServiceId, endpoints: List[URI], configPathOpt: Option[String],
+                                 actorRefOpt: Option[ActorRef])
 
   object LocationServiceInfo {
     /**
@@ -212,14 +212,11 @@ class LocationServiceActor extends Actor with ActorLogging {
 
     // If a registered actor terminates, remove the actorRef from the registry entry
     case Terminated(actorRef) =>
-      for((serviceId, info) <- registry) {
-        if (info.actorRef == actorRef) {
-          registry += (serviceId -> LocationServiceInfo.notFound(serviceId))
-        }
-      }
+      log.info(s"Location Service received terminated message from $actorRef")
+      serviceIdForActorRef(actorRef).foreach(registry -= _)
 
-    // Replies with the registry entry for the given serviceId (a LocationServiceInfo object).
-    // If not found, the serviceId will be set and the other information will be empty.
+    // Replies with the LocationServiceInfo for the given serviceId.
+    // If not found, an empty LocationServiceInfo object is sent with only the serviceId set.
     case Resolve(serviceId) =>
       registry.get(serviceId) match {
         case Some(info) => sender ! info
@@ -236,6 +233,13 @@ class LocationServiceActor extends Actor with ActorLogging {
     case x => log.error(s"Unexpected message: $x")
   }
 
+  // Returns the serviceId for the given actorRef
+  def serviceIdForActorRef(actorRef: ActorRef): Option[ServiceId] = {
+    val list = for ((serviceId, info) <- registry
+                    if info.actorRefOpt.isDefined && info.actorRefOpt.get == actorRef) yield serviceId
+    list.headOption
+  }
+
   def register(serviceId: ServiceId, configPath: Option[String], httpUri: Option[URI]): Unit = {
     val endpoints = List(Some(new URI(sender.path.toString)), httpUri).flatten
     registry += (serviceId -> LocationServiceInfo(serviceId, endpoints, configPath, Some(sender)))
@@ -247,7 +251,6 @@ class LocationServiceActor extends Actor with ActorLogging {
     for((requester, serviceIds) <- map) {
       requestServices(requester, serviceIds)
     }
-
   }
 
   // Find and return all services matching the query

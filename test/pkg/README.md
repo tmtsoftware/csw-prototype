@@ -34,13 +34,14 @@ Optionally, if you want to test the Play web app:
 * cd hardware/src/main/c; mtserver2 pos    # last part of config path for base pos and ao pos
 * cd hardware/src/main/c; mtserver2 one
 
-Then start the two Akka containers:
+Start the location service (This has to be running before any HCDs or assemblies are started):
+
+* cd ../../ls/target/bin; ./start
+
+Then start the two Akka containers (The order is not important here):
 
 * cd container2/target/bin; ./start
 * cd container1/target/bin; ./start
-
-Currently this is the order in which the applications must be started, but that will be changed in the future
-to allow any order.
 
 Optionally start the Play web app:
 

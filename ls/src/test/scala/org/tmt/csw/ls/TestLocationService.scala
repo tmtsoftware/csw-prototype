@@ -27,8 +27,8 @@ class TestLocationService extends TestKit(ActorSystem("Test"))
     val info = expectMsgType[LocationServiceInfo]
     assert(info.serviceId == serviceId)
     assert(info.endpoints == endpoints)
-    assert(info.configPath == configPath)
-    assert(info.actorRef.get == self)
+    assert(info.configPathOpt == configPath)
+    assert(info.actorRefOpt.get == self)
 
     // browse
     ls ! Browse(None, None)

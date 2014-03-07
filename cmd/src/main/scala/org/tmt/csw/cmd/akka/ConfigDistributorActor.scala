@@ -52,9 +52,12 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
   // Initial state until we get a list of running services to use as target actors
   def waitingForServices: Receive = {
     case ServicesReady(services: List[LocationServiceInfo]) =>
-      val targetActors = for (service <- services if service.actorRef.isDefined) yield service.actorRef.get
+      log.info(s"All services ready: $services")
+      val targetActors = for (service <- services if service.actorRefOpt.isDefined) yield service.actorRefOpt.get
       if (targetActors.size == services.size) {
         for(a <- targetActors) context.watch(a)
+        log.info(s"Setting state to ready")
+        unstashAll()
         context.become(ready(services))
       }
 
@@ -63,6 +66,8 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     case s: CommandStatus => stash()
     case c: ConfigGet => stash()
     case c: ConfigControlMessage => stash()
+
+    case Terminated(actorRef) =>
 
     case ConfigPut(config) => internalConfig(config)
 
@@ -86,6 +91,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
     // If a target actor died, go back and wait for it (and any others that are needed) to restart
     case Terminated(actorRef) =>
+      log.info(s"Received terminated message for $actorRef: Switch to waitingForServices state")
       LocationService.requestServices(context.system, self, services.map(_.serviceId))
       context.become(waitingForServices)
 
@@ -127,13 +133,13 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
   // Returns Some(SubmitInfo) if there is a matching path in the config to be submitted, otherwise None.
   private def getSubmitInfo(submit: SubmitWithRunId, targetActor: LocationServiceInfo): Option[SubmitInfo] = {
-    val pathOpt = targetActor.configPath
-    if (targetActor.actorRef.isDefined && (pathOpt.isEmpty || submit.config.hasPath(pathOpt.get))) {
+    val pathOpt = targetActor.configPathOpt
+    if (targetActor.actorRefOpt.isDefined && (pathOpt.isEmpty || submit.config.hasPath(pathOpt.get))) {
       // Give each config part a unique runid, so we can identify it later when the status is received
       val runIdPart = RunId()
       val config = getConfig(submit.config, pathOpt)
       val submitPart = SubmitWithRunId(config, self, runIdPart)
-      Some(SubmitInfo(pathOpt, submitPart, targetActor.actorRef.get))
+      Some(SubmitInfo(pathOpt, submitPart, targetActor.actorRefOpt.get))
     } else None
   }
 
@@ -152,10 +158,10 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     // First get a list of the config parts we need to send and the target actors that should get them.
     val list = targetActors.map {
       targetActor =>
-        val pathOpt = targetActor.configPath
-        if (targetActor.actorRef.isDefined && (pathOpt.isEmpty || config.hasPath(pathOpt.get))) {
+        val pathOpt = targetActor.configPathOpt
+        if (targetActor.actorRefOpt.isDefined && (pathOpt.isEmpty || config.hasPath(pathOpt.get))) {
           val msg = ConfigGet(getConfig(config, pathOpt))
-          Some(QueryInfo(targetActor.actorRef.get, msg, pathOpt))
+          Some(QueryInfo(targetActor.actorRefOpt.get, msg, pathOpt))
         } else None
     }.flatten.toList
 
