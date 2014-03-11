@@ -21,9 +21,10 @@ object LocationService {
    */
   def getLocationService(system: ActorSystem): ActorSelection = {
     val settings = LocationServiceSettings(system)
+    val systemName = settings.systemName
     val host = settings.hostname
     val port = settings.port
-    val path = s"akka.tcp://$locationServiceName@$host:$port/user/$locationServiceName"
+    val path = s"akka.tcp://$systemName@$host:$port/user/$locationServiceName"
     val actorPath = ActorPath.fromString(path)
     system.actorSelection(actorPath)
   }
@@ -103,6 +104,7 @@ class LocationService extends Bootable {
 // Main actor for the location service
 object LocationServiceActor {
 
+  // This should match the value in reference.conf
   val locationServiceName = "LocationService"
 
   /**
