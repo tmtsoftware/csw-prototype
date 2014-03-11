@@ -51,7 +51,7 @@ object Build extends Build {
   lazy val pkg = project
     .settings(buildSettings: _*)
     .settings(multiJvmSettings: _*)
-    .dependsOn(cmd, ls)
+    .dependsOn(cmd % "compile->compile;test->test", ls)
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback) ++

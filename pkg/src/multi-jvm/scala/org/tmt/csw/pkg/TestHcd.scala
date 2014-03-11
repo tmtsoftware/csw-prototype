@@ -1,7 +1,7 @@
 package org.tmt.csw.pkg
 
 import akka.actor.Props
-import org.tmt.csw.cmd.akka.OneAtATimeCommandQueueController
+import org.tmt.csw.cmd.akka.{TestConfigActor, OneAtATimeCommandQueueController}
 
 object TestHcd {
   def props(name: String, configPath: String): Props = Props(classOf[TestHcd], name, configPath)

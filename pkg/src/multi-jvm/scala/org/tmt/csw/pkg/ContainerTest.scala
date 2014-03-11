@@ -16,6 +16,9 @@ import org.scalatest.matchers.MustMatchers
 /**
  * A test that runs each of the classes below in a separate JVM (See the sbt-multi-jvm plugin)
  * See http://doc.akka.io/docs/akka/current/dev/multi-node-testing.html#multi-node-testing.
+ *
+ * Note: Currently the location service has to be started separately (by running
+ * csw/ls/target/bin/start).
  */
 object ContainerTest {
   val testConfig =
@@ -48,10 +51,12 @@ object ContainerConfig extends MultiNodeConfig {
 }
 
 class TestMultiJvmContainer1 extends ContainerSpec
+
 class TestMultiJvmContainer2 extends ContainerSpec
 
 trait STMultiNodeSpec extends MultiNodeSpecCallbacks with WordSpec with MustMatchers with BeforeAndAfterAll {
   override def beforeAll(): Unit = multiNodeSpecBeforeAll()
+
   override def afterAll(): Unit = multiNodeSpecAfterAll()
 }
 
@@ -78,20 +83,21 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val assembly1Props = TestAssembly.props("Assembly-1")
         implicit val timeout = Timeout(5.seconds)
 
-        for {
-          assembly1 <- (container ? Container.CreateComponent(assembly1Props, "Assembly-1")).mapTo[ActorRef]
-        } {
+        within(10 seconds) {
+          container ! Container.CreateComponent(assembly1Props, "Assembly-1")
+          val assembly1 = expectMsgType[ActorRef]
           assembly1 ! Submit(config)
-          within(5.seconds) {
-            val s1 = expectMsgType[CommandStatus.Queued]
-            val s2 = expectMsgType[CommandStatus.Busy]
-            val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
-            val s3 = expectMsgType[CommandStatus.Completed]
-            assert(s1.runId == s2.runId)
-            assert(s3.runId == s2.runId)
-            assert(s3a.runId == s3.runId)
-            log.info(s"Command status: $s3")
-          }
+          val s1 = expectMsgType[CommandStatus.Queued]
+          val s2 = expectMsgType[CommandStatus.Busy]
+          log.info(s"s2 status: $s2")
+          val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
+          log.info(s"s3a status: $s3a")
+          val s3 = expectMsgType[CommandStatus.Completed]
+          assert(s1.runId == s2.runId)
+          assert(s3.runId == s2.runId)
+          assert(s3a.runId == s3.runId)
+          log.info(s"s3 status: $s3")
+          enterBarrier("done")
         }
       }
 
@@ -106,7 +112,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         container ! Container.CreateComponent(hcd2bProps, "HCD-2B")
         expectMsgType[ActorRef]
         enterBarrier("deployed")
-        Thread.sleep(5000) // XXX how to stop from exiting too soon here?
+        enterBarrier("done")
       }
 
       enterBarrier("finished")
