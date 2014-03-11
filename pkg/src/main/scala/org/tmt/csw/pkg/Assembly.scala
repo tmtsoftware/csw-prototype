@@ -7,18 +7,6 @@ import scala.concurrent.duration._
 import org.tmt.csw.ls.LocationService
 import org.tmt.csw.ls.LocationServiceActor.ServiceId
 
-
-//object Assembly {
-//  // Assembly actor messages
-//  sealed trait AssemblyMessage
-//  // Adds a component actor to the assembly
-//  case class AddComponent(actorRef: ActorRef) extends AssemblyMessage
-//  case class AddComponentByPath(actorPath: ActorPath) extends AssemblyMessage
-//  // Removes a component actor from the assembly
-//  case class RemoveComponent(actorRef: ActorRef) extends AssemblyMessage
-//  case class RemoveComponentByPath(actorPath: ActorPath) extends AssemblyMessage
-//}
-
 /**
  * Assemblies represent user-oriented devices and can be assembled from multiple HCDs
  */

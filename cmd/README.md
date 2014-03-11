@@ -56,19 +56,30 @@ the original sender gets single status values as expected.
 ![Multi-Axis HCD Actor graph](doc/Multi-Axis-HCD.jpg)
 
 
+Location Service
+----------------
+
+The location service is a single actor that runs once somewhere in the network.
+All HCDs and assemblies send a registration message to the location service on startup.
+The location service saves both the Akka and HTTP URIs of every HCD or assembly.
+The Akka URI can be used to locate the actor and the HTTP URI points to the web service
+for the actor, if available. Assemblies request information about the HCDs they want to
+use and receive a single reply when all of the HCDs are available.
+HCDs can also optionally specify which parts of config messages they should receive.
+
+
 Assembly View
 -------------
 
-The assembly has the same basic setup, except that here you have a
-config registration actor, which receives registration messages from
-the HCDs. Here you also have the config distributor actor, which
-subscribes to the registration information, which includes the HCD
-actor refs along with the set of config keys each HCD is interested
-in.
+The assembly has the same basic actor setup, except that here the config
+distributor actor is used in place of the config actor. An assembly requests
+information about the HCDs it wants to use at startup and passes the answer
+to the config distributor actor, so that it knows where to send which parts
+of configs iot receives.
 
 When a config is submitted to an assembly, it is passed to the command
-queue actor, which then passes it to the config distributor actor. It
-uses the registry info to pass parts of the config to the different
+queue actor, which eventually passes it to the config distributor actor. It
+uses the location service info to pass parts of the config to the different
 HCDs.  Later, the "command status actor" in each "HCD" sends the
 command status to the config distributor actor (since it appears as
 the original sender in the message sent to the HCDs). When all the
