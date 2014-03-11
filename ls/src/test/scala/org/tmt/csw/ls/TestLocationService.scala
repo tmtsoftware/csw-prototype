@@ -18,17 +18,15 @@ class TestLocationService extends TestKit(ActorSystem("Test"))
 
     // register
     val serviceId = ServiceId("TestActor", ServiceType.HCD)
-    val endpoints = List(new URI(self.path.toString))
-    val configPath = None
-    ls ! Register(serviceId, endpoints, configPath)
+    ls ! Register(serviceId, None, None)
 
     // resolve
     ls ! Resolve(serviceId)
     val info = expectMsgType[LocationServiceInfo]
     assert(info.serviceId == serviceId)
-    assert(info.endpoints == endpoints)
-    assert(info.configPathOpt == configPath)
-    assert(info.actorRefOpt.get == self)
+    assert(info.actorRefOpt == Some(self))
+    assert(info.configPathOpt == None)
+    assert(info.endpoints.size == 1)
 
     // browse
     ls ! Browse(None, None)
@@ -39,7 +37,6 @@ class TestLocationService extends TestKit(ActorSystem("Test"))
     val r2 = expectMsgType[BrowseResults]
     val r3 = expectMsgType[BrowseResults]
     val r4 = expectMsgType[BrowseResults]
-    logger.info(s"XXX r1 = $r1")
     assert(r1.results.size == 1)
     assert(r1.results(0) == info)
     assert(r2 == r1)

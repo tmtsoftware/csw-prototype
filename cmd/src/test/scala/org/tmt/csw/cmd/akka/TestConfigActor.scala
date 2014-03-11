@@ -34,12 +34,11 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    * Called when a configuration is submitted
    */
   override def submit(submit: SubmitWithRunId): Unit = {
-    val configWorkerActor = context.actorOf(TestConfigActorWorker.props(commandStatusActor, numberOfSecondsToRun), "testConfigActorWorker")
+    val configWorkerActor = context.actorOf(TestConfigActorWorker.props(submit, commandStatusActor, numberOfSecondsToRun), "testConfigActorWorker")
     log.debug(s"Forwarding config ${submit.config} to worker $configWorkerActor")
     runIdForActorRef += (configWorkerActor -> submit.runId)
     actorRefForRunId += (submit.runId -> configWorkerActor)
     context.watch(configWorkerActor)
-    configWorkerActor ! submit
   }
 
   /**
