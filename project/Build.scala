@@ -90,7 +90,7 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-    ) dependsOn(cs, cmd, ls)
+    ) dependsOn(cs, cmd % "compile->compile;test->test", ls)
 
 
   // pkg test/demo: Container1 (see ../test/pkg/README.md)

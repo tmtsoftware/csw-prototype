@@ -1,8 +1,8 @@
 package org.tmt.csw.test.container1
 
 import akka.actor.Props
-import org.tmt.csw.pkg.Assembly
-import org.tmt.csw.cmd.akka.OneAtATimeCommandQueueController
+import org.tmt.csw.pkg.Component
+import org.tmt.csw.cmd.akka.{AssemblyCommandServiceActor, OneAtATimeCommandQueueController}
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import java.util.Date
 import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
@@ -13,9 +13,9 @@ object Assembly1 {
 
 // A test assembly
 case class Assembly1(name: String)
-    extends Assembly with OneAtATimeCommandQueueController {
+    extends Component with AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
 
-  override def receive: Receive = receiveAssemblyMessages
+  override def receive: Receive = receiveComponentMessages orElse receiveCommands
 
   // Define the HCDs we want to use
   val serviceIds = List(

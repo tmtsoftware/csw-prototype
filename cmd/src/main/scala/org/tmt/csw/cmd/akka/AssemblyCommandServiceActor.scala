@@ -26,6 +26,15 @@ trait AssemblyCommandServiceActor extends CommandServiceActor {
   }
 
   /**
+   * Request information about the services (HCDs, other assemblies) that will be used by this assembly.
+   * @param serviceIds a list of the names and types of the HCDs that will be used
+   */
+  def requestServices(serviceIds: List[ServiceId]): Unit = {
+    log.info(s"Request services: $serviceIds")
+    LocationService.requestServices(context.system, configDistributorActor, serviceIds)
+  }
+
+  /**
    * Answers a request for status.
    * @param requester the actor requesting the status
    */

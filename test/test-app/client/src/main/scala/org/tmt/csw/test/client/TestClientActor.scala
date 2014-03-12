@@ -4,9 +4,8 @@ import akka.actor._
 import akka.actor.ActorIdentity
 import scala.Some
 import akka.actor.Identify
-import org.tmt.csw.cmd.akka.{OneAtATimeCommandQueueController, CommandServiceActor}
+import org.tmt.csw.cmd.akka.{CommandServiceActor, OneAtATimeCommandQueueController}
 import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
-import java.net.URI
 import org.tmt.csw.ls.LocationService
 
 // -- Test command service --

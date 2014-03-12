@@ -38,7 +38,8 @@ object Settings {
     // make sure that MultiJvm test are compiled by the default test compilation
     compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
     // disable parallel tests
-    parallelExecution in Test := false,
+    //parallelExecution in Test := false,
+    parallelExecution in Global := false,
     executeTests in Test <<=
       (executeTests in Test, executeTests in MultiJvm) map {
         case ((testResults), (multiJvmResults)) =>

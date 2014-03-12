@@ -1,7 +1,7 @@
 package org.tmt.csw.test.container1
 
 import akka.actor._
-import org.tmt.csw.pkg.{Assembly, Container}
+import org.tmt.csw.pkg.Container
 import akka.pattern.ask
 import org.tmt.csw.cmd.akka.CommandStatus
 import org.tmt.csw.cmd.spray.CommandServiceHttpServer

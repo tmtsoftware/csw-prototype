@@ -1,7 +1,7 @@
 package org.tmt.csw.pkg
 
 import akka.actor.Props
-import org.tmt.csw.cmd.akka.OneAtATimeCommandQueueController
+import org.tmt.csw.cmd.akka.{AssemblyCommandServiceActor, OneAtATimeCommandQueueController}
 import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
 
 object TestAssembly {
@@ -9,7 +9,7 @@ object TestAssembly {
 }
 
 // A test assembly
-case class TestAssembly(name: String) extends Assembly with OneAtATimeCommandQueueController {
+case class TestAssembly(name: String) extends Component with AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
 
   // Get the assembly's HCDs from the location service (which must be running)
   requestServices(List(
@@ -17,7 +17,7 @@ case class TestAssembly(name: String) extends Assembly with OneAtATimeCommandQue
     ServiceId("HCD-2B", ServiceType.HCD)
   ))
 
-  def receive: Receive = receiveAssemblyMessages
+  def receive: Receive = receiveComponentMessages orElse receiveCommands
 
   def initialize(): Unit = {log.info("Assembly1 initialize")}
 

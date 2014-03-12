@@ -5,6 +5,9 @@ import org.tmt.csw.cmd.core._
 import org.tmt.csw.cmd.akka.CommandStatus.Busy
 import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
 import org.tmt.csw.cmd.akka.CommandQueueActor.ConfigQueueStatus
+import java.net.URI
+import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
+import org.tmt.csw.ls.LocationService
 
 object CommandServiceActor {
   // Child actor names
@@ -144,6 +147,19 @@ trait CommandServiceActor extends Actor with ActorLogging {
 
     case configMessage: ConfigMessage => configActor forward configMessage
   }
+
+  /**
+   * Register with the location service (which must be started as a separate process).
+   * @param serviceId holds the name and service type (HCD or Assembly) of this actor
+   * @param configPathOpt an optional path in a config message that this actor is interested in
+   * @param httpUri an optional HTTP/REST URI for the actor (if it uses Spray, for example)
+   */
+  def registerWithLocationService(serviceId: ServiceId, configPathOpt: Option[String] = None,
+                                  httpUri: Option[URI] = None) {
+    log.info(s"Registering $serviceId ($configPathOpt) with the location service")
+    LocationService.register(context.system, self, serviceId, configPathOpt, httpUri)
+  }
+
 
   /**
    * Called when a command is submitted

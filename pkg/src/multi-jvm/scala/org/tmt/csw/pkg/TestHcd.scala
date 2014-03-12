@@ -1,19 +1,22 @@
 package org.tmt.csw.pkg
 
 import akka.actor.Props
-import org.tmt.csw.cmd.akka.{TestConfigActor, OneAtATimeCommandQueueController}
+import org.tmt.csw.cmd.akka.{CommandServiceActor, TestConfigActor, OneAtATimeCommandQueueController}
+import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
 
 object TestHcd {
   def props(name: String, configPath: String): Props = Props(classOf[TestHcd], name, configPath)
 }
 
-case class TestHcd(name: String, configPath: String) extends Hcd with OneAtATimeCommandQueueController {
+case class TestHcd(name: String, configPath: String) extends Component with CommandServiceActor
+  with OneAtATimeCommandQueueController {
 
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, 3), name)
 
-  override def receive: Receive = receiveHcdMessages
+  override def receive: Receive = receiveComponentMessages orElse receiveCommands
 
-  registerWithLocationService(Some(configPath))
+  val serviceId = ServiceId(name, ServiceType.HCD)
+  registerWithLocationService(serviceId, Some(configPath))
 
   // -- Implement Component methods --
   override def initialize(): Unit = {
