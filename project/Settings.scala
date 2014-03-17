@@ -1,4 +1,3 @@
-import akka.sbt.AkkaKernelPlugin._
 import sbt._
 import Keys._
 import com.typesafe.sbt.SbtScalariform
@@ -37,8 +36,8 @@ object Settings {
   lazy val multiJvmSettings = SbtMultiJvm.multiJvmSettings ++ Seq(
     // make sure that MultiJvm test are compiled by the default test compilation
     compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
-    // disable parallel tests
-    //parallelExecution in Test := false,
+    // Next line fixes missing source folder in idea project
+    unmanagedSourceDirectories in Test <+= baseDirectory { _ / "src" / "multi-jvm" / "scala" },
     parallelExecution in Global := false,
     executeTests in Test <<=
       (executeTests in Test, executeTests in MultiJvm) map {
