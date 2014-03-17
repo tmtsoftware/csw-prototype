@@ -85,11 +85,12 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
         returnStatus(status, submit.submitter)
 
       case Success(m) => // should not happen
-        log.error(s"Unexpected ZMQ Message: $m")
+        val status = CommandStatus.Error(submit.runId, s"Unexpected ZMQ Message: $m")
+        returnStatus(status, submit.submitter)
 
       case Failure(ex) =>
         val status = CommandStatus.Error(submit.runId, ex.getMessage)
-        commandStatusActor ! CommandStatusActor.StatusUpdate(status, submit.submitter)
+        returnStatus(status, submit.submitter)
     }
   }
 

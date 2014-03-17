@@ -8,15 +8,48 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.akka.ConfigActor._
 import org.tmt.csw.cmd.akka.QueryWorkerActor.QueryInfo
-import org.tmt.csw.ls.LocationServiceActor.ServicesReady
+import org.tmt.csw.ls.LocationServiceActor.{ServiceId, ServicesReady, LocationServiceInfo}
 import scala.util.Failure
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import scala.Some
 import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
 import scala.util.Success
 import org.tmt.csw.cmd.akka.ConfigDistributorActor.SubmitInfo
-import org.tmt.csw.ls.LocationServiceActor.LocationServiceInfo
 import org.tmt.csw.ls.LocationService
+import org.tmt.csw.cmd.akka.CommandServiceActor._
+import org.tmt.csw.cmd.akka.QueryWorkerActor.QueryInfo
+import scala.util.Failure
+import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
+import scala.Some
+import scala.util.Success
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigGet
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigPut
+import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
+import akka.actor.Terminated
+import org.tmt.csw.cmd.akka.ConfigDistributorActor.SubmitInfo
+
+
+/**
+ * Adding this trait to a command service causes it to use a ConfigDistributorActor
+ * to forward commands to different actors, depending on the config paths they are
+ * registered with in the location service.
+ */
+trait ConfigDistributor {
+  this: CommandServiceActor =>
+
+  // Add a ConfigDistributorActor to distribute the incoming configs to the HCDs
+  val configDistributorActor = context.actorOf(ConfigDistributorActor.props(commandStatusActor), name = configDistributorActorName)
+  override val configActor = configDistributorActor
+
+  /**
+   * Request information about the services (HCDs, other assemblies) that will be used by this actor.
+   * @param serviceIds a list of the names and types of the HCDs that will be used
+   */
+  def requestServices(serviceIds: List[ServiceId]): Unit = {
+    log.info(s"Request services: $serviceIds")
+    LocationService.requestServices(context.system, configDistributorActor, serviceIds)
+  }
+}
 
 object ConfigDistributorActor {
   /**

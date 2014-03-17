@@ -2,12 +2,13 @@ package org.tmt.csw.cmd.akka
 
 import akka.actor._
 import org.tmt.csw.cmd.core._
-import org.tmt.csw.cmd.akka.CommandStatus.Busy
-import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
 import org.tmt.csw.cmd.akka.CommandQueueActor.ConfigQueueStatus
 import java.net.URI
-import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
+import org.tmt.csw.ls.LocationServiceActor.ServiceId
 import org.tmt.csw.ls.LocationService
+import akka.util.Timeout
+import scala.concurrent.duration._
+import akka.pattern.ask
 
 object CommandServiceActor {
   // Child actor names
@@ -146,6 +147,8 @@ trait CommandServiceActor extends Actor with ActorLogging {
     case s@QueueDelete(runId) => commandQueueActor forward s
 
     case configMessage: ConfigMessage => configActor forward configMessage
+
+    case StatusRequest => handleStatusRequest(sender)
   }
 
   /**
@@ -177,5 +180,24 @@ trait CommandServiceActor extends Actor with ActorLogging {
   def queueBypassRequest(s: SubmitWithRunId): Unit = {
     configActor ! SubmitWithRunId(s.config, s.submitter, s.runId)
   }
+
+  /**
+   * Answers a request for status.
+   * @param requester the actor requesting the status
+   */
+  def handleStatusRequest(requester: ActorRef): Unit = {
+    implicit val timeout = Timeout(5.seconds)
+    for {
+      queueStatus  <- (commandQueueActor ? StatusRequest).mapTo[ConfigQueueStatus]
+    } {
+      requester ! CommandServiceStatus(self.path.name, queueStatus, commandQueueControllerType)
+    }
+  }
+
 }
+
+/**
+ * A command service actor that forwards parts of configs to other command service actors (HCDs or assemblies)
+ */
+trait AssemblyCommandServiceActor extends CommandServiceActor with ConfigDistributor
 
