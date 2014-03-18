@@ -32,7 +32,7 @@ object Component {
   case object Remove extends ComponentLifecycleState
 }
 
-trait   Component {
+trait Component {
   this: Actor with ActorLogging =>
 
   import Component._
@@ -65,4 +65,18 @@ trait   Component {
    * Called when the given child actor terminates
    */
   def terminated(actorRef: ActorRef): Unit = log.info(s"Actor $actorRef terminated")
+}
+
+/**
+ * An assembly is a component and may optionally also extend CommandServiceActor (or AssemblyCommandServiceActor)
+ */
+trait Assembly extends Component {
+  this: Actor with ActorLogging =>
+}
+
+/**
+ * An HCD is a component and may optionally also extend CommandServiceActor
+ */
+trait Hcd extends Component {
+  this: Actor with ActorLogging =>
 }

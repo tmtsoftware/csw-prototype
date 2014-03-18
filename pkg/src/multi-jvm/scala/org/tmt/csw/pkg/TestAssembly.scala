@@ -9,7 +9,7 @@ object TestAssembly {
 }
 
 // A test assembly
-case class TestAssembly(name: String) extends Component with AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
+case class TestAssembly(name: String) extends Assembly with AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
 
   // Get the assembly's HCDs from the location service (which must be running)
   requestServices(List(

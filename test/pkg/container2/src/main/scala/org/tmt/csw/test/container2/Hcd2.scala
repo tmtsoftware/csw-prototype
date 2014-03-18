@@ -1,7 +1,7 @@
 package org.tmt.csw.test.container2
 
 import akka.actor.Props
-import org.tmt.csw.pkg.Component
+import org.tmt.csw.pkg.Hcd
 import org.tmt.csw.cmd.akka.{CommandServiceActor, OneAtATimeCommandQueueController}
 import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
 
@@ -10,7 +10,7 @@ object Hcd2 {
   def props(name: String, configPath: String): Props = Props(classOf[Hcd2], name, configPath)
 }
 
-case class Hcd2(name: String, configPath: String) extends Component with CommandServiceActor with OneAtATimeCommandQueueController {
+case class Hcd2(name: String, configPath: String) extends Hcd with CommandServiceActor with OneAtATimeCommandQueueController {
 
   val configKey = configPath.split('.').last
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, configKey, 3), name)

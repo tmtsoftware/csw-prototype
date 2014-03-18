@@ -8,7 +8,7 @@ object TestHcd {
   def props(name: String, configPath: String): Props = Props(classOf[TestHcd], name, configPath)
 }
 
-case class TestHcd(name: String, configPath: String) extends Component with CommandServiceActor
+case class TestHcd(name: String, configPath: String) extends Hcd with CommandServiceActor
   with OneAtATimeCommandQueueController {
 
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, 3), name)
