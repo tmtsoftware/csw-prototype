@@ -7,14 +7,7 @@ import scala.concurrent.Future
 import akka.util.Timeout
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.akka.ConfigActor._
-import org.tmt.csw.cmd.akka.QueryWorkerActor.QueryInfo
 import org.tmt.csw.ls.LocationServiceActor.{ServiceId, ServicesReady, LocationServiceInfo}
-import scala.util.Failure
-import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
-import scala.Some
-import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
-import scala.util.Success
-import org.tmt.csw.cmd.akka.ConfigDistributorActor.SubmitInfo
 import org.tmt.csw.ls.LocationService
 import org.tmt.csw.cmd.akka.CommandServiceActor._
 import org.tmt.csw.cmd.akka.QueryWorkerActor.QueryInfo
@@ -22,8 +15,6 @@ import scala.util.Failure
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import scala.Some
 import scala.util.Success
-import org.tmt.csw.cmd.akka.ConfigActor.ConfigGet
-import org.tmt.csw.cmd.akka.ConfigActor.ConfigPut
 import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
 import akka.actor.Terminated
 import org.tmt.csw.cmd.akka.ConfigDistributorActor.SubmitInfo
@@ -40,6 +31,14 @@ trait ConfigDistributor {
   // Add a ConfigDistributorActor to distribute the incoming configs to the HCDs
   val configDistributorActor = context.actorOf(ConfigDistributorActor.props(commandStatusActor), name = configDistributorActorName)
   override val configActor = configDistributorActor
+
+  /**
+   * Override to specify that the config actor (configDistributorActor) is not ready on start,
+   * but needs to wait for the ServicesReady message
+   */
+  override def waitForReady(): Unit = {
+    context.become(waitingForReady(queueActorReady = false, configActorReady = false))
+  }
 
   /**
    * Request information about the services (HCDs, other assemblies) that will be used by this actor.
@@ -71,7 +70,7 @@ object ConfigDistributorActor {
  * This actor receives configurations and sends parts of them on to actors who have registered for them.
  * @param commandStatusActor reference to the command status actor, which receives the final status of commands
  */
-class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging with Stash {
+class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
 
   import ConfigActor._
   import ConfigDistributorActor._
@@ -90,15 +89,9 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
       if (targetActors.size == services.size) {
         for(a <- targetActors) context.watch(a)
         log.info(s"Setting state to ready")
-        unstashAll()
         context.become(ready(services))
+        context.parent ! CommandServiceActor.Ready(ready = true)
       }
-
-    // save these messages for later when in the ready state
-    case s: SubmitWithRunId => stash()
-    case s: CommandStatus => stash()
-    case c: ConfigGet => stash()
-    case c: ConfigControlMessage => stash()
 
     case Terminated(actorRef) =>
 
@@ -126,6 +119,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     case Terminated(actorRef) =>
       log.info(s"Received terminated message for $actorRef: Switch to waitingForServices state")
       LocationService.requestServices(context.system, self, services.map(_.serviceId))
+      context.parent ! CommandServiceActor.Ready(ready = false)
       context.become(waitingForServices)
 
     case x => log.error(s"Unexpected message from $sender: $x")

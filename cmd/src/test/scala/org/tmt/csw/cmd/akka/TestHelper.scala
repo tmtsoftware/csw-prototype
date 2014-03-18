@@ -4,6 +4,7 @@ import akka.actor.{Props, ActorRef}
 import akka.testkit.{TestKit, ImplicitSender}
 import org.tmt.csw.ls.LocationServiceActor._
 import java.net.URI
+import org.tmt.csw.cmd.akka.CommandServiceActor.{StatusRequest, CommandServiceStatus}
 
 // Test HCD
 object TestHcdCommandServiceActor {
@@ -59,7 +60,18 @@ trait TestHelper extends ImplicitSender {
         Some("config.tmt.tel.ao.pos.one"), Some(hcdB))
     )
 
-    system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly")
+    val commandServiceActor = system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly")
+    waitForReady(commandServiceActor)
   }
 
+  // Wait for the command service to be ready before returning (should only be necessary when testing)
+  def waitForReady(commandServiceActor: ActorRef): ActorRef = {
+    commandServiceActor ! StatusRequest
+    val status = expectMsgType[CommandServiceStatus]
+    if (status.ready) {
+      commandServiceActor
+    } else {
+      waitForReady(commandServiceActor)
+    }
+  }
 }

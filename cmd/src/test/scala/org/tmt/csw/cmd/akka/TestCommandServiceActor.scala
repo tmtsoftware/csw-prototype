@@ -33,17 +33,9 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
   implicit val dispatcher = system.dispatcher
 
   val commandServiceActor = getCommandServiceActor()
+
   // -- Tests --
 
-
-  test("Test simple queue (bypass) request") {
-    commandServiceActor ! QueueBypassRequest(config)
-    val s1 = expectMsgType[CommandStatus.Busy]
-    val s2a = expectMsgType[CommandStatus.PartiallyCompleted]
-    val s2 = expectMsgType[CommandStatus.Completed]
-    assert(s1.runId == s2.runId)
-    assert(s2.runId == s2a.runId)
-  }
 
   test("Test simple queue submit") {
     within(duration) {
@@ -57,6 +49,14 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
     }
   }
 
+  test("Test simple queue (bypass) request") {
+    commandServiceActor ! QueueBypassRequest(config)
+    val s1 = expectMsgType[CommandStatus.Busy]
+    val s2a = expectMsgType[CommandStatus.PartiallyCompleted]
+    val s2 = expectMsgType[CommandStatus.Completed]
+    assert(s1.runId == s2.runId)
+    assert(s2.runId == s2a.runId)
+  }
 
   test("Test queue submit with config abort") {
     within(duration) {

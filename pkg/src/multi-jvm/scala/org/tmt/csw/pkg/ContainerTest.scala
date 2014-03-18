@@ -7,7 +7,7 @@ import org.tmt.csw.cmd.core.Configuration
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.remote.testkit.{MultiNodeSpecCallbacks, MultiNodeConfig, MultiNodeSpec}
-import org.tmt.csw.cmd.akka.CommandServiceActor.Submit
+import org.tmt.csw.cmd.akka.CommandServiceActor.{CommandServiceStatus, StatusRequest, Submit}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{BeforeAndAfterAll, WordSpec}
 import org.scalatest.matchers.MustMatchers
@@ -87,6 +87,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         within(10 seconds) {
           container ! Container.CreateComponent(assembly1Props, "Assembly-1")
           val assembly1 = expectMsgType[ActorRef]
+          waitForReady(assembly1)
           assembly1 ! Submit(config)
           val s1 = expectMsgType[CommandStatus.Queued]
           val s2 = expectMsgType[CommandStatus.Busy]
@@ -121,6 +122,17 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       }
 
       enterBarrier("finished")
+    }
+  }
+
+  // Wait for the command service to be ready before returning (should only be necessary when testing)
+  def waitForReady(commandServiceActor: ActorRef): ActorRef = {
+    commandServiceActor ! StatusRequest
+    val status = expectMsgType[CommandServiceStatus]
+    if (status.ready) {
+      commandServiceActor
+    } else {
+      waitForReady(commandServiceActor)
     }
   }
 }

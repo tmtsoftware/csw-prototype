@@ -9,6 +9,7 @@ import org.tmt.csw.ls.LocationService
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
+import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
 
 object CommandServiceActor {
   // Child actor names
@@ -65,9 +66,14 @@ object CommandServiceActor {
   /**
    * Reply to StatusRequest message
    */
-  case class CommandServiceStatus(name: String,
+  case class CommandServiceStatus(name: String, ready: Boolean,
                                   queueStatus: ConfigQueueStatus,
                                   queueControllerClass: String)
+
+  /**
+   * Message sent to this actor by queue and config actors to indicate if they are ready to receive commands.
+   */
+  case class Ready(ready: Boolean) extends CommandServiceMessage
 }
 
 /**
@@ -119,11 +125,33 @@ trait CommandServiceActor extends Actor with ActorLogging {
   // A name describing the queue controller (for display in the status web page)
   def commandQueueControllerType: String
 
-
   // Needed for "ask"
   private implicit val execContext = context.dispatcher
 
-  // Receive only the command server commands
+  waitForReady()
+
+  def waitForReady(): Unit = {
+    context.become(waitingForReady(queueActorReady = false, configActorReady = true))
+  }
+
+  // Initial state while waiting for queue and config actors to be ready
+  def waitingForReady(queueActorReady: Boolean, configActorReady: Boolean): Receive = {
+    case Ready(ready) => checkIfReady(ready, queueActorReady, configActorReady)
+
+    case s@Submit(config, submitter) =>
+      log.error(s"Not yet ready to receive commands $s")
+      commandStatusActor ! StatusUpdate(CommandStatus.Error(RunId(), "Not ready yet"), submitter)
+
+    case s@SubmitWithRunId(config, submitter, runId) =>
+      log.error(s"Not yet ready to receive commands $s")
+      commandStatusActor ! StatusUpdate(CommandStatus.Error(runId, "Not ready yet"), submitter)
+
+    case StatusRequest => handleStatusRequest(sender, ready=false)
+
+    case x => log.error(s"Not yet ready to receive message $x")
+  }
+
+      // Receive only the command server commands
   def receiveCommands: Receive = {
     // Queue related commands
     case Submit(config, submitter) =>
@@ -148,7 +176,9 @@ trait CommandServiceActor extends Actor with ActorLogging {
 
     case configMessage: ConfigMessage => configActor forward configMessage
 
-    case StatusRequest => handleStatusRequest(sender)
+    case StatusRequest => handleStatusRequest(sender, ready=true)
+
+    case Ready(ready) => checkIfReady(ready, queueActorReady = true, configActorReady = true)
   }
 
   /**
@@ -185,13 +215,29 @@ trait CommandServiceActor extends Actor with ActorLogging {
    * Answers a request for status.
    * @param requester the actor requesting the status
    */
-  def handleStatusRequest(requester: ActorRef): Unit = {
+  def handleStatusRequest(requester: ActorRef, ready: Boolean): Unit = {
     implicit val timeout = Timeout(5.seconds)
     for {
       queueStatus  <- (commandQueueActor ? StatusRequest).mapTo[ConfigQueueStatus]
     } {
-      requester ! CommandServiceStatus(self.path.name, queueStatus, commandQueueControllerType)
+      requester ! CommandServiceStatus(self.path.name, ready, queueStatus, commandQueueControllerType)
     }
+  }
+
+
+  /**
+   * Called when a Ready message is received: If the queue and config actors are ready, enter the ready state.
+   */
+  def checkIfReady(ready: Boolean, queueActorReady: Boolean, configActorReady: Boolean): Unit = {
+    val queueReady = if (sender == commandQueueActor) ready else queueActorReady
+    val configReady = if (sender == configActor) ready else configActorReady
+    if (queueReady  && configReady) {
+      log.info("Ready to receive commands")
+      context.become(receive)
+    } else {
+      context.become(waitingForReady(queueReady, configReady))
+    }
+
   }
 
 }

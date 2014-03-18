@@ -91,7 +91,7 @@ object CommandQueueActor {
  * @param commandStatusActor reference to the commandStatusActor
  */
 class CommandQueueActor(commandStatusActor: ActorRef)
-  extends Actor with ActorLogging with Stash {
+  extends Actor with ActorLogging {
 
   import CommandQueueActor._
 
@@ -112,12 +112,11 @@ class CommandQueueActor(commandStatusActor: ActorRef)
 
 
   // Initial behavior while waiting for the queue client and controller actor references on startup.
-  def waitingForInit: Receive = {
+  def initializing: Receive = {
     case s: SubmitWithRunId => queueSubmit(s)
     case QueueClient(client) => initClient(client)
     case QueueController(controller) => initController(controller)
     case StatusRequest => sender ! ConfigQueueStatus("waiting for init", queueMap, submitCount)
-    case m: QueueMessage => stash() // save other queue messages for later
     case x => unknownMessage(x, "waiting for queue client")
   }
 
@@ -157,7 +156,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
     case x => unknownMessage(x, "started")
   }
 
-  override def receive: Receive = waitingForInit
+  override def receive: Receive = initializing
 
   // Queue the given config for later execution and return the runId to the sender
   private def queueSubmit(submit: SubmitWithRunId): Unit = {
@@ -224,7 +223,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
 
   private def maybeStartQueue(): Unit = {
     if (queueClient != Actor.noSender && queueController != Actor.noSender) {
-      unstashAll()
+      context.parent ! CommandServiceActor.Ready(ready = true)
       queueStart()
     }
   }
