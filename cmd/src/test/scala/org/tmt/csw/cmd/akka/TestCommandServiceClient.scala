@@ -2,7 +2,7 @@ package org.tmt.csw.cmd.akka
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{ActorRef, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import com.typesafe.scalalogging.slf4j.Logging
 import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import akka.util.Timeout
@@ -13,7 +13,7 @@ import scala.concurrent.Future
  * Tests the Command Service Client actor
  */
 class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHelper
-  with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
+  with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with Logging {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)

@@ -2,7 +2,7 @@ package org.tmt.csw.cmd.akka
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.core.{TestConfig, Configuration}
@@ -20,7 +20,7 @@ import scala.util._
  * tests run one after the other.
  */
 class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelper
-    with ImplicitSender with FunSuite with BeforeAndAfterAll with Logging {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with Logging {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)

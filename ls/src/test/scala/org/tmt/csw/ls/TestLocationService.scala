@@ -3,7 +3,7 @@ package org.tmt.csw.ls
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor._
 import com.typesafe.scalalogging.slf4j.Logging
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import org.tmt.csw.ls.LocationServiceActor._
 import java.net.URI
 
@@ -11,7 +11,7 @@ import java.net.URI
   * Simple standalone test of local location service (normally it should be run as a remote actor)
   */
 class TestLocationService extends TestKit(ActorSystem("Test"))
-  with ImplicitSender with FunSuite with Logging with BeforeAndAfterAll {
+  with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
   test("Test location service") {
     val ls = system.actorOf(Props[LocationServiceActor], LocationServiceActor.locationServiceName)

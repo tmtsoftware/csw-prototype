@@ -7,6 +7,7 @@ import akka.pattern.ask
 import scala.concurrent.duration._
 import akka.util.Timeout
 import java.net.URI
+import com.typesafe.config.ConfigFactory
 
 /**
  * Location service
@@ -88,7 +89,8 @@ object LocationService {
 class LocationService extends Bootable {
   import LocationServiceActor._
 
-  val system = ActorSystem(locationServiceName)
+  val config = ConfigFactory.load(locationServiceName)
+  val system = ActorSystem(locationServiceName, config)
 
   def startup(): Unit = {
     system.actorOf(Props[LocationServiceActor], locationServiceName)
@@ -230,7 +232,7 @@ class LocationServiceActor extends Actor with ActorLogging {
 
     // Sends a ServicesReady message to the sender when all of the requested services are available.
     // The sender should watch the returned actors and repeat the request if one of them terminates.
-    case RequestServices(serviceIds) => requestServices(sender, serviceIds)
+    case RequestServices(serviceIds) => requestServices(sender(), serviceIds)
 
     case x => log.error(s"Unexpected message: $x")
   }
@@ -243,10 +245,10 @@ class LocationServiceActor extends Actor with ActorLogging {
   }
 
   def register(serviceId: ServiceId, configPath: Option[String], httpUri: Option[URI]): Unit = {
-    val endpoints = List(Some(new URI(sender.path.toString)), httpUri).flatten
-    registry += (serviceId -> LocationServiceInfo(serviceId, endpoints, configPath, Some(sender)))
+    val endpoints = List(Some(new URI(sender().path.toString)), httpUri).flatten
+    registry += (serviceId -> LocationServiceInfo(serviceId, endpoints, configPath, Some(sender())))
     log.info(s"Registered ${serviceId.name} (${serviceId.serviceType}) with endpoints: $endpoints for config paths: $configPath")
-    context.watch(sender)
+    context.watch(sender())
 
     // If there are outstanding requests, check if they can now be completed
     val map = outstandingRequests

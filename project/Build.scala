@@ -1,7 +1,10 @@
+import com.typesafe.sbt.packager.archetypes.JavaAppBashScript
 import sbt._
 import Keys._
 import akka.sbt.AkkaKernelPlugin._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+import com.typesafe.sbt.SbtNativePackager._
+import NativePackagerKeys._
 
 // This is the top level build object used by sbt.
 object Build extends Build {
@@ -10,7 +13,7 @@ object Build extends Build {
 
   // Base project
   lazy val csw = project.in(file("."))
-    .aggregate(cs, cmd, pkg, ls, test_app, test_client, container1, container2)
+    .aggregate(cs, cmd, pkg, ls, containerCmd, test_app, test_client, container1, container2)
     .settings(buildSettings: _*)
 
 
@@ -26,8 +29,7 @@ object Build extends Build {
   // Location Service
   lazy val ls = Project(id = "ls", base = file("ls"),
     settings = defaultSettings ++ distSettings ++
-      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
-        distBootClass in Dist := "org.tmt.csw.ls.LocationService",
+      Seq(distBootClass in Dist := "org.tmt.csw.ls.LocationService",
         outputDirectory in Dist := file("ls/target"),
         libraryDependencies ++=
           provided(akkaActor) ++
@@ -59,6 +61,29 @@ object Build extends Build {
     ) configs MultiJvm
 
 
+  // -- Apps --
+
+  // Build the containerCmd command line application
+  lazy val containerCmd = Project(
+    id = "containerCmd",
+    base = file("apps/containerCmd"),
+    settings = defaultSettings ++ packagerSettings
+      ++ packageArchetype.java_application
+      ++ Seq(mainClass := Option("akka.kernel.Main"),
+      bashScriptExtraDefines ++= Seq(
+        """app_commands=( "${app_commands[@]}" "%s" )""" format ("org.tmt.csw.apps.containerCmd.ContainerCmd")
+      ),
+      bashScriptDefines <<= (Keys.mainClass in Compile, scriptClasspath, bashScriptExtraDefines) map { (mainClass, cp, extras) =>
+        JavaAppBashScript.makeDefines("akka.kernel.Main", appClasspath = "../conf" +: cp, extras = extras, configFile=Option("$app_home/../conf/jvm.conf"))
+      },
+        libraryDependencies ++=
+            provided(akkaActor) ++
+            compile(akkaKernel, akkaRemote) ++
+            test(scalaLogging, logback)
+      )
+  ) dependsOn(pkg, cmd, ls)
+
+
   // -- Test subprojects with dependency information --
 
   // test-app/app (server, see ../test/test-app/README.md)
@@ -66,8 +91,7 @@ object Build extends Build {
     id = "test-app",
     base = file("test/test-app/app"),
     settings = defaultSettings ++ distSettings ++
-      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
-          distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
+      Seq(distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
           outputDirectory in Dist := file("test/test-app/app/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
@@ -82,8 +106,7 @@ object Build extends Build {
     id = "test-client",
     base = file("test/test-app/client"),
     settings = defaultSettings ++ distSettings ++
-      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
-          distBootClass in Dist := "org.tmt.csw.test.client.TestClient",
+      Seq(distBootClass in Dist := "org.tmt.csw.test.client.TestClient",
           outputDirectory in Dist := file("test/test-app/client/target"),
           libraryDependencies ++=
             provided(akkaActor) ++
@@ -98,7 +121,7 @@ object Build extends Build {
     id = "container1",
     base = file("test/pkg/container1"),
     settings = defaultSettings ++ distSettings ++
-      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M -Dcsw.extjs.root=" + file("extjs").absolutePath,
+      Seq(distJvmOptions in Dist := "-Dcsw.extjs.root=" + file("extjs").absolutePath,
         distBootClass in Dist := "org.tmt.csw.test.container1.Container1",
         outputDirectory in Dist := file("test/pkg/container1/target"),
         libraryDependencies ++=
@@ -114,8 +137,7 @@ object Build extends Build {
     id = "container2",
     base = file("test/pkg/container2"),
     settings = defaultSettings ++ distSettings ++
-      Seq(distJvmOptions in Dist := "-Xms256M -Xmx1024M",
-        distBootClass in Dist := "org.tmt.csw.test.container2.Container2",
+      Seq(distBootClass in Dist := "org.tmt.csw.test.container2.Container2",
         outputDirectory in Dist := file("test/pkg/container2/target"),
         libraryDependencies ++=
           provided(akkaActor) ++

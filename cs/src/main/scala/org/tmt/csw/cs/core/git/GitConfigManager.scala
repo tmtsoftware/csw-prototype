@@ -6,7 +6,7 @@ import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
 import org.eclipse.jgit.lib._
 import org.eclipse.jgit.treewalk.TreeWalk
 import java.util.{Date, Properties}
-import org.eclipse.jgit.storage.file.FileRepository
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
 import org.tmt.csw.cs.api._
@@ -57,7 +57,7 @@ object GitConfigManager {
     // Init local repo
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
-      val git = new Git(new FileRepository(gitDir.getPath))
+      val git = new Git(new FileRepositoryBuilder().setGitDir(gitDir).build())
       trackMaster(git)
       val result = git.pull.call
       if (!result.isSuccessful) throw new IOException(result.toString)

@@ -2,7 +2,7 @@ package org.tmt.csw.cmd.spray
 
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuiteLike}
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import org.tmt.csw.cmd.akka._
@@ -12,7 +12,7 @@ import spray.http.StatusCodes
  * Tests the Command Service HTTP/REST interface in an actor environment.
  */
 class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with CommandServiceHttpClient
-  with TestHelper with FunSuite {
+  with TestHelper with FunSuiteLike {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)

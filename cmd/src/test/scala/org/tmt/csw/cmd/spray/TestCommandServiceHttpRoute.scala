@@ -39,26 +39,26 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
   "The command service" should {
     "return a runId for a POST /queue/submit [$config] and return the command status for GET /$runId/status" in {
       val runId = Post("/queue/submit", config) ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
-        assert(contentType == ContentTypes.`application/json`)
+        status == StatusCodes.Accepted
+        contentType == ContentTypes.`application/json`
         responseAs[RunId]
       }
 
       val commandStatus = getCommandStatus(runId)
-      assert(commandStatus.isInstanceOf[CommandStatus.Completed])
+      commandStatus.isInstanceOf[CommandStatus.Completed]
     }
   }
 
   "The command service" should {
     "return a runId for a POST /request [$config] and return the command status for GET /$runId/status" in {
       val runId = Post("/request", config) ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
-        assert(contentType == ContentTypes.`application/json`)
+        status == StatusCodes.Accepted
+        contentType == ContentTypes.`application/json`
         responseAs[RunId]
       }
 
       val commandStatus = getCommandStatus(runId)
-      assert(commandStatus.isInstanceOf[CommandStatus.Completed])
+      commandStatus.isInstanceOf[CommandStatus.Completed]
 
     }
   }
@@ -67,31 +67,31 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
     "return an OK status for other commands" in {
 
       Post("/queue/stop") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
       Post("/queue/pause") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
       Post("/queue/start") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
 
       val runId = RunId()
       Delete(s"/queue/$runId") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
 
       Post(s"/config/$runId/cancel") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
       Post(s"/config/$runId/abort") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
       Post(s"/config/$runId/pause") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
       Post(s"/config/$runId/resume") ~> route ~> check {
-        assert(status == StatusCodes.Accepted)
+        status == StatusCodes.Accepted
       }
     }
   }

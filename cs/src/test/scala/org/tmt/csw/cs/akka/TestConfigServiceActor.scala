@@ -1,6 +1,6 @@
 package org.tmt.csw.cs.akka
 
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import java.io.{File, IOException}
 import org.tmt.csw.cs.core.ConfigString
 import akka.actor.ActorSystem
@@ -16,7 +16,7 @@ import ConfigServiceActor._
 /**
  * Tests the Config Service actor
  */
-class TestConfigServiceActor extends TestKit(ActorSystem("testsys")) with ImplicitSender with FunSuite with BeforeAndAfterAll {
+class TestConfigServiceActor extends TestKit(ActorSystem("testsys")) with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")

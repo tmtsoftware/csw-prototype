@@ -2,7 +2,7 @@ package org.tmt.csw.ls
 
 import akka.actor.{ActorSystem, Extension, ExtensionKey}
 
-object Container1Settings extends ExtensionKey[LocationServiceSettings]
+object LocationServiceSettings extends ExtensionKey[LocationServiceSettings]
 
 /**
  * The configuration settings for the location service

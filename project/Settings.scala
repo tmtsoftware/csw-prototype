@@ -3,7 +3,7 @@ import Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.SbtMultiJvm
-import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{MultiJvm, jvmOptions}
 import scala.Some
 import twirl.sbt.TwirlPlugin._
 
@@ -11,7 +11,7 @@ import twirl.sbt.TwirlPlugin._
 object Settings {
   val Version = "1.0"
 
-  val buildSettings = Defaults.defaultSettings ++ multiJvmSettings ++ Seq (
+  val buildSettings = Defaults.defaultSettings ++ Seq (
     organization := "org.tmt",
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
@@ -33,22 +33,27 @@ object Settings {
     javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
   )
 
+
   lazy val multiJvmSettings = SbtMultiJvm.multiJvmSettings ++ Seq(
+    // Next line fixes missing source folder in idea project, but breaks the "test" target
+//    unmanagedSourceDirectories in Test <+= baseDirectory { _ / "src" / "multi-jvm" / "scala" },
     // make sure that MultiJvm test are compiled by the default test compilation
     compile in MultiJvm <<= (compile in MultiJvm) triggeredBy (compile in Test),
-    // Next line fixes missing source folder in idea project
-    unmanagedSourceDirectories in Test <+= baseDirectory { _ / "src" / "multi-jvm" / "scala" },
-    parallelExecution in Global := false,
-    executeTests in Test <<=
-      (executeTests in Test, executeTests in MultiJvm) map {
-        case ((testResults), (multiJvmResults)) =>
-          val overall =
-            if (testResults.overall.id < multiJvmResults.overall.id) multiJvmResults.overall
-            else testResults.overall
-          Tests.Output(overall,
-            testResults.events ++ multiJvmResults.events,
-            testResults.summaries ++ multiJvmResults.summaries)
-      }
+    // disable parallel tests
+    parallelExecution in Test := false,
+    // make sure that MultiJvm tests are executed by the default test target,
+    // and combine the results from ordinary test and multi-jvm tests
+    executeTests in Test <<= (executeTests in Test, executeTests in MultiJvm) map {
+      case (testResults, multiNodeResults)  =>
+        val overall =
+          if (testResults.overall.id < multiNodeResults.overall.id)
+            multiNodeResults.overall
+          else
+            testResults.overall
+        Tests.Output(overall,
+          testResults.events ++ multiNodeResults.events,
+          testResults.summaries ++ multiNodeResults.summaries)
+    }
   )
 
   lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(

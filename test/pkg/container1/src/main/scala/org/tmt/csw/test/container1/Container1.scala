@@ -65,7 +65,8 @@ class Container1Settings(system: ExtendedActorSystem) extends Extension {
   val port: Int = system.settings.config getInt "csw.test.assembly1-http.port"
 
   // The amount of time to wait when polling for the command status
-  val timeout: FiniteDuration = Duration(system.settings.config getMilliseconds "csw.test.assembly1-http.timeout", MILLISECONDS)
+  val timeout: FiniteDuration = Duration(system.settings.config.getDuration("csw.test.assembly1-http.timeout", MILLISECONDS),
+    MILLISECONDS)
 }
 
 
