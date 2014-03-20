@@ -5,6 +5,8 @@ import akka.actor._
 import scala.util.Properties
 import com.typesafe.config.{ConfigFactory, Config}
 import java.io.File
+import scala.collection.JavaConversions._
+import org.tmt.csw.pkg.Container
 
 /**
  * A command line application for creating containers with components specified in a config file.
@@ -47,10 +49,25 @@ object ContainerCmdActor {
 
 class ContainerCmdActor(config: Config) extends Actor with ActorLogging {
 
-  val systemName = config.getString("csw.containerCmd.systemName")
-  log.info(s"XXX systemName = $systemName")
+  parseConfig()
+
+  def parseConfig(): Unit = {
+    val containerName = config.getString("container.name")
+    log.info(s"Create container $containerName")
+    val container = Container.create(containerName)
+    val components = config.getConfig("container.components")
+    for(key <- components.root.keySet()) {
+      val componentConfig = components.getConfig(key)
+      val className = componentConfig.getString("class")
+      val args = componentConfig.getList("args").toList.map(_.unwrapped().toString)
+      log.info(s"Create component with class $className and args $args")
+      val props = Props(Class.forName(className), args: _*)
+      container ! Container.CreateComponent(props, key)
+    }
+  }
 
   override def receive: Receive = {
+    case actorRef: ActorRef => log.info(s"Started $actorRef")
     case x => log.error(s"Received unexpected message $x")
   }
 }

@@ -71,7 +71,7 @@ object Build extends Build {
       ++ packageArchetype.java_application
       ++ Seq(mainClass := Option("akka.kernel.Main"),
       bashScriptExtraDefines ++= Seq(
-        """app_commands=( "${app_commands[@]}" "%s" )""" format ("org.tmt.csw.apps.containerCmd.ContainerCmd")
+        """app_commands=( "${app_commands[@]}" "%s" )""" format "org.tmt.csw.apps.containerCmd.ContainerCmd"
       ),
       bashScriptDefines <<= (Keys.mainClass in Compile, scriptClasspath, bashScriptExtraDefines) map { (mainClass, cp, extras) =>
         JavaAppBashScript.makeDefines("akka.kernel.Main", appClasspath = "../conf" +: cp, extras = extras, configFile=Option("$app_home/../conf/jvm.conf"))
@@ -81,7 +81,7 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-  ) dependsOn(pkg, cmd, ls)
+  ) dependsOn(pkg, cmd, ls, container1, container2)
 
 
   // -- Test subprojects with dependency information --

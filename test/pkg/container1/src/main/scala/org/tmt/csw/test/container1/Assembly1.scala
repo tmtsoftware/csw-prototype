@@ -6,6 +6,7 @@ import org.tmt.csw.cmd.akka.{AssemblyCommandServiceActor, OneAtATimeCommandQueue
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import java.util.Date
 import org.tmt.csw.ls.LocationServiceActor.{ServiceType, ServiceId}
+import org.tmt.csw.cmd.spray.CommandServiceHttpServer
 
 object Assembly1 {
   def props(name: String): Props = Props(classOf[Assembly1], name)
@@ -25,6 +26,16 @@ case class Assembly1(name: String)
     ServiceId("HCD-2D", ServiceType.HCD)
   )
   requestServices(serviceIds)
+  startHttpServer()
+
+  // Starts the Spray HTTP server for accessing this assembly via HTTP
+  def startHttpServer():Unit = {
+    // Start a HTTP server with the REST interface
+    val interface = Container1Settings(context.system).interface
+    val port = Container1Settings(context.system).port
+    val timeout = Container1Settings(context.system).timeout
+    context.actorOf(CommandServiceHttpServer.props(self, interface, port, timeout), "commandService")
+  }
 
   /**
    * Called when a command is submitted
