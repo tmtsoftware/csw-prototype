@@ -51,6 +51,8 @@ class ContainerCmdActor(config: Config) extends Actor with ActorLogging {
 
   parseConfig()
 
+  // Parses the config file pass in via -DcontainerCmd.config and creates the
+  // container, adding the components specified in the config file.
   def parseConfig(): Unit = {
     val containerName = config.getString("container.name")
     log.info(s"Create container $containerName")
@@ -59,7 +61,11 @@ class ContainerCmdActor(config: Config) extends Actor with ActorLogging {
     for(key <- components.root.keySet()) {
       val componentConfig = components.getConfig(key)
       val className = componentConfig.getString("class")
-      val args = componentConfig.getList("args").toList.map(_.unwrapped().toString)
+      val args =
+        if (componentConfig.hasPath("args"))
+          componentConfig.getList("args").toList.map(_.unwrapped().toString)
+        else List()
+      log.info(s"XXX args = $args")
       log.info(s"Create component with class $className and args $args")
       val props = Props(Class.forName(className), args: _*)
       container ! Container.CreateComponent(props, key)
