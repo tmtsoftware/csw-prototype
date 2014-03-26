@@ -20,11 +20,30 @@ object Component {
     ActorSystem(name).actorOf(props, name)
   }
 
-  /**
-   * Lifecycle state messages
-   */
+  /** =Lifecycle state messages=
+    *
+    * From TMT.CTR.ICD.13.002.DRF06:
+    *
+    * - INIT: the system should perform any initialization needed.
+    * When complete, the system is in the Initialized lifecycle state.
+    *
+    * - STARTUP: the system should bring any hardware online and be ready to execute commands.
+    * Once completed, the system is in the Running state and the READY mode.
+    * No motions should take place during the startup transition to the Running state.
+    * All functional behavior is available once the system is in the Running state.
+    *
+    * - RUNNING: result of STARTUP message: go to the READY state
+    *
+    * - SHUTDOWN: all changes made to move from Initialized to Running should be reversed.
+    * If actions are underway, the actions should first be completed.
+    *
+    * - UNINIT: all changes made to move from Loaded state to Initialized should be reversed.
+    *
+    * - REMOVE: software may be optionally removed if possible or necessary to move to the Ready state.
+    */
   sealed trait ComponentLifecycleState
-  case object Initialize extends ComponentLifecycleState
+
+  case object Init extends ComponentLifecycleState
   case object Startup extends ComponentLifecycleState
   case object Running extends ComponentLifecycleState
   case object Shutdown extends ComponentLifecycleState
@@ -44,7 +63,7 @@ trait Component {
 
   // Receive component messages
   def receiveComponentMessages: Receive = {
-    case Initialize => initialize()
+    case Init => initialize()
     case Startup => startup()
     case Running => run()
     case Shutdown => shutdown()

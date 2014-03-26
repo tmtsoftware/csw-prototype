@@ -113,7 +113,7 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       expectNoMsg(1.second)
       // try adding a new config to the queue while the queue is stopped (it should not be added to the queue)
       commandServiceActor ! Submit(config)
-      expectNoMsg(1.second)
+      expectMsgType[CommandStatus.Error]
       // Restart the queue (it should still be empty)
       commandServiceActor ! QueueStart
       expectNoMsg(1.second)
@@ -195,58 +195,6 @@ class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelp
       case Failure(ex) => fail(ex)
     }
   }
-
-
-  // XXX TODO: Wait configs...
-
-//  test("Test submit with wait config") {
-//    val commandServiceActor = getCommandServiceActor(9)
-//    within(duration) {
-//      val waitConfig = Configuration.waitConfig(forResume = true, obsId = "TMT-2021A-C-2-1")
-//
-//      // Sending the wait config is like sending a Queue Pause command, except that it is also a command on the queue
-//      commandServiceActor ! Submit(waitConfig)
-//      val s1 = expectMsgType[CommandStatus.Queued]
-//      assert(expectMsgType[CommandStatus.Completed].runId == s1.runId)
-//
-//      // Send a config: should be put in the queue, but not executed, since the queue is paused
-//      commandServiceActor ! Submit(config)
-//      val s2 = expectMsgType[CommandStatus.Queued]
-//      expectNoMsg(1.second)
-//      // Restart the queue
-//      commandServiceActor ! QueueStart
-//      assert(expectMsgType[CommandStatus.Busy].runId == s2.runId)
-//      assert(expectMsgType[CommandStatus.Completed].runId == s2.runId)
-//    }
-//  }
-
-
-//  test("Test request with wait config") {
-//    val commandServiceActor = getCommandServiceActor(10)
-//    val waitConfig = Configuration.waitConfig(forResume=true, obsId="TMT-2021A-C-2-1")
-//
-//    // Sending the wait config is like sending a Queue Pause command (in this case we bypass the queue)
-//    commandServiceActor ! QueueBypassRequest(waitConfig)
-//    expectMsgType[CommandStatus.Completed]
-//    expectNoMsg(1.second)
-//
-//    within(duration) {
-//      // Send a config: should be put in the queue, but not executed, since the queue is paused
-//      commandServiceActor ! Submit(config)
-//      val s1 = expectMsgType[CommandStatus.Queued]
-//      expectNoMsg(1.second)
-//      // Restart the queue
-//      commandServiceActor ! QueueStart
-//      assert(expectMsgType[CommandStatus.Busy].runId == s1.runId)
-//      assert(expectMsgType[CommandStatus.Completed].runId == s1.runId)
-//    }
-//  }
-
-
-
-  //  test("Test error handling 1") {
-//
-//  }
 
   override protected def afterAll(): Unit = {
     logger.info("Shutting down test actor system")

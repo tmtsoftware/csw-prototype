@@ -88,7 +88,7 @@ trait ConfigActor extends Actor with ActorLogging {
     case ConfigPause(runId) => pause(runId)
     case ConfigResume(runId) => resume(runId)
 
-    case ConfigGet(config) => query(config, sender)
+    case ConfigGet(config) => query(config, sender())
     case ConfigPut(config) => internalConfig(config)
 
     // An actor was terminated (normal when done)

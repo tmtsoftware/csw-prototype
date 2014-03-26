@@ -134,6 +134,14 @@ class Configuration private(private val config: Config) extends Serializable {
     )
 
   /**
+   * Returns this config if pathOpt is None, otherwise the config at the given path.
+   * @param pathOpt an optional path in this configuration
+   */
+  def getConfig(pathOpt: Option[String]): Configuration = {
+    if (pathOpt.isEmpty) this else getConfig(pathOpt.get)
+  }
+
+  /**
    * Returns the number of top level elements in the configuration
    */
   def size(): Int = config.root().size()

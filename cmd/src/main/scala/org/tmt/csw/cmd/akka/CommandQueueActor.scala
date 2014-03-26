@@ -122,6 +122,10 @@ class CommandQueueActor(commandStatusActor: ActorRef)
 
   // Behavior while the queue is in the stopped state
   def queueStopped: Receive = {
+    case submit: SubmitWithRunId =>
+      commandStatusActor ! StatusUpdate(
+        CommandStatus.Error(submit.runId, "Received submit while queue stopped"),
+        submit.submitter)
     case QueuePause => queuePause()
     case QueueStart => queueStart()
     case QueueStop =>
@@ -201,7 +205,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   // Wait configs are treated specially (TODO: Implement wait configs)
   // The original submitter receives the command status.
   private def dequeue(): Unit = {
-    log.debug(s"Dequeue and sent to: $sender")
+    log.debug(s"Dequeue and sent to: ${sender()}")
     if (!queueMap.isEmpty) {
       val (runId, submit) = queueMap.iterator.next()
       queueMap = queueMap - runId
@@ -237,5 +241,5 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   }
 
   private def unknownMessage(msg: Any, state: String): Unit =
-    log.warning(s"Received unexpected queue message from $sender while $state: $msg")
+    log.warning(s"Received unexpected queue message from ${sender()} while $state: $msg")
 }

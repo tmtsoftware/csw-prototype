@@ -139,14 +139,18 @@ trait CommandServiceActor extends Actor with ActorLogging {
     case Ready(ready) => checkIfReady(ready, queueActorReady, configActorReady)
 
     case s@Submit(config, submitter) =>
-      log.error(s"Not yet ready to receive commands $s")
-      commandStatusActor ! StatusUpdate(CommandStatus.Error(RunId(), "Not ready yet"), submitter)
+      notReadyError(s, RunId(), submitter)
 
     case s@SubmitWithRunId(config, submitter, runId) =>
-      log.error(s"Not yet ready to receive commands $s")
-      commandStatusActor ! StatusUpdate(CommandStatus.Error(runId, "Not ready yet"), submitter)
+      notReadyError(s, runId, submitter)
 
-    case StatusRequest => handleStatusRequest(sender, ready=false)
+    case s@QueueBypassRequest(config) =>
+      notReadyError(s, RunId(), sender())
+
+    case s@QueueBypassRequestWithRunId(config, submitter, runId) =>
+      notReadyError(s, runId, submitter)
+
+    case StatusRequest => handleStatusRequest(sender(), ready=false)
 
     case x => log.error(s"Not yet ready to receive message $x")
   }
@@ -161,24 +165,29 @@ trait CommandServiceActor extends Actor with ActorLogging {
       submit(s)
 
     case QueueBypassRequest(config) =>
-      queueBypassRequest(SubmitWithRunId(config, sender, RunId()))
+      queueBypassRequest(SubmitWithRunId(config, sender(), RunId()))
 
     case QueueBypassRequestWithRunId(config, submitter, runId) =>
       queueBypassRequest(SubmitWithRunId(config, submitter, runId))
 
     case s@QueueStop => commandQueueActor forward s
-
     case s@QueuePause => commandQueueActor forward s
-
     case s@QueueStart => commandQueueActor forward s
-
     case s@QueueDelete(runId) => commandQueueActor forward s
 
     case configMessage: ConfigMessage => configActor forward configMessage
 
-    case StatusRequest => handleStatusRequest(sender, ready=true)
+    case StatusRequest => handleStatusRequest(sender(), ready=true)
 
     case Ready(ready) => checkIfReady(ready, queueActorReady = true, configActorReady = true)
+  }
+
+  // Logs an error message and report an error status if we receive a command
+  // when not in the ready state.
+  def notReadyError(msg: AnyRef, runId: RunId, submitter: ActorRef): Unit = {
+    log.error(s"Not yet ready to receive command $msg")
+    commandStatusActor ! StatusUpdate(CommandStatus.Error(runId, "Not ready yet"), submitter)
+
   }
 
   /**
