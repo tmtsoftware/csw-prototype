@@ -20,9 +20,8 @@ object TestConfigActor {
  */
 class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int) extends ConfigActor {
 
-  // Links the config worker actor to the runId for the config it is currently executing
-  private var runIdForActorRef = Map[ActorRef, RunId]()
-  private var actorRefForRunId = Map[RunId, ActorRef]()
+  // Used to create and get the worker actor that is handling a config
+  val configWorkers = WorkerPerRunId("configWorkerActor", context, log)
 
   // XXX dummy config for test of get/query
   private var savedConfig: Option[Configuration] = None
@@ -35,18 +34,20 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    * Called when a configuration is submitted
    */
   override def submit(submit: SubmitWithRunId): Unit = {
-    val configWorkerActor = context.actorOf(TestConfigActorWorker.props(submit, commandStatusActor, numberOfSecondsToRun), "testConfigActorWorker")
-    log.debug(s"Forwarding config ${submit.config} to worker $configWorkerActor")
-    runIdForActorRef += (configWorkerActor -> submit.runId)
-    actorRefForRunId += (submit.runId -> configWorkerActor)
-    context.watch(configWorkerActor)
+    val props = TestConfigActorWorker.props(submit, commandStatusActor, numberOfSecondsToRun)
+    configWorkers.newWorkerFor(props, submit.runId) match {
+      case Some(configWorkerActor) =>
+        log.debug(s"Forwarding config ${submit.config} to worker $configWorkerActor")
+        context.watch(configWorkerActor)
+      case None =>
+    }
   }
 
   /**
    * Work on the config matching the given runId should be paused
    */
   override def pause(runId: RunId): Unit = {
-    actorRefForRunId.get(runId) match {
+    configWorkers.getWorkerFor(runId) match {
       case Some(actorRef) => actorRef ! ConfigPause(runId)
       case None => log.error(s"Can't pause config: No worker actor found for runId: $runId")
     }
@@ -56,7 +57,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    * Work on the config matching the given runId should be resumed
    */
   override def resume(runId: RunId): Unit = {
-    actorRefForRunId.get(runId) match {
+    configWorkers.getWorkerFor(runId) match {
       case Some(actorRef) => actorRef ! ConfigResume(runId)
       case None => log.error(s"Can't resume config: No worker actor found for runId: $runId")
     }
@@ -66,7 +67,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    * Work on the config matching the given runId should be canceled
    */
   override def cancel(runId: RunId): Unit = {
-    actorRefForRunId.get(runId) match {
+    configWorkers.getWorkerFor(runId) match {
       case Some(actorRef) => actorRef ! ConfigCancel(runId)
       case None => log.error(s"Can't cancel config: No worker actor found for runId: $runId")
     }
@@ -76,7 +77,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    * Work on the config matching the given runId should be aborted
    */
   override def abort(runId: RunId): Unit = {
-    actorRefForRunId.get(runId) match {
+    configWorkers.getWorkerFor(runId) match {
       case Some(actorRef) => actorRef ! ConfigAbort(runId)
       case None => log.error(s"Can't abort config: No worker actor found for runId: $runId")
     }
@@ -125,17 +126,6 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
     sender ! ConfigResponse(Success(conf))
     savedConfig = Some(config)
   }
-
-  /**
-   * Called when a child (worker) actor terminates
-   */
-  override def terminated(actorRef: ActorRef): Unit = {
-    runIdForActorRef.get(actorRef) match {
-      case Some(runId) => actorRefForRunId -= runId
-      case None =>
-    }
-    runIdForActorRef -= actorRef
-  }
 }
 
 
@@ -177,7 +167,7 @@ class TestConfigActorWorker(submit: SubmitWithRunId, val commandStatusActor: Act
     case ConfigCancel(runId) => cancel(Some(timer), runId)
     case ConfigAbort(runId) => abort(Some(timer), runId)
     case ConfigPause(runId) => pause(Some(timer), runId)
-    case ConfigGet(config) => query(config, sender)
+    case ConfigGet(config) => query(config, sender())
     case ConfigPut(config) =>
     case x => unknownMessage(x)
   }
@@ -188,7 +178,7 @@ class TestConfigActorWorker(submit: SubmitWithRunId, val commandStatusActor: Act
     case ConfigCancel(runId) => cancel(None, runId)
     case ConfigAbort(runId) => abort(None, runId)
     case ConfigPause(runId) => pause(None, runId)
-    case ConfigGet(config) => query(config, sender)
+    case ConfigGet(config) => query(config, sender())
     case ConfigPut(config) =>
     case x => unknownMessage(x)
   }

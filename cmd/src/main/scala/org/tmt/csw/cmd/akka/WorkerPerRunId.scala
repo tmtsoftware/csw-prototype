@@ -1,20 +1,29 @@
 package org.tmt.csw.cmd.akka
 
-import akka.actor.{Props, ActorContext, ActorRef}
+import akka.actor.{ActorLogging, Props, ActorContext, ActorRef}
+import akka.event.LoggingAdapter
 
 /**
  * A utility class for managing worker actors where there is one worker per run id.
  * @param name the base name to use for the actors (-$runId will be appended)
  */
-case class WorkerPerRunId(name: String, context: ActorContext) {
+case class WorkerPerRunId(name: String, context: ActorContext, log: LoggingAdapter) {
   /**
    * creates a new submit worker actor to handle the submit for the given runId
    * @param props used to create the actor
    * @param runId the runId to associate with this actor
-   * @return the new actor ref
+   * @return the new actor ref, or if an actor already exists for this runId, None
    */
-  def newWorkerFor(props: Props, runId: RunId): ActorRef = {
-    context.actorOf(props, actorName(runId))
+  def newWorkerFor(props: Props, runId: RunId): Option[ActorRef] = {
+    val name = actorName(runId)
+    context.child(name) match {
+      case Some(actorRef) =>
+        log.error(s"$actorRef already exists")
+        None
+      case None =>
+        Some(context.actorOf(props, actorName(runId)))
+    }
+
   }
 
   /**

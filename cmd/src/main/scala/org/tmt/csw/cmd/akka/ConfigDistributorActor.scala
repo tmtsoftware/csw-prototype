@@ -75,7 +75,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
   import ConfigActor._
 
   // Used to create and get the submit worker actor that is handling a submit
-  val submitWorkers = WorkerPerRunId("submitWorker", context)
+  val submitWorkers = WorkerPerRunId("submitWorker", context, log)
 
   // Start out in the waiting state
   override def receive: Receive = waitingForServices
@@ -133,7 +133,13 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
   private def submit(submit: SubmitWithRunId, targetActors: List[LocationServiceInfo]): Unit = {
       // Create a dedicated submit worker actor to handle this command
       val props = SubmitWorkerActor.props(commandStatusActor, submit, targetActors)
-      submitWorkers.newWorkerFor(props, submit.runId)
+      submitWorkers.newWorkerFor(props, submit.runId) match {
+        case Some(actorRef) =>
+        case None =>
+          commandStatusActor ! CommandStatusActor.StatusUpdate(
+            CommandStatus.Error(submit.runId, "Submit worker for ${submit.runId} already exists"),
+            submit.submitter)
+      }
   }
 
   /**
