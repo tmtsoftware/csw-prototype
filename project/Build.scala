@@ -11,12 +11,6 @@ object Build extends Build {
   import Settings._
   import Dependencies._
 
-  // Base project
-  lazy val csw = project.in(file("."))
-    .aggregate(cs, cmd, pkg, ls, containerCmd, test_app, test_client, container1, container2)
-    .settings(buildSettings: _*)
-
-
   // Config Service
   lazy val cs = project
   	.settings(buildSettings: _*)
@@ -86,36 +80,6 @@ object Build extends Build {
 
   // -- Test subprojects with dependency information --
 
-  // test-app/app (server, see ../test/test-app/README.md)
-  lazy val test_app = Project(
-    id = "test-app",
-    base = file("test/test-app/app"),
-    settings = defaultSettings ++ distSettings ++
-      Seq(distBootClass in Dist := "org.tmt.csw.test.app.TestApp",
-          outputDirectory in Dist := file("test/test-app/app/target"),
-          libraryDependencies ++=
-            provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote) ++
-            test(scalaLogging, logback)
-      )
-    ) dependsOn(cs, cmd, ls)
-
-
-  // test-app/client (see ../test/test-app/README.md)
-  lazy val test_client = Project(
-    id = "test-client",
-    base = file("test/test-app/client"),
-    settings = defaultSettings ++ distSettings ++
-      Seq(distBootClass in Dist := "org.tmt.csw.test.client.TestClient",
-          outputDirectory in Dist := file("test/test-app/client/target"),
-          libraryDependencies ++=
-            provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote) ++
-            test(scalaLogging, logback)
-      )
-    ) dependsOn(cs, cmd % "compile->compile;test->test", ls)
-
-
   // pkg test/demo: Container1 (see ../test/pkg/README.md)
   lazy val container1 = Project(
     id = "container1",
@@ -129,7 +93,7 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote) ++
             test(scalaLogging, logback)
       )
-  ) dependsOn(pkg, cs, cmd, ls)
+  ) dependsOn(pkg, cmd, ls)
 
 
   // pkg test/demo: Container2 (see ../test/pkg/README.md)
@@ -144,7 +108,7 @@ object Build extends Build {
             compile(akkaKernel, akkaRemote, akkaZeromq) ++
             test(scalaLogging, logback)
       )
-  ) dependsOn(pkg, cs, cmd, ls)
+  ) dependsOn(pkg, cmd, ls)
 }
 
 
