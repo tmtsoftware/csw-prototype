@@ -5,7 +5,9 @@ import akka.event.LoggingAdapter
 
 /**
  * A utility class for managing worker actors where there is one worker per run id.
- * @param name the base name to use for the actors (-$runId will be appended)
+ * @param name the base name to use for the actors (-runId will be appended)
+ * @param context the actor context
+ * @param log the actor's logger
  */
 case class WorkerPerRunId(name: String, context: ActorContext, log: LoggingAdapter) {
   /**

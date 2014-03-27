@@ -82,7 +82,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
   // Initial state until we get a list of running services to use as target actors
   def waitingForServices: Receive = {
-    case ServicesReady(services: List[LocationServiceInfo]) =>
+    case ServicesReady(services) =>
       log.info(s"All services ready: $services")
       val targetActors = for (service <- services if service.actorRefOpt.isDefined) yield service.actorRefOpt.get
       if (targetActors.size == services.size) {
