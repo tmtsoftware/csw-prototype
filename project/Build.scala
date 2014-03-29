@@ -1,10 +1,8 @@
-import com.typesafe.sbt.packager.archetypes.JavaAppBashScript
 import sbt._
 import Keys._
-import akka.sbt.AkkaKernelPlugin._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
-import com.typesafe.sbt.SbtNativePackager._
-import NativePackagerKeys._
+import com.typesafe.sbt.packager.Keys._
+
 
 // This is the top level build object used by sbt.
 object Build extends Build {
@@ -13,7 +11,7 @@ object Build extends Build {
 
   // Config Service
   lazy val cs = project
-  	.settings(buildSettings: _*)
+  	.settings(defaultSettings: _*)
   	.settings(libraryDependencies ++=
   		provided(akkaActor) ++
       compile(jgit, scalaIoFile, scalaLogging, logback) ++
@@ -21,33 +19,28 @@ object Build extends Build {
   	)
 
   // Location Service
-  lazy val ls = Project(id = "ls", base = file("ls"),
-    settings = defaultSettings ++ distSettings ++
-      Seq(distBootClass in Dist := "org.tmt.csw.ls.LocationService",
-        outputDirectory in Dist := file("ls/target"),
-        libraryDependencies ++=
-          provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote, scalaLogging, logback) ++
-            test(scalaTest, specs2, akkaTestKit, junit)
-      )
-  )
+  lazy val loc = project
+    .settings(packageSettings: _*)
+    .settings(libraryDependencies ++= provided(akkaActor) ++
+    compile(akkaKernel, akkaRemote, scalaLogging, logback) ++
+    test(scalaTest, specs2, akkaTestKit, junit))
 
   // Command Service
   lazy val cmd = project
-    .settings(buildSettings: _*)
+    .settings(defaultSettings: _*)
     .settings(twirlSettings: _*)
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
       test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
-    ) dependsOn ls
+    ) dependsOn loc
 
 
   // Package (Container, Component) classes
   lazy val pkg = project
-    .settings(buildSettings: _*)
+    .settings(defaultSettings: _*)
     .settings(multiJvmSettings: _*)
-    .dependsOn(cmd % "compile->compile;test->test", ls)
+    .dependsOn(cmd % "compile->compile;test->test", loc)
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback) ++
@@ -58,57 +51,33 @@ object Build extends Build {
   // -- Apps --
 
   // Build the containerCmd command line application
-  lazy val containerCmd = Project(
-    id = "containerCmd",
-    base = file("apps/containerCmd"),
-    settings = defaultSettings ++ packagerSettings
-      ++ packageArchetype.java_application
-      ++ Seq(mainClass := Option("akka.kernel.Main"),
-      bashScriptExtraDefines ++= Seq(
-        """app_commands=( "${app_commands[@]}" "%s" )""" format "org.tmt.csw.apps.containerCmd.ContainerCmd"
-      ),
-      bashScriptDefines <<= (Keys.mainClass in Compile, scriptClasspath, bashScriptExtraDefines) map { (mainClass, cp, extras) =>
-        JavaAppBashScript.makeDefines("akka.kernel.Main", appClasspath = "../conf" +: cp, extras = extras, configFile=Option("$app_home/../conf/jvm.conf"))
-      },
-        libraryDependencies ++=
-            provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote) ++
-            test(scalaLogging, logback)
-      )
-  ) dependsOn(pkg, cmd, ls, container1, container2)
+  lazy val containerCmd = Project(id = "containerCmd", base = file("apps/containerCmd"))
+    .settings(packageSettings: _*)
+    .settings(libraryDependencies ++=
+      provided(akkaActor) ++
+      compile(akkaKernel, akkaRemote) ++
+      test(scalaLogging, logback)
+    ) dependsOn(pkg, cmd, loc, container1, container2)
 
 
   // -- Test subprojects with dependency information --
 
-  // pkg test/demo: Container1 (see ../test/pkg/README.md)
   lazy val container1 = Project(
     id = "container1",
-    base = file("test/pkg/container1"),
-    settings = defaultSettings ++ distSettings ++
-      Seq(distJvmOptions in Dist := "-Dcsw.extjs.root=" + file("extjs").absolutePath,
-        distBootClass in Dist := "org.tmt.csw.test.container1.Container1",
-        outputDirectory in Dist := file("test/pkg/container1/target"),
-        libraryDependencies ++=
-          provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote) ++
-            test(scalaLogging, logback)
-      )
-  ) dependsOn(pkg, cmd, ls)
+    base = file("test/pkg/container1")
+  ).settings(packageSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaKernel, akkaRemote)
+    ).dependsOn(pkg, cmd, loc)
 
-
-  // pkg test/demo: Container2 (see ../test/pkg/README.md)
   lazy val container2 = Project(
     id = "container2",
-    base = file("test/pkg/container2"),
-    settings = defaultSettings ++ distSettings ++
-      Seq(distBootClass in Dist := "org.tmt.csw.test.container2.Container2",
-        outputDirectory in Dist := file("test/pkg/container2/target"),
-        libraryDependencies ++=
-          provided(akkaActor) ++
-            compile(akkaKernel, akkaRemote, akkaZeromq) ++
-            test(scalaLogging, logback)
-      )
-  ) dependsOn(pkg, cmd, ls)
+    base = file("test/pkg/container2")
+  ).settings(packageSettings: _*)
+    .settings(bashScriptExtraDefines ++= Seq(s"addJava -Dcsw.extjs.root=" + file("extjs").absolutePath))
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaKernel, akkaRemote, akkaZeromq)
+    ).dependsOn(pkg, cmd, loc)
 }
-
-

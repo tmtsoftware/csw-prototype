@@ -175,10 +175,6 @@ class Configuration private(private val config: Config) extends Serializable {
 
   def getBytes(path: String): Long = config.getBytes(path)
 
-  def getMilliseconds(path: String): Long = config.getMilliseconds(path)
-
-  def getNanoseconds(path: String): Long = config.getNanoseconds(path)
-
   def getBooleanList(path: String): List[Boolean] = config.getBooleanList(path).toList.map(b => b: Boolean)
 
   def getNumberList(path: String): List[Number] = config.getNumberList(path).toList
@@ -192,10 +188,6 @@ class Configuration private(private val config: Config) extends Serializable {
   def getStringList(path: String): List[String] = config.getStringList(path).toList
 
   def getBytesList(path: String): List[Long] = config.getBytesList(path).toList.map(l => l: Long)
-
-  def getMillisecondsList(path: String): List[Long] = config.getMillisecondsList(path).toList.map(l => l: Long)
-
-  def getNanosecondsList(path: String): List[Long] = config.getNanosecondsList(path).toList.map(l => l: Long)
 
   /**
    * Returns a Map containing the contents of this object at the given path.

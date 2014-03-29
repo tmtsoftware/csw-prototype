@@ -38,7 +38,6 @@ case class RemoteLookup(path: String) extends Actor with ActorLogging {
       // Forward any saved messages
       backlog.reverse.foreach {
         case (msg, actorRef) =>
-          log.info(s"XXX RemoteLookup($path) forwarding msg: $msg to $actorRef")
           actor.tell(msg, actorRef)
       }
       backlog = List.empty[(Any, ActorRef)]
@@ -52,7 +51,7 @@ case class RemoteLookup(path: String) extends Actor with ActorLogging {
       sendIdentifyRequest()
 
     case msg: Any =>
-      backlog = (msg, sender) :: backlog
+      backlog = (msg, sender()) :: backlog
       log.warning(s"Saving message for later: $msg, remote actor is not ready yet.")
   }
 

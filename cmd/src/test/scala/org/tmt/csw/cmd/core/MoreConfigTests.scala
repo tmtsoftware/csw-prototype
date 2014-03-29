@@ -33,13 +33,13 @@ class MoreConfigTests extends FunSuite {
     val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
 
     val conf = ConfigFactory.parseMap(pathMapValue)
-    println("Conf: " + conf)
+//    println("Conf: " + conf)
 
     val y = conf.root().keySet()
-    println("y: " + y)
+//    println("y: " + y)
 
     val ccc = conf.getConfig("b")
-    println("ccc: " + ccc)
+//    println("ccc: " + ccc)
 
     assert(2 == conf.root.size)
     assert(4 == conf.getInt("b.x.y"))
@@ -69,7 +69,7 @@ class MoreConfigTests extends FunSuite {
     //println("xx2: " + xx.format)
 
     val conf3 = conf.withValue("tmt.mobie", conf2)
-    println("Conf3: " + conf3.format)
+//    println("Conf3: " + conf3.format)
 
     assert("config" == conf.rootKey().get)
     assert("tel" == conf.getConfig("config.tmt").rootKey().get)

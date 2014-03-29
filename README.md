@@ -13,7 +13,7 @@ To build, run 'sbt' in the top level directory and type one of the following com
 * compile - compiles the sources
 * publish-local - copies the bundles to the local ivy repository (~/.ivy2) so they can be referenced by other bundles
 * test - run the tests
-* dist - create the Akka microkernel standalone apps (Used in the ./test projects. Creates target/bin/start scripts))
+* stage - create the standalone apps and test apps (installed in */target/universal/stage/bin)
 
 Commands apply to the entire build unless otherwise specified.
 You can narrow the focus to a subproject with the sbt "project" command.
@@ -24,10 +24,11 @@ Projects
 
 * cmd - the Command Service (for sending commands to HCDs and Assemblies)
 * cs - the Configuration Service (manages configuration files in Git repos)
-* ls - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
+* loc - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
 * extjs - the ExtJS web UI (JavaScript with Sencha Cmd/ant build, not a Scala project)
 * pkg - a packaging layer over the command service that provides HCD and Assembly classes
 * test - for integration tests, demos
+* apps/containerCmd - a container command line application that creates a container based on a given config file
 
 ExtJS Build
 -----------

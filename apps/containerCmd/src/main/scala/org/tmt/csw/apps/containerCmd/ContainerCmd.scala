@@ -1,45 +1,50 @@
 package org.tmt.csw.apps.containerCmd
 
-import akka.kernel.Bootable
 import akka.actor._
-import scala.util.Properties
 import com.typesafe.config.{ConfigFactory, Config}
 import java.io.File
 import scala.collection.JavaConversions._
 import org.tmt.csw.pkg.Container
+import com.typesafe.scalalogging.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * A command line application for creating containers with components specified in a config file.
- * This class is started by the Akka microkernel in standalone mode.
- *
- * The name of the config file is expected to be passed as a VM option: -DcontainerCmd.config=myFile.conf.
  */
-class ContainerCmd extends Bootable {
-  val system = ActorSystem("system")
+object ContainerCmd {
+  val log = Logger(LoggerFactory.getLogger("ContainerCmd"))
 
-  def startup(): Unit = {
-    val configProp = "containerCmd.config"
-    Properties.propOrNone(configProp) match {
-      case Some(configFile) =>
-        val file = new File(configFile)
-        if (!file.exists()) {
-          error(s"File '$configFile' does not exist")
-        }
-        val config = ConfigFactory.parseFileAnySyntax(file)
-        system.actorOf(ContainerCmdActor.props(config), "ContainerCmdActor")
-      case None =>
-        error(s"Please specify the config file using: -D$configProp=myFile.conf")
+  // Main: usage: containerCmd configFile
+  def main(args: Array[String]): Unit = {
+    if (args.length != 1) error("Expected a config file argument")
+    val configFile = args(0)
+    val file = new File(configFile)
+    if (!file.exists()) {
+      error(s"File '$configFile' does not exist")
+    }
+    val config = ConfigFactory.parseFileAnySyntax(file)
+    val system = ActorSystem("ContainerCmd")
+    val a = system.actorOf(ContainerCmdActor.props(config), "ContainerCmdActor")
+    system.actorOf(Props(classOf[Terminator], a), "terminator")
+  }
+
+  // For startup errors
+  def error(msg: String) {
+    println(msg)
+    System.exit(1)
+  }
+
+  // Exits the application when the main actor stops
+  class Terminator(ref: ActorRef) extends Actor with ActorLogging {
+    context watch ref
+
+    def receive = {
+      case Terminated(_) =>
+        log.info("{} has terminated, shutting down system", ref.path)
+        context.system.shutdown()
     }
   }
 
-  def error(msg: String) {
-    println(msg)
-    shutdown()
-  }
-
-  def shutdown(): Unit = {
-    system.shutdown()
-  }
 }
 
 // The main actor for this application
@@ -51,21 +56,20 @@ class ContainerCmdActor(config: Config) extends Actor with ActorLogging {
 
   parseConfig()
 
-  // Parses the config file pass in via -DcontainerCmd.config and creates the
+  // Parses the config file argument and creates the
   // container, adding the components specified in the config file.
   def parseConfig(): Unit = {
     val containerName = config.getString("container.name")
     log.info(s"Create container $containerName")
     val container = Container.create(containerName)
     val components = config.getConfig("container.components")
-    for(key <- components.root.keySet()) {
+    for (key <- components.root.keySet()) {
       val componentConfig = components.getConfig(key)
       val className = componentConfig.getString("class")
       val args =
         if (componentConfig.hasPath("args"))
           componentConfig.getList("args").toList.map(_.unwrapped().toString)
         else List()
-      log.info(s"XXX args = $args")
       log.info(s"Create component with class $className and args $args")
       val props = Props(Class.forName(className), args: _*)
       container ! Container.CreateComponent(props, key)

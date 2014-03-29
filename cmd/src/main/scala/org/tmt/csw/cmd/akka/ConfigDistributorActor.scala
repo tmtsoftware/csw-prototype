@@ -45,7 +45,7 @@ trait ConfigDistributor {
    * @param serviceIds a list of the names and types of the HCDs that will be used
    */
   def requestServices(serviceIds: List[ServiceId]): Unit = {
-    log.info(s"Request services: $serviceIds")
+    log.debug(s"Request services: $serviceIds")
     LocationService.requestServices(context.system, configDistributorActor, serviceIds)
   }
 }
@@ -83,11 +83,11 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
   // Initial state until we get a list of running services to use as target actors
   def waitingForServices: Receive = {
     case ServicesReady(services) =>
-      log.info(s"All services ready: $services")
+      log.debug(s"All services ready: $services")
       val targetActors = for (service <- services if service.actorRefOpt.isDefined) yield service.actorRefOpt.get
       if (targetActors.size == services.size) {
         for(a <- targetActors) context.watch(a)
-        log.info(s"Setting state to ready")
+        log.debug(s"Setting state to ready")
         context.become(ready(services))
         context.parent ! CommandServiceActor.Ready(ready = true)
       }
@@ -110,7 +110,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
     // If a target actor died, go back and wait for it (and any others that are needed) to restart
     case Terminated(actorRef) =>
-      log.info(s"Received terminated message for $actorRef: Switch to waitingForServices state")
+      log.debug(s"Received terminated message for $actorRef: Switch to waitingForServices state")
       LocationService.requestServices(context.system, self, services.map(_.serviceId))
       context.parent ! CommandServiceActor.Ready(ready = false)
       context.become(waitingForServices)
@@ -236,7 +236,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
       // Send the submit messages to the target actors
       submitInfoList.foreach {
         submitInfo =>
-          log.info(s"Sending config part to ${submitInfo.target}: ${submitInfo.submit.config}")
+          log.debug(s"Sending config part to ${submitInfo.target}: ${submitInfo.submit.config}")
           submitInfo.target ! submitInfo.submit
       }
     }
@@ -274,7 +274,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
       completedParts.foreach { part =>
         val partialStatus = CommandStatus.PartiallyCompleted(submit.runId, part.path, commandStatus.name)
         commandStatusActor ! CommandStatusActor.StatusUpdate(partialStatus, submit.submitter)
-        log.info(s"Status: PartiallyCompleted: path = ${part.path}")
+        log.debug(s"Status: PartiallyCompleted: path = ${part.path}")
       }
 
       context.become(waiting(remainingParts, commandStatus))

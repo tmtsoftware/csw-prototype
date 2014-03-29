@@ -1,24 +1,14 @@
 package org.tmt.csw.test.container2
 
 import akka.actor._
-import akka.kernel.Bootable
 import org.tmt.csw.pkg.Container
 
-
-// This class is started by the Akka microkernel in standalone mode
-class Container2 extends Bootable {
-
-  val system = ActorSystem("system")
-
-  def startup(): Unit = {
-    system.actorOf(Props[Container2Actor], "Container2Actor")
-  }
-
-  def shutdown(): Unit = {
-    system.shutdown()
+object Container2 {
+  // Container2 main
+  def main(args: Array[String]): Unit = {
+    akka.Main.main(Array(classOf[Container2Actor].getName))
   }
 }
-
 
 /**
  * The main actor for this application.

@@ -1,22 +1,14 @@
 package org.tmt.csw.test.container1
 
 import akka.actor._
-import akka.kernel.Bootable
 import org.tmt.csw.pkg.Container
 import org.tmt.csw.cmd.akka.CommandStatus
 import scala.concurrent.duration._
 
-// This class is started by the Akka microkernel in standalone mode
-class Container1 extends Bootable {
-
-  val system = ActorSystem("system")
-
-  def startup(): Unit = {
-    system.actorOf(Props[Container1Actor], "Container-1-Actor")
-  }
-
-  def shutdown(): Unit = {
-    system.shutdown()
+object Container1 {
+  // Container1 main
+  def main(args: Array[String]): Unit = {
+    akka.Main.main(Array(classOf[Container1Actor].getName))
   }
 }
 

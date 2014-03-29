@@ -37,9 +37,9 @@ object HwClient {
     clientSocket ! ZMQMessage(ByteString(s"Dummy Message $count from Akka"))
   }
 
-  def main(args: Array[String]): Unit = {
-    sendMessage()
-  }
+//  def main(args: Array[String]): Unit = {
+//    sendMessage()
+//  }
 }
 
 

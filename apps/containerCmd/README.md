@@ -4,6 +4,12 @@ ContainerCmd
 This project implements a command line application that takes a config file
 and starts a container with the given HCDs or assemblies.
 
+Location Service must be running
+--------------------------------
+
+Note that before starting a container, the location service (loc) must be running.
+It can be started by typing: ../../loc/target/universal/stage/bin/loc.
+
 Build
 -----
 
@@ -16,7 +22,7 @@ Example
 
 For example, from the top level directory of this project (containerCmd), run:
 
-    target/universal/stage/bin/containercmd -DcontainerCmd.config=src/test/resources/container1.conf
+    target/universal/stage/bin/containercmd src/test/resources/container1.conf
 
 to start `Container-1`, which is described by this config file:
 
@@ -35,7 +41,7 @@ is created using the given class and optional constructor arguments.
 
 Now run this command:
 
-    target/universal/stage/bin/containercmd -DcontainerCmd.config=src/test/resources/container2.conf
+    target/universal/stage/bin/containercmd src/test/resources/container2.conf
 
 This creates `Container-2` from this config file:
 

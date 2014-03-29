@@ -35,7 +35,7 @@ case class CommandServiceHttpServer(commandServiceActor: ActorRef, interface: St
   // Entry point for the actor
   override def receive: Receive = runRoute(route) orElse {
     case e: Event => // ignore Akka Tcp events here
-    case s: CommandStatus => log.info(s"Received command status $s")
-    case x => log.error(s"Received unexpected message from $sender: $x")
+    case s: CommandStatus => log.debug(s"Received command status $s")
+    case x => log.error(s"Received unexpected message from ${sender()}: $x")
   }
 }

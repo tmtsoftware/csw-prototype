@@ -3,9 +3,10 @@ import Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.SbtMultiJvm
-import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{MultiJvm, jvmOptions}
 import scala.Some
 import twirl.sbt.TwirlPlugin._
+import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+import com.typesafe.sbt.SbtNativePackager._
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
@@ -32,6 +33,9 @@ object Settings {
     scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
     javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
   )
+
+  // For standalone applications
+  lazy val packageSettings = defaultSettings ++ packagerSettings ++ packageArchetype.java_application
 
 
   lazy val multiJvmSettings = SbtMultiJvm.multiJvmSettings ++ Seq(

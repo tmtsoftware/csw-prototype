@@ -57,7 +57,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
     val runId = RunId()
     val monitor = newMonitorFor(runId)
     val submit = SubmitWithRunId(config, monitor, runId)
-    log.info(s"Submitting $config")
+    log.debug(s"Submitting $config")
     // Submit to the command service actor using the monitor actor as the return address for status updates
     commandServiceActor ! submit
     runId
@@ -87,7 +87,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
     // If the monitoring actor (which was started when the command was submitted) is still running,
     // send it the the "completer", which it can call to complete the request.
     // If it timed out and the actor quit, do nothing (This case is handled by the caller).
-    log.info(s"Checking status for $runId")
+    log.debug(s"Checking status for $runId")
     getMonitorFor(runId) match {
       case Some(monitor) =>
         monitor ! completer
@@ -137,7 +137,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * Handles a request to fill in the blank values of the given config with the current values.
    */
   override def configGet(config: Configuration): Future[ConfigResponse] = {
-    log.info(s"configGet $config")
+    log.debug(s"configGet $config")
     implicit val askTimeout = Timeout(3 seconds)
     (commandServiceActor ? ConfigGet(config)).mapTo[ConfigResponse]
   }

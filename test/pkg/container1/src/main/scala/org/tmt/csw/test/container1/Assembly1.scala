@@ -42,7 +42,7 @@ case class Assembly1(name: String)
    * @param s holds the config, runId and sender
    */
   override def submit(s: SubmitWithRunId): Unit = {
-    log.info(s"Submit with runId(${s.runId}) ${s.config}")
+    log.debug(s"Submit with runId(${s.runId}) ${s.config}")
 
     // Test changing the contents of the config
     val config = if (s.config.hasPath("config.tmt.mobie.blue.filter.value")) {

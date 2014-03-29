@@ -26,5 +26,6 @@ class CommandServiceSettings(system: ExtendedActorSystem) extends Extension {
   val port: Int = system.settings.config getInt "csw.commandService.port"
 
   val timeout: FiniteDuration =
-    Duration(system.settings.config getMilliseconds "csw.commandService.timeout", MILLISECONDS)
+    Duration(system.settings.config.getDuration("csw.commandService.timeout", MILLISECONDS),
+      MILLISECONDS)
 }

@@ -14,11 +14,12 @@ That application needs to run first and can be compiled by typing "make" in hard
 To compile the Scala/Akka code, type "sbt" and then:
 
 * compile
-* publishLocal
-* dist
+* publishLocal # if using the Play web UI
+* stage
 
 The publishLocal task is needed to install the local dependencies for the Play app, which has a separate build file.
-The dist task creates the distribution with the "start" scripts for the applications (found under the target/bin directories).
+The stage task creates the distribution with the scripts for the applications
+(found under the target/universal/stage/bin directories).
 
 Note: See <a href="../../extjs/Readme.md">../../extjs/Readme.md</a> for how to setup the ExtJS
 based web UI used below. You need to install and run some "sencha" commands once to prepare the web app, otherwise
@@ -36,12 +37,12 @@ Optionally, if you want to test the Play web app:
 
 Start the location service (This has to be running before any HCDs or assemblies are started):
 
-* cd ../../ls/target/bin; ./start
+* cd ../../ls/target/universal/stage/bin; ./loc
 
 Then start the two Akka containers (The order is not important here):
 
-* cd container2/target/bin; ./start
-* cd container1/target/bin; ./start
+* cd container2/target/universal/stage/bin; ./container2
+* cd container1/target/universal/stage/bin; ./container1
 
 Optionally start the Play web app:
 

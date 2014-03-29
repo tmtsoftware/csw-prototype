@@ -27,7 +27,7 @@ object Container {
   /**
    * Creates a container actor with a new ActorSystem using the given name and returns the ActorRef
    */
-  def create(name: String): ActorRef = Component.create(Props[Container], name)
+  def create(name: String): ActorRef = ActorSystem(name).actorOf(Props[Container], name)
 
   /**
    * The container handles the lifecycle of components. It accepts a few kinds of messages including:
@@ -71,7 +71,7 @@ class Container extends Actor with ActorLogging {
       case None =>
         log.info(s"Container.createComponent($name)")
         val actorRef = Component.create(props, name)
-        log.info(s"Container.createComponent($name) -> $actorRef, reply to $sender")
+        log.info(s"Container.createComponent($name) -> $actorRef, reply to ${sender()}")
         context.watch(actorRef)
         sender ! actorRef
     }

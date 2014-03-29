@@ -208,7 +208,7 @@ trait CommandServiceActor extends Actor with ActorLogging {
    * @param s holds the config, runId and sender
    */
   def submit(s: SubmitWithRunId): Unit = {
-    log.info(s"Submit with runId(${s.runId}) ${s.config}")
+    log.debug(s"Submit with runId(${s.runId}) ${s.config}")
     commandQueueActor ! s
   }
 

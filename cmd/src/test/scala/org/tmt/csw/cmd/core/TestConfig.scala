@@ -8,6 +8,7 @@ import com.typesafe.config._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import com.typesafe.config.ConfigException.WrongType
+import com.typesafe.scalalogging.slf4j.Logging
 
 object TestConfig {
   val testConfig =
@@ -34,14 +35,13 @@ object TestConfig {
 }
 
 /**
- * Test the Confog object
+ * Test the Config object
   */
-class TestConfig extends FunSuite {
-
+class TestConfig extends FunSuite with Logging {
 
   test("Test using the Akka Config classes to parse a config from a string") {
     val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
-    println(conf.toString)
+    logger.debug(conf.toString)
     assert(conf.getInt("config.info.configId") == 1000233)
     val pos = conf.getConfig("config.tmt.tel.base.pos")
     assert(pos.getString("posName") == "NGC738B")
@@ -54,7 +54,7 @@ class TestConfig extends FunSuite {
   test("Test Akka Config class extracting single values while keeping the hierarchy") {
     val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
     val path = "config.tmt.tel.base.pos.posName"
-    val x = try {
+    try {
       conf.getConfig(path)
     } catch {
       case e: WrongType =>
@@ -63,7 +63,6 @@ class TestConfig extends FunSuite {
         val key = ar.last
         conf.getConfig(parentPath).withOnlyPath(key)
     }
-    println(x.toString)
   }
 
   test("Test creating a config in code") {
@@ -125,18 +124,17 @@ class TestConfig extends FunSuite {
               ("equinox" -> "J2000")
             )
     val s = pretty(render(json))
-    println("JSON from DSL:")
-    println(s)
+    logger.debug("JSON from DSL:")
+    logger.debug(s)
 
     val parseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF)
-//    val conf = ConfigFactory.parseReader(new StringReader(s), parseOptions)
     val conf = ConfigFactory.parseReader(new StringReader(jsonString), parseOptions)
 
     assert(conf.getInt("config.info.configId") == 1000233)
 
     val renderOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
-    println("Config from JSON:")
-    println(conf.root.render(renderOptions))
+    logger.debug("Config from JSON:")
+    logger.debug(conf.root.render(renderOptions))
 
     // XXX Doesn't work as expected because "tmt.tel.base.pos" is treated as a single key by json4s
 //    assert(conf.getString("config.\"tmt.tel.base.pos\".posName") == "NGC738B")

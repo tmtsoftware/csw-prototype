@@ -1,7 +1,6 @@
 package org.tmt.csw.ls
 
 import akka.actor._
-import akka.kernel.Bootable
 import scala.concurrent.Future
 import akka.pattern.ask
 import scala.concurrent.duration._
@@ -80,24 +79,23 @@ object LocationService {
   def requestServices(system: ActorSystem, actorRef: ActorRef, serviceIds: List[ServiceId]): Unit = {
     getLocationService(system).tell(RequestServices(serviceIds), actorRef)
   }
-}
 
-/**
- * This is the entry point to the Location service and is started by
- * the Akka microkernel in standalone mode.
- */
-class LocationService extends Bootable {
-  import LocationServiceActor._
-
-  val config = ConfigFactory.load(locationServiceName)
-  val system = ActorSystem(locationServiceName, config)
-
-  def startup(): Unit = {
-    system.actorOf(Props[LocationServiceActor], locationServiceName)
+  // Location service main
+  def main(args: Array[String]): Unit = {
+      val config = ConfigFactory.load(locationServiceName)
+      val system = ActorSystem(locationServiceName, config)
+      val a = system.actorOf(Props[LocationServiceActor], locationServiceName)
+      system.actorOf(Props(classOf[Terminator], a), "terminator")
   }
 
-  def shutdown(): Unit = {
-    system.shutdown()
+  // Exits the application when the main actor stops
+  class Terminator(ref: ActorRef) extends Actor with ActorLogging {
+    context watch ref
+    def receive = {
+      case Terminated(_) =>
+        log.info("{} has terminated, shutting down system", ref.path)
+        context.system.shutdown()
+    }
   }
 }
 
@@ -207,6 +205,8 @@ class LocationServiceActor extends Actor with ActorLogging {
   // If a Request message could not be completed, an entry is saved here and the request is
   // repeated when the next Register message is received
   private var outstandingRequests = Map[ActorRef, List[ServiceId]]()
+
+  log.info(s"Started location service on ${self.path.address.port}")
 
   override def receive: Receive = {
 
