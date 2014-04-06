@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.slf4j.Logging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-class TestPubSub extends TestKit(ActorSystem("TestPubSub"))
+class TestPubSub extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
   val numSecs = 20 // number of seconds to run

@@ -43,5 +43,9 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
       case None => None
     }
   }
+
+  def delete(keys: String*): Future[Long] = {
+    redis.del(keys: _*)
+  }
 }
 

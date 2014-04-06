@@ -8,7 +8,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class TestRedisKeyValueStore
-  extends TestKit(ActorSystem("TestRedisKeyValueStore"))
+  extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
   val kvs: KeyValueStore = RedisKeyValueStore()
@@ -20,13 +20,19 @@ class TestRedisKeyValueStore
       val1 <- kvs.get("test1")
       res2 <- kvs.set("test2", "value2")
       val2 <- kvs.get("test2")
-    } yield (res1, val1, res2, val2)
+      res3 <- kvs.delete("test1", "test2")
+      res4 <- kvs.get("test1")
+      res5 <- kvs.get("test2")
+    } yield (res1, val1, res2, val2, res3, res4, res5)
 
-    val (res1, val1, res2, val2) = Await.result(f, 2.seconds)
+    val (res1, val1, res2, val2, res3, res4, res5) = Await.result(f, 3.seconds)
     assert(res1)
     assert(val1 == Some("value1"))
     assert(res2)
     assert(val2 == Some("value2"))
+    assert(res3 == 2)
+    assert(res4.isEmpty)
+    assert(res5.isEmpty)
     logger.info("All tests passed")
   }
 

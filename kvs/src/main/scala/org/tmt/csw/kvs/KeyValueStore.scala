@@ -38,4 +38,10 @@ trait KeyValueStore {
    * @return the future result, None if the key was not found
    */
   def get(key: String): Future[Option[String]]
+
+  /**
+   * Deletes the given key(s) from the store
+   * @return the future number of keys that were deleted
+   */
+  def delete(key: String*): Future[Long]
 }
