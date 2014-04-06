@@ -98,13 +98,6 @@ object Configuration {
  */
 class Configuration private(private val config: Config) extends Serializable {
 
-//  println(s"XXX Configuration: config = $config")
-
-  /**
-   * Returns
-   */
-  def root(): Configuration = new Configuration(config.root.toConfig)
-
   /**
    * Returns the set of root keys
    */

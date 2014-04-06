@@ -18,6 +18,15 @@ object Build extends Build {
       test(scalaTest, specs2, akkaTestKit, junit)
   	)
 
+  // Command Service
+  lazy val kvs = project
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(redisScala, scalaLogging, logback) ++
+      test(scalaTest, specs2, akkaTestKit, junit)
+    )
+
   // Location Service
   lazy val loc = project
     .settings(packageSettings: _*)
@@ -34,7 +43,6 @@ object Build extends Build {
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
       test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
     ) dependsOn loc
-
 
   // Package (Container, Component) classes
   lazy val pkg = project
