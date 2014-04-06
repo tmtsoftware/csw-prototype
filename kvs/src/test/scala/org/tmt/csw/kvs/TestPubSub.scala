@@ -58,7 +58,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
 private class Subscriber extends Actor with ActorLogging with EventSubscriber {
   var count = 0
 
-  subscribe("tmt.mobie.red.dat.exposureInfo")
+  subscribe("tmt.mobie.red.dat.*")
 
   override def receive: Receive = {
     case event: Event =>
