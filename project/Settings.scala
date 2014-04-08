@@ -20,12 +20,13 @@ object Settings {
     scalaVersion := "2.10.3",
     crossPaths := false,
     parallelExecution in Test := false,
-    resolvers += "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",
+    resolvers += Resolver.typesafeRepo("releases"),
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
-    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
+//    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
     resolvers += "Spray repo" at "http://repo.spray.io",
-    resolvers += "Spray nightlies" at "http://nightlies.spray.io",
-    resolvers += "Sonatype (releases)" at "https://oss.sonatype.org/content/repositories/releases/",
+//    resolvers += "Spray nightlies" at "http://nightlies.spray.io",
+    resolvers += Resolver.sonatypeRepo("releases"),
+//    resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/"
   )
 

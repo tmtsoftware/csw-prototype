@@ -30,6 +30,7 @@ object Dependencies {
 
   val jgit           = "org.eclipse.jgit"               % "org.eclipse.jgit"      % "3.3.0.201403021825-r"
   val scalaIoFile    = "com.github.scala-incubator.io" %% "scala-io-file"         % "0.4.2"
+
   val redisScala     = "com.etaty.rediscala"           %% "rediscala"             % "1.3akka2.3" // XXX TEMP FIX
 
   // Test dependencies

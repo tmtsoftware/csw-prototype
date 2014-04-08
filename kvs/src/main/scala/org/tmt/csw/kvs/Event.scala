@@ -6,7 +6,8 @@ import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import scala.Some
 import com.typesafe.config.ConfigException.WrongType
-import scala.concurrent.duration.FiniteDuration
+import redis.ByteStringFormatter
+import akka.util.ByteString
 
 /**
  * Used for building Event instances.
@@ -86,6 +87,21 @@ object Event {
     events match {
       case head :: Nil => head
       case head :: tail => head.merge(merge(tail))
+    }
+  }
+
+  /**
+   * Defines the automatic conversion of an Event to a ByteString and back again.
+   */
+  implicit val byteStringFormatter = new ByteStringFormatter[Event] {
+    def serialize(event: Event): ByteString = {
+      // XXX TODO: Is there a more efficient way to serialize this? (scala-pickle did not work)
+      // ByteString(event.toJson) // could also serialize to JSON (slightly more space)
+      ByteString(event.toString) // Uses the simplified JSON format
+    }
+
+    def deserialize(bs: ByteString): Event = {
+      Event(bs.utf8String)
     }
   }
 }

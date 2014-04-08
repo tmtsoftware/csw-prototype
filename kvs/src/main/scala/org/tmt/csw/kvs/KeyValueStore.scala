@@ -23,21 +23,21 @@ trait KeyValueStore {
   /**
    * Sets the value for the given key
    * @param key the key
-   * @param value the value
+   * @param event the value to store
    * @param expire optional amount of time until value expires
    * @param setCond optional condition for setting the value
    * @return the future result (true if successful)
    */
-  def set(key: String, value: String,
+  def set(key: String, event: Event,
           expire: Option[FiniteDuration] = None,
           setCond: SetCondition = SetAlways): Future[Boolean]
 
   /**
-   * Get the value of the given key
+   * Gets the value of the given key
    * @param key the key
    * @return the future result, None if the key was not found
    */
-  def get(key: String): Future[Option[String]]
+  def get(key: String): Future[Option[Event]]
 
   /**
    * Deletes the given key(s) from the store

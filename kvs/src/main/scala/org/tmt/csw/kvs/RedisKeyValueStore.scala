@@ -1,7 +1,7 @@
 package org.tmt.csw.kvs
 
 import akka.actor.ActorSystem
-import redis.RedisClient
+import redis.{ByteStringFormatter, RedisClient}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
 import org.tmt.csw.kvs.KeyValueStore._
@@ -22,9 +22,10 @@ object RedisKeyValueStore {
 case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStore {
   private val settings = KvsSettings(system)
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
+  val formatter = implicitly[ByteStringFormatter[Event]]
+  implicit val execContext = system.dispatcher
 
-
-  def set(key: String, value: String, expire: Option[FiniteDuration] = None,
+  override def set(key: String, event: Event, expire: Option[FiniteDuration] = None,
           setCond: SetCondition = SetAlways): Future[Boolean] = {
     val msOpt = if (expire.isDefined) Some(expire.get.toMillis) else None
     val (nx, xx) = setCond match {
@@ -32,19 +33,17 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
       case SetOnlyIfExists => (false, true)
       case SetAlways => (false, false)
     }
-    redis.set(key, value, None, msOpt, nx, xx)
+    redis.set(key, event, None, msOpt, nx, xx)
   }
 
-
-  def get(key: String): Future[Option[String]] = {
-    implicit val execContext = system.dispatcher
+  override def get(key: String): Future[Option[Event]] = {
     redis.get(key).map {
-      case Some(byteString) => Some(byteString.utf8String)
+      case Some(byteString) => Some(formatter.deserialize(byteString))
       case None => None
     }
   }
 
-  def delete(keys: String*): Future[Long] = {
+  override def delete(keys: String*): Future[Long] = {
     redis.del(keys: _*)
   }
 }

@@ -15,10 +15,13 @@ class TestRedisKeyValueStore
 
   test("Test Set and Get") {
     implicit val execContext = system.dispatcher
+    val event1 = Event().withValue("test.eventId", 1)
+    val event2 = Event().withValue("test.eventId", 2)
+
     val f = for {
-      res1 <- kvs.set("test1", "value1")
+      res1 <- kvs.set("test1", event1)
       val1 <- kvs.get("test1")
-      res2 <- kvs.set("test2", "value2")
+      res2 <- kvs.set("test2", event2)
       val2 <- kvs.get("test2")
       res3 <- kvs.delete("test1", "test2")
       res4 <- kvs.get("test1")
@@ -27,9 +30,9 @@ class TestRedisKeyValueStore
 
     val (res1, val1, res2, val2, res3, res4, res5) = Await.result(f, 3.seconds)
     assert(res1)
-    assert(val1 == Some("value1"))
+    assert(val1 == Some(event1))
     assert(res2)
-    assert(val2 == Some("value2"))
+    assert(val2 == Some(event2))
     assert(res3 == 2)
     assert(res4.isEmpty)
     assert(res5.isEmpty)
