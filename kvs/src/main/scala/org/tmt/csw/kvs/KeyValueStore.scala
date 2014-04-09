@@ -50,6 +50,13 @@ trait KeyValueStore {
   def lset(key: String, event: Event, history: Int = defaultHistory): Future[Boolean]
 
   /**
+   * Gets the most recent value of the given key that was previously set with lset
+   * @param key the key
+   * @return the future result, None if the key was not found
+   */
+  def lget(key: String): Future[Option[Event]]
+
+  /**
    * Returns a list containing up to the last n values for the given key
    * @param key the key to use
    * @param n max number of history values to return

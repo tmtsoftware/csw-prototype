@@ -40,7 +40,7 @@ class TestRedisKeyValueStore
     Await.result(f, 5.seconds)
   }
 
-  test("Test lset and getHistory") {
+  test("Test lset, lget and getHistory") {
     val event = Event()
     val key = "test"
     val idKey = "test.eventId"
@@ -52,13 +52,16 @@ class TestRedisKeyValueStore
       _ <- kvs.lset(key, event.withValue(idKey, "test3"), n)
       _ <- kvs.lset(key, event.withValue(idKey, "test4"), n)
       _ <- kvs.lset(key, event.withValue(idKey, "test5"), n)
-      hist <- kvs.getHistory(key, n+1)
+      v <- kvs.lget(key)
+      h <- kvs.getHistory(key, n+1)
       _ <- kvs.delete(key)
     } yield {
-      assert(hist.size == n+1)
+      assert(v.isDefined)
+      assert(v.get.getString(idKey) == "test5")
+      assert(h.size == n+1)
       for(i <- 0 to n) {
-        logger.info(s"History: $i: ${hist(i)}")
-        assert(hist(i).getString(idKey) == s"test${n+2-i}")
+        logger.info(s"History: $i: ${h(i)}")
+        assert(h(i).getString(idKey) == s"test${n+2-i}")
       }
     }
     Await.result(f, 5.seconds)

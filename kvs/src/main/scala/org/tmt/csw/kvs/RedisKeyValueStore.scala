@@ -51,6 +51,10 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
     }
   }
 
+  override def lget(key: String): Future[Option[Event]] = {
+    redis.lindex(key, 0).map(_.map(byteString => formatter.deserialize(byteString)))
+  }
+
   override def getHistory(key: String, n: Int): Future[Seq[Event]] = {
     redis.lrange(key, 0, n-1).map(_.map(byteString => formatter.deserialize(byteString)))
   }
