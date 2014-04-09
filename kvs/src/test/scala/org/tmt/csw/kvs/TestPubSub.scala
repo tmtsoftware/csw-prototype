@@ -6,13 +6,12 @@ import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import redis.ByteStringFormatter
 import akka.util.ByteString
 
 class TestPubSub extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
-  val numSecs = 60 // number of seconds to run
+  val numSecs = 20 // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber]))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
 
@@ -33,9 +32,8 @@ class TestPubSub extends TestKit(ActorSystem("Test"))
 
 // A test class that publishes events
 private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging with EventPublisher {
-  implicit val execContext: ExecutionContext = context.dispatcher
   val root = "tmt.mobie.red.dat.exposureInfo"
-  val expTime = 100 // ms
+  val expTime = 1 // ms
   var nextId = 0
   var done = false
 
@@ -44,17 +42,9 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
     done = true
   }
 
-  // Schedule events (Note: Akka scheduler has resolution of about 100ms,
-  // so if we want to test faster, we need to use a different kind of timer)
-//  context.system.scheduler.schedule(0 millisecond, expTime millisecond)(publish(root, nextEvent()))
-//  val formatter = implicitly[ByteStringFormatter[Event]] // XXX temp
-//  val ev = nextEvent() // XXX temp
-//  val bs = formatter.serialize(ev)  // XXX temp
   while(!done) {
     publish(root, nextEvent())
-//    publish(root, ev)
-//    tmpPublish(root, bs)
-    Thread.`yield`()
+    Thread.`yield`() // don't want to hog the cpu here
   }
 
   def nextEvent(): Event = {
@@ -89,13 +79,6 @@ private class Subscriber extends Actor with ActorLogging with EventSubscriber {
       count = count + 1
       if (count % 10000 == 0)
         log.info(s"Received $count events so far: $event")
-
-    case b: ByteString => // XXX temp
-      count = count + 1
-      if (count % 10000 == 0) {
-        val event = Event(b.utf8String)
-        log.info(s"Received $count ByteStrings so far: $event")
-      }
 
     case "done" => sender ! count
     case x => log.error(s"Unexpected message $x")

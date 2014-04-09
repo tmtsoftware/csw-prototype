@@ -7,13 +7,6 @@ import scala.concurrent.Future
 import org.tmt.csw.kvs.KeyValueStore._
 
 /**
- * A Redis based key value store.
- */
-object RedisKeyValueStore {
-
-}
-
-/**
  * Support for accessing a Redis server.
  * The host and port can be configured in resources/reference.conf.
  *
@@ -25,8 +18,8 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
   val formatter = implicitly[ByteStringFormatter[Event]]
   implicit val execContext = system.dispatcher
 
-  override def set(key: String, event: Event, expire: Option[FiniteDuration] = None,
-          setCond: SetCondition = SetAlways): Future[Boolean] = {
+  override def set(key: String, event: Event, expire: Option[FiniteDuration],
+          setCond: SetCondition): Future[Boolean] = {
     val msOpt = if (expire.isDefined) Some(expire.get.toMillis) else None
     val (nx, xx) = setCond match {
       case SetOnlyIfNotExists => (true, false)
@@ -37,10 +30,29 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
   }
 
   override def get(key: String): Future[Option[Event]] = {
-    redis.get(key).map {
-      case Some(byteString) => Some(formatter.deserialize(byteString))
-      case None => None
+    redis.get(key).map(_.map(byteString => formatter.deserialize(byteString)))
+  }
+
+  override def lset(key: String, event: Event, history: Int): Future[Boolean] = {
+    if (history >= 0) {
+      // Serialize the event
+      val formatter = implicitly[ByteStringFormatter[Event]]
+      val bs = formatter.serialize(event)
+
+      // Use a transaction to send all commands at once
+      val redisTransaction = redis.transaction()
+      redisTransaction.watch(key)
+      redisTransaction.lpush(key, bs)
+      redisTransaction.ltrim(key, 0, history+1)
+      val f = redisTransaction.exec()
+      f.map(_.responses.isDefined) // XXX How to check if transaction was successful?
+    } else {
+      Future.successful(false)
     }
+  }
+
+  override def getHistory(key: String, n: Int): Future[Seq[Event]] = {
+    redis.lrange(key, 0, n-1).map(_.map(byteString => formatter.deserialize(byteString)))
   }
 
   override def delete(keys: String*): Future[Long] = {

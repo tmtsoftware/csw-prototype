@@ -5,7 +5,6 @@ import redis.actors.{DecodeReplies, RedisWorkerIO}
 import java.net.InetSocketAddress
 import redis.api.pubsub._
 import akka.util.ByteString
-import redis.api.connection.Auth
 import redis.protocol.{MultiBulk, RedisReply}
 
 
@@ -60,22 +59,17 @@ private object SubscribeActor {
 
 }
 
+// The actor that receives the messages from Redis.
+// Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
+// customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
 private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort: Int)
   extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort)) with DecodeReplies {
-//  extends RedisSubscriberActor(new InetSocketAddress(redisHost, redisPort), List(), List()) {
-
-  import SubscribeActor._
-
-  // XXX temp
-  val channels: Seq[String] = List()
-  val patterns: Seq[String] = List()
-  val authPassword = None // XXX temp
 
   /**
    * Keep states of channels and actor in case of connection reset
    */
-  var channelsSubscribed = channels.toSet
-  var patternsSubscribed = patterns.toSet
+  var channelsSubscribed = Set[String]()
+  var patternsSubscribed = Set[String]()
 
   def writing: Receive = {
     case message: SubscribeMessage =>
@@ -89,7 +83,6 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   }
 
   def onConnectWrite(): ByteString = {
-//    authPassword.map(Auth(_).encodedRequest).getOrElse(ByteString.empty)
     ByteString.empty
   }
 
@@ -104,9 +97,9 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   def onDecodedReply(reply: RedisReply) {
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
-        onMessage(RedisMessage(list(1).toByteString.utf8String, list(2).toByteString))
+        subscriber ! Event(list(2).toByteString.utf8String)
       case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" =>
-        onPMessage(RedisPMessage(list(1).toByteString.utf8String, list(2).toByteString.utf8String, list(3).toByteString))
+        subscriber ! Event(list(3).toByteString.utf8String)
       case _ => // subscribe or psubscribe
     }
   }
@@ -114,16 +107,6 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   def onDataReceivedOnClosingConnection(dataByteString: ByteString): Unit = decodeReplies(dataByteString)
 
   def onClosingConnectionClosed(): Unit = {}
-
-  def onMessage(message: RedisMessage) {
-    subscriber ! Event(message.data.utf8String)
-//    subscriber ! message.data // XXX temp
-  }
-
-  def onPMessage(pmessage: RedisPMessage) {
-    subscriber ! Event(pmessage.data.utf8String)
-//    subscriber ! pmessage.data // XXX temp
-  }
 }
 
 
