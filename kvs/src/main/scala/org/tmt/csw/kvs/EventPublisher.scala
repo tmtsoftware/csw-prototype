@@ -22,18 +22,28 @@ trait EventPublisher {
    * @param history number of previous events to keep in a list for reference
    */
   def publish(channel: String, event: Event, history: Int = 6): Unit = {
+    // Serialize the event
     val formatter = implicitly[ByteStringFormatter[Event]]
     val bs = formatter.serialize(event) // only do this once
-    redis.lpush(channel, bs)
-    redis.ltrim(channel, 0, history)
-    redis.publish(channel, bs)
+
+    // Use a transaction to send all commands at once
+    // XXX TODO check future return values and log errors
+    val redisTransaction = redis.transaction()
+    redisTransaction.watch(channel)
+    redisTransaction.lpush(channel, bs)
+    redisTransaction.ltrim(channel, 0, history)
+    redisTransaction.publish(channel, bs)
+    redisTransaction.exec()
   }
 
-  // temp
+  // temp test
   def tmpPublish(channel: String, bs: ByteString, history: Int = 6): Unit = {
-//    redis.lpush(channel, bs)
-//    redis.ltrim(channel, 0, history)
-    redis.publish(channel, bs)
+    val redisTransaction = redis.transaction()
+    redisTransaction.watch(channel)
+    redisTransaction.lpush(channel, bs)
+    redisTransaction.ltrim(channel, 0, history)
+    redisTransaction.publish(channel, bs)
+    redisTransaction.exec()
   }
 
 }

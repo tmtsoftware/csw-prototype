@@ -1,9 +1,12 @@
 package org.tmt.csw.kvs
 
 import akka.actor.{ActorRef, Props, ActorLogging, Actor}
-import redis.actors.RedisSubscriberActor
+import redis.actors.{DecodeReplies, RedisWorkerIO}
 import java.net.InetSocketAddress
 import redis.api.pubsub._
+import akka.util.ByteString
+import redis.api.connection.Auth
+import redis.protocol.{MultiBulk, RedisReply}
 
 
 /**
@@ -50,17 +53,76 @@ private object SubscribeActor {
     Props(classOf[SubscribeActor], subscriber, redisHost, redisPort)
 
   val dispatcherName = "rediscala.rediscala-client-worker-dispatcher"
+
+  case class RedisMessage(channel: String, data: ByteString)
+
+  case class RedisPMessage(patternMatched: String, channel: String, data: ByteString)
+
 }
 
 private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort: Int)
-  extends RedisSubscriberActor(new InetSocketAddress(redisHost, redisPort), List(), List()) {
+  extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort)) with DecodeReplies {
+//  extends RedisSubscriberActor(new InetSocketAddress(redisHost, redisPort), List(), List()) {
 
-  def onMessage(message: Message) {
-    subscriber ! Event(message.data)
+  import SubscribeActor._
+
+  // XXX temp
+  val channels: Seq[String] = List()
+  val patterns: Seq[String] = List()
+  val authPassword = None // XXX temp
+
+  /**
+   * Keep states of channels and actor in case of connection reset
+   */
+  var channelsSubscribed = channels.toSet
+  var patternsSubscribed = patterns.toSet
+
+  def writing: Receive = {
+    case message: SubscribeMessage =>
+      write(message.toByteString)
+      message match {
+        case s: SUBSCRIBE => channelsSubscribed ++= s.channel
+        case u: UNSUBSCRIBE => channelsSubscribed --= u.channel
+        case ps: PSUBSCRIBE => patternsSubscribed ++= ps.pattern
+        case pu: PUNSUBSCRIBE => patternsSubscribed --= pu.pattern
+      }
   }
 
-  def onPMessage(pmessage: PMessage) {
-    subscriber ! Event(pmessage.data)
+  def onConnectWrite(): ByteString = {
+//    authPassword.map(Auth(_).encodedRequest).getOrElse(ByteString.empty)
+    ByteString.empty
+  }
+
+  def onConnectionClosed() {}
+
+  def onWriteSent() {}
+
+  def onDataReceived(dataByteString: ByteString) {
+    decodeReplies(dataByteString)
+  }
+
+  def onDecodedReply(reply: RedisReply) {
+    reply match {
+      case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
+        onMessage(RedisMessage(list(1).toByteString.utf8String, list(2).toByteString))
+      case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" =>
+        onPMessage(RedisPMessage(list(1).toByteString.utf8String, list(2).toByteString.utf8String, list(3).toByteString))
+      case _ => // subscribe or psubscribe
+    }
+  }
+
+  def onDataReceivedOnClosingConnection(dataByteString: ByteString): Unit = decodeReplies(dataByteString)
+
+  def onClosingConnectionClosed(): Unit = {}
+
+  def onMessage(message: RedisMessage) {
+    subscriber ! Event(message.data.utf8String)
+//    subscriber ! message.data // XXX temp
+  }
+
+  def onPMessage(pmessage: RedisPMessage) {
+    subscriber ! Event(pmessage.data.utf8String)
+//    subscriber ! pmessage.data // XXX temp
   }
 }
 
