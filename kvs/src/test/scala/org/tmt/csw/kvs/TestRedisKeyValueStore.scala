@@ -2,11 +2,13 @@ package org.tmt.csw.kvs
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+// Added annotation below, since test depends on Redis server running (Remove to include in tests)
+@DoNotDiscover
 class TestRedisKeyValueStore
   extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {

@@ -1,12 +1,14 @@
 CSW Sbt Build
 =============
 
-This is a multi-project build with the following subprojects.
+This is a multi-project build.
 
-* csw - top level build
-* cs - top level build for the Configuration Service subproject
-* cmd - top level build for the Command Service subproject
-* pkg - packaging classes, such as assembly and Hcd
-* test-app, test-client - defines an example standalone test application and client based on the Akka microkernel
-* pkg/container* - another set of standalone test applications for testing Assembly and HCD packaging
+Build Instructions
+------------------
 
+To build, run 'sbt' in the top level directory and type one of the following commands:
+
+* compile - compiles the sources
+* test - run the tests
+* stage - create the standalone apps and test apps (installed in */target/universal/stage/bin)
+* publish-local - copies the bundles to the local ivy repository (~/.ivy2) so they can be referenced by other bundles

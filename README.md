@@ -19,12 +19,14 @@ Commands apply to the entire build unless otherwise specified.
 You can narrow the focus to a subproject with the sbt "project" command.
 For example: "project cs" sets the current project to "cs". The top level project is "csw".
 
-Projects
---------
+Projects and Directories
+------------------------
 
+* apps - contains some standalone applications
 * cmd - the Command Service (for sending commands to HCDs and Assemblies)
 * cs - the Configuration Service (manages configuration files in Git repos)
 * loc - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
+* kvs - provides key/value store and publish/subscribe features based on Redis
 * extjs - the ExtJS web UI (JavaScript with Sencha Cmd/ant build, not a Scala project)
 * pkg - a packaging layer over the command service that provides HCD and Assembly classes
 * test - for integration tests, demos
