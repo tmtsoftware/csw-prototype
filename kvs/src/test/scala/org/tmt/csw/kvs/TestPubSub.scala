@@ -22,6 +22,7 @@ class TestPubSub extends TestKit(ActorSystem("Test"))
       val count = expectMsgType[Int]
       val msgPerSec = count/numSecs
       logger.info(s"Recieved $count events in $numSecs seconds ($msgPerSec per second)")
+      assert(count > numSecs*1000)
     }
   }
 
