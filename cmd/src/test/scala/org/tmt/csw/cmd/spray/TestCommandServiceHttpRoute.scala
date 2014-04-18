@@ -3,7 +3,6 @@ package org.tmt.csw.cmd.spray
 import org.specs2.mutable.Specification
 import spray.testkit.Specs2RouteTest
 import org.specs2.time.NoTimeConversions
-import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import org.tmt.csw.cmd.akka.{CommandStatus, RunId}
 import spray.http.{ContentTypes, StatusCodes}
 import scala.Some
@@ -12,6 +11,7 @@ import scala.util.Success
 import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
 import org.tmt.csw.cmd.akka.CommandServiceClientHelper._
 import scala.concurrent.Future
+import org.tmt.csw.util.{TestConfig, Configuration}
 
 /**
  * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run

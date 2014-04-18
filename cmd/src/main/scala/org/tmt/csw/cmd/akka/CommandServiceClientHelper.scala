@@ -1,8 +1,8 @@
 package org.tmt.csw.cmd.akka
 
-import org.tmt.csw.cmd.core.Configuration
 import scala.concurrent.Future
 import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
+import org.tmt.csw.util.Configuration
 
 object CommandServiceClientHelper {
   /**

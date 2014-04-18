@@ -1,7 +1,7 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor.{ActorRef, Props, ActorLogging, Actor}
-import org.tmt.csw.cmd.core.Configuration
+import org.tmt.csw.util.Configuration
 
 /**
  * This is like [[org.tmt.csw.cmd.akka.CommandServiceActor]], but provides multiple separate queues

@@ -3,13 +3,14 @@ package org.tmt.csw.pkg
 import akka.testkit.ImplicitSender
 import akka.actor._
 import org.tmt.csw.cmd.akka.CommandStatus
-import org.tmt.csw.cmd.core.{TestConfig, Configuration}
+import org.tmt.csw.util.TestConfig
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.remote.testkit.{MultiNodeConfig, MultiNodeSpec}
 import org.tmt.csw.cmd.akka.CommandServiceActor.{CommandServiceStatus, StatusRequest, Submit}
 import com.typesafe.config.ConfigFactory
 import org.tmt.csw.ls.LocationServiceActor
+import org.tmt.csw.util.Configuration
 
 /**
  * A test that runs each of the classes below and the location service

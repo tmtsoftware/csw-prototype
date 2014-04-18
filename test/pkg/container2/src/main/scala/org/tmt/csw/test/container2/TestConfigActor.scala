@@ -5,12 +5,12 @@ import org.tmt.csw.cmd.akka.{CommandStatusActor, CommandStatus, ConfigActor, Run
 import akka.zeromq._
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import akka.util.ByteString
-import org.tmt.csw.cmd.core.Configuration
 import scala.util.{Failure, Success}
 import org.tmt.csw.cmd.akka.ConfigActor._
 import com.typesafe.config.ConfigFactory
 import akka.pattern.ask
 import scala.concurrent.duration._
+import org.tmt.csw.util.Configuration
 
 object TestConfigActor {
   def props(commandStatusActor: ActorRef, configKey: String, numberOfSecondsToRun: Int = 2): Props =

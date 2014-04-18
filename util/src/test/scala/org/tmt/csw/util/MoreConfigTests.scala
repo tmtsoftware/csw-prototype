@@ -1,4 +1,4 @@
-package org.tmt.csw.cmd.core
+package org.tmt.csw.util
 
 import org.scalatest.FunSuite
 import scala.collection.JavaConverters._
@@ -24,8 +24,8 @@ class MoreConfigTests extends FunSuite {
     assert(3 == conf.getIntList("b.x.y").get(2))
     assert(List("a", "b", "c") == (for (i <- conf.getStringList("b.z")) yield i))
     assert(1 == conf.getInt("a.c"))
-    assert("b{z=[a,b,c],x{y=[1,2,3]}},a{c=1}" == conf.toTestString)
-    assert("z=[a,b,c],x{y=[1,2,3]}" == conf.getConfig("b").toTestString)
+    assert("b{z=[a,b,c],x{y=[1,2,3]}},a{c=1}" == conf.toString)
+    assert("z=[a,b,c],x{y=[1,2,3]}" == conf.getConfig("b").toString)
   }
 
   test("Test creating a config in code") {
@@ -33,13 +33,6 @@ class MoreConfigTests extends FunSuite {
     val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
 
     val conf = ConfigFactory.parseMap(pathMapValue)
-//    println("Conf: " + conf)
-
-    val y = conf.root().keySet()
-//    println("y: " + y)
-
-    val ccc = conf.getConfig("b")
-//    println("ccc: " + ccc)
 
     assert(2 == conf.root.size)
     assert(4 == conf.getInt("b.x.y"))
@@ -61,15 +54,6 @@ class MoreConfigTests extends FunSuite {
         )
       )
     )
-
-    val conf2 = Map("f1" -> "Green", "grating" -> "GG483", "test" -> 22)
-
-    //val xx = conf.getConfig("config.tmt.tel")
-    //println("xx1: " + xx.toTestString)
-    //println("xx2: " + xx.format)
-
-    val conf3 = conf.withValue("tmt.mobie", conf2)
-//    println("Conf3: " + conf3.format)
 
     assert("config" == conf.rootKey().get)
     assert("tel" == conf.getConfig("config.tmt").rootKey().get)

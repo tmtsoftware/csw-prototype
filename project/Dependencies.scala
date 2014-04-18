@@ -33,6 +33,13 @@ object Dependencies {
 
   val redisScala     = "com.etaty.rediscala"           %% "rediscala"             % "1.3akka2.3" // XXX TEMP FIX
 
+
+
+  val hornetqServer  = "org.hornetq"                    % "hornetq-server"        % "2.4.1.Final"
+  // XXX TEMP FIX (http://stackoverflow.com/questions/21882100/adding-hornetq-dependency-in-sbt-gives-resolution-failure-for-hornetq-native-n)
+  val hornetqNative  = "org.hornetq"                    % "hornetq-native"        % "2.4.1.Final" from "http://repo1.maven.org/maven2/org/hornetq/hornetq-native/2.4.1.Final/hornetq-native-2.4.1.Final.jar"
+
+
   // Test dependencies
   val akkaTestKit    = "com.typesafe.akka"             %% "akka-testkit"          % akkaVersion
   val akkaMultiNodeTest ="com.typesafe.akka"           %% "akka-multi-node-testkit" % akkaVersion

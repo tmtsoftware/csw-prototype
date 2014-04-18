@@ -1,7 +1,6 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor._
-import org.tmt.csw.cmd.core.Configuration
 import scala.Some
 import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
@@ -9,6 +8,7 @@ import org.tmt.csw.cmd.akka.CommandServiceActor._
 import scala.concurrent.Future
 import akka.pattern.ask
 import akka.util.Timeout
+import org.tmt.csw.util.Configuration
 
 
 /**

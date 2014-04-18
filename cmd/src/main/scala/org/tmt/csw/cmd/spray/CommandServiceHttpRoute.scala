@@ -4,12 +4,12 @@ import spray.routing._
 import spray.http.MediaTypes._
 import org.tmt.csw.cmd.akka.{CommandServiceClientHelper, CommandStatus, RunId}
 import spray.http.StatusCodes
-import org.tmt.csw.cmd.core.Configuration
 import spray.routing.directives.DebuggingDirectives
 import akka.event.Logging
 import scala.util._
 import scala.concurrent.ExecutionContext
 import com.typesafe.config.ConfigFactory
+import org.tmt.csw.util.Configuration
 
 /**
  * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests

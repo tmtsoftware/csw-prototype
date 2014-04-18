@@ -3,7 +3,7 @@ package models
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import Assembly1Settings._
-import org.tmt.csw.cmd.core.Configuration
+import org.tmt.csw.util.Configuration
 
 
 object Assembly1Settings {

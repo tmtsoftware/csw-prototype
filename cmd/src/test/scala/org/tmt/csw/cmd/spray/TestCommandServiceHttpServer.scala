@@ -4,9 +4,9 @@ import akka.testkit.TestKit
 import akka.actor.ActorSystem
 import org.scalatest.{FunSuiteLike}
 import scala.concurrent.duration._
-import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import org.tmt.csw.cmd.akka._
 import spray.http.StatusCodes
+import org.tmt.csw.util.{TestConfig, Configuration}
 
 /**
  * Tests the Command Service HTTP/REST interface in an actor environment.

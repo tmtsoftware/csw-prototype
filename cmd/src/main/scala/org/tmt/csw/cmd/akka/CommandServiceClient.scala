@@ -1,6 +1,5 @@
 package org.tmt.csw.cmd.akka
 
-import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandServiceClientActor._
 import akka.actor.ActorRef
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,6 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
+import org.tmt.csw.util.Configuration
 
 /**
  * A simplified interface to the command service actor.

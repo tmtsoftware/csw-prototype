@@ -6,6 +6,7 @@ import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.tmt.csw.util.Configuration
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
@@ -17,8 +18,8 @@ class TestRedisKeyValueStore
   val kvs: KeyValueStore = RedisKeyValueStore()
 
   test("Test Set and Get") {
-    val event1 = Event().withValue("test.eventId", 1)
-    val event2 = Event().withValue("test.eventId", 2)
+    val event1 = Configuration().withValue("test.eventId", 1)
+    val event2 = Configuration().withValue("test.eventId", 2)
 
     val f = for {
       res1 <- kvs.set("test1", event1)
@@ -43,7 +44,7 @@ class TestRedisKeyValueStore
   }
 
   test("Test lset, lget and getHistory") {
-    val event = Event()
+    val event = Configuration()
     val key = "test"
     val idKey = "test.eventId"
     val n = 3

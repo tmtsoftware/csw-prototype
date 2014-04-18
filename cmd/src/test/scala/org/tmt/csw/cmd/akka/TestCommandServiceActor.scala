@@ -5,12 +5,12 @@ import akka.actor.ActorSystem
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import akka.util.Timeout
 import scala.concurrent.duration._
-import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import com.typesafe.scalalogging.slf4j.Logging
 import org.tmt.csw.cmd.akka.CommandServiceActor._
 import org.tmt.csw.cmd.akka.ConfigActor._
 import org.tmt.csw.cmd.akka.CommandQueueActor._
 import scala.util._
+import org.tmt.csw.util.{TestConfig, Configuration}
 
 
 /**

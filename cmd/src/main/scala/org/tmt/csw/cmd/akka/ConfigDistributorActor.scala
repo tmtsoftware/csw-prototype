@@ -1,7 +1,6 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor._
-import org.tmt.csw.cmd.core.Configuration
 import akka.pattern.ask
 import scala.concurrent.Future
 import akka.util.Timeout
@@ -18,6 +17,7 @@ import scala.util.Success
 import org.tmt.csw.cmd.akka.ConfigActor.ConfigResponse
 import akka.actor.Terminated
 import org.tmt.csw.cmd.akka.ConfigDistributorActor.SubmitInfo
+import org.tmt.csw.util.Configuration
 
 
 /**

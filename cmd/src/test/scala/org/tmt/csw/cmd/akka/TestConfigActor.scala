@@ -3,9 +3,9 @@ package org.tmt.csw.cmd.akka
 import akka.actor._
 import org.tmt.csw.cmd.akka.ConfigActor._
 import org.tmt.csw.cmd.akka.CommandQueueActor._
-import org.tmt.csw.cmd.core.Configuration
 import scala.util.Success
 import scala.concurrent.duration._
+import org.tmt.csw.util.Configuration
 
 object TestConfigActor {
   def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int = 2): Props =

@@ -1,9 +1,9 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor._
-import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.CommandServiceActor.StatusRequest
 import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
+import org.tmt.csw.util.Configuration
 
 
 object CommandQueueActor {

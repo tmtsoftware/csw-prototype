@@ -6,13 +6,14 @@ import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+import org.tmt.csw.util.Configuration
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
 class TestPubSub extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
-  val numSecs = 5 // number of seconds to run
+  val numSecs = 10 // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber]))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
 
@@ -52,7 +53,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   def nextEvent(): Event = {
     val time = System.currentTimeMillis()
     nextId = nextId + 1
-    Event()
+    Configuration()
       .withValue(s"$root.eventId", nextId)
       .withValue(s"$root.exposureTime.value", expTime)
       .withValue(s"$root.exposureTime.units", "milliseconds")

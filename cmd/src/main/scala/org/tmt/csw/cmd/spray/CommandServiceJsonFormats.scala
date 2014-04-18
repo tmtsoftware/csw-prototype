@@ -4,9 +4,9 @@ import spray.json._
 import scala.reflect.ClassTag
 import spray.httpx.marshalling.MetaMarshallers
 import spray.httpx.SprayJsonSupport
-import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.{RunId, CommandStatus}
 import java.util.UUID
+import org.tmt.csw.util.Configuration
 
 /**
  * Defines JSON marshallers/unmarshallers for the objects used in REST messages.

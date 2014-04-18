@@ -9,6 +9,15 @@ object Build extends Build {
   import Settings._
   import Dependencies._
 
+  // Shared utils
+  lazy val util = project
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(jgit, scalaIoFile, scalaLogging, logback) ++
+      test(liftJSON, scalaTest, specs2, akkaTestKit, junit)
+    )
+
   // Config Service
   lazy val cs = project
   	.settings(defaultSettings: _*)
@@ -25,7 +34,7 @@ object Build extends Build {
     provided(akkaActor) ++
       compile(redisScala, scalaLogging, logback) ++
       test(scalaTest, specs2, akkaTestKit, junit)
-    )
+    ) dependsOn util
 
   // Location Service
   lazy val loc = project
@@ -42,19 +51,28 @@ object Build extends Build {
       provided(akkaActor) ++
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
       test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
-    ) dependsOn loc
+    ) dependsOn(loc, util % "compile->compile;test->test")
 
   // Package (Container, Component) classes
   lazy val pkg = project
     .settings(defaultSettings: _*)
     .settings(multiJvmSettings: _*)
-    .dependsOn(cmd % "compile->compile;test->test", loc)
+    .dependsOn(cmd % "compile->compile;test->test", util % "compile->compile;test->test", loc)
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
     ) configs MultiJvm
 
+
+  // Event Service
+  lazy val event = project
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(jgit, scalaIoFile, scalaLogging, logback) ++
+      test(scalaTest, specs2, akkaTestKit, junit)
+    ) dependsOn util
 
   // -- Apps --
 
@@ -65,7 +83,7 @@ object Build extends Build {
       provided(akkaActor) ++
       compile(akkaKernel, akkaRemote) ++
       test(scalaLogging, logback)
-    ) dependsOn(pkg, cmd, loc, container1, container2)
+    ) dependsOn(pkg, cmd, loc, util, container1, container2)
 
 
   // -- Test subprojects with dependency information --
@@ -77,7 +95,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(akkaKernel, akkaRemote)
-    ).dependsOn(pkg, cmd, loc)
+    ).dependsOn(pkg, cmd, loc, util)
 
   lazy val container2 = Project(
     id = "container2",
@@ -87,5 +105,5 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(akkaKernel, akkaRemote, akkaZeromq)
-    ).dependsOn(pkg, cmd, loc)
+    ).dependsOn(pkg, cmd, loc, util)
 }

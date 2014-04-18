@@ -1,4 +1,4 @@
-package org.tmt.csw.cmd.core
+package org.tmt.csw.util
 
 import org.scalatest.FunSuite
 import java.io.StringReader

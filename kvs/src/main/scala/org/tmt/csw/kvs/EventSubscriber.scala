@@ -6,6 +6,7 @@ import java.net.InetSocketAddress
 import redis.api.pubsub._
 import akka.util.ByteString
 import redis.protocol.{MultiBulk, RedisReply}
+import org.tmt.csw.util.Configuration
 
 
 /**
@@ -97,9 +98,9 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   def onDecodedReply(reply: RedisReply) {
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
-        subscriber ! Event(list(2).toByteString.utf8String)
+        subscriber ! Configuration(list(2).toByteString.utf8String)
       case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" =>
-        subscriber ! Event(list(3).toByteString.utf8String)
+        subscriber ! Configuration(list(3).toByteString.utf8String)
       case _ => // subscribe or psubscribe
     }
   }

@@ -1,8 +1,8 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor.{ActorLogging, Actor, ActorRef, Terminated}
-import org.tmt.csw.cmd.core.Configuration
 import scala.util.Try
+import org.tmt.csw.util.Configuration
 
 
 object ConfigActor {

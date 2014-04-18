@@ -4,10 +4,10 @@ import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{ActorRef, ActorSystem}
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import com.typesafe.scalalogging.slf4j.Logging
-import org.tmt.csw.cmd.core.{TestConfig, Configuration}
 import akka.util.Timeout
 import org.tmt.csw.cmd.spray.CommandServiceTestSettings
 import scala.concurrent.Future
+import org.tmt.csw.util.{TestConfig, Configuration}
 
 /**
  * Tests the Command Service Client actor

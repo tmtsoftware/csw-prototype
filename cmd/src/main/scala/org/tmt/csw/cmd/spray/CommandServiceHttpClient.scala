@@ -1,12 +1,12 @@
 package org.tmt.csw.cmd.spray
 
-import org.tmt.csw.cmd.core.Configuration
 import org.tmt.csw.cmd.akka.{CommandStatus, RunId}
 import spray.client.pipelining._
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.concurrent.{ExecutionContext, Future}
 import spray.http.HttpResponse
 import akka.actor.ActorSystem
+import org.tmt.csw.util.Configuration
 
 /**
  * Helper methods for command service clients

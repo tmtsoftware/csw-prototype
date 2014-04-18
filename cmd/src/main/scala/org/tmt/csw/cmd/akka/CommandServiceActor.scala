@@ -1,7 +1,6 @@
 package org.tmt.csw.cmd.akka
 
 import akka.actor._
-import org.tmt.csw.cmd.core._
 import org.tmt.csw.cmd.akka.CommandQueueActor.ConfigQueueStatus
 import java.net.URI
 import org.tmt.csw.ls.LocationServiceActor.ServiceId
@@ -10,6 +9,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
 import org.tmt.csw.cmd.akka.CommandStatusActor.StatusUpdate
+import org.tmt.csw.util.Configuration
 
 object CommandServiceActor {
   // Child actor names

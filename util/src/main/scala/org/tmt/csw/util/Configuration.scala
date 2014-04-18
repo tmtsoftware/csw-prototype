@@ -1,4 +1,4 @@
-package org.tmt.csw.kvs
+package org.tmt.csw.util
 
 import com.typesafe.config._
 import java.io._
@@ -6,68 +6,69 @@ import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import scala.Some
 import com.typesafe.config.ConfigException.WrongType
-import redis.ByteStringFormatter
-import akka.util.ByteString
 
 /**
- * Used for building Event instances.
- * (XXX merge with Configuration class from cmd service?)
+ * Used for building Configuration instances.
  */
-object Event {
+object Configuration {
   val toStringOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(false)
   val formatOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
   val jsonOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(true).setFormatted(false)
 
+  def waitConfig(forResume: Boolean, obsId: String): Configuration = {
+    Configuration(Map("wait" -> Map("forResume" -> forResume, "obsId" -> obsId)))
+  }
+
   /**
    * Initialize with an existing typesafe Config object
    */
-  private def apply(config: Config) = new Event(config)
+  private def apply(config: Config) = new Configuration(config)
 
   /**
-   * Reads the Event from the given string
+   * Reads the configuration from the given string
    * @param s a string in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
-  def apply(s: String): Event = apply(ConfigFactory.parseReader(new StringReader(s)))
+  def apply(s: String): Configuration = apply(ConfigFactory.parseReader(new StringReader(s)))
 
   /**
-   * Reads the Event from the given byte array
-   * @param bytes an array of bytes containing the Event (as for example the result of String.getBytes)
+   * Reads the configuration from the given byte array
+   * @param bytes an array of bytes containing the configuration (as for example the result of String.getBytes)
    */
-  def apply(bytes: Array[Byte]): Event = apply(ConfigFactory.parseReader(new InputStreamReader(new ByteArrayInputStream(bytes))))
+  def apply(bytes: Array[Byte]): Configuration = apply(ConfigFactory.parseReader(new InputStreamReader(new ByteArrayInputStream(bytes))))
 
   /**
-   * Reads the Event from the given Reader
+   * Reads the configuration from the given Reader
    * @param reader reader for a file or stream in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
-  def apply(reader: Reader): Event = apply(ConfigFactory.parseReader(reader))
+  def apply(reader: Reader): Configuration = apply(ConfigFactory.parseReader(reader))
 
   /**
    * Initializes with a java Map, where the values may be Strings, some kind of Number, other java Maps or Lists
    */
-  def apply(map: java.util.Map[java.lang.String, java.lang.Object]): Event = apply(ConfigFactory.parseMap(map))
+  def apply(map: java.util.Map[java.lang.String, java.lang.Object]): Configuration = apply(ConfigFactory.parseMap(map))
 
   /**
    * Initializes with a scala Map, where the values may be Strings, some kind of Number, other java Maps or Lists
    */
-  def apply(map: Map[String, Any]): Event = apply(ConfigFactory.parseMap(toJavaMap(map)))
+  def apply(map: Map[String, Any]): Configuration = apply(ConfigFactory.parseMap(toJavaMap(map)))
 
   /**
-   * Reads the Event from the given file
+   * Reads the configuration from the given file
    * @param file a file in JSON or "human-friendly JSON" format (see HOCON: https://github.com/typesafehub/config)
    */
   def apply(file: File): Unit = {
     val reader = new FileReader(file)
     try {
-      new Event(ConfigFactory.parseReader(reader))
+      new Configuration(ConfigFactory.parseReader(reader))
     } finally {
       reader.close()
     }
   }
 
   /**
-   * Returns an empty Event
+   * Returns an empty configuration
    */
-  def apply(): Event = apply(ConfigFactory.empty())
+  def apply(): Configuration = apply(ConfigFactory.empty())
 
 
   // Converts a scala.Map to a java.util.Map recursively
@@ -81,35 +82,25 @@ object Event {
   }
 
   /**
-   * Returns the merge of the events in the list
+   * Returns the merge of the configs in the list
    */
-  def merge(events: List[Event]): Event = {
-    events match {
+  def merge(configs: List[Configuration]): Configuration = {
+    configs match {
       case head :: Nil => head
       case head :: tail => head.merge(merge(tail))
-    }
-  }
-
-  /**
-   * Defines the automatic conversion of an Event to a ByteString and back again.
-   */
-  implicit val byteStringFormatter = new ByteStringFormatter[Event] {
-    def serialize(event: Event): ByteString = {
-      // XXX TODO: Is there a more efficient way to serialize this? (scala-pickle did not work)
-      // ByteString(event.toJson) // could also serialize to JSON (slightly more space)
-      ByteString(event.toString) // Uses the simplified JSON format
-    }
-
-    def deserialize(bs: ByteString): Event = {
-      Event(bs.utf8String)
     }
   }
 }
 
 /**
- * Represents a telescope Event
+ * Represents a telescope configuration.
+ * Based on the Typesafe Config class, a Configuration is basically a map of maps
+ * that can be represented in String form in JSON format or the simplified
+ * <a href="https://github.com/typesafehub/config/blob/master/HOCON.md">HOCON</a> format.
+ * This class provides convenience methods for Scala that are not available in the
+ * java Config class.
  */
-class Event private(private val config: Config) extends Serializable {
+class Configuration private(private val config: Config) extends Serializable {
 
   /**
    * Returns the set of root keys
@@ -125,10 +116,10 @@ class Event private(private val config: Config) extends Serializable {
   }
 
   /**
-   * Returns the nested Event at the requested path and throws an exception if not found
+   * Returns the nested Configuration at the requested path and throws an exception if not found
    */
-  def getEvent(path: String): Event =
-    Event(
+  def getConfig(path: String): Configuration =
+    Configuration(
       try {
         config.getConfig(path)
       } catch {
@@ -140,15 +131,15 @@ class Event private(private val config: Config) extends Serializable {
     )
 
   /**
-   * Returns this event if pathOpt is None, otherwise the event at the given path.
-   * @param pathOpt an optional path in this Event
+   * Returns this config if pathOpt is None, otherwise the config at the given path.
+   * @param pathOpt an optional path in this configuration
    */
-  def getEvent(pathOpt: Option[String]): Event = {
-    if (pathOpt.isEmpty) this else getEvent(pathOpt.get)
+  def getConfig(pathOpt: Option[String]): Configuration = {
+    if (pathOpt.isEmpty) this else getConfig(pathOpt.get)
   }
 
   /**
-   * Returns the number of top level elements in the Event
+   * Returns the number of top level elements in the configuration
    */
   def size(): Int = config.root().size()
 
@@ -158,9 +149,9 @@ class Event private(private val config: Config) extends Serializable {
   def hasPath(path: String): Boolean = config.hasPath(path)
 
   /**
-   * Returns the union of this Event and the given one.
+   * Returns the union of this configuration and the given one.
    */
-  def merge(event: Event): Event = Event(config.withFallback(event.config))
+  def merge(c2: Configuration): Configuration = Configuration(config.withFallback(c2.config))
 
   /**
    * Returns true if this config is empty
@@ -206,73 +197,75 @@ class Event private(private val config: Config) extends Serializable {
     }
 
   /**
-   * Returns the Event formatted on multiple lines.
+   * Returns the configuration formatted on multiple lines.
    */
-  def format(): String = config.root.render(Event.formatOptions)
+  def format(): String = config.root.render(Configuration.formatOptions)
 
   /**
-   * Returns Event formatted on a single line
+   * Returns configuration formatted on a single line
    */
-  override def toString: String = config.root.render(Event.toStringOptions)
+  override def toString: String = config.root.render(Configuration.toStringOptions)
 
   /**
-   * Returns Event formatted on a single line in JSON format
+   * Returns configuration formatted on a single line in JSON format
    */
-  def toJson: String = config.root.render(Event.jsonOptions)
+  def toJson: String = config.root.render(Configuration.jsonOptions)
 
   /**
-   * Returns a new Event with the given path set to the given value
+   * Returns a new Configuration with the given path set to the given value
    */
-  def withValue(path: String, value: String): Event = {
-    new Event(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
+  def withValue(path: String, value: String): Configuration = {
+    new Configuration(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
   }
 
   /**
-   * Returns a new Event with the given path set to the given value
+   * Returns a new Configuration with the given path set to the given value
    */
-  def withValue(path: String, value: Number): Event = {
-    new Event(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
+  def withValue(path: String, value: Number): Configuration = {
+    new Configuration(config.withValue(path, ConfigValueFactory.fromAnyRef(value)))
   }
 
   /**
-   * Returns a new Event with the given path set to the given map of values
+   * Returns a new Configuration with the given path set to the given map of values
    */
-  def withValue(path: String, value: Map[String, Any]): Event = {
-    new Event(config.withValue(path, ConfigValueFactory.fromMap(Event.toJavaMap(value))))
+  def withValue(path: String, value: Map[String, Any]): Configuration = {
+    new Configuration(config.withValue(path, ConfigValueFactory.fromMap(Configuration.toJavaMap(value))))
   }
 
   /**
-   * Returns a new Event with the given path set to the given list of values
+   * Returns a new Configuration with the given path set to the given list of values
    */
-  def withValue(path: String, value: List[AnyRef]): Event = {
-    new Event(config.withValue(path, ConfigValueFactory.fromIterable(value.asJavaCollection)))
+  def withValue(path: String, value: List[AnyRef]): Configuration = {
+    new Configuration(config.withValue(path, ConfigValueFactory.fromIterable(value.asJavaCollection)))
   }
 
   /**
-   * Clone the event with the given path removed.
+   * Clone the config with the given path removed.
    *
    * @param path path to remove
-   * @return a copy of the event minus the specified path
+   * @return a copy of the config minus the specified path
    */
-  def withoutPath(path: String): Event = {
-    new Event(config.withoutPath(path))
+  def withoutPath(path: String): Configuration = {
+    new Configuration(config.withoutPath(path))
   }
 
   /**
-   * Clone the event with only the given path (and its children) retained;
+   * Clone the config with only the given path (and its children) retained;
    * all sibling paths are removed.
    *
    * @param path path to keep
-   * @return a copy of the event minus all paths except the one specified
+   * @return a copy of the config minus all paths except the one specified
    */
-  def withOnlyPath(path: String): Event = {
-    new Event(config.withOnlyPath(path))
+  def withOnlyPath(path: String): Configuration = {
+    new Configuration(config.withOnlyPath(path))
   }
+
+  override def hashCode(): Int = config.hashCode()
 
   override def equals(other: Any): Boolean = {
     other match {
-      case event: Event =>
-        this.config.equals(event.config)
+      case configuration: Configuration =>
+        this.config.equals(configuration.config)
       case _ =>
         false
     }
