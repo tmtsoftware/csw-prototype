@@ -14,7 +14,6 @@ trait EventSubscriber {
 
   private val handler = new MessageHandler() {
     override def onMessage(message: ClientMessage): Unit = {
-//      log.debug(s"Received message: ${message.getStringProperty(propName)}")
       self ! Configuration(message.getStringProperty(propName))
     }
   }
