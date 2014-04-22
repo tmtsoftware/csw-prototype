@@ -9,8 +9,9 @@ import akka.actor.{ActorLogging, Actor}
 trait EventPublisher {
   this: Actor with ActorLogging =>
 
+  import context.dispatcher
+
   implicit val actorSystem = context.system
-  implicit val execContext = context.dispatcher
   private val settings = KvsSettings(actorSystem)
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
 

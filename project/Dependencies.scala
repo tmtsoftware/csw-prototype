@@ -6,6 +6,8 @@ object Dependencies {
 
   val akkaVersion = "2.3.0"
   val sprayVersion = "1.3.0"
+//  val hornetqVersion = "2.4.0.Final"
+  val hornetqVersion = "2.5.0-SNAPSHOT"
 
   def compile   (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
   def provided  (deps: ModuleID*): Seq[ModuleID] = deps map (_ % "provided")
@@ -35,9 +37,10 @@ object Dependencies {
 
 
 
-  val hornetqServer  = "org.hornetq"                    % "hornetq-server"        % "2.4.1.Final"
+  val hornetqServer  = "org.hornetq"                    % "hornetq-server"        % hornetqVersion
   // XXX TEMP FIX (http://stackoverflow.com/questions/21882100/adding-hornetq-dependency-in-sbt-gives-resolution-failure-for-hornetq-native-n)
-  val hornetqNative  = "org.hornetq"                    % "hornetq-native"        % "2.4.1.Final" from "http://repo1.maven.org/maven2/org/hornetq/hornetq-native/2.4.1.Final/hornetq-native-2.4.1.Final.jar"
+//  val hornetqNative  = "org.hornetq"                    % "hornetq-native"        % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
+  val hornetqNative  = "org.hornetq"                    % "hornetq-native"        % hornetqVersion from s"${Path.userHome.asFile.toURI.toURL}.m2/repository/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
 
 
   // Test dependencies

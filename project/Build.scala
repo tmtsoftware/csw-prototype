@@ -14,7 +14,7 @@ object Build extends Build {
     .settings(defaultSettings: _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(jgit, scalaIoFile, scalaLogging, logback) ++
+      compile(scalaLogging, logback) ++
       test(liftJSON, scalaTest, specs2, akkaTestKit, junit)
     )
 
@@ -70,7 +70,7 @@ object Build extends Build {
     .settings(defaultSettings: _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(jgit, scalaIoFile, scalaLogging, logback) ++
+      compile(hornetqServer, hornetqNative, scalaLogging, logback) ++
       test(scalaTest, specs2, akkaTestKit, junit)
     ) dependsOn util
 

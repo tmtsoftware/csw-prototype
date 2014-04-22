@@ -108,8 +108,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   private var submitCount = 0
 
   // Needed for "ask"
-  private implicit val execContext = context.dispatcher
-
+  import context.dispatcher
 
   // Initial behavior while waiting for the queue client and controller actor references on startup.
   def initializing: Receive = {

@@ -51,7 +51,7 @@ trait MultiAxisCommandServiceActor extends Actor with ActorLogging {
 
 
   // Needed for "ask"
-  private implicit val execContext = context.dispatcher
+  import context.dispatcher
 
   // Receive only the command server commands
   // XXX TODO: intercept command status so we can return a single status even if config references multiple axes!

@@ -364,7 +364,8 @@ private class QueryWorkerActor(config: Configuration, targetActors: List[Locatio
     // Like submit, send parts of the query to the registered config actors and when all replies are in,
     // combine and return to sender.
 
-    implicit val execContext = context.dispatcher
+    import context.dispatcher
+
     implicit val askTimeout = Timeout(3 seconds) // TODO: Implement this with tell or configure timeout?
 
     val listOfFutureResponses =

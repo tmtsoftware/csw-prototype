@@ -126,7 +126,7 @@ trait CommandServiceActor extends Actor with ActorLogging {
   def commandQueueControllerType: String
 
   // Needed for "ask"
-  private implicit val execContext = context.dispatcher
+  import context.dispatcher
 
   waitForReady()
 

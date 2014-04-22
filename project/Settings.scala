@@ -27,7 +27,9 @@ object Settings {
 //    resolvers += "Spray nightlies" at "http://nightlies.spray.io",
     resolvers += Resolver.sonatypeRepo("releases"),
 //    resolvers += Resolver.sonatypeRepo("snapshots"),
-    resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/"
+    resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/",
+    // local maven repo
+    resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
   )
 
   lazy val defaultSettings = buildSettings ++ Seq(

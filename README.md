@@ -30,7 +30,6 @@ Projects and Directories
 * extjs - the ExtJS web UI (JavaScript with Sencha Cmd/ant build, not a Scala project)
 * pkg - a packaging layer over the command service that provides HCD and Assembly classes
 * test - for integration tests, demos
-* apps/containerCmd - a container command line application that creates a container based on a given config file
 
 ExtJS Build
 -----------
