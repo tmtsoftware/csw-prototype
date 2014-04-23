@@ -9,8 +9,8 @@ trait EventPublisher {
   this: Actor with ActorLogging =>
 
   // Connect to Hornetq server
-  private val (sf, session) = connectToHornetQ(context.system)
-  private val producer = session.createProducer()
+  private val hq = connectToHornetQ(context.system)
+  private val producer = hq.session.createProducer()
 
   /**
    * Publishes the given event to the given channel.
@@ -18,11 +18,11 @@ trait EventPublisher {
    * @param event the event to publish
    */
   def publish(channel: String, event: Event): Unit = {
-    val message = session.createMessage(false)
+    val message = hq.session.createMessage(false)
     message.getBodyBuffer.writeUTF(event.toString)
     message.setExpiration(System.currentTimeMillis() + 1000) // expire after 1 second
     producer.send(channel, message)
   }
 
-  override def postStop(): Unit = sf.close()
+  override def postStop(): Unit = hq.close()
 }

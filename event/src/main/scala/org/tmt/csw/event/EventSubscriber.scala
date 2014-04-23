@@ -1,10 +1,9 @@
 package org.tmt.csw.event
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{Props, ActorRef, ActorLogging, Actor}
 import org.tmt.csw.util.Configuration
 import org.hornetq.api.core.client._
 import java.util.UUID
-import scala.concurrent.Future
 
 /**
  * Adds the ability to subscribe to events.
@@ -14,7 +13,7 @@ trait EventSubscriber {
   this: Actor with ActorLogging =>
 
   // Connect to Hornetq server
-  private val (sf, session) = connectToHornetQ(context.system)
+  private val hq = connectToHornetQ(context.system)
 
   // Unique id for this subscriber
   private val subscriberId = UUID.randomUUID().toString
@@ -22,26 +21,25 @@ trait EventSubscriber {
   // Unique queue name for this subscriber
   private def makeQueueName(channel: String): String = s"$channel-$subscriberId"
 
+  // Use a worker class to process incoming messages rather than block the receiver thread
+  private val worker = context.actorOf(Props(classOf[EventSubscriberWorker], self))
+
   // Called when a HornetQ message is received
   private val handler = new MessageHandler() {
     override def onMessage(message: ClientMessage): Unit = {
-      val msg = message.getBodyBuffer.readUTF()
-      // Use a future to avoid blocking this thread
-      Future.successful {
-        self ! Configuration(msg)
-      }
+      worker ! message
     }
   }
 
   // Local object used to manage a subscription.
   // It creates a queue with a unique name for each channel.
   case class SubscriberInfo(channel: String) {
-    val coreSession = sf.createSession(false, false, false)
+    val coreSession = hq.sf.createSession(false, false, false)
     val queueName = makeQueueName(channel)
     coreSession.createQueue(channel, queueName, /*, filter */ false)
     coreSession.close()
 
-    val messageConsumer = session.createConsumer(queueName, null, -1, -1, false)
+    val messageConsumer = hq.session.createConsumer(queueName, null, -1, -1, false)
     messageConsumer.setMessageHandler(handler)
   }
 
@@ -65,13 +63,28 @@ trait EventSubscriber {
    * @param channels the top channels for the events you want to unsubscribe from.
    */
   def unsubscribe(channels: String*): Unit = {
-    for(channel <- channels) {
-      val info = map(channel)
+    for {
+      channel <- channels
+      info <- map.get(channel)
+    } {
       map -= channel
       info.messageConsumer.close()
-      session.deleteQueue(info.queueName)
+      hq.session.deleteQueue(info.queueName)
     }
   }
 
-  override def postStop(): Unit = sf.close()
+  override def postStop(): Unit = hq.close()
+}
+
+// Worker class used to process incoming messages rather than block the receiver thread
+// while unpacking the message
+case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorLogging {
+  override def receive: Receive = {
+    case message: ClientMessage =>
+      try {
+        subscriber ! Configuration(message.getBodyBuffer.readUTF())
+      } catch {
+        case ex: Throwable => log.error(ex, s"Error forwarding message to $subscriber: $message")
+      }
+  }
 }

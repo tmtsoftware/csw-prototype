@@ -9,11 +9,11 @@ import scala.concurrent.ExecutionContext
 import org.tmt.csw.util.Configuration
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
-@DoNotDiscover
+//@DoNotDiscover
 class TestEventPubSub extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
-  val numSecs = 10 // number of seconds to run
+  val numSecs = 20 // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
 
@@ -26,6 +26,7 @@ class TestEventPubSub extends TestKit(ActorSystem("Test"))
       logger.info(s"Recieved $count events in $numSecs seconds ($msgPerSec per second)")
       assert(count > 0)
     }
+    Thread.sleep(1000) // wait for any messages still in the queue for the subscriber
   }
 
   override def afterAll(): Unit = {
@@ -50,8 +51,11 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   }
 
   while(!done) {
-    publish(channel, nextEvent())
+    val event = nextEvent()
+    publish(channel, event)
     Thread.`yield`() // don't want to hog the cpu here
+    if (nextId % 10000 == 0)
+      log.info(s"Published $nextId events so far: $event")
   }
 
   // Returns the next event to publish
@@ -77,7 +81,8 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
   implicit val actorSytem = context.system
   var count = 0
 
-  val channel = "tmt.mobie.red.dat.exposureInfo"
+//  val channel = "tmt.mobie.red.dat.exposureInfo"
+  val channel = "tmt.mobie.red.dat.*" // using wildcard
   subscribe(channel)
 
   override def receive: Receive = {
@@ -89,6 +94,7 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
     case "done" =>
       sender ! count
       unsubscribe(channel)
+
     case x => log.error(s"Unexpected message $x")
   }
 }

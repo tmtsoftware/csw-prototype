@@ -1,7 +1,7 @@
 package org.tmt.csw
 
 import org.tmt.csw.util.Configuration
-import org.hornetq.api.core.client.{ClientSessionFactory, HornetQClient, ClientSession}
+import org.hornetq.api.core.client.{ServerLocator, ClientSessionFactory, HornetQClient, ClientSession}
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import scala.collection.JavaConverters._
@@ -16,10 +16,22 @@ package object event {
    */
   type Event = Configuration
 
+  case class HornetqInfo(settings: EventServiceSettings,
+                         serverLocator: ServerLocator,
+                         sf: ClientSessionFactory,
+                         session: ClientSession) {
+
+    def close(): Unit = {
+      session.close()
+      sf.close()
+      serverLocator.close()
+    }
+  }
+
   /**
    * Connects to the HornetQ server
    */
-  private[event] def connectToHornetQ(actorSystem: ActorSystem): (ClientSessionFactory, ClientSession) = {
+  private[event] def connectToHornetQ(actorSystem: ActorSystem): HornetqInfo = {
     val settings = EventServiceSettings(actorSystem)
     val map = Map("host" -> settings.eventServiceHostname, "port" -> settings.eventServicePort)
     val serverLocator = HornetQClient.createServerLocatorWithoutHA(
@@ -33,7 +45,7 @@ package object event {
     val sf = serverLocator.createSessionFactory
     val session = sf.createSession
     session.start()
-    (sf, session)
+    HornetqInfo(settings, serverLocator, sf, session)
   }
 }
 
