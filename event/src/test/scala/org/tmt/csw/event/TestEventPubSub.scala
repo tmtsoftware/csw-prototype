@@ -15,7 +15,6 @@ class TestEventPubSub extends TestKit(ActorSystem("Test"))
 
   val numSecs = 10 // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))
-//  val subscriber2 = system.actorOf(Props(classOf[Subscriber], "Subscriber-2"))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
 
   test("Test subscriber") {
@@ -55,17 +54,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
     Thread.`yield`() // don't want to hog the cpu here
   }
 
-//  scheduleNextEvent()
-//
-//  def scheduleNextEvent(): Unit = {
-//    if (!done) context.system.scheduler.scheduleOnce(1 milliseconds) {
-//      if (!done) {
-//        publish(channel, nextEvent())
-//        scheduleNextEvent()
-//      }
-//    }
-//  }
-
+  // Returns the next event to publish
   def nextEvent(): Event = {
     val time = System.currentTimeMillis()
     nextId = nextId + 1

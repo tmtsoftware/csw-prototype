@@ -13,6 +13,16 @@ import scala.concurrent.Future
 trait EventSubscriber {
   this: Actor with ActorLogging =>
 
+  // Connect to Hornetq server
+  private val (sf, session) = connectToHornetQ(context.system)
+
+  // Unique id for this subscriber
+  private val subscriberId = UUID.randomUUID().toString
+
+  // Unique queue name for this subscriber
+  private def makeQueueName(channel: String): String = s"$channel-$subscriberId"
+
+  // Called when a HornetQ message is received
   private val handler = new MessageHandler() {
     override def onMessage(message: ClientMessage): Unit = {
       val msg = message.getBodyBuffer.readUTF()
@@ -22,15 +32,6 @@ trait EventSubscriber {
       }
     }
   }
-
-  // Connect to Hornetq server
-  private val (sf, session) = connectToHornetQ(context.system)
-
-  // Unique id for this subscriber
-  private val subscriberId = UUID.randomUUID().toString
-
-  // Unique queue name for this subscriber
-  private def makeQueueName(channel: String): String = s"$channel-$subscriberId"
 
   // Local object used to manage a subscription.
   // It creates a queue with a unique name for each channel.
@@ -64,14 +65,12 @@ trait EventSubscriber {
    * @param channels the top channels for the events you want to unsubscribe from.
    */
   def unsubscribe(channels: String*): Unit = {
-//    val coreSession = sf.createSession(false, false, false)
     for(channel <- channels) {
       val info = map(channel)
       map -= channel
       info.messageConsumer.close()
       session.deleteQueue(info.queueName)
     }
-//    coreSession.close()
   }
 
   override def postStop(): Unit = sf.close()
