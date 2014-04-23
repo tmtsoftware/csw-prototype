@@ -14,7 +14,8 @@ class TestPubSub extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
   val numSecs = 10 // number of seconds to run
-  val subscriber = system.actorOf(Props(classOf[Subscriber]))
+  val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))
+//  val subscriber2 = system.actorOf(Props(classOf[Subscriber], "Subscriber-2"))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
 
   test("Test subscriber") {
@@ -40,6 +41,9 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   var nextId = 0
   var done = false
 
+  //Use the system's dispatcher as ExecutionContext
+  import context.dispatcher
+
   context.system.scheduler.scheduleOnce(numSecs seconds) {
     caller ! "done"
     done = true
@@ -48,6 +52,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   while(!done) {
     publish(root, nextEvent())
     Thread.`yield`() // don't want to hog the cpu here
+//    Thread.sleep(1000)
   }
 
   def nextEvent(): Event = {
@@ -67,7 +72,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
 }
 
 // A test class that subscribes to events
-private class Subscriber extends Actor with ActorLogging with EventSubscriber {
+private case class Subscriber(name: String) extends Actor with ActorLogging with EventSubscriber {
   implicit val execContext: ExecutionContext = context.dispatcher
   implicit val actorSytem = context.system
   var count = 0
@@ -79,6 +84,7 @@ private class Subscriber extends Actor with ActorLogging with EventSubscriber {
 
   override def receive: Receive = {
     case event: Event =>
+//      log.info(s"$name received $event")
       count = count + 1
       if (count % 10000 == 0)
         log.info(s"Received $count events so far: $event")

@@ -4,6 +4,7 @@ import akka.actor.{ActorLogging, Actor}
 import org.tmt.csw.util.Configuration
 import org.hornetq.api.core.client._
 import java.util.UUID
+import scala.concurrent.Future
 
 /**
  * Adds the ability to subscribe to events.
@@ -14,20 +15,25 @@ trait EventSubscriber {
 
   private val handler = new MessageHandler() {
     override def onMessage(message: ClientMessage): Unit = {
-      self ! Configuration(message.getStringProperty(propName))
+      val msg = message.getBodyBuffer.readUTF()
+      // Use a future to avoid blocking this thread
+      Future.successful {
+        self ! Configuration(msg)
+      }
     }
   }
 
   // Connect to Hornetq server
-  private val (sf, session) = connectToHornetQ()
+  private val (sf, session) = connectToHornetQ(context.system)
 
   // Unique id for this subscriber
   private val subscriberId = UUID.randomUUID().toString
 
+  // Unique queue name for this subscriber
   private def makeQueueName(channel: String): String = s"$channel-$subscriberId"
 
   // Local object used to manage a subscription.
-  // It creates a queue for each unique channel, if it does not already exist.
+  // It creates a queue with a unique name for each channel.
   case class SubscriberInfo(channel: String) {
     val coreSession = sf.createSession(false, false, false)
     val queueName = makeQueueName(channel)
@@ -38,7 +44,7 @@ trait EventSubscriber {
     messageConsumer.setMessageHandler(handler)
   }
 
-  // Maps channel to SubscriberInfo
+  // Maps channel (hornetq address) to SubscriberInfo
   private var map = Map[String, SubscriberInfo]()
 
   /**
@@ -58,18 +64,15 @@ trait EventSubscriber {
    * @param channels the top channels for the events you want to unsubscribe from.
    */
   def unsubscribe(channels: String*): Unit = {
-    val coreSession = sf.createSession(false, false, false)
+//    val coreSession = sf.createSession(false, false, false)
     for(channel <- channels) {
       val info = map(channel)
       map -= channel
       info.messageConsumer.close()
-      coreSession.deleteQueue(makeQueueName(channel))
+      session.deleteQueue(info.queueName)
     }
-    coreSession.close()
+//    coreSession.close()
   }
 
-  /**
-   * Close the session, clean up resources
-   */
-  def closeSession(): Unit = sf.close()
+  override def postStop(): Unit = sf.close()
 }

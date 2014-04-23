@@ -9,11 +9,11 @@ import scala.concurrent.ExecutionContext
 import org.tmt.csw.util.Configuration
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
-//@DoNotDiscover
+@DoNotDiscover
 class TestEventPubSub extends TestKit(ActorSystem("Test"))
   with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
 
-  val numSecs = 20 // number of seconds to run
+  val numSecs = 10 // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))
 //  val subscriber2 = system.actorOf(Props(classOf[Subscriber], "Subscriber-2"))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
@@ -48,7 +48,6 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   context.system.scheduler.scheduleOnce(numSecs seconds) {
     caller ! "done"
     done = true
-    closeSession()
   }
 
   while(!done) {
@@ -101,7 +100,6 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
     case "done" =>
       sender ! count
       unsubscribe(channel)
-      closeSession()
     case x => log.error(s"Unexpected message $x")
   }
 }
