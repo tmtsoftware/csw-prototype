@@ -1,7 +1,7 @@
 package org.tmt.csw.cs.core.git
 
 import java.io.File
-import org.tmt.csw.cs.api.ConfigManager
+import org.tmt.csw.cs.core.ConfigManager
 
 /**
  * Utility class to create temporary Git repositories for use in testing.

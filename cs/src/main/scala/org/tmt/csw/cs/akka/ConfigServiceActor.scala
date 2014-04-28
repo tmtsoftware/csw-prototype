@@ -1,18 +1,19 @@
 package org.tmt.csw.cs.akka
 
 import akka.actor._
-import org.tmt.csw.cs.api._
-import org.tmt.csw.cs.core.git.GitConfigManager
 import java.io.File
-import ConfigServiceActor._
-import java.net.URI
+import scala.util.{Try, Success, Failure}
+import org.tmt.csw.cs.core._
+import org.tmt.csw.cs.core.ConfigFileHistory
+import scala.Option
+import scala.concurrent.Future
 
 
 /**
  * Defines apply methods for creating a ConfigServiceActor instance
  */
 object ConfigServiceActor {
-  // Messages received by the Config Service actor
+  // Messages received by this actor
   sealed trait ConfigServiceRequest
   case class CreateRequest(path: File, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
   case class UpdateRequest(path: File, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
@@ -22,74 +23,94 @@ object ConfigServiceActor {
   case object ListRequest extends ConfigServiceRequest
   case class HistoryRequest(path: File) extends ConfigServiceRequest
 
+  // Reply messages (The final arguments, wrapped in Try[], give the actual results)
+  sealed trait ConfigServiceResult
+  case class CreateResult(path: File, configId: Try[ConfigId]) extends ConfigServiceResult
+  case class UpdateResult(path: File, configId: Try[ConfigId]) extends ConfigServiceResult
+  case class GetResult(path: File, id: Option[ConfigId], configData: Try[Option[ConfigData]]) extends ConfigServiceResult
+  case class ExistsResult(path: File, exists: Try[Boolean]) extends ConfigServiceResult
+  case class DeleteResult(path: File, status: Try[Unit]) extends ConfigServiceResult
+  case class ListResult(list: Try[List[ConfigFileInfo]]) extends ConfigServiceResult
+  case class HistoryResult(path: File, history: Try[List[ConfigFileHistory]]) extends ConfigServiceResult
+
   /**
    * Use this Props instance to initialize with the given ConfigManager
    */
-  def props(configManager: ConfigManager): Props = Props(classOf[ConfigServiceActor], Some(configManager))
+  def props(configManager: NonBlockingConfigManager): Props =
+    Props(classOf[ConfigServiceActor], configManager)
 
   /**
-   * Use this Props instance to initialize with the local repository directory and the path or URI for the main repository
+   * Returns the default config manager, using the configured settings (see resources/reference.conf).
+   * @param system the caller's actor system, used to access the settings
    */
-  def props(gitLocalRepository: File, gitMainRepository: URI): Props
-  = Props(classOf[ConfigServiceActor], Some(GitConfigManager(gitLocalRepository, gitMainRepository)))
-
-  /**
-   * Use this Props instance to initialize using the default Git repository (configured in resources/reference.conf)
-   */
-  def props(): Props = Props[ConfigServiceActor]
-
-  /**
-   * Returns the default config manager, using the given settings
-   * @param settings read from resources/reference.conf
-   */
-  private def defaultConfigManager(settings: Settings) : ConfigManager = {
-    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
+  def defaultConfigManager(system: ActorSystem) : Future[NonBlockingConfigManager] = {
+    import system.dispatcher
+    val settings = Settings(system)
+    NonBlockingGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
   }
 }
 
 /**
  * An Akka actor class implementing the Config Service.
- * @param configManagerOpt specify the configManager to use for tests, use None for production to get default
+ * @param configManager the configManager to use (See [[ConfigServiceActor.defaultConfigManager]])
  */
-class ConfigServiceActor(configManagerOpt: Option[ConfigManager] = None) extends Actor with ActorLogging {
+class ConfigServiceActor(configManager: NonBlockingConfigManager) extends Actor with ActorLogging {
+  import org.tmt.csw.cs.akka.ConfigServiceActor._
+  import context.dispatcher
 
-  // The ConfigManager instance used to access the Git repository
-  val configManager = {
-    configManagerOpt match {
-      case Some(m) => m
-      case None => defaultConfigManager(Settings(context.system))
-    }
-  }
-
-  /**
-   * Receive actor messages and send replies (via reply method).
-   * The senders should use "?" (ask) and the response will be a Future containing the result (or an exception).
-   */
   override def receive: Receive = {
-    case request: ConfigServiceRequest => reply(sender, request)
-    case _ => sender ! Status.Failure(new IllegalArgumentException)
+    case CreateRequest(path, configData, comment) => handleCreateRequest(sender(), path, configData, comment)
+    case UpdateRequest(path, configData, comment) => handleUpdateRequest(sender(), path, configData, comment)
+    case GetRequest(path, id) => handleGetRequest(sender(), path, id)
+    case ExistsRequest(path) => handleExistsRequest(sender(), path)
+    case DeleteRequest(path, comment) => handleDeleteRequest(sender(), path, comment)
+    case ListRequest => handleListRequest(sender())
+    case HistoryRequest(path) => handleHistoryRequest(sender(), path)
+
+    case x => log.error(s"Received unknown message $x from ${sender()}")
   }
 
-  /**
-   * Answers the sender with the requested results, or with an exception, if there is an error
-   * @param sender the actor that made the request
-   * @param request the request
-   */
-  def reply(sender: ActorRef, request: ConfigServiceRequest): Unit = {
-    log.debug(s"Replying to request: ${request.getClass.getSimpleName}")
-    try {
-      request match {
-        case CreateRequest(path, configData, comment) => sender ! configManager.create(path, configData, comment)
-        case UpdateRequest(path, configData, comment) => sender ! configManager.update(path, configData, comment)
-        case GetRequest(path, id) => sender ! configManager.get(path, id)
-        case ExistsRequest(path) => sender ! configManager.exists(path)
-        case DeleteRequest(path, comment) => sender ! configManager.delete(path, comment)
-        case ListRequest => sender ! configManager.list()
-        case HistoryRequest(path) => sender ! configManager.history(path)
-      }
-    } catch {
-      case e: Exception =>
-        sender ! Status.Failure(e)
+  def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit =
+    configManager.create(path, configData, comment) onComplete {
+      case Success(configId) => replyTo ! CreateResult(path, Success(configId))
+      case Failure(ex) => replyTo ! CreateResult(path, Failure(ex))
     }
-  }
+
+  def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit =
+    configManager.update(path, configData, comment) onComplete {
+      case Success(configId) => replyTo ! UpdateResult(path, Success(configId))
+      case Failure(ex) => replyTo ! UpdateResult(path, Failure(ex))
+    }
+
+  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit =
+    configManager.get(path, id) onComplete {
+      case Success(configDataOpt) => replyTo ! GetResult(path, id, Success(configDataOpt))
+      case Failure(ex) => replyTo ! GetResult(path, id, Failure(ex))
+    }
+
+
+  def handleExistsRequest(replyTo: ActorRef, path: File): Unit =
+    configManager.exists(path) onComplete {
+      case Success(bool) => replyTo ! ExistsResult(path, Success(bool))
+      case Failure(ex) => replyTo ! ExistsResult(path, Failure(ex))
+    }
+
+
+  def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit =
+    configManager.delete(path, comment) onComplete {
+      case Success(u) => replyTo ! DeleteResult(path, Success(u))
+      case Failure(ex) => replyTo ! DeleteResult(path, Failure(ex))
+    }
+
+  def handleListRequest(replyTo: ActorRef): Unit =
+    configManager.list() onComplete {
+      case Success(list) => replyTo ! ListResult(Success(list))
+      case Failure(ex) => replyTo ! ListResult(Failure(ex))
+    }
+
+  def handleHistoryRequest(replyTo: ActorRef, path: File): Unit =
+    configManager.history(path) onComplete {
+      case Success(list) => replyTo ! HistoryResult(path, Success(list))
+      case Failure(ex) => replyTo ! HistoryResult(path, Failure(ex))
+    }
 }

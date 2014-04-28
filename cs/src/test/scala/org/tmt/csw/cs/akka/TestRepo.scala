@@ -1,8 +1,8 @@
 package org.tmt.csw.cs.akka
 
-import org.tmt.csw.cs.api.ConfigManager
 import java.io.File
 import org.tmt.csw.cs.core.git.GitConfigManager
+import scala.concurrent.ExecutionContextExecutor
 
 /**
  * Utility class to create temporary Git repositories for use in testing.
@@ -13,9 +13,9 @@ object TestRepo {
    * Creates a temporary test Git repository and a bare main repository for push/pull.
    * Any previous contents are deleted.
    *
-   * @return a new ConfigManager set to manage the newly created Git repositories
+   * @return a new non-blocking config manager set to manage the newly created Git repositories
    */
-  def getConfigManager(prefix : String) : ConfigManager = {
+  def getConfigManager(prefix : String)(implicit dispatcher: ExecutionContextExecutor): NonBlockingConfigManager = {
     // Create the temporary Git repos for the test
     val tmpDir = System.getProperty("java.io.tmpdir")
     val gitDir = new File(tmpDir, prefix + "-cs-akka-test")
@@ -31,6 +31,6 @@ object TestRepo {
     GitConfigManager.deleteLocalRepo(gitDir)
 
     // create a new repository and use it to create the actor
-    GitConfigManager(gitDir, gitMainRepo.toURI)
+    NonBlockingConfigManager(GitConfigManager(gitDir, gitMainRepo.toURI))
   }
 }

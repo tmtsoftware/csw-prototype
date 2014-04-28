@@ -5,15 +5,12 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
 import org.eclipse.jgit.lib._
 import org.eclipse.jgit.treewalk.TreeWalk
-import java.util.{Date, Properties}
+import java.util.Date
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
-import org.tmt.csw.cs.api._
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
 import org.tmt.csw.cs.core.GitConfigId
-import org.tmt.csw.cs.api.ConfigFileHistory
-import org.tmt.csw.cs.api.ConfigFileInfo
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.annotation.tailrec
 import java.net.URI
@@ -22,24 +19,6 @@ import java.net.URI
  * Used to initialize an instance of GitConfigManager with a given repository directory
  */
 object GitConfigManager {
-
-  /**
-   * Creates and returns a GitConfigManager instance using the default directory as the
-   * local Git repository root (directory containing .git dir) and the default
-   * URI as the remote, central Git repository.
-   * If the local repository already exists, it is opened, otherwise it is created.
-   * An exception is thrown if the remote repository does not exist.
-   *
-   * The defaults in this case are stored in the config.prop file in this package under resources.
-   *
-   * @return a new GitConfigManager configured to use the default local and remote repositories
-   */
-  def apply(): GitConfigManager = {
-    val props = new Properties
-    props.load(Thread.currentThread.getContextClassLoader.getResourceAsStream("org/tmt/csw/cs/core/git/config.prop"))
-    apply(new File(props.getProperty("git-local-repository")), new URI(props.getProperty("git-main-repository")))
-  }
-
 
   /**
    * Creates and returns a GitConfigManager instance using the given directory as the
@@ -69,6 +48,7 @@ object GitConfigManager {
   }
 
   // Sets the master repository (needed for git push/pull commands)
+  // XXX TODO: Check this
   private def trackMaster(git: Git): Unit = {
     git.branchCreate()
       .setName("master")
@@ -109,18 +89,8 @@ object GitConfigManager {
 /**
  * Uses JGit to manage versions of configuration files
  */
-//@Component
 class GitConfigManager(val git: Git) extends ConfigManager with Logging {
 
-  /**
-   * Creates a config file with the given path and data and optional comment.
-   * An IOException is thrown if the file already exists.
-   *
-   * @param path the config file path
-   * @param configData the contents of the file
-   * @param comment an optional comment to associate with this file
-   * @return a unique id that can be used to refer to the file
-   */
   override def create(path: File, configData: ConfigData, comment: String): ConfigId = {
     logger.debug(s"create $path")
     val file = fileForPath(path)
@@ -130,15 +100,6 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     put(path, configData, comment)
   }
 
-  /**
-   * Updates the config file with the given path and data and optional comment.
-   * An FileNotFoundException is thrown if the file does not exists.
-   *
-   * @param path the config file path
-   * @param configData the contents of the file
-   * @param comment an optional comment to associate with this file
-   * @return a unique id that can be used to refer to the file
-   */
   override def update(path: File, configData: ConfigData, comment: String): ConfigId = {
     logger.debug(s"update $path")
     val file = fileForPath(path)
@@ -158,30 +119,20 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     val file = fileForPath(path)
     writeToFile(file, configData)
     val dirCache = git.add.addFilepattern(path.getPath).call()
-//    git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfigfor now
+//    git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfig for now
     git.commit().setMessage(comment).call
     git.push.call()
     GitConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
   }
 
-  /**
-   * Returns true if the given path exists and is being managed
-   * @param path the configuration path
-   * @return true if the file exists
-   */
   def exists(path: File): Boolean = {
     logger.debug(s"exists $path")
     fileForPath(path).exists
   }
 
-  /**
-   * Deletes the given config file (older versions will still be available)
-   *
-   * @param path the configuration path
-   */
   override def delete(path: File, comment: String = "deleted"): Unit = {
     logger.debug(s"delete $path")
-    if (!exists(path)) {
+    if (!fileForPath(path).exists) {
       throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
     }
     git.rm.addFilepattern(path.getPath).call()
@@ -189,33 +140,22 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     git.push.call()
   }
 
-  /**
-   * Gets and returns the config file stored under the given path.
-   *
-   * @param path the configuration path
-   * @param id an optional id used to specify a specific version to fetch
-   *           (by default the latest version is returned)
-   * @return an object containing the configuration data, if found
-   */
   override def get(path: File, id: Option[ConfigId]): Option[ConfigData] = {
     logger.debug(s"get $path")
-    if (! exists(path)) {
-      return None
-    }
-    if (!id.isEmpty) {
-      // return the file for the given id
-      val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)
-      Some(new ConfigBytes(git.getRepository.open(objId).getBytes))
+    if (!fileForPath(path).exists) {
+      None
     } else {
-      // return the latest version of the file (without checking Git)
-      Some(new ConfigFile(fileForPath(path)))
+      if (!id.isEmpty) {
+        // return the file for the given id
+        val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)
+        Some(new ConfigBytes(git.getRepository.open(objId).getBytes))
+      } else {
+        // return the latest version of the file (without checking Git)
+        Some(new ConfigFile(fileForPath(path)))
+      }
     }
   }
 
-  /**
-   * Returns a list containing all known configuration files
-   * @return a list containing one ConfigFileInfo object for each known config file
-   */
   def list(): List[ConfigFileInfo] = {
     logger.debug(s"list")
     val repo = git.getRepository
@@ -252,10 +192,6 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     }
   }
 
-  /**
-   * Returns a list of all known versions of a given path
-   * @return a list containing one ConfigFileHistory object for each version of path
-   */
   def history(path: File): List[ConfigFileHistory] = {
     logger.debug(s"history $path")
     val logCommand = git.log

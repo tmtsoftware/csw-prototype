@@ -1,4 +1,4 @@
-package org.tmt.csw.cs.api
+package org.tmt.csw.cs.core
 
 import java.util.Date
 import java.io.File
@@ -43,7 +43,7 @@ trait ConfigManager {
   /**
    * Returns true if the given path exists and is being managed
    * @param path the configuration path
-   * @return true if the file exists
+   * @return true the file exists
    */
   def exists(path: File) : Boolean
 
@@ -55,7 +55,7 @@ trait ConfigManager {
   def delete(path: File, comment: String = "deleted"): Unit
 
   /**
-   * Returns a list containing all known configuration files
+   * Returns a list containing all of the known config files
    * @return a list containing one ConfigFileInfo object for each known config file
    */
   def list(): List[ConfigFileInfo]

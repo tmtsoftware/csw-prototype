@@ -2,11 +2,12 @@ package org.tmt.csw.cmd.spray
 
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
-import org.scalatest.{FunSuiteLike}
+import org.scalatest.FunSuiteLike
 import scala.concurrent.duration._
 import org.tmt.csw.cmd.akka._
 import spray.http.StatusCodes
 import org.tmt.csw.util.{TestConfig, Configuration}
+import scala.concurrent.Await
 
 /**
  * Tests the Command Service HTTP/REST interface in an actor environment.
@@ -14,19 +15,16 @@ import org.tmt.csw.util.{TestConfig, Configuration}
 class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with CommandServiceHttpClient
   with TestHelper with FunSuiteLike {
 
+  implicit val dispatcher = system.dispatcher
+
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
 
   val duration: FiniteDuration = 5.seconds
-  implicit val dispatcher = system.dispatcher
 
   // Settings
   val interface = CommandServiceTestSettings(system).interface
   val port = CommandServiceTestSettings(system).port
-  implicit val timeout = CommandServiceTestSettings(system).timeout
-
-  // Need to save any exception that occurs in another thread, so we can fail the test in this thread
-  var savedException: Option[Exception] = None
 
   startCommandServiceHttpServer()
 
@@ -34,7 +32,8 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
   // -- Tests --
 
   test("Test HTTP REST interface to Command Service") {
-    for {
+
+    Await.result(for {
       // test submitting a config to the command queue
       runId1 <- queueSubmit(config)
       commandStatus1 <- pollCommandStatus(runId1, 3)
@@ -64,7 +63,7 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
       res4c <- configAbort(runId4)
       commandStatus4c <- pollCommandStatus(runId4, 3)
 
-    } try {
+    } yield {
       // At this point all of the above futures have completed: check the results
       checkReturnStatus("1", commandStatus1, runId1, CommandStatus.Completed(runId1))
 
@@ -82,22 +81,8 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
       checkReturnStatus("4b", commandStatus4b, runId4, CommandStatus.Canceled(runId4))
       assert(res4c.status == StatusCodes.Accepted)
       checkReturnStatus("4c", commandStatus4c, runId4, CommandStatus.Error(runId4, CommandServiceHttpServer.unknownRunIdMessage))
-    } catch {
-      case e: Exception => savedException = Some(e)
-    } finally {
-      // If we don't call this, the call to system.awaitTermination() below will hang
-      system.shutdown()
-    }
-
-    // Wait for above to complete!
-    system.awaitTermination()
-
-    savedException match {
-      case None => // OK
-      case Some(e) => fail(e)
-    }
+    }, 10.seconds)
   }
-
 
   // -- Helper methods --
 
@@ -109,14 +94,13 @@ class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with Com
     }
   }
 
-
   // Start the command service, passing it a command service actor, set up with two config actors that
   // will implement the commands.
   def startCommandServiceHttpServer(): Unit = {
     // val numberOfSecondsToRun = 12 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
     val numberOfSecondsToRun = 2 // Make this greater than CommandServiceTestSettings.timeout to test timeout handling
     val commandServiceActor = getCommandServiceActor(numberOfSecondsToRun)
-    system.actorOf(CommandServiceHttpServer.props(commandServiceActor, interface, port, timeout), "commandService")
+    system.actorOf(CommandServiceHttpServer.props(commandServiceActor, interface, port, 5.seconds), "commandService")
     Thread.sleep(1000) // XXX need a way to wait until the server is ready before proceeding
   }
 }

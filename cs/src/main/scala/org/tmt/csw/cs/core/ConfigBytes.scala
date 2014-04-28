@@ -1,7 +1,5 @@
 package org.tmt.csw.cs.core
 
-import org.tmt.csw.cs.api.ConfigData
-
 /**
  * Represents a configuration file
  */

@@ -1,19 +1,20 @@
 package org.tmt.csw.cs.akka
 
-import org.tmt.csw.cs.api._
 import scala.concurrent.Future
 import akka.pattern.ask
-import akka.actor.ActorRef
+import akka.actor.{ActorSystem, ActorRef}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import ConfigServiceActor._
 import java.io.File
+import org.tmt.csw.cs.core._
 
 /**
  * Adds a convenience layer over the Akka actor interface to the configuration service.
  * This is like the ConfigService API, but returns Akka Futures with the correct return types instead of objects.
  */
-case class ConfigServiceClient(configServiceActor : ActorRef)  {
+case class ConfigServiceClient(system: ActorSystem, configServiceActor : ActorRef)  {
+  import system.dispatcher
 
   val duration = 5.seconds
   implicit val timeout = Timeout(5.seconds)
@@ -28,7 +29,8 @@ case class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping a unique id that can be used to refer to the file
    */
   def create(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
-    (configServiceActor ? CreateRequest(path, configData, comment)).mapTo[ConfigId]
+    (configServiceActor ? CreateRequest(path, configData, comment))
+      .mapTo[CreateResult].map(_.configId.get)
   }
 
   /**
@@ -41,7 +43,8 @@ case class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping a unique id that can be used to refer to the file
    */
   def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
-    (configServiceActor ? UpdateRequest(path, configData, comment)).mapTo[ConfigId]
+    (configServiceActor ? UpdateRequest(path, configData, comment)).
+      mapTo[UpdateResult].map(_.configId.get)
   }
 
   /**
@@ -53,7 +56,7 @@ case class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping an object containing the configuration data, if found
    */
   def get(path: File, id: Option[ConfigId] = None): Future[Option[ConfigData]] = {
-    (configServiceActor ? GetRequest(path, id)).mapTo[Option[ConfigData]]
+    (configServiceActor ? GetRequest(path, id)).mapTo[GetResult].map(_.configData.get)
   }
 
   /**
@@ -62,7 +65,7 @@ case class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping true if the file exists
    */
   def exists(path: File): Future[Boolean] = {
-    (configServiceActor ? ExistsRequest(path)).mapTo[Boolean]
+    (configServiceActor ? ExistsRequest(path)).mapTo[ExistsResult].map(_.exists.get)
   }
 
   /**
@@ -72,7 +75,7 @@ case class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping Unit (so it is possible to tell when the operation is done or failed)
    */
   def delete(path: File, comment: String) : Future[Unit] = {
-    (configServiceActor ? DeleteRequest(path)).mapTo[Unit]
+    (configServiceActor ? DeleteRequest(path)).mapTo[DeleteResult].map(_.status.get)
   }
 
   /**
@@ -80,7 +83,7 @@ case class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping a list containing one ConfigFileInfo object for each known config file
    */
   def list(): Future[List[ConfigFileInfo]] = {
-    (configServiceActor ? ListRequest).mapTo[List[ConfigFileInfo]]
+    (configServiceActor ? ListRequest).mapTo[ListResult].map(_.list.get)
   }
 
   /**
@@ -88,7 +91,7 @@ case class ConfigServiceClient(configServiceActor : ActorRef)  {
    * @return a Future wrapping a list containing one ConfigFileHistory object for each version of path
    */
   def history(path: File): Future[List[ConfigFileHistory]] = {
-    (configServiceActor ? HistoryRequest(path)).mapTo[List[ConfigFileHistory]]
+    (configServiceActor ? HistoryRequest(path)).mapTo[HistoryResult].map(_.history.get)
   }
 }
 

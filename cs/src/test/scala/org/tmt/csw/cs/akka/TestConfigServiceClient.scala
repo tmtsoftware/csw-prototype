@@ -7,13 +7,15 @@ import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.Some
 import scala.concurrent.duration._
-import akka.util.Timeout
+import scala.concurrent.Await
 
 
 /**
  * Tests the Config Service actor
  */
-class TestConfigServiceClient extends TestKit(ActorSystem("mySystem")) with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
+class TestConfigServiceClient extends TestKit(ActorSystem("mySystem"))
+  with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
+  import system.dispatcher
 
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")
@@ -28,24 +30,15 @@ class TestConfigServiceClient extends TestKit(ActorSystem("mySystem")) with Impl
 
   test("Test the ConfigServiceActor, storing and retrieving some files") {
     // create a test repository and use it to create the actor
-    val manager = TestRepo.getConfigManager("test2")
+    val manager = TestRepo.getConfigManager("test2")(system.dispatcher)
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
-    val csClient = ConfigServiceClient(csActor)
+    val csClient = ConfigServiceClient(system, csActor)
 
-    val duration = 5.seconds
-    implicit val timeout = Timeout(duration)
-    implicit val dispatcher = system.dispatcher
-
-    // Need to save any exception that occurs in another thread, so we can fail the test in this thread
-    var savedException : Option[Exception] = None
-
-    // Sequential, non-blocking for comprehension: See Akka docs. The statements below are executed
-    // sequentially, but in different threads.
-    for {
-
-    // Try to update a file that does not exist (should fail)
+    // Sequential, non-blocking for comprehension
+    Await.result(for {
+      // Try to update a file that does not exist (should fail)
       updateIdNull <- csClient.update(path1, new ConfigString(contents2), comment2) recover {
         case e: FileNotFoundException => null
       }
@@ -75,52 +68,33 @@ class TestConfigServiceClient extends TestKit(ActorSystem("mySystem")) with Impl
       createIdNull <- csClient.create(path1, new ConfigString(contents2), comment2) recover {
         case e: IOException => null
       }
-    } {
-      try {
-        // At this point all of the above Futures have completed,so we can do some tests
-        assert(updateIdNull == null)
-        assert(!option1.isEmpty && option1.get.toString == contents3)
-        assert(!option2.isEmpty && option2.get.toString == contents1)
-        assert(!option3.isEmpty && option3.get.toString == contents2)
-        assert(!option4.isEmpty && option4.get.toString == contents3)
-        assert(!option5.isEmpty && option5.get.toString == contents1)
-        assert(!option6.isEmpty && option6.get.toString == contents1)
-        assert(createIdNull == null)
+    } yield {
+      // At this point all of the above Futures have completed,so we can do some tests
+      assert(updateIdNull == null)
+      assert(!option1.isEmpty && option1.get.toString == contents3)
+      assert(!option2.isEmpty && option2.get.toString == contents1)
+      assert(!option3.isEmpty && option3.get.toString == contents2)
+      assert(!option4.isEmpty && option4.get.toString == contents3)
+      assert(!option5.isEmpty && option5.get.toString == contents1)
+      assert(!option6.isEmpty && option6.get.toString == contents1)
+      assert(createIdNull == null)
 
-        assert(historyList1.size == 3)
-        assert(historyList2.size == 1)
-        assert(historyList1(0).comment == comment1)
-        assert(historyList2(0).comment == comment1)
-        assert(historyList1(1).comment == comment2)
-        assert(historyList1(2).comment == comment3)
+      assert(historyList1.size == 3)
+      assert(historyList2.size == 1)
+      assert(historyList1(0).comment == comment1)
+      assert(historyList2(0).comment == comment1)
+      assert(historyList1(1).comment == comment2)
+      assert(historyList1(2).comment == comment3)
 
-        assert(list.size == 2)
-        for (info <- list) {
-          info.path match {
-            case this.path1 => {
-              assert(info.comment == this.comment3)
-            }
-            case this.path2 => {
-              assert(info.comment == this.comment1)
-            }
-            case _ => sys.error("Test failed for " + info)
-          }
+      assert(list.size == 2)
+      for (info <- list) {
+        info.path match {
+          case this.path1 => assert(info.comment == this.comment3)
+          case this.path2 => assert(info.comment == this.comment1)
+          case _ => sys.error("Test failed for " + info)
         }
-      } catch {
-        case e: Exception => savedException = Some(e)
-      } finally {
-        // If we don't call this, the call to system.awaitTermination() below will hang
-        system.shutdown()
       }
-    }
-
-    // Wait for above to complete!
-    system.awaitTermination()
-
-    savedException match {
-      case None => // OK
-      case Some(e) => fail(e)
-    }
+    }, 5.seconds)
   }
 
   override def afterAll(): Unit = {

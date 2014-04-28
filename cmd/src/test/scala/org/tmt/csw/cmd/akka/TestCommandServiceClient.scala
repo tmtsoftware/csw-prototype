@@ -4,16 +4,19 @@ import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{ActorRef, ActorSystem}
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import com.typesafe.scalalogging.slf4j.Logging
-import akka.util.Timeout
 import org.tmt.csw.cmd.spray.CommandServiceTestSettings
 import scala.concurrent.Future
 import org.tmt.csw.util.{TestConfig, Configuration}
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
  * Tests the Command Service Client actor
  */
 class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHelper
   with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with Logging {
+
+  import system.dispatcher
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)
@@ -22,11 +25,9 @@ class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHel
   // to match the time needed for the tests and avoid timeouts
   val duration = CommandServiceTestSettings(system).timeout
 
-  implicit val timeout = Timeout(duration)
-  implicit val dispatcher = system.dispatcher
-
   def getCommandServiceClientActor: ActorRef = {
-    system.actorOf(CommandServiceClientActor.props(getCommandServiceActor(), duration), name = s"testCommandServiceClientActor")
+    system.actorOf(CommandServiceClientActor.props(getCommandServiceActor(), duration),
+      name = s"testCommandServiceClientActor")
   }
 
   def getCommandServiceClient: CommandServiceClient = {
@@ -38,37 +39,19 @@ class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHel
 
   test("Tests the command service client class") {
     val cmdClient = getCommandServiceClient
-    // Need to save any exception that occurs in another thread, so we can fail the test in this thread
-    var savedException: Option[Exception] = None
-    for {
+    Await.result(for {
       runId1 <- cmdClient.queueSubmit(config)
       status1 <- cmdClient.pollCommandStatus(runId1)
-
       _ <- Future.successful(cmdClient.queuePause())
       runId2 <- cmdClient.queueSubmit(config)
       status2a <- cmdClient.getCommandStatus(runId2)
       _ <- Future.successful(cmdClient.queueStart())
       status2b <- cmdClient.pollCommandStatus(runId2)
-    } {
-      try {
-        assert(status1 == CommandStatus.Completed(runId1))
-        assert(status2a == CommandStatus.Queued(runId2))
-        assert(status2b == CommandStatus.Completed(runId2))
-      } catch {
-        case e: Exception => savedException = Some(e)
-      } finally {
-        // If we don't call this, the call to system.awaitTermination() below will hang
-        system.shutdown()
-      }
-    }
-
-    // Wait for above to complete!
-    system.awaitTermination()
-
-    savedException match {
-      case None => // OK
-      case Some(e) => fail(e)
-    }
+    } yield {
+      assert(status1 == CommandStatus.Completed(runId1))
+      assert(status2a == CommandStatus.Queued(runId2))
+      assert(status2b == CommandStatus.Completed(runId2))
+    }, 5.seconds)
   }
 
   override def afterAll(): Unit = {

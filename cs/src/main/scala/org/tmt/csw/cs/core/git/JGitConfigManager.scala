@@ -4,10 +4,9 @@ import org.tmt.csw.cs.api._
 import java.util
 import java.io.File
 import scala.collection.JavaConversions._
-import org.tmt.csw.cs.api.ConfigFileHistory
-import org.tmt.csw.cs.api.ConfigFileInfo
 import scala.Some
 import java.net.URI
+import org.tmt.csw.cs.core.{ConfigData, ConfigId, ConfigFileInfo, ConfigFileHistory}
 
 /**
  * Uses JGit to manage versions of configuration files.
