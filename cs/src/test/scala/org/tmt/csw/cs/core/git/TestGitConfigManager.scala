@@ -101,16 +101,12 @@ class TestGitConfigManager extends FunSuite {
 
     // Test list()
     val list = manager.list()
-    assert(list.size == 2)
+    assert(list.size == 2+1) // +1 for default README file added during creation
     for (info <- list) {
       info.path match {
-        case this.path1 => {
-          assert(info.comment == this.comment3)
-        }
-        case this.path2 => {
-          assert(info.comment == this.comment1)
-        }
-        case _ => sys.error("Test failed for " + info)
+        case this.path1 => assert(info.comment == this.comment3)
+        case this.path2 => assert(info.comment == this.comment1)
+        case x => if (x.getName != "README") sys.error("Test failed for " + info)
       }
     }
 

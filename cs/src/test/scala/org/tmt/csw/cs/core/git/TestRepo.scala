@@ -25,8 +25,6 @@ object TestRepo {
     println("Local repo = " + gitDir + ", remote = " + gitMainRepo)
 
     // Delete the main and local test repositories (Only use this in test cases!)
-//    gitMainRepo.mkdir()
-//    gitDir.mkdir()
     GitConfigManager.deleteLocalRepo(gitMainRepo)
     GitConfigManager.initBareRepo(gitMainRepo)
     GitConfigManager.deleteLocalRepo(gitDir)

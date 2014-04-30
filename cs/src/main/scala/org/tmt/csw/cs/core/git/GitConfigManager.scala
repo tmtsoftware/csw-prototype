@@ -9,11 +9,11 @@ import java.util.Date
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import scalax.io.Resource
 import org.tmt.csw.cs.core._
-import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
 import org.tmt.csw.cs.core.GitConfigId
 import com.typesafe.scalalogging.slf4j.Logging
 import scala.annotation.tailrec
 import java.net.URI
+import java.nio.file.Files
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -37,7 +37,6 @@ object GitConfigManager {
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
       val git = new Git(new FileRepositoryBuilder().setGitDir(gitDir).build())
-      trackMaster(git)
       val result = git.pull.call
       if (!result.isSuccessful) throw new IOException(result.toString)
       new GitConfigManager(git)
@@ -45,17 +44,6 @@ object GitConfigManager {
       val git = Git.cloneRepository.setDirectory(gitWorkDir).setURI(remoteRepo.toString).call
       new GitConfigManager(git)
     }
-  }
-
-  // Sets the master repository (needed for git push/pull commands)
-  // XXX TODO: Check this
-  private def trackMaster(git: Git): Unit = {
-    git.branchCreate()
-      .setName("master")
-      .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
-      .setStartPoint("origin/master")
-      .setForce(true)
-      .call()
   }
 
   /**
@@ -78,11 +66,28 @@ object GitConfigManager {
   }
 
   /**
-   * FOR TESTING: Initializes a bare repository in the given dir
+   * Initializes a bare repository in the given dir
+   * (A bare repository is one containing only the .git dir and no checked out files).
+   *
+   * Note: We need to add at least one file after creating the main repository to avoid errors
+   * later when pulling from an empty repo. Somehow adding the file also initializes
+   * the master branch. The problem shows up when multiple clients create an instance
+   * of GitConfigManager and try to pull from an empty, newly created git repo.
+   *
    * @param dir directory to contain the new bare repository
    */
   def initBareRepo(dir: File): Unit = {
+    // Create the new main repo
     Git.init.setDirectory(dir).setBare(true).call
+
+    // Add a README file to a temporary clone of the main repo and push it to the new repo.
+    val tmpDir = Files.createTempDirectory("TempConfigServiceRepo").toFile
+    val gm = GitConfigManager(tmpDir, dir.toURI)
+    try {
+      gm.create(new File("README"), ConfigString("This is the main Config Service Git repository."))
+    } finally {
+      deleteLocalRepo(tmpDir)
+    }
   }
 }
 
@@ -107,25 +112,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     put(path, configData, comment)
   }
 
-  /**
-   * Creates or updates a config file with the given path and data and optional comment.
-   *
-   * @param path the config file path
-   * @param configData the contents of the file
-   * @param comment an optional comment to associate with this file
-   * @return a unique id that can be used to refer to the file
-   */
-  private def put(path: File, configData: ConfigData, comment: String): ConfigId = {
-    val file = fileForPath(path)
-    writeToFile(file, configData)
-    val dirCache = git.add.addFilepattern(path.getPath).call()
-//    git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfig for now
-    git.commit().setMessage(comment).call
-    git.push.call()
-    GitConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
-  }
-
-  def exists(path: File): Boolean = {
+  override def exists(path: File): Boolean = {
     logger.debug(s"exists $path")
     fileForPath(path).exists
   }
@@ -222,6 +209,24 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     }
   }
 
+  /**
+   * Creates or updates a config file with the given path and data and optional comment.
+   *
+   * @param path the config file path
+   * @param configData the contents of the file
+   * @param comment an optional comment to associate with this file
+   * @return a unique id that can be used to refer to the file
+   */
+  private def put(path: File, configData: ConfigData, comment: String = ""): ConfigId = {
+    val file = fileForPath(path)
+    writeToFile(file, configData)
+    val dirCache = git.add.addFilepattern(path.getPath).call()
+    //    git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfig for now
+    git.commit().setMessage(comment).call
+    git.push.call()
+    GitConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
+  }
+
   private def fileForPath(path: File): File = {
     new File(git.getRepository.getWorkTree, path.getPath)
   }
@@ -230,4 +235,14 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     Resource.fromFile(file).truncate(0L); // according to docs, this should happen below, but does not!
     Resource.fromFile(file).write(configData.getBytes)
   }
+
+  //  // Sets the master repository (needed for git push/pull commands)
+  //  private def trackMaster(git: Git): Unit = {
+  //    git.branchCreate()
+  //      .setName("master")
+  //      .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
+  //      .setStartPoint("origin/master")
+  //      .setForce(true)
+  //      .call
+  //  }
 }

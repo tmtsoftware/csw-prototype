@@ -8,6 +8,7 @@ import akka.testkit.{ImplicitSender, TestKit}
 import scala.Some
 import scala.concurrent.duration._
 import scala.concurrent.Await
+import akka.util.Timeout
 
 
 /**
@@ -28,9 +29,11 @@ class TestConfigServiceClient extends TestKit(ActorSystem("mySystem"))
   val comment2 = "update 1 comment"
   val comment3 = "update 2 comment"
 
-  test("Test the ConfigServiceActor, storing and retrieving some files") {
+  test("Test the ConfigServiceClent, storing and retrieving some files") {
+    implicit val timeout = Timeout(5.seconds)
+
     // create a test repository and use it to create the actor
-    val manager = TestRepo.getConfigManager("test2")(system.dispatcher)
+    val manager = TestRepo.getConfigManager("test2", create=true)(system.dispatcher)
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
@@ -86,12 +89,12 @@ class TestConfigServiceClient extends TestKit(ActorSystem("mySystem"))
       assert(historyList1(1).comment == comment2)
       assert(historyList1(2).comment == comment3)
 
-      assert(list.size == 2)
+      assert(list.size == 2+1) // +1 for REAME file added when creating the bare rep
       for (info <- list) {
         info.path match {
           case this.path1 => assert(info.comment == this.comment3)
           case this.path2 => assert(info.comment == this.comment1)
-          case _ => sys.error("Test failed for " + info)
+          case x => if (x.getName != "README") sys.error("Test failed for " + info)
         }
       }
     }, 5.seconds)

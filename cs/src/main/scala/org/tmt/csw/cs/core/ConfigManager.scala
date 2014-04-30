@@ -2,6 +2,7 @@ package org.tmt.csw.cs.core
 
 import java.util.Date
 import java.io.File
+import scalax.io.Resource
 
 /**
  * Defines an interface for storing and retrieving configuration information
@@ -94,3 +95,57 @@ case class ConfigFileHistory(id: ConfigId, comment: String, time: Date)
  */
 case class ConfigFileInfo(path: File, id: ConfigId, comment: String)
 
+/**
+ * Type of an id returned from ConfigManager create or update methods.
+ * Holds the Git id for the file.
+ */
+case class GitConfigId(id: String) extends ConfigId
+
+/**
+ * Represents the contents of a config file
+ */
+case class ConfigString(str: String) extends ConfigData {
+  /**
+   * @return a representation of the object as a byte array
+   */
+  def getBytes: Array[Byte] = str.getBytes
+  // TODO: Note: maybe serializing the string would be safer here? (no charset handling)
+
+  override def toString: String = str
+}
+
+/**
+ * Represents a configuration file
+ */
+case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
+
+  /**
+   * @return a representation of the object as a byte array
+   */
+  def getBytes: Array[Byte] = bytes
+
+
+  /**
+   * Should only be used for debugging info (no charset handling)
+   * @return contents as string
+   */
+  override def toString: String = {
+    new String(bytes)
+  }
+}
+
+/**
+ * Represents a configuration file
+ */
+case class ConfigFile(file: File) extends ConfigData {
+  /**
+   * @return a representation of the object as a byte array
+   */
+  def getBytes: Array[Byte] = {
+    Resource.fromFile(file).byteArray
+  }
+
+  override def toString: String = {
+    Resource.fromFile(file).string
+  }
+}

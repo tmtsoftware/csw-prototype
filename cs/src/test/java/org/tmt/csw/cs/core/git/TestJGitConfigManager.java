@@ -85,13 +85,13 @@ public class TestJGitConfigManager {
 
         // Test list()
         List<ConfigFileInfo> list = manager.list();
-        assert (list.size() == 2);
+        assert (list.size() == 2+1); // +1 for README added by default when creating bare main repop
         for (ConfigFileInfo info : list) {
             if (info.path().equals(path1)) {
                 assert (info.comment().equals(comment3));
             } else if (info.path().equals(path2)) {
                 assert (info.comment().equals(comment1));
-            } else {
+            } else if (!info.path().getName().equals("README")) {
                 throw new Error("Test failed for " + info);
             }
         }

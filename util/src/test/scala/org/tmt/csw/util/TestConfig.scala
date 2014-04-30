@@ -5,8 +5,6 @@ import java.io.StringReader
 import scala.collection.JavaConverters._
 import com.typesafe.config._
 
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
 import com.typesafe.config.ConfigException.WrongType
 import com.typesafe.scalalogging.slf4j.Logging
 
@@ -106,35 +104,35 @@ class TestConfig extends FunSuite with Logging {
     """.stripMargin
 
     // XXX Note: Using the JSON DSL makes it impossible to have unquoted keys (quotes make a difference in keys)
-    val json =
-      "config" ->
-        ("info" ->
-          ("configId" -> 1000233) ~
-            ("obsId" -> "TMT-2021A-C-2-1")
-          ) ~
-          ("tmt.tel.base.pos" ->
-            ("posName" -> "NGC738B") ~
-              ("c1" -> "22:35:58.530") ~
-              ("c2" -> "33:57:55.40") ~
-              ("equinox" -> "J2000")
-            ) ~
-          ("tmt.tel.ao.pos.one" ->
-            ("c1" -> "22:356:01.066") ~
-              ("c2" -> "33:58:21.69") ~
-              ("equinox" -> "J2000")
-            )
-    val s = pretty(render(json))
-    logger.debug("JSON from DSL:")
-    logger.debug(s)
+//    val json =
+//      "config" ->
+//        ("info" ->
+//          ("configId" -> 1000233) ~
+//            ("obsId" -> "TMT-2021A-C-2-1")
+//          ) ~
+//          ("tmt.tel.base.pos" ->
+//            ("posName" -> "NGC738B") ~
+//              ("c1" -> "22:35:58.530") ~
+//              ("c2" -> "33:57:55.40") ~
+//              ("equinox" -> "J2000")
+//            ) ~
+//          ("tmt.tel.ao.pos.one" ->
+//            ("c1" -> "22:356:01.066") ~
+//              ("c2" -> "33:58:21.69") ~
+//              ("equinox" -> "J2000")
+//            )
+//    val s = pretty(render(json))
+//    logger.debug("JSON from DSL:")
+//    logger.debug(s)
 
     val parseOptions = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF)
     val conf = ConfigFactory.parseReader(new StringReader(jsonString), parseOptions)
 
     assert(conf.getInt("config.info.configId") == 1000233)
 
-    val renderOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
-    logger.debug("Config from JSON:")
-    logger.debug(conf.root.render(renderOptions))
+//    val renderOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
+//    logger.debug("Config from JSON:")
+//    logger.debug(conf.root.render(renderOptions))
 
     // XXX Doesn't work as expected because "tmt.tel.base.pos" is treated as a single key by json4s
 //    assert(conf.getString("config.\"tmt.tel.base.pos\".posName") == "NGC738B")

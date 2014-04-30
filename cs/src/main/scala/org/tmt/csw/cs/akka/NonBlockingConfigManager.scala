@@ -4,7 +4,6 @@ import java.io.File
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import org.tmt.csw.cs.core._
 import org.tmt.csw.cs.core.ConfigFileInfo
-import akka.actor.ActorSystem
 import java.net.URI
 import org.tmt.csw.cs.core.git.GitConfigManager
 

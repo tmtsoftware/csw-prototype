@@ -6,21 +6,22 @@ import org.tmt.csw.cs.core._
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
-import ConfigServiceActor._
-import org.tmt.csw.cs.akka.ConfigServiceActor.DeleteRequest
-import org.tmt.csw.cs.akka.ConfigServiceActor.UpdateRequest
+import org.tmt.csw.cs.akka.ConfigServiceActor._
 import org.tmt.csw.cs.core.ConfigString
 import scala.Some
-import org.tmt.csw.cs.akka.ConfigServiceActor.GetRequest
-import org.tmt.csw.cs.akka.ConfigServiceActor.HistoryRequest
-import org.tmt.csw.cs.akka.ConfigServiceActor.CreateRequest
-import org.tmt.csw.cs.akka.ConfigServiceActor.ExistsRequest
+import scala.concurrent.Await
+import akka.pattern.ask
+import akka.util.Timeout
 
 /**
  * Tests the Config Service actor
  */
 class TestConfigServiceActor extends TestKit(ActorSystem("testsys"))
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
+
+  // Create temporary main (bare) and local git repos for testing
+  val gitRepoPrefix = "test1"
+  TestRepo.getConfigManager(gitRepoPrefix, create=true)(system.dispatcher)
 
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")
@@ -33,19 +34,17 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys"))
   val comment2 = "update 1 comment"
   val comment3 = "update 2 comment"
 
-  val duration = 5.seconds
-
   // Note: Using blocking for this test, so we can compare return values easily.
   // Applications should not need to block while waiting. See TestConfigServiceClient in this directory
   // for a different way of doing it.
   test("Test the ConfigServiceActor, storing and retrieving some files") {
-    // create a test repository and use it to create the actor
-    val manager = TestRepo.getConfigManager("test1")(system.dispatcher)
+    // Use the test repository created above
+    val manager = TestRepo.getConfigManager(gitRepoPrefix, create=false)(system.dispatcher)
 
     // Create the actor
     val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
 
-    within(duration) {
+    within(10 seconds) {
       // Should throw exception if we try to update a file that does not exist
       configServiceActor ! UpdateRequest(path1, new ConfigString(contents2), comment2)
       checkUpdateResultFailed(path1)
@@ -85,6 +84,12 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys"))
 
       configServiceActor ! GetRequest(path2, Some(createId2))
       checkGetResult(path2, contents1)
+
+      // Test using '?' instead of '!'
+      implicit val timeout = Timeout(2.seconds)
+      val result = Await.result(configServiceActor ? GetRequest(path2, Some(createId2)),
+        2.seconds).asInstanceOf[GetResult]
+      checkGetResult(result, path2, contents1)
 
       // test history()
       configServiceActor ! HistoryRequest(path1)
@@ -148,6 +153,10 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys"))
 
   def checkGetResult(path: File, contents: String): Unit = {
     val result = expectMsgType[GetResult]
+    checkGetResult(result, path, contents)
+  }
+
+  def checkGetResult(result: GetResult, path: File, contents: String): Unit = {
     assert(result.path == path)
     assert(result.configData.isSuccess)
     val option = result.configData.get
@@ -167,9 +176,10 @@ class TestConfigServiceActor extends TestKit(ActorSystem("testsys"))
     val result = expectMsgType[ListResult]
     assert(result.list.isSuccess)
     val list = result.list.get
-    assert(list.size == size)
+    assert(list.size == size+1) // plus 1 for README file added when creating the bare repo
     for (info <- list) {
-      assert(info.comment == comments(info.path))
+      if (info.path.getName != "README")
+        assert(info.comment == comments(info.path))
     }
   }
 

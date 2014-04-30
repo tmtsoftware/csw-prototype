@@ -4,7 +4,6 @@ import scala.concurrent.Future
 import akka.pattern.ask
 import akka.actor.{ActorSystem, ActorRef}
 import akka.util.Timeout
-import scala.concurrent.duration._
 import ConfigServiceActor._
 import java.io.File
 import org.tmt.csw.cs.core._
@@ -12,12 +11,14 @@ import org.tmt.csw.cs.core._
 /**
  * Adds a convenience layer over the Akka actor interface to the configuration service.
  * This is like the ConfigService API, but returns Akka Futures with the correct return types instead of objects.
+ *
+ * @param system the caller's actor system
+ * @param configServiceActor the config service actor reference to use
+ * @param timeout amount of time to wait for config service operations to complete
  */
-case class ConfigServiceClient(system: ActorSystem, configServiceActor : ActorRef)  {
+case class ConfigServiceClient(system: ActorSystem, configServiceActor : ActorRef)
+                              (implicit timeout: Timeout)  {
   import system.dispatcher
-
-  val duration = 5.seconds
-  implicit val timeout = Timeout(5.seconds)
 
   /**
    * Creates a config file with the given path and data and optional comment.
