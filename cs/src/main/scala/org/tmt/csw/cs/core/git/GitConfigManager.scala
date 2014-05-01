@@ -66,8 +66,9 @@ object GitConfigManager {
   }
 
   /**
-   * Initializes a bare repository in the given dir
-   * (A bare repository is one containing only the .git dir and no checked out files).
+   * Initializes a bare (main) repository in the given dir.
+   * (A bare repository is one containing only the .git dir and no checked out files.)
+   * This is used to create the main git repository that all the local repos point to.
    *
    * Note: We need to add at least one file after creating the main repository to avoid errors
    * later when pulling from an empty repo. Somehow adding the file also initializes
@@ -143,7 +144,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     }
   }
 
-  def list(): List[ConfigFileInfo] = {
+  override def list(): List[ConfigFileInfo] = {
     logger.debug(s"list")
     val repo = git.getRepository
 
