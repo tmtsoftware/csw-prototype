@@ -238,8 +238,8 @@ trait CommandServiceActor extends Actor with ActorLogging {
    * Called when a Ready message is received: If the queue and config actors are ready, enter the ready state.
    */
   def checkIfReady(ready: Boolean, queueActorReady: Boolean, configActorReady: Boolean): Unit = {
-    val queueReady = if (sender == commandQueueActor) ready else queueActorReady
-    val configReady = if (sender == configActor) ready else configActorReady
+    val queueReady = if (sender() == commandQueueActor) ready else queueActorReady
+    val configReady = if (sender() == configActor) ready else configActorReady
     if (queueReady  && configReady) {
       log.info("Ready to receive commands")
       context.become(receive)

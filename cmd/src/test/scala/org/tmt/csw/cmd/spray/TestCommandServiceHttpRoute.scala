@@ -125,7 +125,7 @@ class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest wit
   override def requestCommand(config: Configuration): RunId = RunId()
 
   override def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit =
-    completer(Some(CommandStatus.Completed(runId)))
+    completer.complete(Some(CommandStatus.Completed(runId)))
 
   override def statusRequestTimedOut(runId: RunId): Boolean = false
 

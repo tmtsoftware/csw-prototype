@@ -6,10 +6,10 @@ import org.tmt.csw.util.Configuration
 
 object CommandServiceClientHelper {
   /**
-   * Function completing a request when given a CommandStatus option
+   * Holds a function that completes a request when given an optional CommandStatus
    * (used for long polling of command status while a command is running).
    */
-  type CommandStatusCompleter = Option[CommandStatus] => Unit
+  case class CommandStatusCompleter(complete: Option[CommandStatus] => Unit)
 }
 
 /**

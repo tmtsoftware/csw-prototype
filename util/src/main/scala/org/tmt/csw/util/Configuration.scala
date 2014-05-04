@@ -86,6 +86,7 @@ object Configuration {
    */
   def merge(configs: List[Configuration]): Configuration = {
     configs match {
+      case Nil => Configuration()
       case head :: Nil => head
       case head :: tail => head.merge(merge(tail))
     }

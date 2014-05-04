@@ -107,15 +107,12 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   // The number of commands submitted
   private var submitCount = 0
 
-  // Needed for "ask"
-  import context.dispatcher
-
   // Initial behavior while waiting for the queue client and controller actor references on startup.
   def initializing: Receive = {
     case s: SubmitWithRunId => queueSubmit(s)
     case QueueClient(client) => initClient(client)
     case QueueController(controller) => initController(controller)
-    case StatusRequest => sender ! ConfigQueueStatus("waiting for init", queueMap, submitCount)
+    case StatusRequest => sender() ! ConfigQueueStatus("waiting for init", queueMap, submitCount)
     case x => unknownMessage(x, "waiting for queue client")
   }
 
@@ -129,7 +126,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
     case QueueStart => queueStart()
     case QueueStop =>
     case Dequeue =>
-    case StatusRequest => sender ! ConfigQueueStatus("stopped", queueMap, submitCount)
+    case StatusRequest => sender() ! ConfigQueueStatus("stopped", queueMap, submitCount)
     case x => unknownMessage(x, "stopped")
   }
 
@@ -141,7 +138,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
     case QueueStart => queueStart()
     case QueueDelete(runId) => queueDelete(runId)
     case Dequeue =>
-    case StatusRequest => sender ! ConfigQueueStatus("paused", queueMap, submitCount)
+    case StatusRequest => sender() ! ConfigQueueStatus("paused", queueMap, submitCount)
     case x => unknownMessage(x, "paused")
   }
 
@@ -155,7 +152,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
     case QueueStart =>
     case QueueDelete(runId) => queueDelete(runId)
     case Dequeue => dequeue()
-    case StatusRequest => sender ! ConfigQueueStatus("started", queueMap, submitCount)
+    case StatusRequest => sender() ! ConfigQueueStatus("started", queueMap, submitCount)
     case x => unknownMessage(x, "started")
   }
 

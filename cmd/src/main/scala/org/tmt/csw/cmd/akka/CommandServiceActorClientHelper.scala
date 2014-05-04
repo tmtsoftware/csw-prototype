@@ -92,7 +92,9 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
       case Some(monitor) =>
         monitor ! completer
       case None =>
-        completer(Some(CommandStatus.Error(runId, "Unknown runId: Request may have timed out").asInstanceOf[CommandStatus]))
+        completer.complete(
+          Some(CommandStatus.Error(runId,
+            "Unknown runId: Request may have timed out").asInstanceOf[CommandStatus]))
     }
   }
 

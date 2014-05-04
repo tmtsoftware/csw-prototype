@@ -5,14 +5,11 @@ import com.typesafe.config.{ConfigFactory, Config}
 import java.io.File
 import scala.collection.JavaConversions._
 import org.tmt.csw.pkg.Container
-import com.typesafe.scalalogging.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /**
  * A command line application for creating containers with components specified in a config file.
  */
 object ContainerCmd {
-  val log = Logger(LoggerFactory.getLogger("ContainerCmd"))
 
   // Main: usage: containerCmd configFile
   def main(args: Array[String]): Unit = {

@@ -6,7 +6,7 @@ import scala.collection.JavaConverters._
 import com.typesafe.config._
 
 import com.typesafe.config.ConfigException.WrongType
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 object TestConfig {
   val testConfig =
@@ -35,7 +35,7 @@ object TestConfig {
 /**
  * Test the Config object
   */
-class TestConfig extends FunSuite with Logging {
+class TestConfig extends FunSuite with LazyLogging {
 
   test("Test using the Akka Config classes to parse a config from a string") {
     val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))

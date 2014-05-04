@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import akka.util.Timeout
 import scala.concurrent.duration._
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.tmt.csw.cmd.akka.CommandServiceActor._
 import org.tmt.csw.cmd.akka.ConfigActor._
 import org.tmt.csw.cmd.akka.CommandQueueActor._
@@ -20,7 +20,7 @@ import org.tmt.csw.util.{TestConfig, Configuration}
  * tests run one after the other.
  */
 class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelper
-    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with Logging {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   // The Configuration used in the tests below
   val config = Configuration(TestConfig.testConfig)

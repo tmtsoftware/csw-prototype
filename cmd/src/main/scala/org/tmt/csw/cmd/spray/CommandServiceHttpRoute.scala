@@ -138,7 +138,8 @@ trait CommandServiceHttpRoute extends HttpService
             get(
               respondWithMediaType(`application/json`) {
                 produce(instanceOf[Option[CommandStatus]]) {
-                  completer => _ => checkCommandStatus(runId, completer)
+                  completer => _ => checkCommandStatus(runId,
+                    CommandServiceClientHelper.CommandStatusCompleter(completer))
                 }
               }
             )

@@ -67,7 +67,7 @@ trait MultiAxisCommandServiceActor extends Actor with ActorLogging {
 
     case QueueBypassRequest(config) =>
       val i = axisIndexForConfig(config)
-      configActors(i) forward SubmitWithRunId(config, sender)
+      configActors(i) forward SubmitWithRunId(config, sender())
 
     case QueueBypassRequestWithRunId(config, submitter, runId) =>
       val i = axisIndexForConfig(config)

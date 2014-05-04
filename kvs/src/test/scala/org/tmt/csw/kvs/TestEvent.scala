@@ -1,7 +1,7 @@
 package org.tmt.csw.kvs
 
 import org.scalatest.FunSuite
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import com.typesafe.config.ConfigFactory
 import java.io.StringReader
 import redis.ByteStringFormatter
@@ -25,7 +25,7 @@ object TestEvent {
 /**
  * Test the Config object
  */
-class TestEvent extends FunSuite with Logging {
+class TestEvent extends FunSuite with LazyLogging {
 
   test("Test constructing an Event from a string") {
     val event = Configuration(TestEvent.testEvent)

@@ -15,7 +15,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(scalaLogging, logback) ++
-      test(liftJSON, scalaTest, specs2, akkaTestKit, junit)
+      test(scalaTest, specs2, akkaTestKit, junit)
     )
 
   // Config Service
@@ -23,18 +23,18 @@ object Build extends Build {
   	.settings(defaultSettings: _*)
   	.settings(libraryDependencies ++=
   		provided(akkaActor) ++
-      compile(jgit, scalaIoFile, scalaLogging, logback) ++
+      compile(jgit, scalaLogging, /*scalaIoFile,*/ logback) ++
       test(scalaTest, specs2, akkaTestKit, junit)
   	)
 
-  // Command Service
-  lazy val kvs = project
-    .settings(defaultSettings: _*)
-    .settings(libraryDependencies ++=
-    provided(akkaActor) ++
-      compile(redisScala, scalaLogging, logback) ++
-      test(scalaTest, specs2, akkaTestKit, junit)
-    ) dependsOn util
+//  // Key Value Store
+//  lazy val kvs = project
+//    .settings(defaultSettings: _*)
+//    .settings(libraryDependencies ++=
+//    provided(akkaActor) ++
+//      compile(redisScala, scalaLogging, logback) ++
+//      test(scalaTest, specs2, akkaTestKit, junit)
+//    ) dependsOn util
 
   // Location Service
   lazy val loc = project
@@ -50,7 +50,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
-      test(liftJSON, scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
+      test(scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
     ) dependsOn(loc, util % "compile->compile;test->test")
 
   // Package (Container, Component) classes
@@ -104,6 +104,6 @@ object Build extends Build {
     .settings(bashScriptExtraDefines ++= Seq(s"addJava -Dcsw.extjs.root=" + file("extjs").absolutePath))
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaKernel, akkaRemote, akkaZeromq)
+      compile(akkaKernel, akkaRemote, /*akkaZeromq scalaZeromq*/ jeromq)
     ).dependsOn(pkg, cmd, loc, util)
 }

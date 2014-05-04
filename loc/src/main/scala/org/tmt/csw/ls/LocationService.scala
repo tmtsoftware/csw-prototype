@@ -223,12 +223,12 @@ class LocationServiceActor extends Actor with ActorLogging {
     // If not found, an empty LocationServiceInfo object is sent with only the serviceId set.
     case Resolve(serviceId) =>
       registry.get(serviceId) match {
-        case Some(info) => sender ! info
-        case None => sender ! LocationServiceInfo.notFound(serviceId)
+        case Some(info) => sender() ! info
+        case None => sender() ! LocationServiceInfo.notFound(serviceId)
       }
 
     // Wildcard query returning a QueryResult object with a list of LocationServiceInfo
-    case b: Browse => sender ! browseService(b)
+    case b: Browse => sender() ! browseService(b)
 
     // Sends a ServicesReady message to the sender when all of the requested services are available.
     // The sender should watch the returned actors and repeat the request if one of them terminates.

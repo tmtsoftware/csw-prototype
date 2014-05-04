@@ -7,13 +7,12 @@ import org.eclipse.jgit.lib._
 import org.eclipse.jgit.treewalk.TreeWalk
 import java.util.Date
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
-import scalax.io.Resource
 import org.tmt.csw.cs.core._
 import org.tmt.csw.cs.core.GitConfigId
-import com.typesafe.scalalogging.slf4j.Logging
 import scala.annotation.tailrec
 import java.net.URI
-import java.nio.file.Files
+import java.nio.file.{Paths, Files}
+import com.typesafe.scalalogging.slf4j.LazyLogging
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -95,7 +94,7 @@ object GitConfigManager {
 /**
  * Uses JGit to manage versions of configuration files
  */
-class GitConfigManager(val git: Git) extends ConfigManager with Logging {
+class GitConfigManager(val git: Git) extends ConfigManager with LazyLogging {
 
   override def create(path: File, configData: ConfigData, comment: String): ConfigId = {
     logger.debug(s"create $path")
@@ -232,9 +231,12 @@ class GitConfigManager(val git: Git) extends ConfigManager with Logging {
     new File(git.getRepository.getWorkTree, path.getPath)
   }
 
+  // Writes the given data to the given file (Note: The Files class is new in java1.7)
   private def writeToFile(file: File, configData: ConfigData): Unit = {
-    Resource.fromFile(file).truncate(0L); // according to docs, this should happen below, but does not!
-    Resource.fromFile(file).write(configData.getBytes)
+    val path = Paths.get(file.getPath)
+    if (!Files.isDirectory(path.getParent))
+      Files.createDirectories(path.getParent)
+    Files.write(path, configData.getBytes)
   }
 
   //  // Sets the master repository (needed for git push/pull commands)

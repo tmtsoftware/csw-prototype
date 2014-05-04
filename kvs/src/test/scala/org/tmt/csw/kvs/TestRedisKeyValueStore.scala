@@ -3,7 +3,7 @@ package org.tmt.csw.kvs
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
 import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import org.tmt.csw.util.Configuration
@@ -12,7 +12,7 @@ import org.tmt.csw.util.Configuration
 @DoNotDiscover
 class TestRedisKeyValueStore
   extends TestKit(ActorSystem("Test"))
-  with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
+  with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   implicit val execContext = system.dispatcher
   val kvs: KeyValueStore = RedisKeyValueStore()

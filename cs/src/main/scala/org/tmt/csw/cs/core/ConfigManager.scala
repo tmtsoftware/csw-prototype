@@ -2,7 +2,7 @@ package org.tmt.csw.cs.core
 
 import java.util.Date
 import java.io.File
-import scalax.io.Resource
+import java.nio.file.{Paths, Files}
 
 /**
  * Defines an interface for storing and retrieving configuration information
@@ -142,10 +142,10 @@ case class ConfigFile(file: File) extends ConfigData {
    * @return a representation of the object as a byte array
    */
   def getBytes: Array[Byte] = {
-    Resource.fromFile(file).byteArray
+    Files.readAllBytes(Paths.get(file.getPath))
   }
 
   override def toString: String = {
-    Resource.fromFile(file).string
+    new String(Files.readAllBytes(Paths.get(file.getPath)))
   }
 }

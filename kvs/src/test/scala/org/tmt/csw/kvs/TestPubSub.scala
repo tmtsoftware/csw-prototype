@@ -3,7 +3,7 @@ package org.tmt.csw.kvs
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor._
 import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import org.tmt.csw.util.Configuration
@@ -11,7 +11,7 @@ import org.tmt.csw.util.Configuration
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
 class TestPubSub extends TestKit(ActorSystem("Test"))
-  with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
+  with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   val numSecs = 10 // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))

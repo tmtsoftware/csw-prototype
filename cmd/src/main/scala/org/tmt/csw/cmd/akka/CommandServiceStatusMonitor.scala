@@ -101,7 +101,7 @@ final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: 
   // otherwise done (was cancelled or had an error).
   private def completeAndWait(completer: CommandStatusCompleter, status: CommandStatus, timerInfo: TimerInfo): Unit = {
     log.debug(s"Completing with status $status")
-    completer(Some(status))
+    completer.complete(Some(status))
     if (status.done) {
       // We're done
       log.debug("Done, stopping self")

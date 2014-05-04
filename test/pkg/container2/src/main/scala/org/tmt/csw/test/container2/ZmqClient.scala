@@ -1,10 +1,9 @@
 package org.tmt.csw.test.container2
 
-import akka.zeromq._
-import akka.actor.{Props, ActorRef, Actor, ActorLogging}
-import akka.zeromq.Connect
-import akka.zeromq.Listener
+import akka.actor.{Props, Actor, ActorLogging}
 import akka.util.ByteString
+import org.zeromq.ZMQ
+import scala.concurrent.Future
 
 object ZmqClient {
   def props(url: String): Props = Props(classOf[ZmqClient], url)
@@ -14,35 +13,43 @@ object ZmqClient {
 }
 
 /**
- * Akka ask (?) doesn't work when used on the akka-zeromq socket,
- * so this class can be put in between to make it work. See page 30 of:
- * http://www.slideshare.net/normation/nrm-scala-ioscalaetzeromqv10
+ * Using Jeromq, since akka-zeromq not available in Scala-2.11
  */
 class ZmqClient(url: String) extends Actor with ActorLogging {
+  import context.dispatcher
 
-  val clientSocket = ZeroMQExtension(context.system).newSocket(
-    SocketType.Req,
-    Listener(self),
-    Connect(url))
+  val zmqContext = ZMQ.context(1)
+  val socket = zmqContext.socket(ZMQ.REQ)
+  socket.connect (url)
 
-  override def receive: Receive = waitingForCommand
-
-  def waitingForCommand: Receive = {
+  override def receive: Receive = {
     case ZmqClient.Command(byteString) ⇒
-      clientSocket ! ZMQMessage(byteString)
-      context.become(waitingForReply(sender))
+      val replyTo = sender()
+      Future {
+        socket.send(byteString.toArray, 0)
+        val reply = socket.recv(0)
+        replyTo ! ByteString(reply)
+      }
+
     case x ⇒ log.info(s"Unexpected Message from ZMQ: $x")
   }
 
-  // Wait for the reply from the ZMQ socket and then forward it to the replyTo actor
-  def waitingForReply(replyTo: ActorRef): Receive = {
-    case m: ZMQMessage ⇒
-      replyTo ! m
-      context.become(waitingForCommand)
-    case ZmqClient.Command(byteString) ⇒
-      // Wait may have timed out, just continue with this new command
-      clientSocket ! ZMQMessage(byteString)
-      context.become(waitingForReply(sender))
-    case x ⇒ log.info(s"Unexpected reply from ZMQ: $x")
-  }
+//  def waitingForCommand: Receive = {
+//    case ZmqClient.Command(byteString) ⇒
+//      clientSocket ! ZMQMessage(byteString)
+//      context.become(waitingForReply(sender))
+//    case x ⇒ log.info(s"Unexpected Message from ZMQ: $x")
+//  }
+//
+//  // Wait for the reply from the ZMQ socket and then forward it to the replyTo actor
+//  def waitingForReply(replyTo: ActorRef): Receive = {
+//    case m: ZMQMessage ⇒
+//      replyTo ! m
+//      context.become(waitingForCommand)
+//    case ZmqClient.Command(byteString) ⇒
+//      // Wait may have timed out, just continue with this new command
+//      clientSocket ! ZMQMessage(byteString)
+//      context.become(waitingForReply(sender))
+//    case x ⇒ log.info(s"Unexpected reply from ZMQ: $x")
+//  }
 }

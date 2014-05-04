@@ -329,7 +329,7 @@ private class QueryWorkerActor(config: Configuration, targetActors: List[Locatio
   val list = getQueryInfoList
   if (list.length == 0) {
     log.error(s"No subscribers for config/get query: $config")
-    sender ! ConfigResponse(Failure(new Error("No subscribers for config/get query")))
+    sender() ! ConfigResponse(Failure(new Error("No subscribers for config/get query")))
     context.stop(self)
   } else {
     query(list, replyTo)

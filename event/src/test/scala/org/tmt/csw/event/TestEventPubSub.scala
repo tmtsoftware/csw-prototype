@@ -3,7 +3,7 @@ package org.tmt.csw.event
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor._
 import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
-import com.typesafe.scalalogging.slf4j.Logging
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import org.tmt.csw.util.Configuration
@@ -11,7 +11,7 @@ import org.tmt.csw.util.Configuration
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
 class TestEventPubSub extends TestKit(ActorSystem("Test"))
-  with ImplicitSender with FunSuiteLike with Logging with BeforeAndAfterAll {
+  with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   val numSecs = 20 // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))
@@ -92,7 +92,7 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
         log.info(s"Received $count events so far: $event")
 
     case "done" =>
-      sender ! count
+      sender() ! count
       unsubscribe(channel)
 
     case x => log.error(s"Unexpected message $x")

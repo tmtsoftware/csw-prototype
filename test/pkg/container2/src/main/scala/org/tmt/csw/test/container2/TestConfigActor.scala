@@ -1,8 +1,8 @@
 package org.tmt.csw.test.container2
 
 import akka.actor._
-import org.tmt.csw.cmd.akka.{CommandStatusActor, CommandStatus, ConfigActor, RunId}
-import akka.zeromq._
+import org.tmt.csw.cmd.akka.{CommandStatus, ConfigActor, RunId}
+import org.zeromq.ZMQ
 import org.tmt.csw.cmd.akka.CommandQueueActor.SubmitWithRunId
 import akka.util.ByteString
 import scala.util.{Failure, Success}
@@ -66,16 +66,15 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
     val zmqMsg = configKey match {
       case "filter" =>
         val timestamp = submit.config.getString("timestamp")
-        ByteString(s"$configKey=$value, timestamp=$timestamp")
+        ByteString(s"$configKey=$value, timestamp=$timestamp", ZMQ.CHARSET.name())
       case _ =>
-        ByteString(s"$configKey=$value")
+        ByteString(s"$configKey=$value", ZMQ.CHARSET.name())
     }
 
     implicit val dispatcher = context.system.dispatcher
     ask(zmqClient, ZmqClient.Command(zmqMsg))(6 seconds) onComplete {
-
-      case Success(ZMQMessage(frames)) =>
-        val msg = frames(0).utf8String
+      case Success(reply: ByteString) =>
+        val msg = reply.decodeString(ZMQ.CHARSET.name())
         log.info(s"ZMQ Message: $msg")
         val status = if (msg == "OK") {
           CommandStatus.Completed(submit.runId)
@@ -143,7 +142,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, configKey: Stri
         } else config
     }
 
-    sender ! ConfigResponse(Success(conf))
+    sender() ! ConfigResponse(Success(conf))
   }
 }
 

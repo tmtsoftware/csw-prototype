@@ -27,9 +27,9 @@ class CommandServiceClientActor(val commandServiceActor: ActorRef, val timeout: 
   // Receive messages
   override def receive: Receive = {
     // Queue related commands
-    case Submit(config, _) => sender ! submitCommand(config)
-    case QueueBypassRequest(config) => sender ! requestCommand(config)
-    case GetStatus(runId) => checkCommandStatus(runId, getCompleter(sender))
+    case Submit(config, _) => sender() ! submitCommand(config)
+    case QueueBypassRequest(config) => sender() ! requestCommand(config)
+    case GetStatus(runId) => checkCommandStatus(runId, getCompleter(sender()))
     case QueueStop => queueStop()
     case QueuePause => queuePause()
     case QueueStart => queueStart()
@@ -44,7 +44,8 @@ class CommandServiceClientActor(val commandServiceActor: ActorRef, val timeout: 
   }
 
   // Returns a function that takes a command status and sends it to the given actor
-  private def getCompleter(ref: ActorRef): CommandServiceClientHelper.CommandStatusCompleter = {
+  private def getCompleter(ref: ActorRef): CommandServiceClientHelper.CommandStatusCompleter =
+    CommandServiceClientHelper.CommandStatusCompleter {
     case Some(status) => ref ! status
     case None =>
   }

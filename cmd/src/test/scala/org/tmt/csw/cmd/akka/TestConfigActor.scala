@@ -123,7 +123,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
         }
     }
 
-    sender ! ConfigResponse(Success(conf))
+    sender() ! ConfigResponse(Success(conf))
     savedConfig = Some(config)
   }
 }

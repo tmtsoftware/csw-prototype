@@ -17,7 +17,7 @@ object Settings {
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
     version := Version,
-    scalaVersion := "2.10.3",
+    scalaVersion := "2.11.0",
     crossPaths := false,
     parallelExecution in Test := false,
     resolvers += Resolver.typesafeRepo("releases"),
@@ -28,14 +28,15 @@ object Settings {
     resolvers += Resolver.sonatypeRepo("releases"),
 //    resolvers += Resolver.sonatypeRepo("snapshots"),
     resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/",
+    resolvers += "mDialog releases" at "http://mdialog.github.io/releases/"
     // local maven repo
-    resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
+//    resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
   )
 
   lazy val defaultSettings = buildSettings ++ Seq(
     // compile options
     scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
-    javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
+    javacOptions in Compile ++= Seq("-source", "1.7", "-target", "1.7", "-Xlint:unchecked", "-Xlint:deprecation")
   )
 
   // For standalone applications
