@@ -6,6 +6,8 @@ import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import scala.Some
 import com.typesafe.config.ConfigException.WrongType
+import scala.util.Try
+import com.typesafe.config.ConfigException.{ValidationProblem, ValidationFailed}
 
 /**
  * Used for building Configuration instances.
@@ -91,6 +93,49 @@ object Configuration {
       case head :: tail => head.merge(merge(tail))
     }
   }
+
+  // -- Validation --
+
+  sealed trait Constraint {
+    /**
+     * @param config the config being validated
+     * @return a list of validation problems, which will be empty if all is OK
+     */
+    def validate(config: Configuration): List[ValidationProblem]
+  }
+
+  /**
+   * Tests that a value is in the given range
+   * @param key the key in the config
+   * @param min the min value (inclusive)
+   * @param max the max value (inclusive)
+   */
+  case class RangeConstraint(key: String, min: Int, max: Int) extends Constraint {
+    override def validate(config: Configuration): List[ValidationProblem] = {
+      val v = config.getInt(key)
+      if (v < min || v > max)
+        List(new ValidationProblem(key, config.config.origin(), s"Value $v out of range ($min, $max)"))
+      else
+        List.empty
+    }
+  }
+
+  /**
+   * Tests that a config value is one of the values in a given list.
+   * @param key the key in the config
+   * @param values the allowed values
+   */
+  case class EnumConstraint(key: String, values: List[String]) extends Constraint {
+    override def validate(config: Configuration): List[ValidationProblem] = {
+      val v = config.getString(key)
+      if (!values.contains(v)) {
+        val l = values.mkString(", ")
+        List(new ValidationProblem(key, config.config.origin(), s"Value $v should be one of ($l)"))
+      }
+      else List.empty
+    }
+  }
+
 }
 
 /**
@@ -102,6 +147,7 @@ object Configuration {
  * java Config class.
  */
 class Configuration private(private val config: Config) extends Serializable {
+  import org.tmt.csw.util.Configuration.Constraint
 
   /**
    * Returns the set of root keys
@@ -259,6 +305,22 @@ class Configuration private(private val config: Config) extends Serializable {
    */
   def withOnlyPath(path: String): Configuration = {
     new Configuration(config.withOnlyPath(path))
+  }
+
+  /**
+   * Validates this config agains the given reference config.
+   * @param reference contains the keys that this config should contain, with the same value types
+   * @return a possible ConfigException, wrapped in Try
+   */
+  def checkValid(reference: Configuration, constraints: List[Constraint] = List.empty): Try[Unit] = {
+    Try {
+      // check against reference config
+      config.checkValid(reference.config)
+
+      // check additional constraints
+      val problems = (for(c <- constraints) yield c.validate(this)).flatten
+      if (problems.size != 0) throw new ValidationFailed(problems)
+    }
   }
 
   override def hashCode(): Int = config.hashCode()

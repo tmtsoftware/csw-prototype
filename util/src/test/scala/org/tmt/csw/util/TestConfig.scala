@@ -30,6 +30,29 @@ object TestConfig {
       |      }
       |
     """.stripMargin
+
+  // Reference config for use with checkValid: Tests only presence of keys and value types
+  val refConfig =
+    """
+      |      config {
+      |        info {
+      |          configId = 0
+      |          obsId = ""
+      |        }
+      |        tmt.tel.base.pos {
+      |          posName = ""
+      |          c1 = ""
+      |          c2 = ""
+      |          equinox = ""
+      |        }
+      |        tmt.tel.ao.pos.one {
+      |          c1 = ""
+      |          c2 = ""
+      |          equinox = ""
+      |        }
+      |      }
+      |
+    """.stripMargin
 }
 
 /**
@@ -39,7 +62,7 @@ class TestConfig extends FunSuite with LazyLogging {
 
   test("Test using the Akka Config classes to parse a config from a string") {
     val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
-    logger.debug(conf.toString)
+//    logger.debug(conf.toString)
     assert(conf.getInt("config.info.configId") == 1000233)
     val pos = conf.getConfig("config.tmt.tel.base.pos")
     assert(pos.getString("posName") == "NGC738B")
@@ -129,16 +152,16 @@ class TestConfig extends FunSuite with LazyLogging {
     val conf = ConfigFactory.parseReader(new StringReader(jsonString), parseOptions)
 
     assert(conf.getInt("config.info.configId") == 1000233)
-
-//    val renderOptions = ConfigRenderOptions.defaults().setOriginComments(false).setJson(false).setFormatted(true)
-//    logger.debug("Config from JSON:")
-//    logger.debug(conf.root.render(renderOptions))
-
-    // XXX Doesn't work as expected because "tmt.tel.base.pos" is treated as a single key by json4s
-//    assert(conf.getString("config.\"tmt.tel.base.pos\".posName") == "NGC738B")
     assert(conf.getString("config.tmt.tel.base.pos.posName") == "NGC738B")
     assert(conf.getString("config.tmt.tel.base.pos.equinox") == "J2000")
     assert(conf.getString("config.tmt.tel.ao.pos.one.c2") == "33:58:21.69")
     assert(conf.getString("config.tmt.tel.ao.pos.one.equinox") == "J2000")
+  }
+
+  test("Test validation") {
+    val conf = ConfigFactory.parseReader(new StringReader(TestConfig.testConfig))
+    val ref = ConfigFactory.parseReader(new StringReader(TestConfig.refConfig))
+    conf.checkValid(ref)
+
   }
 }

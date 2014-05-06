@@ -3,6 +3,8 @@ package org.tmt.csw.util
 import org.scalatest.FunSuite
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
+import com.typesafe.config.ConfigException.ValidationFailed
+import org.tmt.csw.util.Configuration._
 
 /**
  * Tests Configurations
@@ -151,5 +153,31 @@ class TestConfiguration extends FunSuite {
     val c2 = Configuration().withValue("grating", "T5422")
     val c3 = Configuration.merge(List(c1, c2))
     assert(c3.toString == "grating=T5422,filter=GG455")
+  }
+
+  test("Test validation") {
+    val conf = Configuration(TestConfig.testConfig)
+    val ref = Configuration(TestConfig.refConfig)
+    assert(conf.checkValid(ref).isSuccess)
+
+    val t1 = conf.withoutPath("config.tmt.tel.base.pos.posName").checkValid(ref)
+    assert(t1.isFailure)
+    assert(t1.failed.get.isInstanceOf[ValidationFailed])
+
+    val constraints = List(
+      RangeConstraint("config.info.configId", 0, 100),
+      EnumConstraint("config.tmt.tel.ao.pos.one.equinox", List("J2000", "B1950"))
+    )
+    val t2 = conf.checkValid(ref, constraints)
+    assert(t2.isFailure)
+    println(s"Message = ${t2.failed.get.getMessage}")
+    assert(t2.failed.get.isInstanceOf[ValidationFailed])
+    assert(t2.failed.get.asInstanceOf[ValidationFailed].problems().toList.size == 1)
+
+    val t3 = conf.withValue("config.tmt.tel.ao.pos.one.equinox", "J1000").checkValid(ref, constraints)
+    assert(t3.isFailure)
+    println(s"Message = ${t3.failed.get.getMessage}")
+    assert(t3.failed.get.isInstanceOf[ValidationFailed])
+    assert(t3.failed.get.asInstanceOf[ValidationFailed].problems().toList.size == 2)
   }
 }
