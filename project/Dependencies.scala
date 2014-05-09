@@ -35,7 +35,7 @@ object Dependencies {
   val jgit           = "org.eclipse.jgit"               % "org.eclipse.jgit"      % "3.3.2.201404171909-r"
   val scalaIoFile    = "com.github.scala-incubator.io" %% "scala-io-file"         % "0.4.3"
 
-//  val redisScala     = "com.etaty.rediscala"           %% "rediscala"             % "1.3akka2.3" // XXX TEMP FIX
+  val redisScala     = "com.etaty.rediscala"           %% "rediscala"             % "1.3.1"
 
   val hornetqServer  = "org.hornetq"                    % "hornetq-server"        % hornetqVersion
   // XXX TEMP FIX (http://stackoverflow.com/questions/21882100/adding-hornetq-dependency-in-sbt-gives-resolution-failure-for-hornetq-native-n)

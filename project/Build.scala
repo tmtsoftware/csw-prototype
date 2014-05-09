@@ -27,14 +27,14 @@ object Build extends Build {
       test(scalaTest, specs2, akkaTestKit, junit)
   	)
 
-//  // Key Value Store
-//  lazy val kvs = project
-//    .settings(defaultSettings: _*)
-//    .settings(libraryDependencies ++=
-//    provided(akkaActor) ++
-//      compile(redisScala, scalaLogging, logback) ++
-//      test(scalaTest, specs2, akkaTestKit, junit)
-//    ) dependsOn util
+  // Key Value Store
+  lazy val kvs = project
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(redisScala, scalaLogging, logback) ++
+      test(scalaTest, specs2, akkaTestKit, junit)
+    ) dependsOn util
 
   // Location Service
   lazy val loc = project
