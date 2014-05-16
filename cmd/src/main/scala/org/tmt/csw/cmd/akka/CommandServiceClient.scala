@@ -44,6 +44,16 @@ case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeo
     (commandServiceClientActor ? GetStatus(runId)).mapTo[CommandStatus]
 
   /**
+   * Used to query the current state of a device. A config is passed in (the values are ignored)
+   * and a reply will be sent containing the same config with the current values filled out.
+   *
+   * @param config used to specify the keys for the values that should be returned
+   * @return the response (a config wrapped in a Try)
+   */
+  def configGet(config: Configuration): Future[ConfigResponse] =
+    (commandServiceClientActor ? ConfigGet(config)).mapTo[ConfigResponse]
+
+  /**
    * Polls the command status for the given runId until the command completes (commandStatus.done is true).
    * The command status normally starts out as Queued, then becomes Busy and eventually Complete,
    * although other statuses are possible, such as Aborted or Canceled.

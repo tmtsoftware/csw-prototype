@@ -4,6 +4,7 @@ import sbt._
 
 object Dependencies {
 
+  val scalaVersion = "2.11.0"
   val akkaVersion = "2.3.2"
   val sprayVersion = "1.3.1-20140423"
   val hornetqVersion = "2.4.0.Final"
@@ -50,6 +51,10 @@ object Dependencies {
   val specs2         = "org.specs2"                    %% "specs2"                % "2.3.11"
 //  val liftJSON       = "net.liftweb"                   %% "lift-json"             % "2.5.1"
 
-
+  // REPL dependencies
+  val scalaLibrary   = "org.scala-lang"                 % "scala-library"         % scalaVersion
+  val scalaCompiler  = "org.scala-lang"                 % "scala-compiler"        % scalaVersion
+  val scalaReflect   = "org.scala-lang"                 % "scala-reflect"         % scalaVersion
+  val jline          = "jline"                          % "jline"                 % "2.11"
 }
 

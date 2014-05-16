@@ -16,6 +16,9 @@ object Assembly1 {
 case class Assembly1(name: String)
     extends Assembly with AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
 
+  // Register with the location service (which must be started as a separate process)
+  registerWithLocationService(ServiceId(name, ServiceType.Assembly))
+
   override def receive: Receive = receiveComponentMessages orElse receiveCommands
 
   // Define the HCDs we want to use

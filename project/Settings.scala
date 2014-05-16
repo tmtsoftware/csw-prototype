@@ -17,7 +17,7 @@ object Settings {
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
     version := Version,
-    scalaVersion := "2.11.0",
+    scalaVersion := Dependencies.scalaVersion,
     crossPaths := false,
     parallelExecution in Test := false,
     resolvers += Resolver.typesafeRepo("releases"),

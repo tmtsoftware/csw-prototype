@@ -30,17 +30,17 @@ class CommandServiceClientActor(val commandServiceActor: ActorRef, val timeout: 
     case Submit(config, _) => sender() ! submitCommand(config)
     case QueueBypassRequest(config) => sender() ! requestCommand(config)
     case GetStatus(runId) => checkCommandStatus(runId, getCompleter(sender()))
-    case QueueStop => queueStop()
-    case QueuePause => queuePause()
-    case QueueStart => queueStart()
-    case QueueDelete(runId) => queueDelete(runId)
-    case ConfigCancel(runId) => configCancel(runId)
-    case ConfigAbort(runId) => configAbort(runId)
-    case ConfigPause(runId) => configPause(runId)
-    case ConfigResume(runId) => configResume(runId)
+    case m@QueueStop => commandServiceActor forward m
+    case m@QueuePause => commandServiceActor forward m
+    case m@QueueStart => commandServiceActor forward m
+    case m@QueueDelete(runId) => commandServiceActor forward m
+    case m@ConfigCancel(runId) => commandServiceActor forward m
+    case m@ConfigAbort(runId) => commandServiceActor forward m
+    case m@ConfigPause(runId) => commandServiceActor forward m
+    case m@ConfigResume(runId) => commandServiceActor forward m
+    case m@ConfigGet(config) => commandServiceActor forward m
 
     case x => log.error(s"Unknown CommandServiceClientActor message: $x")
-
   }
 
   // Returns a function that takes a command status and sends it to the given actor

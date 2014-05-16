@@ -83,8 +83,16 @@ object Build extends Build {
       provided(akkaActor) ++
       compile(akkaKernel, akkaRemote) ++
       test(scalaLogging, logback)
-    ) dependsOn(pkg, cmd, loc, util, container1, container2)
+    ) dependsOn(pkg, cmd, loc, util)
 
+  // Build the sequencer command line application
+  lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
+    .settings(packageSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaKernel, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++
+      test(scalaLogging, logback)
+    ) dependsOn(pkg, cmd, loc, util)
 
   // -- Test subprojects with dependency information --
 
@@ -104,6 +112,6 @@ object Build extends Build {
     .settings(bashScriptExtraDefines ++= Seq(s"addJava -Dcsw.extjs.root=" + file("extjs").absolutePath))
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaKernel, akkaRemote, /*akkaZeromq scalaZeromq*/ jeromq)
+      compile(akkaKernel, akkaRemote, jeromq)
     ).dependsOn(pkg, cmd, loc, util)
 }
