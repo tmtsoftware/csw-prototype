@@ -82,7 +82,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       }
 
       runOn(locationService) {
-        system.actorOf(Props[LocationServiceActor], LocationServiceActor.locationServiceName)
+        val ls = system.actorOf(Props[LocationServiceActor], LocationServiceActor.locationServiceName)
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
         enterBarrier("done")
@@ -99,6 +99,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
     if (status.ready) {
       commandServiceActor
     } else {
+      Thread.sleep(200)
       waitForReady(commandServiceActor)
     }
   }

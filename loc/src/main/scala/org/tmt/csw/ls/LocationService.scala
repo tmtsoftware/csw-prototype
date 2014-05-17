@@ -36,7 +36,7 @@ object LocationService {
    * register again when restarting.
    *
    * @param system the caller's actor system
-   * @param actorRef optional reference to the actor for the service
+   * @param actorRef reference to the actor for the service
    * @param serviceId name and service type to register with
    * @param configPath optional dot-separated config path be sent to the actor (default is entire config)
    * @param httpUri optional HTTP URI for the actor registering

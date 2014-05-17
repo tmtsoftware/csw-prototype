@@ -16,8 +16,7 @@ case class Hcd2(name: String, configPath: String) extends Hcd with CommandServic
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, configKey, 3), name)
 
   // Register with the location service (which must be started as a separate process)
-  val serviceId = ServiceId(name, ServiceType.HCD)
-  registerWithLocationService(serviceId, Some(configPath))
+  registerWithLocationService(ServiceId(name, ServiceType.HCD), Some(configPath))
 
   override def receive: Receive = receiveComponentMessages orElse receiveCommands orElse {
     case x => println(s"XXX HCD2: Received unknown message: $x")

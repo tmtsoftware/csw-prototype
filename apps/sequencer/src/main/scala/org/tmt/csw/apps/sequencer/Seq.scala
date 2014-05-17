@@ -19,7 +19,7 @@ object Seq {
   private def resolve(name: String, serviceType: ServiceType): BlockingCommandServiceClient = {
     val info = Await.result(LocationService.resolve(system, ServiceId(name, serviceType)), duration)
     val actorRef = info.actorRefOpt.get
-    val clientActor = system.actorOf(CommandServiceClientActor.props(actorRef, duration), name = s"${name}Client")
+    val clientActor = system.actorOf(CommandServiceClientActor.props(actorRef, duration))
     BlockingCommandServiceClient(CommandServiceClient(clientActor, duration))
   }
 

@@ -4,7 +4,7 @@ import akka.actor._
 import org.tmt.csw.cmd.akka.CommandQueueActor.ConfigQueueStatus
 import java.net.URI
 import org.tmt.csw.ls.LocationServiceActor.ServiceId
-import org.tmt.csw.ls.LocationService
+import org.tmt.csw.ls.{LocationServiceRegisterActor, LocationService}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
@@ -198,8 +198,8 @@ trait CommandServiceActor extends Actor with ActorLogging {
    */
   def registerWithLocationService(serviceId: ServiceId, configPathOpt: Option[String] = None,
                                   httpUri: Option[URI] = None) {
-    log.info(s"Registering $serviceId ($configPathOpt) with the location service")
-    LocationService.register(context.system, self, serviceId, configPathOpt, httpUri)
+    // Start an actor to re-register when the location service restarts
+    context.actorOf(LocationServiceRegisterActor.props(self, serviceId, configPathOpt, httpUri))
   }
 
 
