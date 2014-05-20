@@ -1,7 +1,6 @@
 import sbt._
 import Keys._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
-import com.typesafe.sbt.packager.Keys._
 
 
 // This is the top level build object used by sbt.
@@ -93,25 +92,4 @@ object Build extends Build {
       compile(akkaKernel, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++
       test(scalaLogging, logback)
     ) dependsOn(pkg, cmd, loc, util)
-
-  // -- Test subprojects with dependency information --
-
-  lazy val container1 = Project(
-    id = "container1",
-    base = file("test/pkg/container1")
-  ).settings(packageSettings: _*)
-    .settings(libraryDependencies ++=
-    provided(akkaActor) ++
-      compile(akkaKernel, akkaRemote)
-    ).dependsOn(pkg, cmd, loc, util)
-
-  lazy val container2 = Project(
-    id = "container2",
-    base = file("test/pkg/container2")
-  ).settings(packageSettings: _*)
-    .settings(bashScriptExtraDefines ++= Seq(s"addJava -Dcsw.extjs.root=" + file("extjs").absolutePath))
-    .settings(libraryDependencies ++=
-    provided(akkaActor) ++
-      compile(akkaKernel, akkaRemote, jeromq)
-    ).dependsOn(pkg, cmd, loc, util)
 }
