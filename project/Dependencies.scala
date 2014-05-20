@@ -20,8 +20,6 @@ object Dependencies {
   val akkaKernel     = "com.typesafe.akka"             %% "akka-kernel"           % akkaVersion
   val akkaRemote     = "com.typesafe.akka"             %% "akka-remote"           % akkaVersion
 
-//  val akkaZeromq     = "com.typesafe.akka"             %% "akka-zeromq"           % akkaVersion
-//  val scalaZeromq    = "com.mdialog"                   %% "scala-zeromq"          % "1.0.0"
   val jeromq         = "org.zeromq"                     % "jeromq"                % "0.3.3"
   val typesafeConfig = "com.typesafe"                   % "config"                % "1.2.0"
   val scalaLogging   = "com.typesafe.scala-logging"    %% "scala-logging-slf4j"   % "2.1.2"
@@ -49,7 +47,6 @@ object Dependencies {
   val scalaTest      = "org.scalatest"                 %% "scalatest"             % "2.1.5"
   val junit          = "com.novocode"                   % "junit-interface"       % "0.10"
   val specs2         = "org.specs2"                    %% "specs2"                % "2.3.11"
-//  val liftJSON       = "net.liftweb"                   %% "lift-json"             % "2.5.1"
 
   // REPL dependencies
   val scalaLibrary   = "org.scala-lang"                 % "scala-library"         % scalaVersion

@@ -18,7 +18,7 @@ object Settings {
     organizationHomepage := Some(url("http://www.tmt.org")),
     version := Version,
     scalaVersion := Dependencies.scalaVersion,
-    crossPaths := false,
+    crossPaths := true,
     parallelExecution in Test := false,
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
