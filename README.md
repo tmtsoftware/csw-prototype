@@ -27,17 +27,8 @@ Projects and Directories
 * cs - the Configuration Service (manages configuration files in Git repos)
 * doc - for documentation
 * event - the Event Service, based on HornetQ
-* extjs - the ExtJS web UI (JavaScript with Sencha Cmd/ant build, not a Scala project)
 * kvs - provides key/value store and publish/subscribe features based on Redis
 * loc - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
 * pkg - a packaging layer over the command service that provides HCD and Assembly classes
-* test - for integration tests, demos
 * util - for reusable utility code
 
-ExtJS Build
------------
-
-The extjs subdirectory contains the ExtJS sources for the web UIs. In addition,
-the full ExtJS distribution needs to be in the extjs/ext directory, but has not be
-checked in to Git, since it is generated and is quite large.
-See <a href="extjs/README.md">extjs/README.md</a> for how to generate this directory.
