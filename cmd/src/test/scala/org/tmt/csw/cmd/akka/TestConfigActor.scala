@@ -185,7 +185,7 @@ class TestConfigActorWorker(submit: SubmitWithRunId, val commandStatusActor: Act
 
   def newTimer(): Cancellable = {
     implicit val dispatcher = context.system.dispatcher
-    context.system.scheduler.scheduleOnce(numberOfSecondsToRun seconds, self, WorkDone)
+    context.system.scheduler.scheduleOnce(numberOfSecondsToRun.seconds, self, WorkDone)
   }
 
   def unknownMessage(x: Any): Unit = {

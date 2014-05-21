@@ -18,7 +18,7 @@ class TestEventPubSub extends TestKit(ActorSystem("Test"))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
 
   test("Test subscriber") {
-    within(numSecs+2 seconds) {
+    within((numSecs+2).seconds) {
       expectMsg("done")
       subscriber ! "done"
       val count = expectMsgType[Int]
@@ -45,7 +45,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   import context.dispatcher
 
   context.system.scheduler.maxFrequency
-  context.system.scheduler.scheduleOnce(numSecs seconds) {
+  context.system.scheduler.scheduleOnce(numSecs.seconds) {
     caller ! "done"
     done = true
   }

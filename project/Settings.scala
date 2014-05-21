@@ -7,6 +7,9 @@ import scala.Some
 import twirl.sbt.TwirlPlugin._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import com.typesafe.sbt.SbtNativePackager._
+import com.typesafe.sbt.packager.linux.{LinuxPackageMapping, LinuxSymlink}
+import com.typesafe.sbt.packager.rpm.RpmDependencies
+import com.typesafe.sbt.packager.Keys._
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
@@ -41,8 +44,17 @@ object Settings {
   )
 
   // For standalone applications
-  lazy val packageSettings = defaultSettings ++ packagerSettings ++ packageArchetype.java_application
-
+  def packageSettings(summary: String, desc: String) = defaultSettings ++
+    packagerSettings ++ packageArchetype.java_application ++ Seq(
+    version in Rpm := Version,
+    rpmRelease := "0",
+    rpmVendor := "TMT Common Software",
+    rpmUrl := Some("http://www.tmt.org"),
+    rpmLicense := Some("MIT"),
+    rpmGroup := Some("CSW"),
+    packageSummary := summary,
+    packageDescription := desc
+  )
 
   lazy val multiJvmSettings = SbtMultiJvm.multiJvmSettings ++ Seq(
     // Next line fixes missing source folder in idea project, but breaks the "test" target

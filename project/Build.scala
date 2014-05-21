@@ -37,7 +37,7 @@ object Build extends Build {
 
   // Location Service
   lazy val loc = project
-    .settings(packageSettings: _*)
+    .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
     .settings(libraryDependencies ++= provided(akkaActor) ++
     compile(akkaKernel, akkaRemote, scalaLogging, logback) ++
     test(scalaTest, specs2, akkaTestKit, junit))
@@ -77,7 +77,7 @@ object Build extends Build {
 
   // Build the containerCmd command line application
   lazy val containerCmd = Project(id = "containerCmd", base = file("apps/containerCmd"))
-    .settings(packageSettings: _*)
+    .settings(packageSettings("CSW Container Command", "Used to configure and start CSW containers"): _*)
     .settings(libraryDependencies ++=
       provided(akkaActor) ++
       compile(akkaKernel, akkaRemote) ++
@@ -86,7 +86,7 @@ object Build extends Build {
 
   // Build the sequencer command line application
   lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
-    .settings(packageSettings: _*)
+    .settings(packageSettings("CSW Sequencer", "Scala REPL for running sequences"): _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(akkaKernel, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++

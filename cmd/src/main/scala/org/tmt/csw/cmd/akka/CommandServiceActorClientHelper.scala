@@ -140,7 +140,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    */
   override def configGet(config: Configuration): Future[ConfigResponse] = {
     log.debug(s"configGet $config")
-    implicit val askTimeout = Timeout(3 seconds)
+    implicit val askTimeout = Timeout(3.seconds)
     (commandServiceActor ? ConfigGet(config)).mapTo[ConfigResponse]
   }
 

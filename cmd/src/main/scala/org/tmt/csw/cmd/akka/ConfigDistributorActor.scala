@@ -366,7 +366,7 @@ private class QueryWorkerActor(config: Configuration, targetActors: List[Locatio
 
     import context.dispatcher
 
-    implicit val askTimeout = Timeout(3 seconds) // TODO: Implement this with tell or configure timeout?
+    implicit val askTimeout = Timeout(3.seconds) // TODO: Implement this with tell or configure timeout?
 
     val listOfFutureResponses =
       for (queryInfo <- list) yield

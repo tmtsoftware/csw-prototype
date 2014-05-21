@@ -52,7 +52,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val config = Configuration(TestConfig.testConfig)
         val container = Container.create("Container-1")
         val assembly1Props = TestAssembly.props("Assembly-1")
-        within(10 seconds) {
+        within(10.seconds) {
           container ! Container.CreateComponent(assembly1Props, "Assembly-1")
           val assembly1 = expectMsgType[ActorRef]
           waitForReady(assembly1)

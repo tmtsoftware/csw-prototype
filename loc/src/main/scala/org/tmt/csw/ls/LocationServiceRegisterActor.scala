@@ -68,6 +68,6 @@ case class LocationServiceRegisterActor(actorRef: ActorRef, serviceId: ServiceId
 
   private def retryLater(): Unit = {
     implicit val dispatcher = context.system.dispatcher
-    context.system.scheduler.scheduleOnce(1 second, self, Retry)
+    context.system.scheduler.scheduleOnce(1.second, self, Retry)
   }
 }

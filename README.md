@@ -19,6 +19,19 @@ Commands apply to the entire build unless otherwise specified.
 You can narrow the focus to a subproject with the sbt "project" command.
 For example: "project cs" sets the current project to "cs". The top level project is "csw".
 
+Creating Installable Packages
+-----------------------------
+
+The following sbt commands generate packages that can be installed on various systems:
+
+* universal:packageBin - Generates a universal zip file
+* universal:packageZipTarball - Generates a universal tgz file
+* debian:packageBin - Generates a deb
+* rpm:packageBin - Generates an rpm
+* universal:packageOsxDmg - Generates a DMG file with the same contents as the universal zip/tgz.
+* windows:packageBin - Generates an MSI
+
+
 Projects and Directories
 ------------------------
 

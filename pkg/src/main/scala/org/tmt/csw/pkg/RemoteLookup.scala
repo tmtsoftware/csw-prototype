@@ -18,7 +18,7 @@ case class RemoteLookup(path: String) extends Actor with ActorLogging {
 
   private var backlog = List.empty[(Any, ActorRef)]
 
-  context.setReceiveTimeout(3 seconds)
+  context.setReceiveTimeout(3.seconds)
   sendIdentifyRequest()
 
   def sendIdentifyRequest(): Unit = {
@@ -59,7 +59,7 @@ case class RemoteLookup(path: String) extends Actor with ActorLogging {
     case Terminated(actorRef) =>
       log.info(s"Actor $actorRef terminated: switching to identify state.")
       context.become(identify)
-      context.setReceiveTimeout(3 seconds)
+      context.setReceiveTimeout(3.seconds)
       sendIdentifyRequest()
 
     case msg: Any => actor forward msg
