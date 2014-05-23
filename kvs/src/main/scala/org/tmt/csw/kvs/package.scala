@@ -7,7 +7,7 @@ import akka.util.ByteString
 package object kvs {
 
   /**
-   * An Event here is just a [[Configuration]] with an implicit conversion to/from ByteString for
+   * An Event here is just a Configuration with an implicit conversion to/from ByteString for
    * use with Redis
    */
   type Event = Configuration
