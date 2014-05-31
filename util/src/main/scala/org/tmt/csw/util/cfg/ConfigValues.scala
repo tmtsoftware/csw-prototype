@@ -80,7 +80,7 @@ object ConfigValues {
     def units = data.units
 
     // Should we have a way to add an element of type A to the data?
-    def :+[B >: A](elem: B): CValue[B] = new CValue(fqn, data :+ elem)
+    def :+[B >: A](elem: B): CValue[B] = CValue(fqn, data :+ elem)
 
     override def toString = fqn + data
   }
@@ -94,9 +94,43 @@ object ConfigValues {
      * @tparam A type of values
      * @return a new CValue instance
      */
-    def apply[A](fqn: String, units: Units, data: A*): CValue[A] = new CValue[A](fqn, ValueData[A](data, units))
+    def apply[A](fqn: String, units: Units, data: A*): CValue[A] = CValue[A](fqn, ValueData[A](data, units))
 
-    def apply[A](fqn: String): CValue[A] = new CValue[A](fqn, ValueData.empty)
+    def apply[A](fqn: String): CValue[A] = CValue[A](fqn, ValueData.empty)
   }
 
 }
+
+import ConfigValues._
+import Units._
+
+case class SetupConfig(obsId: String, values: CValue[_]*) {
+  def apply(idx: Int) = values(idx)
+
+  def :+(value: CValue[_]): SetupConfig = SetupConfig(obsId, values :+ value: _*)
+
+  override def toString = values.mkString(s"SetupConfig($obsId, ", ", ", ")")
+}
+
+
+object SetupConfigTest {
+
+  // XXX temp
+  def main(args: Array[String]) {
+    val t = SetupConfig("obs100", CValue("mobie.red.filter", NoUnits, "F1-red"))
+    val t2 = t :+ CValue("tcs.base.pos.name", NoUnits, "m59")
+    val t3 = t2 :+ CValue("tcs.base.pos.equinox", NoUnits, 2000)
+
+    println(s"t.class = ${t.values.getClass}")
+    println(s"t = $t")
+    println(s"t2 = $t2")
+    println(s"t3 = $t3")
+    println(s"t(0) = ${t(0)}")
+    println(s"t3(2) = ${t3(2)}")
+
+//    val x = t(0).elems
+    // Any...
+  }
+}
+
+
