@@ -7,7 +7,7 @@ import scala.collection._
  * although something should be developed or borrowed
  * for use.
  */
-object Units {
+object UnitsOfMeasure {
 
   // Should parameterize Units so concat can be created concat[A, B]
   case class Units(name: String) {
@@ -26,23 +26,55 @@ object FullyQualifiedName {
   case class Fqn(fqn: String) {
     assert(fqn != null, "fqn can not be a null string")
 
-    val prefix = Fqn.prefix(this.fqn)
-    val name = Fqn.name(this.fqn)
+    lazy val prefix = Fqn.prefix(fqn)
+    lazy val name = Fqn.name(fqn)
   }
 
   object Fqn {
+    implicit def strToFqn(s: String) = Fqn(s)
+
     //def apply(fqn:String) = new Fqn(fqn)
     private def getPrefixName(s: String): (String, String) = {
-      s.splitAt(s.lastIndexOf(SEPERATOR))
+      if (isFqn(s)) {
+        val result = s.splitAt(s.lastIndexOf(SEPERATOR))
+        // this skips over the SEPERATOR
+        (result._1, result._2.substring(1))
+      } else {
+        ("", s)
+      }
     }
 
+    def isFqn(s: String): Boolean = s.contains(SEPERATOR)
+
     def prefix(fqn: String): String = {
-      getPrefixName(fqn)._1
+      val r = getPrefixName(fqn)
+      r._1
+    }
+
+    def subsystem(fqn: String): String = {
+      // Get the prefix for the fqn, if it's empty, return
+      val prefix = Fqn.prefix(fqn)
+      if (prefix.isEmpty) prefix
+      else if (prefix.contains(SEPERATOR)) {
+        // Else check to see if prefix still contains a prefix
+        // if so, get the text before the first Seperator
+        prefix.splitAt(prefix.indexOf(SEPERATOR))._1
+      } else prefix
     }
 
     def name(fqn: String): String = {
       // Split doesn't remove the seperator, so skip it
-      getPrefixName(fqn)._2.substring(1)
+      val r = getPrefixName(fqn)
+      r._2
+    }
+
+    // Attempt to think about what to do for improper name
+    // Currently not in use since I can't manage to do it functionally with Some, etc
+    // XXX allan: use Try?
+    def validateName(trialName: String): Option[String] = {
+      if (trialName.isEmpty) None
+      else if (trialName.contains(SEPERATOR)) None
+      else Some(trialName)
     }
   }
 
@@ -50,7 +82,7 @@ object FullyQualifiedName {
 
 object ConfigValues {
 
-  import Units._
+  import UnitsOfMeasure._
 
   /**
    * Trying here to represent values separately so we might be able to handle other non-numeric kinds
@@ -79,7 +111,7 @@ object ConfigValues {
    */
   class ValueData[+A](val elems: Seq[A], val units: Units = NoUnits) extends AllValues[A] {
 
-    def :+[B >: A](elem: B) = ValueData.apply(elems ++ Seq(elem), units)
+    def :+[B >: A](elem: B) = ValueData(elems ++ Seq(elem), units)
 
     override def toString = elems.mkString("(", ", ", ")") + units
   }
@@ -106,8 +138,14 @@ object ConfigValues {
    * A CValue is a configuration value. This joins a fully qualified name (future object?)
    * with ValueData
    */
-  case class CValue[+A](fqn: String, data: ValueData[A]) {
-    def apply(idx: Int) = data.apply(idx)
+  case class CValue[+A](private val trialName: String, data: ValueData[A]) {
+
+    import org.tmt.csw.util.cfg.FullyQualifiedName.Fqn
+
+    //The following bit is to auto take off the name from an FQN
+    val name = Fqn.name(trialName)
+
+    def apply(idx: Int) = data(idx)
 
     def length = data.elems.length
 
@@ -118,135 +156,151 @@ object ConfigValues {
     def units = data.units
 
     // Should we have a way to add an element of type A to the data?
-    def :+[B >: A](elem: B): CValue[B] = new CValue(fqn, data :+ elem)
+    def :+[B >: A](elem: B): CValue[B] = new CValue(name, data :+ elem)
 
-    override def toString = fqn + data
+    override def toString = name + data
   }
 
   object CValue {
+
     /**
      * Allows creating a CValue with a sequence or values as a vararg
-     * @param fqn fully qualified name as in "tcs.m1cs.az
+     * @param name final name in a fully qualified name as az in "tcs.m1cs.az"
      * @param units units for values (unfortunately cannot be defaulted with vararg
      * @param data values of type A
      * @tparam A type of values
      * @return a new CValue instance
      */
-    def apply[A](fqn: String, units: Units, data: A*): CValue[A] = new CValue[A](fqn, ValueData[A](data, units))
+    def apply[A](name: String, units: Units, data: A*): CValue[A] = CValue[A](name, ValueData[A](data, units))
 
-    def apply[A](fqn: String): CValue[A] = new CValue[A](fqn, ValueData.empty)
+    def apply[A](name: String): CValue[A] = CValue[A](name, ValueData.empty)
   }
 
 }
 
 
-object Config {
+object Configurations {
 
   import ConfigValues.CValue
 
-  type A = CValue[_]
+  // This really sucks but I can't figure out how to get only subtypes of ConfigType because of type erasure
+  object ConfigKind extends Enumeration {
+    type ConfigKind = Value
+    val Setup, Observe, Wait = Value
+  }
+
+  // Base trait for all Configuration Types
+  trait ConfigType {
+    import org.tmt.csw.util.cfg.Configurations.ConfigKind.ConfigKind
+    def obsId: String
+
+    def kind: ConfigKind
+  }
+
+  type CV = CValue[_]
+  type CT = ConfigType
 
   // obsId might be changed to some set of observation Info type
-  case class SetupConfig(obsId: String, var values: Set[A]) {
+  case class SetupConfig(obsId: String, prefix: String, values: Set[CV]) extends ConfigType {
+
+    val kind = ConfigKind.Setup
 
     def size = values.size
+
+    def names: Set[String] = values.map(c => c.name)
 
     def empty = values.empty
 
     def notEmpty = values.nonEmpty
 
-    def map[B](f: A => B) = values.map(f)
-
-    def flatMap[B](f: A => GenTraversable[B]) = values.flatMap(f)
-
-    def foreach[U](f: A => U): Unit = values.foreach(f)
-
-    def filter(f: A => Boolean): Set[A] = values.filter(f)
-
-    def :+[B <: A](elem: B): SetupConfig = {
-      //new SetupConfig(obsId, values :+ elem)
-      values = values + elem
-      this
+    def :+[B <: CV](elem: B): SetupConfig = {
+      SetupConfig(obsId, prefix, values + elem)
     }
 
-    def withValues(newValues: A*): SetupConfig = {
-      newValues.foreach { v => values = values + v}
-      this
+    def withValues(newValues: CV*): SetupConfig = {
+      val nv = newValues.foldLeft(values)((vals, v) => vals + v)
+      SetupConfig(obsId, prefix, nv)
     }
 
-    override def toString = "(" + obsId + ")->" + values
+    // Needs improvement
+    override def toString = "(" + obsId + ")->" + prefix + " " + values
   }
 
   object SetupConfig {
+    val DEFAULT_PREFIX = ""
 
-    import FullyQualifiedName._
-
-    def apply(obsId: String) = new SetupConfig(obsId, Set.empty[A])
-
-    def fqns(sc: SetupConfig): Set[String] = sc.values.map(c => c.fqn)
-
-    type CValueFilter = CValue[_] => Boolean
-
-    val startsWithFilter: String => CValueFilter = query => cv => cv.fqn.startsWith(query)
-    val containsFilter: String => CValueFilter = query => cv => cv.fqn.contains(query)
-
-    private def select(values: Set[A], f: CValueFilter): Set[A] = values.filter(f)
-
-    def startsWith(sc: SetupConfig, query: String): Set[A] = select(sc.values, startsWithFilter(query))
-
-    def contains(sc: SetupConfig, query: String): Set[A] = select(sc.values, containsFilter(query))
-
-    def getFirst(values: Set[A]): Set[A] = {
-      val q = Fqn.prefix(values.head.fqn)
-      select(values, startsWithFilter(q))
-    }
-
-    def getFirst(sc: SetupConfig): Set[A] = {
-      getFirst(sc.values)
-    }
-
-    def getConfig(sc: SetupConfig) = {
-      sc.values.partition(cv => Fqn.prefix(cv.fqn) == Fqn.prefix(sc.values.head.fqn))
-    }
-
-    // Returns a list of configs in list
-    def getAllConfigs(sc: SetupConfig): List[SetupConfig] = {
-
-      def getAllHelper(values: Set[A], current_result: List[SetupConfig]): List[SetupConfig] = {
-        if (values.isEmpty) current_result
-        else {
-          val first: Set[A] = getFirst(values)
-          val next_result = SetupConfig(sc.obsId, first) +: current_result
-          val next_values = values -- first
-          getAllHelper(next_values, next_result)
-        }
-      }
-
-      getAllHelper(sc.values, List.empty[SetupConfig])
-    }
+    def apply(obsId: String, prefix: String = DEFAULT_PREFIX) = new SetupConfig(obsId, prefix, Set.empty[CV])
   }
 
+  case class WaitConfig(obsId: String) extends ConfigType {
+    val kind = ConfigKind.Wait
+
+  }
+
+  case class ObserveConfig(obsId: String) extends ConfigType {
+    val kind = ConfigKind.Observe
+  }
+
+
+  case class ConfigList[A <: ConfigType](configs: List[A]) {
+
+    def size = configs.size
+
+    def :+[B <: CT](elem: B): ConfigList[CT] = new ConfigList(configs.+:(elem))
+
+    def prefixes: Set[String] = ConfigList.onlySetupConfigs(configs).map(c => c.prefix).toSet
+
+    def obsIds: Set[String] = configs.map(sc => sc.obsId).toSet
+
+    def map[B](f: CT => B) = configs.map(f)
+
+    def flatMap[B](f: A => GenTraversable[B]) = configs.flatMap(f)
+
+    def foreach[U](f: A => U): Unit = configs.foreach(f)
+
+    def filter(f: A => Boolean): Seq[A] = configs.filter(f)
+  }
+
+
+  object ConfigList {
+
+    // A filter type for various kinds of Configs
+    type ConfigFilter[A] = A => Boolean
+
+    private def selectOnSetupConfigs(configs: List[SetupConfig], f: ConfigFilter[SetupConfig]): List[SetupConfig]
+      = configs.filter(f)
+
+    def onlySetupConfigs(configs: List[ConfigType]): List[SetupConfig]
+      = configs.filter(c => c.kind == ConfigKind.Setup).asInstanceOf[List[SetupConfig]]
+
+    def onlyWaitConfigs(configs: List[ConfigType]): List[WaitConfig]
+      = configs.filter(c => c.kind == ConfigKind.Wait).asInstanceOf[List[WaitConfig]]
+
+    def onlyObserveConfigs(configs: List[ConfigType]): List[ObserveConfig]
+      = configs.filter(c => c.kind == ConfigKind.Observe).asInstanceOf[List[ObserveConfig]]
+
+    private def select(configs: List[ConfigType], f: ConfigFilter[SetupConfig]): List[SetupConfig]
+      = selectOnSetupConfigs(onlySetupConfigs(configs), f)
+
+    private val startsWithFilter: String => ConfigFilter[SetupConfig]
+      = query => sc => sc.prefix.startsWith(query)
+    private val containsFilter: String => ConfigFilter[SetupConfig]
+      = query => sc => sc.prefix.contains(query)
+
+    def startsWith(cl: ConfigList[ConfigType], query: String): List[SetupConfig]
+      = select(cl.configs, startsWithFilter(query))
+
+    def contains(cl: ConfigList[ConfigType], query: String): List[SetupConfig]
+      = select(cl.configs, containsFilter(query))
+
+    def getFirst(values: List[ConfigType]): List[SetupConfig] = {
+      val scList = onlySetupConfigs(values)
+      select(scList, startsWithFilter(scList.head.prefix))
+    }
+
+    def apply(configs: ConfigType*) = new ConfigList(configs.toList)
+  }
+
+
 }
-
-
-//object SetupConfigTest {
-//
-//  // XXX temp
-//  def main(args: Array[String]) {
-//    val t = SetupConfig("obs100", CValue("mobie.red.filter", NoUnits, "F1-red"))
-//    val t2 = t :+ CValue("tcs.base.pos.name", NoUnits, "m59")
-//    val t3 = t2 :+ CValue("tcs.base.pos.equinox", NoUnits, 2000)
-//
-//    println(s"t.class = ${t.values.getClass}")
-//    println(s"t = $t")
-//    println(s"t2 = $t2")
-//    println(s"t3 = $t3")
-//    println(s"t(0) = ${t(0)}")
-//    println(s"t3(2) = ${t3(2)}")
-//
-////    val x = t(0).elems
-//    // Any...
-//  }
-//}
-
 
