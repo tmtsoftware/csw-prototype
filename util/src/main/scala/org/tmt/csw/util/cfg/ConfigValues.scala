@@ -218,8 +218,7 @@ object Configurations {
     }
 
     def withValues(newValues: CV*): SetupConfig = {
-      val nv = newValues.foldLeft(values)((vals, v) => vals + v)
-      SetupConfig(obsId, prefix, nv)
+      SetupConfig(obsId, prefix, values ++ newValues)
     }
 
     // Needs improvement
