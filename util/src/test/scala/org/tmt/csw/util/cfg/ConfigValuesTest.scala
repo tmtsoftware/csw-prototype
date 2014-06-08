@@ -394,7 +394,7 @@ class ConfigValuesTest extends FunSpec with Matchers {
     val cl1 = ConfigList(sc1, sc2, sc3, sc4)
 
     val t1 = "mobie"
-    val r1 = ConfigList.startsWith(cl1, t1)
+    val r1 = cl1.startsWith(t1)
 
     //info("Select results: " +  r1)
     it("it should result in selecton of 1 SetupConfig with mobie") {
@@ -402,14 +402,14 @@ class ConfigValuesTest extends FunSpec with Matchers {
     }
 
     // Wrap in a new configlist
-    val cl2 = ConfigList(r1)
+    val cl2 = List(r1)
     it("new mobie list should have 1 members") {
       cl2.size should be(1)
     }
 
     // This test is from original ConfigList
     val t2 = "pos"
-    val r2 = ConfigList.contains(cl1, t2)
+    val r2 = cl1.contains(t2)
     it("it should return results for contains") {
       r2.size should be(3)
     }
@@ -438,7 +438,7 @@ class ConfigValuesTest extends FunSpec with Matchers {
     // Add to list
     val cl1 = ConfigList(sc1, sc2, sc3, sc4)
 
-    val t1 = ConfigList.getFirst(cl1.configs)
+    val t1 = cl1.getFirst
     info("test: " + t1)
 
   }
@@ -550,23 +550,23 @@ class ConfigValuesTest extends FunSpec with Matchers {
     val waitConfig1 = WaitConfig(obsId1)
 
     // Add to list
-    val cl1 = ConfigList(sc1, sc4, obsConfig1, sc3, waitConfig1)
+    val cl1 = List(sc1, sc4, obsConfig1, sc3, waitConfig1)
     it("it should have all the members of the list") {
       cl1.size should be(5)
     }
 
     it("it should have only 1 wait config") {
-      val t2 = ConfigList.onlyWaitConfigs(cl1.configs)
+      val t2 = cl1.onlyWaitConfigs
       t2.size should be(1)
     }
 
     it("it should have only 1 observe config") {
-      val t3 = ConfigList.onlyObserveConfigs(cl1.configs)
+      val t3 = cl1.onlyObserveConfigs
       t3.size should be(1)
     }
 
     it("it should have 3 setup configs") {
-      val t4 = ConfigList.onlySetupConfigs(cl1.configs)
+      val t4 = cl1.onlySetupConfigs
       t4.size should be(3)
     }
   }

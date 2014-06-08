@@ -241,24 +241,10 @@ object Configurations {
   }
 
 
-  case class ConfigList[A <: ConfigType](configs: List[A]) {
+  type ConfigList[A <: ConfigType] = List[A]
 
-    def size = configs.size
-
-    def :+[B <: CT](elem: B): ConfigList[CT] = new ConfigList(configs.+:(elem))
-
-    def prefixes: Set[String] = ConfigList.onlySetupConfigs(configs).map(c => c.prefix).toSet
-
-    def obsIds: Set[String] = configs.map(sc => sc.obsId).toSet
-
-    def map[B](f: CT => B) = configs.map(f)
-
-    def flatMap[B](f: A => GenTraversable[B]) = configs.flatMap(f)
-
-    def foreach[U](f: A => U): Unit = configs.foreach(f)
-
-    def filter(f: A => Boolean): Seq[A] = configs.filter(f)
-  }
+  implicit def listToConfigList[A <: ConfigType](l: List[A]): ConfigListWrapper[A] = ConfigListWrapper(l)
+  implicit def listToSetupConfigList[A <: SetupConfig](l: List[A]): SetupConfigListWrapper[A] = SetupConfigListWrapper(l)
 
 
   object ConfigList {
@@ -266,40 +252,44 @@ object Configurations {
     // A filter type for various kinds of Configs
     type ConfigFilter[A] = A => Boolean
 
-    private def selectOnSetupConfigs(configs: List[SetupConfig], f: ConfigFilter[SetupConfig]): List[SetupConfig]
-      = configs.filter(f)
+    val startsWithFilter: String => ConfigFilter[SetupConfig] = query => sc => sc.prefix.startsWith(query)
 
-    def onlySetupConfigs(configs: List[ConfigType]): List[SetupConfig]
-      = configs.filter(c => c.kind == ConfigKind.Setup).asInstanceOf[List[SetupConfig]]
+    val containsFilter: String => ConfigFilter[SetupConfig] = query => sc => sc.prefix.contains(query)
 
-    def onlyWaitConfigs(configs: List[ConfigType]): List[WaitConfig]
-      = configs.filter(c => c.kind == ConfigKind.Wait).asInstanceOf[List[WaitConfig]]
-
-    def onlyObserveConfigs(configs: List[ConfigType]): List[ObserveConfig]
-      = configs.filter(c => c.kind == ConfigKind.Observe).asInstanceOf[List[ObserveConfig]]
-
-    private def select(configs: List[ConfigType], f: ConfigFilter[SetupConfig]): List[SetupConfig]
-      = selectOnSetupConfigs(onlySetupConfigs(configs), f)
-
-    private val startsWithFilter: String => ConfigFilter[SetupConfig]
-      = query => sc => sc.prefix.startsWith(query)
-    private val containsFilter: String => ConfigFilter[SetupConfig]
-      = query => sc => sc.prefix.contains(query)
-
-    def startsWith(cl: ConfigList[ConfigType], query: String): List[SetupConfig]
-      = select(cl.configs, startsWithFilter(query))
-
-    def contains(cl: ConfigList[ConfigType], query: String): List[SetupConfig]
-      = select(cl.configs, containsFilter(query))
-
-    def getFirst(values: List[ConfigType]): List[SetupConfig] = {
-      val scList = onlySetupConfigs(values)
-      select(scList, startsWithFilter(scList.head.prefix))
-    }
-
-    def apply(configs: ConfigType*) = new ConfigList(configs.toList)
+    def apply(configs: ConfigType*) = new ConfigListWrapper(configs.toList)
   }
 
 
+  case class SetupConfigListWrapper[A <: SetupConfig](configs: List[A]) {
+    import ConfigList._
+
+    def select(f: ConfigFilter[SetupConfig]): List[SetupConfig] = configs.filter(f)
+
+  }
+
+  case class ConfigListWrapper[A <: ConfigType](configs: List[A]) {
+    import ConfigList._
+
+    def prefixes: Set[String] = onlySetupConfigs.map(c => c.prefix).toSet
+
+    def obsIds: Set[String] = configs.map(sc => sc.obsId).toSet
+
+    def onlySetupConfigs: List[SetupConfig] = configs.collect {case sc: SetupConfig => sc}
+
+    def onlyWaitConfigs: List[WaitConfig] = configs.collect {case sc: WaitConfig => sc}
+
+    def onlyObserveConfigs = configs.collect {case sc: ObserveConfig => sc}
+
+    private def select(f: ConfigFilter[SetupConfig]): List[SetupConfig] = onlySetupConfigs.select(f)
+
+    def startsWith(query: String): List[SetupConfig] = select(startsWithFilter(query))
+
+    def contains(query: String): List[SetupConfig] = select(containsFilter(query))
+
+    def getFirst: List[SetupConfig] = {
+      val scList = onlySetupConfigs
+      scList.select(startsWithFilter(scList.head.prefix))
+    }
+  }
 }
 
