@@ -180,21 +180,11 @@ object ConfigValues {
 
 
 object Configurations {
-
   import ConfigValues.CValue
-
-  // This really sucks but I can't figure out how to get only subtypes of ConfigType because of type erasure
-  object ConfigKind extends Enumeration {
-    type ConfigKind = Value
-    val Setup, Observe, Wait = Value
-  }
 
   // Base trait for all Configuration Types
   trait ConfigType {
-    import org.tmt.csw.util.cfg.Configurations.ConfigKind.ConfigKind
     def obsId: String
-
-    def kind: ConfigKind
   }
 
   type CV = CValue[_]
@@ -202,8 +192,6 @@ object Configurations {
 
   // obsId might be changed to some set of observation Info type
   case class SetupConfig(obsId: String, prefix: String, values: Set[CV]) extends ConfigType {
-
-    val kind = ConfigKind.Setup
 
     def size = values.size
 
@@ -231,14 +219,9 @@ object Configurations {
     def apply(obsId: String, prefix: String = DEFAULT_PREFIX) = new SetupConfig(obsId, prefix, Set.empty[CV])
   }
 
-  case class WaitConfig(obsId: String) extends ConfigType {
-    val kind = ConfigKind.Wait
+  case class WaitConfig(obsId: String) extends ConfigType
 
-  }
-
-  case class ObserveConfig(obsId: String) extends ConfigType {
-    val kind = ConfigKind.Observe
-  }
+  case class ObserveConfig(obsId: String) extends ConfigType
 
 
   type ConfigList[A <: ConfigType] = List[A]
@@ -278,7 +261,7 @@ object Configurations {
 
     def onlyWaitConfigs: List[WaitConfig] = configs.collect {case sc: WaitConfig => sc}
 
-    def onlyObserveConfigs = configs.collect {case sc: ObserveConfig => sc}
+    def onlyObserveConfigs: List[ObserveConfig] = configs.collect { case sc: ObserveConfig => sc}
 
     private def select(f: ConfigFilter[SetupConfig]): List[SetupConfig] = onlySetupConfigs.select(f)
 

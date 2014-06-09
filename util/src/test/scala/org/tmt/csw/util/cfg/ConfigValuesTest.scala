@@ -558,16 +558,22 @@ class ConfigValuesTest extends FunSpec with Matchers {
     it("it should have only 1 wait config") {
       val t2 = cl1.onlyWaitConfigs
       t2.size should be(1)
+      val wc: WaitConfig = t2(0)
+      wc.obsId should be(obsId1)
     }
 
     it("it should have only 1 observe config") {
       val t3 = cl1.onlyObserveConfigs
       t3.size should be(1)
+      val oc: ObserveConfig = t3(0)
+      oc.obsId should be(obsId1)
     }
 
     it("it should have 3 setup configs") {
       val t4 = cl1.onlySetupConfigs
       t4.size should be(3)
+      val sc: SetupConfig = t4(0)
+      sc.obsId should be(obsId1)
     }
   }
 }
