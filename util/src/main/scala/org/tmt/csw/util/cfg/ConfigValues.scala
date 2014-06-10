@@ -16,6 +16,8 @@ object UnitsOfMeasure {
 
   object Meters extends Units("m")
 
+  object Deg extends Units("deg")
+
 }
 
 object FullyQualifiedName {
@@ -140,6 +142,7 @@ object ConfigValues {
      */
     def apply[A](name: String, units: Units, data: A*): CValue[A] = CValue[A](name, ValueData[A](data, units))
   }
+
 }
 
 
@@ -182,6 +185,8 @@ object Configurations {
 
   object SetupConfig {
     val DEFAULT_PREFIX = ""
+
+    def apply(obsId: String, prefix: String, values: CV*): SetupConfig = SetupConfig(obsId, prefix, values.toSet)
   }
 
   case class WaitConfig(obsId: String) extends ConfigType
