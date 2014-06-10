@@ -244,7 +244,7 @@ class ConfigValuesTest extends FunSpec with Matchers {
     it("an empty string should return None") {
       r1 should be(None)
     }
-    it("should be plain text with no seperator") {
+    it("should be plain text with no separator") {
       val t1 = ".ra"
       val r2 = Fqn.validateName(t1)
       r2 should be(None)

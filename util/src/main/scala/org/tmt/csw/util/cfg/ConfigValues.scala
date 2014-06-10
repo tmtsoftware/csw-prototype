@@ -21,7 +21,7 @@ object UnitsOfMeasure {
 }
 
 object FullyQualifiedName {
-  val SEPERATOR = '.'
+  val SEPARATOR = '.'
 
   case class Fqn(fqn: String) {
     assert(fqn != null, "fqn can not be a null string")
@@ -33,47 +33,27 @@ object FullyQualifiedName {
   object Fqn {
     implicit def strToFqn(s: String) = Fqn(s)
 
-    //def apply(fqn:String) = new Fqn(fqn)
     private def getPrefixName(s: String): (String, String) = {
-      if (isFqn(s)) {
-        val result = s.splitAt(s.lastIndexOf(SEPERATOR))
-        // this skips over the SEPERATOR
-        (result._1, result._2.substring(1))
-      } else {
-        ("", s)
-      }
+      val result = s.splitAt(s.lastIndexOf(SEPARATOR))
+      // this skips over the SEPARATOR, if present
+      if (isFqn(s)) (result._1, result._2.substring(1)) else result
     }
 
-    def isFqn(s: String): Boolean = s.contains(SEPERATOR)
+    def isFqn(s: String): Boolean = s.contains(SEPARATOR)
 
-    def prefix(fqn: String): String = {
-      val r = getPrefixName(fqn)
-      r._1
-    }
+    def prefix(s: String): String = s.splitAt(s.lastIndexOf(SEPARATOR))._1
 
-    def subsystem(fqn: String): String = {
-      // Get the prefix for the fqn, if it's empty, return
-      val prefix = Fqn.prefix(fqn)
-      if (prefix.isEmpty) prefix
-      else if (prefix.contains(SEPERATOR)) {
-        // Else check to see if prefix still contains a prefix
-        // if so, get the text before the first Seperator
-        prefix.splitAt(prefix.indexOf(SEPERATOR))._1
-      } else prefix
-    }
+    def subsystem(s: String): String = s.splitAt(s.indexOf(SEPARATOR))._1
 
-    def name(fqn: String): String = {
-      // Split doesn't remove the seperator, so skip it
-      val r = getPrefixName(fqn)
-      r._2
-    }
+    // Split doesn't remove the separator, so skip it
+    def name(fqn: String): String = getPrefixName(fqn)._2
 
     // Attempt to think about what to do for improper name
     // Currently not in use since I can't manage to do it functionally with Some, etc
     // XXX allan: use Try?
     def validateName(trialName: String): Option[String] = {
       if (trialName.isEmpty) None
-      else if (trialName.contains(SEPERATOR)) None
+      else if (trialName.contains(SEPARATOR)) None
       else Some(trialName)
     }
   }
@@ -109,23 +89,13 @@ object ConfigValues {
    * @param units units of the values
    * @tparam A Type of contained value
    */
-  class ValueData[+A](val elems: Seq[A], val units: Units = NoUnits) extends AllValues[A] {
-
+  case class ValueData[+A](elems: Seq[A], units: Units = NoUnits) extends AllValues[A] {
     def :+[B >: A](elem: B) = ValueData(elems ++ Seq(elem), units)
 
     override def toString = elems.mkString("(", ", ", ")") + units
   }
 
   object ValueData {
-    /**
-     * Convenience to create ValueData easily
-     * @param values sequence of values
-     * @param units units
-     * @tparam A type of sequence values
-     * @return a new ValueData object
-     */
-    def apply[A](values: Seq[A], units: Units = NoUnits) = new ValueData(values, units)
-
     def empty[A]: ValueData[A] = new ValueData(Seq.empty, NoUnits)
 
     def withUnits[A](v1: ValueData[A], u: Units) = ValueData(v1.elems, u)
@@ -140,7 +110,7 @@ object ConfigValues {
    */
   case class CValue[+A](private val trialName: String, data: ValueData[A]) {
 
-    import org.tmt.csw.util.cfg.FullyQualifiedName.Fqn
+    import FullyQualifiedName.Fqn
 
     //The following bit is to auto take off the name from an FQN
     val name = Fqn.name(trialName)
@@ -180,6 +150,7 @@ object ConfigValues {
 
 
 object Configurations {
+
   import ConfigValues.CValue
 
   // Base trait for all Configuration Types
@@ -191,7 +162,9 @@ object Configurations {
   type CT = ConfigType
 
   // obsId might be changed to some set of observation Info type
-  case class SetupConfig(obsId: String, prefix: String, values: Set[CV]) extends ConfigType {
+  case class SetupConfig(obsId: String,
+                         prefix: String = SetupConfig.DEFAULT_PREFIX,
+                         values: Set[CV] = Set.empty[CV]) extends ConfigType {
 
     def size = values.size
 
@@ -215,8 +188,6 @@ object Configurations {
 
   object SetupConfig {
     val DEFAULT_PREFIX = ""
-
-    def apply(obsId: String, prefix: String = DEFAULT_PREFIX) = new SetupConfig(obsId, prefix, Set.empty[CV])
   }
 
   case class WaitConfig(obsId: String) extends ConfigType
@@ -227,6 +198,7 @@ object Configurations {
   type ConfigList[A <: ConfigType] = List[A]
 
   implicit def listToConfigList[A <: ConfigType](l: List[A]): ConfigListWrapper[A] = ConfigListWrapper(l)
+
   implicit def listToSetupConfigList[A <: SetupConfig](l: List[A]): SetupConfigListWrapper[A] = SetupConfigListWrapper(l)
 
 
@@ -244,6 +216,7 @@ object Configurations {
 
 
   case class SetupConfigListWrapper[A <: SetupConfig](configs: List[A]) {
+
     import ConfigList._
 
     def select(f: ConfigFilter[SetupConfig]): List[SetupConfig] = configs.filter(f)
@@ -251,15 +224,16 @@ object Configurations {
   }
 
   case class ConfigListWrapper[A <: ConfigType](configs: List[A]) {
+
     import ConfigList._
 
     def prefixes: Set[String] = onlySetupConfigs.map(c => c.prefix).toSet
 
     def obsIds: Set[String] = configs.map(sc => sc.obsId).toSet
 
-    def onlySetupConfigs: List[SetupConfig] = configs.collect {case sc: SetupConfig => sc}
+    def onlySetupConfigs: List[SetupConfig] = configs.collect { case sc: SetupConfig => sc}
 
-    def onlyWaitConfigs: List[WaitConfig] = configs.collect {case sc: WaitConfig => sc}
+    def onlyWaitConfigs: List[WaitConfig] = configs.collect { case sc: WaitConfig => sc}
 
     def onlyObserveConfigs: List[ObserveConfig] = configs.collect { case sc: ObserveConfig => sc}
 
@@ -274,5 +248,6 @@ object Configurations {
       scList.select(startsWithFilter(scList.head.prefix))
     }
   }
+
 }
 
