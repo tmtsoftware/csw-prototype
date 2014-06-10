@@ -1,7 +1,5 @@
 package org.tmt.csw.util.cfg
 
-import scala.collection._
-
 /**
  * This Units stuff is just for play
  * although something should be developed or borrowed
@@ -108,22 +106,22 @@ object ConfigValues {
    * A CValue is a configuration value. This joins a fully qualified name (future object?)
    * with ValueData
    */
-  case class CValue[+A](private val trialName: String, data: ValueData[A]) {
+  case class CValue[+A](private val trialName: String, data: ValueData[A] = ValueData.empty) {
 
     import FullyQualifiedName.Fqn
 
     //The following bit is to auto take off the name from an FQN
-    val name = Fqn.name(trialName)
+    lazy val name = Fqn.name(trialName)
 
     def apply(idx: Int) = data(idx)
 
-    def length = data.elems.length
+    lazy val length = data.elems.length
 
-    def isEmpty = data.elems.isEmpty
+    lazy val isEmpty = data.elems.isEmpty
 
-    def elems = data.elems
+    lazy val elems = data.elems
 
-    def units = data.units
+    lazy val units = data.units
 
     // Should we have a way to add an element of type A to the data?
     def :+[B >: A](elem: B): CValue[B] = new CValue(name, data :+ elem)
@@ -132,7 +130,6 @@ object ConfigValues {
   }
 
   object CValue {
-
     /**
      * Allows creating a CValue with a sequence or values as a vararg
      * @param name final name in a fully qualified name as az in "tcs.m1cs.az"
@@ -142,10 +139,7 @@ object ConfigValues {
      * @return a new CValue instance
      */
     def apply[A](name: String, units: Units, data: A*): CValue[A] = CValue[A](name, ValueData[A](data, units))
-
-    def apply[A](name: String): CValue[A] = CValue[A](name, ValueData.empty)
   }
-
 }
 
 
@@ -166,13 +160,13 @@ object Configurations {
                          prefix: String = SetupConfig.DEFAULT_PREFIX,
                          values: Set[CV] = Set.empty[CV]) extends ConfigType {
 
-    def size = values.size
+    lazy val size = values.size
 
-    def names: Set[String] = values.map(c => c.name)
+    lazy val names: Set[String] = values.map(c => c.name)
 
-    def empty = values.empty
+    lazy val empty = values.empty
 
-    def notEmpty = values.nonEmpty
+    lazy val notEmpty = values.nonEmpty
 
     def :+[B <: CV](elem: B): SetupConfig = {
       SetupConfig(obsId, prefix, values + elem)
@@ -227,15 +221,15 @@ object Configurations {
 
     import ConfigList._
 
-    def prefixes: Set[String] = onlySetupConfigs.map(c => c.prefix).toSet
+    lazy val prefixes: Set[String] = onlySetupConfigs.map(c => c.prefix).toSet
 
-    def obsIds: Set[String] = configs.map(sc => sc.obsId).toSet
+    lazy val obsIds: Set[String] = configs.map(sc => sc.obsId).toSet
 
-    def onlySetupConfigs: List[SetupConfig] = configs.collect { case sc: SetupConfig => sc}
+    lazy val onlySetupConfigs: List[SetupConfig] = configs.collect { case sc: SetupConfig => sc}
 
-    def onlyWaitConfigs: List[WaitConfig] = configs.collect { case sc: WaitConfig => sc}
+    lazy val onlyWaitConfigs: List[WaitConfig] = configs.collect { case sc: WaitConfig => sc}
 
-    def onlyObserveConfigs: List[ObserveConfig] = configs.collect { case sc: ObserveConfig => sc}
+    lazy val onlyObserveConfigs: List[ObserveConfig] = configs.collect { case sc: ObserveConfig => sc}
 
     private def select(f: ConfigFilter[SetupConfig]): List[SetupConfig] = onlySetupConfigs.select(f)
 
@@ -243,11 +237,10 @@ object Configurations {
 
     def contains(query: String): List[SetupConfig] = select(containsFilter(query))
 
-    def getFirst: List[SetupConfig] = {
+    lazy val getFirst: List[SetupConfig] = {
       val scList = onlySetupConfigs
       scList.select(startsWithFilter(scList.head.prefix))
     }
   }
-
 }
 
