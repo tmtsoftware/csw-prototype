@@ -141,6 +141,9 @@ object ConfigValues {
      * @return a new CValue instance
      */
     def apply[A](name: String, units: Units, data: A*): CValue[A] = CValue[A](name, ValueData[A](data, units))
+
+    implicit def tupleToCValue[A](t: (String, A)): CValue[A] = CValue[A](t._1, ValueData[A](Seq(t._2), NoUnits))
+
   }
 
 }
@@ -248,4 +251,23 @@ object Configurations {
     }
   }
 }
+
+object TmpMain {
+  // Temporary test main for experimenting...
+  def main(args: Array[String]) {
+    import Configurations.SetupConfig
+
+    val sc = SetupConfig(
+      obsId = "2014-C2-4-44",
+      "tcs.base.pos",
+      "name" -> "m99",
+      "ra" -> 10.2,
+      "dec" -> 2.34,
+      "equinox" -> "J2000"
+    )
+
+    println(s"sc = $sc")
+  }
+}
+
 
