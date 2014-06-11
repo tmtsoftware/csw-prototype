@@ -30,7 +30,7 @@ to start `Container-1`, which is described by this config file:
         name = "Container-1"
         components {
             Assembly-1 {
-                class = "org.tmt.csw.test.container1.Assembly1"
+                class = "csw.pkgDemo.container1.Assembly1"
                 args = ["Assembly-1"]
             }
         }
@@ -49,19 +49,19 @@ This creates `Container-2` from this config file:
         name = "Container-2"
         components {
             HCD-2A {
-                class = "org.tmt.csw.test.container2.Hcd2"
+                class = "csw.pkgDemo.container2.Hcd2"
                 args = ["HCD-2A", "config.tmt.mobie.blue.filter"]
             }
             HCD-2B {
-                class = "org.tmt.csw.test.container2.Hcd2"
+                class = "csw.pkgDemo.container2.Hcd2"
                 args = ["HCD-2B", "config.tmt.mobie.blue.disperser"]
             }
             HCD-2C {
-                class = "org.tmt.csw.test.container2.Hcd2"
+                class = "csw.pkgDemo.container2.Hcd2"
                 args = ["HCD-2C", "config.tmt.tel.base.pos"]
             }
             HCD-2D {
-                class = "org.tmt.csw.test.container2.Hcd2"
+                class = "csw.pkgDemo.container2.Hcd2"
                 args = ["HCD-2D", "config.tmt.tel.ao.pos.one"]
             }
         }

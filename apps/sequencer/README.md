@@ -27,7 +27,7 @@ Example Session
 ---------------
 
 After initializing the environment, it presents you with the `seq>` prompt, where you can enter Scala code.
-The [org.tmt.csw.apps.sequencer.Seq](src/main/scala/org/tmt/csw/apps/sequencer/Seq.scala) class provides 
+The [csw.services.apps.sequencer.Seq](src/main/scala/csw/services/apps/sequencer/Seq.scala) class provides 
 some convenient utility methods for use in the shell to
 get started. 
 The initialization code (see [resources/Init.scala](src/main/resources/Init.scala)) automatically imports 
@@ -41,22 +41,22 @@ the contents of the Seq object.
     Welcome to the TMT sequencer
     
     seq> val a1 = resolveAssembly("Assembly-1")
-    a1: org.tmt.csw.cmd.akka.BlockingCommandServiceClient = BlockingCommandServiceClient(CommandServiceClient(Actor[akka://Sequencer/user/Assembly-1Client#-1698508007],5 seconds))
+    a1: csw.services.cmd.akka.BlockingCommandServiceClient = BlockingCommandServiceClient(CommandServiceClient(Actor[akka://Sequencer/user/Assembly-1Client#-1698508007],5 seconds))
     
     seq> val conf = Configuration().withValue("config.tmt.mobie.blue.filter.value", "blue")
-    conf: org.tmt.csw.util.Configuration = config{tmt{mobie{blue{filter{value=blue}}}}}
+    conf: csw.util.Configuration = config{tmt{mobie{blue{filter{value=blue}}}}}
     
     seq> val s = a1.submit(conf)
-    s: org.tmt.csw.cmd.akka.CommandStatus = Completed(4528d456-13cc-42dc-9f32-17dfbfaebc2f)
+    s: csw.services.cmd.akka.CommandStatus = Completed(4528d456-13cc-42dc-9f32-17dfbfaebc2f)
     
     seq> a1.getConfig(conf)
-    res1: org.tmt.csw.util.Configuration = config{tmt{mobie{blue{filter{value=blue,timestamp=1400266708517}}}}}
+    res1: csw.util.Configuration = config{tmt{mobie{blue{filter{value=blue,timestamp=1400266708517}}}}}
     
     seq> a1.submit(conf.withValue("config.tmt.mobie.blue.filter.value", "red"))
-    res2: org.tmt.csw.cmd.akka.CommandStatus = Completed(d9e1bde3-37ac-4812-b0fc-f5e41aefe451)
+    res2: csw.services.cmd.akka.CommandStatus = Completed(d9e1bde3-37ac-4812-b0fc-f5e41aefe451)
     
     seq> a1.getConfig(conf)
-    res3: org.tmt.csw.util.Configuration = config{tmt{mobie{blue{filter{value=red,timestamp=1400266750419}}}}}
+    res3: csw.util.Configuration = config{tmt{mobie{blue{filter{value=red,timestamp=1400266750419}}}}}
     
     seq> 
 
