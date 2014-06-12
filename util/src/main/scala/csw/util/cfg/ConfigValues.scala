@@ -92,15 +92,23 @@ object ConfigValues {
   case class ValueData[+A](elems: Seq[A], units: Units = NoUnits) extends AllValues[A] {
     def :+[B >: A](elem: B) = ValueData(elems ++ Seq(elem), units)
 
+    // DSL support for units
+    def deg = ValueData(elems, Deg)
+
+    //...
+
     override def toString = elems.mkString("(", ", ", ")") + units
   }
 
   object ValueData {
-    def empty[A]: ValueData[A] = new ValueData(Seq.empty, NoUnits)
+    def empty[A]: ValueData[A] = ValueData(Seq.empty, NoUnits)
 
     def withUnits[A](v1: ValueData[A], u: Units) = ValueData(v1.elems, u)
 
     def withValues[A](v1: ValueData[A], values: Seq[A]) = ValueData(values, v1.units)
+
+    // DSL support XXX
+    implicit def toValueData[A](elem: A) = ValueData(Seq(elem))
   }
 
 
@@ -182,7 +190,7 @@ object Configurations {
       SetupConfig(obsId, prefix, values ++ newValues)
     }
 
-    // Needs improvement
+    // Needs improvement (XXX use JSON output)
     override def toString = "(" + obsId + ")->" + prefix + " " + values
   }
 
@@ -257,13 +265,14 @@ object TmpMain {
   // Temporary test main for experimenting...
   def main(args: Array[String]) {
     import Configurations.SetupConfig
+    import ConfigValues.ValueData._
 
     val sc = SetupConfig(
       obsId = "2014-C2-4-44",
       "tcs.base.pos",
       "name" -> "m99",
-      "ra" -> 10.2,
-      "dec" -> 2.34,
+      "ra" -> (10.2 deg),
+      "dec" -> 2.34.deg,
       "equinox" -> "J2000"
     )
 
