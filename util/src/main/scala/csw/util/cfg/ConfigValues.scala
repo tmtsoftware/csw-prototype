@@ -18,6 +18,14 @@ object UnitsOfMeasure {
 
   object Deg extends Units("deg")
 
+  object Units {
+    def fromString(name: String): Units = name match {
+      case Meters.name => Meters
+      case Deg.name => Deg
+      case _ => NoUnits
+    }
+  }
+
 }
 
 object FullyQualifiedName {
@@ -108,7 +116,10 @@ object ConfigValues {
     def withValues[A](v1: ValueData[A], values: Seq[A]) = ValueData(values, v1.units)
 
     // DSL support XXX
-    implicit def toValueData[A](elem: A) = ValueData(Seq(elem))
+    implicit def toValueData[A](elem: A) = elem match {
+      case s: Seq[A] => ValueData(s)
+      case _ => ValueData(Seq(elem))
+    }
   }
 
 
@@ -150,10 +161,11 @@ object ConfigValues {
      */
     def apply[A](name: String, units: Units, data: A*): CValue[A] = CValue[A](name, ValueData[A](data, units))
 
-    implicit def tupleToCValue[A](t: (String, A)): CValue[A] = CValue[A](t._1, ValueData[A](Seq(t._2), NoUnits))
-
+    implicit def tupleToCValue[A](t: (String, A)): CValue[A] = t._2 match {
+      case v: ValueData[A] => CValue[A](t._1, v)
+      case _ => CValue[A](t._1, ValueData[A](Seq(t._2), NoUnits))
+    }
   }
-
 }
 
 
@@ -257,26 +269,6 @@ object Configurations {
       val scList = onlySetupConfigs
       scList.select(startsWithFilter(scList.head.prefix))
     }
-  }
-
-}
-
-object TmpMain {
-  // Temporary test main for experimenting...
-  def main(args: Array[String]) {
-    import Configurations.SetupConfig
-    import ConfigValues.ValueData._
-
-    val sc = SetupConfig(
-      obsId = "2014-C2-4-44",
-      "tcs.base.pos",
-      "name" -> "m99",
-      "ra" -> (10.2 deg),
-      "dec" -> 2.34.deg,
-      "equinox" -> "J2000"
-    )
-
-    println(s"sc = $sc")
   }
 }
 

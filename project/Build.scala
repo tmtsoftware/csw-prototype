@@ -5,6 +5,7 @@ import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 
 // This is the top level build object used by sbt.
 object Build extends Build {
+
   import Settings._
   import Dependencies._
 
@@ -13,18 +14,18 @@ object Build extends Build {
     .settings(defaultSettings: _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(scalaLogging, logback) ++
+      compile(sprayJson, sprayHttpx, scalaLogging, logback) ++
       test(scalaTest, specs2, akkaTestKit, junit)
     )
 
   // Config Service
   lazy val cs = project
-  	.settings(defaultSettings: _*)
-  	.settings(libraryDependencies ++=
-  		provided(akkaActor) ++
-      compile(jgit, scalaLogging, /*scalaIoFile,*/ logback) ++
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(jgit, scalaLogging, logback) ++
       test(scalaTest, specs2, akkaTestKit, junit)
-  	)
+    )
 
   // Key Value Store
   lazy val kvs = project
@@ -47,7 +48,7 @@ object Build extends Build {
     .settings(defaultSettings: _*)
     .settings(twirlSettings: _*)
     .settings(libraryDependencies ++=
-      provided(akkaActor) ++
+    provided(akkaActor) ++
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
       test(scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
     ) dependsOn(loc, util % "compile->compile;test->test")
@@ -58,7 +59,7 @@ object Build extends Build {
     .settings(multiJvmSettings: _*)
     .dependsOn(cmd % "compile->compile;test->test", util % "compile->compile;test->test", loc)
     .settings(libraryDependencies ++=
-      provided(akkaActor) ++
+    provided(akkaActor) ++
       compile(scalaLogging, logback) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
     ) configs MultiJvm
@@ -79,7 +80,7 @@ object Build extends Build {
   lazy val containerCmd = Project(id = "containerCmd", base = file("apps/containerCmd"))
     .settings(packageSettings("CSW Container Command", "Used to configure and start CSW containers"): _*)
     .settings(libraryDependencies ++=
-      provided(akkaActor) ++
+    provided(akkaActor) ++
       compile(akkaKernel, akkaRemote) ++
       test(scalaLogging, logback)
     ) dependsOn(pkg, cmd, loc, util)

@@ -1,7 +1,6 @@
 package csw.services.cmd.spray
 
 import spray.json._
-import scala.reflect.ClassTag
 import spray.httpx.marshalling.MetaMarshallers
 import spray.httpx.SprayJsonSupport
 import csw.services.cmd.akka.{RunId, CommandStatus}
@@ -12,17 +11,6 @@ import csw.util.Configuration
  * Defines JSON marshallers/unmarshallers for the objects used in REST messages.
  */
 trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with MetaMarshallers {
-
-  /**
-   * Computes ``RootJsonFormat`` for type ``A`` if ``A`` is object
-   */
-  def jsonObjectFormat[A: ClassTag]: RootJsonFormat[A] = new RootJsonFormat[A] {
-    val ct = implicitly[ClassTag[A]]
-
-    def write(obj: A): JsValue = JsObject("value" -> JsString(ct.runtimeClass.getSimpleName))
-
-    def read(json: JsValue): A = ct.runtimeClass.newInstance().asInstanceOf[A]
-  }
 
   /**
    * Instance of RootJsonFormat for Configuration
