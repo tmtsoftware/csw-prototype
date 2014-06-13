@@ -18,9 +18,9 @@ class TestConfigJsonFormats extends FunSuite with ConfigJsonFormats {
       "dec" -> 2.0.deg,
       "equinox" -> "J2000",
       "nameList" -> List("xxx", "yyy", "zzz"),
-      "names" ->("aaa", "bbb", "ccc"),
-      "other" -> (1, 2, 3).deg,
-      "otherList" -> List(1, 2, 3).deg,
+      "nameTuple" ->("aaa", "bbb", "ccc"),
+      //      "intTuple" -> (1, 2, 3).deg,
+      "intList" -> List(1, 2, 3).deg,
       "intVal" -> 22,
       "doubleVal" -> 3.14
     )

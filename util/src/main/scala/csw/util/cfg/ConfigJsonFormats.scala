@@ -18,10 +18,12 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
 
     // -- write --
 
+    // XXX TODO: Save types
     private def valueToJsValue[A](value: A): JsValue = value match {
       case Nil => JsNull
       case s: String => JsString(s)
       case i: Int => JsNumber(i)
+      case i: Integer => JsNumber(i)
       case l: Long => JsNumber(l)
       case f: Float => JsNumber(f)
       case d: Double => JsNumber(d)
@@ -30,22 +32,45 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
       case x: BigInt => JsNumber(x)
       case x: BigDecimal => JsNumber(x)
       case c: Char => JsString(String.valueOf(c))
-      case s: Seq[A] => JsArray(s.map(valueToJsValue(_)).toList)
+      case s: Seq[A] => JsArray(s.map(valueToJsValue).toList)
       case (a, b) => valueToJsValue(Seq(a, b))
       case (a, b, c) => valueToJsValue(Seq(a, b, c))
       case (a, b, c, d) => valueToJsValue(Seq(a, b, c, d))
       case (a, b, c, d, e) => valueToJsValue(Seq(a, b, c, d, e))
     }
 
-    private def seqToJsValue[A](values: Seq[A]): JsValue = values match {
-      case Nil => JsNull
-      case head :: Nil => valueToJsValue(head)
-      case head :: tail => JsArray(values.map(valueToJsValue(_)).toList)
+    private def seqToJsValue[A](values: Seq[A]): JsValue = values.size match {
+      case 0 => JsNull
+      case 1 => valueToJsValue(values.head)
+      case _ => JsArray(values.map(valueToJsValue).toList)
+    }
+
+    // If the sequence contains elements of non default types (String, Double), Some(typeName)
+    private def typeOption[A](elems: Seq[A]): Option[String] = {
+      if (elems.isEmpty) None
+      else elems(0) match {
+        case _: String => None
+        case _: Double => None
+        case _: Int => Some("Int")
+        case _ => None
+      }
     }
 
     private def valueDataToJsValue[A](data: ValueData[A]): JsValue = data.units match {
-      case NoUnits => seqToJsValue(data.elems)
-      case units => JsObject(("value", seqToJsValue(data.elems)), ("units", JsString(units.name)))
+      case NoUnits =>
+        typeOption(data.elems) match {
+          case None =>
+            seqToJsValue(data.elems)
+          case Some(typeName) =>
+            JsObject(("value", seqToJsValue(data.elems)), ("type", JsString(typeName)))
+        }
+      case units =>
+        typeOption(data.elems) match {
+          case None =>
+            JsObject(("value", seqToJsValue(data.elems)), ("units", JsString(units.name)))
+          case Some(typeName) =>
+            JsObject(("value", seqToJsValue(data.elems)), ("units", JsString(units.name)), ("type", JsString(typeName)))
+        }
     }
 
     def write(sc: SetupConfig): JsValue = {
@@ -61,9 +86,16 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
       case _ => NoUnits
     }
 
-    private def JsValueToValue(js: JsValue): Any = js match {
+    private def JsValueToValue(js: JsValue, typeOpt: Option[String] = None): Any = js match {
       case JsString(s) => s
-      case JsNumber(n) => if (n.isValidInt) n.toInt else n.toDouble // XXX converts 2.0 to 2 ...
+      case JsNumber(n) =>
+        typeOpt match {
+          case Some("Int") => n.toInt
+          case Some("Short") => n.toShort
+          case Some("Long") => n.toLong
+          case Some("Byte") => n.toByte
+          case _ => n.toDouble
+        }
       case JsArray(l) => l // only needed if we have lists as values in the sequence
       case JsFalse => false
       case JsTrue => true
@@ -71,10 +103,10 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
       case x => deserializationError(s"Unexpected JsValue: $x")
     }
 
-    private def JsValueToSeq(js: JsValue): Seq[Any] = js match {
+    private def JsValueToSeq(js: JsValue, typeOpt: Option[String] = None): Seq[Any] = js match {
       case s: JsString => Seq(JsValueToValue(s))
-      case n: JsNumber => Seq(JsValueToValue(n))
-      case JsArray(l) => l.map(JsValueToValue)
+      case n: JsNumber => Seq(JsValueToValue(n, typeOpt))
+      case JsArray(l) => l.map(JsValueToValue(_, typeOpt))
       case JsFalse => Seq(false)
       case JsTrue => Seq(true)
       case JsNull => Seq(null)
@@ -89,9 +121,16 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
       case JsNull => CValue(name, ValueData(Seq(null)))
       case a: JsArray => CValue(name, ValueData(JsValueToSeq(a)))
       case JsObject(fields) =>
-        val value = fields("value")
-        val units = fields("units")
-        CValue(name, ValueData(JsValueToSeq(value), JsValueToUnits(units)))
+        val units = fields.get("units") match {
+          case None => NoUnits
+          case Some(jsValue) => JsValueToUnits(jsValue)
+        }
+        val typeOpt = fields.get("type") match {
+          case None => None
+          case Some(JsString(typeName)) => Some(typeName)
+        }
+        val value = JsValueToSeq(fields("value"), typeOpt)
+        CValue(name, ValueData(value, units))
       case x => deserializationError(s"Unexpected JsValue: $x")
     }
 
