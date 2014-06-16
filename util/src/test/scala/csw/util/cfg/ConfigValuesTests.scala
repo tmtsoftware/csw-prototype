@@ -233,7 +233,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
     }
     it("it should create an exception for a null str") {
       intercept[AssertionError] {
-        val t2 = Fqn(null)
+        Fqn(null)
         // This should create an exception
       }
     }
@@ -535,7 +535,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
     val c1 = CValue(fqn1.name)
     val c2 = CValue(fqn2.name)
     val c3 = CValue(fqn3.name)
-    val c4 = CValue(fqn4.name)
+    //    val c4 = CValue(fqn4.name)
     val c5 = CValue(fqn5.name)
     val c6 = CValue(fqn6.name)
     val c7 = CValue(fqn7.name)

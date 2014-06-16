@@ -18,7 +18,6 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
 
     // -- write --
 
-    // XXX TODO: Save types
     private def valueToJsValue[A](value: A): JsValue = value match {
       case Nil => JsNull
       case s: String => JsString(s)
@@ -128,6 +127,7 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
         val typeOpt = fields.get("type") match {
           case None => None
           case Some(JsString(typeName)) => Some(typeName)
+          case Some(x) => None // Should not happen
         }
         val value = JsValueToSeq(fields("value"), typeOpt)
         CValue(name, ValueData(value, units))
