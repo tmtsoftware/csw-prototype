@@ -17,7 +17,7 @@ import csw.util.{TestConfig, Configuration}
  * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run
  * without using actors.
  */
-class TestCommandServiceHttpRoute extends Specification with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions {
+class CommandServiceHttpRouteTests extends Specification with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions {
 
   // Required by HttpService
   def actorRefFactory: ActorSystem = system

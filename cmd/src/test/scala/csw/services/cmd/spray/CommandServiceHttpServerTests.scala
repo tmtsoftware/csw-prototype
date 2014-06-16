@@ -12,7 +12,7 @@ import csw.util.{TestConfig, Configuration}
 /**
  * Tests the Command Service HTTP/REST interface in an actor environment.
  */
-class TestCommandServiceHttpServer extends TestKit(ActorSystem("test")) with CommandServiceHttpClient
+class CommandServiceHttpServerTests extends TestKit(ActorSystem("test")) with CommandServiceHttpClient
 with TestHelper with FunSuiteLike {
 
   implicit val dispatcher = system.dispatcher

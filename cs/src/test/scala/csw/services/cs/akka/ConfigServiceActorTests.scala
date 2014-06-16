@@ -16,7 +16,7 @@ import akka.util.Timeout
 /**
  * Tests the Config Service actor
  */
-class TestConfigServiceActor extends TestKit(ActorSystem("testsys"))
+class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
 with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
   // Create temporary main (bare) and local git repos for testing

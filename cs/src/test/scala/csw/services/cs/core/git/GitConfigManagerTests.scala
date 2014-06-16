@@ -8,7 +8,7 @@ import csw.services.cs.core.ConfigString
 /**
  * Tests the GitConfigManager class
  */
-class TestGitConfigManager extends FunSuite {
+class GitConfigManagerTests extends FunSuite {
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")
 

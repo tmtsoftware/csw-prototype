@@ -9,7 +9,7 @@ import LocationServiceActor._
 /**
  * Simple standalone test of local location service (normally it should be run as a remote actor)
  */
-class TestLocationService extends TestKit(ActorSystem("Test"))
+class LocationServiceTests extends TestKit(ActorSystem("Test"))
 with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   test("Test location service") {

@@ -13,7 +13,7 @@ import csw.util.{TestConfig, Configuration}
 /**
  * Tests the Command Service Client actor
  */
-class TestCommandServiceClient extends TestKit(ActorSystem("test")) with TestHelper
+class CommandServiceClientTests extends TestKit(ActorSystem("test")) with TestHelper
 with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   import system.dispatcher

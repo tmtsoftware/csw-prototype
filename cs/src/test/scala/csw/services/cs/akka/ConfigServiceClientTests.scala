@@ -14,7 +14,7 @@ import akka.util.Timeout
 /**
  * Tests the Config Service actor
  */
-class TestConfigServiceClient extends TestKit(ActorSystem("mySystem"))
+class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
   import system.dispatcher

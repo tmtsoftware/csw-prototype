@@ -7,7 +7,7 @@ import spray.json._
 
 //import DefaultJsonProtocol._
 
-class TestConfigJsonFormats extends FunSuite with ConfigJsonFormats {
+class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
 
   test("Test converting a SetupConfig to JSON and back again") {
     val sc = SetupConfig(
@@ -19,7 +19,7 @@ class TestConfigJsonFormats extends FunSuite with ConfigJsonFormats {
       "equinox" -> "J2000",
       "nameList" -> List("xxx", "yyy", "zzz"),
       "nameTuple" ->("aaa", "bbb", "ccc"),
-      //      "intTuple" -> (1, 2, 3).deg,
+      //      "intTuple" -> (1, 2, 3).deg, // XXX Tuple looses type info
       "intList" -> List(1, 2, 3).deg,
       "intVal" -> 22,
       "doubleVal" -> 3.14

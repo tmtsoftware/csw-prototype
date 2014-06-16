@@ -37,7 +37,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
     val props = TestConfigActorWorker.props(submit, commandStatusActor, numberOfSecondsToRun)
     configWorkers.newWorkerFor(props, submit.runId) match {
       case Some(configWorkerActor) =>
-        log.debug(s"Forwarding config ${submit.config} to worker $configWorkerActor")
+        log.info(s"Forwarding config ${submit.config} to worker")
         context.watch(configWorkerActor)
       case None =>
     }

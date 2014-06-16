@@ -10,7 +10,7 @@ import csw.util.Configuration
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
-class TestEventPubSub extends TestKit(ActorSystem("Test"))
+class EventPubSubTests extends TestKit(ActorSystem("Test"))
 with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   val numSecs = 20

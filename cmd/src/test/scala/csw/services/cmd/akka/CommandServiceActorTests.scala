@@ -19,7 +19,7 @@ import csw.util.{TestConfig, Configuration}
  * Note: The build settings include "parallelExecution in Test := false", so the
  * tests run one after the other.
  */
-class TestCommandServiceActor extends TestKit(ActorSystem("test")) with TestHelper
+class CommandServiceActorTests extends TestKit(ActorSystem("test")) with TestHelper
 with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   // The Configuration used in the tests below

@@ -7,7 +7,7 @@ import csw.util.cfg.FullyQualifiedName.Fqn
 import csw.util.cfg.FullyQualifiedName.Fqn._
 import csw.util.cfg.UnitsOfMeasure.{Meters, NoUnits, Units}
 
-class TestConfigValues extends FunSpec with Matchers {
+class ConfigValuesTests extends FunSpec with Matchers {
   val numbers1 = (1 to 5).toVector
   val numbers2 = Vector(2.3, 40.22)
 
