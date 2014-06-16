@@ -1,4 +1,4 @@
-package csw.util.support.coords
+package csw.support.coords
 
 import org.scalatest.{Matchers, FunSpec}
 

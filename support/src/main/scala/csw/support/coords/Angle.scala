@@ -1,4 +1,4 @@
-package csw.util.support.coords
+package csw.support.coords
 
 /*
  *  Copyright Jan Kotek 2009, http://asterope.org

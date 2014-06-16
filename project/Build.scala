@@ -15,7 +15,15 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(sprayJson, sprayHttpx, scalaLogging, logback) ++
-      test(scalaTest, specs2, akkaTestKit, junit)
+      test(scalaTest, akkaTestKit)
+    )
+
+  // Shared utils
+  lazy val support = project
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    compile(scalaLogging, logback) ++
+      test(scalaTest)
     )
 
   // Config Service
@@ -24,7 +32,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(jgit, scalaLogging, logback) ++
-      test(scalaTest, specs2, akkaTestKit, junit)
+      test(scalaTest, akkaTestKit, junit)
     )
 
   // Key Value Store
@@ -33,15 +41,15 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(redisScala, scalaLogging, logback) ++
-      test(scalaTest, specs2, akkaTestKit, junit)
+      test(scalaTest, akkaTestKit)
     ) dependsOn util
 
   // Location Service
   lazy val loc = project
     .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
     .settings(libraryDependencies ++= provided(akkaActor) ++
-    compile(akkaKernel, akkaRemote, scalaLogging, logback) ++
-    test(scalaTest, specs2, akkaTestKit, junit))
+    compile(akkaRemote, scalaLogging, logback) ++
+    test(scalaTest, akkaTestKit))
 
   // Command Service
   lazy val cmd = project
@@ -50,7 +58,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
-      test(scalaTest, specs2, akkaTestKit, junit, sprayTestkit)
+      test(scalaTest, specs2, akkaTestKit, sprayTestkit)
     ) dependsOn(loc, util % "compile->compile;test->test")
 
   // Package (Container, Component) classes
@@ -71,7 +79,7 @@ object Build extends Build {
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(hornetqServer, hornetqNative, scalaLogging, logback) ++
-      test(scalaTest, specs2, akkaTestKit, junit)
+      test(scalaTest, akkaTestKit)
     ) dependsOn util
 
   // -- Apps --
@@ -81,7 +89,7 @@ object Build extends Build {
     .settings(packageSettings("CSW Container Command", "Used to configure and start CSW containers"): _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaKernel, akkaRemote) ++
+      compile(akkaRemote) ++
       test(scalaLogging, logback)
     ) dependsOn(pkg, cmd, loc, util)
 
@@ -90,7 +98,7 @@ object Build extends Build {
     .settings(packageSettings("CSW Sequencer", "Scala REPL for running sequences"): _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaKernel, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++
+      compile(akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++
       test(scalaLogging, logback)
     ) dependsOn(pkg, cmd, loc, util)
 }
