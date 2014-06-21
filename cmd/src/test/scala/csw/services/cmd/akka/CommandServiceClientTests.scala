@@ -2,13 +2,13 @@ package csw.services.cmd.akka
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.{ActorRef, ActorSystem}
+import csw.util.cfg.TestConfig
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.cmd.spray.CommandServiceTestSettings
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import csw.util.{TestConfig, Configuration}
 
 /**
  * Tests the Command Service Client actor
@@ -19,7 +19,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
   import system.dispatcher
 
   // The Configuration used in the tests below
-  val config = Configuration(TestConfig.testConfig)
+  val config = TestConfig.testConfig
 
   // Note: Adjust this value and the one used by TestConfigActor
   // to match the time needed for the tests and avoid timeouts

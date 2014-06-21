@@ -1,8 +1,9 @@
 package csw.services.cmd.akka
 
-import akka.actor.{ActorLogging, Actor, ActorRef, Terminated}
+import akka.actor.{ActorLogging, Actor, ActorRef}
 import scala.util.Try
-import csw.util.Configuration
+import csw.util.cfg.Configurations._
+import akka.actor.Terminated
 
 
 object ConfigActor {
@@ -50,19 +51,19 @@ object ConfigActor {
    *
    * @param config used to specify the keys for the values that should be returned
    */
-  case class ConfigGet(config: Configuration) extends ConfigMessage
+  case class ConfigGet(config: SetupConfigList) extends ConfigMessage
 
   /**
    * The response from a ConfigGet command
    * @param tryConfig if all the requested values could be retrieved, Success(config), otherwise Failure(ex)
    */
-  case class ConfigResponse(tryConfig: Try[Configuration])
+  case class ConfigResponse(tryConfig: Try[SetupConfigList])
 
   /**
    * Can be used to configure the system (for internal use)
    * @param config contains internal configuration values (to be defined)
    */
-  case class ConfigPut(config: Configuration) extends ConfigMessage
+  case class ConfigPut(config: SetupConfigList) extends ConfigMessage
 
 }
 
@@ -141,13 +142,13 @@ trait ConfigActor extends Actor with ActorLogging {
    * @param config used to specify the keys for the values that should be returned
    * @param replyTo reply to this actor with the config response
    */
-  def query(config: Configuration, replyTo: ActorRef): Unit
+  def query(config: SetupConfigList, replyTo: ActorRef): Unit
 
   /**
    * Used to configure the system (for internal use)
    * @param config contains internal configuration values (to be defined)
    */
-  def internalConfig(config: Configuration): Unit = {
+  def internalConfig(config: SetupConfigList): Unit = {
     // XXX TODO to be defined... (make abstract)
   }
 

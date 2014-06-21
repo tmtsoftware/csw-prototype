@@ -1,8 +1,8 @@
 package csw.services.cmd.akka
 
 import scala.concurrent.Future
+import csw.util.cfg.Configurations._
 import csw.services.cmd.akka.ConfigActor.ConfigResponse
-import csw.util.Configuration
 
 object CommandServiceClientHelper {
 
@@ -24,14 +24,14 @@ trait CommandServiceClientHelper {
    * @param config the command configuration
    * @return the runId for the command
    */
-  def submitCommand(config: Configuration): RunId
+  def submitCommand(config: ConfigList): RunId
 
   /**
    * Handles a command (queue bypass) request and returns the runId, which can be used to request the command status.
    * @param config the command configuration
    * @return the runId for the command
    */
-  def requestCommand(config: Configuration): RunId
+  def requestCommand(config: ConfigList): RunId
 
   /**
    * Handles a request for command status (using long polling). Since the command may take a long time to run
@@ -70,7 +70,7 @@ trait CommandServiceClientHelper {
   /**
    * Handles a request to fill in the blank values of the given config with the current values.
    */
-  def configGet(config: Configuration): Future[ConfigResponse]
+  def configGet(config: SetupConfigList): Future[ConfigResponse]
 
   /**
    * Handles a request to pause the config with the given runId

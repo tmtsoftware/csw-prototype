@@ -1,17 +1,18 @@
 package csw.services.cmd.spray
 
 import csw.services.cmd.akka.{CommandStatus, RunId}
+import csw.util.cfg.ConfigJsonFormats
+import csw.util.cfg.Configurations._
 import spray.client.pipelining._
 import scala.concurrent.{ExecutionContext, Future}
 import spray.http.HttpResponse
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.util.Configuration
 
 /**
  * Helper methods for command service clients
  */
-trait CommandServiceHttpClient extends CommandServiceJsonFormats with LazyLogging {
+trait CommandServiceHttpClient extends CommandServiceJsonFormats with ConfigJsonFormats with LazyLogging {
 
   /**
    * The HTTP server host
@@ -39,7 +40,7 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with LazyLoggin
    * @param config the configuration to submit to the command queue
    * @return a future runId with which to reference the command
    */
-  def queueSubmit(config: Configuration): Future[RunId] = {
+  def queueSubmit(config: ConfigList): Future[RunId] = {
     val pipeline = sendReceive ~> unmarshal[RunId]
     pipeline(Post(s"http://$interface:$port/queue/submit", config))
   }
@@ -49,7 +50,7 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with LazyLoggin
    * @param config the configuration to request for the command queue
    * @return a future runId with which to reference the command
    */
-  def queueBypassRequest(config: Configuration): Future[RunId] = {
+  def queueBypassRequest(config: ConfigList): Future[RunId] = {
     val pipeline = sendReceive ~> unmarshal[RunId]
     pipeline(Post(s"http://$interface:$port/request", config))
   }

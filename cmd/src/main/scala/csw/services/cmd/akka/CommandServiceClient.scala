@@ -1,13 +1,13 @@
 package csw.services.cmd.akka
 
-import csw.services.cmd.akka.CommandServiceClientActor._
 import akka.actor.ActorRef
 import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 import ExecutionContext.Implicits.global
-import csw.util.Configuration
+import csw.util.cfg.Configurations._
+import csw.services.cmd.akka.CommandServiceClientActor.GetStatus
 
 /**
  * A simplified interface to the command service actor.
@@ -25,7 +25,7 @@ case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeo
    * @param config the command configuration
    * @return the future runId for the command
    */
-  def queueSubmit(config: Configuration): Future[RunId] =
+  def queueSubmit(config: ConfigList): Future[RunId] =
     (commandServiceClientActor ? Submit(config)).mapTo[RunId]
 
   /**
@@ -33,7 +33,7 @@ case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeo
    * @param config the command configuration
    * @return the future runId for the command
    */
-  def queueBypassRequest(config: Configuration): Future[RunId] =
+  def queueBypassRequest(config: ConfigList): Future[RunId] =
     (commandServiceClientActor ? QueueBypassRequest(config)).mapTo[RunId]
 
   /**
@@ -51,7 +51,7 @@ case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeo
    * @param config used to specify the keys for the values that should be returned
    * @return the response (a config wrapped in a Try)
    */
-  def configGet(config: Configuration): Future[ConfigResponse] =
+  def configGet(config: SetupConfigList): Future[ConfigResponse] =
     (commandServiceClientActor ? ConfigGet(config)).mapTo[ConfigResponse]
 
   /**

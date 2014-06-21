@@ -2,11 +2,12 @@ package csw.services.kvs
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor._
+import csw.util.cfg.ConfigValues.ValueData
+import csw.util.cfg.Events.TelemetryEvent
 import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import csw.util.Configuration
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
@@ -59,14 +60,17 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   }
 
   def nextEvent(): Event = {
+    import ValueData._
     val time = System.currentTimeMillis()
     nextId = nextId + 1
-    Configuration()
-      .withValue(s"$root.eventId", nextId)
-      .withValue(s"$root.exposureTime.value", expTime)
-      .withValue(s"$root.exposureTime.units", "milliseconds")
-      .withValue(s"$root.startTime", time - expTime)
-      .withValue(s"$root.endTime", time)
+    TelemetryEvent(
+      source = "test",
+      s"$root",
+      "eventId" -> nextId,
+      "exposureTime" -> expTime.ms,
+      "startTime" -> (time - expTime),
+      "endTime" -> time
+    )
   }
 
   override def receive: Receive = {

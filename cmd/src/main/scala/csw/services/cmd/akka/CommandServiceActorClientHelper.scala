@@ -1,14 +1,15 @@
 package csw.services.cmd.akka
 
 import akka.actor._
-import scala.Some
-import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
 import csw.services.cmd.akka.CommandServiceActor._
 import scala.concurrent.Future
 import akka.pattern.ask
 import akka.util.Timeout
-import csw.util.Configuration
+import csw.util.cfg.Configurations._
+import csw.services.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
+import csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus
+import akka.actor.OneForOneStrategy
 
 
 /**
@@ -54,7 +55,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * @param config the command configuration
    * @return the runId for the command
    */
-  override def submitCommand(config: Configuration): RunId = {
+  override def submitCommand(config: ConfigList): RunId = {
     val runId = RunId()
     val monitor = newMonitorFor(runId)
     val submit = SubmitWithRunId(config, monitor, runId)
@@ -69,7 +70,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * @param config the command configuration
    * @return the runId for the command
    */
-  override def requestCommand(config: Configuration): RunId = {
+  override def requestCommand(config: ConfigList): RunId = {
     val runId = RunId()
     val monitor = newMonitorFor(runId)
     val request = QueueBypassRequestWithRunId(config, monitor, runId)
@@ -139,7 +140,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
   /**
    * Handles a request to fill in the blank values of the given config with the current values.
    */
-  override def configGet(config: Configuration): Future[ConfigResponse] = {
+  override def configGet(config: SetupConfigList): Future[ConfigResponse] = {
     log.debug(s"configGet $config")
     implicit val askTimeout = Timeout(3.seconds)
     (commandServiceActor ? ConfigGet(config)).mapTo[ConfigResponse]

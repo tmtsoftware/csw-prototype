@@ -1,11 +1,10 @@
 package csw.util.cfg
 
 import org.scalatest.FunSuite
-import Configurations.SetupConfig
+import csw.util.cfg.Configurations._
 import ConfigValues.ValueData._
 import spray.json._
-
-//import DefaultJsonProtocol._
+import csw.util.cfg.UnitsOfMeasure.{NoUnits, Meters, Deg}
 
 class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
 
@@ -23,9 +22,7 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
       "intList" -> List(1, 2, 3).deg,
       "intVal" -> 22,
       "doubleVal" -> 3.14
-    )
-
-    //    println(s"sc = $sc")
+    ).withValues("added1" -> 1, "added2" -> 2.deg)
 
     val json = sc.toJson
     val s = json.prettyPrint
@@ -39,14 +36,72 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
     assert(json == json2)
 
     val s2 = json2.prettyPrint
-    println(s2)
 
-    // XXX Ints are turned into Doubles...
     assert(s == s2)
 
     // direct compare doesn't work, due to differences in collection type for names (List != ::)
     //    println(s"config = $config")
     //    assert(config == sc)
+
+    assert(config.prefix == "tcs.base.pos")
+    assert(config.obsId == "2014-C2-4-44")
+    assert(config("name").elems.head == "m99")
+    assert(config("ra").elems.head == 10.0)
+    assert(config("ra").units == Deg)
+    assert(config.get("dec").get.elems.head == 2.0)
+    assert(config.get("xxx") == None)
+    assert(config("dec").units == Deg)
+    assert(config("nameList").elems == List("xxx", "yyy", "zzz"))
+    assert(config("nameTuple").elems == List("aaa", "bbb", "ccc"))
+    assert(config("intList").elems == List(1, 2, 3))
+    assert(config("intList").units == Deg)
+    assert(config("intVal").elems.head == 22)
+    assert(config("intVal").units == Meters)
+    assert(config("doubleVal").elems.head == 3.14)
+    assert(config("doubleVal").units == NoUnits)
+
+  }
+
+
+  test("Test converting a mixed ConfigList to JSON and back again") {
+    val obsId = "TMT-2021A-C-2-1"
+    val testConfig: List[ConfigType] = List(
+      SetupConfig(
+        obsId = obsId,
+        "tmt.tel.base.pos",
+        "posName" -> "NGC738B",
+        "c1" -> "22:35:58.530",
+        "c2" -> "33:57:55.40",
+        "equinox" -> "J2000"
+      ),
+      WaitConfig(obsId),
+      ObserveConfig(obsId),
+      SetupConfig(
+        obsId = obsId,
+        "tmt.tel.ao.pos.one",
+        "c1" -> "22:356:01.066",
+        "c2" -> "33:58:21.69",
+        "equinox" -> "J2000"
+      ),
+      WaitConfig(obsId),
+      ObserveConfig(obsId)
+    )
+
+    val json = testConfig.toJson
+    val s = json.prettyPrint
+    println(s)
+
+    val js = s.parseJson
+    assert(json == js)
+
+    val configList = js.convertTo[List[ConfigType]]
+    val json2 = configList.toJson
+    assert(json == json2)
+
+    val s2 = json2.prettyPrint
+    //    println(s2)
+
+    assert(s == s2)
   }
 }
 

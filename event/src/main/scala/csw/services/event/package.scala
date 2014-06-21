@@ -1,20 +1,18 @@
 package csw.services
 
+import csw.util.cfg.Events.EventType
 import org.hornetq.api.core.client.{ServerLocator, ClientSessionFactory, HornetQClient, ClientSession}
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import scala.collection.JavaConverters._
 import akka.actor.ActorSystem
-import csw.util.Configuration
-
-//import scala.collection.JavaConversions._
 
 package object event {
 
   /**
-   * An Event here is just a [[Configuration]]
+   * An Event here is just some type of config
    */
-  type Event = Configuration
+  type Event = EventType
 
   case class HornetqInfo(settings: EventServiceSettings,
                          serverLocator: ServerLocator,

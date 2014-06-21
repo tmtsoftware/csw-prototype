@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+import play.twirl.sbt.SbtTwirl
 
 
 // This is the top level build object used by sbt.
@@ -52,7 +53,7 @@ object Build extends Build {
     test(scalaTest, akkaTestKit))
 
   // Command Service
-  lazy val cmd = project
+  lazy val cmd = project.enablePlugins(SbtTwirl)
     .settings(defaultSettings: _*)
     .settings(twirlSettings: _*)
     .settings(libraryDependencies ++=

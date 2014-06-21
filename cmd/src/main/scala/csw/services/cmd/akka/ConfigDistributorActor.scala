@@ -6,19 +6,21 @@ import scala.concurrent.Future
 import akka.util.Timeout
 import scala.concurrent.duration._
 import csw.services.cmd.akka.ConfigActor._
-import csw.services.ls.{LocationServiceActor, LocationService}
-import LocationServiceActor.{ServiceId, ServicesReady, LocationServiceInfo}
+import csw.services.ls.LocationServiceActor
+import LocationServiceActor.LocationServiceInfo
 import csw.services.cmd.akka.CommandServiceActor._
+import csw.services.ls.LocationService
 import csw.services.cmd.akka.QueryWorkerActor.QueryInfo
+import csw.services.ls.LocationServiceActor.ServicesReady
 import scala.util.Failure
 import csw.services.cmd.akka.CommandQueueActor.SubmitWithRunId
-import scala.Some
 import scala.util.Success
+import csw.services.ls.LocationServiceActor.ServiceId
+import csw.services.cmd.akka.ConfigActor.ConfigGet
 import csw.services.cmd.akka.ConfigActor.ConfigResponse
 import akka.actor.Terminated
 import csw.services.cmd.akka.ConfigDistributorActor.SubmitInfo
-import csw.services.ls.LocationService
-import csw.util.Configuration
+import csw.util.cfg.Configurations._
 
 
 /**
@@ -152,7 +154,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    * @param config used to specify the keys for the values that should be returned
    * @param targetActors information about the target HCDs or assemblies
    */
-  private def query(config: Configuration, targetActors: List[LocationServiceInfo]): Unit = {
+  private def query(config: SetupConfigList, targetActors: List[LocationServiceInfo]): Unit = {
     // Hand this off to a new query worker actor to gather the results from the target actors
     context.actorOf(QueryWorkerActor.props(config, targetActors, sender()))
   }
@@ -161,7 +163,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    * Used to configure the system (for internal use)
    * @param config contains internal configuration values (to be defined)
    */
-  private def internalConfig(config: Configuration): Unit = {
+  private def internalConfig(config: SetupConfigList): Unit = {
     // XXX TODO to be defined...
   }
 
@@ -247,13 +249,11 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
   // Returns Some(SubmitInfo) if there is a matching path in the config to be submitted, otherwise None.
   private def getSubmitInfo(submit: SubmitWithRunId, targetActor: LocationServiceInfo): Option[SubmitInfo] = {
     val pathOpt = targetActor.configPathOpt
-    if (targetActor.actorRefOpt.isDefined && (pathOpt.isEmpty || submit.config.hasPath(pathOpt.get))) {
-      // Give each config part a unique runid, so we can identify it later when the status is received
-      val runIdPart = RunId()
-      val config = submit.config.getConfig(pathOpt)
-      val submitPart = SubmitWithRunId(config, self, runIdPart)
-      Some(SubmitInfo(pathOpt, submitPart, targetActor.actorRefOpt.get))
-    } else None
+    val setupConfigs = submit.config.prefixStartsWith(pathOpt)
+    if (setupConfigs.size == 0) None
+    else for {
+      actorRef <- targetActor.actorRefOpt
+    } yield SubmitInfo(pathOpt, SubmitWithRunId(setupConfigs, self, RunId()), actorRef)
   }
 
   /**
@@ -312,7 +312,7 @@ private object QueryWorkerActor {
   // Query info broken down by target actor and optional path
   case class QueryInfo(targetActor: ActorRef, msg: ConfigActor.ConfigGet, queryPath: Option[String])
 
-  def props(config: Configuration, targetActors: List[LocationServiceInfo],
+  def props(config: SetupConfigList, targetActors: List[LocationServiceInfo],
             replyTo: ActorRef): Props = Props(classOf[QueryWorkerActor], config, targetActors, replyTo)
 }
 
@@ -320,7 +320,7 @@ private object QueryWorkerActor {
  * One of these actors is created for each query command to wait for the different parts to reply and
  * then send the result to the replyTo actor.
  */
-private class QueryWorkerActor(config: Configuration, targetActors: List[LocationServiceInfo], replyTo: ActorRef)
+private class QueryWorkerActor(config: SetupConfigList, targetActors: List[LocationServiceInfo], replyTo: ActorRef)
   extends Actor with ActorLogging {
 
   // Send parts of the query to the target actors and when all replies are in,
@@ -344,10 +344,11 @@ private class QueryWorkerActor(config: Configuration, targetActors: List[Locatio
     targetActors.map {
       targetActor =>
         val pathOpt = targetActor.configPathOpt
-        if (targetActor.actorRefOpt.isDefined && (pathOpt.isEmpty || config.hasPath(pathOpt.get))) {
-          val msg = ConfigGet(config.getConfig(pathOpt))
-          Some(QueryInfo(targetActor.actorRefOpt.get, msg, pathOpt))
-        } else None
+        val setupConfigs = config.prefixStartsWith(pathOpt)
+        if (setupConfigs.size == 0) None
+        else for {
+          actorRef <- targetActor.actorRefOpt
+        } yield QueryInfo(actorRef, ConfigGet(setupConfigs), pathOpt)
     }.flatten.toList
   }
 
@@ -369,7 +370,8 @@ private class QueryWorkerActor(config: Configuration, targetActors: List[Locatio
 
     val listOfFutureResponses =
       for (queryInfo <- list) yield
-        (queryInfo.targetActor ? queryInfo.msg).mapTo[ConfigResponse].map(insertPath(_, queryInfo.queryPath))
+        (queryInfo.targetActor ? queryInfo.msg).mapTo[ConfigResponse]
+
     Future.sequence(listOfFutureResponses).onComplete {
       case Success(responseList) =>
         replyTo ! mergeConfigResponses(responseList.toList)
@@ -377,28 +379,6 @@ private class QueryWorkerActor(config: Configuration, targetActors: List[Locatio
       case Failure(ex) =>
         replyTo ! ConfigResponse(Failure(ex))
         context.stop(self)
-    }
-  }
-
-  /**
-   * Returns the given response with the config modified by inserting it at the given path.
-   * This is to make up for the fact that the config actor only received and filled out
-   * a part of the config. This method puts that part back in its place in the config tree.
-   * @param response the response to a "get" query from the config actor
-   * @param path an optional path in the config that the actor registered for
-   * @return the response with the config inserted at the given path
-   */
-  private def insertPath(response: ConfigResponse, path: Option[String]): ConfigResponse = {
-    response.tryConfig match {
-      case Success(configuration) =>
-        if (path.isEmpty) {
-          response
-        } else {
-          val map = Map(path.get -> configuration.asMap(""))
-          ConfigResponse(Success(Configuration(map)))
-        }
-      case Failure(ex) =>
-        response
     }
   }
 
@@ -411,9 +391,9 @@ private class QueryWorkerActor(config: Configuration, targetActors: List[Locatio
     // return first failure if found, otherwise the merged response
     val configs = for (resp <- responses) yield
       resp.tryConfig match {
-        case Success(configuration) => configuration
-        case Failure(ex) => return resp
+        case Success(conf) => conf
+        case Failure(ex) => return resp // XXX FIXME
       }
-    ConfigResponse(Success(Configuration.merge(configs.toList)))
+    ConfigResponse(Success(configs.flatten))
   }
 }

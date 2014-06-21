@@ -394,7 +394,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
     val cl1 = ConfigList(sc1, sc2, sc3, sc4)
 
     val t1 = "mobie"
-    val r1 = cl1.startsWith(t1)
+    val r1 = cl1.prefixStartsWith(t1)
 
     //info("Select results: " +  r1)
     it("it should result in selecton of 1 SetupConfig with mobie") {
@@ -409,7 +409,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
 
     // This test is from original ConfigList
     val t2 = "pos"
-    val r2 = cl1.contains(t2)
+    val r2 = cl1.prefixContains(t2)
     it("it should return results for contains") {
       r2.size should be(3)
     }

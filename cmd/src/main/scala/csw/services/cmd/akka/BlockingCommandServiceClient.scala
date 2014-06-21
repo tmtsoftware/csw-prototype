@@ -1,9 +1,8 @@
 package csw.services.cmd.akka
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, Await}
-import csw.services.cmd.akka.ConfigActor.ConfigResponse
-import csw.util.Configuration
+import scala.concurrent.Await
+import csw.util.cfg.Configurations._
 
 /**
  * A simple, blocking command service client for use in scripts, in the REPL, or tests.
@@ -16,7 +15,7 @@ case class BlockingCommandServiceClient(client: CommandServiceClient) {
    * @param timeout optional amount of time to wait for command to complete
    * @return the command completion status
    */
-  def submit(conf: Configuration, timeout: Duration = client.statusTimeout): CommandStatus = {
+  def submit(conf: ConfigList, timeout: Duration = client.statusTimeout): CommandStatus = {
     val runId = Await.result(client.queueSubmit(conf), timeout)
     Await.result(client.pollCommandStatus(runId), timeout)
   }
@@ -27,7 +26,7 @@ case class BlockingCommandServiceClient(client: CommandServiceClient) {
    * @param timeout optional amount of time to wait for command to complete
    * @return the command completion status
    */
-  def request(conf: Configuration, timeout: Duration = client.statusTimeout): CommandStatus = {
+  def request(conf: ConfigList, timeout: Duration = client.statusTimeout): CommandStatus = {
     val runId = Await.result(client.queueBypassRequest(conf), timeout)
     Await.result(client.pollCommandStatus(runId), timeout)
   }
@@ -40,7 +39,7 @@ case class BlockingCommandServiceClient(client: CommandServiceClient) {
    * @param timeout optional amount of time to wait for command to complete
    * @return the config with the values filled out
    */
-  def getConfig(config: Configuration, timeout: Duration = client.statusTimeout): Configuration = {
+  def getConfig(config: SetupConfigList, timeout: Duration = client.statusTimeout): SetupConfigList = {
     val response = Await.result(client.configGet(config), timeout)
     response.tryConfig.get
   }

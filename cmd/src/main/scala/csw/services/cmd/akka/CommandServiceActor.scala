@@ -3,14 +3,14 @@ package csw.services.cmd.akka
 import akka.actor._
 import csw.services.cmd.akka.CommandQueueActor.ConfigQueueStatus
 import java.net.URI
-import csw.services.ls.{LocationServiceRegisterActor, LocationServiceActor}
+import csw.services.ls.LocationServiceActor
 import LocationServiceActor.ServiceId
 import csw.services.ls.LocationServiceRegisterActor
 import akka.util.Timeout
 import scala.concurrent.duration._
 import akka.pattern.ask
 import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
-import csw.util.Configuration
+import csw.util.cfg.Configurations.ConfigList
 
 object CommandServiceActor {
   // Child actor names
@@ -32,7 +32,7 @@ object CommandServiceActor {
      * @param submitter the return address (defaults to the implicit sender defined for every actor)
      * @param ignore not used: only needed to have a different argument list than the generated apply() method
      */
-    def apply(config: Configuration)(implicit submitter: ActorRef = Actor.noSender, ignore: Int = 0): Submit =
+    def apply(config: ConfigList)(implicit submitter: ActorRef = Actor.noSender, ignore: Int = 0): Submit =
       Submit(config, submitter)
   }
 
@@ -41,13 +41,13 @@ object CommandServiceActor {
    * @param config the configuration
    * @param submitter the actor submitting the config (normally implicit)
    */
-  case class Submit(config: Configuration, submitter: ActorRef) extends CommandServiceMessage
+  case class Submit(config: ConfigList, submitter: ActorRef) extends CommandServiceMessage
 
   /**
    * Queue bypass request configuration.
    * @param config the configuration to send
    */
-  case class QueueBypassRequest(config: Configuration) extends CommandServiceMessage
+  case class QueueBypassRequest(config: ConfigList) extends CommandServiceMessage
 
   /**
    * Queue bypass request configuration with an assigned submitter and runId
@@ -55,7 +55,7 @@ object CommandServiceActor {
    * @param submitter the actor submitting the config (will receive status messages)
    * @param runId the unique runId
    */
-  case class QueueBypassRequestWithRunId(config: Configuration, submitter: ActorRef,
+  case class QueueBypassRequestWithRunId(config: ConfigList, submitter: ActorRef,
                                          runId: RunId = RunId()) extends CommandServiceMessage
 
   /**

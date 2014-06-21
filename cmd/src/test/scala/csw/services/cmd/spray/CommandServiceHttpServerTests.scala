@@ -2,12 +2,12 @@ package csw.services.cmd.spray
 
 import akka.testkit.TestKit
 import akka.actor.ActorSystem
+import csw.util.cfg.TestConfig
 import org.scalatest.FunSuiteLike
 import scala.concurrent.duration._
 import csw.services.cmd.akka._
 import spray.http.StatusCodes
 import scala.concurrent.Await
-import csw.util.{TestConfig, Configuration}
 
 /**
  * Tests the Command Service HTTP/REST interface in an actor environment.
@@ -18,7 +18,7 @@ with TestHelper with FunSuiteLike {
   implicit val dispatcher = system.dispatcher
 
   // The Configuration used in the tests below
-  val config = Configuration(TestConfig.testConfig)
+  val config = TestConfig.testConfig
 
   val duration: FiniteDuration = 5.seconds
 

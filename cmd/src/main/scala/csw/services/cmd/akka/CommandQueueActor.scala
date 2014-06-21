@@ -2,8 +2,8 @@ package csw.services.cmd.akka
 
 import akka.actor._
 import csw.services.cmd.akka.CommandServiceActor.StatusRequest
+import csw.util.cfg.Configurations._
 import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
-import csw.util.Configuration
 
 
 object CommandQueueActor {
@@ -32,7 +32,7 @@ object CommandQueueActor {
    * @param submitter the actor submitting the config (will receive status messages)
    * @param runId the unique runId
    */
-  case class SubmitWithRunId(config: Configuration, submitter: ActorRef, runId: RunId = RunId()) extends QueueMessage
+  case class SubmitWithRunId(config: ConfigList, submitter: ActorRef, runId: RunId = RunId()) extends QueueMessage
 
   /**
    * Message to stop the command queue

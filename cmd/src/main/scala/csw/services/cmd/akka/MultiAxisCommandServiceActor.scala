@@ -1,7 +1,7 @@
 package csw.services.cmd.akka
 
 import akka.actor.{ActorRef, Props, ActorLogging, Actor}
-import csw.util.Configuration
+import csw.util.cfg.Configurations.ConfigList
 
 /**
  * This is like [[csw.services.cmd.akka.CommandServiceActor]], but provides multiple separate queues
@@ -50,12 +50,7 @@ trait MultiAxisCommandServiceActor extends Actor with ActorLogging {
   /**
    * Returns the axis index for the given configuration
    */
-  def axisIndexForConfig(config: Configuration): Int
-
-
-  // Needed for "ask"
-
-  import context.dispatcher
+  def axisIndexForConfig(config: ConfigList): Int
 
   // Receive only the command server commands
   // XXX TODO: intercept command status so we can return a single status even if config references multiple axes!

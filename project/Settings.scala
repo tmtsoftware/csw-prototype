@@ -3,12 +3,10 @@ import Keys._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.SbtMultiJvm
-import scala.Some
-import twirl.sbt.TwirlPlugin._
+import play.twirl.sbt.SbtTwirl
+import play.twirl.sbt.Import.TwirlKeys
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import com.typesafe.sbt.SbtNativePackager._
-import com.typesafe.sbt.packager.linux.{LinuxPackageMapping, LinuxSymlink}
-import com.typesafe.sbt.packager.rpm.RpmDependencies
 import com.typesafe.sbt.packager.Keys._
 
 // Defines the global build settings so they don't need to be edited everywhere
@@ -83,8 +81,8 @@ object Settings {
     ScalariformKeys.preferences in Test := formattingPreferences
   )
 
-  lazy val twirlSettings = Twirl.settings ++ Seq(
-    Twirl.twirlImports := Seq(
+  lazy val twirlSettings = SbtTwirl.projectSettings ++ Seq(
+    TwirlKeys.templateImports in Compile ++= Seq(
       "csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus"
     )
   )

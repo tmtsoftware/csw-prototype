@@ -3,6 +3,7 @@ package csw.services.cmd.akka
 import akka.actor._
 import csw.services.cmd.akka.ConfigActor._
 import csw.services.cmd.akka.CommandQueueActor._
+import csw.util.cfg.Configurations._
 import scala.util.Success
 import scala.concurrent.duration._
 import csw.util.Configuration
@@ -24,7 +25,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   val configWorkers = WorkerPerRunId("configWorkerActor", context, log)
 
   // XXX dummy config for test of get/query
-  private var savedConfig: Option[Configuration] = None
+  private var savedConfig: Option[SetupConfigList] = None
 
 
   // Receive config messages
@@ -104,10 +105,10 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
       }
 
    */
-  override def query(config: Configuration, replyTo: ActorRef): Unit = {
+  override def query(config: SetupConfigList, replyTo: ActorRef): Unit = {
     val conf = savedConfig match {
       // XXX TODO: should only fill in the values that are passed in!
-      case Some(c)  => c
+      case Some(c) => c
       case None =>
         if (config.hasPath("posName")) {
           config.
@@ -232,7 +233,7 @@ class TestConfigActorWorker(submit: SubmitWithRunId, val commandStatusActor: Act
     self ! PoisonPill
   }
 
-  def query(config: Configuration, replyTo: ActorRef): Unit = {
+  def query(config: SetupConfigList, replyTo: ActorRef): Unit = {
     replyTo ! ConfigResponse(Success(config)) // XXX dummy implementation
   }
 }

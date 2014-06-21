@@ -1,25 +1,26 @@
 package csw.services.cmd.spray
 
+import csw.util.cfg.ConfigJsonFormats
+import csw.util.cfg.Configurations._
 import spray.routing._
 import spray.http.MediaTypes._
 import csw.services.cmd.akka.{CommandServiceClientHelper, CommandStatus, RunId}
 import spray.http.StatusCodes
 import spray.routing.directives.DebuggingDirectives
 import akka.event.Logging
-import scala.util._
 import scala.concurrent.ExecutionContext
+import scala.util._
 import com.typesafe.config.ConfigFactory
-import csw.util.Configuration
+import spray.json._
+import ExecutionContext.Implicits.global
+
 
 /**
  * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests
  * without actually running an HTTP server.
  */
 trait CommandServiceHttpRoute extends HttpService
-with CommandServiceClientHelper
-with CommandServiceJsonFormats {
-
-  import ExecutionContext.Implicits.global
+with CommandServiceClientHelper with CommandServiceJsonFormats with ConfigJsonFormats {
 
   // marks with "get-user", log with info level, HttpRequest.toString
   DebuggingDirectives.logRequest("get-user", Logging.InfoLevel)
@@ -45,7 +46,7 @@ with CommandServiceJsonFormats {
     path("request")(
       // "POST /request {config: $config}" submits a config to the command service (bypassing the queue) and returns the runId
       post(
-        entity(as[Configuration]) {
+        entity(as[List[ConfigType]]) {
           config =>
             respondWithMediaType(`application/json`) {
               complete(StatusCodes.Accepted, requestCommand(config))
@@ -56,7 +57,7 @@ with CommandServiceJsonFormats {
       path("get")(
         // "POST /get {config: $config}" submits a config to be filled in with the current values
         post(
-          entity(as[Configuration]) {
+          entity(as[List[SetupConfig]]) {
             config =>
               respondWithMediaType(`application/json`) {
                 complete {
@@ -85,7 +86,7 @@ with CommandServiceJsonFormats {
         path("submit")(
           // "POST /queue/submit {config: $config}" submits a config to the command service and returns the runId
           post(
-            entity(as[Configuration]) {
+            entity(as[List[ConfigType]]) {
               config =>
                 respondWithMediaType(`application/json`) {
                   complete(StatusCodes.Accepted, submitCommand(config))

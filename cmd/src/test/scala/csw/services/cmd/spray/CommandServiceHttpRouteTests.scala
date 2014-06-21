@@ -1,5 +1,10 @@
 package csw.services.cmd.spray
 
+import csw.util.cfg.{TestConfig, ConfigValues, ConfigJsonFormats}
+import csw.util.cfg.Configurations._
+import csw.util.cfg.Configurations.{SetupConfigList, SetupConfig}
+import ConfigValues.ValueData._
+import spray.json._
 import org.specs2.mutable.Specification
 import spray.testkit.Specs2RouteTest
 import org.specs2.time.NoTimeConversions
@@ -11,19 +16,22 @@ import scala.util.Success
 import csw.services.cmd.akka.ConfigActor.ConfigResponse
 import csw.services.cmd.akka.CommandServiceClientHelper._
 import scala.concurrent.Future
-import csw.util.{TestConfig, Configuration}
 
 /**
  * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run
  * without using actors.
  */
-class CommandServiceHttpRouteTests extends Specification with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions {
+class CommandServiceHttpRouteTests extends Specification
+with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with ConfigJsonFormats {
 
   // Required by HttpService
   def actorRefFactory: ActorSystem = system
 
   // The Configuration used in the tests below
-  val config = Configuration(TestConfig.testConfig)
+  val config = TestConfig.testConfig
+
+  //  // The config in JSON format
+  //  val configJson = config.toJson.prettyPrint
 
   // Polls the command status for the given runId until the command completes
   def getCommandStatus(runId: RunId): CommandStatus = {
@@ -120,9 +128,9 @@ class CommandServiceHttpRouteTests extends Specification with Specs2RouteTest wi
 
   // -- Override CommandServiceRoute methods with stubs for testing --
 
-  override def submitCommand(config: Configuration): RunId = RunId()
+  override def submitCommand(config: ConfigList): RunId = RunId()
 
-  override def requestCommand(config: Configuration): RunId = RunId()
+  override def requestCommand(config: SetupConfigList): RunId = RunId()
 
   override def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit =
     completer.complete(Some(CommandStatus.Completed(runId)))
@@ -137,7 +145,7 @@ class CommandServiceHttpRouteTests extends Specification with Specs2RouteTest wi
 
   override def queueDelete(runId: RunId): Unit = {}
 
-  override def configGet(config: Configuration): Future[ConfigResponse] = {
+  override def configGet(config: SetupConfigList): Future[ConfigResponse] = {
     // dummy code, just returns the input config
     Future.successful(ConfigResponse(Success(config)))
   }

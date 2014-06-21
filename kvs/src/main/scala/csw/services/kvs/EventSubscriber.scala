@@ -1,12 +1,12 @@
 package csw.services.kvs
 
 import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import csw.util.cfg.Events.EventType
 import redis.actors.{DecodeReplies, RedisWorkerIO}
 import java.net.InetSocketAddress
 import redis.api.pubsub._
 import akka.util.ByteString
 import redis.protocol.{MultiBulk, RedisReply}
-import csw.util.Configuration
 
 
 /**
@@ -98,9 +98,9 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   def onDecodedReply(reply: RedisReply) {
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
-        subscriber ! Configuration(list(2).toByteString.utf8String)
+        subscriber ! EventType(list(2).toByteString.toArray)
       case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" =>
-        subscriber ! Configuration(list(3).toByteString.utf8String)
+        subscriber ! EventType(list(3).toByteString.toArray)
       case _ => // subscribe or psubscribe
     }
   }

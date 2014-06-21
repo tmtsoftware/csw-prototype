@@ -2,11 +2,11 @@ package csw.services.kvs
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
+import csw.util.cfg.Events.TelemetryEvent
 import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import csw.util.Configuration
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
@@ -18,8 +18,8 @@ class RedisKeyValueStoreTests
   val kvs: KeyValueStore = RedisKeyValueStore()
 
   test("Test Set and Get") {
-    val event1 = Configuration().withValue("test.eventId", 1)
-    val event2 = Configuration().withValue("test.eventId", 2)
+    val event1 = TelemetryEvent(source = "test", "test", "eventId" -> 1)
+    val event2 = TelemetryEvent(source = "test", "test", "eventId" -> 2)
 
     val f = for {
       res1 <- kvs.set("test1", event1)
@@ -44,27 +44,27 @@ class RedisKeyValueStoreTests
   }
 
   test("Test lset, lget and getHistory") {
-    val event = Configuration()
+    val event = TelemetryEvent(source = "testSource", "testPrefix")
     val key = "test"
-    val idKey = "test.eventId"
+    val testKey = "testKey"
     val n = 3
 
     val f = for {
-      _ <- kvs.lset(key, event.withValue(idKey, "test1"), n)
-      _ <- kvs.lset(key, event.withValue(idKey, "test2"), n)
-      _ <- kvs.lset(key, event.withValue(idKey, "test3"), n)
-      _ <- kvs.lset(key, event.withValue(idKey, "test4"), n)
-      _ <- kvs.lset(key, event.withValue(idKey, "test5"), n)
+      _ <- kvs.lset(key, event.withValues(testKey -> "test1"), n)
+      _ <- kvs.lset(key, event.withValues(testKey -> "test2"), n)
+      _ <- kvs.lset(key, event.withValues(testKey -> "test3"), n)
+      _ <- kvs.lset(key, event.withValues(testKey -> "test4"), n)
+      _ <- kvs.lset(key, event.withValues(testKey -> "test5"), n)
       v <- kvs.lget(key)
       h <- kvs.getHistory(key, n + 1)
       _ <- kvs.delete(key)
     } yield {
       assert(v.isDefined)
-      assert(v.get.getString(idKey) == "test5")
+      assert(v.get.asInstanceOf[TelemetryEvent](testKey).elems.head == "test5")
       assert(h.size == n + 1)
       for (i <- 0 to n) {
         logger.info(s"History: $i: ${h(i)}")
-        assert(h(i).getString(idKey) == s"test${n + 2 - i}")
+        assert(h(i).asInstanceOf[TelemetryEvent](testKey).elems.head == s"test${n + 2 - i}")
       }
     }
     Await.result(f, 5.seconds)

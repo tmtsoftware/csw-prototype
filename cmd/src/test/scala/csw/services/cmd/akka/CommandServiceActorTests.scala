@@ -2,6 +2,7 @@ package csw.services.cmd.akka
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
+import csw.util.cfg.{TestConfig, ConfigJsonFormats}
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -10,7 +11,6 @@ import csw.services.cmd.akka.CommandServiceActor._
 import csw.services.cmd.akka.ConfigActor._
 import csw.services.cmd.akka.CommandQueueActor._
 import scala.util._
-import csw.util.{TestConfig, Configuration}
 
 
 /**
@@ -20,10 +20,10 @@ import csw.util.{TestConfig, Configuration}
  * tests run one after the other.
  */
 class CommandServiceActorTests extends TestKit(ActorSystem("test")) with TestHelper
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
+with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging with ConfigJsonFormats {
 
   // The Configuration used in the tests below
-  val config = Configuration(TestConfig.testConfig)
+  val config = TestConfig.testConfig
 
   // Note: Adjust this value and the one used by TestConfigActor
   // to match the time needed for the tests and avoid timeouts
@@ -158,40 +158,16 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
   }
 
   test("Test get (query) request") {
-    val empty =
-      """
-        |      config {
-        |        tmt.tel.base.pos {
-        |          posName = ""
-        |          c1 = ""
-        |          c2 = ""
-        |          equinox = ""
-        |        }
-        |        tmt.tel.ao.pos.one {
-        |          c1 = ""
-        |          c2 = ""
-        |          equinox = ""
-        |        }
-        |      }
-        |
-      """.stripMargin
-    val emptyConfig = Configuration(empty)
+    val emptyConfig = TestConfig.refConfig
     commandServiceActor ! ConfigGet(emptyConfig)
     val resp = expectMsgType[ConfigResponse]
     resp.tryConfig match {
       case Success(c) =>
-        logger.info(s"GET returns: ${c.toJson.toString}")
-        for (s <- List(
-          "config.tmt.tel.base.pos.posName",
-          "config.tmt.tel.base.pos.c1",
-          "config.tmt.tel.base.pos.c2",
-          "config.tmt.tel.base.pos.equinox",
-          "config.tmt.tel.ao.pos.one.c1",
-          "config.tmt.tel.ao.pos.one.c2",
-          "config.tmt.tel.ao.pos.one.equinox"
-        )) {
-          assert(c.getString(s) == config.getString(s), s"Failed to match config key: $s")
-        }
+        logger.info(s"GET returns: $c")
+        assert(c.size == emptyConfig.size)
+        assert(c.head.obsId == config.head.obsId)
+        assert(c.head.prefix == config.head.prefix)
+        assert(c == config) // XXX?
       case Failure(ex) => fail(ex)
     }
   }

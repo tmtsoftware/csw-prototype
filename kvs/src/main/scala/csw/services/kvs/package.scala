@@ -1,27 +1,27 @@
 package csw.services
 
+import csw.util.cfg.Events.EventType
 import redis.ByteStringFormatter
 import akka.util.ByteString
-import csw.util.Configuration
 
 package object kvs {
 
   /**
-   * An Event here is just a Configuration with an implicit conversion to/from ByteString for
+   * An Event here is an EventType instance with an implicit conversion to/from ByteString for
    * use with Redis
    */
-  type Event = Configuration
+  type Event = EventType
 
   /**
    * Defines the automatic conversion of an Event to a ByteString and back again.
    */
   implicit val byteStringFormatter = new ByteStringFormatter[Event] {
     def serialize(event: Event): ByteString = {
-      ByteString(event.toString) // Uses the simplified JSON format
+      ByteString(event.toBinary)
     }
 
     def deserialize(bs: ByteString): Event = {
-      Configuration(bs.utf8String)
+      EventType(bs.asByteBuffer.array())
     }
   }
 
