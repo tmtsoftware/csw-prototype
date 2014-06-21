@@ -1,7 +1,7 @@
 package csw.services.cmd.spray
 
 import akka.testkit.TestKit
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import csw.util.cfg.TestConfig
 import org.scalatest.FunSuiteLike
 import scala.concurrent.duration._
@@ -81,6 +81,8 @@ with TestHelper with FunSuiteLike {
       checkReturnStatus("4b", commandStatus4b, runId4, CommandStatus.Canceled(runId4))
       assert(res4c.status == StatusCodes.Accepted)
       checkReturnStatus("4c", commandStatus4c, runId4, CommandStatus.Error(runId4, CommandServiceHttpServer.unknownRunIdMessage))
+
+      system.shutdown()
     }, 10.seconds)
   }
 

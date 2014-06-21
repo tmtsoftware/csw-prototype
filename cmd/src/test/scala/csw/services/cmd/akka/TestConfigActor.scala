@@ -3,10 +3,11 @@ package csw.services.cmd.akka
 import akka.actor._
 import csw.services.cmd.akka.ConfigActor._
 import csw.services.cmd.akka.CommandQueueActor._
+import csw.util.cfg.ConfigJsonFormats
 import csw.util.cfg.Configurations._
 import scala.util.Success
 import scala.concurrent.duration._
-import csw.util.Configuration
+import spray.json._
 
 object TestConfigActor {
   def props(commandStatusActor: ActorRef, numberOfSecondsToRun: Int = 2): Props =
@@ -19,7 +20,8 @@ object TestConfigActor {
  * @param commandStatusActor actor that receives the command status messages
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
-class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int) extends ConfigActor {
+class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int)
+  extends ConfigActor with ConfigJsonFormats {
 
   // Used to create and get the worker actor that is handling a config
   val configWorkers = WorkerPerRunId("configWorkerActor", context, log)
@@ -38,7 +40,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
     val props = TestConfigActorWorker.props(submit, commandStatusActor, numberOfSecondsToRun)
     configWorkers.newWorkerFor(props, submit.runId) match {
       case Some(configWorkerActor) =>
-        log.info(s"Forwarding config ${submit.config} to worker")
+        log.info(s"Forwarding config ${submit.config.toJson.toString} to worker")
         context.watch(configWorkerActor)
       case None =>
     }
@@ -105,27 +107,28 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
       }
 
    */
-  override def query(config: SetupConfigList, replyTo: ActorRef): Unit = {
-    val conf = savedConfig match {
+  override def query(configs: SetupConfigList, replyTo: ActorRef): Unit = {
+    val configList = savedConfig match {
       // XXX TODO: should only fill in the values that are passed in!
       case Some(c) => c
       case None =>
-        if (config.hasPath("posName")) {
-          config.
-            withValue("posName", "NGC738B").
-            withValue("c1", "22:35:58.530").
-            withValue("c2", "33:57:55.40").
-            withValue("equinox", "J2000")
+        for(config <- configs) yield
+        if (config.exists("posName")) {
+          config.withValues(
+              "posName" -> "NGC738B",
+              "c1" -> "22:35:58.530",
+              "c2" -> "33:57:55.40",
+              "equinox" -> "J2000")
         } else {
-          config.
-            withValue("c1", "22:356:01.066").
-            withValue("c2", "33:58:21.69").
-            withValue("equinox", "J2000")
+          config.withValues(
+            "c1" -> "22:356:01.066",
+            "c2" -> "33:58:21.69",
+             "equinox" -> "J2000")
         }
     }
 
-    sender() ! ConfigResponse(Success(conf))
-    savedConfig = Some(config)
+    sender() ! ConfigResponse(Success(configList))
+    savedConfig = Some(configList)
   }
 }
 

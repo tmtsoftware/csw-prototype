@@ -2,12 +2,12 @@ package csw.services.pkg
 
 import akka.actor._
 import csw.services.cmd.akka.CommandStatus
+import csw.util.cfg.TestConfig
 import scala.concurrent.duration._
 import akka.remote.testkit._
 import csw.services.cmd.akka.CommandServiceActor.{CommandServiceStatus, StatusRequest, Submit}
 import com.typesafe.config.ConfigFactory
 import csw.services.ls.LocationServiceActor
-import csw.util.{TestConfig, Configuration}
 import akka.testkit.ImplicitSender
 
 /**
@@ -47,7 +47,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       runOn(container1) {
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
-        val config = Configuration(TestConfig.testConfig)
+        val config = TestConfig.testConfig
         val container = Container.create("Container-1")
         val assembly1Props = TestAssembly.props("Assembly-1")
         within(10.seconds) {
@@ -69,8 +69,8 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       runOn(container2) {
         enterBarrier("locationServiceStarted")
         val container = Container.create("Container-2")
-        val hcd2aProps = TestHcd.props("HCD-2A", "config.tmt.tel.base.pos")
-        val hcd2bProps = TestHcd.props("HCD-2B", "config.tmt.tel.ao.pos.one")
+        val hcd2aProps = TestHcd.props("HCD-2A", "tmt.tel.base.pos")
+        val hcd2bProps = TestHcd.props("HCD-2B", "tmt.tel.ao.pos.one")
         container ! Container.CreateComponent(hcd2aProps, "HCD-2A")
         expectMsgType[ActorRef]
         container ! Container.CreateComponent(hcd2bProps, "HCD-2B")

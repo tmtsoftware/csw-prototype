@@ -130,7 +130,7 @@ with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with Co
 
   override def submitCommand(config: ConfigList): RunId = RunId()
 
-  override def requestCommand(config: SetupConfigList): RunId = RunId()
+  override def requestCommand(config: ConfigList): RunId = RunId()
 
   override def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit =
     completer.complete(Some(CommandStatus.Completed(runId)))

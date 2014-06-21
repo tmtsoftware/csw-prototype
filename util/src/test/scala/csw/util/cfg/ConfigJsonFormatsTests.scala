@@ -20,7 +20,7 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
       "nameTuple" ->("aaa", "bbb", "ccc"),
       //      "intTuple" -> (1, 2, 3).deg, // XXX Tuple looses type info
       "intList" -> List(1, 2, 3).deg,
-      "intVal" -> 22,
+      "intVal" -> 22.meters,
       "doubleVal" -> 3.14
     ).withValues("added1" -> 1, "added2" -> 2.deg)
 
@@ -46,8 +46,7 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
     assert(config.prefix == "tcs.base.pos")
     assert(config.obsId == "2014-C2-4-44")
     assert(config("name").elems.head == "m99")
-    assert(config("ra").elems.head == 10.0)
-    assert(config("ra").units == Deg)
+    assert(config("ra") == 10.0.deg)
     assert(config.get("dec").get.elems.head == 2.0)
     assert(config.get("xxx") == None)
     assert(config("dec").units == Deg)
@@ -59,6 +58,8 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
     assert(config("intVal").units == Meters)
     assert(config("doubleVal").elems.head == 3.14)
     assert(config("doubleVal").units == NoUnits)
+    assert(config.exists("added1"))
+    assert(config("added2") == 2.deg)
 
   }
 

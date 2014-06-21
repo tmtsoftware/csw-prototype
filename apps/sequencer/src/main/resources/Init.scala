@@ -3,7 +3,6 @@
 import akka.actor._
 import akka.util.Timeout
 import csw.services.ls.LocationServiceActor
-import csw.util.Configuration
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import java.io.StringReader

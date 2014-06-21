@@ -51,20 +51,20 @@ trait TestHelper extends ImplicitSender {
    */
   def getCommandServiceActor(numberOfSecondsToRun: Int = 2): ActorRef = {
     val hcdA = system.actorOf(
-      TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun - 1, s"TestConfigActorA"),
+      TestHcdCommandServiceActor.props("tmt.tel.base.pos", numberOfSecondsToRun - 1, s"TestConfigActorA"),
       name = s"HCD-A")
     val hcdB = system.actorOf(
-      TestHcdCommandServiceActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB"),
+      TestHcdCommandServiceActor.props("tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB"),
       name = s"HCD-B")
 
     // Normally this information would come from the location service, but for testing it is hard coded here
     val hcds = List(
       LocationServiceInfo(
         ServiceId(s"HCD-A", ServiceType.HCD), List(new URI(hcdA.path.toString)),
-        Some("config.tmt.tel.base.pos"), Some(hcdA)),
+        Some("tmt.tel.base.pos"), Some(hcdA)),
       LocationServiceInfo(
         ServiceId(s"HCD-B", ServiceType.HCD), List(new URI(hcdB.path.toString)),
-        Some("config.tmt.tel.ao.pos.one"), Some(hcdB))
+        Some("tmt.tel.ao.pos.one"), Some(hcdB))
     )
 
     val commandServiceActor = system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly")

@@ -21,7 +21,9 @@ package object kvs {
     }
 
     def deserialize(bs: ByteString): Event = {
-      EventType(bs.asByteBuffer.array())
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      EventType(ar)
     }
   }
 

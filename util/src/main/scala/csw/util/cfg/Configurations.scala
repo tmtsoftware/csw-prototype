@@ -56,10 +56,16 @@ object Configurations {
 
     lazy val names: Set[String] = values.map(c => c.name)
 
-    def :+[B <: CV](elem: B): SetupConfig = {
-      SetupConfig(obsId, prefix, values + elem)
+    /**
+     * Returns a new instance including the given value
+     */
+    def :+[B <: CV](value: B): SetupConfig = {
+      SetupConfig(obsId, prefix, values + value)
     }
 
+    /**
+     * Returns a new instance including the given values
+     */
     def withValues(newValues: CV*): SetupConfig = {
       SetupConfig(obsId, prefix, values ++ newValues)
     }
@@ -79,6 +85,11 @@ object Configurations {
      * @return the ValueData instance for the key
      */
     def apply(key: String): ValueData[Any] = get(key).get
+
+    /**
+     * Returns true if the config contains the given key
+     */
+    def exists(key: String): Boolean = values.exists(_.name == key)
 
     override def toString = "(" + obsId + ")->" + prefix + " " + values
   }

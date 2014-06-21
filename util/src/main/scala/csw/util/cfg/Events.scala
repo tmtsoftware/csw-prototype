@@ -57,8 +57,8 @@ object Events {
 
     lazy val names: Set[String] = values.map(c => c.name)
 
-    def :+[B <: CV](elem: B): TelemetryEvent = {
-      TelemetryEvent(eventId, timestamp, source, prefix, values + elem)
+    def :+[B <: CV](value: B): TelemetryEvent = {
+      TelemetryEvent(eventId, timestamp, source, prefix, values + value)
     }
 
     def withValues(newValues: CV*): TelemetryEvent = {
@@ -85,6 +85,11 @@ object Events {
      * @return the ValueData instance for the key
      */
     def apply(key: String): ValueData[Any] = get(key).get
+
+    /**
+     * Returns true if the event contains the given key
+     */
+    def exists(key: String): Boolean = values.exists(_.name == key)
   }
 
   object TelemetryEvent {

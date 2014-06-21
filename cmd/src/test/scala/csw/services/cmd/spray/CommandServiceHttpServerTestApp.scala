@@ -85,20 +85,20 @@ object CommandServiceHttpServerTestApp extends App {
    * @return the actor ref of the assembly command server
    */
   def getCommandServiceActor(n: Int = 1, numberOfSecondsToRun: Int = 2): ActorRef = {
-    val hcdA = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.base.pos", numberOfSecondsToRun, s"TestConfigActorA$n"),
+    val hcdA = system.actorOf(TestHcdCommandServiceActor.props("tmt.tel.base.pos", numberOfSecondsToRun, s"TestConfigActorA$n"),
       name = s"HCD-A$n")
 
-    val hcdB = system.actorOf(TestHcdCommandServiceActor.props("config.tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB$n"),
+    val hcdB = system.actorOf(TestHcdCommandServiceActor.props("tmt.tel.ao.pos.one", numberOfSecondsToRun, s"TestConfigActorB$n"),
       name = s"HCD-B$n")
 
     // Normally this information would come from the location service, but for testing it is hard coded here
     val hcds = List(
       LocationServiceInfo(
         ServiceId("HCD-A", ServiceType.HCD), List(new URI(hcdA.path.toString)),
-        Some("config.tmt.tel.base.pos"), Some(hcdA)),
+        Some("tmt.tel.base.pos"), Some(hcdA)),
       LocationServiceInfo(
         ServiceId("HCD-B", ServiceType.HCD), List(new URI(hcdB.path.toString)),
-        Some("config.tmt.tel.ao.pos.one"), Some(hcdB))
+        Some("tmt.tel.ao.pos.one"), Some(hcdB))
     )
 
     system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly$n")

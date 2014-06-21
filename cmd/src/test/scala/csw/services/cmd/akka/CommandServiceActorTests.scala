@@ -167,7 +167,6 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging wi
         assert(c.size == emptyConfig.size)
         assert(c.head.obsId == config.head.obsId)
         assert(c.head.prefix == config.head.prefix)
-        assert(c == config) // XXX?
       case Failure(ex) => fail(ex)
     }
   }
