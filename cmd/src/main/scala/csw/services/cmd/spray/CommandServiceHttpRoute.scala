@@ -5,9 +5,9 @@ import csw.util.cfg.Configurations._
 import spray.routing._
 import spray.http.MediaTypes._
 import csw.services.cmd.akka.{CommandServiceClientHelper, CommandStatus, RunId}
-import spray.http.StatusCodes
-import spray.routing.directives.DebuggingDirectives
-import akka.event.Logging
+import spray.http.{HttpRequest, StatusCodes}
+import spray.routing.directives.{LogEntry, DebuggingDirectives}
+import akka.event.{LoggingAdapter, Logging}
 import scala.concurrent.ExecutionContext
 import scala.util._
 import com.typesafe.config.ConfigFactory
@@ -22,8 +22,12 @@ import ExecutionContext.Implicits.global
 trait CommandServiceHttpRoute extends HttpService
 with CommandServiceClientHelper with CommandServiceJsonFormats with ConfigJsonFormats {
 
-  // marks with "get-user", log with info level, HttpRequest.toString
-  DebuggingDirectives.logRequest("get-user", Logging.InfoLevel)
+  // Log messages at INFO level (XXX does this work?)
+  def requestMessageAsInfo(req: HttpRequest): LogEntry = LogEntry(req.message, Logging.InfoLevel)
+  DebuggingDirectives.logRequest(requestMessageAsInfo _)
+
+  // Implementing classes need to define logging
+  def log: LoggingAdapter
 
   // the root of the ExtJS workspace, which contains all the ExtJS web apps.
   // (use uncompiled sources during development, minified app.js from build dir in production release)
@@ -63,8 +67,8 @@ with CommandServiceClientHelper with CommandServiceJsonFormats with ConfigJsonFo
                 complete {
                   configGet(config).map {
                     resp => resp.tryConfig match {
-                      case Success(c) => c.toJson.toString
-                      case Failure(ex) => ""
+                      case Success(c) =>  log.info(s"get ${c.toJson.toString()}"); c.toJson.toString()
+                      case Failure(ex) => log.error(s"$ex"); ""
                     }
                   }
                 }

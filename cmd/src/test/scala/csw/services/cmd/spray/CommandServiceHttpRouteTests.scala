@@ -1,5 +1,6 @@
 package csw.services.cmd.spray
 
+import akka.event.{Logging, LoggingAdapter}
 import csw.util.cfg.{TestConfig, ConfigValues, ConfigJsonFormats}
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Configurations.{SetupConfigList, SetupConfig}
@@ -26,6 +27,8 @@ with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with Co
 
   // Required by HttpService
   def actorRefFactory: ActorSystem = system
+
+  override def log = Logging(system, this)
 
   // The Configuration used in the tests below
   val config = TestConfig.testConfig
