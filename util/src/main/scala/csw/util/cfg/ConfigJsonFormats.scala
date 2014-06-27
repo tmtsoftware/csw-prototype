@@ -114,11 +114,15 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
    */
   implicit object SetupConfigListJsonFormat extends RootJsonFormat[SetupConfigList] {
     def write(configs: SetupConfigList): JsValue =
-      JsArray(configs.map(_.toJson))
+      JsObject((CONFIGS, JsArray(configs.map(_.toJson))))
 
     def read(json: JsValue): SetupConfigList = json match {
-      case JsArray(values) => values.map(SetupConfigJsonFormat.read)
-      case x => unexpectedJsValueError(x)
+      case JsObject(root) =>
+        root(CONFIGS) match {
+          case JsArray(values) => values.map(SetupConfigJsonFormat.read)
+          case x => deserializationError(s"Unexpected JsValue: $x")
+        }
+      case x => deserializationError(s"Unexpected JsValue: $x")
     }
   }
 
@@ -128,14 +132,17 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
    */
   implicit object ConfigListJsonFormat extends RootJsonFormat[List[ConfigType]] {
     def write(configs: List[ConfigType]): JsValue =
-      JsArray(configs.map(_.toJson))
+      JsObject((CONFIGS, JsArray(configs.map(_.toJson))))
 
     def read(json: JsValue): List[ConfigType] = json match {
-      case JsArray(values) => values.map(ConfigTypeJsonFormat.read)
-      case x => unexpectedJsValueError(x)
+      case JsObject(root) =>
+        root(CONFIGS) match {
+          case JsArray(values) => values.map(ConfigTypeJsonFormat.read)
+          case x => deserializationError(s"Unexpected JsValue: $x")
+        }
+      case x => deserializationError(s"Unexpected JsValue: $x")
     }
   }
-
 }
 
 
@@ -148,6 +155,7 @@ private object ConfigJsonFormats {
   val SETUP = "setup"
   val OBSERVE = "observe"
   val WAIT = "wait"
+  val CONFIGS = "configs"
 
   // Reserved keys
   val OBS_ID = "obsId"

@@ -28,7 +28,7 @@ with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with Co
   // Required by HttpService
   def actorRefFactory: ActorSystem = system
 
-  override def log = Logging(system, this)
+  override def log = Logging(system, this.getClass)
 
   // The Configuration used in the tests below
   val config = TestConfig.testConfig
