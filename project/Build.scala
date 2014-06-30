@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import play.twirl.sbt.SbtTwirl
-
+import scalabuff.ScalaBuffPlugin._
 
 // This is the top level build object used by sbt.
 object Build extends Build {
@@ -13,9 +13,10 @@ object Build extends Build {
   // Shared utils
   lazy val util = project
     .settings(defaultSettings: _*)
+    .settings(scalabuffSettings: _*).configs(ScalaBuff)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(sprayJson, sprayHttpx, scalaLogging, logback) ++
+      compile(sprayJson, sprayHttpx, scalaLogging, logback, scalabuffRuntime) ++
       test(scalaTest, akkaTestKit)
     )
 
