@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-// Added annotation below, since test depends on Redis server running (Remove to include in tests)
+// Added annotation below, since test depends on Hornetq server running (Remove to include in tests)
 @DoNotDiscover
 class EventPubSubTests extends TestKit(ActorSystem("Test"))
 with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
@@ -41,7 +41,6 @@ with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging with EventPublisher {
   val channel = "tmt.mobie.red.dat.exposureInfo"
   val expTime = 1
-  // ms
   var nextId = 0
   var done = false
 

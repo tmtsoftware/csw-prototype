@@ -14,8 +14,8 @@ import scala.concurrent.ExecutionContext
 class PubSubTests extends TestKit(ActorSystem("Test"))
 with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
-  val numSecs = 10
   // number of seconds to run
+  val numSecs = 10
   val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))
   //  val subscriber2 = system.actorOf(Props(classOf[Subscriber], "Subscriber-2"))
   val publisher = system.actorOf(Props(classOf[Publisher], self, numSecs))
@@ -39,12 +39,10 @@ with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 // A test class that publishes events
 private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging with EventPublisher {
   val root = "tmt.mobie.red.dat.exposureInfo"
-  val expTime = 1
   // ms
+  val expTime = 1
   var nextId = 0
   var done = false
-
-  //Use the system's dispatcher as ExecutionContext
 
   import context.dispatcher
 
@@ -91,7 +89,7 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
 
   override def receive: Receive = {
     case event: Event =>
-      //      log.info(s"$name received $event")
+      // log.info(s"$name received $event")
       count = count + 1
       if (count % 10000 == 0)
         log.info(s"Received $count events so far: $event")

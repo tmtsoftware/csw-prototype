@@ -19,7 +19,9 @@ trait EventPublisher {
    */
   def publish(channel: String, event: Event): Unit = {
     val message = hq.session.createMessage(false)
-    message.getBodyBuffer.writeBytes(event.toBinary)
+    val buf = message.getBodyBuffer
+    buf.clear()
+    buf.writeBytes(event.toBinary)
     message.setExpiration(System.currentTimeMillis() + 1000) // expire after 1 second
     producer.send(channel, message)
   }

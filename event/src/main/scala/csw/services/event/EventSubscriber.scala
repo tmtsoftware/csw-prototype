@@ -1,7 +1,7 @@
 package csw.services.event
 
 import akka.actor.{Props, ActorRef, ActorLogging, Actor}
-import csw.util.cfg.Configurations.ConfigType
+import csw.util.cfg.Events.EventType
 import org.hornetq.api.core.client._
 import java.util.UUID
 
@@ -82,10 +82,9 @@ case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorL
   override def receive: Receive = {
     case message: ClientMessage =>
       try {
-        //        subscriber ! ConfigType(message.getBodyBuffer.byteBuf().array()) // XXX test this
-        val ar = Array[Byte]()
+        val ar = Array.ofDim[Byte](message.getBodySize)
         message.getBodyBuffer.readBytes(ar)
-        subscriber ! ConfigType(ar)
+        subscriber ! EventType(ar)
       } catch {
         case ex: Throwable => log.error(ex, s"Error forwarding message to $subscriber: $message")
       }
