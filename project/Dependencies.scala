@@ -46,8 +46,7 @@ object Dependencies {
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
   //  val hornetqNative  = "org.hornetq"                    % "hornetq-native"        % hornetqVersion from s"${Path.userHome.asFile.toURI.toURL}.m2/repository/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
 
-  // Scala protobuf support
-  val scalabuffRuntime = "net.sandrogrzicic" %% "scalabuff-runtime" % "1.3.8"
+  val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.5.0"
 
   // Test dependencies
   val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion

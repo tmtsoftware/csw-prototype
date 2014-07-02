@@ -1,0 +1,43 @@
+package csw.util.cfg;
+
+option java_outer_classname = "Protobuf";
+
+// Defines a protobuf for an Event
+
+message ObserveEvent {
+    required string eventId = 1;
+    required int64 timestamp = 2;
+    required string source = 3;
+}
+
+// Protobufs don't support generic types, so add any types needed here
+message A {
+    optional string stringVal = 1;
+    optional int32 intVal = 2;
+    optional int64 longVal = 3;
+    optional double doubleVal = 4;
+    // add more types here ...
+}
+
+message ValueData {
+    repeated A elems = 1;
+    optional string units = 2 [default = "none"];
+}
+
+message CV {
+    required string trialName = 1;
+    required ValueData data = 2;
+}
+
+message TelemetryEvent {
+    required string eventId = 1;
+    required int64 timestamp = 2;
+    required string source = 3;
+    optional string prefix = 4 [default = ""];
+    repeated CV values = 5;
+}
+
+message EventType {
+    optional ObserveEvent observeEvent = 1;
+    optional TelemetryEvent telemetryEvent = 2;
+}

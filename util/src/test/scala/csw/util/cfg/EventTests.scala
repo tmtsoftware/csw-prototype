@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import ConfigValues.ValueData._
 import spray.json._
 
-class EventJsonFormatsTests extends FunSuite with EventJsonFormats {
+class EventTests extends FunSuite with EventJsonFormats {
 
   val telemetryEvent = TelemetryEvent(
     eventId = "event1",
@@ -15,13 +15,13 @@ class EventJsonFormatsTests extends FunSuite with EventJsonFormats {
     "tmt.mobie.blue.filter",
     "name" -> "GG495",
     "nameList" -> List("xxx", "yyy", "zzz"),
-    "nameTuple" ->("aaa", "bbb", "ccc"),
+//    "nameTuple" -> ("aaa", "bbb", "ccc"), // tuple looses type info
     "intList" -> List(1, 2, 3).deg,
     "intVal" -> 22.meters,
     "doubleVal" -> 3.14
   )
 
-  val obsEvent = ObserveEvent(
+  val observeEvent = ObserveEvent(
     eventId = "event2",
     timestamp = System.currentTimeMillis,
     source = "test2")
@@ -32,7 +32,7 @@ class EventJsonFormatsTests extends FunSuite with EventJsonFormats {
     assert(e.names == telemetryEvent.names)
     assert(e("name").elems.head == "GG495")
     assert(e("nameList").elems == List("xxx", "yyy", "zzz"))
-    assert(e("nameTuple").elems == List("aaa", "bbb", "ccc"))
+//    assert(e("nameTuple").elems == List("aaa", "bbb", "ccc"))
     assert(e("intList").elems == List(1, 2, 3))
     assert(e("intList").units == Deg)
     assert(e("intVal").elems.head == 22)
@@ -42,7 +42,7 @@ class EventJsonFormatsTests extends FunSuite with EventJsonFormats {
   }
 
   test("Test converting an ObserveEvent to JSON and back again") {
-    val e = testJson(obsEvent)
+    testJson(observeEvent)
   }
 
   def testJson(event: EventType): EventType = {
@@ -59,6 +59,19 @@ class EventJsonFormatsTests extends FunSuite with EventJsonFormats {
     assert(event.timestamp == e.timestamp)
     assert(event.source == e.source)
     e
+  }
+
+  test("Test protobuf serialization") {
+    val te = TelemetryEvent(telemetryEvent.toBinary)
+    assert(te == telemetryEvent)
+    val te2 = EventType(telemetryEvent.toBinary)
+    assert(te2 == te)
+
+    val oe = ObserveEvent(observeEvent.toBinary)
+    assert(oe == observeEvent)
+    val oe2 = EventType(observeEvent.toBinary)
+    assert(oe2 == oe)
+    println("Protobuf tests passed")
   }
 }
 

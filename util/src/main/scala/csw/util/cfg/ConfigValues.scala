@@ -69,6 +69,7 @@ object ConfigValues {
     // DSL support (XXX deal with duration implicit defs)
     implicit def toValueData[A](elem: A) = elem match {
       case s: Seq[A] => ValueData(s)
+//      case p: Product => ValueData(p.productIterator.toList)
       case _ => ValueData(Seq(elem))
     }
   }
@@ -78,7 +79,7 @@ object ConfigValues {
    * A CValue is a configuration value. This joins a fully qualified name (future object?)
    * with ValueData
    */
-  case class CValue[+A](private val trialName: String, data: ValueData[A] = ValueData.empty) {
+  case class CValue[+A](trialName: String, data: ValueData[A] = ValueData.empty) {
 
     import FullyQualifiedName.Fqn
 
@@ -113,8 +114,14 @@ object ConfigValues {
     def apply[A](name: String, units: Units, data: A*): CValue[A] = CValue[A](name, ValueData[A](data, units))
 
     implicit def tupleToCValue[A](t: (String, A)): CValue[A] = t._2 match {
-      case v: ValueData[A] => CValue[A](t._1, v)
-      case _ => CValue[A](t._1, ValueData[A](Seq(t._2), NoUnits))
+      case v: ValueData[A] =>
+        CValue[A](t._1, v)
+      case s: Seq[A] =>
+        CValue[A](t._1, ValueData[A](s, NoUnits))
+//      case p: Product =>
+//        CValue[A](t._1, ValueData[A](p.productIterator.toSeq, NoUnits))
+      case _ =>
+        CValue[A](t._1, ValueData[A](Seq(t._2), NoUnits))
     }
   }
 }

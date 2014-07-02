@@ -1,10 +1,10 @@
 package csw.util.cfg
 
-import java.io.{ByteArrayInputStream, ObjectInputStream, ObjectOutputStream, ByteArrayOutputStream}
 import java.util.{Date, UUID}
 
 import csw.util.cfg.ConfigValues.ValueData
 import csw.util.cfg.Configurations.CV
+import csw.util.cfg.UnitsOfMeasure.Units
 
 /**
  * Defines the different types of configurations: setup, observe, wait, ...
@@ -16,28 +16,26 @@ object Events {
    */
   trait EventType {
     val eventId: String
-    // = UUID.randomUUID().toString
     val timestamp: Long
-    // = System.currentTimeMillis
     val source: String
 
-    // Serializes this config (XXX TODO: Use Akka Protobuf serializer)
-    def toBinary: Array[Byte] = {
-      val bos = new ByteArrayOutputStream
-      val out = new ObjectOutputStream(bos)
-      out.writeObject(this)
-      out.close()
-      bos.toByteArray
-    }
+    /**
+     * Serializes this config to a byte array using google protobufs
+     */
+    def toBinary: Array[Byte]
   }
 
   object EventType {
-    // Deserializes a EventType object from bytes
+    /**
+     * Deserializes an EventType object from protobuf bytes
+     */
     def apply(bytes: Array[Byte]): EventType = {
-      val in = new ObjectInputStream(new ByteArrayInputStream(bytes))
-      val obj = in.readObject()
-      in.close()
-      obj.asInstanceOf[EventType]
+      val et = Protobuf.EventType.parseFrom(bytes)
+      if (et.hasObserveEvent) {
+        ObserveEvent(et.getObserveEvent)
+      } else if (et.hasTelemetryEvent) {
+        TelemetryEvent(et.getTelemetryEvent)
+      } else throw new RuntimeException("No event found in protobuf")
     }
   }
 
@@ -90,6 +88,43 @@ object Events {
      * Returns true if the event contains the given key
      */
     def exists(key: String): Boolean = values.exists(_.name == key)
+
+    override def toBinary: Array[Byte] = {
+      import scala.collection.JavaConversions._
+
+      def getElems[A](elems: Seq[A]): Seq[Protobuf.A] = {
+        val b = Protobuf.A.newBuilder()
+        for (e <- elems) yield
+          e match {
+            case s: String => b.setStringVal(s).build()
+            case i: Int => b.setIntVal(i).build()
+            case l: Long => b.setLongVal(l).build()
+            case d: Double => b.setDoubleVal(d).build()
+          }
+      }
+
+      def getValueData(cv: CV): Protobuf.ValueData = {
+        Protobuf.ValueData.newBuilder()
+          .setUnits(cv.units.name)
+          .addAllElems(getElems(cv.elems))
+          .build()
+      }
+
+      def getValues = for (cv <- values) yield
+        Protobuf.CV.newBuilder()
+          .setTrialName(cv.trialName)
+          .setData(getValueData(cv))
+          .build()
+
+      Protobuf.EventType.newBuilder().setTelemetryEvent(
+        Protobuf.TelemetryEvent.newBuilder()
+          .setEventId(eventId)
+          .setTimestamp(timestamp)
+          .setSource(source)
+          .setPrefix(prefix)
+          .addAllValues(getValues)
+      ).build().toByteArray
+    }
   }
 
   object TelemetryEvent {
@@ -105,26 +140,57 @@ object Events {
       TelemetryEvent(eventId, timestamp, source, prefix, values.toSet)
     }
 
-    // Create from serialized bytes
+    def apply(oe: Protobuf.TelemetryEvent): TelemetryEvent = {
+      import scala.collection.JavaConversions._
+
+      def getElems(l: List[Protobuf.A]): Seq[Any] = {
+        for (a <- l) yield
+          if (a.hasStringVal) a.getStringVal
+          else if (a.hasIntVal) a.getIntVal
+          else if (a.hasLongVal) a.getLongVal
+          else if (a.hasDoubleVal) a.getDoubleVal
+      }
+
+      def getValueData(data: Protobuf.ValueData): ValueData[Any] = {
+        ValueData(getElems(data.getElemsList.toList), Units.fromString(data.getUnits))
+      }
+
+      def getValues(seq: Seq[Protobuf.CV]): Set[CV] = {
+        (for (cv <- seq) yield ConfigValues.CValue(cv.getTrialName, getValueData(cv.getData))).toSet[CV]
+      }
+
+      TelemetryEvent(oe.getEventId, oe.getTimestamp, oe.getSource, oe.getPrefix, getValues(oe.getValuesList))
+    }
+
     def apply(bytes: Array[Byte]): TelemetryEvent = {
-      EventType(bytes).asInstanceOf[TelemetryEvent]
+      TelemetryEvent(Protobuf.EventType.parseFrom(bytes).getTelemetryEvent)
     }
   }
 
   /**
-   * Defines an observe event (XXX TBD)
+   * Defines an observe event
    */
-  case class ObserveEvent(eventId: String, timestamp: Long, source: String) extends EventType
-
-  object ObserveEvent {
-    // Create from serialized bytes
-    def apply(bytes: Array[Byte]): ObserveEvent = {
-      EventType(bytes).asInstanceOf[ObserveEvent]
+  case class ObserveEvent(eventId: String, timestamp: Long, source: String) extends EventType {
+    override def toBinary: Array[Byte] = {
+      Protobuf.EventType.newBuilder().setObserveEvent(
+        Protobuf.ObserveEvent.newBuilder()
+          .setEventId(eventId)
+          .setTimestamp(timestamp)
+          .setSource(source)
+      ).build.toByteArray
     }
   }
 
-  // XXX TODO: Add "endless" EventStream? (only neeeded if "pulling" events)
+  object ObserveEvent {
+    def apply(oe: Protobuf.ObserveEvent): ObserveEvent =
+      ObserveEvent(oe.getEventId, oe.getTimestamp, oe.getSource)
 
+    def apply(bytes: Array[Byte]): ObserveEvent =
+      ObserveEvent(Protobuf.EventType.parseFrom(bytes).getObserveEvent)
+  }
+
+  // XXX TODO: Add "endless" EventStream? (only neeeded if "pulling" events)
 }
+
 
 
