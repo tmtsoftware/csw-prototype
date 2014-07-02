@@ -17,7 +17,7 @@ object Configurations {
   trait ConfigType {
     val obsId: String
 
-    // Serializes this config (XXX TODO: Use Akka Protobuf serializer)
+    // Serializes this config (XXX TODO: Use Akka Protobuf serializer?)
     def toBinary: Array[Byte] = {
       val bos = new ByteArrayOutputStream
       val out = new ObjectOutputStream(bos)
@@ -38,9 +38,6 @@ object Configurations {
   }
 
   type CV = CValue[_]
-
-  //  type CT = ConfigType
-
 
   /**
    * A setup config: used to set values before an observe.
