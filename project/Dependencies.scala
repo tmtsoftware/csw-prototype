@@ -4,8 +4,8 @@ import sbt._
 
 object Dependencies {
 
-  val scalaVersion = "2.11.1"
-  val akkaVersion = "2.3.2"
+  val scalaVersion = "2.11.2"
+  val akkaVersion = "2.3.6"
   val sprayVersion = "1.3.1-20140423"
   val hornetqVersion = "2.4.0.Final"
   //  val hornetqVersion = "2.5.0-SNAPSHOT"
@@ -23,11 +23,14 @@ object Dependencies {
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
   val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
+  val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.3"
   val typesafeConfig = "com.typesafe" % "config" % "1.2.0"
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.1"
+  val janino = "org.codehaus.janino" % "janino" % "2.7.6"
+  val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1"
 
   val sprayCan = "io.spray" %% "spray-can" % sprayVersion
   val sprayHttpx = "io.spray" %% "spray-httpx" % sprayVersion

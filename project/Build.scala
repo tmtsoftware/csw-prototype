@@ -1,3 +1,4 @@
+import com.typesafe.sbt.packager.Keys._
 import sbt._
 import Keys._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
@@ -18,7 +19,7 @@ object Build extends Build {
       test(scalaTest, akkaTestKit)
     )
 
-  // Shared utils
+  // Support classes
   lazy val support = project
     .settings(defaultSettings: _*)
     .settings(libraryDependencies ++=
@@ -35,6 +36,14 @@ object Build extends Build {
       test(scalaTest, akkaTestKit, junit)
     )
 
+  // Logging support, Log service (only includes config files so far)
+  lazy val log = project
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaSlf4j, logback, janino, logstashLogbackEncoder)
+    )
+
   // Key Value Store
   lazy val kvs = project
     .settings(defaultSettings: _*)
@@ -47,9 +56,12 @@ object Build extends Build {
   // Location Service
   lazy val loc = project
     .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
-    .settings(libraryDependencies ++= provided(akkaActor) ++
-    compile(akkaRemote, scalaLogging, logback) ++
-    test(scalaTest, akkaTestKit))
+    .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=loc"))
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaRemote) ++
+      test(scalaTest, akkaTestKit)
+    ) dependsOn log
 
   // Command Service
   lazy val cmd = project.enablePlugins(SbtTwirl)

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- A Logback config file that logs to the console and also to a file in JSON format for use by Logstash -->
+<!-- Logging to a file requires setting the system property 'application-name' -->
+<configuration>
+    <logger name="com.prosysopc.ua" level="INFO"/>
+    <logger name="org.opcfoundation.ua" level="ERROR"/>
+
+    <if condition='isDefined("application-name")'>
+        <then>
+            <appender name="stash" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>info</level>
+                </filter>
+                <file>${application-name}.log</file>
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${application-name}.log.%d{yyyy-MM-dd}</fileNamePattern>
+                    <maxHistory>30</maxHistory>
+                </rollingPolicy>
+                <!-- Use Logback encoder which creates JSON for use with Logstash -->
+                <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+            </appender>
+        </then>
+    </if>
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <root level="all">
+        <if condition='isDefined("application-name")'>
+            <then>
+                <appender-ref ref="stash"/>
+            </then>
+        </if>
+        <appender-ref ref="stdout"/>
+    </root>
+</configuration>

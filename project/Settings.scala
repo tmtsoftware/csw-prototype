@@ -11,7 +11,7 @@ import com.typesafe.sbt.packager.Keys._
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
-  val Version = "1.0"
+  val Version = "0.1-SNAPSHOT"
 
   val buildSettings = Defaults.defaultSettings ++ Seq(
     organization := "org.tmt",
