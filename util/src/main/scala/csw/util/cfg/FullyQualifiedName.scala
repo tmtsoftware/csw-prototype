@@ -1,4 +1,5 @@
 package csw.util.cfg
+import scala.language.implicitConversions
 
 object FullyQualifiedName {
   val SEPARATOR = '.'

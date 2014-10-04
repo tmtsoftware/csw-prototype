@@ -8,6 +8,7 @@ import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+import scala.language.postfixOps
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover

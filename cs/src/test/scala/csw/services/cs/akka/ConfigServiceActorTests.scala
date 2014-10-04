@@ -12,6 +12,7 @@ import scala.Some
 import scala.concurrent.Await
 import akka.pattern.ask
 import akka.util.Timeout
+import scala.language.postfixOps
 
 /**
  * Tests the Config Service actor

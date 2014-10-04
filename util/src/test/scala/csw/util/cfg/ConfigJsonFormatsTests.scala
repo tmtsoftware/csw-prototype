@@ -5,6 +5,7 @@ import csw.util.cfg.Configurations._
 import ConfigValues.ValueData._
 import spray.json._
 import csw.util.cfg.UnitsOfMeasure.{NoUnits, Meters, Deg}
+import scala.language.postfixOps
 
 class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
 

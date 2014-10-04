@@ -13,7 +13,7 @@ import com.typesafe.sbt.packager.Keys._
 object Settings {
   val Version = "0.1-SNAPSHOT"
 
-  val buildSettings = Defaults.defaultSettings ++ Seq(
+  val buildSettings = Seq(
     organization := "org.tmt",
     organizationName := "TMT",
     organizationHomepage := Some(url("http://www.tmt.org")),
@@ -37,7 +37,7 @@ object Settings {
 
   lazy val defaultSettings = buildSettings ++ Seq(
     // compile options
-    scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
+    scalacOptions ++= Seq("-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     javacOptions in Compile ++= Seq("-source", "1.7", "-target", "1.7", "-Xlint:unchecked", "-Xlint:deprecation")
   )
 
@@ -81,10 +81,14 @@ object Settings {
     ScalariformKeys.preferences in Test := formattingPreferences
   )
 
-  lazy val twirlSettings = SbtTwirl.projectSettings ++ Seq(
-    TwirlKeys.templateImports in Compile ++= Seq(
-      "csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus"
-    )
+//  lazy val twirlSettings = SbtTwirl.projectSettings ++ Seq(
+//    TwirlKeys.templateImports in Compile ++= Seq(
+//      "csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus"
+//    )
+//  )
+
+  lazy val twirlSettings = Seq(
+    TwirlKeys.templateImports += "csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus"
   )
 
   import scalariform.formatter.preferences._

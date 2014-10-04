@@ -1,6 +1,7 @@
 package csw.util.cfg
 
 import java.io.{ByteArrayInputStream, ObjectInputStream, ObjectOutputStream, ByteArrayOutputStream}
+import scala.language.implicitConversions
 
 import csw.util.cfg.ConfigValues.ValueData
 

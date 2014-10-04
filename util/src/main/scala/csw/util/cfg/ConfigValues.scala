@@ -1,4 +1,5 @@
 package csw.util.cfg
+import scala.language.implicitConversions
 
 /**
  * Defines configuration values (the dynamic contents of a configuration, as opposed to the fixed fields).

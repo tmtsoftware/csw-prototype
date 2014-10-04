@@ -7,6 +7,7 @@ package csw.support.coords
  */
 
 import java.text.DecimalFormat
+import scala.language.implicitConversions
 
 /**
  * An wrapper for angle. Normally angle would be stored in double
