@@ -37,8 +37,8 @@ object Settings {
 
   lazy val defaultSettings = buildSettings ++ Seq(
     // compile options
-    scalacOptions ++= Seq("-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
-    javacOptions in Compile ++= Seq("-source", "1.7", "-target", "1.7", "-Xlint:unchecked", "-Xlint:deprecation")
+    scalacOptions ++= Seq("-target:jvm-1.7", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
+    javacOptions in (Compile, compile) ++= Seq("-source", "1.7", "-target", "1.7", "-Xlint:unchecked", "-Xlint:deprecation")
   )
 
   // For standalone applications
