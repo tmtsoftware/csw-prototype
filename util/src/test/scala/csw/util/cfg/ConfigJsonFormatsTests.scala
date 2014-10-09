@@ -14,6 +14,7 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
       obsId = "2014-C2-4-44",
       "tcs.base.pos",
       "name" -> "m99",
+      "full.name" -> "xxx m99",
       "ra" -> (10.0 deg),
       "dec" -> 2.0.deg,
       "equinox" -> "J2000",
@@ -47,6 +48,7 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
     assert(config.prefix == "tcs.base.pos")
     assert(config.obsId == "2014-C2-4-44")
     assert(config("name").elems.head == "m99")
+    assert(config("full.name").elems.head == "xxx m99")
     assert(config("ra") == 10.0.deg)
     assert(config.get("dec").get.elems.head == 2.0)
     assert(config.get("xxx") == None)

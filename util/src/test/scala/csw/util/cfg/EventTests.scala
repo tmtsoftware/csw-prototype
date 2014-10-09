@@ -18,7 +18,8 @@ class EventTests extends FunSuite with EventJsonFormats {
 //    "nameTuple" -> ("aaa", "bbb", "ccc"), // tuple looses type info
     "intList" -> List(1, 2, 3).deg,
     "intVal" -> 22.meters,
-    "doubleVal" -> 3.14
+    "doubleVal" -> 3.14,
+    "some.other.name" -> "seps are OK"
   )
 
   val observeEvent = ObserveEvent(
@@ -39,6 +40,7 @@ class EventTests extends FunSuite with EventJsonFormats {
     assert(e("intVal").units == Meters)
     assert(e("doubleVal").elems.head == 3.14)
     assert(e("doubleVal").units == NoUnits)
+    assert(e("some.other.name").elems.head == "seps are OK")
   }
 
   test("Test converting an ObserveEvent to JSON and back again") {

@@ -7,8 +7,7 @@ object FullyQualifiedName {
   case class Fqn(fqn: String) {
     assert(fqn != null, "fqn can not be a null string")
 
-    lazy val prefix = Fqn.prefix(fqn)
-    lazy val name = Fqn.name(fqn)
+    lazy val (prefix, name) = Fqn.getPrefixName(fqn)
   }
 
   object Fqn {

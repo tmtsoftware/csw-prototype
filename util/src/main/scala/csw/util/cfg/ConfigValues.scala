@@ -82,10 +82,7 @@ object ConfigValues {
    */
   case class CValue[+A](trialName: String, data: ValueData[A] = ValueData.empty) {
 
-    import FullyQualifiedName.Fqn
-
-    //The following bit is to auto take off the name from an FQN
-    lazy val name = Fqn.name(trialName)
+    val name = trialName
 
     def apply(idx: Int) = data(idx)
 

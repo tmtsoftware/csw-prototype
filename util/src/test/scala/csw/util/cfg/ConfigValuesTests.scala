@@ -4,7 +4,6 @@ import csw.util.cfg.Configurations._
 import org.scalatest.{Matchers, FunSpec}
 import csw.util.cfg.ConfigValues.{ValueData, CValue}
 import csw.util.cfg.FullyQualifiedName.Fqn
-import csw.util.cfg.FullyQualifiedName.Fqn._
 import csw.util.cfg.UnitsOfMeasure.{Meters, NoUnits, Units}
 
 class ConfigValuesTests extends FunSpec with Matchers {
@@ -147,6 +146,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
   }
 
   describe("Test string rep for CValue") {
+    import Fqn._
     val t1 = CValue(fqn1.name, testUnits1, numbers1: _*)
     val toStringExpected = "name(1, 2, 3, 4, 5)[ms]"
     it("it sholud be correct") {
@@ -157,6 +157,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
 
   // Note: this is using apply from ValueData?
   describe("Create CValue with ValueData") {
+    import Fqn._
     val v1 = ValueData(numbers1, testUnits1)
     val t1 = CValue(fqn1.name, v1)
     it("it should have the correct fqn") {
@@ -198,10 +199,13 @@ class ConfigValuesTests extends FunSpec with Matchers {
     it("it should have the correct fqn") {
       t1.name should be(fqn3.name)
     }
+
+    // allan: changed to allow separators in names
     val t2 = CValue(fqn3)
-    it("it should be the name not full fqn") {
-      t2.name should be(fqn3.name)
+    it("it should be the full fqn") {
+      t2.name should be(fqn3)
     }
+
   }
 
   describe("Testing +: for CValue") {
@@ -489,6 +493,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
   }
 
   describe("Testing the ConfigList obsId function") {
+    import Fqn._
 
     // Create some data
     val c1 = CValue(fqn1.name)
@@ -530,6 +535,7 @@ class ConfigValuesTests extends FunSpec with Matchers {
   }
 
   describe("Testing the ConfigList with different config types") {
+    import Fqn._
 
     // Create some data
     val c1 = CValue(fqn1.name)
