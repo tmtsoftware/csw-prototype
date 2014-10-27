@@ -1,5 +1,6 @@
 package csw.services.cs.core
 
+import java.net.URI
 import java.util.Date
 import java.io.File
 import java.nio.file.{Paths, Files}
@@ -102,7 +103,7 @@ case class ConfigFileInfo(path: File, id: ConfigId, comment: String)
 case class GitConfigId(id: String) extends ConfigId
 
 /**
- * Represents the contents of a config file
+ * Represents the contents of a config file as a String
  */
 case class ConfigString(str: String) extends ConfigData {
   /**
@@ -110,9 +111,22 @@ case class ConfigString(str: String) extends ConfigData {
    */
   def getBytes: Array[Byte] = str.getBytes
 
-  // TODO: Note: maybe serializing the string would be safer here? (no charset handling)
+  // TODO: charset handling?
 
   override def toString: String = str
+}
+
+/**
+ * In this case the content of the file being managed is a URI pointing to the actual file.
+ * This can be used to store large binary files that do not change.
+ */
+case class ConfigUri(uri: URI) extends ConfigData {
+  /**
+   * @return a representation of the object as a byte array
+   */
+  def getBytes: Array[Byte] = uri.toString.getBytes
+
+  override def toString: String = uri.toString
 }
 
 /**

@@ -8,7 +8,6 @@ import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
 import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.core.ConfigString
-import scala.Some
 import scala.concurrent.Await
 import akka.pattern.ask
 import akka.util.Timeout
@@ -35,9 +34,6 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
   val comment2 = "update 1 comment"
   val comment3 = "update 2 comment"
 
-  // Note: Using blocking for this test, so we can compare return values easily.
-  // Applications should not need to block while waiting. See TestConfigServiceClient in this directory
-  // for a different way of doing it.
   test("Test the ConfigServiceActor, storing and retrieving some files") {
     // Use the test repository created above
     val manager = TestRepo.getConfigManager(gitRepoPrefix, create = false)(system.dispatcher)
@@ -161,7 +157,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
     assert(result.path == path)
     assert(result.configData.isSuccess)
     val option = result.configData.get
-    assert(!option.isEmpty)
+    assert(option.isDefined)
     assert(option.get.toString == contents)
   }
 

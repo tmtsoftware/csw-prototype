@@ -132,7 +132,7 @@ class GitConfigManager(val git: Git) extends ConfigManager with LazyLogging {
     if (!fileForPath(path).exists) {
       None
     } else {
-      if (!id.isEmpty) {
+      if (id.isDefined) {
         // return the file for the given id
         val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)
         Some(new ConfigBytes(git.getRepository.open(objId).getBytes))

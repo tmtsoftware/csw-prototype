@@ -5,7 +5,6 @@ import java.io.{File, FileNotFoundException, IOException}
 import csw.services.cs.core.ConfigString
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
-import scala.Some
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import akka.util.Timeout
@@ -75,12 +74,12 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
       assert(updateIdNull == null)
-      assert(!option1.isEmpty && option1.get.toString == contents3)
-      assert(!option2.isEmpty && option2.get.toString == contents1)
-      assert(!option3.isEmpty && option3.get.toString == contents2)
-      assert(!option4.isEmpty && option4.get.toString == contents3)
-      assert(!option5.isEmpty && option5.get.toString == contents1)
-      assert(!option6.isEmpty && option6.get.toString == contents1)
+      assert(option1.isDefined && option1.get.toString == contents3)
+      assert(option2.isDefined && option2.get.toString == contents1)
+      assert(option3.isDefined && option3.get.toString == contents2)
+      assert(option4.isDefined && option4.get.toString == contents3)
+      assert(option5.isDefined && option5.get.toString == contents1)
+      assert(option6.isDefined && option6.get.toString == contents1)
       assert(createIdNull == null)
 
       assert(historyList1.size == 3)
