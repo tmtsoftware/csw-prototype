@@ -1,12 +1,12 @@
 package csw.services.cs.akka
 
-import akka.actor._
 import java.io.File
-import scala.util.{Try, Success, Failure}
-import csw.services.cs.core._
-import csw.services.cs.core.ConfigFileHistory
-import scala.Option
+
+import akka.actor._
+import csw.services.cs.core.{ConfigFileHistory, _}
+
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 
 /**
@@ -17,7 +17,7 @@ object ConfigServiceActor {
   // Messages received by this actor
   sealed trait ConfigServiceRequest
 
-  case class CreateRequest(path: File, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
+  case class CreateRequest(path: File, configData: ConfigData, oversize: Boolean, comment: String = "") extends ConfigServiceRequest
 
   case class UpdateRequest(path: File, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
 
@@ -61,7 +61,7 @@ object ConfigServiceActor {
   def defaultConfigManager(system: ActorSystem): Future[NonBlockingConfigManager] = {
     import system.dispatcher
     val settings = Settings(system)
-    NonBlockingGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
+    NonBlockingGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
   }
 }
 
@@ -71,11 +71,11 @@ object ConfigServiceActor {
  */
 class ConfigServiceActor(configManager: NonBlockingConfigManager) extends Actor with ActorLogging {
 
-  import csw.services.cs.akka.ConfigServiceActor._
   import context.dispatcher
+  import csw.services.cs.akka.ConfigServiceActor._
 
   override def receive: Receive = {
-    case CreateRequest(path, configData, comment) => handleCreateRequest(sender(), path, configData, comment)
+    case CreateRequest(path, configData, oversize, comment) => handleCreateRequest(sender(), path, configData, oversize, comment)
     case UpdateRequest(path, configData, comment) => handleUpdateRequest(sender(), path, configData, comment)
     case GetRequest(path, id) => handleGetRequest(sender(), path, id)
     case ExistsRequest(path) => handleExistsRequest(sender(), path)
@@ -86,8 +86,8 @@ class ConfigServiceActor(configManager: NonBlockingConfigManager) extends Actor 
     case x => log.error(s"Received unknown message $x from ${sender()}")
   }
 
-  def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit =
-    configManager.create(path, configData, comment) onComplete {
+  def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit =
+    configManager.create(path, configData, oversize, comment) onComplete {
       case Success(configId) => replyTo ! CreateResult(path, Success(configId))
       case Failure(ex) => replyTo ! CreateResult(path, Failure(ex))
     }
@@ -98,11 +98,12 @@ class ConfigServiceActor(configManager: NonBlockingConfigManager) extends Actor 
       case Failure(ex) => replyTo ! UpdateResult(path, Failure(ex))
     }
 
-  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit =
+  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
     configManager.get(path, id) onComplete {
       case Success(configDataOpt) => replyTo ! GetResult(path, id, Success(configDataOpt))
       case Failure(ex) => replyTo ! GetResult(path, id, Failure(ex))
     }
+  }
 
 
   def handleExistsRequest(replyTo: ActorRef, path: File): Unit =

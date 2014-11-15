@@ -27,11 +27,12 @@ case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef
    *
    * @param path the config file path
    * @param configData the contents of the file
+   * @param oversize true if the file is large and requires special handling (external storage)
    * @param comment an optional comment to associate with this file
    * @return a Future wrapping a unique id that can be used to refer to the file
    */
-  def create(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
-    (configServiceActor ? CreateRequest(path, configData, comment))
+  def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
+    (configServiceActor ? CreateRequest(path, configData, oversize, comment))
       .mapTo[CreateResult].map(_.configId.get)
   }
 

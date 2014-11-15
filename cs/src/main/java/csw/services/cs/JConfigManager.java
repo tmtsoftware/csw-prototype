@@ -19,10 +19,11 @@ public interface JConfigManager {
      *
      * @param path       the config file path
      * @param configData the contents of the file
+     * @param oversize true if the file is large and requires special handling (external storage)
      * @param comment    a comment to associate with this file
      * @return a unique id that can be used to refer to the file
      */
-    public ConfigId create(File path, ConfigData configData, String comment);
+    public ConfigId create(File path, ConfigData configData, Boolean oversize, String comment);
 
     /**
      * Updates the config file with the given path and data and optional comment.

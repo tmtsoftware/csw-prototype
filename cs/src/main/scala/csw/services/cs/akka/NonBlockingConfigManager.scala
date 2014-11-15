@@ -18,11 +18,12 @@ case class NonBlockingConfigManager(manager: ConfigManager)(implicit dispatcher:
    *
    * @param path the config file path
    * @param configData the contents of the file
+   * @param oversize true if the file is large and requires special handling (external storage)
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def create(path: File, configData: ConfigData, comment: String = ""): Future[ConfigId] =
-    Future(manager.create(path, configData, comment))
+  def create(path: File, configData: ConfigData, oversize: Boolean = false, comment: String = ""): Future[ConfigId] =
+    Future(manager.create(path, configData, oversize, comment))
 
   /**
    * Updates the config file with the given path and data and optional comment.
@@ -91,9 +92,11 @@ object NonBlockingGitConfigManager {
    *
    * @param gitWorkDir top level directory to use for storing configuration files and the local git repository (under .git)
    * @param remoteRepo the URI of the remote, main repository
+   * @param gitOversizeStorage the URI of the place to store oversize files (The repo then contains the SHA-1 of the file)
    *
    * @return a wrapped GitConfigManager configured to use the given local and remote repositories
    */
-  def apply(gitWorkDir: File, remoteRepo: URI)(implicit dispatcher: ExecutionContextExecutor): Future[NonBlockingConfigManager] =
-    Future(NonBlockingConfigManager(GitConfigManager(gitWorkDir, remoteRepo)))
+  def apply(gitWorkDir: File, remoteRepo: URI, gitOversizeStorage: URI)
+           (implicit dispatcher: ExecutionContextExecutor): Future[NonBlockingConfigManager] =
+    Future(NonBlockingConfigManager(GitConfigManager(gitWorkDir, remoteRepo, gitOversizeStorage)))
 }

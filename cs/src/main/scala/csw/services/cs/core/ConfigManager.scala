@@ -1,9 +1,8 @@
 package csw.services.cs.core
 
-import java.net.URI
-import java.util.Date
 import java.io.File
-import java.nio.file.{Paths, Files}
+import java.nio.file.{Files, Paths}
+import java.util.Date
 
 /**
  * Defines an interface for storing and retrieving configuration information
@@ -16,10 +15,11 @@ trait ConfigManager {
    *
    * @param path the config file path
    * @param configData the contents of the file
+   * @param oversize true if the file is large and requires special handling (external storage)
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def create(path: File, configData: ConfigData, comment: String = ""): ConfigId
+  def create(path: File, configData: ConfigData, oversize: Boolean = false, comment: String = ""): ConfigId
 
   /**
    * Updates the config file with the given path and data and optional comment.
@@ -80,6 +80,11 @@ trait ConfigId {
  * Interface implemented by the configuration data objects being managed
  */
 trait ConfigData {
+//  /**
+//   * @return a stream of XXX TODO...
+//   */
+//  def getSource: Source[ByteString]
+
   /**
    * @return a representation of the object as a byte array
    */
@@ -117,19 +122,6 @@ case class ConfigString(str: String) extends ConfigData {
 }
 
 /**
- * In this case the content of the file being managed is a URI pointing to the actual file.
- * This can be used to store large binary files that do not change.
- */
-case class ConfigUri(uri: URI) extends ConfigData {
-  /**
-   * @return a representation of the object as a byte array
-   */
-  def getBytes: Array[Byte] = uri.toString.getBytes
-
-  override def toString: String = uri.toString
-}
-
-/**
  * Represents a configuration file
  */
 case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
@@ -144,23 +136,19 @@ case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
    * Should only be used for debugging info (no charset handling)
    * @return contents as string
    */
-  override def toString: String = {
-    new String(bytes)
-  }
+  override def toString: String = new String(bytes)
 }
 
 /**
  * Represents a configuration file
  */
 case class ConfigFile(file: File) extends ConfigData {
+  // Note: If we delay reading in the file, the contents could change before we read it!
+  val bytes = Files.readAllBytes(Paths.get(file.getPath))
   /**
    * @return a representation of the object as a byte array
    */
-  def getBytes: Array[Byte] = {
-    Files.readAllBytes(Paths.get(file.getPath))
-  }
+  def getBytes: Array[Byte] = bytes
 
-  override def toString: String = {
-    new String(Files.readAllBytes(Paths.get(file.getPath)))
-  }
+  override def toString: String = new String(bytes)
 }

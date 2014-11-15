@@ -4,9 +4,9 @@ import sbt._
 
 object Dependencies {
 
-  val scalaVersion = "2.11.2"
-  val akkaVersion = "2.3.6"
-  val sprayVersion = "1.3.1-20140423"
+  val scalaVersion = "2.11.4"
+  val akkaVersion = "2.3.7"
+  val sprayVersion = "1.3.2"
   val hornetqVersion = "2.4.0.Final"
   //  val hornetqVersion = "2.5.0-SNAPSHOT"
 
@@ -24,6 +24,8 @@ object Dependencies {
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
   val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+//  val akkaStream = "com.typesafe.akka" %% "akka-stream-experimental" % "0.9"
+
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.3"
   val typesafeConfig = "com.typesafe" % "config" % "1.2.0"
@@ -40,6 +42,7 @@ object Dependencies {
   val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r"
+//  val jsch = "com.jcraft" % "jsch" % "0.1.51"
 
   val redisScala = "com.etaty.rediscala" %% "rediscala" % "1.3.1"
 

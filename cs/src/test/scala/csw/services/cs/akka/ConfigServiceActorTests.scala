@@ -21,7 +21,6 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
   // Create temporary main (bare) and local git repos for testing
   val gitRepoPrefix = "test1"
-  TestRepo.getConfigManager(gitRepoPrefix, create = true)(system.dispatcher)
 
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")
@@ -35,8 +34,16 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
   val comment3 = "update 2 comment"
 
   test("Test the ConfigServiceActor, storing and retrieving some files") {
+    runTests(oversize = false)
+    runTests(oversize = true)
+  }
+
+  // Runs the tests for the config service, using the given oversize option.
+  def runTests(oversize: Boolean) : Unit = {
+    println(s"--- Testing config service: oversize = $oversize ---")
+
     // Use the test repository created above
-    val manager = TestRepo.getConfigManager(gitRepoPrefix, create = false)(system.dispatcher)
+    val manager = TestRepo.getNonBlockingConfigManager(gitRepoPrefix, create = true, system)
 
     // Create the actor
     val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
@@ -47,10 +54,10 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
       checkUpdateResultFailed(path1)
 
       // Add two files, then update the first file twice
-      configServiceActor ! CreateRequest(path1, new ConfigString(contents1), comment1)
+      configServiceActor ! CreateRequest(path1, new ConfigString(contents1), oversize, comment1)
       val createId1 = checkCreateResult(path1)
 
-      configServiceActor ! CreateRequest(path2, new ConfigString(contents1), comment1)
+      configServiceActor ! CreateRequest(path2, new ConfigString(contents1), oversize, comment1)
       val createId2 = checkCreateResult(path2)
 
       configServiceActor ! UpdateRequest(path1, new ConfigString(contents2), comment2)
@@ -60,7 +67,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
       val updateId2 = checkUpdateResult(path1)
 
       // Should throw exception if we try to create a file that already exists
-      configServiceActor ! CreateRequest(path1, new ConfigString(contents2), comment2)
+      configServiceActor ! CreateRequest(path1, new ConfigString(contents2), oversize, comment2)
       checkCreateResultFailed(path1)
 
       // Check that we can access each version
@@ -117,6 +124,8 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
       configServiceActor ! HistoryRequest(path2)
       checkHistoryResult(path2, 1, List(comment1))
+
+      system.stop(configServiceActor)
     }
   }
 

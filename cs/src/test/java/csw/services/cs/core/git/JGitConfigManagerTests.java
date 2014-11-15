@@ -1,11 +1,13 @@
 package csw.services.cs.core.git;
 
-import org.junit.*;
+import csw.services.cs.JConfigManager;
+import csw.services.cs.akka.TestRepo;
 import csw.services.cs.core.ConfigData;
 import csw.services.cs.core.ConfigFileHistory;
 import csw.services.cs.core.ConfigFileInfo;
 import csw.services.cs.core.ConfigId;
 import csw.services.cs.core.ConfigString;
+import org.junit.Test;
 
 import java.io.File;
 import java.util.List;
@@ -28,19 +30,13 @@ public class JGitConfigManagerTests {
     // Test creating a GitConfigManager, storing and retrieving some files
     @Test
     public void testGitConfigManager() {
+        runTests(false);
+        runTests(true);
+    }
 
-        String tmpDir = System.getProperty("java.io.tmpdir");
-        File gitDir = new File(tmpDir, "cstest");
-        File gitMainRepo = new File(tmpDir, "cstestMainRepo");
-        System.out.println("Local repo = " + gitDir + ", remote = " + gitMainRepo);
+    void runTests(Boolean oversize) {
+        JConfigManager manager = TestRepo.getJConfigManager();
 
-        // Delete the main and local test repositories (Only use this in test cases!)
-        GitConfigManager.deleteLocalRepo(gitMainRepo);
-        GitConfigManager.initBareRepo(gitMainRepo);
-        GitConfigManager.deleteLocalRepo(gitDir);
-
-        // create a new repository
-        JGitConfigManager manager = new JGitConfigManager(gitDir, gitMainRepo.toURI());
         if (manager.exists(path1)) {
             manager.delete(path1, "deleted");
         }
@@ -49,8 +45,8 @@ public class JGitConfigManagerTests {
         }
 
         // Add, then update the file twice
-        ConfigId createId1 = manager.create(path1, new ConfigString(contents1), comment1);
-        ConfigId createId2 = manager.create(path2, new ConfigString(contents1), comment1);
+        ConfigId createId1 = manager.create(path1, new ConfigString(contents1), oversize, comment1);
+        ConfigId createId2 = manager.create(path2, new ConfigString(contents1), oversize, comment1);
         ConfigId updateId1 = manager.update(path1, new ConfigString(contents2), comment2);
         ConfigId updateId2 = manager.update(path1, new ConfigString(contents3), comment3);
 
@@ -95,6 +91,7 @@ public class JGitConfigManagerTests {
                 throw new Error("Test failed for " + info);
             }
         }
+
     }
 }
 

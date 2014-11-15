@@ -19,8 +19,9 @@ object Settings extends ExtensionId[Settings] with ExtensionIdProvider {
 }
 
 class Settings(config: Config) extends Extension {
-  val gitMainRepository = new URI(subst(config.getString("csw.cs.git-main-repository")))
+  val gitMainRepository = new URI(config.getString("csw.cs.git-main-repository"))
   val gitLocalRepository = new File(subst(config.getString("csw.cs.git-local-repository")))
+  val gitOversizeStorage = new URI(config.getString("csw.cs.git-oversize-storage"))
 
   // Do any required substitution on the setting values
   def subst(s: String): String = {

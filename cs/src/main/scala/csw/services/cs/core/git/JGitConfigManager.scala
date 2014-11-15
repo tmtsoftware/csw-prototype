@@ -1,12 +1,13 @@
 package csw.services.cs.core.git
 
-import java.util
 import java.io.File
-import scala.collection.JavaConversions._
-import scala.Some
 import java.net.URI
-import csw.services.cs.core.{ConfigData, ConfigId, ConfigFileInfo, ConfigFileHistory}
+import java.{lang, util}
+
 import csw.services.cs.JConfigManager
+import csw.services.cs.core.{ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId}
+
+import scala.collection.JavaConversions._
 
 /**
  * Uses JGit to manage versions of configuration files.
@@ -14,11 +15,11 @@ import csw.services.cs.JConfigManager
  * Note: This version is for use by Java applications. Scala applications should use
  * [[csw.services.cs.core.git.GitConfigManager]].
  */
-class JGitConfigManager(gitWorkDir: File, remoteRepo: URI) extends JConfigManager {
-  private val manager = GitConfigManager(gitWorkDir, remoteRepo)
+case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI, gitOversizeStorage: URI) extends JConfigManager {
+  private val manager = GitConfigManager(gitWorkDir, remoteRepo, gitOversizeStorage)
 
-  override def create(path: File, configData: ConfigData, comment: String): ConfigId = {
-    manager.create(path, configData, comment)
+  override def create(path: File, configData: ConfigData, oversize: lang.Boolean, comment: String): ConfigId = {
+    manager.create(path, configData, oversize, comment)
   }
 
   override def update(path: File, configData: ConfigData, comment: String): ConfigId = {

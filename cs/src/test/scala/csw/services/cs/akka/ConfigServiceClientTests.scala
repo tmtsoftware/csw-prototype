@@ -30,10 +30,18 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
   val comment3 = "update 2 comment"
 
   test("Test the ConfigServiceClent, storing and retrieving some files") {
-    implicit val timeout = Timeout(5.seconds)
+    runTests(oversize = false)
+    runTests(oversize = true)
+  }
+
+  // Runs the tests for the config service, using the given oversize option.
+  def runTests(oversize: Boolean) : Unit = {
+    println(s"--- Testing config service: oversize = $oversize ---")
+
+    implicit val timeout = Timeout(55555.seconds)
 
     // create a test repository and use it to create the actor
-    val manager = TestRepo.getConfigManager("test2", create = true)(system.dispatcher)
+    val manager = TestRepo.getNonBlockingConfigManager("test2", create = true, system)
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
@@ -47,8 +55,8 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
       }
 
       // Add, then update the file twice
-      createId1 <- csClient.create(path1, new ConfigString(contents1), comment1)
-      createId2 <- csClient.create(path2, new ConfigString(contents1), comment1)
+      createId1 <- csClient.create(path1, new ConfigString(contents1), oversize, comment1)
+      createId2 <- csClient.create(path2, new ConfigString(contents1), oversize, comment1)
       updateId1 <- csClient.update(path1, new ConfigString(contents2), comment2)
       updateId2 <- csClient.update(path1, new ConfigString(contents3), comment3)
 
@@ -68,7 +76,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
       list <- csClient.list()
 
       // Should throw exception if we try to create a file that already exists
-      createIdNull <- csClient.create(path1, new ConfigString(contents2), comment2) recover {
+      createIdNull <- csClient.create(path1, new ConfigString(contents2), oversize, comment2) recover {
         case e: IOException => null
       }
     } yield {
@@ -89,7 +97,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
       assert(historyList1(1).comment == comment2)
       assert(historyList1(2).comment == comment3)
 
-      assert(list.size == 2 + 1) // +1 for REAME file added when creating the bare rep
+      assert(list.size == 2 + 1) // +1 for RENAME file added when creating the bare rep
       for (info <- list) {
         info.path match {
           case this.path1 => assert(info.comment == this.comment3)
@@ -97,7 +105,10 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
           case x => if (x.getName != "README") sys.error("Test failed for " + info)
         }
       }
-    }, 5.seconds)
+
+      system.stop(csActor)
+
+    }, timeout.duration)
   }
 
   override def afterAll(): Unit = {
