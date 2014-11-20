@@ -139,50 +139,50 @@ trait CommandServiceActor extends Actor with ActorLogging {
 
   // Initial state while waiting for queue and config actors to be ready
   def waitingForReady(queueActorReady: Boolean, configActorReady: Boolean): Receive = {
-    case Ready(ready) => checkIfReady(ready, queueActorReady, configActorReady)
+    case Ready(ready) ⇒ checkIfReady(ready, queueActorReady, configActorReady)
 
-    case s@Submit(config, submitter) =>
+    case s @ Submit(config, submitter) ⇒
       notReadyError(s, RunId(), submitter)
 
-    case s@SubmitWithRunId(config, submitter, runId) =>
+    case s @ SubmitWithRunId(config, submitter, runId) ⇒
       notReadyError(s, runId, submitter)
 
-    case s@QueueBypassRequest(config) =>
+    case s @ QueueBypassRequest(config) ⇒
       notReadyError(s, RunId(), sender())
 
-    case s@QueueBypassRequestWithRunId(config, submitter, runId) =>
+    case s @ QueueBypassRequestWithRunId(config, submitter, runId) ⇒
       notReadyError(s, runId, submitter)
 
-    case StatusRequest => handleStatusRequest(sender(), ready = false)
+    case StatusRequest ⇒ handleStatusRequest(sender(), ready = false)
 
-    case x => log.error(s"Not yet ready to receive message $x")
+    case x             ⇒ log.error(s"Not yet ready to receive message $x")
   }
 
   // Receive only the command server commands
   def receiveCommands: Receive = {
     // Queue related commands
-    case Submit(config, submitter) =>
+    case Submit(config, submitter) ⇒
       submit(SubmitWithRunId(config, submitter))
 
-    case s@SubmitWithRunId(config, submitter, runId) =>
+    case s @ SubmitWithRunId(config, submitter, runId) ⇒
       submit(s)
 
-    case QueueBypassRequest(config) =>
+    case QueueBypassRequest(config) ⇒
       queueBypassRequest(SubmitWithRunId(config, sender(), RunId()))
 
-    case QueueBypassRequestWithRunId(config, submitter, runId) =>
+    case QueueBypassRequestWithRunId(config, submitter, runId) ⇒
       queueBypassRequest(SubmitWithRunId(config, submitter, runId))
 
-    case s@QueueStop => commandQueueActor forward s
-    case s@QueuePause => commandQueueActor forward s
-    case s@QueueStart => commandQueueActor forward s
-    case s@QueueDelete(runId) => commandQueueActor forward s
+    case s @ QueueStop                ⇒ commandQueueActor forward s
+    case s @ QueuePause               ⇒ commandQueueActor forward s
+    case s @ QueueStart               ⇒ commandQueueActor forward s
+    case s @ QueueDelete(runId)       ⇒ commandQueueActor forward s
 
-    case configMessage: ConfigMessage => configActor forward configMessage
+    case configMessage: ConfigMessage ⇒ configActor forward configMessage
 
-    case StatusRequest => handleStatusRequest(sender(), ready = true)
+    case StatusRequest                ⇒ handleStatusRequest(sender(), ready = true)
 
-    case Ready(ready) => checkIfReady(ready, queueActorReady = true, configActorReady = true)
+    case Ready(ready)                 ⇒ checkIfReady(ready, queueActorReady = true, configActorReady = true)
   }
 
   // Logs an error message and report an error status if we receive a command
@@ -204,7 +204,6 @@ trait CommandServiceActor extends Actor with ActorLogging {
     // Start an actor to re-register when the location service restarts
     context.actorOf(LocationServiceRegisterActor.props(self, serviceId, configPathOpt, httpUri))
   }
-
 
   /**
    * Called when a command is submitted
@@ -230,12 +229,11 @@ trait CommandServiceActor extends Actor with ActorLogging {
   def handleStatusRequest(requester: ActorRef, ready: Boolean): Unit = {
     implicit val timeout = Timeout(5.seconds)
     for {
-      queueStatus <- (commandQueueActor ? StatusRequest).mapTo[ConfigQueueStatus]
+      queueStatus ← (commandQueueActor ? StatusRequest).mapTo[ConfigQueueStatus]
     } {
       requester ! CommandServiceStatus(self.path.name, ready, queueStatus, commandQueueControllerType)
     }
   }
-
 
   /**
    * Called when a Ready message is received: If the queue and config actors are ready, enter the ready state.

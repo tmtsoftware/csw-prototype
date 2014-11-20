@@ -5,7 +5,6 @@ import csw.services.cmd.akka.CommandServiceActor.StatusRequest
 import csw.util.cfg.Configurations._
 import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
 
-
 object CommandQueueActor {
 
   /**
@@ -54,7 +53,6 @@ object CommandQueueActor {
    */
   case class QueueDelete(runId: RunId) extends QueueMessage
 
-
   /**
    * The config at the front of the queue is removed and sent to the sender
    */
@@ -92,7 +90,7 @@ object CommandQueueActor {
  * @param commandStatusActor reference to the commandStatusActor
  */
 class CommandQueueActor(commandStatusActor: ActorRef)
-  extends Actor with ActorLogging {
+    extends Actor with ActorLogging {
 
   import CommandQueueActor._
 
@@ -110,51 +108,51 @@ class CommandQueueActor(commandStatusActor: ActorRef)
 
   // Initial behavior while waiting for the queue client and controller actor references on startup.
   def initializing: Receive = {
-    case s: SubmitWithRunId => queueSubmit(s)
-    case QueueClient(client) => initClient(client)
-    case QueueController(controller) => initController(controller)
-    case StatusRequest => sender() ! ConfigQueueStatus("waiting for init", queueMap, submitCount)
-    case x => unknownMessage(x, "waiting for queue client")
+    case s: SubmitWithRunId          ⇒ queueSubmit(s)
+    case QueueClient(client)         ⇒ initClient(client)
+    case QueueController(controller) ⇒ initController(controller)
+    case StatusRequest               ⇒ sender() ! ConfigQueueStatus("waiting for init", queueMap, submitCount)
+    case x                           ⇒ unknownMessage(x, "waiting for queue client")
   }
 
   // Behavior while the queue is in the stopped state
   def queueStopped: Receive = {
-    case submit: SubmitWithRunId =>
+    case submit: SubmitWithRunId ⇒
       commandStatusActor ! StatusUpdate(
         CommandStatus.Error(submit.runId, "Received submit while queue stopped"),
         submit.submitter)
-    case QueuePause => queuePause()
-    case QueueStart => queueStart()
-    case QueueStop =>
-    case Dequeue =>
-    case StatusRequest => sender() ! ConfigQueueStatus("stopped", queueMap, submitCount)
-    case x => unknownMessage(x, "stopped")
+    case QueuePause    ⇒ queuePause()
+    case QueueStart    ⇒ queueStart()
+    case QueueStop     ⇒
+    case Dequeue       ⇒
+    case StatusRequest ⇒ sender() ! ConfigQueueStatus("stopped", queueMap, submitCount)
+    case x             ⇒ unknownMessage(x, "stopped")
   }
 
   // Behavior while the queue is in the paused state
   def queuePaused: Receive = {
-    case s: SubmitWithRunId => queueSubmit(s)
-    case QueueStop => queueStop()
-    case QueuePause =>
-    case QueueStart => queueStart()
-    case QueueDelete(runId) => queueDelete(runId)
-    case Dequeue =>
-    case StatusRequest => sender() ! ConfigQueueStatus("paused", queueMap, submitCount)
-    case x => unknownMessage(x, "paused")
+    case s: SubmitWithRunId ⇒ queueSubmit(s)
+    case QueueStop          ⇒ queueStop()
+    case QueuePause         ⇒
+    case QueueStart         ⇒ queueStart()
+    case QueueDelete(runId) ⇒ queueDelete(runId)
+    case Dequeue            ⇒
+    case StatusRequest      ⇒ sender() ! ConfigQueueStatus("paused", queueMap, submitCount)
+    case x                  ⇒ unknownMessage(x, "paused")
   }
 
   // Behavior while the queue is in the started state
   def queueStarted: Receive = {
-    case s: SubmitWithRunId =>
+    case s: SubmitWithRunId ⇒
       queueSubmit(s)
       notifyQueueController()
-    case QueueStop => queueStop()
-    case QueuePause => queuePause()
-    case QueueStart =>
-    case QueueDelete(runId) => queueDelete(runId)
-    case Dequeue => dequeue()
-    case StatusRequest => sender() ! ConfigQueueStatus("started", queueMap, submitCount)
-    case x => unknownMessage(x, "started")
+    case QueueStop          ⇒ queueStop()
+    case QueuePause         ⇒ queuePause()
+    case QueueStart         ⇒
+    case QueueDelete(runId) ⇒ queueDelete(runId)
+    case Dequeue            ⇒ dequeue()
+    case StatusRequest      ⇒ sender() ! ConfigQueueStatus("started", queueMap, submitCount)
+    case x                  ⇒ unknownMessage(x, "started")
   }
 
   override def receive: Receive = initializing

@@ -1,12 +1,12 @@
 package csw.services.event
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ ActorLogging, Actor }
 
 /**
  * Adds the ability to publish events.
  */
 trait EventPublisher {
-  this: Actor with ActorLogging =>
+  this: Actor with ActorLogging ⇒
 
   // Connect to Hornetq server
   private val hq = connectToHornetQ(context.system)

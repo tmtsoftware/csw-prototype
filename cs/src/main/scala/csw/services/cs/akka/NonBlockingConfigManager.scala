@@ -1,7 +1,7 @@
 package csw.services.cs.akka
 
 import java.io.File
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ ExecutionContextExecutor, Future }
 import csw.services.cs.core._
 import csw.services.cs.core.ConfigFileInfo
 import java.net.URI
@@ -9,6 +9,11 @@ import csw.services.cs.core.git.GitConfigManager
 
 /**
  * Wraps access to a ConfigManager instance in Futures to avoid blocking.
+ *
+ * Note: Not really safe to use in the current implementation, since the working directory is static.
+ * Supposedly JGit methods that don't deal with the working dir are thread-safe, as long as you don't
+ * actually write any files. For now it seems safer to have a single config service actor managing a
+ * queue of commands that work on the local repository one at a time.
  */
 case class NonBlockingConfigManager(manager: ConfigManager)(implicit dispatcher: ExecutionContextExecutor) {
 
@@ -96,7 +101,6 @@ object NonBlockingGitConfigManager {
    *
    * @return a wrapped GitConfigManager configured to use the given local and remote repositories
    */
-  def apply(gitWorkDir: File, remoteRepo: URI, gitOversizeStorage: URI)
-           (implicit dispatcher: ExecutionContextExecutor): Future[NonBlockingConfigManager] =
+  def apply(gitWorkDir: File, remoteRepo: URI, gitOversizeStorage: URI)(implicit dispatcher: ExecutionContextExecutor): Future[NonBlockingConfigManager] =
     Future(NonBlockingConfigManager(GitConfigManager(gitWorkDir, remoteRepo, gitOversizeStorage)))
 }

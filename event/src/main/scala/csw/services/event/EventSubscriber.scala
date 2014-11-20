@@ -1,6 +1,6 @@
 package csw.services.event
 
-import akka.actor.{Props, ActorRef, ActorLogging, Actor}
+import akka.actor.{ Props, ActorRef, ActorLogging, Actor }
 import csw.util.cfg.Events.EventType
 import org.hornetq.api.core.client._
 import java.util.UUID
@@ -10,7 +10,7 @@ import java.util.UUID
  * The subscribed actor wil receive Event messages for the given channel.
  */
 trait EventSubscriber {
-  this: Actor with ActorLogging =>
+  this: Actor with ActorLogging ⇒
 
   // Connect to Hornetq server
   private val hq = connectToHornetQ(context.system)
@@ -52,7 +52,7 @@ trait EventSubscriber {
    * @param channels the channel for the events you want to subscribe to.
    */
   def subscribe(channels: String*): Unit = {
-    for (channel <- channels) {
+    for (channel ← channels) {
       map += (channel -> SubscriberInfo(channel))
     }
   }
@@ -64,8 +64,8 @@ trait EventSubscriber {
    */
   def unsubscribe(channels: String*): Unit = {
     for {
-      channel <- channels
-      info <- map.get(channel)
+      channel ← channels
+      info ← map.get(channel)
     } {
       map -= channel
       info.messageConsumer.close()
@@ -80,13 +80,13 @@ trait EventSubscriber {
 // while unpacking the message
 case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorLogging {
   override def receive: Receive = {
-    case message: ClientMessage =>
+    case message: ClientMessage ⇒
       try {
         val ar = Array.ofDim[Byte](message.getBodySize)
         message.getBodyBuffer.readBytes(ar)
         subscriber ! EventType(ar)
       } catch {
-        case ex: Throwable => log.error(ex, s"Error forwarding message to $subscriber: $message")
+        case ex: Throwable ⇒ log.error(ex, s"Error forwarding message to $subscriber: $message")
       }
   }
 }

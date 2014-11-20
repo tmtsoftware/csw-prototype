@@ -6,7 +6,7 @@ import csw.services.cs.core._
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
-import csw.services.cs.akka.ConfigServiceActor._
+import csw.services.cs.akka.NonBlockingConfigServiceActor._
 import csw.services.cs.core.ConfigString
 import scala.concurrent.Await
 import akka.pattern.ask
@@ -46,7 +46,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
     val manager = TestRepo.getNonBlockingConfigManager(gitRepoPrefix, create = true, system)
 
     // Create the actor
-    val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
+    val configServiceActor = system.actorOf(NonBlockingConfigServiceActor.props(manager), name = "configService")
 
     within(10 seconds) {
       // Should throw exception if we try to update a file that does not exist

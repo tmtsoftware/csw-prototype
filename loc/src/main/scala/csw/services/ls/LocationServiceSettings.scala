@@ -1,6 +1,6 @@
 package csw.services.ls
 
-import akka.actor.{ActorSystem, Extension, ExtensionKey}
+import akka.actor.{ ActorSystem, Extension, ExtensionKey }
 
 object LocationServiceSettings extends ExtensionKey[LocationServiceSettings]
 

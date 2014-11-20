@@ -2,10 +2,10 @@ package csw.services.cs.core.git
 
 import java.io.File
 import java.net.URI
-import java.{lang, util}
+import java.{ lang, util }
 
 import csw.services.cs.JConfigManager
-import csw.services.cs.core.{ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId}
+import csw.services.cs.core.{ ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId }
 
 import scala.collection.JavaConversions._
 

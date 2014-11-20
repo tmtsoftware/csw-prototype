@@ -1,6 +1,6 @@
 package csw.services.cmd.akka
 
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
 
 object OneAtATimeCommandQueueControllerActor {
   /**
@@ -10,7 +10,6 @@ object OneAtATimeCommandQueueControllerActor {
   def props(commandQueueActor: ActorRef, commandStatusActor: ActorRef): Props =
     Props(classOf[OneAtATimeCommandQueueControllerActor], commandQueueActor, commandStatusActor)
 }
-
 
 /**
  * Controls how configs are taken from the command queue.
@@ -34,20 +33,20 @@ class OneAtATimeCommandQueueControllerActor(commandQueueActor: ActorRef,
   // Then we switch to waiting for the command status.
   // The count is used to keep track of work available message received while waiting for the command status
   def waitingForWork(count: Int): Receive = {
-    case QueueWorkAvailable =>
+    case QueueWorkAvailable ⇒
       commandQueueActor ! Dequeue
       context become waitingForStatus(count)
 
-    case commandStatus: CommandStatus => // Should not happen, unless actor was restarted
+    case commandStatus: CommandStatus ⇒ // Should not happen, unless actor was restarted
   }
 
   // State where we are waiting for the command status.
   // The count is used to keep track of work available message received while waiting for the command status
   def waitingForStatus(count: Int): Receive = {
-    case QueueWorkAvailable =>
+    case QueueWorkAvailable ⇒
       context become waitingForStatus(count + 1)
 
-    case commandStatus: CommandStatus =>
+    case commandStatus: CommandStatus ⇒
       if (commandStatus.done) {
         if (count <= 1) commandQueueActor ! Dequeue
         context become waitingForWork(count - 1)

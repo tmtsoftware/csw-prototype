@@ -24,8 +24,9 @@ object Dependencies {
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
   val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
-//  val akkaStream = "com.typesafe.akka" %% "akka-stream-experimental" % "0.9"
-
+  // Akka streams (experimental)
+  val akkaStream = "com.typesafe.akka" %% "akka-stream-experimental" % "0.11"
+  val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % "0.11"
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.3"
   val typesafeConfig = "com.typesafe" % "config" % "1.2.0"
@@ -42,14 +43,11 @@ object Dependencies {
   val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r"
-//  val jsch = "com.jcraft" % "jsch" % "0.1.51"
 
   val redisScala = "com.etaty.rediscala" %% "rediscala" % "1.3.1"
 
   val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion
-  // XXX TEMP FIX (http://stackoverflow.com/questions/21882100/adding-hornetq-dependency-in-sbt-gives-resolution-failure-for-hornetq-native-n)
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
-  //  val hornetqNative  = "org.hornetq"                    % "hornetq-native"        % hornetqVersion from s"${Path.userHome.asFile.toURI.toURL}.m2/repository/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
 
   val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.5.0"
 

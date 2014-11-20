@@ -11,7 +11,6 @@ import csw.services.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
 import csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus
 import akka.actor.OneForOneStrategy
 
-
 /**
  * Defines helper methods for implementing command service actor clients.
  */
@@ -30,9 +29,8 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
   // If there is an error in one of the monitor actors, stop it, but not the others
   override def supervisorStrategy: SupervisorStrategy =
     OneForOneStrategy() {
-      case _ => SupervisorStrategy.Stop
+      case _ ⇒ SupervisorStrategy.Stop
     }
-
 
   // creates a new CommandServiceMonitor actor to listen for status messages for the given runId
   private def newMonitorFor(runId: RunId): ActorRef = {
@@ -48,7 +46,6 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
   private def monitorName(runId: RunId): String = {
     s"CommandServiceMonitor-${runId.id}"
   }
-
 
   /**
    * Handles a command submit and returns the runId, which can be used to request the command status.
@@ -91,9 +88,9 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
     // If it timed out and the actor quit, do nothing (This case is handled by the caller).
     log.debug(s"Checking status for $runId")
     getMonitorFor(runId) match {
-      case Some(monitor) =>
+      case Some(monitor) ⇒
         monitor ! completer
-      case None =>
+      case None ⇒
         completer.complete(
           Some(CommandStatus.Error(runId,
             "Unknown runId: Request may have timed out").asInstanceOf[CommandStatus]))
@@ -182,7 +179,7 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
     // Fill in the variables in the Twirl (Play) template and return the resulting HTML page
     // See src/main/twirl/csw/services/cmd/index.scala.html
     for {
-      status <- (commandServiceActor ? StatusRequest).mapTo[CommandServiceStatus]
+      status ← (commandServiceActor ? StatusRequest).mapTo[CommandServiceStatus]
     } yield csw.services.cmd.html.index(status).toString()
   }
 }

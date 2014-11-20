@@ -2,9 +2,9 @@ package csw.services.cs.akka
 
 import scala.concurrent.Future
 import akka.pattern.ask
-import akka.actor.{ActorSystem, ActorRef}
+import akka.actor.{ ActorSystem, ActorRef }
 import akka.util.Timeout
-import ConfigServiceActor._
+import NonBlockingConfigServiceActor._
 import java.io.File
 import csw.services.cs.core._
 
@@ -16,8 +16,7 @@ import csw.services.cs.core._
  * @param configServiceActor the config service actor reference to use
  * @param timeout amount of time to wait for config service operations to complete
  */
-case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef)
-                              (implicit timeout: Timeout) {
+case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef)(implicit timeout: Timeout) {
 
   import system.dispatcher
 

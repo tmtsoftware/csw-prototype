@@ -1,10 +1,9 @@
 package csw.services.cmd.akka
 
-import akka.actor.{ActorLogging, Actor, ActorRef}
+import akka.actor.{ ActorLogging, Actor, ActorRef }
 import scala.util.Try
 import csw.util.cfg.Configurations._
 import akka.actor.Terminated
-
 
 object ConfigActor {
 
@@ -67,7 +66,6 @@ object ConfigActor {
 
 }
 
-
 /**
  * Command service targets can extend this class, which defines
  * methods for implementing the standard configuration control messages.
@@ -86,17 +84,17 @@ trait ConfigActor extends Actor with ActorLogging {
    * Messages received in the normal state.
    */
   def receiveConfigs: Receive = {
-    case s: SubmitWithRunId => submit(s)
-    case ConfigCancel(runId) => cancel(runId)
-    case ConfigAbort(runId) => abort(runId)
-    case ConfigPause(runId) => pause(runId)
-    case ConfigResume(runId) => resume(runId)
+    case s: SubmitWithRunId  ⇒ submit(s)
+    case ConfigCancel(runId) ⇒ cancel(runId)
+    case ConfigAbort(runId)  ⇒ abort(runId)
+    case ConfigPause(runId)  ⇒ pause(runId)
+    case ConfigResume(runId) ⇒ resume(runId)
 
-    case ConfigGet(config) => query(config, sender())
-    case ConfigPut(config) => internalConfig(config)
+    case ConfigGet(config)   ⇒ query(config, sender())
+    case ConfigPut(config)   ⇒ internalConfig(config)
 
     // An actor was terminated (normal when done)
-    case Terminated(actor) => terminated(actor)
+    case Terminated(actor)   ⇒ terminated(actor)
   }
 
   /**

@@ -10,7 +10,7 @@ object CommandServiceClientHelper {
    * Holds a function that completes a request when given an optional CommandStatus
    * (used for long polling of command status while a command is running).
    */
-  case class CommandStatusCompleter(complete: Option[CommandStatus] => Unit)
+  case class CommandStatusCompleter(complete: Option[CommandStatus] ⇒ Unit)
 
 }
 

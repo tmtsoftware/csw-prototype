@@ -1,6 +1,6 @@
 package csw.util.cfg
 
-import java.io.{ByteArrayInputStream, ObjectInputStream, ObjectOutputStream, ByteArrayOutputStream}
+import java.io.{ ByteArrayInputStream, ObjectInputStream, ObjectOutputStream, ByteArrayOutputStream }
 import scala.language.implicitConversions
 
 import csw.util.cfg.ConfigValues.ValueData
@@ -52,7 +52,7 @@ object Configurations {
 
     lazy val size = values.size
 
-    lazy val names: Set[String] = values.map(c => c.name)
+    lazy val names: Set[String] = values.map(c ⇒ c.name)
 
     /**
      * Returns a new instance including the given value
@@ -138,19 +138,17 @@ object Configurations {
 
   implicit def listToSetupConfigList[A <: SetupConfig](l: List[A]): SetupConfigListWrapper[A] = SetupConfigListWrapper(l)
 
-
   object ConfigList {
 
     // A filter type for various kinds of Configs
-    type ConfigFilter[A] = A => Boolean
+    type ConfigFilter[A] = A ⇒ Boolean
 
     // XXX may need to rethink this and access only as a queue, one at a time, since config list may include Wait and Observe configs
-    val prefixStartsWithFilter: String => ConfigFilter[SetupConfig] = query => sc => sc.prefix.startsWith(query)
-    val prefixContainsFilter: String => ConfigFilter[SetupConfig] = query => sc => sc.prefix.contains(query)
+    val prefixStartsWithFilter: String ⇒ ConfigFilter[SetupConfig] = query ⇒ sc ⇒ sc.prefix.startsWith(query)
+    val prefixContainsFilter: String ⇒ ConfigFilter[SetupConfig] = query ⇒ sc ⇒ sc.prefix.contains(query)
 
     def apply(configs: ConfigType*) = new ConfigListWrapper(configs.toList)
   }
-
 
   /**
    * Adds methods to a list of setup configs
@@ -170,15 +168,15 @@ object Configurations {
 
     import ConfigList._
 
-    lazy val prefixes: Set[String] = onlySetupConfigs.map(c => c.prefix).toSet
+    lazy val prefixes: Set[String] = onlySetupConfigs.map(c ⇒ c.prefix).toSet
 
-    lazy val obsIds: Set[String] = configs.map(sc => sc.obsId).toSet
+    lazy val obsIds: Set[String] = configs.map(sc ⇒ sc.obsId).toSet
 
-    lazy val onlySetupConfigs: SetupConfigList = configs.collect { case sc: SetupConfig => sc}
+    lazy val onlySetupConfigs: SetupConfigList = configs.collect { case sc: SetupConfig ⇒ sc }
 
-    lazy val onlyWaitConfigs: List[WaitConfig] = configs.collect { case sc: WaitConfig => sc}
+    lazy val onlyWaitConfigs: List[WaitConfig] = configs.collect { case sc: WaitConfig ⇒ sc }
 
-    lazy val onlyObserveConfigs: List[ObserveConfig] = configs.collect { case sc: ObserveConfig => sc}
+    lazy val onlyObserveConfigs: List[ObserveConfig] = configs.collect { case sc: ObserveConfig ⇒ sc }
 
     // XXX risk of skipping over WAIT and Observe configs?
     private def select(f: ConfigFilter[SetupConfig]): SetupConfigList = onlySetupConfigs.select(f)
@@ -187,8 +185,8 @@ object Configurations {
 
     def prefixStartsWith(query: Option[String]): SetupConfigList =
       query match {
-        case None => onlySetupConfigs
-        case Some(q) => select(prefixStartsWithFilter(q))
+        case None    ⇒ onlySetupConfigs
+        case Some(q) ⇒ select(prefixStartsWithFilter(q))
       }
 
     def prefixContains(query: String): SetupConfigList = select(prefixContainsFilter(query))
@@ -200,5 +198,4 @@ object Configurations {
   }
 
 }
-
 

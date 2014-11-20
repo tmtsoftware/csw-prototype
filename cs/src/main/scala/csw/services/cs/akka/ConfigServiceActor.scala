@@ -3,14 +3,22 @@ package csw.services.cs.akka
 import java.io.File
 
 import akka.actor._
-import csw.services.cs.core.{ConfigFileHistory, _}
+import csw.services.cs.core.git.GitConfigManager
+import csw.services.cs.core.{ ConfigFileHistory, _ }
 
-import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-
+import scala.util.Try
 
 /**
- * Defines apply methods for creating a ConfigServiceActor instance
+ * Config service actor.
+ *
+ * Note: In this implementation, you should have a single config service actor managing a
+ * queue of commands that work on a single local repository, one command at a time.
+ * This is because the current implementation reads and writes file to the working directory.
+ * This has the advantage of being a cache for files, so they don't always have to
+ * be copied from the server. While it might be possible to avoid reading and writing files
+ * in the working directory using lower level JGit commands, it would still be necessary to
+ * have a single config service actor per local repository to avoid potential concurrency
+ * issues (Thread-safety might work within the JVM, but not with multiple applications at once).
  */
 object ConfigServiceActor {
 
@@ -51,17 +59,16 @@ object ConfigServiceActor {
   /**
    * Use this Props instance to initialize with the given ConfigManager
    */
-  def props(configManager: NonBlockingConfigManager): Props =
+  def props(configManager: ConfigManager): Props =
     Props(classOf[ConfigServiceActor], configManager)
 
   /**
    * Returns the default config manager, using the configured settings (see resources/reference.conf).
    * @param system the caller's actor system, used to access the settings
    */
-  def defaultConfigManager(system: ActorSystem): Future[NonBlockingConfigManager] = {
-    import system.dispatcher
-    val settings = Settings(system)
-    NonBlockingGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
+  def defaultConfigManager(system: ActorSystem): ConfigManager = {
+    val settings = ConfigServiceSettings(system)
+    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
   }
 }
 
@@ -69,65 +76,40 @@ object ConfigServiceActor {
  * An Akka actor class implementing the Config Service.
  * @param configManager the configManager to use (See [[ConfigServiceActor.defaultConfigManager]])
  */
-class ConfigServiceActor(configManager: NonBlockingConfigManager) extends Actor with ActorLogging {
+class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorLogging {
 
-  import context.dispatcher
   import csw.services.cs.akka.ConfigServiceActor._
 
   override def receive: Receive = {
-    case CreateRequest(path, configData, oversize, comment) => handleCreateRequest(sender(), path, configData, oversize, comment)
-    case UpdateRequest(path, configData, comment) => handleUpdateRequest(sender(), path, configData, comment)
-    case GetRequest(path, id) => handleGetRequest(sender(), path, id)
-    case ExistsRequest(path) => handleExistsRequest(sender(), path)
-    case DeleteRequest(path, comment) => handleDeleteRequest(sender(), path, comment)
-    case ListRequest => handleListRequest(sender())
-    case HistoryRequest(path) => handleHistoryRequest(sender(), path)
+    case CreateRequest(path, configData, oversize, comment) ⇒ handleCreateRequest(sender(), path, configData, oversize, comment)
+    case UpdateRequest(path, configData, comment) ⇒ handleUpdateRequest(sender(), path, configData, comment)
+    case GetRequest(path, id) ⇒ handleGetRequest(sender(), path, id)
+    case ExistsRequest(path) ⇒ handleExistsRequest(sender(), path)
+    case DeleteRequest(path, comment) ⇒ handleDeleteRequest(sender(), path, comment)
+    case ListRequest ⇒ handleListRequest(sender())
+    case HistoryRequest(path) ⇒ handleHistoryRequest(sender(), path)
 
-    case x => log.error(s"Received unknown message $x from ${sender()}")
+    case x ⇒ log.error(s"Received unknown message $x from ${sender()}")
   }
 
   def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit =
-    configManager.create(path, configData, oversize, comment) onComplete {
-      case Success(configId) => replyTo ! CreateResult(path, Success(configId))
-      case Failure(ex) => replyTo ! CreateResult(path, Failure(ex))
-    }
+    replyTo ! CreateResult(path, Try(configManager.create(path, configData, oversize, comment)))
 
   def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit =
-    configManager.update(path, configData, comment) onComplete {
-      case Success(configId) => replyTo ! UpdateResult(path, Success(configId))
-      case Failure(ex) => replyTo ! UpdateResult(path, Failure(ex))
-    }
+    replyTo ! UpdateResult(path, Try(configManager.update(path, configData, comment)))
 
-  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
-    configManager.get(path, id) onComplete {
-      case Success(configDataOpt) => replyTo ! GetResult(path, id, Success(configDataOpt))
-      case Failure(ex) => replyTo ! GetResult(path, id, Failure(ex))
-    }
-  }
-
+  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit =
+    replyTo ! GetResult(path, id, Try(configManager.get(path, id)))
 
   def handleExistsRequest(replyTo: ActorRef, path: File): Unit =
-    configManager.exists(path) onComplete {
-      case Success(bool) => replyTo ! ExistsResult(path, Success(bool))
-      case Failure(ex) => replyTo ! ExistsResult(path, Failure(ex))
-    }
-
+    replyTo ! ExistsResult(path, Try(configManager.exists(path)))
 
   def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit =
-    configManager.delete(path, comment) onComplete {
-      case Success(u) => replyTo ! DeleteResult(path, Success(u))
-      case Failure(ex) => replyTo ! DeleteResult(path, Failure(ex))
-    }
+    replyTo ! DeleteResult(path, Try(configManager.delete(path, comment)))
 
   def handleListRequest(replyTo: ActorRef): Unit =
-    configManager.list() onComplete {
-      case Success(list) => replyTo ! ListResult(Success(list))
-      case Failure(ex) => replyTo ! ListResult(Failure(ex))
-    }
+    replyTo ! ListResult(Try(configManager.list()))
 
   def handleHistoryRequest(replyTo: ActorRef, path: File): Unit =
-    configManager.history(path) onComplete {
-      case Success(list) => replyTo ! HistoryResult(path, Success(list))
-      case Failure(ex) => replyTo ! HistoryResult(path, Failure(ex))
-    }
+    replyTo ! HistoryResult(path, Try(configManager.history(path)))
 }

@@ -13,7 +13,7 @@ object Sequencer extends App {
     override def createInterpreter(): Unit = {
       super.createInterpreter()
       readInit()
-      args.foreach(f => readFile(f))
+      args.foreach(f ⇒ readFile(f))
     }
 
     // Reads resources/Init.scala, which adds imports for use in the shell

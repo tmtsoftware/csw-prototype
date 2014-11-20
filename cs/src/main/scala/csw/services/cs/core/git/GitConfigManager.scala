@@ -1,16 +1,16 @@
 package csw.services.cs.core.git
 
-import java.io.{File, FileNotFoundException, IOException}
+import java.io.{ File, FileNotFoundException, IOException }
 import java.net.URI
-import java.nio.file.{StandardCopyOption, Files}
+import java.nio.file.{ StandardCopyOption, Files }
 import java.util.Date
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.cs.core.{GitConfigId, _}
+import csw.services.cs.core.{ GitConfigId, _ }
 import net.codejava.security.HashGeneratorUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib._
-import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
+import org.eclipse.jgit.revwalk.{ RevCommit, RevWalk }
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.treewalk.TreeWalk
 
@@ -45,6 +45,7 @@ object GitConfigManager {
       if (!result.isSuccessful) throw new IOException(result.toString)
       new GitConfigManager(git, gitOversizeStorage)
     } else {
+      gitWorkDir.mkdirs()
       val git = Git.cloneRepository.setDirectory(gitWorkDir).setURI(remoteRepo.toString).call
       new GitConfigManager(git, gitOversizeStorage)
     }
@@ -62,7 +63,7 @@ object GitConfigManager {
 
     if (dir.isDirectory) {
       dir.list.foreach {
-        filePath =>
+        filePath ⇒
           val file = new File(dir, filePath)
           if (file.isDirectory) {
             deleteDirectoryRecursively(file)
@@ -192,8 +193,8 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
   // Returns the contents of the given version of the file, if found
   private def getConfigData(path: File, id: Option[ConfigId]): Option[ConfigData] = {
     val file = fileForPath(path)
-    // XXX We could check if the file is in the remote repo, but ?
     if (!file.exists) {
+      // assumes git pull was done, so file should be in working dir
       None
     } else {
       if (id.isDefined) {
@@ -206,7 +207,6 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
       }
     }
   }
-
 
   // Returns a list containing all known configuration files by walking the Git tree recursively and
   // collecting the resulting file info.
@@ -292,7 +292,7 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
     if (!result.isSuccessful) throw new IOException(result.toString)
   }
 
-    // Returns the absolute path of the file in the Git repository working tree
+  // Returns the absolute path of the file in the Git repository working tree
   private def fileForPath(path: File): File = new File(git.getRepository.getWorkTree, path.getPath)
 
   // Writes the given data to the given file (Note: The Files class is new in java1.7)
@@ -313,13 +313,11 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
   //      .call
   //  }
 
-
   // File used to store the SHA-1 of the actual file, if oversized.
   private def shaFile(file: File): File = new File(s"${file.getPath}.sha1")
 
   // Inverse of shaFile
   private def origFile(file: File): File = if (file.getPath.endsWith(".sha1")) new File(file.getPath.dropRight(5)) else file
-
 
   // True if the .sha1 file exists, meaning the file needs special oversize handling.
   // Note: We only check if it exists in the working directory, not the repository.
@@ -368,15 +366,15 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
     writeToFile(file, configData)
     val sha1 = HashGeneratorUtils.generateSHA1(file)
     // XXX TODO compare SHA-1 to existing one at this point and return if same
-//    if (sha1 == new String(Files.readAllBytes(sha1File.toPath))) {...}
+    //    if (sha1 == new String(Files.readAllBytes(sha1File.toPath))) {...}
     copyFileToServer(file, sha1)
     update(shaFile(path), ConfigString(sha1), comment)
   }
 
   private def getOversize(path: File, id: Option[ConfigId]): Option[ConfigData] = {
     get(shaFile(path), id) match {
-      case None => None
-      case Some(configData) =>
+      case None ⇒ None
+      case Some(configData) ⇒
         val sha1 = configData.toString
         val file = fileForPath(path)
         if (!file.exists() || (sha1 != HashGeneratorUtils.generateSHA1(file))) {
@@ -396,14 +394,14 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
    */
   private def copyFileToServer(file: File, name: String): Unit = {
     gitOversizeStorage.getScheme match {
-      case "file" =>
+      case "file" ⇒
         val dir = new File(gitOversizeStorage.getPath)
         val f = new File(dir, name)
         if (!f.exists()) Files.copy(file.toPath, f.toPath)
 
-        // XXX FIXME TODO: add sftp, maybe other schemes if needed (http)
-//      case "sftp" => val jsch = new JSch()
-      case x => throw new RuntimeException(s"$x is not supported here")
+      // XXX FIXME TODO: add sftp, maybe other schemes if needed (http)
+      //      case "sftp" => val jsch = new JSch()
+      case x ⇒ throw new RuntimeException(s"$x is not supported here")
     }
   }
 
@@ -416,7 +414,7 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
    */
   private def copyFileFromServer(file: File, name: String): Unit = {
     gitOversizeStorage.getScheme match {
-      case "file" =>
+      case "file" ⇒
         val dir = new File(gitOversizeStorage.getPath)
         val f = new File(dir, name)
         if (f.exists()) {
@@ -426,7 +424,7 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
 
       // XXX FIXME TODO: add sftp, maybe other schemes if needed (http)
       //      case "sftp" => val jsch = new JSch()
-      case x => throw new RuntimeException(s"$x is not supported here")
+      case x ⇒ throw new RuntimeException(s"$x is not supported here")
     }
   }
 

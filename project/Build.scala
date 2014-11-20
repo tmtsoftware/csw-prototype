@@ -1,14 +1,14 @@
-import com.typesafe.sbt.packager.Keys._
-import sbt._
-import Keys._
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import play.twirl.sbt.SbtTwirl
+import sbt.Keys._
+import sbt._
+import com.typesafe.sbt.packager.Keys._
 
 // This is the top level build object used by sbt.
 object Build extends Build {
 
-  import Settings._
   import Dependencies._
+  import Settings._
 
   // Shared utils
   lazy val util = project
@@ -29,12 +29,13 @@ object Build extends Build {
 
   // Config Service
   lazy val cs = project
-    .settings(defaultSettings: _*)
+    .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
+    .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(jgit, scalaLogging, logback) ++
+      compile(akkaRemote, jgit, scalaLogging, logback) ++
       test(scalaTest, akkaTestKit, junit)
-    ) dependsOn util
+    ) dependsOn(log, util)
 
   // Logging support, Log service (only includes config files so far)
   lazy val log = project
@@ -56,12 +57,11 @@ object Build extends Build {
   // Location Service
   lazy val loc = project
     .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
-    .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=loc"))
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(akkaRemote) ++
       test(scalaTest, akkaTestKit)
-    ) dependsOn log
+    ) dependsOn(log, util)
 
   // Command Service
   lazy val cmd = project.enablePlugins(SbtTwirl)
@@ -113,4 +113,14 @@ object Build extends Build {
       compile(akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++
       test(scalaLogging, logback)
     ) dependsOn(pkg, cmd, loc, util)
+
+  // Build the config service annex application
+  lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("apps/configServiceAnnex"))
+    .settings(packageSettings("CSW Config Service Annex", "Store/retrieve large files for Config Service"): _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaRemote, akkaStream, akkaHttp) ++
+      test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
+    ) dependsOn(loc, util)
+
 }

@@ -1,7 +1,7 @@
 package csw.services
 
 import csw.util.cfg.Events.EventType
-import org.hornetq.api.core.client.{ServerLocator, ClientSessionFactory, HornetQClient, ClientSession}
+import org.hornetq.api.core.client.{ ServerLocator, ClientSessionFactory, HornetQClient, ClientSession }
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory
 import scala.collection.JavaConverters._

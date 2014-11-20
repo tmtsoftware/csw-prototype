@@ -1,10 +1,10 @@
 package csw.services.cmd.spray
 
-import csw.services.cmd.akka.{CommandStatus, RunId}
+import csw.services.cmd.akka.{ CommandStatus, RunId }
 import csw.util.cfg.ConfigJsonFormats
 import csw.util.cfg.Configurations._
 import spray.client.pipelining._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import spray.http.HttpResponse
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -33,7 +33,6 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with ConfigJson
    * required Akka execution context
    */
   implicit val dispatcher: ExecutionContext
-
 
   /**
    * Posts a submit command with the given configuration
@@ -112,7 +111,7 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with ConfigJson
    * @return the future command status
    */
   def pollCommandStatus(runId: RunId, maxAttempts: Int = 10): Future[CommandStatus] = {
-    val f = for (commandStatus <- getCommandStatus(runId)) yield {
+    val f = for (commandStatus ← getCommandStatus(runId)) yield {
       if (commandStatus.done) {
         Future.successful(commandStatus)
       } else if (maxAttempts > 0) {
@@ -122,7 +121,7 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with ConfigJson
       }
     }
     // Flatten the result, which is of type Future[Future[CommandStatus]], to get a Future[CommandStatus]
-    f.flatMap[CommandStatus] { x => x}
+    f.flatMap[CommandStatus] { x ⇒ x }
   }
 
   /**
@@ -148,7 +147,6 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with ConfigJson
    * @return a future http response
    */
   def configResume(runId: RunId): Future[HttpResponse] = configPost(runId, "resume")
-
 
   // Posts the queue command with the given name
   private def queuePost(name: String): Future[HttpResponse] = {

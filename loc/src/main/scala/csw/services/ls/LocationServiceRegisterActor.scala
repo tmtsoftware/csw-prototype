@@ -38,24 +38,23 @@ case class LocationServiceRegisterActor(actorRef: ActorRef, serviceId: ServiceId
   identify()
 
   override def receive: Receive = {
-    case x => log.error(s"Received unexpected message $x")
+    case x ⇒ log.error(s"Received unexpected message $x")
   }
 
   // Waiting for the location service actor ref
   def waitingForId: Receive = {
-    case ActorIdentity(_, ref) => ref match {
-      case Some(ls) => registerWithLocationService(ls)
-      case None => retryLater()
+    case ActorIdentity(_, ref) ⇒ ref match {
+      case Some(ls) ⇒ registerWithLocationService(ls)
+      case None     ⇒ retryLater()
     }
-    case Retry => identify()
+    case Retry ⇒ identify()
   }
 
   // registered with the location service and watching it in case it restarts
   def registered(ls: ActorRef): Receive = {
-    case Terminated(`ls`) => identify()
-    case x => log.error(s"Received unexpected message $x")
+    case Terminated(`ls`) ⇒ identify()
+    case x                ⇒ log.error(s"Received unexpected message $x")
   }
-
 
   private def identify(): Unit = {
     LocationService.getLocationService(context.system) ! Identify(0)

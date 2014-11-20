@@ -19,27 +19,28 @@ object Component {
     ActorSystem(name).actorOf(props, name)
   }
 
-  /** =Lifecycle state messages=
-    *
-    * From TMT.CTR.ICD.13.002.DRF06:
-    *
-    * - INIT: the system should perform any initialization needed.
-    * When complete, the system is in the Initialized lifecycle state.
-    *
-    * - STARTUP: the system should bring any hardware online and be ready to execute commands.
-    * Once completed, the system is in the Running state and the READY mode.
-    * No motions should take place during the startup transition to the Running state.
-    * All functional behavior is available once the system is in the Running state.
-    *
-    * - RUNNING: result of STARTUP message: go to the READY state
-    *
-    * - SHUTDOWN: all changes made to move from Initialized to Running should be reversed.
-    * If actions are underway, the actions should first be completed.
-    *
-    * - UNINIT: all changes made to move from Loaded state to Initialized should be reversed.
-    *
-    * - REMOVE: software may be optionally removed if possible or necessary to move to the Ready state.
-    */
+  /**
+   * =Lifecycle state messages=
+   *
+   * From TMT.CTR.ICD.13.002.DRF06:
+   *
+   * - INIT: the system should perform any initialization needed.
+   * When complete, the system is in the Initialized lifecycle state.
+   *
+   * - STARTUP: the system should bring any hardware online and be ready to execute commands.
+   * Once completed, the system is in the Running state and the READY mode.
+   * No motions should take place during the startup transition to the Running state.
+   * All functional behavior is available once the system is in the Running state.
+   *
+   * - RUNNING: result of STARTUP message: go to the READY state
+   *
+   * - SHUTDOWN: all changes made to move from Initialized to Running should be reversed.
+   * If actions are underway, the actions should first be completed.
+   *
+   * - UNINIT: all changes made to move from Loaded state to Initialized should be reversed.
+   *
+   * - REMOVE: software may be optionally removed if possible or necessary to move to the Ready state.
+   */
   sealed trait ComponentLifecycleState
 
   case object Init extends ComponentLifecycleState
@@ -57,7 +58,7 @@ object Component {
 }
 
 trait Component {
-  this: Actor with ActorLogging =>
+  this: Actor with ActorLogging ⇒
 
   import Component._
 
@@ -68,14 +69,14 @@ trait Component {
 
   // Receive component messages
   def receiveComponentMessages: Receive = {
-    case Init => initialize()
-    case Startup => startup()
-    case Running => run()
-    case Shutdown => shutdown()
-    case Uninit => uninit()
-    case Remove => remove()
+    case Init                 ⇒ initialize()
+    case Startup              ⇒ startup()
+    case Running              ⇒ run()
+    case Shutdown             ⇒ shutdown()
+    case Uninit               ⇒ uninit()
+    case Remove               ⇒ remove()
 
-    case Terminated(actorRef) => terminated(actorRef)
+    case Terminated(actorRef) ⇒ terminated(actorRef)
   }
 
   def initialize(): Unit
@@ -100,12 +101,12 @@ trait Component {
  * An assembly is a component and may optionally also extend CommandServiceActor (or AssemblyCommandServiceActor)
  */
 trait Assembly extends Component {
-  this: Actor with ActorLogging =>
+  this: Actor with ActorLogging ⇒
 }
 
 /**
  * An HCD is a component and may optionally also extend CommandServiceActor
  */
 trait Hcd extends Component {
-  this: Actor with ActorLogging =>
+  this: Actor with ActorLogging ⇒
 }

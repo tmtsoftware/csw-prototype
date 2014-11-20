@@ -72,12 +72,11 @@ case class Angle(uas: Long) extends AnyVal with Ordered[Angle] {
   override def toString = "Angle(" + toDegree + " degree)"
 
   /** Returns sequence of angles with given max value and increment */
-  def to(maxVal: Angle, increment: Angle): Seq[Angle] = (uas to(maxVal.uas, increment.uas)).map(Angle(_))
+  def to(maxVal: Angle, increment: Angle): Seq[Angle] = (uas to (maxVal.uas, increment.uas)).map(Angle(_))
 
   /** Returns sequence of angles with given max value and increment */
-  def until(maxVal: Angle, increment: Angle): Seq[Angle] = (uas until(maxVal.uas, increment.uas)).map(Angle(_))
+  def until(maxVal: Angle, increment: Angle): Seq[Angle] = (uas until (maxVal.uas, increment.uas)).map(Angle(_))
 }
-
 
 object Angle {
 
@@ -127,7 +126,8 @@ object Angle {
    * @param deDegree declination in degrees
    * @param deMin    remaining part in arc minutes
    * @param deSec    remaining part in arc seconds
-   * @return declination in Micro Arc Seconds */
+   * @return declination in Micro Arc Seconds
+   */
   def parseDe(deSign: String, deDegree: String, deMin: String, deSec: String): Angle = {
     val sign: Int = if ("-".equals(deSign.trim)) -1 else 1
     import java.math.BigDecimal
@@ -141,8 +141,7 @@ object Angle {
     Angle(sign *
       (deg.multiply(new BigDecimal(Angle.D2Uas)).longValueExact +
         min.multiply(new BigDecimal(Angle.M2Uas)).longValueExact +
-        sec.multiply(new BigDecimal(Angle.S2Uas)).longValueExact)
-    )
+        sec.multiply(new BigDecimal(Angle.S2Uas)).longValueExact))
   }
 
   /**
@@ -154,9 +153,9 @@ object Angle {
     val r1 = ("([+|-]?)([0-9]+)[" + Angle.DEGREE_SIGN + "d: ]{1,2}([0-9]+)[m': ]{1,2}([0-9\\.]+)[s\\\"]?").r
     val r2 = ("([+|-]?)([0-9]+)[" + Angle.DEGREE_SIGN + "d: ]{1,2}([0-9]+)[m']?").r
     de match {
-      case r1(sign, d, m, s) => parseDe(sign, d, m, s)
-      case r2(sign, d, m) => parseDe(sign, d, m, null)
-      case _ => throw new IllegalArgumentException("Could not parse DE: " + de)
+      case r1(sign, d, m, s) ⇒ parseDe(sign, d, m, s)
+      case r2(sign, d, m)    ⇒ parseDe(sign, d, m, null)
+      case _                 ⇒ throw new IllegalArgumentException("Could not parse DE: " + de)
     }
   }
 
@@ -167,7 +166,8 @@ object Angle {
    * @param raHour ra hours value as String
    * @param raMin ra minutes value as String
    * @param raSec ra seconds value as String
-   * @return result in micro arc seconds */
+   * @return result in micro arc seconds
+   */
   def parseRa(raHour: String, raMin: String, raSec: String): Angle = {
     import java.math.BigDecimal
     val raHour2: BigDecimal = new BigDecimal(raHour)
@@ -180,8 +180,7 @@ object Angle {
     Angle(
       raHour2.multiply(new BigDecimal(Angle.H2Uas)).longValueExact +
         raMin2.multiply(new BigDecimal(Angle.HMin2Uas)).longValueExact +
-        raSec2.multiply(new BigDecimal(Angle.HSec2Uas)).longValueExact
-    )
+        raSec2.multiply(new BigDecimal(Angle.HSec2Uas)).longValueExact)
   }
 
   /**
@@ -194,10 +193,10 @@ object Angle {
     val r2 = "([0-9]+)[h: ]{1,2}([0-9\\.]+)[m]?".r
     val r3 = "([0-9]+)d([0-9]+)m([0-9\\.]+)s".r
     ra match {
-      case r1(h, m, s) => parseRa(h, m, s)
-      case r2(h, m) => parseRa(h, m, null)
-      case r3(d, m, s) => d.toDouble.degree + m.toDouble.arcMinute + m.toDouble.arcSec
-      case _ => throw new IllegalArgumentException("Could not parse RA: " + ra)
+      case r1(h, m, s) ⇒ parseRa(h, m, s)
+      case r2(h, m)    ⇒ parseRa(h, m, null)
+      case r3(d, m, s) ⇒ d.toDouble.degree + m.toDouble.arcMinute + m.toDouble.arcSec
+      case _           ⇒ throw new IllegalArgumentException("Could not parse RA: " + ra)
     }
   }
 
@@ -207,14 +206,14 @@ object Angle {
    * An example:
    * The following writings are allowed:
    * <pre>
-      20 54 05.689 +37 01 17.38
-      10:12:45.3-45:17:50
-      15h17m-11d10m
-      15h17+89d15
-      275d11m15.6954s+17d59m59.876s
-      12.34567h-17.87654d
-      350.123456d-17.33333d <=> 350.123456 -17.33333
-    </pre>
+   * 20 54 05.689 +37 01 17.38
+   * 10:12:45.3-45:17:50
+   * 15h17m-11d10m
+   * 15h17+89d15
+   * 275d11m15.6954s+17d59m59.876s
+   * 12.34567h-17.87654d
+   * 350.123456d-17.33333d <=> 350.123456 -17.33333
+   * </pre>
    */
   def parseRaDe(str: String): (Angle, Angle) = {
     //20 54 05.689 +37 01 17.38
@@ -231,17 +230,18 @@ object Angle {
     lazy val r5 = "([0-9]{1,3}\\.?[0-9]*)[d]?[ ]?([\\+-]?[0-9]{1,2}\\.?[0-9]*)[d]?".r
 
     str match {
-      case r1(ah, am, as, ss, d, m, s) => (parseRa(ah, am, as), parseDe(ss, d, m, s))
-      case r2(ah, am, ss, d, m) => (parseRa(ah, am, null), parseDe(ss, d, m, null))
-      case r3(ra, de) => (parseRa(ra), parseDe(de))
-      case r4(ra, de) => (ra.toDouble.arcHour, de.toDouble.degree)
-      case r5(ra, de) => (ra.toDouble.degree, de.toDouble.degree)
+      case r1(ah, am, as, ss, d, m, s) ⇒ (parseRa(ah, am, as), parseDe(ss, d, m, s))
+      case r2(ah, am, ss, d, m)        ⇒ (parseRa(ah, am, null), parseDe(ss, d, m, null))
+      case r3(ra, de)                  ⇒ (parseRa(ra), parseDe(de))
+      case r4(ra, de)                  ⇒ (ra.toDouble.arcHour, de.toDouble.degree)
+      case r5(ra, de)                  ⇒ (ra.toDouble.degree, de.toDouble.degree)
     }
 
   }
 
   /**
-   * normalize RA into 0 - 2 * PI range */
+   * normalize RA into 0 - 2 * PI range
+   */
   def normalizeRa(ra2: Double): Double = {
     var ra = ra2
     while (ra < 0)
@@ -262,7 +262,6 @@ object Angle {
       throw new IllegalArgumentException("Invalid DE: " + de)
   }
 
-
   private def isNear(x: Double, d: Double): Boolean = {
     val tolerance = 1e-7
     math.abs(x % d) < tolerance || math.abs(x % d - d) < tolerance
@@ -276,7 +275,8 @@ object Angle {
    * minutes and seconds are auto added as needed
    *
    * @param ra in radians
-   * @return ra in string form  */
+   * @return ra in string form
+   */
   def raToString(ra: Double): String = {
     if (isNear(ra, H2R)) {
       val hour = math.round(ra * R2H).toInt
@@ -312,7 +312,8 @@ object Angle {
    * minutes and seconds are auto added as needed
    *
    * @param de2 in radians
-   * @return de in string form */
+   * @return de in string form
+   */
   def deToString(de2: Double): String = {
     var de = de2
     var sign = ""
@@ -355,7 +356,8 @@ object Angle {
    * calculate great circle distance of two points,
    * coordinates are given in radians
    *
-   * @return distance of two points in radians */
+   * @return distance of two points in radians
+   */
   def distance(ra1: Double, de1: Double, ra2: Double, de2: Double): Double = {
     //check ranges
     assertRa(ra1)
@@ -370,13 +372,11 @@ object Angle {
     2.0 * math.asin(r)
   }
 
-
   /** multiply to convert degrees to radians */
   val D2R = math.Pi / 180d
 
   /** multiply to convert radians to degrees */
   val R2D = 1d / D2R
-
 
   /** multiply to convert degrees to arc hours */
   val D2H = 1d / 15d
@@ -413,13 +413,11 @@ object Angle {
   /** multiply to convert micro arc seconds to radians */
   val Uas2R = D2R / 3600000000d
 
-
   /** multiply to convert radians to mili arc seconds */
   val R2Mas = 1d / Mas2R
 
   /** multiply to convert radians to micro arc seconds */
   val R2Uas = 1d / Uas2R
-
 
   /** multiply to convert hours to mili arc seconds */
   val H2Mas = 15 * 60 * 60 * 1000
@@ -439,7 +437,6 @@ object Angle {
   /** multiply to convert time seconds to micro arc seconds */
   val HSec2Uas = 15l * 1000l * 1000l
 
-
   /** multiply to convert degrees to mili arc seconds */
   val D2Mas = 60 * 60 * 1000
 
@@ -448,7 +445,6 @@ object Angle {
 
   /** multiply to convert Seconds to mili arc seconds */
   val S2Mas = 1000
-
 
   /** multiply to convert degrees to micro arc seconds */
   val D2Uas = 60l * 60l * 1000l * 1000l
@@ -459,7 +455,6 @@ object Angle {
   /** multiply to convert Seconds to micro arc seconds */
   val S2Uas = 1000l * 1000l
 
-
   /** multiply to convert UAS to degrees  */
   val Uas2D = 1d / D2Uas
 
@@ -468,7 +463,6 @@ object Angle {
 
   /** multiply to convert UAS to Seconds  */
   val Uas2S = 1d / S2Uas
-
 
   /** multiply to convert  arc seconds to radians */
   val S2R = D2R / 3600d

@@ -1,7 +1,7 @@
 package csw.services.kvs
 
 import akka.actor.ActorSystem
-import redis.{ByteStringFormatter, RedisClient}
+import redis.{ ByteStringFormatter, RedisClient }
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
 import csw.services.kvs.KeyValueStore._
@@ -22,9 +22,9 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
                    setCond: SetCondition): Future[Boolean] = {
     val msOpt = if (expire.isDefined) Some(expire.get.toMillis) else None
     val (nx, xx) = setCond match {
-      case SetOnlyIfNotExists => (true, false)
-      case SetOnlyIfExists => (false, true)
-      case SetAlways => (false, false)
+      case SetOnlyIfNotExists ⇒ (true, false)
+      case SetOnlyIfExists    ⇒ (false, true)
+      case SetAlways          ⇒ (false, false)
     }
     redis.set(key, event, None, msOpt, nx, xx)
   }

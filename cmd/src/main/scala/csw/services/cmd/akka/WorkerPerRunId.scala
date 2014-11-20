@@ -1,6 +1,6 @@
 package csw.services.cmd.akka
 
-import akka.actor.{ActorLogging, Props, ActorContext, ActorRef}
+import akka.actor.{ ActorContext, ActorRef, Props }
 import akka.event.LoggingAdapter
 
 /**
@@ -19,10 +19,10 @@ case class WorkerPerRunId(name: String, context: ActorContext, log: LoggingAdapt
   def newWorkerFor(props: Props, runId: RunId): Option[ActorRef] = {
     val name = actorName(runId)
     context.child(name) match {
-      case Some(actorRef) =>
+      case Some(actorRef) ⇒
         log.error(s"$actorRef already exists")
         None
-      case None =>
+      case None ⇒
         Some(context.actorOf(props, actorName(runId)))
     }
 

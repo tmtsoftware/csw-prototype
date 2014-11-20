@@ -1,20 +1,19 @@
 package csw.services.kvs
 
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
 import csw.util.cfg.Events.EventType
-import redis.actors.{DecodeReplies, RedisWorkerIO}
+import redis.actors.{ DecodeReplies, RedisWorkerIO }
 import java.net.InetSocketAddress
 import redis.api.pubsub._
 import akka.util.ByteString
-import redis.protocol.{MultiBulk, RedisReply}
-
+import redis.protocol.{ MultiBulk, RedisReply }
 
 /**
  * Adds the ability to subscribe to events.
  * The subscribed actor wil receive Event messages for the given channel.
  */
 trait EventSubscriber {
-  this: Actor with ActorLogging =>
+  this: Actor with ActorLogging ⇒
 
   private val settings = KvsSettings(context.system)
 
@@ -64,7 +63,7 @@ private object SubscribeActor {
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
 private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort: Int)
-  extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort)) with DecodeReplies {
+    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort)) with DecodeReplies {
 
   /**
    * Keep states of channels and actor in case of connection reset
@@ -73,13 +72,13 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   var patternsSubscribed = Set[String]()
 
   def writing: Receive = {
-    case message: SubscribeMessage =>
+    case message: SubscribeMessage ⇒
       write(message.toByteString)
       message match {
-        case s: SUBSCRIBE => channelsSubscribed ++= s.channel
-        case u: UNSUBSCRIBE => channelsSubscribed --= u.channel
-        case ps: PSUBSCRIBE => patternsSubscribed ++= ps.pattern
-        case pu: PUNSUBSCRIBE => patternsSubscribed --= pu.pattern
+        case s: SUBSCRIBE     ⇒ channelsSubscribed ++= s.channel
+        case u: UNSUBSCRIBE   ⇒ channelsSubscribed --= u.channel
+        case ps: PSUBSCRIBE   ⇒ patternsSubscribed ++= ps.pattern
+        case pu: PUNSUBSCRIBE ⇒ patternsSubscribed --= pu.pattern
       }
   }
 
@@ -97,11 +96,11 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
 
   def onDecodedReply(reply: RedisReply) {
     reply match {
-      case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
+      case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" ⇒
         subscriber ! EventType(list(2).toByteString.toArray)
-      case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" =>
+      case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" ⇒
         subscriber ! EventType(list(3).toByteString.toArray)
-      case _ => // subscribe or psubscribe
+      case _ ⇒ // subscribe or psubscribe
     }
   }
 
@@ -109,5 +108,4 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
 
   def onClosingConnectionClosed(): Unit = {}
 }
-
 

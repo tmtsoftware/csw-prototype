@@ -65,16 +65,16 @@ class Container extends Actor with ActorLogging {
 
   // Receive messages
   override def receive: Receive = {
-    case CreateComponent(props, name) => createComponent(props, name)
-    case DeleteComponent(name) => deleteComponent(name)
-    case SetComponentState(name, state) => setComponentState(name, state)
-    case Terminated(actorRef) => log.info(s"Actor $actorRef terminated")
+    case CreateComponent(props, name)   ⇒ createComponent(props, name)
+    case DeleteComponent(name)          ⇒ deleteComponent(name)
+    case SetComponentState(name, state) ⇒ setComponentState(name, state)
+    case Terminated(actorRef)           ⇒ log.info(s"Actor $actorRef terminated")
   }
 
   private def createComponent(props: Props, name: String): Unit = {
     context.child(name) match {
-      case Some(actorRef) => log.error(s"Component $name already exists")
-      case None =>
+      case Some(actorRef) ⇒ log.error(s"Component $name already exists")
+      case None ⇒
         log.info(s"Container.createComponent($name)")
         val actorRef = Component.create(props, name)
         log.info(s"Container.createComponent($name) -> $actorRef, reply to ${sender()}")
@@ -85,15 +85,15 @@ class Container extends Actor with ActorLogging {
 
   private def deleteComponent(name: String): Unit = {
     context.child(name) match {
-      case Some(actorRef) => setComponentState(name, Component.Remove)
-      case None => log.error(s"Component $name does not exist")
+      case Some(actorRef) ⇒ setComponentState(name, Component.Remove)
+      case None           ⇒ log.error(s"Component $name does not exist")
     }
   }
 
   private def setComponentState(name: String, state: ComponentLifecycleState): Unit = {
     context.child(name) match {
-      case Some(actorRef) => actorRef ! state
-      case None => log.error(s"Component $name does not exist")
+      case Some(actorRef) ⇒ actorRef ! state
+      case None           ⇒ log.error(s"Component $name does not exist")
     }
   }
 }

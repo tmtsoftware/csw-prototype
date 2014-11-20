@@ -1,14 +1,14 @@
 package csw.services.kvs
 
 import redis.ByteStringFormatter
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ ActorLogging, Actor }
 import redis.RedisClient
 
 /**
  * Adds the ability to publish events.
  */
 trait EventPublisher {
-  this: Actor with ActorLogging =>
+  this: Actor with ActorLogging ⇒
 
   implicit val actorSystem = context.system
   private val settings = KvsSettings(actorSystem)

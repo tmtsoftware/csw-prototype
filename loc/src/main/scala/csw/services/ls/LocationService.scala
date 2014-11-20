@@ -7,6 +7,7 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 import java.net.URI
 import com.typesafe.config.ConfigFactory
+import csw.util.akka.Terminator
 
 /**
  * Location service
@@ -82,20 +83,10 @@ object LocationService {
 
   // Location service main
   def main(args: Array[String]): Unit = {
-      val config = ConfigFactory.load(locationServiceName)
-      val system = ActorSystem(locationServiceName, config)
-      val a = system.actorOf(Props[LocationServiceActor], locationServiceName)
-      system.actorOf(Props(classOf[Terminator], a), "terminator")
-  }
-
-  // Exits the application when the main actor stops
-  class Terminator(ref: ActorRef) extends Actor with ActorLogging {
-    context watch ref
-    def receive = {
-      case Terminated(_) =>
-        log.info("{} has terminated, shutting down system", ref.path)
-        context.system.shutdown()
-    }
+    val config = ConfigFactory.load(locationServiceName)
+    val system = ActorSystem(locationServiceName, config)
+    val a = system.actorOf(Props[LocationServiceActor], locationServiceName)
+    system.actorOf(Props(classOf[Terminator], a), "terminator")
   }
 }
 
@@ -211,36 +202,37 @@ class LocationServiceActor extends Actor with ActorLogging {
   override def receive: Receive = {
 
     // An HDU or Assembly registers with the location service
-    case Register(serviceId, configPath, httpUri) =>
+    case Register(serviceId, configPath, httpUri) ⇒
       register(serviceId, configPath, httpUri)
 
     // If a registered actor terminates, remove the actorRef from the registry entry
-    case Terminated(actorRef) =>
+    case Terminated(actorRef) ⇒
       log.info(s"Location Service received terminated message from $actorRef")
       serviceIdForActorRef(actorRef).foreach(registry -= _)
 
     // Replies with the LocationServiceInfo for the given serviceId.
     // If not found, an empty LocationServiceInfo object is sent with only the serviceId set.
-    case Resolve(serviceId) =>
+    case Resolve(serviceId) ⇒
       registry.get(serviceId) match {
-        case Some(info) => sender() ! info
-        case None => sender() ! LocationServiceInfo.notFound(serviceId)
+        case Some(info) ⇒ sender() ! info
+        case None       ⇒ sender() ! LocationServiceInfo.notFound(serviceId)
       }
 
     // Wildcard query returning a QueryResult object with a list of LocationServiceInfo
-    case b: Browse => sender() ! browseService(b)
+    case b: Browse                   ⇒ sender() ! browseService(b)
 
     // Sends a ServicesReady message to the sender when all of the requested services are available.
     // The sender should watch the returned actors and repeat the request if one of them terminates.
-    case RequestServices(serviceIds) => requestServices(sender(), serviceIds)
+    case RequestServices(serviceIds) ⇒ requestServices(sender(), serviceIds)
 
-    case x => log.error(s"Unexpected message: $x")
+    case x                           ⇒ log.error(s"Unexpected message: $x")
   }
 
   // Returns the serviceId for the given actorRef
   def serviceIdForActorRef(actorRef: ActorRef): Option[ServiceId] = {
-    val list = for ((serviceId, info) <- registry
-                    if info.actorRefOpt.isDefined && info.actorRefOpt.get == actorRef) yield serviceId
+    val list = for (
+      (serviceId, info) ← registry if info.actorRefOpt.isDefined && info.actorRefOpt.get == actorRef
+    ) yield serviceId
     list.headOption
   }
 
@@ -252,24 +244,24 @@ class LocationServiceActor extends Actor with ActorLogging {
 
     // If there are outstanding requests, check if they can now be completed
     val map = outstandingRequests
-    for((requester, serviceIds) <- map) {
+    for ((requester, serviceIds) ← map) {
       requestServices(requester, serviceIds)
     }
   }
 
   // Find and return all services matching the query
   def browseService(q: Browse): BrowseResults = {
-     val results = for(i <- registry.values if matchService(q, i.serviceId)) yield i
-     BrowseResults(results.toList)
+    val results = for (i ← registry.values if matchService(q, i.serviceId)) yield i
+    BrowseResults(results.toList)
   }
 
   // Returns true if the given query matches the given serviceId
   def matchService(b: Browse, serviceId: ServiceId): Boolean = {
     (b.name, b.serviceType) match {
-      case (None, None) => true
-      case (Some(name), None) => name == serviceId.name
-      case (None, Some(serviceType)) => serviceType == serviceId.serviceType
-      case (Some(name), Some(serviceType)) => name == serviceId.name && serviceType == serviceId.serviceType
+      case (None, None)                    ⇒ true
+      case (Some(name), None)              ⇒ name == serviceId.name
+      case (None, Some(serviceType))       ⇒ serviceType == serviceId.serviceType
+      case (Some(name), Some(serviceType)) ⇒ name == serviceId.name && serviceType == serviceId.serviceType
     }
   }
 
@@ -287,5 +279,4 @@ class LocationServiceActor extends Actor with ActorLogging {
     }
   }
 }
-
 

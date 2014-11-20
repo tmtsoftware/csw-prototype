@@ -1,10 +1,13 @@
 package csw.services.apps.containerCmd
 
-import akka.actor._
-import com.typesafe.config.{ConfigFactory, Config}
 import java.io.File
-import scala.collection.JavaConversions._
+
+import akka.actor._
+import com.typesafe.config.{ Config, ConfigFactory }
 import csw.services.pkg.Container
+
+import scala.collection.JavaConversions._
+import csw.util.akka.Terminator
 
 /**
  * A command line application for creating containers with components specified in a config file.
@@ -30,18 +33,6 @@ object ContainerCmd {
     println(msg)
     System.exit(1)
   }
-
-  // Exits the application when the main actor stops
-  class Terminator(ref: ActorRef) extends Actor with ActorLogging {
-    context watch ref
-
-    def receive = {
-      case Terminated(_) =>
-        log.info("{} has terminated, shutting down system", ref.path)
-        context.system.shutdown()
-    }
-  }
-
 }
 
 // The main actor for this application
@@ -60,7 +51,7 @@ class ContainerCmdActor(config: Config) extends Actor with ActorLogging {
     log.info(s"Create container $containerName")
     val container = Container.create(containerName)
     val components = config.getConfig("container.components")
-    for (key <- components.root.keySet()) {
+    for (key ← components.root.keySet()) {
       val componentConfig = components.getConfig(key)
       val className = componentConfig.getString("class")
       val args =
@@ -74,7 +65,7 @@ class ContainerCmdActor(config: Config) extends Actor with ActorLogging {
   }
 
   override def receive: Receive = {
-    case actorRef: ActorRef => log.info(s"Started $actorRef")
-    case x => log.error(s"Received unexpected message $x")
+    case actorRef: ActorRef ⇒ log.info(s"Started $actorRef")
+    case x                  ⇒ log.error(s"Received unexpected message $x")
   }
 }

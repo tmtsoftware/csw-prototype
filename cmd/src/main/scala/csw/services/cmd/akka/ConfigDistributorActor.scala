@@ -22,14 +22,13 @@ import akka.actor.Terminated
 import csw.services.cmd.akka.ConfigDistributorActor.SubmitInfo
 import csw.util.cfg.Configurations._
 
-
 /**
  * Adding this trait to a command service causes it to use a ConfigDistributorActor
  * to forward commands to different actors, depending on the config paths they are
  * registered with in the location service.
  */
 trait ConfigDistributor {
-  this: CommandServiceActor =>
+  this: CommandServiceActor ⇒
 
   // Add a ConfigDistributorActor to distribute the incoming configs to the HCDs
   val configDistributorActor = context.actorOf(ConfigDistributorActor.props(commandStatusActor), name = configDistributorActorName)
@@ -86,40 +85,40 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
   // Initial state until we get a list of running services to use as target actors
   def waitingForServices: Receive = {
-    case ServicesReady(services) =>
+    case ServicesReady(services) ⇒
       log.debug(s"All services ready: $services")
-      val targetActors = for (service <- services if service.actorRefOpt.isDefined) yield service.actorRefOpt.get
+      val targetActors = for (service ← services if service.actorRefOpt.isDefined) yield service.actorRefOpt.get
       if (targetActors.size == services.size) {
-        for (a <- targetActors) context.watch(a)
+        for (a ← targetActors) context.watch(a)
         log.debug(s"Setting state to ready")
         context.become(ready(services))
         context.parent ! CommandServiceActor.Ready(ready = true)
       }
 
-    case Terminated(actorRef) =>
+    case Terminated(actorRef) ⇒
 
-    case ConfigPut(config) => internalConfig(config)
+    case ConfigPut(config)    ⇒ internalConfig(config)
 
-    case x => log.error(s"Unexpected message from ${sender()} (while waiting for services): $x")
+    case x                    ⇒ log.error(s"Unexpected message from ${sender()} (while waiting for services): $x")
   }
 
   // Messages received in the ready state.
   def ready(services: List[LocationServiceInfo]): Receive = {
-    case s: SubmitWithRunId => submit(s, services)
+    case s: SubmitWithRunId      ⇒ submit(s, services)
 
-    case ConfigGet(config) => query(config, services)
-    case ConfigPut(config) => internalConfig(config)
+    case ConfigGet(config)       ⇒ query(config, services)
+    case ConfigPut(config)       ⇒ internalConfig(config)
 
-    case c: ConfigControlMessage => forwardToSubmitWorker(c.runId, c)
+    case c: ConfigControlMessage ⇒ forwardToSubmitWorker(c.runId, c)
 
     // If a target actor died, go back and wait for it (and any others that are needed) to restart
-    case Terminated(actorRef) =>
+    case Terminated(actorRef) ⇒
       log.debug(s"Received terminated message for $actorRef: Switch to waitingForServices state")
       LocationService.requestServices(context.system, self, services.map(_.serviceId))
       context.parent ! CommandServiceActor.Ready(ready = false)
       context.become(waitingForServices)
 
-    case x => log.error(s"Unexpected message from ${sender()}(): $x")
+    case x ⇒ log.error(s"Unexpected message from ${sender()}(): $x")
   }
 
   // Forwards the given message to the submit worker actor
@@ -138,8 +137,8 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     // Create a dedicated submit worker actor to handle this command
     val props = SubmitWorkerActor.props(commandStatusActor, submit, targetActors)
     submitWorkers.newWorkerFor(props, submit.runId) match {
-      case Some(actorRef) =>
-      case None =>
+      case Some(actorRef) ⇒
+      case None ⇒
         commandStatusActor ! CommandStatusActor.StatusUpdate(
           CommandStatus.Error(submit.runId, "Submit worker for ${submit.runId} already exists"),
           submit.submitter)
@@ -169,9 +168,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
 }
 
-
 // ---- SubmitWorkerActor ----
-
 
 /**
  * Defines props to create the submit worker actor
@@ -203,7 +200,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
    */
   def waiting(parts: List[SubmitInfo], returnStatus: CommandStatus): Receive = {
     // Status Results for a config part from a ConfigActor: check if all parts have completed
-    case status: CommandStatus =>
+    case status: CommandStatus ⇒
       if (status.done) {
         val newStatus = getCommandStatus(status, returnStatus)
         val (completedParts, remainingParts) = parts.partition(_.submit.runId == status.runId)
@@ -211,17 +208,17 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
       }
 
     // Forward any cancel, abort, pause, resume messages to the target actors
-    case c: ConfigControlMessage =>
+    case c: ConfigControlMessage ⇒
       parts.foreach {
-        part => part.target ! c.withRunId(part.submit.runId)
+        part ⇒ part.target ! c.withRunId(part.submit.runId)
       }
 
-    case x => log.error(s"Unexpected message from ${sender()}: $x")
+    case x ⇒ log.error(s"Unexpected message from ${sender()}: $x")
   }
 
   // This state is not used here
   override def receive: Receive = {
-    case x => log.error(s"Unexpected message received from ${sender()}: $x")
+    case x ⇒ log.error(s"Unexpected message received from ${sender()}: $x")
   }
 
   // Sends each target actor a part of the submitted config, based on the config path it subscribed to.
@@ -239,7 +236,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
       context.become(waiting(submitInfoList, CommandStatus.Submitted(submit.runId)))
       // Send the submit messages to the target actors
       submitInfoList.foreach {
-        submitInfo =>
+        submitInfo ⇒
           log.debug(s"Sending config part to ${submitInfo.target}: ${submitInfo.submit.config}")
           submitInfo.target ! submitInfo.submit
       }
@@ -252,7 +249,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
     val setupConfigs = submit.config.prefixStartsWith(pathOpt)
     if (setupConfigs.size == 0) None
     else for {
-      actorRef <- targetActor.actorRefOpt
+      actorRef ← targetActor.actorRefOpt
     } yield SubmitInfo(pathOpt, SubmitWithRunId(setupConfigs, self, RunId()), actorRef)
   }
 
@@ -273,7 +270,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
       log.debug(s"${remainingParts.length} parts left for runId ${submit.runId}")
 
       // send partially complete status (may be displayed by UI)
-      completedParts.foreach { part =>
+      completedParts.foreach { part ⇒
         val partialStatus = CommandStatus.PartiallyCompleted(submit.runId, part.path, commandStatus.name)
         commandStatusActor ! CommandStatusActor.StatusUpdate(partialStatus, submit.submitter)
         log.debug(s"Status: PartiallyCompleted: path = ${part.path}")
@@ -290,19 +287,17 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
    */
   private def getCommandStatus(newStatus: CommandStatus, oldStatus: CommandStatus): CommandStatus = {
     val s = oldStatus match {
-      case CommandStatus.Canceled(_) => oldStatus.withRunId(submit.runId)
-      case CommandStatus.Aborted(_) => oldStatus.withRunId(submit.runId)
-      case CommandStatus.Error(_, msg) => oldStatus.withRunId(submit.runId)
-      case _ => newStatus.withRunId(submit.runId)
+      case CommandStatus.Canceled(_)   ⇒ oldStatus.withRunId(submit.runId)
+      case CommandStatus.Aborted(_)    ⇒ oldStatus.withRunId(submit.runId)
+      case CommandStatus.Error(_, msg) ⇒ oldStatus.withRunId(submit.runId)
+      case _                           ⇒ newStatus.withRunId(submit.runId)
     }
     log.debug(s"Old status: $oldStatus, new status: $newStatus ==> $s")
     s
   }
 }
 
-
 // ---- QueryWorkerActor ----
-
 
 /**
  * Defines props to create the query worker actor
@@ -321,7 +316,7 @@ private object QueryWorkerActor {
  * then send the result to the replyTo actor.
  */
 private class QueryWorkerActor(config: SetupConfigList, targetActors: List[LocationServiceInfo], replyTo: ActorRef)
-  extends Actor with ActorLogging {
+    extends Actor with ActorLogging {
 
   // Send parts of the query to the target actors and when all replies are in,
   // combine and return to sender.
@@ -336,18 +331,18 @@ private class QueryWorkerActor(config: SetupConfigList, targetActors: List[Locat
 
   // This state is not used here (yet)
   override def receive: Receive = {
-    case x => log.error(s"Unexpected message received from ${sender()}: $x")
+    case x ⇒ log.error(s"Unexpected message received from ${sender()}: $x")
   }
 
   // Gets a list of the config parts we need to send and the target actors that should get them.
   private def getQueryInfoList: List[QueryInfo] = {
     targetActors.map {
-      targetActor =>
+      targetActor ⇒
         val pathOpt = targetActor.configPathOpt
         val setupConfigs = config.prefixStartsWith(pathOpt)
         if (setupConfigs.size == 0) None
         else for {
-          actorRef <- targetActor.actorRefOpt
+          actorRef ← targetActor.actorRefOpt
         } yield QueryInfo(actorRef, ConfigGet(setupConfigs), pathOpt)
     }.flatten.toList
   }
@@ -369,14 +364,13 @@ private class QueryWorkerActor(config: SetupConfigList, targetActors: List[Locat
     implicit val askTimeout = Timeout(3.seconds) // TODO: Implement this with tell or configure timeout?
 
     val listOfFutureResponses =
-      for (queryInfo <- list) yield
-        (queryInfo.targetActor ? queryInfo.msg).mapTo[ConfigResponse]
+      for (queryInfo ← list) yield (queryInfo.targetActor ? queryInfo.msg).mapTo[ConfigResponse]
 
     Future.sequence(listOfFutureResponses).onComplete {
-      case Success(responseList) =>
+      case Success(responseList) ⇒
         replyTo ! mergeConfigResponses(responseList.toList)
         context.stop(self)
-      case Failure(ex) =>
+      case Failure(ex) ⇒
         replyTo ! ConfigResponse(Failure(ex))
         context.stop(self)
     }
@@ -389,11 +383,10 @@ private class QueryWorkerActor(config: SetupConfigList, targetActors: List[Locat
    */
   private def mergeConfigResponses(responses: List[ConfigResponse]): ConfigResponse = {
     // return first failure if found, otherwise the merged response
-    val configs = for (resp <- responses) yield
-      resp.tryConfig match {
-        case Success(conf) => conf
-        case Failure(ex) => return resp // XXX FIXME
-      }
+    val configs = for (resp ← responses) yield resp.tryConfig match {
+      case Success(conf) ⇒ conf
+      case Failure(ex)   ⇒ return resp // XXX FIXME
+    }
     ConfigResponse(Success(configs.flatten))
   }
 }

@@ -1,6 +1,5 @@
 package csw.services.cmd.akka
 
-
 /**
  * The status of a running command
  */
@@ -118,7 +117,6 @@ object CommandStatus {
     override def withRunId(newRunId: RunId): Canceled = Canceled(newRunId)
   }
 
-
   /**
    * Creates a command status by name
    * @param name simple name of the command status class
@@ -129,16 +127,16 @@ object CommandStatus {
    */
   def apply(name: String, runId: RunId, message: String, partialStatus: String): CommandStatus =
     name match {
-      case "submitted" => Submitted(runId)
-      case "pending" => Pending(runId)
-      case "queued" => Queued(runId)
-      case "busy" => Busy(runId)
-      case "paused" => Paused(runId)
-      case "resumed" => Resumed(runId)
-      case "partially completed" => PartiallyCompleted(runId, Some(message), partialStatus)
-      case "completed" => Completed(runId)
-      case "error" => Error(runId, message)
-      case "aborted" => Aborted(runId)
-      case "canceled" => Canceled(runId)
+      case "submitted"           ⇒ Submitted(runId)
+      case "pending"             ⇒ Pending(runId)
+      case "queued"              ⇒ Queued(runId)
+      case "busy"                ⇒ Busy(runId)
+      case "paused"              ⇒ Paused(runId)
+      case "resumed"             ⇒ Resumed(runId)
+      case "partially completed" ⇒ PartiallyCompleted(runId, Some(message), partialStatus)
+      case "completed"           ⇒ Completed(runId)
+      case "error"               ⇒ Error(runId, message)
+      case "aborted"             ⇒ Aborted(runId)
+      case "canceled"            ⇒ Canceled(runId)
     }
 }

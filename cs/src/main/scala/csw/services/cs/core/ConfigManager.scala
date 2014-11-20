@@ -1,7 +1,7 @@
 package csw.services.cs.core
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 import java.util.Date
 
 /**
@@ -80,10 +80,10 @@ trait ConfigId {
  * Interface implemented by the configuration data objects being managed
  */
 trait ConfigData {
-//  /**
-//   * @return a stream of XXX TODO...
-//   */
-//  def getSource: Source[ByteString]
+  //  /**
+  //   * @return a stream of XXX TODO...
+  //   */
+  //  def getSource: Source[ByteString]
 
   /**
    * @return a representation of the object as a byte array
@@ -130,7 +130,6 @@ case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
    * @return a representation of the object as a byte array
    */
   def getBytes: Array[Byte] = bytes
-
 
   /**
    * Should only be used for debugging info (no charset handling)

@@ -1,6 +1,6 @@
 package csw.util.cfg
 
-import java.util.{Date, UUID}
+import java.util.{ Date, UUID }
 
 import csw.util.cfg.ConfigValues.ValueData
 import csw.util.cfg.Configurations.CV
@@ -53,7 +53,7 @@ object Events {
 
     lazy val size = values.size
 
-    lazy val names: Set[String] = values.map(c => c.name)
+    lazy val names: Set[String] = values.map(c ⇒ c.name)
 
     def :+[B <: CV](value: B): TelemetryEvent = {
       TelemetryEvent(eventId, timestamp, source, prefix, values + value)
@@ -94,13 +94,12 @@ object Events {
 
       def getElems[A](elems: Seq[A]): Seq[Protobuf.A] = {
         val b = Protobuf.A.newBuilder()
-        for (e <- elems) yield
-          e match {
-            case s: String => b.setStringVal(s).build()
-            case i: Int => b.setIntVal(i).build()
-            case l: Long => b.setLongVal(l).build()
-            case d: Double => b.setDoubleVal(d).build()
-          }
+        for (e ← elems) yield e match {
+          case s: String ⇒ b.setStringVal(s).build()
+          case i: Int    ⇒ b.setIntVal(i).build()
+          case l: Long   ⇒ b.setLongVal(l).build()
+          case d: Double ⇒ b.setDoubleVal(d).build()
+        }
       }
 
       def getValueData(cv: CV): Protobuf.ValueData = {
@@ -110,11 +109,10 @@ object Events {
           .build()
       }
 
-      def getValues = for (cv <- values) yield
-        Protobuf.CV.newBuilder()
-          .setTrialName(cv.trialName)
-          .setData(getValueData(cv))
-          .build()
+      def getValues = for (cv ← values) yield Protobuf.CV.newBuilder()
+        .setTrialName(cv.trialName)
+        .setData(getValueData(cv))
+        .build()
 
       Protobuf.EventType.newBuilder().setTelemetryEvent(
         Protobuf.TelemetryEvent.newBuilder()
@@ -122,8 +120,7 @@ object Events {
           .setTimestamp(timestamp)
           .setSource(source)
           .setPrefix(prefix)
-          .addAllValues(getValues)
-      ).build().toByteArray
+          .addAllValues(getValues)).build().toByteArray
     }
   }
 
@@ -144,11 +141,10 @@ object Events {
       import scala.collection.JavaConversions._
 
       def getElems(l: List[Protobuf.A]): Seq[Any] = {
-        for (a <- l) yield
-          if (a.hasStringVal) a.getStringVal
-          else if (a.hasIntVal) a.getIntVal
-          else if (a.hasLongVal) a.getLongVal
-          else if (a.hasDoubleVal) a.getDoubleVal
+        for (a ← l) yield if (a.hasStringVal) a.getStringVal
+        else if (a.hasIntVal) a.getIntVal
+        else if (a.hasLongVal) a.getLongVal
+        else if (a.hasDoubleVal) a.getDoubleVal
       }
 
       def getValueData(data: Protobuf.ValueData): ValueData[Any] = {
@@ -156,7 +152,7 @@ object Events {
       }
 
       def getValues(seq: Seq[Protobuf.CV]): Set[CV] = {
-        (for (cv <- seq) yield ConfigValues.CValue(cv.getTrialName, getValueData(cv.getData))).toSet[CV]
+        (for (cv ← seq) yield ConfigValues.CValue(cv.getTrialName, getValueData(cv.getData))).toSet[CV]
       }
 
       TelemetryEvent(oe.getEventId, oe.getTimestamp, oe.getSource, oe.getPrefix, getValues(oe.getValuesList))
@@ -176,8 +172,7 @@ object Events {
         Protobuf.ObserveEvent.newBuilder()
           .setEventId(eventId)
           .setTimestamp(timestamp)
-          .setSource(source)
-      ).build.toByteArray
+          .setSource(source)).build.toByteArray
     }
   }
 
@@ -191,6 +186,4 @@ object Events {
 
   // XXX TODO: Add "endless" EventStream? (only neeeded if "pulling" events)
 }
-
-
 

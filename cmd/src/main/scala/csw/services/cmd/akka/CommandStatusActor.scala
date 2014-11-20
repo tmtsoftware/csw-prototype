@@ -1,6 +1,6 @@
 package csw.services.cmd.akka
 
-import akka.actor.{Terminated, ActorRef, Actor, ActorLogging}
+import akka.actor.{ Terminated, ActorRef, Actor, ActorLogging }
 
 // Defines messages used by the CommandStatusActor
 object CommandStatusActor {
@@ -41,10 +41,10 @@ class CommandStatusActor extends Actor with ActorLogging {
   private var subscribers = Set[ActorRef]()
 
   override def receive: Receive = {
-    case Subscribe(actorRef) => subscribe(actorRef)
-    case Unsubscribe(actorRef) => unsubscribe(actorRef)
-    case Terminated(actorRef) => unsubscribe(actorRef)
-    case StatusUpdate(commandStatus, originalSubmitter) => notifySubscribers(commandStatus, originalSubmitter)
+    case Subscribe(actorRef)                            ⇒ subscribe(actorRef)
+    case Unsubscribe(actorRef)                          ⇒ unsubscribe(actorRef)
+    case Terminated(actorRef)                           ⇒ unsubscribe(actorRef)
+    case StatusUpdate(commandStatus, originalSubmitter) ⇒ notifySubscribers(commandStatus, originalSubmitter)
   }
 
   private def subscribe(actorRef: ActorRef): Unit = {

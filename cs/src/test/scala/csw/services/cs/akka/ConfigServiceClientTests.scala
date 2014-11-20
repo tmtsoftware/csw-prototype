@@ -44,7 +44,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
     val manager = TestRepo.getNonBlockingConfigManager("test2", create = true, system)
 
     // Create the actor
-    val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
+    val csActor = system.actorOf(NonBlockingConfigServiceActor.props(manager), name = "configService")
     val csClient = ConfigServiceClient(system, csActor)
 
     // Sequential, non-blocking for comprehension

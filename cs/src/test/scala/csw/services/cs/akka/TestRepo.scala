@@ -12,7 +12,7 @@ import csw.services.cs.core.git.{GitConfigManager, JGitConfigManager}
  */
 object TestRepo {
 
-  private def resetRepo(settings: Settings): Unit = {
+  private def resetRepo(settings: ConfigServiceSettings): Unit = {
     println(s"Local repo = ${settings.gitLocalRepository}, remote = ${settings.gitMainRepository}, oversize files: ${settings.gitOversizeStorage}")
     if (settings.gitMainRepository.getScheme != "file")
       throw new RuntimeException(s"Please specify a file URI for csw.cs.git-main-repository for testing")
@@ -36,7 +36,7 @@ object TestRepo {
    *
    * @return a new ConfigManager set to manage the newly created Git repositories
    */
-  def getConfigManager(settings: Settings = Settings(ActorSystem())): ConfigManager = {
+  def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem())): ConfigManager = {
     resetRepo(settings)
     GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
   }
@@ -48,7 +48,7 @@ object TestRepo {
    * @return a new ConfigManager set to manage the newly created Git repositories
    */
   def getJConfigManager: JConfigManager = {
-    val settings = Settings(ActorSystem())
+    val settings = ConfigServiceSettings(ActorSystem())
     resetRepo(settings)
     JGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
   }
@@ -63,6 +63,6 @@ object TestRepo {
    * @return a new non-blocking config manager set to manage the newly created Git repositories
    */
   def getNonBlockingConfigManager(prefix: String, create: Boolean, system: ActorSystem): NonBlockingConfigManager = {
-    NonBlockingConfigManager(getConfigManager(Settings(system)))(system.dispatcher)
+    NonBlockingConfigManager(getConfigManager(ConfigServiceSettings(system)))(system.dispatcher)
   }
 }

@@ -1,6 +1,6 @@
 package csw.services.cmd.akka
 
-import akka.actor.{Cancellable, ActorLogging, Actor, Props}
+import akka.actor.{ Cancellable, ActorLogging, Actor, Props }
 import scala.concurrent.duration.FiniteDuration
 import scala.Some
 
@@ -42,48 +42,48 @@ final class CommandServiceStatusMonitor(timeoutDuration: FiniteDuration, runId: 
   // Wait for the command status or for a request for it (completer).
   // Give up if nothing happens in the required time.
   private def waiting(timerInfo: TimerInfo, previouStatus: CommandStatus): Receive = {
-    case completer: CommandStatusCompleter =>
+    case completer: CommandStatusCompleter ⇒
       log.debug(s"Received completer (waiting)")
       context become waitingForStatus(completer, newTimeout(timerInfo), previouStatus)
-    case status: CommandStatus =>
+    case status: CommandStatus ⇒
       log.debug(s"Received command status $status (waiting)")
       context become waitingForCompleter(status, timerInfo, status)
-    case timerInfo.`timeout` =>
+    case timerInfo.`timeout` ⇒
       log.debug(s"Received timeout while waiting: stopping")
       context.stop(self)
-    case Timeout(t) => // ignore other timeouts
+    case Timeout(t) ⇒ // ignore other timeouts
   }
 
   // We have a request for command status (completer), but no status value to return yet.
   // Wait for a command status message to arrive and if we timeout, return the previous status.
   // The requester should then try again later.
   private def waitingForStatus(completer: CommandStatusCompleter, timerInfo: TimerInfo, previousStatus: CommandStatus): Receive = {
-    case completer: CommandStatusCompleter =>
+    case completer: CommandStatusCompleter ⇒
       log.debug(s"Received completer (waiting for status)")
       context become waitingForStatus(completer, newTimeout(timerInfo), previousStatus)
-    case status: CommandStatus =>
+    case status: CommandStatus ⇒
       log.debug(s"Received command status $status (waiting for status)")
       completeAndWait(completer, status, timerInfo)
-    case timerInfo.`timeout` =>
+    case timerInfo.`timeout` ⇒
       log.debug(s"Received timeout while waiting for command status: completing")
       completeAndWait(completer, previousStatus, timerInfo)
-    case Timeout(t) => // ignore other timeouts
+    case Timeout(t) ⇒ // ignore other timeouts
   }
 
   // We have a command status value, but no one has asked for it yet.
   // The command status could be updated again and/or we could get a request for it (completer).
   // If we timeout, quit (maybe nobody is interested in the command status?).
   private def waitingForCompleter(status: CommandStatus, timerInfo: TimerInfo, previouStatus: CommandStatus): Receive = {
-    case completer: CommandStatusCompleter =>
+    case completer: CommandStatusCompleter ⇒
       log.debug(s"Received completer (waiting for completer)")
       completeAndWait(completer, status, timerInfo)
-    case status: CommandStatus =>
+    case status: CommandStatus ⇒
       log.debug(s"Received command status $status (waiting for completer)")
       context become waitingForCompleter(status, timerInfo, status)
-    case timerInfo.`timeout` =>
+    case timerInfo.`timeout` ⇒
       log.debug(s"Received timeout while waiting for completer: stopping")
       context.stop(self)
-    case Timeout(t) => // ignore other timeouts
+    case Timeout(t) ⇒ // ignore other timeouts
   }
 
   // Returns a new timer with an incremented id

@@ -1,7 +1,7 @@
 package csw.services.cmd.akka
 
 import akka.actor.ActorRef
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -63,7 +63,7 @@ case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeo
    * @return the future command status
    */
   def pollCommandStatus(runId: RunId, maxAttempts: Int = 10): Future[CommandStatus] = {
-    val f = for (commandStatus <- getCommandStatus(runId)) yield {
+    val f = for (commandStatus ← getCommandStatus(runId)) yield {
       if (commandStatus.done) {
         Future.successful(commandStatus)
       } else if (maxAttempts > 0) {
@@ -73,7 +73,7 @@ case class CommandServiceClient(commandServiceClientActor: ActorRef, statusTimeo
       }
     }
     // Flatten the result, which is of type Future[Future[CommandStatus]], to get a Future[CommandStatus]
-    f.flatMap[CommandStatus] { x => x}
+    f.flatMap[CommandStatus] { x ⇒ x }
   }
 
   /**
