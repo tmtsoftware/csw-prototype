@@ -11,12 +11,11 @@ import akka.io.IO
 import akka.pattern.ask
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.{ForeachSink, Sink, Source}
-import akka.util.{ByteString, Timeout}
+import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
 import net.codejava.security.HashGeneratorUtils
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
 
@@ -24,14 +23,12 @@ object ConfigServiceAnnexClient {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexClient"))
 
   implicit val system = ActorSystem("ConfigServiceAnnexClient")
-
   import system.dispatcher
 
   val settings = ConfigServiceAnnexSettings(system)
   val host = settings.interface
   val port = settings.port
-
-  implicit val askTimeout: Timeout = 5000.millis
+  implicit val askTimeout = settings.timeout
 
   /**
    * Downloads the file with the given id from the server and saves it to the given file.
@@ -94,7 +91,7 @@ object ConfigServiceAnnexClient {
     implicit val materializer = FlowMaterializer()
 
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
-    val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, 4096)
+    val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
     val chunks = Source(iterator).map(ChunkStreamPart.apply)
 
     val entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks)
@@ -128,4 +125,6 @@ object ConfigServiceAnnexClient {
       .run()
     Source(connection.responsePublisher).map(_._1).runWith(Sink.head)
   }
+
+  def shutdown(): Unit = system.shutdown()
 }

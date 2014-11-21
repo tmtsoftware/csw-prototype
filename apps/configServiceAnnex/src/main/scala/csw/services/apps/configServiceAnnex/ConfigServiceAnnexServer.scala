@@ -15,7 +15,7 @@ import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Promise, Future, Await}
+import scala.concurrent.{Promise, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
@@ -32,82 +32,106 @@ import scala.util.control.NonFatal
  * Use HEAD to check if a file already exists, DELETE to delete.
  * Files are immutable. (TODO: Should delete be available?)
  */
-object ConfigServiceAnnexServer extends App {
+object ConfigServiceAnnexServerApp extends App {
+  ConfigServiceAnnexServer.startup()
+}
+
+object ConfigServiceAnnexServer {
+
+  /**
+   * Starts the server and returns a future that completes when it is ready to accept connections
+   * (needed for testing)
+   */
+  def startup(): Future[ConfigServiceAnnexServer] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val server = new ConfigServiceAnnexServer()
+    server.startup().map(_ => server)
+  }
+}
+
+class ConfigServiceAnnexServer {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServer"))
   logger.info("Config service annex started")
   implicit val system = ActorSystem("ConfigServiceAnnexServer")
 
   import system.dispatcher
+  import akka.http.model.HttpMethods._
 
   val settings = ConfigServiceAnnexSettings(system)
   if (!settings.dir.exists()) settings.dir.mkdirs()
 
   implicit val materializer = FlowMaterializer()
-  implicit val askTimeout: Timeout = 5000.millis
-
-  import akka.http.model.HttpMethods._
+  implicit val askTimeout = settings.timeout
 
   val requestHandler: HttpRequest ⇒ Future[HttpResponse] = {
-    case HttpRequest(GET, uri, headers, _, _) ⇒
-      val path = makePath(settings.dir, new File(uri.path.toString()))
-      logger.info(s"Received GET request for $path (uri = $uri)")
-      val result = Try {
-        val mappedByteBuffer = FileUtils.mmap(path)
-        val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, 4096)
-        val chunks = Source(iterator).map(ChunkStreamPart.apply)
-        HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
-      } recover {
-        case NonFatal(cause) ⇒
-          logger.error(s"Nonfatal error: cause = ${cause.getMessage}")
-          HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
-      }
-      Future.successful(result.get)
-
-    case HttpRequest(POST, uri, headers, entity, _) ⇒
-      val id = new File(uri.path.toString()).getName
-      val file = new File(settings.dir, id)
-      logger.info(s"Received POST request for $file (uri = $uri)")
-      val out = new FileOutputStream(file)
-      val sink = ForeachSink[ByteString] { bytes ⇒
-        out.write(bytes.toArray)
-      }
-      val materialized = entity.getDataBytes().to(sink).run()
-      val response = Promise[HttpResponse]()
-      // ensure the output file is closed and the system shutdown upon completion
-      materialized.get(sink).onComplete {
-        case Success(_) ⇒
-          Try(out.close())
-          if (FileUtils.validate(id, file))
-            response.success(HttpResponse(StatusCodes.OK))
-          else
-            response.success(HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage))
-        case Failure(e) ⇒
-          logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
-          Try(out.close())
-          response.success(HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage))
-      }
-      response.future
-
+    case HttpRequest(GET, uri, headers, _, _) ⇒ httpGet(uri)
+    case HttpRequest(POST, uri, headers, entity, _) ⇒ httpPost(uri, entity)
     case _: HttpRequest ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
   }
 
-  val bindingFuture = IO(Http) ? Http.Bind(interface = settings.interface, port = settings.port)
-  bindingFuture foreach {
-    case Http.ServerBinding(localAddress, connectionStream) ⇒
-      logger.info(s"Listening on http:/$localAddress/")
-      Source(connectionStream).foreach {
-        case Http.IncomingConnection(remoteAddress, requestProducer, responseConsumer) ⇒
-          logger.info(s"Accepted new connection from $remoteAddress")
-          Source(requestProducer).mapAsync(requestHandler).to(Sink(responseConsumer)).run()
-      }
+  private def startup(): Future[Any] = {
+    val bindingFuture = IO(Http) ? Http.Bind(interface = settings.interface, port = settings.port)
+    bindingFuture foreach {
+      case Http.ServerBinding(localAddress, connectionStream) ⇒
+        logger.info(s"Listening on http:/$localAddress/")
+        Source(connectionStream).foreach {
+          case Http.IncomingConnection(remoteAddress, requestProducer, responseConsumer) ⇒
+            logger.info(s"Accepted new connection from $remoteAddress")
+            Source(requestProducer).mapAsync(requestHandler).to(Sink(responseConsumer)).run()
+        }
+    }
+    bindingFuture.recover {
+      case ex ⇒
+        logger.error(ex.getMessage)
+        system.shutdown() // XXX TODO error handling
+    }
   }
 
-  bindingFuture.recover {
-    case ex ⇒
-      logger.error(ex.getMessage)
-      system.shutdown() // XXX TODO error handling
+  // Implements Http GET
+  private def httpGet(uri: Uri): Future[HttpResponse] = {
+    val path = makePath(settings.dir, new File(uri.path.toString()))
+    logger.info(s"Received GET request for $path (uri = $uri)")
+    val result = Try {
+      val mappedByteBuffer = FileUtils.mmap(path)
+      val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
+      val chunks = Source(iterator).map(ChunkStreamPart.apply)
+      HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
+    } recover {
+      case NonFatal(cause) ⇒
+        logger.error(s"Nonfatal error: cause = ${cause.getMessage}")
+        HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
+    }
+    Future.successful(result.get)
   }
 
+  // Implements Http POST
+  private def httpPost(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
+    val id = new File(uri.path.toString()).getName
+    val file = new File(settings.dir, id)
+    logger.info(s"Received POST request for $file (uri = $uri)")
+    val out = new FileOutputStream(file)
+    val sink = ForeachSink[ByteString] { bytes ⇒
+      out.write(bytes.toArray)
+    }
+    val materialized = entity.getDataBytes().to(sink).run()
+    val response = Promise[HttpResponse]()
+    // ensure the output file is closed and the system shutdown upon completion
+    materialized.get(sink).onComplete {
+      case Success(_) ⇒
+        Try(out.close())
+        if (FileUtils.validate(id, file))
+          response.success(HttpResponse(StatusCodes.OK))
+        else
+          response.success(HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage))
+      case Failure(e) ⇒
+        logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
+        Try(out.close())
+        response.success(HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage))
+    }
+    response.future
+  }
+
+  def shutdown(): Unit = system.shutdown()
 
   // Returns the name of the file to use in the configured directory
   // XXX TODO: Split into subdirs based on parts of file name for better performance
