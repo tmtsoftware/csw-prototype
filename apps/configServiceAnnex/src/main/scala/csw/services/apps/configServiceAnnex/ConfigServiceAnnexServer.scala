@@ -15,9 +15,9 @@ import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.Await
+import scala.concurrent.{Promise, Future, Await}
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -47,7 +47,7 @@ object ConfigServiceAnnexServer extends App {
 
   import akka.http.model.HttpMethods._
 
-  val requestHandler: HttpRequest ⇒ HttpResponse = {
+  val requestHandler: HttpRequest ⇒ Future[HttpResponse] = {
     case HttpRequest(GET, uri, headers, _, _) ⇒
       val path = makePath(settings.dir, new File(uri.path.toString()))
       logger.info(s"Received GET request for $path (uri = $uri)")
@@ -61,7 +61,7 @@ object ConfigServiceAnnexServer extends App {
           logger.error(s"Nonfatal error: cause = ${cause.getMessage}")
           HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
       }
-      result.get
+      Future.successful(result.get)
 
     case HttpRequest(POST, uri, headers, entity, _) ⇒
       val id = new File(uri.path.toString()).getName
@@ -72,27 +72,23 @@ object ConfigServiceAnnexServer extends App {
         out.write(bytes.toArray)
       }
       val materialized = entity.getDataBytes().to(sink).run()
+      val response = Promise[HttpResponse]()
       // ensure the output file is closed and the system shutdown upon completion
-      Await.result(materialized.get(sink), askTimeout.duration)  // XXX TODO FIXME
-      if (FileUtils.validate(id, file))
-        HttpResponse(StatusCodes.OK)
-      else
-        HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage)
+      materialized.get(sink).onComplete {
+        case Success(_) ⇒
+          Try(out.close())
+          if (FileUtils.validate(id, file))
+            response.success(HttpResponse(StatusCodes.OK))
+          else
+            response.success(HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage))
+        case Failure(e) ⇒
+          logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
+          Try(out.close())
+          response.success(HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage))
+      }
+      response.future
 
-//      materialized.get(sink).onComplete {
-//        case Success(_) ⇒
-//          Try(out.close())
-//          if (FileUtils.validate(id, file))
-//            HttpResponse(StatusCodes.OK)
-//          else
-//            HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage)
-//        case Failure(e) ⇒
-//          logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
-//          Try(out.close())
-//          HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage)
-//      }
-
-    case _: HttpRequest ⇒ HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!")
+    case _: HttpRequest ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
   }
 
   val bindingFuture = IO(Http) ? Http.Bind(interface = settings.interface, port = settings.port)
@@ -102,23 +98,20 @@ object ConfigServiceAnnexServer extends App {
       Source(connectionStream).foreach {
         case Http.IncomingConnection(remoteAddress, requestProducer, responseConsumer) ⇒
           logger.info(s"Accepted new connection from $remoteAddress")
-          Source(requestProducer).map(requestHandler).to(Sink(responseConsumer)).run()
-        case _ ⇒ logger.error("XXX 1")
+          Source(requestProducer).mapAsync(requestHandler).to(Sink(responseConsumer)).run()
       }
-    case _ ⇒ logger.error("XXX 2")
   }
 
   bindingFuture.recover {
     case ex ⇒
       logger.error(ex.getMessage)
-      system.shutdown()
+      system.shutdown() // XXX TODO error handling
   }
 
 
   // Returns the name of the file to use in the configured directory
   // XXX TODO: Split into subdirs based on parts of file name for better performance
   private def makePath(dir: File, file: File): Path = {
-    logger.info(s"XXX makePath $dir , $file")
     Paths.get(dir.getPath, file.getName)
   }
 }
