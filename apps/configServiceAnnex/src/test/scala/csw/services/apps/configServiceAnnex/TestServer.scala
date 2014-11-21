@@ -1,4 +1,4 @@
-package csw.services.apps.configServiceAnnex
+package test
 
 import java.io.File
 import java.nio.channels.FileChannel
@@ -14,18 +14,18 @@ import akka.pattern.ask
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.{ByteString, Timeout}
-import com.typesafe.scalalogging.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.util.Try
 import scala.util.control.NonFatal
 
+// A test HTTP server that returns files with a given name from /tmp.
+// The test client tries to get /tmp/test.txt by getting http://localhost:8549/test.txt
+// and stores the result in /tmp/out.txt.
 object TestServer extends App {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServer"))
   implicit val system = ActorSystem()
 
-  import csw.services.apps.configServiceAnnex.TestServer.system.dispatcher
+  import system.dispatcher
 
   implicit val materializer = FlowMaterializer()
   implicit val askTimeout: Timeout = 5000.millis
@@ -36,20 +36,22 @@ object TestServer extends App {
   // Serve files from this directory
   val dir = new File("/tmp")
 
+  val chunkSize = 4096
+
   import akka.http.model.HttpMethods._
 
   val requestHandler: HttpRequest ⇒ HttpResponse = {
     case HttpRequest(GET, uri, headers, _, _) ⇒
       val path = makePath(dir, new File(uri.path.toString()))
-      logger.info(s"Received request for $path (uri = $uri)")
+      println(s"Received request for $path (uri = $uri)")
       val result = Try {
         val mappedByteBuffer = mmap(path)
-        val iterator = new ByteBufferIterator(mappedByteBuffer, 4096)
+        val iterator = new ByteBufferIterator(mappedByteBuffer, chunkSize)
         val chunks = Source(iterator).map(ChunkStreamPart.apply)
         HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
       } recover {
         case NonFatal(cause) ⇒
-          logger.error(s"Nonfatal error: cause = ${cause.getMessage}")
+          println(s"Nonfatal error: cause = ${cause.getMessage}")
           HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
       }
       result.get
@@ -59,17 +61,17 @@ object TestServer extends App {
   val bindingFuture = IO(Http) ? Http.Bind(host, port)
   bindingFuture foreach {
     case Http.ServerBinding(localAddress, connectionStream) ⇒
-      logger.info(s"Listening on http:/$localAddress/")
+      println(s"Listening on http:/$localAddress/")
       Source(connectionStream).foreach {
         case Http.IncomingConnection(remoteAddress, requestProducer, responseConsumer) ⇒
-          logger.info(s"Accepted new connection from $remoteAddress")
-          Source(requestProducer).map(requestHandler).to(Sink(responseConsumer)).run()
+          println(s"Accepted new connection from $remoteAddress")
+          val materialized = Source(requestProducer).map(requestHandler).to(Sink(responseConsumer)).run()
       }
   }
 
   bindingFuture.recover {
     case ex =>
-      logger.error(ex.getMessage)
+      println("error: " + ex.getMessage)
       system.shutdown()
   }
 
@@ -96,7 +98,6 @@ object TestServer extends App {
   }
 
   def makePath(dir: File, file: File): Path = {
-    logger.info(s"XXX makePath $dir , $file")
     Paths.get(dir.getPath, file.getName)
   }
 }

@@ -1,9 +1,7 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.File
-import java.nio.channels.FileChannel
-import java.nio.file.{ Paths, Path, StandardOpenOption }
-import java.nio.{ ByteBuffer, MappedByteBuffer }
+import java.io.{File, FileOutputStream}
+import java.nio.file.{Path, Paths}
 
 import akka.actor.ActorSystem
 import akka.http.Http
@@ -12,11 +10,12 @@ import akka.http.model._
 import akka.io.IO
 import akka.pattern.ask
 import akka.stream.FlowMaterializer
-import akka.stream.scaladsl.{ Sink, Source }
-import akka.util.{ ByteString, Timeout }
+import akka.stream.scaladsl.{ForeachSink, Sink, Source}
+import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -51,10 +50,10 @@ object ConfigServiceAnnexServer extends App {
   val requestHandler: HttpRequest ⇒ HttpResponse = {
     case HttpRequest(GET, uri, headers, _, _) ⇒
       val path = makePath(settings.dir, new File(uri.path.toString()))
-      logger.info(s"Received request for $path (uri = $uri)")
+      logger.info(s"Received GET request for $path (uri = $uri)")
       val result = Try {
-        val mappedByteBuffer = mmap(path)
-        val iterator = new ByteBufferIterator(mappedByteBuffer, 4096)
+        val mappedByteBuffer = FileUtils.mmap(path)
+        val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, 4096)
         val chunks = Source(iterator).map(ChunkStreamPart.apply)
         HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
       } recover {
@@ -63,6 +62,36 @@ object ConfigServiceAnnexServer extends App {
           HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
       }
       result.get
+
+    case HttpRequest(POST, uri, headers, entity, _) ⇒
+      val id = new File(uri.path.toString()).getName
+      val file = new File(settings.dir, id)
+      logger.info(s"Received POST request for $file (uri = $uri)")
+      val out = new FileOutputStream(file)
+      val sink = ForeachSink[ByteString] { bytes ⇒
+        out.write(bytes.toArray)
+      }
+      val materialized = entity.getDataBytes().to(sink).run()
+      // ensure the output file is closed and the system shutdown upon completion
+      Await.result(materialized.get(sink), askTimeout.duration)  // XXX TODO FIXME
+      if (FileUtils.validate(id, file))
+        HttpResponse(StatusCodes.OK)
+      else
+        HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage)
+
+//      materialized.get(sink).onComplete {
+//        case Success(_) ⇒
+//          Try(out.close())
+//          if (FileUtils.validate(id, file))
+//            HttpResponse(StatusCodes.OK)
+//          else
+//            HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage)
+//        case Failure(e) ⇒
+//          logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
+//          Try(out.close())
+//          HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage)
+//      }
+
     case _: HttpRequest ⇒ HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!")
   }
 
@@ -85,31 +114,10 @@ object ConfigServiceAnnexServer extends App {
       system.shutdown()
   }
 
-  def mmap(path: Path): MappedByteBuffer = {
-    val channel = FileChannel.open(path, StandardOpenOption.READ)
-    val result = channel.map(FileChannel.MapMode.READ_ONLY, 0L, channel.size())
-    channel.close()
-    result
-  }
-
-  class ByteBufferIterator(buffer: ByteBuffer, chunkSize: Int) extends Iterator[ByteString] {
-    require(buffer.isReadOnly)
-    require(chunkSize > 0)
-
-    override def hasNext = buffer.hasRemaining
-
-    override def next(): ByteString = {
-      val size = chunkSize min buffer.remaining()
-      val temp = buffer.slice()
-      temp.limit(size)
-      buffer.position(buffer.position() + size)
-      ByteString(temp)
-    }
-  }
 
   // Returns the name of the file to use in the configured directory
   // XXX TODO: Split into subdirs based on parts of file name for better performance
-  def makePath(dir: File, file: File): Path = {
+  private def makePath(dir: File, file: File): Path = {
     logger.info(s"XXX makePath $dir , $file")
     Paths.get(dir.getPath, file.getName)
   }
