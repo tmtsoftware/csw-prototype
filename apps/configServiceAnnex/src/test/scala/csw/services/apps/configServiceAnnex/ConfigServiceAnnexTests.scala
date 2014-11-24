@@ -24,39 +24,44 @@ object ConfigServiceAnnexTests extends App {
     // client instance
     val client = ConfigServiceAnnexClient
 
-    // Create a file for testing
-    val file = Files.createTempFile(null, null).toFile
-    val raf = new RandomAccessFile(file, "rw")
-    raf.setLength(1048576)
-    raf.close()
-
+    val file = makeTestFile()
     val id = HashGeneratorUtils.generateSHA1(file)
 
-    // Upload the file
-    client.post(file).onComplete {
-      case Success(f) =>
-        println(s"File $f uploaded successfully with id $id")
-        file.delete()
-        // Download the file again
-        client.get(id, file).onComplete {
-          case Success(ff) =>
-            assert(FileUtils.validate(id, file))
-            println(s"File $ff downloaded successfully with id $id")
-            done(file)
-          case Failure(ex) =>
-            println(s"Error downloading id $id to $file: $ex")
-            done(file)
-        }
-      case Failure(ex) =>
-        println(s"Error uploading $file: $ex")
-        done(file)
+    for {
+      f1 <- client.post(file)
+      exists1 <- client.head(id)
+      f2 <- client.get(id, file)
+      delete1 <- client.delete(id)
+      exists2 <- client.head(id)
+    } try {
+      assert(f1 == file)
+      assert(exists1)
+      assert(f2 == f1)
+      assert(delete1)
+      assert(!exists2)
+      println("Test Passed")
+    } finally done()
+
+    def error(msg: String): Unit = {
+      println(msg)
+      done()
     }
 
-    def done(file: File): Unit = {
+    // Called when done to clean up and shutdown the http server and client
+    def done(): Unit = {
       server.shutdown()
       client.shutdown()
       file.delete()
       System.exit(0)
     }
+  }
+
+  // Create a file for testing
+  def makeTestFile(): File = {
+    val file = Files.createTempFile(null, null).toFile
+    val raf = new RandomAccessFile(file, "rw")
+    raf.setLength(1048576)
+    raf.close()
+    file
   }
 }

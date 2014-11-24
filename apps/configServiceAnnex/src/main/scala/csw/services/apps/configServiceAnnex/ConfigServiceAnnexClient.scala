@@ -1,6 +1,6 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{File, FileOutputStream, IOException}
+import java.io.{ File, FileOutputStream, IOException }
 
 import akka.actor.ActorSystem
 import akka.http.Http
@@ -10,14 +10,14 @@ import akka.http.model._
 import akka.io.IO
 import akka.pattern.ask
 import akka.stream.FlowMaterializer
-import akka.stream.scaladsl.{ForeachSink, Sink, Source}
+import akka.stream.scaladsl.{ ForeachSink, Sink, Source }
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
 import net.codejava.security.HashGeneratorUtils
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ Future, Promise }
+import scala.util.{ Failure, Success, Try }
 
 object ConfigServiceAnnexClient {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexClient"))
@@ -67,7 +67,7 @@ object ConfigServiceAnnexClient {
             status.failure(e)
         }
 
-      case Success(res)   ⇒
+      case Success(res) ⇒
         val s = s"HTTP response code for $uri: ${res.status}"
         logger.error(s)
         status.failure(new IOException(s))
@@ -106,7 +106,7 @@ object ConfigServiceAnnexClient {
       case Success(res) if res.status == StatusCodes.OK ⇒
         status.success(file)
 
-      case Success(res)   ⇒
+      case Success(res) ⇒
         val s = s"HTTP response code for $uri: ${res.status}"
         logger.error(s)
         status.failure(new IOException(s))
@@ -118,8 +118,63 @@ object ConfigServiceAnnexClient {
     status.future
   }
 
-  private def sendRequest(request: HttpRequest, connection: Http.OutgoingConnection)
-                         (implicit fm: FlowMaterializer): Future[HttpResponse] = {
+  /**
+   * Checks the existence of the file with the given id on the server
+   * @param id the id of the file to check (SHA-1 hash of the contents)
+   * @return a future boolean indicating the existence of the file, if successful,
+   *         or the exception if there was an HTTP error
+   */
+  def head(id: String): Future[Boolean] = {
+    val uri = s"http://$host:$port/$id"
+    logger.info(s"Checking existence of $uri")
+    implicit val materializer = FlowMaterializer()
+
+    val result = for {
+      connection ← IO(Http).ask(Http.Connect(host, port)).mapTo[Http.OutgoingConnection]
+      response ← sendRequest(HttpRequest(HEAD, uri = s"/$id"), connection)
+    } yield response
+
+    val status = Promise[Boolean]()
+    result onComplete {
+      case Success(res)  ⇒
+        status.success(res.status == StatusCodes.OK)
+
+      case Failure(error) ⇒
+        logger.error(s"$error")
+        status.failure(error)
+    }
+    status.future
+  }
+
+  /**
+   * Deletes the file with the given id on the server (Should normally only be used in tests).
+   * @param id the id of the file to delete (SHA-1 hash of the contents)
+   * @return a future boolean: true if the file could be deleted or did not exist,
+   *         or the exception if the file could not be deleted or there was an HTTP error
+   */
+  def delete(id: String): Future[Boolean] = {
+    val uri = s"http://$host:$port/$id"
+    logger.info(s"Deleting $uri")
+    implicit val materializer = FlowMaterializer()
+
+    val result = for {
+      connection ← IO(Http).ask(Http.Connect(host, port)).mapTo[Http.OutgoingConnection]
+      response ← sendRequest(HttpRequest(DELETE, uri = s"/$id"), connection)
+    } yield response
+
+    val status = Promise[Boolean]()
+    result onComplete {
+      case Success(res)  ⇒
+        status.success(res.status == StatusCodes.OK)
+
+      case Failure(error) ⇒
+        logger.error(s"$error")
+        status.failure(error)
+    }
+    status.future
+  }
+
+  private def sendRequest(request: HttpRequest, connection: Http.OutgoingConnection)(implicit fm: FlowMaterializer): Future[HttpResponse] = {
     Source(List(request -> 'NoContext))
       .to(Sink(connection.requestSubscriber))
       .run()

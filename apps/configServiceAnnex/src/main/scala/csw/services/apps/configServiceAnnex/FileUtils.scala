@@ -1,9 +1,9 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{IOException, File}
-import java.nio.{ByteBuffer, MappedByteBuffer}
+import java.io.{ IOException, File }
+import java.nio.{ ByteBuffer, MappedByteBuffer }
 import java.nio.channels.FileChannel
-import java.nio.file.{StandardOpenOption, Path}
+import java.nio.file.{ StandardOpenOption, Path }
 
 import akka.util.ByteString
 import net.codejava.security.HashGeneratorUtils
@@ -49,7 +49,6 @@ object FileUtils {
 
   def validateError(id: String, file: File): IOException =
     new IOException(s"Invalid contents of file $file, does not match SHA-1 $id")
-
 
   class ByteBufferIterator(buffer: ByteBuffer, chunkSize: Int) extends Iterator[ByteString] {
     require(buffer.isReadOnly)
