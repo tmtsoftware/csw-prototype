@@ -11,7 +11,9 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Config service actor.
  *
- * Note: In this implementation, you should have a single config service actor managing a
+ * Note: Only one instance of this actor should exist for a given local Git repository.
+ *
+ * In this implementation, you should have a single config service actor managing a
  * queue of commands that work on a single local repository, one command at a time.
  * This is because the current implementation reads and writes file to the working directory.
  * This has the advantage of being a cache for files, so they don't always have to

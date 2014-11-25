@@ -12,11 +12,13 @@ import csw.services.cs.core._
  * Adds a convenience layer over the Akka actor interface to the configuration service.
  * This is like the ConfigService API, but returns Akka Futures with the correct return types instead of objects.
  *
+ * Only one instance of this class should exist for a given local Git repository.
+ *
  * @param system the caller's actor system
  * @param configServiceActor the config service actor reference to use
  * @param timeout amount of time to wait for config service operations to complete
  */
-case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef)(implicit timeout: Timeout) {
+case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef)(implicit timeout: Timeout) extends ConfigManager {
 
   import system.dispatcher
 

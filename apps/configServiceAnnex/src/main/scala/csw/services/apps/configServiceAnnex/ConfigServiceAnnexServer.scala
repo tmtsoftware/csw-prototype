@@ -36,7 +36,6 @@ object ConfigServiceAnnexServerApp extends App {
 }
 
 object ConfigServiceAnnexServer {
-
   /**
    * Starts the server and returns a future that completes when it is ready to accept connections
    * (needed for testing)
@@ -108,7 +107,9 @@ class ConfigServiceAnnexServer {
   // Implements Http POST
   private def httpPost(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
     val id = new File(uri.path.toString()).getName
-    val file = new File(settings.dir, id)
+    val path = makePath(settings.dir, new File(uri.path.toString()))
+    val file = path.toFile
+    file.getParentFile.mkdirs()
     val response = Promise[HttpResponse]()
     if (file.exists) {
       logger.info(s"Ignoring POST request for existing $file (uri = $uri)")
@@ -168,9 +169,10 @@ class ConfigServiceAnnexServer {
    */
   def shutdown(): Unit = system.shutdown()
 
-  // Returns the name of the file to use in the configured directory
-  // XXX TODO: Split into subdirs based on parts of file name for better performance
+  // Returns the name of the file to use in the configured directory.
+  // Like Git, distribute the files in directories based on the first 2 chars of the SHA-1 hash
   private def makePath(dir: File, file: File): Path = {
-    Paths.get(dir.getPath, file.getName)
+    val (subdir, name) = file.getName.splitAt(2)
+    Paths.get(dir.getPath, subdir, name)
   }
 }

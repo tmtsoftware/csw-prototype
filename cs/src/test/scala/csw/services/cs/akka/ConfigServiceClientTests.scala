@@ -52,7 +52,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
     val csClient = ConfigServiceClient(system, csActor)
 
-    // Sequential, non-blocking for comprehension
+    // Sequential, non-blocking for-comprehension
     val result = for {
     // Try to update a file that does not exist (should fail)
       updateIdNull <- csClient.update(path1, new ConfigString(contents2), comment2) recover {

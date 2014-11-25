@@ -16,7 +16,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.treewalk.TreeWalk
 
 import scala.annotation.tailrec
-import scala.concurrent.{Await, Future, ExecutionContextExecutor}
+import scala.concurrent.{ Await, Future, ExecutionContextExecutor }
 import scala.concurrent.duration._
 
 /**
@@ -99,7 +99,7 @@ object GitConfigManager {
     try {
       Await.result(
         gm.create(new File("README"), ConfigString("This is the main Config Service Git repository.")),
-        5.seconds)
+        10.seconds)
     } finally {
       deleteDirectoryRecursively(tmpDir)
     }
@@ -117,7 +117,19 @@ object GitConfigManager {
 }
 
 /**
- * Uses JGit to manage versions of configuration files
+ * Uses JGit to manage versions of configuration files.
+ * Special handling is available for large/binary files (oversize option in create).
+ * Oversize files are stored on an "annex" server using the SHA-1 hash of the file
+ * contents for the name (similar to the way Git stores file objects).
+ *
+ * Note that although the API is non-blocking, you need to be careful when dealing
+ * with the file system (the local Git repo), which is static, and not attempt multiple
+ * conflicting file read, write or Git operations at once. The remote (bare) Git repo should
+ * be able to handle the concurrent usage, but not the local repo, which has a files in the
+ * working directory. Having the files checked out in working directory should help avoid
+ * having to download them every time an application starts.
+ *
+ * Only one instance of this class should exist for a given local Git repository.
  */
 class GitConfigManager(val git: Git)(implicit dispatcher: ExecutionContextExecutor)
     extends ConfigManager with LazyLogging {
@@ -184,7 +196,6 @@ class GitConfigManager(val git: Git)(implicit dispatcher: ExecutionContextExecut
       file.delete()
     }
   }
-
 
   override def get(path: File, id: Option[ConfigId]): Future[Option[ConfigData]] = {
     logger.debug(s"get $path")
