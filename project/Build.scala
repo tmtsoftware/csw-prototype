@@ -35,7 +35,7 @@ object Build extends Build {
     provided(akkaActor) ++
       compile(akkaRemote, jgit, scalaLogging, logback) ++
       test(scalaTest, akkaTestKit, junit)
-    ) dependsOn(log, util)
+    ) dependsOn(log, util, configServiceAnnex)
 
   // Logging support, Log service (only includes config files so far)
   lazy val log = project

@@ -84,7 +84,7 @@ object ConfigServiceAnnexClient {
    * @param file the local file to upload to the server
    * @return a future containing the file, if successful, or the exception if there was an error
    */
-  def post(file: File): Future[File] = {
+  def post(file: File): Future[String] = {
     val id = HashGeneratorUtils.generateSHA1(file)
     val uri = s"http://$host:$port/$id"
     logger.info(s"Uploading $file to $uri")
@@ -101,10 +101,10 @@ object ConfigServiceAnnexClient {
       response ← sendRequest(HttpRequest(method = POST, uri = s"/$id", entity = entity), connection)
     } yield response
 
-    val status = Promise[File]()
+    val status = Promise[String]()
     result onComplete {
       case Success(res) if res.status == StatusCodes.OK ⇒
-        status.success(file)
+        status.success(id)
 
       case Success(res) ⇒
         val s = s"HTTP response code for $uri: ${res.status}"
@@ -136,7 +136,7 @@ object ConfigServiceAnnexClient {
 
     val status = Promise[Boolean]()
     result onComplete {
-      case Success(res)  ⇒
+      case Success(res) ⇒
         status.success(res.status == StatusCodes.OK)
 
       case Failure(error) ⇒
@@ -164,7 +164,7 @@ object ConfigServiceAnnexClient {
 
     val status = Promise[Boolean]()
     result onComplete {
-      case Success(res)  ⇒
+      case Success(res) ⇒
         status.success(res.status == StatusCodes.OK)
 
       case Failure(error) ⇒

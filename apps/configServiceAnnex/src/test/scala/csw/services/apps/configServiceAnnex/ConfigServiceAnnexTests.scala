@@ -25,18 +25,17 @@ object ConfigServiceAnnexTests extends App {
     val client = ConfigServiceAnnexClient
 
     val file = makeTestFile()
-    val id = HashGeneratorUtils.generateSHA1(file)
 
     for {
-      f1 <- client.post(file)
+      id <- client.post(file)
       exists1 <- client.head(id)
-      f2 <- client.get(id, file)
+      file1 <- client.get(id, file)
       delete1 <- client.delete(id)
       exists2 <- client.head(id)
     } try {
-      assert(f1 == file)
+      assert(id == HashGeneratorUtils.generateSHA1(file))
       assert(exists1)
-      assert(f2 == f1)
+      assert(file1 == file)
       assert(delete1)
       assert(!exists2)
       println("Test Passed")

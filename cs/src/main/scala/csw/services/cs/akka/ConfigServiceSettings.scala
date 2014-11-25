@@ -19,11 +19,10 @@ object ConfigServiceSettings extends ExtensionId[ConfigServiceSettings] with Ext
 }
 
 class ConfigServiceSettings(config: Config) extends Extension {
-  val gitMainRepository = new URI(config.getString("csw.config-service.git.main-repository"))
-  val gitLocalRepository = new File(subst(config.getString("csw.config-service.git.local-repository")))
-
-  // XXX temp
-  val gitOversizeStorage = new URI(config.getString("csw.config-service.git.oversize-storage"))
+  val prefix = "csw.services.cs"
+  val name = config.getString(s"$prefix.name")
+  val gitMainRepository = new URI(config.getString(s"$prefix.main-repository"))
+  val gitLocalRepository = new File(subst(config.getString(s"$prefix.local-repository")))
 
   // Do any required substitution on the setting values
   def subst(s: String): String = {

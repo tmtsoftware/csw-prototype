@@ -7,27 +7,25 @@ import csw.services.cs.JConfigManager
 import csw.services.cs.core.ConfigManager
 import csw.services.cs.core.git.{GitConfigManager, JGitConfigManager}
 
+import scala.concurrent.ExecutionContextExecutor
+
 /**
  * Utility class to create temporary Git repositories for use in testing.
  */
 object TestRepo {
 
-  private def resetRepo(settings: ConfigServiceSettings): Unit = {
-    println(s"Local repo = ${settings.gitLocalRepository}, remote = ${settings.gitMainRepository}, oversize files: ${settings.gitOversizeStorage}")
+  private def resetRepo(settings: ConfigServiceSettings)
+                       (implicit dispatcher: ExecutionContextExecutor): Unit = {
+    // XXX FIXME TODO: Use generated temp dirs, not settings
+    println(s"Local repo = ${settings.gitLocalRepository}, remote = ${settings.gitMainRepository}")
     if (settings.gitMainRepository.getScheme != "file")
-      throw new RuntimeException(s"Please specify a file URI for csw.cs.git-main-repository for testing")
+      throw new RuntimeException(s"Please specify a file URI for csw.services.cs.main-repository for testing")
 
     val gitMainRepo = new File(settings.gitMainRepository.getPath)
     // Delete the main and local test repositories (Only use this in test cases!)
     GitConfigManager.deleteDirectoryRecursively(gitMainRepo)
     GitConfigManager.initBareRepo(gitMainRepo)
     GitConfigManager.deleteDirectoryRecursively(settings.gitLocalRepository)
-
-    if (settings.gitOversizeStorage.getScheme == "file") {
-      val dir = new File(settings.gitOversizeStorage.getPath)
-      GitConfigManager.deleteDirectoryRecursively(dir)
-      dir.mkdirs()
-    }
   }
 
   /**
@@ -36,9 +34,10 @@ object TestRepo {
    *
    * @return a new ConfigManager set to manage the newly created Git repositories
    */
-  def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem())): ConfigManager = {
+  def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))
+                      (implicit dispatcher: ExecutionContextExecutor): ConfigManager = {
     resetRepo(settings)
-    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
+    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
   }
 
   /**
@@ -48,21 +47,10 @@ object TestRepo {
    * @return a new ConfigManager set to manage the newly created Git repositories
    */
   def getJConfigManager: JConfigManager = {
-    val settings = ConfigServiceSettings(ActorSystem())
+    val system = ActorSystem()
+    import system.dispatcher
+    val settings = ConfigServiceSettings(system)
     resetRepo(settings)
-    JGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
-  }
-
-  /**
-   * Creates a temporary test Git repository and a bare main repository for push/pull.
-   * Any previous contents are deleted.
-   * @param prefix prefix for temp repos created
-   * @param create if true, create temporary git main and local repos for testing
-   * @param system the actor system
-   *
-   * @return a new non-blocking config manager set to manage the newly created Git repositories
-   */
-  def getNonBlockingConfigManager(prefix: String, create: Boolean, system: ActorSystem): NonBlockingConfigManager = {
-    NonBlockingConfigManager(getConfigManager(ConfigServiceSettings(system)))(system.dispatcher)
+    JGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
   }
 }

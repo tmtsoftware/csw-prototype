@@ -1,5 +1,8 @@
 package csw.services.cs.akka
 
+import akka.util.Timeout
+import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import java.io.{File, FileNotFoundException, IOException}
 import csw.services.cs.core.ConfigString
@@ -7,16 +10,16 @@ import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
 import scala.concurrent.Await
-import akka.util.Timeout
 
 
 /**
  * Tests the Config Service actor
  */
 class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
+with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   import system.dispatcher
+  implicit val timeout: Timeout = 30.seconds
 
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")
@@ -30,25 +33,27 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
   val comment3 = "update 2 comment"
 
   test("Test the ConfigServiceClent, storing and retrieving some files") {
-    runTests(oversize = false)
-    runTests(oversize = true)
+    runTests(None, oversize = false)
+
+    // Start the config service annex http server and wait for it to be ready for connections
+    // (In normal operations, this server would already be running)
+    val server = Await.result(ConfigServiceAnnexServer.startup(), 5.seconds)
+    runTests(Some(server), oversize = true)
   }
 
   // Runs the tests for the config service, using the given oversize option.
-  def runTests(oversize: Boolean) : Unit = {
-    println(s"--- Testing config service: oversize = $oversize ---")
-
-    implicit val timeout = Timeout(55555.seconds)
+  def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean) : Unit = {
+    logger.info(s"--- Testing config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
-    val manager = TestRepo.getNonBlockingConfigManager("test2", create = true, system)
+    val manager = TestRepo.getConfigManager()
 
     // Create the actor
-    val csActor = system.actorOf(NonBlockingConfigServiceActor.props(manager), name = "configService")
+    val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
     val csClient = ConfigServiceClient(system, csActor)
 
     // Sequential, non-blocking for comprehension
-    Await.result(for {
+    val result = for {
     // Try to update a file that does not exist (should fail)
       updateIdNull <- csClient.update(path1, new ConfigString(contents2), comment2) recover {
         case e: FileNotFoundException => null
@@ -105,10 +110,15 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
           case x => if (x.getName != "README") sys.error("Test failed for " + info)
         }
       }
-
       system.stop(csActor)
 
-    }, timeout.duration)
+      if (annexServer.isDefined) {
+        logger.info("Shutting down annex server")
+        annexServer.get.shutdown()
+      }
+    }
+
+    Await.result(result, 30.seconds)
   }
 
   override def afterAll(): Unit = {

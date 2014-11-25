@@ -2,10 +2,11 @@ package csw.services.cs.core.git
 
 import java.io.{ File, FileNotFoundException, IOException }
 import java.net.URI
-import java.nio.file.{ StandardCopyOption, Files }
+import java.nio.file.Files
 import java.util.Date
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
 import csw.services.cs.core.{ GitConfigId, _ }
 import net.codejava.security.HashGeneratorUtils
 import org.eclipse.jgit.api.Git
@@ -15,6 +16,8 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.treewalk.TreeWalk
 
 import scala.annotation.tailrec
+import scala.concurrent.{Await, Future, ExecutionContextExecutor}
+import scala.concurrent.duration._
 
 /**
  * Used to initialize an instance of GitConfigManager with a given repository directory
@@ -32,22 +35,21 @@ object GitConfigManager {
    *
    * @param gitWorkDir top level directory to use for storing configuration files and the local git repository (under .git)
    * @param remoteRepo the URI of the remote, main repository
-   * @param gitOversizeStorage the URI of the place to store oversize files (The repo then contains the SHA-1 of the file)
    *
    * @return a new GitConfigManager configured to use the given local and remote repositories
    */
-  def apply(gitWorkDir: File, remoteRepo: URI, gitOversizeStorage: URI): GitConfigManager = {
+  def apply(gitWorkDir: File, remoteRepo: URI)(implicit dispatcher: ExecutionContextExecutor): GitConfigManager = {
     // Init local repo
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
       val git = new Git(new FileRepositoryBuilder().setGitDir(gitDir).build())
       val result = git.pull.call
       if (!result.isSuccessful) throw new IOException(result.toString)
-      new GitConfigManager(git, gitOversizeStorage)
+      new GitConfigManager(git)
     } else {
       gitWorkDir.mkdirs()
       val git = Git.cloneRepository.setDirectory(gitWorkDir).setURI(remoteRepo.toString).call
-      new GitConfigManager(git, gitOversizeStorage)
+      new GitConfigManager(git)
     }
   }
 
@@ -87,64 +89,90 @@ object GitConfigManager {
    *
    * @param dir directory to contain the new bare repository
    */
-  def initBareRepo(dir: File): Unit = {
+  def initBareRepo(dir: File)(implicit dispatcher: ExecutionContextExecutor): Unit = {
     // Create the new main repo
     Git.init.setDirectory(dir).setBare(true).call
 
     // Add a README file to a temporary clone of the main repo and push it to the new repo.
     val tmpDir = Files.createTempDirectory("TempConfigServiceRepo").toFile
-    val gm = GitConfigManager(tmpDir, dir.toURI, tmpDir.toURI)
+    val gm = GitConfigManager(tmpDir, dir.toURI)
     try {
-      gm.create(new File("README"), ConfigString("This is the main Config Service Git repository."))
+      Await.result(
+        gm.create(new File("README"), ConfigString("This is the main Config Service Git repository.")),
+        5.seconds)
     } finally {
       deleteDirectoryRecursively(tmpDir)
     }
   }
+
+  //  // Sets the master repository (needed for git push/pull commands)
+  //  private def trackMaster(git: Git): Unit = {
+  //    git.branchCreate()
+  //      .setName("master")
+  //      .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
+  //      .setStartPoint("origin/master")
+  //      .setForce(true)
+  //      .call
+  //  }
 }
 
 /**
  * Uses JGit to manage versions of configuration files
  */
-class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigManager with LazyLogging {
+class GitConfigManager(val git: Git)(implicit dispatcher: ExecutionContextExecutor)
+    extends ConfigManager with LazyLogging {
 
-  override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): ConfigId = {
+  // used to access the http server that manages oversize files
+  val annex = ConfigServiceAnnexClient
+
+  override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
     logger.debug(s"create $path")
     if (oversize) {
       createOversize(path, configData, comment)
     } else {
-      val file = fileForPath(path)
-      if (file.exists()) {
-        throw new IOException("File already exists in repository: " + path)
+      Future {
+        val file = fileForPath(path)
+        if (file.exists()) {
+          throw new IOException("File already exists in repository: " + path)
+        }
+        put(path, configData, comment)
       }
-      put(path, configData, comment)
     }
   }
 
-  override def update(path: File, configData: ConfigData, comment: String): ConfigId = {
+  override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
     logger.debug(s"update $path")
-    pull()
-    val file = fileForPath(path)
-    if (isOversize(file)) {
-      updateOversize(path, configData, comment)
-    } else {
-      if (!file.exists()) throw new FileNotFoundException("File not found: " + path)
-      put(path, configData, comment)
+    Future(pull()).flatMap { _ ⇒
+      val file = fileForPath(path)
+      if (isOversize(file)) {
+        updateOversize(path, configData, comment)
+      } else {
+        Future {
+          if (!file.exists()) throw new FileNotFoundException("File not found: " + path)
+          put(path, configData, comment)
+        }
+      }
     }
   }
 
-  override def exists(path: File): Boolean = {
+  override def exists(path: File): Future[Boolean] = Future {
     logger.debug(s"exists $path")
     pull()
     val file = fileForPath(path)
+    logger.debug(s"exists $path: $file exists? ${file.exists} || oversize? ${isOversize(file)}")
     file.exists || isOversize(file)
   }
 
-  override def delete(path: File, comment: String = "deleted"): Unit = {
+  override def delete(path: File, comment: String = "deleted"): Future[Unit] = Future {
+    deleteFile(path, comment)
+  }
+
+  private def deleteFile(path: File, comment: String = "deleted"): Unit = {
     logger.debug(s"delete $path")
     val file = fileForPath(path)
     pull()
     if (isOversize(file)) {
-      delete(shaFile(path), comment)
+      deleteFile(shaFile(path), comment)
       file.delete()
     } else {
       if (!file.exists) {
@@ -157,18 +185,20 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
     }
   }
 
-  override def get(path: File, id: Option[ConfigId]): Option[ConfigData] = {
+
+  override def get(path: File, id: Option[ConfigId]): Future[Option[ConfigData]] = {
     logger.debug(s"get $path")
-    val file = fileForPath(path)
-    pull()
-    if (isOversize(file)) {
-      getOversize(path, id)
-    } else {
-      getConfigData(path, id)
+    Future(pull()).flatMap { _ ⇒
+      val file = fileForPath(path)
+      if (isOversize(file)) {
+        getOversize(path, id)
+      } else {
+        Future(getConfigData(path, id))
+      }
     }
   }
 
-  override def list(): List[ConfigFileInfo] = {
+  override def list(): Future[List[ConfigFileInfo]] = Future {
     logger.debug(s"list")
     pull()
     val repo = git.getRepository
@@ -218,14 +248,16 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
       val origPath = origFile(path)
       val objectId = treeWalk.getObjectId(0).name
       // TODO: Include create comment (history(path)(0).comment) or latest comment (history(path).last.comment)?
-      val info = new ConfigFileInfo(origPath, GitConfigId(objectId), history(origPath).last.comment)
+      val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath).last.comment)
       list(treeWalk, info :: result)
     } else {
       result
     }
   }
 
-  override def history(path: File): List[ConfigFileHistory] = {
+  override def history(path: File): Future[List[ConfigFileHistory]] = Future(hist(path))
+
+  private def hist(path: File): List[ConfigFileHistory] = {
     logger.debug(s"history $path")
     pull()
     // Check sha1 file history first (may have been deleted, so don't check if it exists)
@@ -233,33 +265,33 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
     val logCommand = git.log
       .add(git.getRepository.resolve(Constants.HEAD))
       .addPath(shaPath.getPath)
-    val result = history(shaPath, logCommand.call.iterator(), List())
+    val result = hist(shaPath, logCommand.call.iterator(), List())
     if (result.nonEmpty) {
       result
     } else {
       val logCommand = git.log
         .add(git.getRepository.resolve(Constants.HEAD))
         .addPath(path.getPath)
-      history(path, logCommand.call.iterator(), List())
+      hist(path, logCommand.call.iterator(), List())
     }
   }
 
   // Returns a list of all known versions of a given path by recursively walking the Git history tree
   @tailrec
-  private def history(path: File, it: java.util.Iterator[RevCommit], result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
+  private def hist(path: File, it: java.util.Iterator[RevCommit], result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
     if (it.hasNext) {
       val revCommit = it.next()
       val tree = revCommit.getTree
       val treeWalk = TreeWalk.forPath(git.getRepository, path.getPath, tree)
       if (treeWalk == null) {
-        history(path, it, result)
+        hist(path, it, result)
       } else {
         val objectId = treeWalk.getObjectId(0)
         // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
         val comment = revCommit.getShortMessage
         val time = new Date(revCommit.getCommitTime * 1000L)
         val info = new ConfigFileHistory(GitConfigId(objectId.name), comment, time)
-        history(path, it, info :: result)
+        hist(path, it, info :: result)
       }
     } else {
       result
@@ -303,21 +335,13 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
     Files.write(path, configData.getBytes)
   }
 
-  //  // Sets the master repository (needed for git push/pull commands)
-  //  private def trackMaster(git: Git): Unit = {
-  //    git.branchCreate()
-  //      .setName("master")
-  //      .setUpstreamMode(SetupUpstreamMode.SET_UPSTREAM)
-  //      .setStartPoint("origin/master")
-  //      .setForce(true)
-  //      .call
-  //  }
-
   // File used to store the SHA-1 of the actual file, if oversized.
-  private def shaFile(file: File): File = new File(s"${file.getPath}.sha1")
+  private def shaFile(file: File): File =
+    new File(s"${file.getPath}.sha1")
 
   // Inverse of shaFile
-  private def origFile(file: File): File = if (file.getPath.endsWith(".sha1")) new File(file.getPath.dropRight(5)) else file
+  private def origFile(file: File): File =
+    if (file.getPath.endsWith(".sha1")) new File(file.getPath.dropRight(5)) else file
 
   // True if the .sha1 file exists, meaning the file needs special oversize handling.
   // Note: We only check if it exists in the working directory, not the repository.
@@ -328,104 +352,75 @@ class GitConfigManager(val git: Git, gitOversizeStorage: URI) extends ConfigMana
    * For large/binary files:
    * Creates the given file in the Git repo (actually creates a file named $path.sha1 containing the SHA-1
    * of the actual file).
-   * The file data is stored at a configured location, where the file name is the SHA-1
+   * The file data is stored on the config service annex server, where the file name is the SHA-1
    * of the data (making it unique for that data).
    *
    * @param path the relative path of the file in the git repo
    * @param configData contains the file's data
    * @param comment the create comment
-   * @return the ConfigId for the created $path.sha1, which only contains the SHA-1 of the actual file.
+   * @return the future ConfigId for the created $path.sha1, which only contains the SHA-1 of the actual file.
    */
-  private def createOversize(path: File, configData: ConfigData, comment: String): ConfigId = {
+  private def createOversize(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
     val file = fileForPath(path)
-    val sha1File = shaFile(file)
-    if (file.exists() || sha1File.exists())
-      throw new IOException("File already exists in repository: " + file)
-
-    writeToFile(file, configData)
-    val sha1 = HashGeneratorUtils.generateSHA1(file)
-    copyFileToServer(file, sha1)
-    create(shaFile(path), ConfigString(sha1), oversize = false, comment)
+    Future {
+      val sha1File = shaFile(file)
+      if (file.exists() || sha1File.exists())
+        throw new IOException("File already exists in repository: " + file)
+      writeToFile(file, configData)
+    }.flatMap { _ ⇒
+      annex.post(file).flatMap { sha1 ⇒
+        create(shaFile(path), ConfigString(sha1), oversize = false, comment)
+      }
+    }
   }
 
   /**
    * For large/binary files:
    * Updates the given file in the Git repo (actually updates a file named $path.sha1 containing the SHA-1
    * of the actual file).
-   * The file data is stored at a configured location, where the file name is the SHA-1
+   * The file data is stored on the config service annex server, where the file name is the SHA-1
    * of the data (making it unique for that data).
    *
    * @param path the relative path of the file in the git repo
    * @param configData contains the file's data
    * @param comment the update comment
-   * @return the ConfigId for the updated $path.sha1, which only contains the SHA-1 of the actual file.
+   * @return the future ConfigId for the updated $path.sha1, which only contains the SHA-1 of the actual file.
    */
-  private def updateOversize(path: File, configData: ConfigData, comment: String): ConfigId = {
+  private def updateOversize(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
     val file = fileForPath(path)
-    val sha1File = shaFile(file)
-    writeToFile(file, configData)
-    val sha1 = HashGeneratorUtils.generateSHA1(file)
-    // XXX TODO compare SHA-1 to existing one at this point and return if same
-    //    if (sha1 == new String(Files.readAllBytes(sha1File.toPath))) {...}
-    copyFileToServer(file, sha1)
-    update(shaFile(path), ConfigString(sha1), comment)
+    Future {
+      val sha1File = shaFile(file)
+      writeToFile(file, configData)
+    }.flatMap { _ ⇒
+      annex.post(file).flatMap { sha1 ⇒
+        update(shaFile(path), ConfigString(sha1), comment)
+      }
+    }
   }
 
-  private def getOversize(path: File, id: Option[ConfigId]): Option[ConfigData] = {
-    get(shaFile(path), id) match {
-      case None ⇒ None
+  /**
+   * For large/binary files:
+   * Gets the given file from the Git repo (actually gets a file named $path.sha1 containing the SHA-1
+   * of the actual file and uses that to get the actual file from the annex http server).
+   *
+   * @param path the file path
+   * @param id an optional id used to specify a specific version to fetch
+   *           (by default the latest version is returned)
+   * @return a future object containing the configuration data, if found
+   */
+  private def getOversize(path: File, id: Option[ConfigId]): Future[Option[ConfigData]] = {
+    get(shaFile(path), id).flatMap {
+      case None ⇒ Future(None)
       case Some(configData) ⇒
         val sha1 = configData.toString
         val file = fileForPath(path)
         if (!file.exists() || (sha1 != HashGeneratorUtils.generateSHA1(file))) {
-          copyFileFromServer(file, configData.toString)
+          annex.get(sha1, file).map {
+            f ⇒ Some(ConfigFile(f))
+          }
+        } else {
+          Future(Some(ConfigFile(file)))
         }
-        Some(ConfigFile(file))
     }
   }
-
-  /**
-   * Copies the given file to the configured location, storing it under the given name.
-   * If the file already exists, it is not overwritten (Any files with the same content
-   * will have the same SHA-1 name).
-   *
-   * @param file local file, contains the data to copy
-   * @param name the base name of the file in which the data will be stored on the configured server
-   */
-  private def copyFileToServer(file: File, name: String): Unit = {
-    gitOversizeStorage.getScheme match {
-      case "file" ⇒
-        val dir = new File(gitOversizeStorage.getPath)
-        val f = new File(dir, name)
-        if (!f.exists()) Files.copy(file.toPath, f.toPath)
-
-      // XXX FIXME TODO: add sftp, maybe other schemes if needed (http)
-      //      case "sftp" => val jsch = new JSch()
-      case x ⇒ throw new RuntimeException(s"$x is not supported here")
-    }
-  }
-
-  /**
-   * Copies the contents of the file from the configured location,
-   * where it is stored under the given name, to the file path.
-   *
-   * @param file The local file in which to store the data
-   * @param name the base name of the file on the server holding the data
-   */
-  private def copyFileFromServer(file: File, name: String): Unit = {
-    gitOversizeStorage.getScheme match {
-      case "file" ⇒
-        val dir = new File(gitOversizeStorage.getPath)
-        val f = new File(dir, name)
-        if (f.exists()) {
-          logger.debug(s"copy $f to $file")
-          Files.copy(f.toPath, file.toPath, StandardCopyOption.REPLACE_EXISTING)
-        } else throw new FileNotFoundException(s"File not found: $f")
-
-      // XXX FIXME TODO: add sftp, maybe other schemes if needed (http)
-      //      case "sftp" => val jsch = new JSch()
-      case x ⇒ throw new RuntimeException(s"$x is not supported here")
-    }
-  }
-
 }

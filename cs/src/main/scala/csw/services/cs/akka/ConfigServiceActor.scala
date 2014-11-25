@@ -6,7 +6,7 @@ import akka.actor._
 import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.{ ConfigFileHistory, _ }
 
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 /**
  * Config service actor.
@@ -67,8 +67,9 @@ object ConfigServiceActor {
    * @param system the caller's actor system, used to access the settings
    */
   def defaultConfigManager(system: ActorSystem): ConfigManager = {
+    import system.dispatcher
     val settings = ConfigServiceSettings(system)
-    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.gitOversizeStorage)
+    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
   }
 }
 
@@ -78,7 +79,8 @@ object ConfigServiceActor {
  */
 class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorLogging {
 
-  import csw.services.cs.akka.ConfigServiceActor._
+  import ConfigServiceActor._
+  import context.dispatcher
 
   override def receive: Receive = {
     case CreateRequest(path, configData, oversize, comment) ⇒ handleCreateRequest(sender(), path, configData, oversize, comment)
@@ -93,23 +95,45 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   }
 
   def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit =
-    replyTo ! CreateResult(path, Try(configManager.create(path, configData, oversize, comment)))
+    configManager.create(path, configData, oversize, comment) onComplete {
+      case Success(configId) ⇒ replyTo ! CreateResult(path, Success(configId))
+      case Failure(ex)       ⇒ replyTo ! CreateResult(path, Failure(ex))
+    }
 
   def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit =
-    replyTo ! UpdateResult(path, Try(configManager.update(path, configData, comment)))
+    configManager.update(path, configData, comment) onComplete {
+      case Success(configId) ⇒ replyTo ! UpdateResult(path, Success(configId))
+      case Failure(ex)       ⇒ replyTo ! UpdateResult(path, Failure(ex))
+    }
 
-  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit =
-    replyTo ! GetResult(path, id, Try(configManager.get(path, id)))
+  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
+    configManager.get(path, id) onComplete {
+      case Success(configDataOpt) ⇒ replyTo ! GetResult(path, id, Success(configDataOpt))
+      case Failure(ex)            ⇒ replyTo ! GetResult(path, id, Failure(ex))
+    }
+  }
 
   def handleExistsRequest(replyTo: ActorRef, path: File): Unit =
-    replyTo ! ExistsResult(path, Try(configManager.exists(path)))
+    configManager.exists(path) onComplete {
+      case Success(bool) ⇒ replyTo ! ExistsResult(path, Success(bool))
+      case Failure(ex)   ⇒ replyTo ! ExistsResult(path, Failure(ex))
+    }
 
   def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit =
-    replyTo ! DeleteResult(path, Try(configManager.delete(path, comment)))
+    configManager.delete(path, comment) onComplete {
+      case Success(u)  ⇒ replyTo ! DeleteResult(path, Success(u))
+      case Failure(ex) ⇒ replyTo ! DeleteResult(path, Failure(ex))
+    }
 
   def handleListRequest(replyTo: ActorRef): Unit =
-    replyTo ! ListResult(Try(configManager.list()))
+    configManager.list() onComplete {
+      case Success(list) ⇒ replyTo ! ListResult(Success(list))
+      case Failure(ex)   ⇒ replyTo ! ListResult(Failure(ex))
+    }
 
   def handleHistoryRequest(replyTo: ActorRef, path: File): Unit =
-    replyTo ! HistoryResult(path, Try(configManager.history(path)))
+    configManager.history(path) onComplete {
+      case Success(list) ⇒ replyTo ! HistoryResult(path, Success(list))
+      case Failure(ex)   ⇒ replyTo ! HistoryResult(path, Failure(ex))
+    }
 }

@@ -1,23 +1,27 @@
 package csw.services.cs.akka
 
+import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import java.io.{File, IOException}
 import csw.services.cs.core._
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
-import csw.services.cs.akka.NonBlockingConfigServiceActor._
 import csw.services.cs.core.ConfigString
 import scala.concurrent.Await
 import akka.pattern.ask
 import akka.util.Timeout
 import scala.language.postfixOps
+import csw.services.cs.akka.ConfigServiceActor._
 
 /**
  * Tests the Config Service actor
  */
 class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
+with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
+
+  import system.dispatcher
 
   // Create temporary main (bare) and local git repos for testing
   val gitRepoPrefix = "test1"
@@ -34,21 +38,25 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
   val comment3 = "update 2 comment"
 
   test("Test the ConfigServiceActor, storing and retrieving some files") {
-    runTests(oversize = false)
-    runTests(oversize = true)
+    runTests(None, oversize = false)
+
+    // Start the config service annex http server and wait for it to be ready for connections
+    // (In normal operations, this server would already be running)
+    val server = Await.result(ConfigServiceAnnexServer.startup(), 5.seconds)
+    runTests(Some(server), oversize = true)
   }
 
   // Runs the tests for the config service, using the given oversize option.
-  def runTests(oversize: Boolean) : Unit = {
-    println(s"--- Testing config service: oversize = $oversize ---")
+  def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean) : Unit = {
+    logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
     // Use the test repository created above
-    val manager = TestRepo.getNonBlockingConfigManager(gitRepoPrefix, create = true, system)
+    val manager = TestRepo.getConfigManager()
 
     // Create the actor
-    val configServiceActor = system.actorOf(NonBlockingConfigServiceActor.props(manager), name = "configService")
+    val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
 
-    within(10 seconds) {
+    within(20 seconds) {
       // Should throw exception if we try to update a file that does not exist
       configServiceActor ! UpdateRequest(path1, new ConfigString(contents2), comment2)
       checkUpdateResultFailed(path1)
@@ -126,6 +134,11 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
       checkHistoryResult(path2, 1, List(comment1))
 
       system.stop(configServiceActor)
+
+      if (annexServer.isDefined) {
+        logger.info("Shutting down annex server")
+        annexServer.get.shutdown()
+      }
     }
   }
 

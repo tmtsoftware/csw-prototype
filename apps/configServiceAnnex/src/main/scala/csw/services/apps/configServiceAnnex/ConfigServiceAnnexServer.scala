@@ -1,7 +1,7 @@
 package csw.services.apps.configServiceAnnex
 
 import java.io.{ File, FileOutputStream }
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{ Files, Path, Paths }
 
 import akka.actor.ActorSystem
 import akka.http.Http
@@ -109,25 +109,33 @@ class ConfigServiceAnnexServer {
   private def httpPost(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
     val id = new File(uri.path.toString()).getName
     val file = new File(settings.dir, id)
-    logger.info(s"Received POST request for $file (uri = $uri)")
-    val out = new FileOutputStream(file)
-    val sink = ForeachSink[ByteString] { bytes ⇒
-      out.write(bytes.toArray)
-    }
-    val materialized = entity.getDataBytes().to(sink).run()
     val response = Promise[HttpResponse]()
-    // ensure the output file is closed and the system shutdown upon completion
-    materialized.get(sink).onComplete {
-      case Success(_) ⇒
-        Try(out.close())
-        if (FileUtils.validate(id, file))
-          response.success(HttpResponse(StatusCodes.OK))
-        else
-          response.success(HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage))
-      case Failure(e) ⇒
-        logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
-        Try(out.close())
-        response.success(HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage))
+    if (file.exists) {
+      logger.info(s"Ignoring POST request for existing $file (uri = $uri)")
+      response.success(HttpResponse(StatusCodes.OK))
+    } else {
+      logger.info(s"Received POST request for $file (uri = $uri)")
+      val out = new FileOutputStream(file)
+      val sink = ForeachSink[ByteString] { bytes ⇒
+        out.write(bytes.toArray)
+      }
+      val materialized = entity.getDataBytes().to(sink).run()
+      // ensure the output file is closed and the system shutdown upon completion
+      materialized.get(sink).onComplete {
+        case Success(_) ⇒
+          Try(out.close())
+          if (FileUtils.validate(id, file)) {
+            response.success(HttpResponse(StatusCodes.OK))
+          } else {
+            file.delete()
+            response.success(HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage))
+          }
+        case Failure(e) ⇒
+          logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
+          Try(out.close())
+          file.delete()
+          response.success(HttpResponse(StatusCodes.InternalServerError, entity = e.getMessage))
+      }
     }
     response.future
   }
@@ -148,9 +156,9 @@ class ConfigServiceAnnexServer {
   private def httpDelete(uri: Uri): Future[HttpResponse] = {
     val path = makePath(settings.dir, new File(uri.path.toString()))
     logger.info(s"Received DELETE request for $path (uri = $uri)")
-    val result = Try {if (path.toFile.exists()) Files.delete(path)} match {
-      case Success(_) => HttpResponse(StatusCodes.OK)
-      case Failure(ex) => HttpResponse(StatusCodes.InternalServerError, entity = ex.getMessage)
+    val result = Try { if (path.toFile.exists()) Files.delete(path) } match {
+      case Success(_)  ⇒ HttpResponse(StatusCodes.OK)
+      case Failure(ex) ⇒ HttpResponse(StatusCodes.InternalServerError, entity = ex.getMessage)
     }
     Future.successful(result)
   }

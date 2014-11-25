@@ -4,7 +4,7 @@ import scala.concurrent.Future
 import akka.pattern.ask
 import akka.actor.{ ActorSystem, ActorRef }
 import akka.util.Timeout
-import NonBlockingConfigServiceActor._
+import ConfigServiceActor._
 import java.io.File
 import csw.services.cs.core._
 

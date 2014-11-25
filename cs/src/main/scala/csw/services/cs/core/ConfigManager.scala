@@ -4,6 +4,8 @@ import java.io.File
 import java.nio.file.{ Files, Paths }
 import java.util.Date
 
+import scala.concurrent.Future
+
 /**
  * Defines an interface for storing and retrieving configuration information
  */
@@ -19,7 +21,7 @@ trait ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def create(path: File, configData: ConfigData, oversize: Boolean = false, comment: String = ""): ConfigId
+  def create(path: File, configData: ConfigData, oversize: Boolean = false, comment: String = ""): Future[ConfigId]
 
   /**
    * Updates the config file with the given path and data and optional comment.
@@ -30,43 +32,43 @@ trait ConfigManager {
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
-  def update(path: File, configData: ConfigData, comment: String = ""): ConfigId
+  def update(path: File, configData: ConfigData, comment: String = ""): Future[ConfigId]
 
   /**
    * Gets and returns the config file stored under the given path.
    *
-   * @param path the configuration path
+   * @param path the config file path
    * @param id an optional id used to specify a specific version to fetch
    *           (by default the latest version is returned)
-   * @return an object containing the configuration data, if found
+   * @return a future object containing the configuration data, if found
    */
-  def get(path: File, id: Option[ConfigId] = None): Option[ConfigData]
+  def get(path: File, id: Option[ConfigId] = None): Future[Option[ConfigData]]
 
   /**
    * Returns true if the given path exists and is being managed
    * @param path the configuration path
    * @return true the file exists
    */
-  def exists(path: File): Boolean
+  def exists(path: File): Future[Boolean]
 
   /**
    * Deletes the given config file (older versions will still be available)
    *
    * @param path the configuration path
    */
-  def delete(path: File, comment: String = "deleted"): Unit
+  def delete(path: File, comment: String = "deleted"): Future[Unit]
 
   /**
    * Returns a list containing all of the known config files
    * @return a list containing one ConfigFileInfo object for each known config file
    */
-  def list(): List[ConfigFileInfo]
+  def list(): Future[List[ConfigFileInfo]]
 
   /**
    * Returns a list of all known versions of a given path
    * @return a list containing one ConfigFileHistory object for each version of path
    */
-  def history(path: File): List[ConfigFileHistory]
+  def history(path: File): Future[List[ConfigFileHistory]]
 }
 
 /**
@@ -142,7 +144,8 @@ case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
  * Represents a configuration file
  */
 case class ConfigFile(file: File) extends ConfigData {
-  // Note: If we delay reading in the file, the contents could change before we read it!
+  // XXX Note: If we delay reading in the file, the contents could change before we read it!
+  // XXX TODO FIXME: Don't read into memory (but watch out for modification before reading!)
   val bytes = Files.readAllBytes(Paths.get(file.getPath))
   /**
    * @return a representation of the object as a byte array

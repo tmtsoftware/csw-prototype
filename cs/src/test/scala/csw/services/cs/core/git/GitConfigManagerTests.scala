@@ -1,139 +1,114 @@
 package csw.services.cs.core.git
 
 import java.io.{File, FileNotFoundException, IOException}
-import java.util.Date
 
+import akka.actor.ActorSystem
+import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.akka.TestRepo
 import csw.services.cs.core.ConfigString
 import org.scalatest.FunSuite
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
+
 /**
-  * Tests the GitConfigManager class
-  */
-class GitConfigManagerTests extends FunSuite {
-   val path1 = new File("some/test1/TestConfig1")
-   val path2 = new File("some/test2/TestConfig2")
+ * Tests the GitConfigManager class
+ */
+class GitConfigManagerTests extends FunSuite with LazyLogging {
+  val path1 = new File("some/test1/TestConfig1")
+  val path2 = new File("some/test2/TestConfig2")
 
-   val contents1 = "Contents of some file...\n"
-   val contents2 = "New contents of some file...\n"
-   val contents3 = "Even newer contents of some file...\n"
+  val contents1 = "Contents of some file...\n"
+  val contents2 = "New contents of some file...\n"
+  val contents3 = "Even newer contents of some file...\n"
 
-   val comment1 = "create comment"
-   val comment2 = "update 1 comment"
-   val comment3 = "update 2 comment"
+  val comment1 = "create comment"
+  val comment2 = "update 1 comment"
+  val comment3 = "update 2 comment"
 
-   val startTime = new Date().getTime
+  val system = ActorSystem()
+  import system.dispatcher
 
-   test("Test creating a GitConfigManager, storing and retrieving some files") {
-     runTests(oversize = false)
-     runTests(oversize = true)
-   }
 
-  def runTests(oversize: Boolean) : Unit = {
-    println(s"--- Testing config service: oversize = $oversize ---")
+  test("Test creating a GitConfigManager, storing and retrieving some files") {
+    runTests(None, oversize = false)
+
+    // Start the config service annex http server and wait for it to be ready for connections
+    // (In normal operations, this server would already be running)
+    val server = Await.result(ConfigServiceAnnexServer.startup(), 5.seconds)
+    runTests(Some(server), oversize = true)
+  }
+
+  def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {
+    logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
     val manager = TestRepo.getConfigManager()
-     if (manager.exists(path1)) {
-       manager.delete(path1)
-     }
-     if (manager.exists(path2)) {
-       manager.delete(path2)
-     }
 
-     // Should get exception if we try to delete a file that does not exist
-     intercept[FileNotFoundException] {
-       manager.delete(path1)
-     }
-     intercept[FileNotFoundException] {
-       // Should get exception if we try to delete a file that does not exist
-       manager.delete(path2)
-     }
+    val result = for {
+    // Try to update a file that does not exist (should fail)
+      updateIdNull <- manager.update(path1, new ConfigString(contents2), comment2) recover {
+        case e: FileNotFoundException => null
+      }
 
-     // Should throw exception if we try to update a file that does not exist
-     intercept[IOException] {
-       manager.update(path1, new ConfigString(contents2), comment2)
-     }
-     intercept[IOException] {
-       manager.update(path1, new ConfigString(contents3), comment3)
-     }
+      // Add, then update the file twice
+      createId1 <- manager.create(path1, new ConfigString(contents1), oversize, comment1)
+      createId2 <- manager.create(path2, new ConfigString(contents1), oversize, comment1)
+      updateId1 <- manager.update(path1, new ConfigString(contents2), comment2)
+      updateId2 <- manager.update(path1, new ConfigString(contents3), comment3)
 
-     // Add, then update the file twice
-     val createId1 = manager.create(path1, new ConfigString(contents1), oversize, comment1)
-     val createId2 = manager.create(path2, new ConfigString(contents1), oversize, comment1)
-     val updateId1 = manager.update(path1, new ConfigString(contents2), comment2)
-     val updateId2 = manager.update(path1, new ConfigString(contents3), comment3)
+      // Check that we can access each version
+      option1 <- manager.get(path1)
+      option2 <- manager.get(path1, Some(createId1))
+      option3 <- manager.get(path1, Some(updateId1))
+      option4 <- manager.get(path1, Some(updateId2))
+      option5 <- manager.get(path2)
+      option6 <- manager.get(path2, Some(createId2))
 
-     // Should throw exception if we try to create a file that already exists
-     intercept[IOException] {
-       manager.create(path1, new ConfigString(contents2), oversize, comment2)
-     }
-     intercept[IOException] {
-       manager.create(path2, new ConfigString(contents2), oversize, comment2)
-     }
+      // test history()
+      historyList1 <- manager.history(path1)
+      historyList2 <- manager.history(path2)
 
-     // Check that we can access each version
-     val option1 = manager.get(path1)
-     assert(option1.isDefined)
-     assert(option1.get.toString == contents3)
+      // test list()
+      list <- manager.list()
 
-     val option2 = manager.get(path1, Some(createId1))
-     assert(option2.isDefined)
-     assert(option2.get.toString == contents1)
+      // Should throw exception if we try to create a file that already exists
+      createIdNull <- manager.create(path1, new ConfigString(contents2), oversize, comment2) recover {
+        case e: IOException => null
+      }
+    } yield {
+      // At this point all of the above Futures have completed,so we can do some tests
+      assert(updateIdNull == null)
+      assert(option1.isDefined && option1.get.toString == contents3)
+      assert(option2.isDefined && option2.get.toString == contents1)
+      assert(option3.isDefined && option3.get.toString == contents2)
+      assert(option4.isDefined && option4.get.toString == contents3)
+      assert(option5.isDefined && option5.get.toString == contents1)
+      assert(option6.isDefined && option6.get.toString == contents1)
+      assert(createIdNull == null)
 
-     val option3 = manager.get(path1, Some(updateId1))
-     assert(option3.isDefined)
-     assert(option3.get.toString == contents2)
+      assert(historyList1.size == 3)
+      assert(historyList2.size == 1)
+      assert(historyList1(0).comment == comment1)
+      assert(historyList2(0).comment == comment1)
+      assert(historyList1(1).comment == comment2)
+      assert(historyList1(2).comment == comment3)
 
-     val option4 = manager.get(path1, Some(updateId2))
-     assert(option4.isDefined)
-     assert(option4.get.toString == contents3)
+      assert(list.size == 2 + 1) // +1 for RENAME file added when creating the bare rep
+      for (info <- list) {
+        info.path match {
+          case this.path1 => assert(info.comment == this.comment3)
+          case this.path2 => assert(info.comment == this.comment1)
+          case x => if (x.getName != "README") sys.error("Test failed for " + info)
+        }
+      }
+    }
 
-     val option5 = manager.get(path2)
-     assert(option5.isDefined)
-     assert(option5.get.toString == contents1)
-
-     val option6 = manager.get(path2, Some(createId2))
-     assert(option6.isDefined)
-     assert(option6.get.toString == contents1)
-
-     // test history()
-     val historyList1 = manager.history(path1)
-     val historyList2 = manager.history(path2)
-
-     assert(historyList1.size >= 3)
-     assert(historyList2.size >= 1)
-
-     assert(historyList1(0).comment == comment1)
-     assert(historyList2(0).comment == comment1)
-     assert(historyList1(1).comment == comment2)
-     assert(historyList1(2).comment == comment3)
-
-     // Test list()
-     val list = manager.list()
-     assert(list.size == 2 + 1) // +1 for default README file added during creation
-     for (info <- list) {
-       info.path match {
-         case this.path1 => assert(info.comment == this.comment3)
-         case this.path2 => assert(info.comment == this.comment1)
-         case x => if (x.getName != "README") sys.error("Test failed for " + info)
-       }
-     }
-
-     // Test getting history of document that has been deleted
-     manager.delete(path1, "test delete")
-     assert(!manager.exists(path1))
-     manager.delete(path2)
-     assert(!manager.exists(path2))
-     val historyList1d = manager.history(path1)
-     val historyList2d = manager.history(path2)
-
-     assert(historyList1d.size >= 3)
-     assert(historyList2d.size >= 1)
-
-     assert(historyList1d(0).comment == comment1)
-     assert(historyList2d(0).comment == comment1)
-     assert(historyList1d(1).comment == comment2)
-     assert(historyList1d(2).comment == comment3)
-
-   }
- }
+    Await.result(result, 30.seconds)
+    if (annexServer.isDefined) {
+      logger.info("Shutting down annex server")
+      annexServer.get.shutdown()
+    }
+  }
+}

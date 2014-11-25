@@ -8,6 +8,9 @@ import csw.services.cs.JConfigManager
 import csw.services.cs.core.{ ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId }
 
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContextExecutor, Await }
 
 /**
  * Uses JGit to manage versions of configuration files.
@@ -15,42 +18,48 @@ import scala.collection.JavaConversions._
  * Note: This version is for use by Java applications. Scala applications should use
  * [[csw.services.cs.core.git.GitConfigManager]].
  */
-case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI, gitOversizeStorage: URI) extends JConfigManager {
-  private val manager = GitConfigManager(gitWorkDir, remoteRepo, gitOversizeStorage)
+case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit dispatcher: ExecutionContextExecutor)
+    extends JConfigManager {
+
+  private val manager = GitConfigManager(gitWorkDir, remoteRepo)
+
+  // XXX For now, wait for results in the Java version.
+  // Later, if needed, we could convert to Java futures (maybe in Scala 2.12, when Java8 support is better)
+  private val timeout = 10.seconds
 
   override def create(path: File, configData: ConfigData, oversize: lang.Boolean, comment: String): ConfigId = {
-    manager.create(path, configData, oversize, comment)
+    Await.result(manager.create(path, configData, oversize, comment), timeout)
   }
 
   override def update(path: File, configData: ConfigData, comment: String): ConfigId = {
-    manager.update(path, configData, comment)
+    Await.result(manager.update(path, configData, comment), timeout)
   }
 
   override def get(path: File): ConfigData = {
-    manager.get(path).orNull
+    Await.result(manager.get(path), timeout).orNull
   }
 
   override def get(path: File, id: ConfigId): ConfigData = {
-    manager.get(path, Some(id)).orNull
+    Await.result(manager.get(path, Some(id)), timeout).orNull
   }
 
   override def exists(path: File): Boolean = {
-    manager.exists(path)
+    Await.result(manager.exists(path), timeout)
   }
 
   override def delete(path: File): Unit = {
-    manager.delete(path)
+    Await.result(manager.delete(path), timeout)
   }
 
   override def delete(path: File, comment: String): Unit = {
-    manager.delete(path, comment)
+    Await.result(manager.delete(path, comment), timeout)
   }
 
   override def list(): util.List[ConfigFileInfo] = {
-    manager.list()
+    Await.result(manager.list().map(_.asJava), timeout)
   }
 
   override def history(path: File): util.List[ConfigFileHistory] = {
-    manager.history(path)
+    Await.result(manager.history(path).map(_.asJava), timeout)
   }
 }
