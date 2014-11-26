@@ -8,7 +8,10 @@ import csw.services.cs.core.{ ConfigFileHistory, _ }
 import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
 import csw.services.ls.LocationServiceRegisterActor
 
+import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
+import scala.concurrent.duration._
+import scala.concurrent.Await
 
 /**
  * Config service actor.
@@ -17,7 +20,9 @@ import scala.util.{ Failure, Success, Try }
  *
  * In this implementation, you should have a single config service actor managing a
  * queue of commands that work on a single local repository, one command at a time.
- * This is because the current implementation reads and writes file to the working directory.
+ * (This is enforced here by waiting for each command to complete before taking the
+ * next one from the queue.)
+ * This is because the current implementation reads and writes file to the local Git working directory.
  * This has the advantage of being a cache for files, so they don't always have to
  * be copied from the server. While it might be possible to avoid reading and writing files
  * in the working directory using lower level JGit commands, it would still be necessary to
@@ -88,6 +93,9 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   import ConfigServiceActor._
   import context.dispatcher
 
+  // timeout for blocking wait (used to make sure local Git repo working dir access is not concurrent)
+  val timeout = 60.seconds
+
   // Start an actor to re-register when the location service restarts
   def registerWithLocationService(): Unit = {
     val serviceId = ServiceId(configManager.name, ServiceType.Service)
@@ -107,46 +115,66 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     case x ⇒ log.error(s"Received unknown message $x from ${sender()}")
   }
 
-  def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit =
-    configManager.create(path, configData, oversize, comment) onComplete {
+  def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit = {
+    val result = configManager.create(path, configData, oversize, comment)
+    result onComplete {
       case Success(configId) ⇒ replyTo ! CreateResult(path, Success(configId))
       case Failure(ex)       ⇒ replyTo ! CreateResult(path, Failure(ex))
     }
+    Await.ready(result, timeout)
+  }
 
-  def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit =
-    configManager.update(path, configData, comment) onComplete {
+  def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit = {
+    val result = configManager.update(path, configData, comment)
+    result onComplete {
       case Success(configId) ⇒ replyTo ! UpdateResult(path, Success(configId))
-      case Failure(ex)       ⇒ replyTo ! UpdateResult(path, Failure(ex))
+      case Failure(ex) ⇒ replyTo ! UpdateResult(path, Failure(ex))
     }
+    Await.ready(result, timeout)
+  }
 
   def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
-    configManager.get(path, id) onComplete {
+    val result = configManager.get(path, id)
+    result onComplete {
       case Success(configDataOpt) ⇒ replyTo ! GetResult(path, id, Success(configDataOpt))
       case Failure(ex)            ⇒ replyTo ! GetResult(path, id, Failure(ex))
     }
+    Await.ready(result, timeout)
   }
 
-  def handleExistsRequest(replyTo: ActorRef, path: File): Unit =
-    configManager.exists(path) onComplete {
+  def handleExistsRequest(replyTo: ActorRef, path: File): Unit = {
+    val result = configManager.exists(path)
+    result onComplete {
       case Success(bool) ⇒ replyTo ! ExistsResult(path, Success(bool))
-      case Failure(ex)   ⇒ replyTo ! ExistsResult(path, Failure(ex))
+      case Failure(ex) ⇒ replyTo ! ExistsResult(path, Failure(ex))
     }
+    Await.ready(result, timeout)
+  }
 
-  def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit =
-    configManager.delete(path, comment) onComplete {
-      case Success(u)  ⇒ replyTo ! DeleteResult(path, Success(u))
+  def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit = {
+    val result = configManager.delete(path, comment)
+    result onComplete {
+      case Success(u) ⇒ replyTo ! DeleteResult(path, Success(u))
       case Failure(ex) ⇒ replyTo ! DeleteResult(path, Failure(ex))
     }
+    Await.ready(result, timeout)
+  }
 
-  def handleListRequest(replyTo: ActorRef): Unit =
-    configManager.list() onComplete {
+  def handleListRequest(replyTo: ActorRef): Unit = {
+    val result = configManager.list()
+    result onComplete {
       case Success(list) ⇒ replyTo ! ListResult(Success(list))
-      case Failure(ex)   ⇒ replyTo ! ListResult(Failure(ex))
+      case Failure(ex) ⇒ replyTo ! ListResult(Failure(ex))
     }
+    Await.ready(result, timeout)
+  }
 
-  def handleHistoryRequest(replyTo: ActorRef, path: File): Unit =
-    configManager.history(path) onComplete {
+  def handleHistoryRequest(replyTo: ActorRef, path: File): Unit = {
+    val result = configManager.history(path)
+    result onComplete {
       case Success(list) ⇒ replyTo ! HistoryResult(path, Success(list))
-      case Failure(ex)   ⇒ replyTo ! HistoryResult(path, Failure(ex))
+      case Failure(ex) ⇒ replyTo ! HistoryResult(path, Failure(ex))
     }
+    Await.ready(result, timeout)
+  }
 }

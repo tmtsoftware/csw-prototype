@@ -124,10 +124,10 @@ object GitConfigManager {
  * Oversize files are stored on an "annex" server using the SHA-1 hash of the file
  * contents for the name (similar to the way Git stores file objects).
  *
- * Note that although the API is non-blocking, you need to be careful when dealing
+ * Note that although the API is non-blocking, we need to be careful when dealing
  * with the file system (the local Git repo), which is static, and not attempt multiple
  * conflicting file read, write or Git operations at once. The remote (bare) Git repo should
- * be able to handle the concurrent usage, but not the local repo, which has a files in the
+ * be able to handle the concurrent usage, but not the local repo, which has files in the
  * working directory. Having the files checked out in working directory should help avoid
  * having to download them every time an application starts.
  *
@@ -251,6 +251,8 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
 
     // If the file matches the SHA-1 hash, return a future for it, otherwise get it from the annex server
     def getIfNeeded(file: File, sha1: String): Future[Option[ConfigData]] = {
+      // XXX TODO FIXME: What if two apps try to GET different versions at once? May need to store under SHA-1 based file name
+      // XXX TODO FIXME: Either that or really enforce sequential access in the actor!!!
       if (!file.exists() || (sha1 != HashGeneratorUtils.generateSHA1(file))) {
         annex.get(sha1, file).map {
           _ ⇒ Some(ConfigData(file))
@@ -272,6 +274,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
           Some(ConfigData(git.getRepository.open(objId).getBytes))
         } else {
           // return the latest version of the file from the working dir
+          // (XXX TODO FIXME: it would be safer to get it from Git here: need to get the id of the current version!!!)
           Some(ConfigData(file))
         }
       }
