@@ -1,10 +1,18 @@
 package csw.services.cs.core
 
-import java.io.File
-import java.nio.file.{ Files, Paths }
+import java.io.{ FileOutputStream, ByteArrayOutputStream, File }
+import java.nio.file.Files
 import java.util.Date
 
+import akka.actor.ActorRefFactory
+import akka.stream.FlowMaterializer
+import akka.stream.scaladsl.{ ForeachSink, Source }
+import csw.services.apps.configServiceAnnex.FileUtils
+
 import scala.concurrent.Future
+import akka.util.ByteString
+
+import scala.util.Try
 
 /**
  * Defines an interface for storing and retrieving configuration information
@@ -84,21 +92,6 @@ trait ConfigId {
 }
 
 /**
- * Interface implemented by the configuration data objects being managed
- */
-trait ConfigData {
-  //  /**
-  //   * @return a stream of XXX TODO...
-  //   */
-  //  def getSource: Source[ByteString]
-
-  /**
-   * @return a representation of the object as a byte array
-   */
-  def getBytes: Array[Byte]
-}
-
-/**
  * Holds information about a specific version of a config file
  */
 case class ConfigFileHistory(id: ConfigId, comment: String, time: Date)
@@ -115,47 +108,77 @@ case class ConfigFileInfo(path: File, id: ConfigId, comment: String)
 case class GitConfigId(id: String) extends ConfigId
 
 /**
- * Represents the contents of a config file as a String
+ * This trait represents the contents of the files being managed.
  */
-case class ConfigString(str: String) extends ConfigData {
+trait ConfigData {
   /**
-   * @return a representation of the object as a byte array
+   * Returns a stream which can be used to read the data
    */
-  def getBytes: Array[Byte] = str.getBytes
+  def source: Source[ByteString]
 
-  // TODO: charset handling?
+  /**
+   * Writes the contents of the source to the given file.
+   */
+  def writeToFile(file: File)(implicit context: ActorRefFactory): Future[Unit] = {
+    implicit val materializer = FlowMaterializer()
+    import context.dispatcher
+    val path = file.toPath
+    if (!Files.isDirectory(path.getParent))
+      Files.createDirectories(path.getParent)
+    val out = new FileOutputStream(file)
+    val sink = ForeachSink[ByteString] { bytes ⇒
+      out.write(bytes.toArray)
+    }
+    val materialized = source.to(sink).run()
+    // ensure the output file is closed when done
+    val result = materialized.get(sink)
+    result.andThen { case _ ⇒ Try(out.close()) }
+    result
+  }
+
+  /**
+   * Returns a future string by reading the source.
+   */
+  def toFutureString(implicit context: ActorRefFactory): Future[String] = {
+    implicit val materializer = FlowMaterializer()
+    import context.dispatcher
+    val out = new ByteArrayOutputStream
+    val sink = ForeachSink[ByteString] { bytes ⇒
+      out.write(bytes.toArray)
+    }
+    val materialized = source.to(sink).run()
+    for { _ ← materialized.get(sink) } yield out.toString
+  }
+}
+
+object ConfigData {
+  def apply(str: String): ConfigData = ConfigString(str)
+
+  def apply(bytes: Array[Byte]): ConfigData = ConfigBytes(bytes)
+
+  def apply(file: File, chunkSize: Int = 4096): ConfigData = ConfigFile(file, chunkSize)
+
+  def apply(source: Source[ByteString]): ConfigData = ConfigSource(source)
+}
+
+case class ConfigString(str: String) extends ConfigData {
+  override def source: Source[ByteString] = Source(List(ByteString(str.getBytes)))
 
   override def toString: String = str
 }
 
-/**
- * Represents a configuration file
- */
 case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
-
-  /**
-   * @return a representation of the object as a byte array
-   */
-  def getBytes: Array[Byte] = bytes
-
-  /**
-   * Should only be used for debugging info (no charset handling)
-   * @return contents as string
-   */
-  override def toString: String = new String(bytes)
-}
-
-/**
- * Represents a configuration file
- */
-case class ConfigFile(file: File) extends ConfigData {
-  // XXX Note: If we delay reading in the file, the contents could change before we read it!
-  // XXX TODO FIXME: Don't read into memory (but watch out for modification before reading!)
-  val bytes = Files.readAllBytes(Paths.get(file.getPath))
-  /**
-   * @return a representation of the object as a byte array
-   */
-  def getBytes: Array[Byte] = bytes
+  override def source: Source[ByteString] = Source(List(ByteString(bytes)))
 
   override def toString: String = new String(bytes)
 }
+
+case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
+  override def source: Source[ByteString] = {
+    val mappedByteBuffer = FileUtils.mmap(file.toPath)
+    val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
+    Source(iterator)
+  }
+}
+
+case class ConfigSource(override val source: Source[ByteString]) extends ConfigData

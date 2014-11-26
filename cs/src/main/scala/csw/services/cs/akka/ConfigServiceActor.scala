@@ -73,8 +73,7 @@ object ConfigServiceActor {
    * Returns the default config manager, using the configured settings (see resources/reference.conf).
    * @param system the caller's actor system, used to access the settings
    */
-  def defaultConfigManager(system: ActorSystem): ConfigManager = {
-    import system.dispatcher
+  def defaultConfigManager(implicit system: ActorSystem): ConfigManager = {
     val settings = ConfigServiceSettings(system)
     GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
   }

@@ -4,13 +4,13 @@ import java.io.File
 import java.net.URI
 import java.{ lang, util }
 
+import akka.actor.ActorRefFactory
 import csw.services.cs.JConfigManager
 import csw.services.cs.core.{ ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId }
 
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContextExecutor, Await }
+import scala.concurrent.Await
 
 /**
  * Uses JGit to manage versions of configuration files.
@@ -18,9 +18,10 @@ import scala.concurrent.{ ExecutionContextExecutor, Await }
  * Note: This version is for use by Java applications. Scala applications should use
  * [[csw.services.cs.core.git.GitConfigManager]].
  */
-case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit dispatcher: ExecutionContextExecutor)
+case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit context: ActorRefFactory)
     extends JConfigManager {
 
+  import context.dispatcher
   private val manager = GitConfigManager(gitWorkDir, remoteRepo)
 
   // XXX For now, wait for results in the Java version.

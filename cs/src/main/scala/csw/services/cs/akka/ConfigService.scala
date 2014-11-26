@@ -9,8 +9,8 @@ import csw.util.akka.Terminator
  */
 object ConfigService {
   def main(args: Array[String]): Unit = {
-    val system = ActorSystem("ConfigService")
-    val configManager = ConfigServiceActor.defaultConfigManager(system)
+    implicit val system = ActorSystem("ConfigService")
+    val configManager = ConfigServiceActor.defaultConfigManager
     val configServiceActor = system.actorOf(ConfigServiceActor.props(configManager), "ConfigServiceActor")
     configServiceActor ! RegisterWithLocationService
     system.actorOf(Props(classOf[Terminator], configServiceActor), "terminator")

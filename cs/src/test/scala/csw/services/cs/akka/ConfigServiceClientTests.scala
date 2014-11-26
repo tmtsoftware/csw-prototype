@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import java.io.{File, FileNotFoundException, IOException}
-import csw.services.cs.core.ConfigString
+import csw.services.cs.core.ConfigData
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
@@ -55,23 +55,23 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
     // Sequential, non-blocking for-comprehension
     val result = for {
     // Try to update a file that does not exist (should fail)
-      updateIdNull <- csClient.update(path1, new ConfigString(contents2), comment2) recover {
+      updateIdNull <- csClient.update(path1, ConfigData(contents2), comment2) recover {
         case e: FileNotFoundException => null
       }
 
       // Add, then update the file twice
-      createId1 <- csClient.create(path1, new ConfigString(contents1), oversize, comment1)
-      createId2 <- csClient.create(path2, new ConfigString(contents1), oversize, comment1)
-      updateId1 <- csClient.update(path1, new ConfigString(contents2), comment2)
-      updateId2 <- csClient.update(path1, new ConfigString(contents3), comment3)
+      createId1 <- csClient.create(path1, ConfigData(contents1), oversize, comment1)
+      createId2 <- csClient.create(path2, ConfigData(contents1), oversize, comment1)
+      updateId1 <- csClient.update(path1, ConfigData(contents2), comment2)
+      updateId2 <- csClient.update(path1, ConfigData(contents3), comment3)
 
       // Check that we can access each version
-      option1 <- csClient.get(path1)
-      option2 <- csClient.get(path1, Some(createId1))
-      option3 <- csClient.get(path1, Some(updateId1))
-      option4 <- csClient.get(path1, Some(updateId2))
-      option5 <- csClient.get(path2)
-      option6 <- csClient.get(path2, Some(createId2))
+      result1 <- manager.get(path1).flatMap(_.get.toFutureString)
+      result2 <- manager.get(path1, Some(createId1)).flatMap(_.get.toFutureString)
+      result3 <- manager.get(path1, Some(updateId1)).flatMap(_.get.toFutureString)
+      result4 <- manager.get(path1, Some(updateId2)).flatMap(_.get.toFutureString)
+      result5 <- manager.get(path2).flatMap(_.get.toFutureString)
+      result6 <- manager.get(path2, Some(createId2)).flatMap(_.get.toFutureString)
 
       // test history()
       historyList1 <- csClient.history(path1)
@@ -81,18 +81,18 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
       list <- csClient.list()
 
       // Should throw exception if we try to create a file that already exists
-      createIdNull <- csClient.create(path1, new ConfigString(contents2), oversize, comment2) recover {
+      createIdNull <- csClient.create(path1, ConfigData(contents2), oversize, comment2) recover {
         case e: IOException => null
       }
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
       assert(updateIdNull == null)
-      assert(option1.isDefined && option1.get.toString == contents3)
-      assert(option2.isDefined && option2.get.toString == contents1)
-      assert(option3.isDefined && option3.get.toString == contents2)
-      assert(option4.isDefined && option4.get.toString == contents3)
-      assert(option5.isDefined && option5.get.toString == contents1)
-      assert(option6.isDefined && option6.get.toString == contents1)
+      assert(result1 == contents3)
+      assert(result2 == contents1)
+      assert(result3 == contents2)
+      assert(result4 == contents3)
+      assert(result5 == contents1)
+      assert(result6 == contents1)
       assert(createIdNull == null)
 
       assert(historyList1.size == 3)

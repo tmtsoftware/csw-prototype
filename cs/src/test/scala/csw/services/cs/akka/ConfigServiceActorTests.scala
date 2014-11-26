@@ -8,7 +8,7 @@ import csw.services.cs.core._
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
-import csw.services.cs.core.ConfigString
+import csw.services.cs.core.ConfigData
 import scala.concurrent.Await
 import akka.pattern.ask
 import akka.util.Timeout
@@ -58,24 +58,24 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
     within(20 seconds) {
       // Should throw exception if we try to update a file that does not exist
-      configServiceActor ! UpdateRequest(path1, new ConfigString(contents2), comment2)
+      configServiceActor ! UpdateRequest(path1, ConfigData(contents2), comment2)
       checkUpdateResultFailed(path1)
 
       // Add two files, then update the first file twice
-      configServiceActor ! CreateRequest(path1, new ConfigString(contents1), oversize, comment1)
+      configServiceActor ! CreateRequest(path1, ConfigData(contents1), oversize, comment1)
       val createId1 = checkCreateResult(path1)
 
-      configServiceActor ! CreateRequest(path2, new ConfigString(contents1), oversize, comment1)
+      configServiceActor ! CreateRequest(path2, ConfigData(contents1), oversize, comment1)
       val createId2 = checkCreateResult(path2)
 
-      configServiceActor ! UpdateRequest(path1, new ConfigString(contents2), comment2)
+      configServiceActor ! UpdateRequest(path1, ConfigData(contents2), comment2)
       val updateId1 = checkUpdateResult(path1)
 
-      configServiceActor ! UpdateRequest(path1, new ConfigString(contents3), comment3)
+      configServiceActor ! UpdateRequest(path1, ConfigData(contents3), comment3)
       val updateId2 = checkUpdateResult(path1)
 
       // Should throw exception if we try to create a file that already exists
-      configServiceActor ! CreateRequest(path1, new ConfigString(contents2), oversize, comment2)
+      configServiceActor ! CreateRequest(path1, ConfigData(contents2), oversize, comment2)
       checkCreateResultFailed(path1)
 
       // Check that we can access each version
@@ -180,7 +180,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
     assert(result.configData.isSuccess)
     val option = result.configData.get
     assert(option.isDefined)
-    assert(option.get.toString == contents)
+    assert(Await.result(option.get.toFutureString, 5.seconds) == contents)
   }
 
   def checkHistoryResult(path: File, count: Int, comments: List[String]): Unit = {

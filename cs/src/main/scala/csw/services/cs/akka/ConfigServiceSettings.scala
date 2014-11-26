@@ -23,6 +23,7 @@ class ConfigServiceSettings(config: Config) extends Extension {
   val name = config.getString(s"$prefix.name")
   val gitMainRepository = new URI(config.getString(s"$prefix.main-repository"))
   val gitLocalRepository = new File(subst(config.getString(s"$prefix.local-repository")))
+  val chunkSize = config.getInt("csw.services.apps.configServiceAnnex.chunkSize")
 
   // Do any required substitution on the setting values
   def subst(s: String): String = {

@@ -5,6 +5,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.util.Date
 
+import akka.actor.ActorRefFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
 import csw.services.cs.core.{ GitConfigId, _ }
@@ -16,7 +17,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.treewalk.TreeWalk
 
 import scala.annotation.tailrec
-import scala.concurrent.{ Await, Future, ExecutionContextExecutor }
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
 
 /**
@@ -39,7 +40,7 @@ object GitConfigManager {
    *
    * @return a new GitConfigManager configured to use the given local and remote repositories
    */
-  def apply(gitWorkDir: File, remoteRepo: URI, name: String = "Config Service")(implicit dispatcher: ExecutionContextExecutor): GitConfigManager = {
+  def apply(gitWorkDir: File, remoteRepo: URI, name: String = "Config Service")(implicit context: ActorRefFactory): GitConfigManager = {
     // Init local repo
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
@@ -90,7 +91,7 @@ object GitConfigManager {
    *
    * @param dir directory to contain the new bare repository
    */
-  def initBareRepo(dir: File)(implicit dispatcher: ExecutionContextExecutor): Unit = {
+  def initBareRepo(dir: File)(implicit context: ActorRefFactory): Unit = {
     // Create the new main repo
     Git.init.setDirectory(dir).setBare(true).call
 
@@ -99,7 +100,7 @@ object GitConfigManager {
     val gm = GitConfigManager(tmpDir, dir.toURI)
     try {
       Await.result(
-        gm.create(new File("README"), ConfigString("This is the main Config Service Git repository.")),
+        gm.create(new File("README"), ConfigData("This is the main Config Service Git repository.")),
         10.seconds)
     } finally {
       deleteDirectoryRecursively(tmpDir)
@@ -135,36 +136,59 @@ object GitConfigManager {
  * @param git used to access Git
  * @param name the name of the service
  */
-class GitConfigManager(val git: Git, override val name: String)(implicit dispatcher: ExecutionContextExecutor)
+class GitConfigManager(val git: Git, override val name: String)(implicit context: ActorRefFactory)
     extends ConfigManager with LazyLogging {
+
+  import context.dispatcher
 
   // used to access the http server that manages oversize files
   val annex = ConfigServiceAnnexClient
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
+    def createOversize(file: File): Future[ConfigId] = {
+      val sha1File = shaFile(file)
+      if (file.exists() || sha1File.exists()) {
+        Future.failed(new IOException("File already exists in repository: " + file))
+      } else for {
+        _ ← configData.writeToFile(file)
+        sha1 ← annex.post(file)
+        configId ← create(shaFile(path), ConfigData(sha1), oversize = false, comment)
+      } yield configId
+    }
+
     logger.debug(s"create $path")
+    val file = fileForPath(path)
     if (oversize) {
-      createOversize(path, configData, comment)
+      createOversize(file)
     } else {
-      Future {
-        val file = fileForPath(path)
-        if (file.exists()) {
-          throw new IOException("File already exists in repository: " + path)
-        }
+      if (file.exists()) {
+        Future.failed(new IOException("File already exists in repository: " + path))
+      } else {
         put(path, configData, comment)
       }
     }
+
   }
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
+    def updateOversize(file: File): Future[ConfigId] = {
+      val sha1File = shaFile(file)
+      for {
+        _ ← configData.writeToFile(file)
+        sha1 ← annex.post(file)
+        configId ← update(shaFile(path), ConfigData(sha1), comment)
+      } yield configId
+    }
+
     logger.debug(s"update $path")
+    val file = fileForPath(path)
     Future(pull()).flatMap { _ ⇒
-      val file = fileForPath(path)
       if (isOversize(file)) {
-        updateOversize(path, configData, comment)
+        updateOversize(file)
       } else {
-        Future {
-          if (!file.exists()) throw new FileNotFoundException("File not found: " + path)
+        if (!file.exists()) {
+          Future.failed(new FileNotFoundException("File not found: " + path))
+        } else {
           put(path, configData, comment)
         }
       }
@@ -179,41 +203,111 @@ class GitConfigManager(val git: Git, override val name: String)(implicit dispatc
     file.exists || isOversize(file)
   }
 
-  override def delete(path: File, comment: String = "deleted"): Future[Unit] = Future {
-    deleteFile(path, comment)
-  }
-
-  private def deleteFile(path: File, comment: String = "deleted"): Unit = {
-    logger.debug(s"delete $path")
-    val file = fileForPath(path)
-    pull()
-    if (isOversize(file)) {
-      deleteFile(shaFile(path), comment)
-      file.delete()
-    } else {
-      if (!file.exists) {
-        throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
+  override def delete(path: File, comment: String = "deleted"): Future[Unit] = {
+    def deleteFile(path: File, comment: String = "deleted"): Unit = {
+      logger.debug(s"delete $path")
+      val file = fileForPath(path)
+      pull()
+      if (isOversize(file)) {
+        deleteFile(shaFile(path), comment)
+        file.delete()
+      } else {
+        if (!file.exists) {
+          throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
+        }
+        git.rm.addFilepattern(path.getPath).call()
+        git.commit().setMessage(comment).call
+        git.push.call()
+        file.delete()
       }
-      git.rm.addFilepattern(path.getPath).call()
-      git.commit().setMessage(comment).call
-      git.push.call()
-      file.delete()
+    }
+
+    Future {
+      deleteFile(path, comment)
     }
   }
 
   override def get(path: File, id: Option[ConfigId]): Future[Option[ConfigData]] = {
-    logger.debug(s"get $path")
-    Future(pull()).flatMap { _ ⇒
-      val file = fileForPath(path)
-      if (isOversize(file)) {
-        getOversize(path, id)
+
+    // Get oversize files that are stored in the annex server
+    def getOversize(file: File): Future[Option[ConfigData]] = {
+      for {
+        opt ← get(shaFile(path), id)
+        data ← getData(file, opt)
+      } yield data
+
+    }
+    // Gets the actual file data using the SHA-1 value contained in the checked in file
+    def getData(file: File, opt: Option[ConfigData]): Future[Option[ConfigData]] = {
+      opt match {
+        case None ⇒ Future(None)
+        case Some(configData) ⇒
+          for {
+            sha1 ← configData.toFutureString
+            configDataOpt ← getIfNeeded(file, sha1)
+          } yield configDataOpt
+      }
+    }
+
+    // If the file matches the SHA-1 hash, return a future for it, otherwise get it from the annex server
+    def getIfNeeded(file: File, sha1: String): Future[Option[ConfigData]] = {
+      if (!file.exists() || (sha1 != HashGeneratorUtils.generateSHA1(file))) {
+        annex.get(sha1, file).map {
+          _ ⇒ Some(ConfigData(file))
+        }
       } else {
-        Future(getConfigData(path, id))
+        Future(Some(ConfigData(file)))
+      }
+    }
+
+    // Returns the contents of the given version of the file, if found
+    def getConfigData(file: File): Option[ConfigData] = {
+      if (!file.exists) {
+        // assumes git pull was done, so file should be in working dir
+        None
+      } else {
+        if (id.isDefined) {
+          // return the file for the given id
+          val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)
+          Some(ConfigData(git.getRepository.open(objId).getBytes))
+        } else {
+          // return the latest version of the file from the working dir
+          Some(ConfigData(file))
+        }
+      }
+    }
+
+    logger.debug(s"get $path")
+    val file = fileForPath(path)
+
+    Future(pull()).flatMap { _ ⇒
+      if (isOversize(file)) {
+        getOversize(file)
+      } else {
+        Future(getConfigData(file))
       }
     }
   }
 
   override def list(): Future[List[ConfigFileInfo]] = Future {
+
+    // Returns a list containing all known configuration files by walking the Git tree recursively and
+    // collecting the resulting file info.
+    @tailrec
+    def list(treeWalk: TreeWalk, result: List[ConfigFileInfo]): List[ConfigFileInfo] = {
+      if (treeWalk.next()) {
+        val pathStr = treeWalk.getPathString
+        val path = new File(pathStr)
+        val origPath = origFile(path)
+        val objectId = treeWalk.getObjectId(0).name
+        // TODO: Include create comment (history(path)(0).comment) or latest comment (history(path).last.comment)?
+        val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath).last.comment)
+        list(treeWalk, info :: result)
+      } else {
+        result
+      }
+    }
+
     logger.debug(s"list")
     pull()
     val repo = git.getRepository
@@ -233,41 +327,6 @@ class GitConfigManager(val git: Git, override val name: String)(implicit dispatc
     treeWalk.addTree(tree)
 
     list(treeWalk, List())
-  }
-
-  // Returns the contents of the given version of the file, if found
-  private def getConfigData(path: File, id: Option[ConfigId]): Option[ConfigData] = {
-    val file = fileForPath(path)
-    if (!file.exists) {
-      // assumes git pull was done, so file should be in working dir
-      None
-    } else {
-      if (id.isDefined) {
-        // return the file for the given id
-        val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)
-        Some(new ConfigBytes(git.getRepository.open(objId).getBytes))
-      } else {
-        // return the latest version of the file (without checking Git) (XXX needed?)
-        Some(new ConfigFile(file))
-      }
-    }
-  }
-
-  // Returns a list containing all known configuration files by walking the Git tree recursively and
-  // collecting the resulting file info.
-  @tailrec
-  private def list(treeWalk: TreeWalk, result: List[ConfigFileInfo]): List[ConfigFileInfo] = {
-    if (treeWalk.next()) {
-      val pathStr = treeWalk.getPathString
-      val path = new File(pathStr)
-      val origPath = origFile(path)
-      val objectId = treeWalk.getObjectId(0).name
-      // TODO: Include create comment (history(path)(0).comment) or latest comment (history(path).last.comment)?
-      val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath).last.comment)
-      list(treeWalk, info :: result)
-    } else {
-      result
-    }
   }
 
   override def history(path: File): Future[List[ConfigFileHistory]] = Future(hist(path))
@@ -319,16 +378,20 @@ class GitConfigManager(val git: Git, override val name: String)(implicit dispatc
    * @param path the config file path
    * @param configData the contents of the file
    * @param comment an optional comment to associate with this file
-   * @return a unique id that can be used to refer to the file
+   * @return a future unique id that can be used to refer to the file
    */
-  private def put(path: File, configData: ConfigData, comment: String = ""): ConfigId = {
+  private def put(path: File, configData: ConfigData, comment: String = ""): Future[ConfigId] = {
     val file = fileForPath(path)
-    writeToFile(file, configData)
-    val dirCache = git.add.addFilepattern(path.getPath).call()
-    //    git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfig for now
-    git.commit().setOnly(path.getPath).setMessage(comment).call
-    git.push.call()
-    GitConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
+    for {
+      _ ← configData.writeToFile(file)
+      configId ← Future {
+        val dirCache = git.add.addFilepattern(path.getPath).call()
+        // git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfig for now
+        git.commit().setOnly(path.getPath).setMessage(comment).call
+        git.push.call()
+        GitConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
+      }
+    } yield configId
   }
 
   /**
@@ -341,14 +404,6 @@ class GitConfigManager(val git: Git, override val name: String)(implicit dispatc
 
   // Returns the absolute path of the file in the Git repository working tree
   private def fileForPath(path: File): File = new File(git.getRepository.getWorkTree, path.getPath)
-
-  // Writes the given data to the given file (Note: The Files class is new in java1.7)
-  private def writeToFile(file: File, configData: ConfigData): Unit = {
-    val path = file.toPath
-    if (!Files.isDirectory(path.getParent))
-      Files.createDirectories(path.getParent)
-    Files.write(path, configData.getBytes)
-  }
 
   // File used to store the SHA-1 of the actual file, if oversized.
   private def shaFile(file: File): File =
@@ -363,79 +418,4 @@ class GitConfigManager(val git: Git, override val name: String)(implicit dispatc
   // Since the constructor does a git pull already, we assume all files that were not deleted are in the working dir.
   private def isOversize(file: File): Boolean = shaFile(file).exists
 
-  /**
-   * For large/binary files:
-   * Creates the given file in the Git repo (actually creates a file named $path.sha1 containing the SHA-1
-   * of the actual file).
-   * The file data is stored on the config service annex server, where the file name is the SHA-1
-   * of the data (making it unique for that data).
-   *
-   * @param path the relative path of the file in the git repo
-   * @param configData contains the file's data
-   * @param comment the create comment
-   * @return the future ConfigId for the created $path.sha1, which only contains the SHA-1 of the actual file.
-   */
-  private def createOversize(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
-    val file = fileForPath(path)
-    Future {
-      val sha1File = shaFile(file)
-      if (file.exists() || sha1File.exists())
-        throw new IOException("File already exists in repository: " + file)
-      writeToFile(file, configData)
-    }.flatMap { _ ⇒
-      annex.post(file).flatMap { sha1 ⇒
-        create(shaFile(path), ConfigString(sha1), oversize = false, comment)
-      }
-    }
-  }
-
-  /**
-   * For large/binary files:
-   * Updates the given file in the Git repo (actually updates a file named $path.sha1 containing the SHA-1
-   * of the actual file).
-   * The file data is stored on the config service annex server, where the file name is the SHA-1
-   * of the data (making it unique for that data).
-   *
-   * @param path the relative path of the file in the git repo
-   * @param configData contains the file's data
-   * @param comment the update comment
-   * @return the future ConfigId for the updated $path.sha1, which only contains the SHA-1 of the actual file.
-   */
-  private def updateOversize(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
-    val file = fileForPath(path)
-    Future {
-      val sha1File = shaFile(file)
-      writeToFile(file, configData)
-    }.flatMap { _ ⇒
-      annex.post(file).flatMap { sha1 ⇒
-        update(shaFile(path), ConfigString(sha1), comment)
-      }
-    }
-  }
-
-  /**
-   * For large/binary files:
-   * Gets the given file from the Git repo (actually gets a file named $path.sha1 containing the SHA-1
-   * of the actual file and uses that to get the actual file from the annex http server).
-   *
-   * @param path the file path
-   * @param id an optional id used to specify a specific version to fetch
-   *           (by default the latest version is returned)
-   * @return a future object containing the configuration data, if found
-   */
-  private def getOversize(path: File, id: Option[ConfigId]): Future[Option[ConfigData]] = {
-    get(shaFile(path), id).flatMap {
-      case None ⇒ Future(None)
-      case Some(configData) ⇒
-        val sha1 = configData.toString
-        val file = fileForPath(path)
-        if (!file.exists() || (sha1 != HashGeneratorUtils.generateSHA1(file))) {
-          annex.get(sha1, file).map {
-            f ⇒ Some(ConfigFile(f))
-          }
-        } else {
-          Future(Some(ConfigFile(file)))
-        }
-    }
-  }
 }
