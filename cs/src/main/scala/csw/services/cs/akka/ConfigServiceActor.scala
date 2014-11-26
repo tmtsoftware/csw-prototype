@@ -5,6 +5,8 @@ import java.io.File
 import akka.actor._
 import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.{ ConfigFileHistory, _ }
+import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
+import csw.services.ls.LocationServiceRegisterActor
 
 import scala.util.{ Failure, Success, Try }
 
@@ -41,6 +43,9 @@ object ConfigServiceActor {
 
   case class HistoryRequest(path: File) extends ConfigServiceRequest
 
+  // Request config service actor to register with the location service
+  case object RegisterWithLocationService extends ConfigServiceRequest
+
   // Reply messages (The final arguments, wrapped in Try[], give the actual results)
   sealed trait ConfigServiceResult
 
@@ -71,7 +76,7 @@ object ConfigServiceActor {
   def defaultConfigManager(system: ActorSystem): ConfigManager = {
     import system.dispatcher
     val settings = ConfigServiceSettings(system)
-    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
+    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
   }
 }
 
@@ -84,6 +89,12 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   import ConfigServiceActor._
   import context.dispatcher
 
+  // Start an actor to re-register when the location service restarts
+  def registerWithLocationService(): Unit = {
+    val serviceId = ServiceId(configManager.name, ServiceType.Service)
+    context.actorOf(LocationServiceRegisterActor.props(serviceId, Some(self)))
+  }
+
   override def receive: Receive = {
     case CreateRequest(path, configData, oversize, comment) ⇒ handleCreateRequest(sender(), path, configData, oversize, comment)
     case UpdateRequest(path, configData, comment) ⇒ handleUpdateRequest(sender(), path, configData, comment)
@@ -92,6 +103,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     case DeleteRequest(path, comment) ⇒ handleDeleteRequest(sender(), path, comment)
     case ListRequest ⇒ handleListRequest(sender())
     case HistoryRequest(path) ⇒ handleHistoryRequest(sender(), path)
+    case RegisterWithLocationService ⇒ registerWithLocationService()
 
     case x ⇒ log.error(s"Received unknown message $x from ${sender()}")
   }

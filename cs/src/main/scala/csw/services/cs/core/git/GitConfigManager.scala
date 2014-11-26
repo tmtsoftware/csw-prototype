@@ -35,21 +35,22 @@ object GitConfigManager {
    *
    * @param gitWorkDir top level directory to use for storing configuration files and the local git repository (under .git)
    * @param remoteRepo the URI of the remote, main repository
+   * @param name the name of this service
    *
    * @return a new GitConfigManager configured to use the given local and remote repositories
    */
-  def apply(gitWorkDir: File, remoteRepo: URI)(implicit dispatcher: ExecutionContextExecutor): GitConfigManager = {
+  def apply(gitWorkDir: File, remoteRepo: URI, name: String = "Config Service")(implicit dispatcher: ExecutionContextExecutor): GitConfigManager = {
     // Init local repo
     val gitDir = new File(gitWorkDir, ".git")
     if (gitDir.exists()) {
       val git = new Git(new FileRepositoryBuilder().setGitDir(gitDir).build())
       val result = git.pull.call
       if (!result.isSuccessful) throw new IOException(result.toString)
-      new GitConfigManager(git)
+      new GitConfigManager(git, name)
     } else {
       gitWorkDir.mkdirs()
       val git = Git.cloneRepository.setDirectory(gitWorkDir).setURI(remoteRepo.toString).call
-      new GitConfigManager(git)
+      new GitConfigManager(git, name)
     }
   }
 
@@ -130,8 +131,11 @@ object GitConfigManager {
  * having to download them every time an application starts.
  *
  * Only one instance of this class should exist for a given local Git repository.
+ *
+ * @param git used to access Git
+ * @param name the name of the service
  */
-class GitConfigManager(val git: Git)(implicit dispatcher: ExecutionContextExecutor)
+class GitConfigManager(val git: Git, override val name: String)(implicit dispatcher: ExecutionContextExecutor)
     extends ConfigManager with LazyLogging {
 
   // used to access the http server that manages oversize files

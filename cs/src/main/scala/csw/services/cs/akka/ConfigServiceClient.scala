@@ -18,7 +18,7 @@ import csw.services.cs.core._
  * @param configServiceActor the config service actor reference to use
  * @param timeout amount of time to wait for config service operations to complete
  */
-case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef)(implicit timeout: Timeout) extends ConfigManager {
+case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef, override val name: String)(implicit timeout: Timeout) extends ConfigManager {
 
   import system.dispatcher
 

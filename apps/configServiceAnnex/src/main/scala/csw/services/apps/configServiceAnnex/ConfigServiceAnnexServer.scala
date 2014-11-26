@@ -1,6 +1,7 @@
 package csw.services.apps.configServiceAnnex
 
 import java.io.{ File, FileOutputStream }
+import java.net.{ InetSocketAddress, URI }
 import java.nio.file.{ Files, Path, Paths }
 
 import akka.actor.ActorSystem
@@ -13,6 +14,8 @@ import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.{ ForeachSink, Sink, Source }
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
+import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
+import csw.services.ls.LocationServiceRegisterActor
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ Promise, Future }
@@ -32,7 +35,8 @@ import scala.util.control.NonFatal
  * Files are immutable. (TODO: Should delete be available?)
  */
 object ConfigServiceAnnexServerApp extends App {
-  ConfigServiceAnnexServer.startup()
+  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServerApp"))
+  ConfigServiceAnnexServer.startup(registerWithLoc = true)
 }
 
 object ConfigServiceAnnexServer {
@@ -40,10 +44,10 @@ object ConfigServiceAnnexServer {
    * Starts the server and returns a future that completes when it is ready to accept connections
    * (needed for testing)
    */
-  def startup(): Future[ConfigServiceAnnexServer] = {
+  def startup(registerWithLoc: Boolean = false): Future[ConfigServiceAnnexServer] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     val server = new ConfigServiceAnnexServer()
-    server.startup().map(_ ⇒ server)
+    server.start(registerWithLoc).map(_ ⇒ server)
   }
 }
 
@@ -69,11 +73,12 @@ class ConfigServiceAnnexServer {
     case _: HttpRequest                       ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
   }
 
-  private def startup(): Future[Any] = {
+  private def start(registerWithLoc: Boolean): Future[Any] = {
     val bindingFuture = IO(Http) ? Http.Bind(interface = settings.interface, port = settings.port)
     bindingFuture foreach {
       case Http.ServerBinding(localAddress, connectionStream) ⇒
         logger.info(s"Listening on http:/$localAddress/")
+        if (registerWithLoc) registerWithLocationService(localAddress)
         Source(connectionStream).foreach {
           case Http.IncomingConnection(remoteAddress, requestProducer, responseConsumer) ⇒
             logger.info(s"Accepted new connection from $remoteAddress")
@@ -87,6 +92,17 @@ class ConfigServiceAnnexServer {
     }
   }
 
+  /**
+   * Register with the location service (which must be started as a separate process).
+   */
+  def registerWithLocationService(addr: InetSocketAddress) {
+    val serviceId = ServiceId("ConfigServiceAnnex", ServiceType.Service)
+    val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
+    logger.info(s"Registering with the location service with URI $httpUri")
+    // Start an actor to re-register when the location service restarts
+    system.actorOf(LocationServiceRegisterActor.props(serviceId, actorRef = None, configPath = None, httpUri = Some(httpUri)))
+  }
+
   // Implements Http GET
   private def httpGet(uri: Uri): Future[HttpResponse] = {
     val path = makePath(settings.dir, new File(uri.path.toString()))
@@ -98,7 +114,7 @@ class ConfigServiceAnnexServer {
       HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
     } recover {
       case NonFatal(cause) ⇒
-        logger.error(s"Nonfatal error: cause = ${cause.getMessage}")
+        logger.error(s"Nonfatal error while attempting to get $path (uri = $uri): cause = ${cause.getMessage}")
         HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
     }
     Future.successful(result.get)

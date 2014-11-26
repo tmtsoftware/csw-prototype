@@ -202,7 +202,7 @@ trait CommandServiceActor extends Actor with ActorLogging {
   def registerWithLocationService(serviceId: ServiceId, configPathOpt: Option[String] = None,
                                   httpUri: Option[URI] = None) {
     // Start an actor to re-register when the location service restarts
-    context.actorOf(LocationServiceRegisterActor.props(self, serviceId, configPathOpt, httpUri))
+    context.actorOf(LocationServiceRegisterActor.props(serviceId, Some(self), configPathOpt, httpUri))
   }
 
   /**

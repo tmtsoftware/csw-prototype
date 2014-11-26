@@ -22,6 +22,9 @@ import scala.util.{ Failure, Success, Try }
 object ConfigServiceAnnexClient {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexClient"))
 
+  // Note: We could take the actor system as an implicit argument from the caller,
+  // but using a separate one was suggested, to avoid congestion and slowing down actor
+  // messages while large files are being transferred.
   implicit val system = ActorSystem("ConfigServiceAnnexClient")
   import system.dispatcher
 

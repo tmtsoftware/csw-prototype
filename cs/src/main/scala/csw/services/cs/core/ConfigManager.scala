@@ -12,6 +12,11 @@ import scala.concurrent.Future
 trait ConfigManager {
 
   /**
+   * The name of this instance
+   */
+  val name: String
+
+  /**
    * Creates a config file with the given path and data and optional comment.
    * An IOException is thrown if the file already exists.
    *

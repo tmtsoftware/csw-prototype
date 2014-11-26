@@ -1,5 +1,6 @@
 package csw.services.cs.core.git;
 
+import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import csw.services.cs.JConfigManager;
 import csw.services.cs.akka.TestRepo;
 import csw.services.cs.core.ConfigData;
@@ -8,6 +9,9 @@ import csw.services.cs.core.ConfigFileInfo;
 import csw.services.cs.core.ConfigId;
 import csw.services.cs.core.ConfigString;
 import org.junit.Test;
+import scala.concurrent.Await;
+import scala.concurrent.duration.FiniteDuration;
+import java.util.concurrent.TimeUnit;
 
 import java.io.File;
 import java.util.List;
@@ -29,12 +33,17 @@ public class JGitConfigManagerTests {
 
     // Test creating a GitConfigManager, storing and retrieving some files
     @Test
-    public void testGitConfigManager() {
-        runTests(false);
-        runTests(true);
+    public void testGitConfigManager() throws Exception {
+        runTests(null, false);
+
+        // Start the config service annex http server and wait for it to be ready for connections
+        // (In normal operations, this server would already be running)
+        ConfigServiceAnnexServer server = Await.result(ConfigServiceAnnexServer.startup(false), new FiniteDuration(5, TimeUnit.SECONDS));
+
+        runTests(server, true);
     }
 
-    void runTests(Boolean oversize) {
+    void runTests(ConfigServiceAnnexServer annexServer, Boolean oversize) {
         JConfigManager manager = TestRepo.getJConfigManager();
 
         if (manager.exists(path1)) {
@@ -92,6 +101,10 @@ public class JGitConfigManagerTests {
             }
         }
 
+        if (annexServer != null) {
+            System.out.println("Shutting down annex server");
+            annexServer.shutdown();
+        }
     }
 }
 

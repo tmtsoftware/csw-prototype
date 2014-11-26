@@ -32,14 +32,16 @@ object LocationService {
 
   /**
    * Utility method to register with the location service.
-   * Note that the context should be the actor context of the HCD or Assembly that is registering.
+   * Note that the context should be the actor context of the service that is registering.
    * If the actor dies, the location service will remove the reference and the service will need to
    * register again when restarting.
    *
    * @param system the caller's actor system
    * @param actorRef reference to the actor for the service
    * @param serviceId name and service type to register with
-   * @param configPath optional dot-separated config path be sent to the actor (default is entire config)
+   * @param configPath for command service actors (HCDs and Assemblies), an optional
+   *                   dot-separated path indicating the part of command configurations
+   *                   to be sent to the actor (default is to send the entire command)
    * @param httpUri optional HTTP URI for the actor registering
    */
   def register(system: ActorSystem, actorRef: ActorRef, serviceId: ServiceId,
@@ -63,7 +65,7 @@ object LocationService {
    * Convenience method  to search for services matching the given name or service type.
    * @param system the caller's actor system
    * @param name optional service name (default: any)
-   * @param serviceType optional service type (HCD or Assembly): Defaults to any
+   * @param serviceType optional service type: Defaults to any type
    */
   def browse(system: ActorSystem, name: Option[String], serviceType: Option[ServiceType]): Future[BrowseResults] = {
     implicit val timeout = Timeout(5.seconds)
@@ -103,14 +105,27 @@ object LocationServiceActor {
    */
   sealed trait ServiceType
   object ServiceType {
+
+    /**
+     * A service that controls a hardware device
+     */
     case object HCD extends ServiceType
+
+    /**
+     * A service that controls one or more HCDs or assemblies
+     */
     case object Assembly extends ServiceType
+
+    /**
+     * A general purpose service (actor and/or web service application)
+     */
+    case object Service extends ServiceType
   }
 
   /**
    * Used to identify a service
    * @param name the service name
-   * @param serviceType HCD or Assembly
+   * @param serviceType HCD, Assembly, Service
    */
   case class ServiceId(name: String, serviceType: ServiceType)
 
@@ -121,7 +136,7 @@ object LocationServiceActor {
 
   /**
    * Message used by an actor to register with the location service.
-   * Note that the (implicit or explicit) sender of this message should be the HCD or Assembly that is registering.
+   * Note that the (implicit or explicit) sender of this message should be the service that is registering.
    * If the actor dies, the location service will remove the reference and the service will need to
    * register again when restarting.
    *
@@ -163,7 +178,7 @@ object LocationServiceActor {
   /**
    * Used to search for running services matching the given name or service type
    * @param name an optional service name (default: any)
-   * @param serviceType optional: HCD or Assembly (default: any)
+   * @param serviceType optional service type (default: any)
    */
   case class Browse(name: Option[String], serviceType: Option[ServiceType]) extends LocationServiceMessage
 

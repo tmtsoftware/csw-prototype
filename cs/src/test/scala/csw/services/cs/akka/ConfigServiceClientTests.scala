@@ -50,7 +50,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
-    val csClient = ConfigServiceClient(system, csActor)
+    val csClient = ConfigServiceClient(system, csActor, manager.name)
 
     // Sequential, non-blocking for-comprehension
     val result = for {
