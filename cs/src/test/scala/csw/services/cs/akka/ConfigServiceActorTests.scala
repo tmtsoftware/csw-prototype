@@ -2,11 +2,11 @@ package csw.services.cs.akka
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
-import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
-import java.io.{File, IOException}
+import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
+import java.io.{ File, IOException }
 import csw.services.cs.core._
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import scala.concurrent.duration._
 import csw.services.cs.core.ConfigData
 import scala.concurrent.Await
@@ -19,7 +19,7 @@ import csw.services.cs.akka.ConfigServiceActor._
  * Tests the Config Service actor
  */
 class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   import system.dispatcher
 
@@ -47,10 +47,10 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
   }
 
   // Runs the tests for the config service, using the given oversize option.
-  def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean) : Unit = {
+  def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {
     logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
-    // Use the test repository created above
+    // create a test repository and use it to create the actor
     val manager = TestRepo.getConfigManager()
 
     // Create the actor
@@ -196,7 +196,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
     assert(result.list.isSuccess)
     val list = result.list.get
     assert(list.size == size + 1) // plus 1 for README file added when creating the bare repo
-    for (info <- list) {
+    for (info ← list) {
       if (info.path.getName != "README")
         assert(info.comment == comments(info.path))
     }

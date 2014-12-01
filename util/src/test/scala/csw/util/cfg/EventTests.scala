@@ -1,7 +1,7 @@
 package csw.util.cfg
 
 import csw.util.cfg.Events._
-import csw.util.cfg.UnitsOfMeasure.{NoUnits, Meters, Deg}
+import csw.util.cfg.UnitsOfMeasure.{ NoUnits, Meters, Deg }
 import org.scalatest.FunSuite
 import ConfigValues.ValueData._
 import spray.json._
@@ -15,12 +15,11 @@ class EventTests extends FunSuite with EventJsonFormats {
     "tmt.mobie.blue.filter",
     "name" -> "GG495",
     "nameList" -> List("xxx", "yyy", "zzz"),
-//    "nameTuple" -> ("aaa", "bbb", "ccc"), // tuple looses type info
+    //    "nameTuple" -> ("aaa", "bbb", "ccc"), // tuple looses type info
     "intList" -> List(1, 2, 3).deg,
     "intVal" -> 22.meters,
     "doubleVal" -> 3.14,
-    "some.other.name" -> "seps are OK"
-  )
+    "some.other.name" -> "seps are OK")
 
   val observeEvent = ObserveEvent(
     eventId = "event2",
@@ -33,7 +32,7 @@ class EventTests extends FunSuite with EventJsonFormats {
     assert(e.names == telemetryEvent.names)
     assert(e("name").elems.head == "GG495")
     assert(e("nameList").elems == List("xxx", "yyy", "zzz"))
-//    assert(e("nameTuple").elems == List("aaa", "bbb", "ccc"))
+    //    assert(e("nameTuple").elems == List("aaa", "bbb", "ccc"))
     assert(e("intList").elems == List(1, 2, 3))
     assert(e("intList").units == Deg)
     assert(e("intVal").elems.head == 22)

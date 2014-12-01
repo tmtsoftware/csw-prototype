@@ -2,18 +2,17 @@ package csw.services.cs.akka
 
 import java.io.File
 
-import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.actor.{ ActorRefFactory, ActorSystem }
 import csw.services.cs.JConfigManager
 import csw.services.cs.core.ConfigManager
-import csw.services.cs.core.git.{GitConfigManager, JGitConfigManager}
+import csw.services.cs.core.git.{ GitConfigManager, JGitConfigManager }
 
 /**
  * Utility class to create temporary Git repositories for use in testing.
  */
 object TestRepo {
 
-  private def resetRepo(settings: ConfigServiceSettings)
-                       (implicit context: ActorRefFactory): Unit = {
+  private def resetRepo(settings: ConfigServiceSettings)(implicit context: ActorRefFactory): Unit = {
     // XXX FIXME TODO: Use generated temp dirs, not settings
     println(s"Local repo = ${settings.gitLocalRepository}, remote = ${settings.gitMainRepository}")
     if (settings.gitMainRepository.getScheme != "file")
@@ -32,10 +31,9 @@ object TestRepo {
    *
    * @return a new ConfigManager set to manage the newly created Git repositories
    */
-  def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))
-                      (implicit context: ActorRefFactory): ConfigManager = {
+  def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))(implicit context: ActorRefFactory): ConfigManager = {
     resetRepo(settings)
-    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
+    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
   }
 
   /**

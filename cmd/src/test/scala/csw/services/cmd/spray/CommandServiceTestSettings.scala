@@ -1,7 +1,7 @@
 package csw.services.cmd.spray
 
-import akka.actor.{ExtendedActorSystem, Extension, ExtensionKey}
-import scala.concurrent.duration.{Duration, FiniteDuration, MILLISECONDS}
+import akka.actor.{ ExtendedActorSystem, Extension, ExtensionKey }
+import scala.concurrent.duration.{ Duration, FiniteDuration, MILLISECONDS }
 
 object CommandServiceTestSettings extends ExtensionKey[CommandServiceTestSettings]
 

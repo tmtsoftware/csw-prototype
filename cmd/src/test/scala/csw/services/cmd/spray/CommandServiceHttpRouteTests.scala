@@ -1,16 +1,16 @@
 package csw.services.cmd.spray
 
-import akka.event.{Logging, LoggingAdapter}
-import csw.util.cfg.{TestConfig, ConfigValues, ConfigJsonFormats}
+import akka.event.{ Logging, LoggingAdapter }
+import csw.util.cfg.{ TestConfig, ConfigValues, ConfigJsonFormats }
 import csw.util.cfg.Configurations._
-import csw.util.cfg.Configurations.{SetupConfigList, SetupConfig}
+import csw.util.cfg.Configurations.{ SetupConfigList, SetupConfig }
 import ConfigValues.ValueData._
 import spray.json._
 import org.specs2.mutable.Specification
 import spray.testkit.Specs2RouteTest
 import org.specs2.time.NoTimeConversions
-import csw.services.cmd.akka.{CommandStatus, RunId}
-import spray.http.{ContentTypes, StatusCodes}
+import csw.services.cmd.akka.{ CommandStatus, RunId }
+import spray.http.{ ContentTypes, StatusCodes }
 import scala.Some
 import akka.actor.ActorSystem
 import scala.util.Success
@@ -23,7 +23,7 @@ import scala.concurrent.Future
  * without using actors.
  */
 class CommandServiceHttpRouteTests extends Specification
-with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with ConfigJsonFormats {
+    with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with ConfigJsonFormats {
 
   // Required by HttpService
   def actorRefFactory: ActorSystem = system
@@ -127,7 +127,6 @@ with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with Co
   //      }
   //    }
   //  }
-
 
   // -- Override CommandServiceRoute methods with stubs for testing --
 

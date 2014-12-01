@@ -1,10 +1,10 @@
 package csw.util.cfg
 
 import csw.util.cfg.Configurations._
-import org.scalatest.{Matchers, FunSpec}
-import csw.util.cfg.ConfigValues.{ValueData, CValue}
+import org.scalatest.{ Matchers, FunSpec }
+import csw.util.cfg.ConfigValues.{ ValueData, CValue }
 import csw.util.cfg.FullyQualifiedName.Fqn
-import csw.util.cfg.UnitsOfMeasure.{Meters, NoUnits, Units}
+import csw.util.cfg.UnitsOfMeasure.{ Meters, NoUnits, Units }
 
 class ConfigValuesTests extends FunSpec with Matchers {
   val numbers1 = (1 to 5).toVector
@@ -419,7 +419,6 @@ class ConfigValuesTests extends FunSpec with Matchers {
     }
   }
 
-
   describe("Testing getConfig parts") {
     import Fqn._
 
@@ -469,7 +468,6 @@ class ConfigValuesTests extends FunSpec with Matchers {
 
     // Add to list
     val cl1 = ConfigList(sc1, sc2, sc3, sc4)
-
 
     it("ConfigList test for returning names when names are unique") {
       val r1 = cl1.prefixes

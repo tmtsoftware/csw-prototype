@@ -212,7 +212,7 @@ class LocationServiceActor extends Actor with ActorLogging {
   // repeated when the next Register message is received
   private var outstandingRequests = Map[ActorRef, List[ServiceId]]()
 
-  log.info(s"Started location service on ${self.path.address.port}")
+  log.info("Started location service")
 
   override def receive: Receive = {
 

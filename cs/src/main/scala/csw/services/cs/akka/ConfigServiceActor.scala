@@ -128,7 +128,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     val result = configManager.update(path, configData, comment)
     result onComplete {
       case Success(configId) ⇒ replyTo ! UpdateResult(path, Success(configId))
-      case Failure(ex) ⇒ replyTo ! UpdateResult(path, Failure(ex))
+      case Failure(ex)       ⇒ replyTo ! UpdateResult(path, Failure(ex))
     }
     Await.ready(result, timeout)
   }
@@ -146,7 +146,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     val result = configManager.exists(path)
     result onComplete {
       case Success(bool) ⇒ replyTo ! ExistsResult(path, Success(bool))
-      case Failure(ex) ⇒ replyTo ! ExistsResult(path, Failure(ex))
+      case Failure(ex)   ⇒ replyTo ! ExistsResult(path, Failure(ex))
     }
     Await.ready(result, timeout)
   }
@@ -154,7 +154,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit = {
     val result = configManager.delete(path, comment)
     result onComplete {
-      case Success(u) ⇒ replyTo ! DeleteResult(path, Success(u))
+      case Success(u)  ⇒ replyTo ! DeleteResult(path, Success(u))
       case Failure(ex) ⇒ replyTo ! DeleteResult(path, Failure(ex))
     }
     Await.ready(result, timeout)
@@ -164,7 +164,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     val result = configManager.list()
     result onComplete {
       case Success(list) ⇒ replyTo ! ListResult(Success(list))
-      case Failure(ex) ⇒ replyTo ! ListResult(Failure(ex))
+      case Failure(ex)   ⇒ replyTo ! ListResult(Failure(ex))
     }
     Await.ready(result, timeout)
   }
@@ -173,7 +173,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     val result = configManager.history(path)
     result onComplete {
       case Success(list) ⇒ replyTo ! HistoryResult(path, Success(list))
-      case Failure(ex) ⇒ replyTo ! HistoryResult(path, Failure(ex))
+      case Failure(ex)   ⇒ replyTo ! HistoryResult(path, Failure(ex))
     }
     Await.ready(result, timeout)
   }

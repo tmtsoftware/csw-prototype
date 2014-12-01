@@ -4,7 +4,7 @@ import org.scalatest.FunSuite
 import csw.util.cfg.Configurations._
 import ConfigValues.ValueData._
 import spray.json._
-import csw.util.cfg.UnitsOfMeasure.{NoUnits, Meters, Deg}
+import csw.util.cfg.UnitsOfMeasure.{ NoUnits, Meters, Deg }
 import scala.language.postfixOps
 
 class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
@@ -19,12 +19,11 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
       "dec" -> 2.0.deg,
       "equinox" -> "J2000",
       "nameList" -> List("xxx", "yyy", "zzz"),
-      "nameTuple" ->("aaa", "bbb", "ccc"),
+      "nameTuple" -> ("aaa", "bbb", "ccc"),
       //      "intTuple" -> (1, 2, 3).deg, // XXX Tuple looses type info
       "intList" -> List(1, 2, 3).deg,
       "intVal" -> 22.meters,
-      "doubleVal" -> 3.14
-    ).withValues("added1" -> 1, "added2" -> 2.deg)
+      "doubleVal" -> 3.14).withValues("added1" -> 1, "added2" -> 2.deg)
 
     val json = sc.toJson
     val s = json.prettyPrint
@@ -66,7 +65,6 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
 
   }
 
-
   test("Test converting a mixed ConfigList to JSON and back again") {
     val obsId = "TMT-2021A-C-2-1"
     val testConfig: List[ConfigType] = List(
@@ -76,8 +74,7 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
         "posName" -> "NGC738B",
         "c1" -> "22:35:58.530",
         "c2" -> "33:57:55.40",
-        "equinox" -> "J2000"
-      ),
+        "equinox" -> "J2000"),
       WaitConfig(obsId),
       ObserveConfig(obsId),
       SetupConfig(
@@ -85,11 +82,9 @@ class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
         "tmt.tel.ao.pos.one",
         "c1" -> "22:356:01.066",
         "c2" -> "33:58:21.69",
-        "equinox" -> "J2000"
-      ),
+        "equinox" -> "J2000"),
       WaitConfig(obsId),
-      ObserveConfig(obsId)
-    )
+      ObserveConfig(obsId))
 
     val json = testConfig.toJson
     val s = json.prettyPrint

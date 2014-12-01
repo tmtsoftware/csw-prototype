@@ -1,11 +1,11 @@
 package csw.services.cmd.akka
 
-import akka.actor.{Props, ActorRef}
-import akka.testkit.{TestKit, ImplicitSender}
+import akka.actor.{ Props, ActorRef }
+import akka.testkit.{ TestKit, ImplicitSender }
 import csw.services.ls.LocationServiceActor
 import LocationServiceActor._
 import java.net.URI
-import csw.services.cmd.akka.CommandServiceActor.{StatusRequest, CommandServiceStatus}
+import csw.services.cmd.akka.CommandServiceActor.{ StatusRequest, CommandServiceStatus }
 
 // Test HCD
 object TestHcdCommandServiceActor {
@@ -20,7 +20,7 @@ object TestHcdCommandServiceActor {
 }
 
 class TestHcdCommandServiceActor(configPath: String, numberOfSecondsToRun: Int, name: String)
-  extends CommandServiceActor with OneAtATimeCommandQueueController {
+    extends CommandServiceActor with OneAtATimeCommandQueueController {
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, numberOfSecondsToRun), name)
 
   override def receive: Receive = receiveCommands
@@ -64,8 +64,7 @@ trait TestHelper extends ImplicitSender {
         Some("tmt.tel.base.pos"), Some(hcdA)),
       LocationServiceInfo(
         ServiceId(s"HCD-B", ServiceType.HCD), List(new URI(hcdB.path.toString)),
-        Some("tmt.tel.ao.pos.one"), Some(hcdB))
-    )
+        Some("tmt.tel.ao.pos.one"), Some(hcdB)))
 
     val commandServiceActor = system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly")
     waitForReady(commandServiceActor)

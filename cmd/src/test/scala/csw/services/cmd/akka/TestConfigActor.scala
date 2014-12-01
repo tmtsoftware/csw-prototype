@@ -21,14 +21,13 @@ object TestConfigActor {
  * @param numberOfSecondsToRun the number of seconds to run the simulated work
  */
 class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSecondsToRun: Int)
-  extends ConfigActor with ConfigJsonFormats {
+    extends ConfigActor with ConfigJsonFormats {
 
   // Used to create and get the worker actor that is handling a config
   val configWorkers = WorkerPerRunId("configWorkerActor", context, log)
 
   // XXX dummy config for test of get/query
   private var savedConfig: Option[SetupConfigList] = None
-
 
   // Receive config messages
   override def receive: Receive = receiveConfigs
@@ -39,10 +38,10 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   override def submit(submit: SubmitWithRunId): Unit = {
     val props = TestConfigActorWorker.props(submit, commandStatusActor, numberOfSecondsToRun)
     configWorkers.newWorkerFor(props, submit.runId) match {
-      case Some(configWorkerActor) =>
+      case Some(configWorkerActor) ⇒
         log.info(s"Forwarding config ${submit.config.toJson.toString} to worker")
         context.watch(configWorkerActor)
-      case None =>
+      case None ⇒
     }
   }
 
@@ -51,8 +50,8 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    */
   override def pause(runId: RunId): Unit = {
     configWorkers.getWorkerFor(runId) match {
-      case Some(actorRef) => actorRef ! ConfigPause(runId)
-      case None => log.error(s"Can't pause config: No worker actor found for runId: $runId")
+      case Some(actorRef) ⇒ actorRef ! ConfigPause(runId)
+      case None           ⇒ log.error(s"Can't pause config: No worker actor found for runId: $runId")
     }
   }
 
@@ -61,8 +60,8 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    */
   override def resume(runId: RunId): Unit = {
     configWorkers.getWorkerFor(runId) match {
-      case Some(actorRef) => actorRef ! ConfigResume(runId)
-      case None => log.error(s"Can't resume config: No worker actor found for runId: $runId")
+      case Some(actorRef) ⇒ actorRef ! ConfigResume(runId)
+      case None           ⇒ log.error(s"Can't resume config: No worker actor found for runId: $runId")
     }
   }
 
@@ -71,8 +70,8 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    */
   override def cancel(runId: RunId): Unit = {
     configWorkers.getWorkerFor(runId) match {
-      case Some(actorRef) => actorRef ! ConfigCancel(runId)
-      case None => log.error(s"Can't cancel config: No worker actor found for runId: $runId")
+      case Some(actorRef) ⇒ actorRef ! ConfigCancel(runId)
+      case None           ⇒ log.error(s"Can't cancel config: No worker actor found for runId: $runId")
     }
   }
 
@@ -81,11 +80,10 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
    */
   override def abort(runId: RunId): Unit = {
     configWorkers.getWorkerFor(runId) match {
-      case Some(actorRef) => actorRef ! ConfigAbort(runId)
-      case None => log.error(s"Can't abort config: No worker actor found for runId: $runId")
+      case Some(actorRef) ⇒ actorRef ! ConfigAbort(runId)
+      case None           ⇒ log.error(s"Can't abort config: No worker actor found for runId: $runId")
     }
   }
-
 
   /*
         config {
@@ -110,20 +108,19 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   override def query(configs: SetupConfigList, replyTo: ActorRef): Unit = {
     val configList = savedConfig match {
       // XXX TODO: should only fill in the values that are passed in!
-      case Some(c) => c
-      case None =>
-        for(config <- configs) yield
-        if (config.exists("posName")) {
+      case Some(c) ⇒ c
+      case None ⇒
+        for (config ← configs) yield if (config.exists("posName")) {
           config.withValues(
-              "posName" -> "NGC738B",
-              "c1" -> "22:35:58.530",
-              "c2" -> "33:57:55.40",
-              "equinox" -> "J2000")
+            "posName" -> "NGC738B",
+            "c1" -> "22:35:58.530",
+            "c2" -> "33:57:55.40",
+            "equinox" -> "J2000")
         } else {
           config.withValues(
             "c1" -> "22:356:01.066",
             "c2" -> "33:58:21.69",
-             "equinox" -> "J2000")
+            "equinox" -> "J2000")
         }
     }
 
@@ -132,9 +129,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
   }
 }
 
-
 // ----
-
 
 object TestConfigActorWorker {
   /**
@@ -153,7 +148,7 @@ object TestConfigActorWorker {
 }
 
 class TestConfigActorWorker(submit: SubmitWithRunId, val commandStatusActor: ActorRef, numberOfSecondsToRun: Int)
-  extends Actor with ActorLogging {
+    extends Actor with ActorLogging {
 
   import TestConfigActorWorker._
   import ConfigActor._
@@ -162,29 +157,29 @@ class TestConfigActorWorker(submit: SubmitWithRunId, val commandStatusActor: Act
   context.become(busy(newTimer()))
 
   override def receive: Receive = {
-    case x => unknownMessage(x)
+    case x ⇒ unknownMessage(x)
   }
 
   // State while busy working
   def busy(timer: Cancellable): Receive = {
-    case WorkDone => workDone(timer)
-    case ConfigCancel(runId) => cancel(Some(timer), runId)
-    case ConfigAbort(runId) => abort(Some(timer), runId)
-    case ConfigPause(runId) => pause(Some(timer), runId)
-    case ConfigGet(config) => query(config, sender())
-    case ConfigPut(config) =>
-    case x => unknownMessage(x)
+    case WorkDone            ⇒ workDone(timer)
+    case ConfigCancel(runId) ⇒ cancel(Some(timer), runId)
+    case ConfigAbort(runId)  ⇒ abort(Some(timer), runId)
+    case ConfigPause(runId)  ⇒ pause(Some(timer), runId)
+    case ConfigGet(config)   ⇒ query(config, sender())
+    case ConfigPut(config)   ⇒
+    case x                   ⇒ unknownMessage(x)
   }
 
   // State while paused
   def paused: Receive = {
-    case ConfigResume(runId) => resume(runId)
-    case ConfigCancel(runId) => cancel(None, runId)
-    case ConfigAbort(runId) => abort(None, runId)
-    case ConfigPause(runId) => pause(None, runId)
-    case ConfigGet(config) => query(config, sender())
-    case ConfigPut(config) =>
-    case x => unknownMessage(x)
+    case ConfigResume(runId) ⇒ resume(runId)
+    case ConfigCancel(runId) ⇒ cancel(None, runId)
+    case ConfigAbort(runId)  ⇒ abort(None, runId)
+    case ConfigPause(runId)  ⇒ pause(None, runId)
+    case ConfigGet(config)   ⇒ query(config, sender())
+    case ConfigPut(config)   ⇒
+    case x                   ⇒ unknownMessage(x)
   }
 
   def newTimer(): Cancellable = {

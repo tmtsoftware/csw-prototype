@@ -1,7 +1,7 @@
 package csw.services.cmd.spray
 
 import akka.testkit.TestKit
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ ActorRef, ActorSystem }
 import csw.util.cfg.TestConfig
 import org.scalatest.FunSuiteLike
 import scala.concurrent.duration._
@@ -13,7 +13,7 @@ import scala.concurrent.Await
  * Tests the Command Service HTTP/REST interface in an actor environment.
  */
 class CommandServiceHttpServerTests extends TestKit(ActorSystem("test")) with CommandServiceHttpClient
-with TestHelper with FunSuiteLike {
+    with TestHelper with FunSuiteLike {
 
   implicit val dispatcher = system.dispatcher
 
@@ -28,40 +28,39 @@ with TestHelper with FunSuiteLike {
 
   startCommandServiceHttpServer()
 
-
   // -- Tests --
 
   test("Test HTTP REST interface to Command Service") {
 
     Await.result(for {
-    // test submitting a config to the command queue
-      runId1 <- queueSubmit(config)
-      commandStatus1 <- pollCommandStatus(runId1, 3)
+      // test submitting a config to the command queue
+      runId1 ← queueSubmit(config)
+      commandStatus1 ← pollCommandStatus(runId1, 3)
 
       // test requesting immediate execution of a config
-      runId2 <- queueBypassRequest(config)
-      commandStatus2 <- pollCommandStatus(runId2, 3)
+      runId2 ← queueBypassRequest(config)
+      commandStatus2 ← pollCommandStatus(runId2, 3)
 
       // test pausing the queue, submitting a config and then restarting the queue
-      res3a <- queuePause()
-      runId3 <- queueSubmit(config)
-      commandStatus3a <- getCommandStatus(runId3)
-      res3b <- queueStart()
-      commandStatus3b <- pollCommandStatus(runId3, 3)
+      res3a ← queuePause()
+      runId3 ← queueSubmit(config)
+      commandStatus3a ← getCommandStatus(runId3)
+      res3b ← queueStart()
+      commandStatus3b ← pollCommandStatus(runId3, 3)
 
       // Attempting to get the status of an old or unknown command runId should an error
-      commandStatus3c <- pollCommandStatus(runId3, 3)
+      commandStatus3c ← pollCommandStatus(runId3, 3)
 
       // test submitting a config, pausing it and then canceling it (what is the status?)
-      runId4 <- queueSubmit(config)
-      res4a <- configPause(runId4)
-      commandStatus4a <- getCommandStatus(runId4)
-      res4b <- configCancel(runId4)
-      commandStatus4b <- pollCommandStatus(runId4, 3)
+      runId4 ← queueSubmit(config)
+      res4a ← configPause(runId4)
+      commandStatus4a ← getCommandStatus(runId4)
+      res4b ← configCancel(runId4)
+      commandStatus4b ← pollCommandStatus(runId4, 3)
 
       // abort should fail, since command was already canceled
-      res4c <- configAbort(runId4)
-      commandStatus4c <- pollCommandStatus(runId4, 3)
+      res4c ← configAbort(runId4)
+      commandStatus4c ← pollCommandStatus(runId4, 3)
 
     } yield {
       // At this point all of the above futures have completed: check the results

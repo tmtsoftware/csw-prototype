@@ -3,7 +3,7 @@ package csw.services.cmd.spray
 import akka.actor._
 import csw.services.cmd.akka._
 import csw.services.ls.LocationServiceActor
-import LocationServiceActor.{ServicesReady, ServiceType, ServiceId, LocationServiceInfo}
+import LocationServiceActor.{ ServicesReady, ServiceType, ServiceId, LocationServiceInfo }
 import java.net.URI
 
 /**
@@ -59,7 +59,7 @@ object CommandServiceHttpServerTestApp extends App {
   }
 
   class TestHcdCommandServiceActor(configPath: String, numberOfSecondsToRun: Int, name: String)
-    extends CommandServiceActor with OneAtATimeCommandQueueController {
+      extends CommandServiceActor with OneAtATimeCommandQueueController {
     override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, numberOfSecondsToRun), name)
 
     override def receive: Receive = receiveCommands
@@ -76,7 +76,6 @@ object CommandServiceHttpServerTestApp extends App {
 
     configDistributorActor ! ServicesReady(hcds)
   }
-
 
   /**
    * Creates and returns a new CommandServiceActor
@@ -98,8 +97,7 @@ object CommandServiceHttpServerTestApp extends App {
         Some("tmt.tel.base.pos"), Some(hcdA)),
       LocationServiceInfo(
         ServiceId("HCD-B", ServiceType.HCD), List(new URI(hcdB.path.toString)),
-        Some("tmt.tel.ao.pos.one"), Some(hcdB))
-    )
+        Some("tmt.tel.ao.pos.one"), Some(hcdB)))
 
     system.actorOf(TestAssemblyCommandServiceActor.props(hcds), name = s"Assembly$n")
   }

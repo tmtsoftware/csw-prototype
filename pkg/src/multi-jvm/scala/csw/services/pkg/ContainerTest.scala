@@ -62,6 +62,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           assert(s1.runId == s2.runId)
           assert(s3.runId == s2.runId)
           assert(s3a.runId == s3.runId)
+          println("XXX Container1 tests passed")
           enterBarrier("done")
         }
       }
@@ -75,6 +76,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         expectMsgType[ActorRef]
         container ! Container.CreateComponent(hcd2bProps, "HCD-2B")
         expectMsgType[ActorRef]
+        println("XXX Container2 tests passed")
         enterBarrier("deployed")
         enterBarrier("done")
       }
@@ -95,8 +97,10 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
     commandServiceActor ! StatusRequest
     val status = expectMsgType[CommandServiceStatus]
     if (status.ready) {
+      println("XXX READY")
       commandServiceActor
     } else {
+      println("XXX WAITING")
       Thread.sleep(200)
       waitForReady(commandServiceActor)
     }

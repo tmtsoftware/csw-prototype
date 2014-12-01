@@ -1,6 +1,6 @@
 package csw.services.cs.core.git
 
-import java.io.{File, FileNotFoundException, IOException}
+import java.io.{ File, FileNotFoundException, IOException }
 
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -30,7 +30,6 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
   implicit val system = ActorSystem()
   import system.dispatcher
 
-
   test("Test creating a GitConfigManager, storing and retrieving some files") {
     runTests(None, oversize = false)
 
@@ -43,38 +42,39 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
   def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {
     logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
+    // create a test repository and use it to create the manager
     val manager = TestRepo.getConfigManager()
 
     val result = for {
-    // Try to update a file that does not exist (should fail)
-      updateIdNull <- manager.update(path1, ConfigData(contents2), comment2) recover {
-        case e: FileNotFoundException => null
+      // Try to update a file that does not exist (should fail)
+      updateIdNull ← manager.update(path1, ConfigData(contents2), comment2) recover {
+        case e: FileNotFoundException ⇒ null
       }
 
       // Add, then update the file twice
-      createId1 <- manager.create(path1, ConfigData(contents1), oversize, comment1)
-      createId2 <- manager.create(path2, ConfigData(contents1), oversize, comment1)
-      updateId1 <- manager.update(path1, ConfigData(contents2), comment2)
-      updateId2 <- manager.update(path1, ConfigData(contents3), comment3)
+      createId1 ← manager.create(path1, ConfigData(contents1), oversize, comment1)
+      createId2 ← manager.create(path2, ConfigData(contents1), oversize, comment1)
+      updateId1 ← manager.update(path1, ConfigData(contents2), comment2)
+      updateId2 ← manager.update(path1, ConfigData(contents3), comment3)
 
       // Check that we can access each version
-      result1 <- manager.get(path1).flatMap(_.get.toFutureString)
-      result2 <- manager.get(path1, Some(createId1)).flatMap(_.get.toFutureString)
-      result3 <- manager.get(path1, Some(updateId1)).flatMap(_.get.toFutureString)
-      result4 <- manager.get(path1, Some(updateId2)).flatMap(_.get.toFutureString)
-      result5 <- manager.get(path2).flatMap(_.get.toFutureString)
-      result6 <- manager.get(path2, Some(createId2)).flatMap(_.get.toFutureString)
+      result1 ← manager.get(path1).flatMap(_.get.toFutureString)
+      result2 ← manager.get(path1, Some(createId1)).flatMap(_.get.toFutureString)
+      result3 ← manager.get(path1, Some(updateId1)).flatMap(_.get.toFutureString)
+      result4 ← manager.get(path1, Some(updateId2)).flatMap(_.get.toFutureString)
+      result5 ← manager.get(path2).flatMap(_.get.toFutureString)
+      result6 ← manager.get(path2, Some(createId2)).flatMap(_.get.toFutureString)
 
       // test history()
-      historyList1 <- manager.history(path1)
-      historyList2 <- manager.history(path2)
+      historyList1 ← manager.history(path1)
+      historyList2 ← manager.history(path2)
 
       // test list()
-      list <- manager.list()
+      list ← manager.list()
 
       // Should throw exception if we try to create a file that already exists
-      createIdNull <- manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
-        case e: IOException => null
+      createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
+        case e: IOException ⇒ null
       }
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
@@ -95,11 +95,11 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
       assert(historyList1(2).comment == comment3)
 
       assert(list.size == 2 + 1) // +1 for RENAME file added when creating the bare rep
-      for (info <- list) {
+      for (info ← list) {
         info.path match {
-          case this.path1 => assert(info.comment == this.comment3)
-          case this.path2 => assert(info.comment == this.comment1)
-          case x => if (x.getName != "README") sys.error("Test failed for " + info)
+          case this.path1 ⇒ assert(info.comment == this.comment3)
+          case this.path2 ⇒ assert(info.comment == this.comment1)
+          case x          ⇒ if (x.getName != "README") sys.error("Test failed for " + info)
         }
       }
     }

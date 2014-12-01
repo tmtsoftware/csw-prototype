@@ -1,9 +1,9 @@
 package csw.services.cmd.akka
 
-import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{ActorRef, ActorSystem}
+import akka.testkit.{ ImplicitSender, TestKit }
+import akka.actor.{ ActorRef, ActorSystem }
 import csw.util.cfg.TestConfig
-import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
+import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.cmd.spray.CommandServiceTestSettings
 import scala.concurrent.Future
@@ -14,7 +14,7 @@ import scala.concurrent.duration._
  * Tests the Command Service Client actor
  */
 class CommandServiceClientTests extends TestKit(ActorSystem("test")) with TestHelper
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   import system.dispatcher
 
@@ -36,17 +36,16 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   // -- Tests --
 
-
   test("Tests the command service client class") {
     val cmdClient = getCommandServiceClient
     Await.result(for {
-      runId1 <- cmdClient.queueSubmit(config)
-      status1 <- cmdClient.pollCommandStatus(runId1)
-      _ <- Future.successful(cmdClient.queuePause())
-      runId2 <- cmdClient.queueSubmit(config)
-      status2a <- cmdClient.getCommandStatus(runId2)
-      _ <- Future.successful(cmdClient.queueStart())
-      status2b <- cmdClient.pollCommandStatus(runId2)
+      runId1 ← cmdClient.queueSubmit(config)
+      status1 ← cmdClient.pollCommandStatus(runId1)
+      _ ← Future.successful(cmdClient.queuePause())
+      runId2 ← cmdClient.queueSubmit(config)
+      status2a ← cmdClient.getCommandStatus(runId2)
+      _ ← Future.successful(cmdClient.queueStart())
+      status2b ← cmdClient.pollCommandStatus(runId2)
     } yield {
       assert(status1 == CommandStatus.Completed(runId1))
       assert(status2a == CommandStatus.Queued(runId2))

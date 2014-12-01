@@ -27,16 +27,6 @@ object Build extends Build {
       test(scalaTest)
     )
 
-  // Config Service
-  lazy val cs = project
-    .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
-    .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
-    .settings(libraryDependencies ++=
-    provided(akkaActor) ++
-      compile(akkaRemote, jgit, scalaLogging, logback) ++
-      test(scalaTest, akkaTestKit, junit)
-    ) dependsOn(log, util, configServiceAnnex)
-
   // Logging support, Log service (only includes config files so far)
   lazy val log = project
     .settings(defaultSettings: _*)
@@ -72,6 +62,19 @@ object Build extends Build {
       compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
       test(scalaTest, specs2, akkaTestKit, sprayTestkit)
     ) dependsOn(loc, util % "compile->compile;test->test")
+
+  // Config Service
+  lazy val cs = project
+    .settings(defaultSettings: _*)
+//    .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
+//    .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
+    .settings(multiJvmSettings: _*)
+    .dependsOn(log, loc, util, configServiceAnnex)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(jgit, scalaLogging, logback) ++
+      test(scalaTest, akkaTestKit, junit, akkaMultiNodeTest)
+    ) configs MultiJvm
 
   // Package (Container, Component) classes
   lazy val pkg = project

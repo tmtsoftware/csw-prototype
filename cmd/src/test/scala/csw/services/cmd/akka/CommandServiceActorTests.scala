@@ -1,9 +1,9 @@
 package csw.services.cmd.akka
 
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.ActorSystem
-import csw.util.cfg.{TestConfig, ConfigJsonFormats}
-import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
+import csw.util.cfg.{ TestConfig, ConfigJsonFormats }
+import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -12,7 +12,6 @@ import csw.services.cmd.akka.ConfigActor._
 import csw.services.cmd.akka.CommandQueueActor._
 import scala.util._
 
-
 /**
  * Tests the Command Service actor
  *
@@ -20,7 +19,7 @@ import scala.util._
  * tests run one after the other.
  */
 class CommandServiceActorTests extends TestKit(ActorSystem("test")) with TestHelper
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging with ConfigJsonFormats {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging with ConfigJsonFormats {
 
   // The Configuration used in the tests below
   val config = TestConfig.testConfig
@@ -35,7 +34,6 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging wi
   val commandServiceActor = getCommandServiceActor()
 
   // -- Tests --
-
 
   test("Test simple queue submit") {
     within(duration) {
@@ -70,7 +68,6 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging wi
     }
   }
 
-
   test("Test queue submit followed by config pause and resume") {
     within(duration) {
       commandServiceActor ! Submit(config)
@@ -84,7 +81,6 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging wi
       assert(expectMsgType[CommandStatus.Completed].runId == s.runId)
     }
   }
-
 
   test("Test queue pause and start") {
     within(duration) {
@@ -129,7 +125,6 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging wi
     }
   }
 
-
   test("Test queue delete") {
     within(duration) {
       // Start with the queue paused, so that the config stays in the queue
@@ -162,12 +157,12 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging wi
     commandServiceActor ! ConfigGet(emptyConfig)
     val resp = expectMsgType[ConfigResponse]
     resp.tryConfig match {
-      case Success(c) =>
+      case Success(c) ⇒
         logger.info(s"GET returns: $c")
         assert(c.size == emptyConfig.size)
         assert(c.head.obsId == config.head.obsId)
         assert(c.head.prefix == config.head.prefix)
-      case Failure(ex) => fail(ex)
+      case Failure(ex) ⇒ fail(ex)
     }
   }
 
