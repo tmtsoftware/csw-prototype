@@ -66,8 +66,8 @@ object Build extends Build {
   // Config Service
   lazy val cs = project
     .settings(defaultSettings: _*)
-//    .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
-//    .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
+    .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
+    .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
     .settings(multiJvmSettings: _*)
     .dependsOn(log, loc, util, configServiceAnnex)
     .settings(libraryDependencies ++=

@@ -18,7 +18,7 @@ object ConfigServiceSettings extends ExtensionId[ConfigServiceSettings] with Ext
   override def createExtension(system: ExtendedActorSystem): ConfigServiceSettings = new ConfigServiceSettings(system.settings.config)
 }
 
-class ConfigServiceSettings(config: Config) extends Extension {
+case class ConfigServiceSettings(config: Config) extends Extension {
   val prefix = "csw.services.cs"
   val name = config.getString(s"$prefix.name")
   val gitMainRepository = new URI(config.getString(s"$prefix.main-repository"))
