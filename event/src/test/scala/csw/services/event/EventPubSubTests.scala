@@ -1,11 +1,11 @@
 package csw.services.event
 
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
 import csw.util.cfg.ConfigValues
 import ConfigValues.ValueData._
 import csw.util.cfg.Events.TelemetryEvent
-import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 // Added annotation below, since test depends on Hornetq server running (Remove to include in tests)
 @DoNotDiscover
 class EventPubSubTests extends TestKit(ActorSystem("Test"))
-with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
+    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   val numSecs = 20
   // number of seconds to run
@@ -72,12 +72,11 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
       "eventId" -> nextId,
       "exposureTime" -> expTime.ms, // XXX deal with duration implicit defs
       "startTime" -> (time - expTime),
-      "endTime" -> time
-    )
+      "endTime" -> time)
   }
 
   override def receive: Receive = {
-    case x => log.error(s"Unexpected message $x")
+    case x ⇒ log.error(s"Unexpected message $x")
   }
 }
 
@@ -92,15 +91,15 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
   subscribe(channel)
 
   override def receive: Receive = {
-    case event: Event =>
+    case event: Event ⇒
       count = count + 1
       if (count % 10000 == 0)
         log.info(s"Received $count events so far: $event")
 
-    case "done" =>
+    case "done" ⇒
       sender() ! count
       unsubscribe(channel)
 
-    case x => log.error(s"Unexpected message $x")
+    case x ⇒ log.error(s"Unexpected message $x")
   }
 }

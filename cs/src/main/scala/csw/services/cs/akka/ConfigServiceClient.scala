@@ -41,8 +41,8 @@ case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef
   override def list(): Future[List[ConfigFileInfo]] =
     (configServiceActor ? ListRequest).mapTo[ListResult].map(_.list.get)
 
-  override def history(path: File): Future[List[ConfigFileHistory]] =
-    (configServiceActor ? HistoryRequest(path)).mapTo[HistoryResult].map(_.history.get)
+  override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] =
+    (configServiceActor ? HistoryRequest(path, maxResults)).mapTo[HistoryResult].map(_.history.get)
 
   override def setDefault(path: File, id: Option[ConfigId]): Future[Unit] =
     (configServiceActor ? SetDefaultRequest(path, id)).mapTo[UnitResult].map(_.status.get)

@@ -39,7 +39,8 @@ object Dependencies {
   val sprayHttpx = "io.spray" %% "spray-httpx" % sprayVersion
   val sprayClient = "io.spray" %% "spray-client" % sprayVersion
   val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
-  val sprayJson = "io.spray" %% "spray-json" % "1.2.6"
+//  val sprayJson = "io.spray" %% "spray-json" % "1.2.6"
+  val sprayJson = "io.spray" %% "spray-json" % "1.3.1"
   val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r"

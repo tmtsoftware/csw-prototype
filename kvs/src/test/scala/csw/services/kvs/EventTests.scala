@@ -15,15 +15,13 @@ object EventTests {
     "tmt.mobie.red.dat.exposureInfo",
     "exposureTime" -> 220.seconds,
     "startTime" -> "2022-07-14 22:00:01",
-    "endTime" -> "2022-07-14 22:03:41"
-  )
+    "endTime" -> "2022-07-14 22:03:41")
 }
 
 /**
  * Test the Config object
  */
 class EventTests extends FunSuite with LazyLogging {
-
 
   test("Test serializing an Event to a ByteBuffer") {
     val event = EventTests.testEvent

@@ -6,7 +6,7 @@ import java.io.File
 
 import net.codejava.security.HashGeneratorUtils
 
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -16,8 +16,8 @@ object ConfigServiceAnnexTests extends App {
 
   // Start the http server and wait for it to be ready for connections
   ConfigServiceAnnexServer.startup().onComplete {
-    case Success(server) => runTest(server)
-    case Failure(ex) => println(s"Error starting server: $ex")
+    case Success(server) ⇒ runTest(server)
+    case Failure(ex)     ⇒ println(s"Error starting server: $ex")
   }
 
   def runTest(server: ConfigServiceAnnexServer): Unit = {
@@ -27,11 +27,11 @@ object ConfigServiceAnnexTests extends App {
     val file = makeTestFile()
 
     for {
-      id <- client.post(file)
-      exists1 <- client.head(id)
-      file1 <- client.get(id, file)
-      delete1 <- client.delete(id)
-      exists2 <- client.head(id)
+      id ← client.post(file)
+      exists1 ← client.head(id)
+      file1 ← client.get(id, file)
+      delete1 ← client.delete(id)
+      exists2 ← client.head(id)
     } try {
       assert(id == HashGeneratorUtils.generateSHA1(file))
       assert(exists1)

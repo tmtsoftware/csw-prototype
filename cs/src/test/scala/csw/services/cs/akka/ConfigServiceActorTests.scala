@@ -21,8 +21,6 @@ import csw.services.cs.akka.ConfigServiceActor._
 class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
-  import system.dispatcher
-
   // Create temporary main (bare) and local git repos for testing
   val gitRepoPrefix = "test1"
 

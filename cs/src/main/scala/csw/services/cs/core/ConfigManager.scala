@@ -80,9 +80,10 @@ trait ConfigManager {
   /**
    * Returns a list of all known versions of a given path
    * @param path the file path relative to the repository root
+   * @param maxResults the maximum number of history results to return (default: unlimited)
    * @return a list containing one ConfigFileHistory object for each version of path
    */
-  def history(path: File): Future[List[ConfigFileHistory]]
+  def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]]
 
   /**
    * Sets the "default version" of the file with the given path.

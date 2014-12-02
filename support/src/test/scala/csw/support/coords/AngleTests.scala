@@ -1,10 +1,8 @@
 package csw.support.coords
 
-import org.scalatest.{Matchers, FunSpec}
-
+import org.scalatest.{ Matchers, FunSpec }
 
 class AngleTests extends FunSpec with Matchers {
-
 
   /**
    * Tests for ValueData

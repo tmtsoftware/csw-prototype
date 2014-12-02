@@ -46,7 +46,7 @@ object ConfigServiceActor {
 
   case object ListRequest extends ConfigServiceRequest
 
-  case class HistoryRequest(path: File) extends ConfigServiceRequest
+  case class HistoryRequest(path: File, maxResults: Int = Int.MaxValue) extends ConfigServiceRequest
 
   case class SetDefaultRequest(path: File, id: Option[ConfigId])
 
@@ -116,7 +116,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     case ExistsRequest(path) ⇒ handleExistsRequest(sender(), path)
     case DeleteRequest(path, comment) ⇒ handleDeleteRequest(sender(), path, comment)
     case ListRequest ⇒ handleListRequest(sender())
-    case HistoryRequest(path) ⇒ handleHistoryRequest(sender(), path)
+    case HistoryRequest(path, maxResults) ⇒ handleHistoryRequest(sender(), path, maxResults)
     case SetDefaultRequest(path, id) ⇒ handleSetDefaultRequest(sender(), path, id)
     case ResetDefaultRequest(path) ⇒ handleResetDefaultRequest(sender(), path)
     case GetDefaultRequest(path) ⇒ handleGetDefaultRequest(sender(), path)
@@ -174,8 +174,8 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     Await.ready(result, timeout)
   }
 
-  def handleHistoryRequest(replyTo: ActorRef, path: File): Unit = {
-    val result = configManager.history(path)
+  def handleHistoryRequest(replyTo: ActorRef, path: File, maxResults: Int = Int.MaxValue): Unit = {
+    val result = configManager.history(path, maxResults)
     result onComplete {
       case Success(list) ⇒ replyTo ! HistoryResult(path, Success(list))
       case Failure(ex)   ⇒ replyTo ! HistoryResult(path, Failure(ex))

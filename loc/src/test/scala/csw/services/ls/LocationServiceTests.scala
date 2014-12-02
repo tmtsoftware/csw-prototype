@@ -1,15 +1,15 @@
 package csw.services.ls
 
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
-import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
+import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
 import LocationServiceActor._
 
 /**
  * Simple standalone test of local location service (normally it should be run as a remote actor)
  */
 class LocationServiceTests extends TestKit(ActorSystem("Test"))
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
   test("Test location service") {
     val ls = system.actorOf(Props[LocationServiceActor], LocationServiceActor.locationServiceName)
@@ -61,5 +61,4 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
     system.shutdown()
   }
 }
-
 

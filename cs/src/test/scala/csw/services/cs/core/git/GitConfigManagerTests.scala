@@ -69,6 +69,14 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
       historyList1 ← manager.history(path1)
       historyList2 ← manager.history(path2)
 
+      // Test default file features
+      default1 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.setDefault(path1, Some(updateId1))
+      default2 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.resetDefault(path1)
+      default3 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.setDefault(path1, Some(updateId2))
+
       // test list()
       list ← manager.list()
 
@@ -76,13 +84,6 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
       createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
         case e: IOException ⇒ null
       }
-
-      // Test default file features
-      default1 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
-      _ ← manager.setDefault(path1, Some(updateId1))
-      default2 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
-      _ ← manager.resetDefault(path1)
-      default3 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
 
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
@@ -102,8 +103,9 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
       assert(historyList1(1).comment == comment2)
       assert(historyList1(2).comment == comment1)
 
-      assert(list.size == 2 + 1) // +1 for RENAME file added when creating the bare rep
+      assert(list.size == 3) // +1 for RENAME file added when creating the bare rep
       for (info ← list) {
+        println(s"XXX list: ${info.path}")
         info.path match {
           case this.path1 ⇒ assert(info.comment == this.comment3)
           case this.path2 ⇒ assert(info.comment == this.comment1)

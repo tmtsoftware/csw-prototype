@@ -1,10 +1,10 @@
 package csw.services.kvs
 
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
 import csw.util.cfg.ConfigValues.ValueData
 import csw.util.cfg.Events.TelemetryEvent
-import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
@@ -13,7 +13,7 @@ import scala.language.postfixOps
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
 class PubSubTests extends TestKit(ActorSystem("Test"))
-with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
+    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   // number of seconds to run
   val numSecs = 10
@@ -68,12 +68,11 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
       "eventId" -> nextId,
       "exposureTime" -> expTime.ms,
       "startTime" -> (time - expTime),
-      "endTime" -> time
-    )
+      "endTime" -> time)
   }
 
   override def receive: Receive = {
-    case x => log.error(s"Unexpected message $x")
+    case x ⇒ log.error(s"Unexpected message $x")
   }
 }
 
@@ -89,14 +88,14 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
   subscribe("tmt.mobie.red.dat.*")
 
   override def receive: Receive = {
-    case event: Event =>
+    case event: Event ⇒
       // log.info(s"$name received $event")
       count = count + 1
       if (count % 10000 == 0)
         log.info(s"Received $count events so far: $event")
 
-    case "done" => sender ! count
-    case x => log.error(s"Unexpected message $x")
+    case "done" ⇒ sender ! count
+    case x      ⇒ log.error(s"Unexpected message $x")
   }
 }
 

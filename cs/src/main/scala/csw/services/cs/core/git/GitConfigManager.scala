@@ -27,6 +27,12 @@ object GitConfigManager {
 
   private val tmpDir = System.getProperty("java.io.tmpdir")
 
+  // $file.default holds the id of the default version of file
+  private val defaultSuffix = ".default"
+
+  // $file.sha1 holds the SHA-1 hash of oversize files that are stored on the config service annex http server
+  private val sha1Suffix = ".sha1"
+
   /**
    * Creates and returns a GitConfigManager instance using the given directory as the
    * local Git repository root (directory containing .git dir) and the given
@@ -297,11 +303,15 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     def list(treeWalk: TreeWalk, result: List[ConfigFileInfo]): List[ConfigFileInfo] = {
       if (treeWalk.next()) {
         val pathStr = treeWalk.getPathString
-        val path = new File(pathStr)
-        val origPath = origFile(path)
-        val objectId = treeWalk.getObjectId(0).name
-        val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath).head.comment)
-        list(treeWalk, info :: result)
+        if (pathStr.endsWith(GitConfigManager.defaultSuffix)) {
+          list(treeWalk, result)
+        } else {
+          val path = new File(pathStr)
+          val origPath = origFile(path)
+          val objectId = treeWalk.getObjectId(0).name
+          val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath, 1).head.comment)
+          list(treeWalk, info :: result)
+        }
       } else {
         result
       }
@@ -328,9 +338,10 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     list(treeWalk, List())
   }
 
-  override def history(path: File): Future[List[ConfigFileHistory]] = Future(hist(path))
+  override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] =
+    Future(hist(path, maxResults))
 
-  private def hist(path: File): List[ConfigFileHistory] = {
+  private def hist(path: File, maxResults: Int = Int.MaxValue): List[ConfigFileHistory] = {
     logger.debug(s"history $path")
     pull()
     // Check sha1 file history first (may have been deleted, so don't check if it exists)
@@ -338,14 +349,14 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     val logCommand = git.log
       .add(git.getRepository.resolve(Constants.HEAD))
       .addPath(shaPath.getPath)
-    val result = hist(shaPath, logCommand.call.iterator(), List()).reverse
+    val result = hist(shaPath, logCommand.call.iterator(), List(), maxResults)
     if (result.nonEmpty) {
       result
     } else {
       val logCommand = git.log
         .add(git.getRepository.resolve(Constants.HEAD))
         .addPath(path.getPath)
-      hist(path, logCommand.call.iterator(), List()).reverse
+      hist(path, logCommand.call.iterator(), List(), maxResults)
     }
   }
 
@@ -353,20 +364,21 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   @tailrec
   private def hist(path: File,
                    it: java.util.Iterator[RevCommit],
-                   result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
-    if (it.hasNext) {
+                   result: List[ConfigFileHistory],
+                   maxResults: Int): List[ConfigFileHistory] = {
+    if (it.hasNext && result.size < maxResults) {
       val revCommit = it.next()
       val tree = revCommit.getTree
       val treeWalk = TreeWalk.forPath(git.getRepository, path.getPath, tree)
       if (treeWalk == null) {
-        hist(path, it, result)
+        hist(path, it, result, maxResults)
       } else {
         val objectId = treeWalk.getObjectId(0)
         // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
         val comment = revCommit.getShortMessage
         val time = new Date(revCommit.getCommitTime * 1000L)
         val info = new ConfigFileHistory(GitConfigId(objectId.name), comment, time)
-        hist(path, it, info :: result)
+        hist(path, it, result :+ info, maxResults)
       }
     } else {
       result
@@ -408,11 +420,11 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
 
   // File used to store the SHA-1 of the actual file, if oversized.
   private def shaFile(file: File): File =
-    new File(s"${file.getPath}.sha1")
+    new File(s"${file.getPath}${GitConfigManager.sha1Suffix}")
 
   // Inverse of shaFile
   private def origFile(file: File): File =
-    if (file.getPath.endsWith(".sha1")) new File(file.getPath.dropRight(5)) else file
+    if (file.getPath.endsWith(GitConfigManager.sha1Suffix)) new File(file.getPath.dropRight(5)) else file
 
   // True if the .sha1 file exists, meaning the file needs special oversize handling.
   // Note: We only check if it exists in the working directory, not the repository.
@@ -423,12 +435,12 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
 
   // Returns the current version of the file, if known
   private def getCurrentVersion(path: File): Option[ConfigId] = {
-    hist(path).headOption.map(_.id)
+    hist(path, 1).headOption.map(_.id)
   }
 
   // File used to store the id of the default version of the file.
   private def defaultFile(file: File): File =
-    new File(s"${file.getPath}.default")
+    new File(s"${file.getPath}${GitConfigManager.defaultSuffix}")
 
   // True if the .default file exists, meaning the file has a default version set.
   // Note: We only check if it exists in the working directory, not the repository.
