@@ -1,7 +1,7 @@
 Config Service Annex
 ====================
 
-An akk-http based service used by the Config Service to store and retrieve large/binary files
+An akka-http based service used by the Config Service to store and retrieve large/binary files
 that should not be stored in the Git repository.
 
 See [reference.conf](src/main/resources/reference.conf) for configuration options.
