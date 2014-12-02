@@ -76,6 +76,14 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
       createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
         case e: IOException ⇒ null
       }
+
+      // Test default file features
+      default1 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.setDefault(path1, Some(updateId1))
+      default2 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.resetDefault(path1)
+      default3 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
       assert(updateIdNull == null)
@@ -89,10 +97,10 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
 
       assert(historyList1.size == 3)
       assert(historyList2.size == 1)
-      assert(historyList1(0).comment == comment1)
+      assert(historyList1(0).comment == comment3)
       assert(historyList2(0).comment == comment1)
       assert(historyList1(1).comment == comment2)
-      assert(historyList1(2).comment == comment3)
+      assert(historyList1(2).comment == comment1)
 
       assert(list.size == 2 + 1) // +1 for RENAME file added when creating the bare rep
       for (info ← list) {
@@ -102,6 +110,10 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
           case x          ⇒ if (x.getName != "README") sys.error("Test failed for " + info)
         }
       }
+
+      assert(default1 == contents3)
+      assert(default2 == contents2)
+      assert(default3 == contents3)
     }
 
     Await.result(result, 30.seconds)

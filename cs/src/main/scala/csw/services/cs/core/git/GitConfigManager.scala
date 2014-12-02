@@ -172,7 +172,6 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
     def updateOversize(file: File): Future[ConfigId] = {
-      val sha1File = shaFile(file)
       for {
         _ ← configData.writeToFile(file)
         sha1 ← annex.post(file)
@@ -251,8 +250,6 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
 
     // If the file matches the SHA-1 hash, return a future for it, otherwise get it from the annex server
     def getIfNeeded(file: File, sha1: String): Future[Option[ConfigData]] = {
-      // XXX TODO FIXME: What if two apps try to GET different versions at once? May need to store under SHA-1 based file name
-      // XXX TODO FIXME: Either that or really enforce sequential access in the actor!!!
       if (!file.exists() || (sha1 != HashGeneratorUtils.generateSHA1(file))) {
         annex.get(sha1, file).map {
           _ ⇒ Some(ConfigData(file))
@@ -303,8 +300,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
         val path = new File(pathStr)
         val origPath = origFile(path)
         val objectId = treeWalk.getObjectId(0).name
-        // TODO: Include create comment (history(path)(0).comment) or latest comment (history(path).last.comment)?
-        val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath).last.comment)
+        val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath).head.comment)
         list(treeWalk, info :: result)
       } else {
         result
@@ -342,20 +338,22 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     val logCommand = git.log
       .add(git.getRepository.resolve(Constants.HEAD))
       .addPath(shaPath.getPath)
-    val result = hist(shaPath, logCommand.call.iterator(), List())
+    val result = hist(shaPath, logCommand.call.iterator(), List()).reverse
     if (result.nonEmpty) {
       result
     } else {
       val logCommand = git.log
         .add(git.getRepository.resolve(Constants.HEAD))
         .addPath(path.getPath)
-      hist(path, logCommand.call.iterator(), List())
+      hist(path, logCommand.call.iterator(), List()).reverse
     }
   }
 
   // Returns a list of all known versions of a given path by recursively walking the Git history tree
   @tailrec
-  private def hist(path: File, it: java.util.Iterator[RevCommit], result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
+  private def hist(path: File,
+                   it: java.util.Iterator[RevCommit],
+                   result: List[ConfigFileHistory]): List[ConfigFileHistory] = {
     if (it.hasNext) {
       val revCommit = it.next()
       val tree = revCommit.getTree
@@ -421,4 +419,47 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   // Since the constructor does a git pull already, we assume all files that were not deleted are in the working dir.
   private def isOversize(file: File): Boolean = shaFile(file).exists
 
+  // --- Default version handling ---
+
+  // Returns the current version of the file, if known
+  private def getCurrentVersion(path: File): Option[ConfigId] = {
+    hist(path).headOption.map(_.id)
+  }
+
+  // File used to store the id of the default version of the file.
+  private def defaultFile(file: File): File =
+    new File(s"${file.getPath}.default")
+
+  // True if the .default file exists, meaning the file has a default version set.
+  // Note: We only check if it exists in the working directory, not the repository.
+  // Since the constructor and most methods do a git pull already,
+  // we assume all files that were not deleted are in the working dir.
+  private def hasDefault(file: File): Boolean = defaultFile(file).exists
+
+  def setDefault(path: File, id: Option[ConfigId] = None): Future[Unit] = {
+    logger.debug(s"setDefault $path $id")
+    (if (id.isDefined) id else getCurrentVersion(path)) match {
+      case Some(configId) ⇒
+        create(defaultFile(path), ConfigData(configId.id)).map(_ ⇒ ())
+      case None ⇒
+        Future.failed(new RuntimeException(s"Unknown path $path"))
+    }
+  }
+
+  def resetDefault(path: File): Future[Unit] = {
+    logger.debug(s"resetDefault $path")
+    delete(defaultFile(path))
+  }
+
+  def getDefault(path: File): Future[Option[ConfigData]] = {
+    logger.debug(s"getDefault $path")
+    val currentId = getCurrentVersion(path)
+    if (currentId.isEmpty)
+      Future(None)
+    else for {
+      d ← get(defaultFile(path))
+      id ← if (d.isDefined) d.get.toFutureString else Future(currentId.get.id)
+      result ← get(path, Some(ConfigId(id)))
+    } yield result
+  }
 }

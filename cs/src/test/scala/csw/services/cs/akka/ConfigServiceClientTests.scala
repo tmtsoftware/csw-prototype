@@ -5,19 +5,19 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.core.git.GitConfigManager
-import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
-import java.io.{File, FileNotFoundException, IOException}
+import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
+import java.io.{ File, FileNotFoundException, IOException }
 import csw.services.cs.core.ConfigData
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import scala.concurrent.duration._
-import scala.concurrent.{Future, Await}
+import scala.concurrent.{ Future, Await }
 
 /**
  * Tests the Config Service actor
  */
 class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   import system.dispatcher
 
@@ -43,11 +43,11 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
     val annexServer = Await.result(ConfigServiceAnnexServer.startup(), 5.seconds)
 
     val f = for {
-      _ <- runTests(settings, oversize = false)
-      _ <- runTests2(settings2, oversize = false)
+      _ ← runTests(settings, oversize = false)
+      _ ← runTests2(settings2, oversize = false)
 
-      _ <- runTests(settings, oversize = true)
-      x <- runTests2(settings2, oversize = true)
+      _ ← runTests(settings, oversize = true)
+      x ← runTests2(settings2, oversize = true)
     } yield x
     Await.ready(f, 30.seconds)
     logger.info("Shutting down annex server")
@@ -67,7 +67,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
     // Sequential, non-blocking for-comprehension
     for {
-    // Try to update a file that does not exist (should fail)
+      // Try to update a file that does not exist (should fail)
       updateIdNull ← csClient.update(path1, ConfigData(contents2), comment2) recover {
         case e: FileNotFoundException ⇒ null
       }
@@ -97,6 +97,14 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
       createIdNull ← csClient.create(path1, ConfigData(contents2), oversize, comment2) recover {
         case e: IOException ⇒ null
       }
+
+      // Test default file features
+      default1 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.setDefault(path1, Some(updateId1))
+      default2 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.resetDefault(path1)
+      default3 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
       assert(updateIdNull == null)
@@ -110,19 +118,24 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
       assert(historyList1.size == 3)
       assert(historyList2.size == 1)
-      assert(historyList1(0).comment == comment1)
+      assert(historyList1(0).comment == comment3)
       assert(historyList2(0).comment == comment1)
       assert(historyList1(1).comment == comment2)
-      assert(historyList1(2).comment == comment3)
+      assert(historyList1(2).comment == comment1)
 
       assert(list.size == 2 + 1) // +1 for README file added when creating the bare rep
       for (info ← list) {
         info.path match {
           case this.path1 ⇒ assert(info.comment == this.comment3)
           case this.path2 ⇒ assert(info.comment == this.comment1)
-          case x ⇒ if (x.getName != "README") sys.error("Test failed for " + info)
+          case x          ⇒ if (x.getName != "README") sys.error("Test failed for " + info)
         }
       }
+
+      assert(default1 == contents3)
+      assert(default2 == contents2)
+      assert(default3 == contents3)
+
       system.stop(csActor)
     }
   }
@@ -140,7 +153,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
     // Sequential, non-blocking for-comprehension
     for {
-    // Check that we can access each version
+      // Check that we can access each version
       result1 ← csClient.get(path1).flatMap(_.get.toFutureString)
       result5 ← csClient.get(path2).flatMap(_.get.toFutureString)
 
@@ -173,7 +186,7 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
         info.path match {
           case this.path1 ⇒ assert(info.comment == this.comment3)
           case this.path2 ⇒ assert(info.comment == this.comment1)
-          case x ⇒ if (x.getName != "README") sys.error("Test failed for " + info)
+          case x          ⇒ if (x.getName != "README") sys.error("Test failed for " + info)
         }
       }
       system.stop(csActor)

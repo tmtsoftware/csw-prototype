@@ -28,8 +28,8 @@ trait ConfigManager {
    * Creates a config file with the given path and data and optional comment.
    * An IOException is thrown if the file already exists.
    *
-   * @param path the config file path
-   * @param configData the contents of the file
+   * @param path the file path relative to the repository root
+   * @param configData used to read the contents of the file
    * @param oversize true if the file is large and requires special handling (external storage)
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
@@ -40,26 +40,26 @@ trait ConfigManager {
    * Updates the config file with the given path and data and optional comment.
    * An FileNotFoundException is thrown if the file does not exists.
    *
-   * @param path the config file path
-   * @param configData the contents of the file
+   * @param path the file path relative to the repository root
+   * @param configData used to read the contents of the file
    * @param comment an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
   def update(path: File, configData: ConfigData, comment: String = ""): Future[ConfigId]
 
   /**
-   * Gets and returns the config file stored under the given path.
+   * Gets and returns the file stored under the given path.
    *
-   * @param path the config file path
+   * @param path the file path relative to the repository root
    * @param id an optional id used to specify a specific version to fetch
    *           (by default the latest version is returned)
-   * @return a future object containing the configuration data, if found
+   * @return a future object that can be used to access the file's data, if found
    */
   def get(path: File, id: Option[ConfigId] = None): Future[Option[ConfigData]]
 
   /**
    * Returns true if the given path exists and is being managed
-   * @param path the configuration path
+   * @param path the file path relative to the repository root
    * @return true the file exists
    */
   def exists(path: File): Future[Boolean]
@@ -67,7 +67,7 @@ trait ConfigManager {
   /**
    * Deletes the given config file (older versions will still be available)
    *
-   * @param path the configuration path
+   * @param path the file path relative to the repository root
    */
   def delete(path: File, comment: String = "deleted"): Future[Unit]
 
@@ -79,9 +79,39 @@ trait ConfigManager {
 
   /**
    * Returns a list of all known versions of a given path
+   * @param path the file path relative to the repository root
    * @return a list containing one ConfigFileHistory object for each version of path
    */
   def history(path: File): Future[List[ConfigFileHistory]]
+
+  /**
+   * Sets the "default version" of the file with the given path.
+   * If this method is not called, the default version will always be the latest version.
+   * After calling this method, the version with the given Id will be the default.
+   *
+   * @param path the file path relative to the repository root
+   * @param id an optional id used to specify a specific version
+   *           (by default the id of the latest version is used)
+   * @return a future result
+   */
+  def setDefault(path: File, id: Option[ConfigId] = None): Future[Unit]
+
+  /**
+   * Resets the "default version" of the file with the given path to be always the latest version.
+   *
+   * @param path the file path relative to the repository root
+   * @return a future result
+   */
+  def resetDefault(path: File): Future[Unit]
+
+  /**
+   * Gets and returns the default version of the file stored under the given path.
+   * If no default was set, this returns the latest version.
+   *
+   * @param path the file path relative to the repository root
+   * @return a future object that can be used to access the file's data, if found
+   */
+  def getDefault(path: File): Future[Option[ConfigData]]
 }
 
 /**
@@ -89,6 +119,10 @@ trait ConfigManager {
  */
 trait ConfigId {
   val id: String
+}
+
+object ConfigId {
+  def apply(id: String): ConfigId = GitConfigId(id)
 }
 
 /**

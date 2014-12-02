@@ -105,7 +105,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
 
       // test history()
       configServiceActor ! HistoryRequest(path1)
-      checkHistoryResult(path1, 3, List(comment1, comment2, comment3))
+      checkHistoryResult(path1, 3, List(comment3, comment2, comment1))
 
       configServiceActor ! HistoryRequest(path2)
       checkHistoryResult(path2, 1, List(comment1))
@@ -128,7 +128,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
       checkExistsResult(path2, exists = false)
 
       configServiceActor ! HistoryRequest(path1)
-      checkHistoryResult(path1, 3, List(comment1, comment2, comment3))
+      checkHistoryResult(path1, 3, List(comment3, comment2, comment1))
 
       configServiceActor ! HistoryRequest(path2)
       checkHistoryResult(path2, 1, List(comment1))
@@ -203,7 +203,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
   }
 
   def checkDeleteResult(path: File): Unit = {
-    val result = expectMsgType[DeleteResult]
+    val result = expectMsgType[UnitResult]
     assert(result.path == path)
     assert(result.status.isSuccess)
   }

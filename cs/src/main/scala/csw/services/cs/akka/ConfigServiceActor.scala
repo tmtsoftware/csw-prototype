@@ -48,6 +48,12 @@ object ConfigServiceActor {
 
   case class HistoryRequest(path: File) extends ConfigServiceRequest
 
+  case class SetDefaultRequest(path: File, id: Option[ConfigId])
+
+  case class ResetDefaultRequest(path: File)
+
+  case class GetDefaultRequest(path: File)
+
   // Request config service actor to register with the location service
   case object RegisterWithLocationService extends ConfigServiceRequest
 
@@ -62,11 +68,12 @@ object ConfigServiceActor {
 
   case class ExistsResult(path: File, exists: Try[Boolean]) extends ConfigServiceResult
 
-  case class DeleteResult(path: File, status: Try[Unit]) extends ConfigServiceResult
-
   case class ListResult(list: Try[List[ConfigFileInfo]]) extends ConfigServiceResult
 
   case class HistoryResult(path: File, history: Try[List[ConfigFileHistory]]) extends ConfigServiceResult
+
+  // Reply message for operations that don't return a value (Delete, SetDefault, ResetDefault)
+  case class UnitResult(path: File, status: Try[Unit]) extends ConfigServiceResult
 
   /**
    * Use this Props instance to initialize with the given ConfigManager
@@ -110,6 +117,9 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     case DeleteRequest(path, comment) ⇒ handleDeleteRequest(sender(), path, comment)
     case ListRequest ⇒ handleListRequest(sender())
     case HistoryRequest(path) ⇒ handleHistoryRequest(sender(), path)
+    case SetDefaultRequest(path, id) ⇒ handleSetDefaultRequest(sender(), path, id)
+    case ResetDefaultRequest(path) ⇒ handleResetDefaultRequest(sender(), path)
+    case GetDefaultRequest(path) ⇒ handleGetDefaultRequest(sender(), path)
     case RegisterWithLocationService ⇒ registerWithLocationService()
 
     case x ⇒ log.error(s"Received unknown message $x from ${sender()}")
@@ -152,12 +162,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   }
 
   def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit = {
-    val result = configManager.delete(path, comment)
-    result onComplete {
-      case Success(u)  ⇒ replyTo ! DeleteResult(path, Success(u))
-      case Failure(ex) ⇒ replyTo ! DeleteResult(path, Failure(ex))
-    }
-    Await.ready(result, timeout)
+    unitReply(replyTo, path, configManager.delete(path, comment))
   }
 
   def handleListRequest(replyTo: ActorRef): Unit = {
@@ -174,6 +179,31 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
     result onComplete {
       case Success(list) ⇒ replyTo ! HistoryResult(path, Success(list))
       case Failure(ex)   ⇒ replyTo ! HistoryResult(path, Failure(ex))
+    }
+    Await.ready(result, timeout)
+  }
+
+  def handleSetDefaultRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
+    unitReply(replyTo, path, configManager.setDefault(path, id))
+  }
+
+  def handleResetDefaultRequest(replyTo: ActorRef, path: File): Unit = {
+    unitReply(replyTo, path, configManager.resetDefault(path))
+  }
+
+  def handleGetDefaultRequest(replyTo: ActorRef, path: File): Unit = {
+    val result = configManager.getDefault(path)
+    result onComplete {
+      case Success(configDataOpt) ⇒ replyTo ! GetResult(path, None, Success(configDataOpt))
+      case Failure(ex)            ⇒ replyTo ! GetResult(path, None, Failure(ex))
+    }
+    Await.ready(result, timeout)
+  }
+
+  private def unitReply(replyTo: ActorRef, path: File, result: Future[Unit]): Unit = {
+    result onComplete {
+      case Success(u)  ⇒ replyTo ! UnitResult(path, Success(u))
+      case Failure(ex) ⇒ replyTo ! UnitResult(path, Failure(ex))
     }
     Await.ready(result, timeout)
   }

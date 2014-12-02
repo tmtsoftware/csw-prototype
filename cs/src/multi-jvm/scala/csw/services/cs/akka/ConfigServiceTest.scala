@@ -58,14 +58,14 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
     "be able to start the config service, annex, and client to manage files" in {
       runOn(configServiceAnnex) {
         enterBarrier("locationServiceStarted")
-        Await.result(ConfigServiceAnnexServer.startup(registerWithLoc = true), 5.seconds)
+        Await.result(ConfigServiceAnnexServer.startup(registerWithLoc = true), 30.seconds)
         enterBarrier("deployed")
         enterBarrier("done")
       }
 
       runOn(configService) {
         enterBarrier("locationServiceStarted")
-        val manager = TestRepo.getConfigManager()
+        val manager = TestRepo.getConfigManager(ConfigServiceSettings(system))
         val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
         configServiceActor ! RegisterWithLocationService
         Thread.sleep(1000) // XXX FIXME: need reply from location service?
@@ -110,7 +110,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
     val settings = ConfigServiceSettings(system)
     val serviceId = ServiceId(settings.name, ServiceType.Service)
     LocationService.requestServices(system, actorRef, List(serviceId))
-    println(s"locating config service: reply to $actorRef")
+    println(s"locating ${settings.name}: reply to $actorRef")
   }
 
   val path1 = new File("some/test1/TestConfig1")
@@ -175,10 +175,10 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
 
       assert(historyList1.size == 3)
       assert(historyList2.size == 1)
-      assert(historyList1(0).comment == comment1)
+      assert(historyList1(0).comment == comment3)
       assert(historyList2(0).comment == comment1)
       assert(historyList1(1).comment == comment2)
-      assert(historyList1(2).comment == comment3)
+      assert(historyList1(2).comment == comment1)
 
       assert(list.size == 2 + 1) // +1 for README file added when creating the bare rep
       for (info ← list) {
@@ -189,7 +189,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
         }
       }
 
-      println("\nAll config service client tests passed\n")
+      println("\nAll config service client tests passed\n(Pay no attention to those annoying dead letter warnings...)\n")
     }
 
     Await.result(result, 30.seconds)
