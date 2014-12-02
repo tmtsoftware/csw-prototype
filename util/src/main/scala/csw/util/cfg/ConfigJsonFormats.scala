@@ -21,10 +21,10 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
   implicit object SetupConfigJsonFormat extends RootJsonFormat[SetupConfig] {
 
     def write(sc: SetupConfig): JsValue = {
-      val items = for (v ← sc.values) yield (v.name, valueDataToJsValue(v.data))
-      JsObject((SETUP, JsObject(
-        (OBS_ID, JsString(sc.obsId)),
-        (sc.prefix, JsObject(items.toList)))))
+      val items = for (v ← sc.values) yield v.name -> valueDataToJsValue(v.data)
+      JsObject(SETUP -> JsObject(
+        OBS_ID -> JsString(sc.obsId),
+        sc.prefix -> JsObject(items.toMap)))
     }
 
     def read(json: JsValue): SetupConfig = json match {
@@ -112,13 +112,15 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
    * This adds toJson and parseJson methods to the SetupConfigList type (list[SetupConfig]).
    */
   implicit object SetupConfigListJsonFormat extends RootJsonFormat[SetupConfigList] {
-    def write(configs: SetupConfigList): JsValue =
-      JsObject((CONFIGS, JsArray(configs.map(_.toJson))))
+    def write(configs: SetupConfigList): JsValue = {
+      val items = JsArray(configs.map(_.toJson): _*)
+      JsObject(CONFIGS -> items)
+    }
 
     def read(json: JsValue): SetupConfigList = json match {
       case JsObject(root) ⇒
         root(CONFIGS) match {
-          case JsArray(values) ⇒ values.map(SetupConfigJsonFormat.read)
+          case JsArray(values) ⇒ values.toList.map(SetupConfigJsonFormat.read)
           case x               ⇒ deserializationError(s"Unexpected JsValue: $x")
         }
       case x ⇒ deserializationError(s"Unexpected JsValue: $x")
@@ -130,13 +132,15 @@ trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with M
    * This adds toJson and parseJson methods to ConfigList (List[ConfigType]).
    */
   implicit object ConfigListJsonFormat extends RootJsonFormat[List[ConfigType]] {
-    def write(configs: List[ConfigType]): JsValue =
-      JsObject((CONFIGS, JsArray(configs.map(_.toJson))))
+    def write(configs: List[ConfigType]): JsValue = {
+      val items = JsArray(configs.map(_.toJson): _*)
+      JsObject(CONFIGS -> items)
+    }
 
     def read(json: JsValue): List[ConfigType] = json match {
       case JsObject(root) ⇒
         root(CONFIGS) match {
-          case JsArray(values) ⇒ values.map(ConfigTypeJsonFormat.read)
+          case JsArray(values) ⇒ values.toList.map(ConfigTypeJsonFormat.read)
           case x               ⇒ deserializationError(s"Unexpected JsValue: $x")
         }
       case x ⇒ deserializationError(s"Unexpected JsValue: $x")
@@ -175,7 +179,7 @@ private object ConfigJsonFormats {
     case x: BigInt       ⇒ JsNumber(x)
     case x: BigDecimal   ⇒ JsNumber(x)
     case c: Char         ⇒ JsString(String.valueOf(c))
-    case s: Seq[A]       ⇒ JsArray(s.map(valueToJsValue).toList)
+    case s: Seq[A]       ⇒ JsArray(s.map(valueToJsValue).toList: _*)
     case (a, b)          ⇒ valueToJsValue(Seq(a, b))
     case (a, b, c)       ⇒ valueToJsValue(Seq(a, b, c))
     case (a, b, c, d)    ⇒ valueToJsValue(Seq(a, b, c, d))
@@ -185,7 +189,7 @@ private object ConfigJsonFormats {
   def seqToJsValue[A](values: Seq[A]): JsValue = values.size match {
     case 0 ⇒ JsNull
     case 1 ⇒ valueToJsValue(values.head)
-    case _ ⇒ JsArray(values.map(valueToJsValue).toList)
+    case _ ⇒ JsArray(values.map(valueToJsValue).toList: _*)
   }
 
   // If the sequence contains elements of non default types (String, Double), Some(typeName)

@@ -17,11 +17,11 @@ trait EventJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with Me
 
     def write(event: TelemetryEvent): JsValue = {
       val items = for (v ← event.values) yield (v.name, ConfigJsonFormats.valueDataToJsValue(v.data))
-      JsObject((TELEMETRY, JsObject(
-        (EVENT_ID, JsString(event.eventId)),
-        (TIMESTAMP, JsNumber(event.timestamp)),
-        (SOURCE, JsString(event.source)),
-        (event.prefix, JsObject(items.toList)))))
+      JsObject(TELEMETRY -> JsObject(
+        EVENT_ID -> JsString(event.eventId),
+        TIMESTAMP -> JsNumber(event.timestamp),
+        SOURCE -> JsString(event.source),
+        event.prefix -> JsObject(items.toList: _*)))
     }
 
     def read(json: JsValue): TelemetryEvent = json match {
