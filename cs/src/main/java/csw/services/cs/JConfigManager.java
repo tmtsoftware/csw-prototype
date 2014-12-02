@@ -42,7 +42,7 @@ public interface JConfigManager {
      * @param path the configuration path
      * @return an object containing the configuration data, if found
      */
-    public ConfigData get(File path);
+    public JConfigData get(File path);
 
     /**
      * Gets and returns the config file stored under the given path.
@@ -51,7 +51,7 @@ public interface JConfigManager {
      * @param id   id used to specify a specific version to fetch
      * @return an object containing the configuration data, if found
      */
-    public ConfigData get(File path, ConfigId id);
+    public JConfigData get(File path, ConfigId id);
 
     /**
      * Returns true if the given path exists and is being managed

@@ -5,7 +5,7 @@ import java.net.URI
 import java.{ lang, util }
 
 import akka.actor.ActorRefFactory
-import csw.services.cs.JConfigManager
+import csw.services.cs.{JConfigData, JConfigManager}
 import csw.services.cs.core.{ ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId }
 
 import scala.collection.JavaConverters._
@@ -36,12 +36,14 @@ case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit context
     Await.result(manager.update(path, configData, comment), timeout)
   }
 
-  override def get(path: File): ConfigData = {
-    Await.result(manager.get(path), timeout).orNull
+  override def get(path: File): JConfigData = {
+    val result = Await.result(manager.get(path), timeout).orNull
+    if (result != null) JGitConfigData(result) else null
   }
 
-  override def get(path: File, id: ConfigId): ConfigData = {
-    Await.result(manager.get(path, Some(id)), timeout).orNull
+  override def get(path: File, id: ConfigId): JConfigData = {
+    val result = Await.result(manager.get(path, Some(id)), timeout).orNull
+    if (result != null) JGitConfigData(result) else null
   }
 
   override def exists(path: File): Boolean = {
@@ -63,4 +65,13 @@ case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit context
   override def history(path: File): util.List[ConfigFileHistory] = {
     Await.result(manager.history(path).map(_.asJava), timeout)
   }
+}
+
+case class JGitConfigData(configData: ConfigData)(implicit context: ActorRefFactory) extends JConfigData {
+  import context.dispatcher
+  private val timeout = 30.seconds
+
+  override def toString: String = Await.result(configData.toFutureString, timeout)
+
+  override def writeToFile(file: File): Unit = Await.result(configData.writeToFile(file), timeout);
 }

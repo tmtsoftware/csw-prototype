@@ -1,6 +1,7 @@
 package csw.services.cs.core.git;
 
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
+import csw.services.cs.JConfigData;
 import csw.services.cs.JConfigManager;
 import csw.services.cs.akka.TestRepo;
 import csw.services.cs.core.ConfigData;
@@ -18,8 +19,6 @@ import java.util.List;
 
 /**
  * Test access to GitConfigManager from java
- *
- * XXX TODO FIXME: Currently java API is broken: Should base on the config service client (remote) API
  */
 public class JGitConfigManagerTests {
     private static final File path1 = new File("some/test1/TestConfig1");
@@ -63,39 +62,38 @@ public class JGitConfigManagerTests {
         ConfigId updateId1 = manager.update(path1, new ConfigString(contents2), comment2);
         ConfigId updateId2 = manager.update(path1, new ConfigString(contents3), comment3);
 
-        // XXX TODO FIXME (toString was replaced with toFutureString)
-//        // Check that we can access each version
-//        ConfigData data1 = manager.get(path1);
-//        assert (data1.toString().equals(contents3));
-//
-//        ConfigData data2 = manager.get(path1, createId1);
-//        assert (data2.toString().equals(contents1));
-//
-//        ConfigData data3 = manager.get(path1, updateId1);
-//        assert (data3.toString().equals(contents2));
-//
-//        ConfigData data4 = manager.get(path1, updateId2);
-//        assert (data4.toString().equals(contents3));
-//
-//        ConfigData data5 = manager.get(path2);
-//        assert (data5.toString().equals(contents1));
-//
-//        ConfigData data6 = manager.get(path2, createId2);
-//        assert (data6.toString().equals(contents1));
+        // Check that we can access each version
+        JConfigData data1 = manager.get(path1);
+        assert (data1.toString().equals(contents3));
+
+        JConfigData data2 = manager.get(path1, createId1);
+        assert (data2.toString().equals(contents1));
+
+        JConfigData data3 = manager.get(path1, updateId1);
+        assert (data3.toString().equals(contents2));
+
+        JConfigData data4 = manager.get(path1, updateId2);
+        assert (data4.toString().equals(contents3));
+
+        JConfigData data5 = manager.get(path2);
+        assert (data5.toString().equals(contents1));
+
+        JConfigData data6 = manager.get(path2, createId2);
+        assert (data6.toString().equals(contents1));
 
         // test history()
         List<ConfigFileHistory> historyList1 = manager.history(path1);
         List<ConfigFileHistory> historyList2 = manager.history(path2);
         assert (historyList1.size() >= 3);
         assert (historyList2.size() >= 1);
-        assert (historyList1.get(0).comment().equals(comment1));
+        assert (historyList1.get(0).comment().equals(comment3));
         assert (historyList2.get(0).comment().equals(comment1));
         assert (historyList1.get(1).comment().equals(comment2));
-        assert (historyList1.get(2).comment().equals(comment3));
+        assert (historyList1.get(2).comment().equals(comment1));
 
         // Test list()
         List<ConfigFileInfo> list = manager.list();
-        assert (list.size() == 2 + 1); // +1 for README added by default when creating bare main repop
+        assert (list.size() == 2 + 1); // +1 for README added by default when creating bare main repo
         for (ConfigFileInfo info : list) {
             if (info.path().equals(path1)) {
                 assert (info.comment().equals(comment3));
