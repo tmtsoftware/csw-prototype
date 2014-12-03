@@ -79,12 +79,6 @@ object Settings {
     ScalariformKeys.preferences in Test := formattingPreferences
   )
 
-//  lazy val twirlSettings = SbtTwirl.projectSettings ++ Seq(
-//    TwirlKeys.templateImports in Compile ++= Seq(
-//      "csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus"
-//    )
-//  )
-
   lazy val twirlSettings = Seq(
     TwirlKeys.templateImports += "csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus"
   )

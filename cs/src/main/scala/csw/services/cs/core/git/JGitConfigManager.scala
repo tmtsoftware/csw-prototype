@@ -5,7 +5,7 @@ import java.net.URI
 import java.{ lang, util }
 
 import akka.actor.ActorRefFactory
-import csw.services.cs.{JConfigData, JConfigManager}
+import csw.services.cs.{ JConfigData, JConfigManager }
 import csw.services.cs.core.{ ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId }
 
 import scala.collection.JavaConverters._
