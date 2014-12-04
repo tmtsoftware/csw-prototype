@@ -1,6 +1,8 @@
 package csw.services.pkg
 
 import akka.actor._
+import csw.services.ls.LocationService.RegInfo
+import csw.services.ls.LocationServiceRegisterActor
 
 /**
  * The Lifecycle Manager is an actor that deals with component lifecycle messages
@@ -25,18 +27,26 @@ object LifecycleManager {
 
   case class Stopped(name: String) extends LifecycleState
 
-  def props(componentProps: Props, name: String): Props = Props(classOf[LifecycleManager], componentProps, name)
+  def props(componentProps: Props, regInfo: RegInfo): Props =
+    Props(classOf[LifecycleManager], componentProps, regInfo)
 }
+
+import LifecycleManager._
 
 /**
  * A lifecycle manager actor that manages the component actor given by the arguments.
  *
- * @param props used to create the component actor (HCD, assembly) being managed
- * @param name the name of the component (used to register with the location service)
+ * @param componentProps used to create the component actor (HCD, assembly) being managed
+ * @param regInfo used to register with the location service
  */
-case class LifecycleManager(props: Props, name: String) extends Actor with ActorLogging {
+case class LifecycleManager(componentProps: Props, regInfo: RegInfo) extends Actor with ActorLogging {
 
-  import LifecycleManager._
+  val name = regInfo.serviceId.name
+
+  // Start an actor to manage registering this actor with the location service
+  // (as a proxy for the component)
+  context.actorOf(LocationServiceRegisterActor.props(regInfo.serviceId, Some(self),
+    regInfo.configPath, regInfo.httpUri))
 
   override def receive: Receive = stopped
 
@@ -48,7 +58,7 @@ case class LifecycleManager(props: Props, name: String) extends Actor with Actor
   }
 
   def stopping(replyTo: ActorRef): Receive = {
-    case Start ⇒ self ! Start // XXX?
+    case Start ⇒ self ! Start // XXX retry later when stopped?
     case Stop  ⇒ log.error(s"$name is already stopping")
     case Terminated(_) ⇒
       replyTo ! Stopped(name)
@@ -57,17 +67,15 @@ case class LifecycleManager(props: Props, name: String) extends Actor with Actor
   }
 
   def started(actorRef: ActorRef): Receive = {
-    case Start ⇒ log.error(s"$name is already started")
-    case Stop  ⇒ stop(actorRef)
-    case Terminated(_) ⇒
-      log.info(s"$name terminated: restarting")
-      start(None)
-    case msg ⇒ forwardMessage(msg)
+    case Start                          ⇒ log.error(s"$name is already started")
+    case Stop                           ⇒ stop(actorRef)
+    case Terminated(a) if a == actorRef ⇒ restart()
+    case msg                            ⇒ forwardMessage(msg)
   }
 
   def start(replyTo: Option[ActorRef]): Unit = {
     log.info(s"Starting $name")
-    val actorRef = context.actorOf(props, name)
+    val actorRef = context.actorOf(componentProps, name)
     context.become(started(actorRef))
     context.watch(actorRef)
     replyTo.map(_ ! Started(name, self))
@@ -84,6 +92,13 @@ case class LifecycleManager(props: Props, name: String) extends Actor with Actor
     log.info(s"Stopping $name")
     context.become(stopping(sender()))
     context.stop(actorRef)
+  }
+
+  // Restart the actor if it crashes
+  def restart(): Unit = {
+    // XXX TODO: max restart count?
+    log.info(s"$name terminated: restarting")
+    start(None)
   }
 
   def forwardMessage(msg: Any): Unit = context.child(name) match {

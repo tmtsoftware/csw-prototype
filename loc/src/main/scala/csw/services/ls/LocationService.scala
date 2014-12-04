@@ -16,6 +16,15 @@ object LocationService {
   import LocationServiceActor._
 
   /**
+   * Stores information needed to register with the location service
+   * @param serviceId the name and service type of the actor (used by other actors to search for it)
+   * @param configPath an optional dot separated path expression referring to a hierarchy in a
+   *                    Configuration object (Default: the entire configuration)
+   * @param httpUri optional HTTP URI for the actor registering
+   */
+  case class RegInfo(serviceId: ServiceId, configPath: Option[String] = None, httpUri: Option[URI] = None)
+
+  /**
    * Convenience method that returns a reference to the location service actor based on the
    * settings in reference.conf.
    * @param system the caller's actor system

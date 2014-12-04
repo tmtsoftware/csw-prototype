@@ -1,6 +1,7 @@
 package csw.services.pkg
 
 import akka.actor._
+import csw.services.ls.LocationService.RegInfo
 
 /**
  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
@@ -45,7 +46,7 @@ object Container {
    */
   sealed trait ContainerMessage
 
-  case class CreateComponent(props: Props, name: String) extends ContainerMessage
+  case class CreateComponent(props: Props, regInfo: RegInfo) extends ContainerMessage
 
   case class DeleteComponent(name: String) extends ContainerMessage
 
@@ -71,17 +72,18 @@ class Container extends Actor with ActorLogging {
 
   // Receive messages
   override def receive: Receive = {
-    case CreateComponent(props, name)   ⇒ createComponent(props, name)
-    case DeleteComponent(name)          ⇒ deleteComponent(name)
-    case Terminated(actorRef)           ⇒ log.info(s"Actor $actorRef terminated")
-    case LifecycleManager.Stopped(name) ⇒ shutdownComponent(name)
+    case CreateComponent(props, regInfo) ⇒ createComponent(props, regInfo)
+    case DeleteComponent(name)           ⇒ deleteComponent(name)
+    case Terminated(actorRef)            ⇒ componentDied(actorRef)
+    case LifecycleManager.Stopped(name)  ⇒ shutdownComponent(name)
   }
 
-  private def createComponent(props: Props, name: String): Unit = {
+  private def createComponent(props: Props, regInfo: RegInfo): Unit = {
+    val name = regInfo.serviceId.name
     components.get(name) match {
       case Some(componentInfo) ⇒ log.error(s"Component $name already exists")
       case None ⇒
-        val componentInfo = Component.create(props, name)
+        val componentInfo = Component.create(props, regInfo)
         components += (name -> componentInfo)
         context.watch(componentInfo.lifecycleManager)
         componentInfo.lifecycleManager.tell(LifecycleManager.Start, sender())
@@ -106,6 +108,12 @@ class Container extends Actor with ActorLogging {
         components -= name
       case None ⇒ log.error(s"Component $name does not exist")
     }
+  }
+
+  // Called whan a component (lifecycle manager) terminates
+  private def componentDied(actorRef: ActorRef): Unit = {
+    // TODO: recreate if component was not deleted (restart count?)
+    log.info(s"Actor $actorRef terminated")
   }
 }
 
