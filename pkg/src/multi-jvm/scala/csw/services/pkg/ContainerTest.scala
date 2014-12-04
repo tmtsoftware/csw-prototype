@@ -27,7 +27,9 @@ object ContainerConfig extends MultiNodeConfig {
 }
 
 class TestMultiJvmContainer1 extends ContainerSpec
+
 class TestMultiJvmContainer2 extends ContainerSpec
+
 class TestMultiJvmLocationService extends ContainerSpec
 
 
@@ -52,7 +54,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val assembly1Props = TestAssembly.props("Assembly-1")
         within(10.seconds) {
           container ! Container.CreateComponent(assembly1Props, "Assembly-1")
-          val assembly1 = expectMsgType[ActorRef]
+          val started = expectMsgType[LifecycleManager.Started]
+          assert(started.name == "Assembly-1")
+          val assembly1 = started.actorRef
           waitForReady(assembly1)
           assembly1 ! Submit(config)
           val s1 = expectMsgType[CommandStatus.Queued]
@@ -62,7 +66,19 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           assert(s1.runId == s2.runId)
           assert(s3.runId == s2.runId)
           assert(s3a.runId == s3.runId)
-          println("XXX Container1 tests passed")
+
+          println("\nContainer1 tests passed\n")
+
+          assembly1 ! LifecycleManager.Stop
+          val stopped = expectMsgType[LifecycleManager.Stopped]
+          assert(stopped.name == "Assembly-1")
+
+          assembly1 ! LifecycleManager.Start
+          val started2 = expectMsgType[LifecycleManager.Started]
+          assert(started2.name == "Assembly-1")
+
+//          container ! Container.DeleteComponent("Assembly-1")
+
           enterBarrier("done")
         }
       }
@@ -73,12 +89,20 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val hcd2aProps = TestHcd.props("HCD-2A", "tmt.tel.base.pos")
         val hcd2bProps = TestHcd.props("HCD-2B", "tmt.tel.ao.pos.one")
         container ! Container.CreateComponent(hcd2aProps, "HCD-2A")
-        expectMsgType[ActorRef]
+        val startedA = expectMsgType[LifecycleManager.Started]
+        assert(startedA.name == "HCD-2A")
         container ! Container.CreateComponent(hcd2bProps, "HCD-2B")
-        expectMsgType[ActorRef]
-        println("XXX Container2 tests passed")
+        val startedB = expectMsgType[LifecycleManager.Started]
+        assert(startedB.name == "HCD-2B")
+
+        println("\nContainer2 tests passed\n")
+
         enterBarrier("deployed")
         enterBarrier("done")
+
+//        container ! Container.DeleteComponent("HCD-2A")
+//        container ! Container.DeleteComponent("HCD-2B")
+//        container ! PoisonPill
       }
 
       runOn(locationService) {
@@ -86,6 +110,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
         enterBarrier("done")
+//        ls ! PoisonPill
       }
 
       enterBarrier("finished")
@@ -97,10 +122,8 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
     commandServiceActor ! StatusRequest
     val status = expectMsgType[CommandServiceStatus]
     if (status.ready) {
-      println("XXX READY")
       commandServiceActor
     } else {
-      println("XXX WAITING")
       Thread.sleep(200)
       waitForReady(commandServiceActor)
     }

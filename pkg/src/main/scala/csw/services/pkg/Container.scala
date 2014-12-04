@@ -1,7 +1,6 @@
 package csw.services.pkg
 
 import akka.actor._
-import Component._
 
 /**
  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
@@ -24,10 +23,18 @@ import Component._
  * then it will be visible externally for commands.
  */
 object Container {
+
+  /**
+   * Describes a container
+   * @param system the container's actor system
+   * @param container the container actor
+   */
+  case class ContainerInfo(system: ActorSystem, container: ActorRef)
+
   /**
    * Creates a container actor with a new ActorSystem using the given name and returns the ActorRef
    */
-  def create(name: String): ActorRef = ActorSystem(name).actorOf(Props[Container], name)
+  def create(name: String): ActorRef = ActorSystem(s"$name-system").actorOf(Props[Container], name)
 
   /**
    * The container handles the lifecycle of components. It accepts a few kinds of messages including:
@@ -35,8 +42,6 @@ object Container {
    * CreateComponent – creates a specific component with a name
    *
    * DeleteComponent – shuts a component down if it is running and removes it from the container
-   *
-   * SetComponentState – requires the component to enter a specific lifecycle state (XXX for future discussion).
    */
   sealed trait ContainerMessage
 
@@ -44,15 +49,13 @@ object Container {
 
   case class DeleteComponent(name: String) extends ContainerMessage
 
-  case class SetComponentState(name: String, state: ComponentLifecycleState) extends ContainerMessage
-
   /**
    * Reply messages.
    * CreatedComponent - sent when a new child component was createed
    */
   sealed trait ContainerReplyMessage
 
-  case class CreatedComponent(actorRef: ActorRef, name: String) extends ContainerMessage
+  case class CreatedComponent(actorRef: ActorRef, name: String) extends ContainerReplyMessage
 
 }
 
@@ -63,37 +66,45 @@ class Container extends Actor with ActorLogging {
 
   import Container._
 
+  // Maps component name to the info returned when creating it
+  private var components = Map[String, Component.ComponentInfo]()
+
   // Receive messages
   override def receive: Receive = {
     case CreateComponent(props, name)   ⇒ createComponent(props, name)
     case DeleteComponent(name)          ⇒ deleteComponent(name)
-    case SetComponentState(name, state) ⇒ setComponentState(name, state)
     case Terminated(actorRef)           ⇒ log.info(s"Actor $actorRef terminated")
+    case LifecycleManager.Stopped(name) ⇒ shutdownComponent(name)
   }
 
   private def createComponent(props: Props, name: String): Unit = {
-    context.child(name) match {
-      case Some(actorRef) ⇒ log.error(s"Component $name already exists")
+    components.get(name) match {
+      case Some(componentInfo) ⇒ log.error(s"Component $name already exists")
       case None ⇒
-        log.info(s"Container.createComponent($name)")
-        val actorRef = Component.create(props, name)
-        log.info(s"Container.createComponent($name) -> $actorRef, reply to ${sender()}")
-        context.watch(actorRef)
-        sender() ! actorRef
+        val componentInfo = Component.create(props, name)
+        components += (name -> componentInfo)
+        context.watch(componentInfo.lifecycleManager)
+        componentInfo.lifecycleManager.tell(LifecycleManager.Start, sender())
     }
   }
 
+  // Deletes a component by sending a stop message to the lifecycle manager.
+  // A Stopped message should be the reply. Then we shutdown the component's system.
   private def deleteComponent(name: String): Unit = {
-    context.child(name) match {
-      case Some(actorRef) ⇒ setComponentState(name, Component.Remove)
-      case None           ⇒ log.error(s"Component $name does not exist")
+    components.get(name) match {
+      case Some(componentInfo) ⇒ componentInfo.lifecycleManager ! LifecycleManager.Stop
+      case None                ⇒ log.error(s"Component $name does not exist")
     }
   }
 
-  private def setComponentState(name: String, state: ComponentLifecycleState): Unit = {
-    context.child(name) match {
-      case Some(actorRef) ⇒ actorRef ! state
-      case None           ⇒ log.error(s"Component $name does not exist")
+  // Completes deleting a component by shutting down it's actor system
+  // and removing it from the map
+  private def shutdownComponent(name: String): Unit = {
+    components.get(name) match {
+      case Some(componentInfo) ⇒
+        componentInfo.system.shutdown()
+        components -= name
+      case None ⇒ log.error(s"Component $name does not exist")
     }
   }
 }

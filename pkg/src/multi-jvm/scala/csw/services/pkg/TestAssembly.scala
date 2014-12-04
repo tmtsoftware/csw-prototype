@@ -18,17 +18,5 @@ case class TestAssembly(name: String) extends Assembly with AssemblyCommandServi
     ServiceId("HCD-2B", ServiceType.HCD)
   ))
 
-  def receive: Receive = receiveComponentMessages orElse receiveCommands
-
-  def initialize(): Unit = {log.info("Assembly1 initialize")}
-
-  def startup(): Unit = {log.info("Assembly1 startup")}
-
-  def run(): Unit = {log.info("Assembly1 run")}
-
-  def shutdown(): Unit = {log.info("Assembly1 shutdown")}
-
-  def uninit(): Unit = {log.info("Assembly1 uninit")}
-
-  def remove(): Unit = {log.info("Assembly1 remove")}
+  def receive: Receive = receiveCommands
 }
