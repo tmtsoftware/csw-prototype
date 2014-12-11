@@ -1,6 +1,7 @@
 package csw.services.pkg
 
 import akka.actor._
+import com.typesafe.config.Config
 import csw.services.ls.LocationService.RegInfo
 
 /**
@@ -22,8 +23,23 @@ import csw.services.ls.LocationService.RegInfo
  *
  * The Container then keeps a collection of Components. If the Component includes the CommandService (some may not),
  * then it will be visible externally for commands.
+ *
+ * See also "OSW TN012 Component Lifecycle Design".
  */
 object Container {
+
+  /**
+   * Used to create the actor
+   */
+  def props(name: String): Props = Props(classOf[Container], name)
+
+  /**
+   * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
+   */
+  def create(config: Config): ActorRef = {
+    val name = config.getString("container.name")
+    ActorSystem(s"$name-system").actorOf(props(name), name)
+  }
 
   /**
    * Describes a container
@@ -31,11 +47,6 @@ object Container {
    * @param container the container actor
    */
   case class ContainerInfo(system: ActorSystem, container: ActorRef)
-
-  /**
-   * Creates a container actor with a new ActorSystem using the given name and returns the ActorRef
-   */
-  def create(name: String): ActorRef = ActorSystem(s"$name-system").actorOf(Props[Container], name)
 
   /**
    * The container handles the lifecycle of components. It accepts a few kinds of messages including:
@@ -61,9 +72,10 @@ object Container {
 }
 
 /**
- * Implements the container actor
+ * Implements the container actor based on the contents of the given config.
+ * XXX TODO: Add description of format, pointer to example file
  */
-class Container extends Actor with ActorLogging {
+class Container(name: String) extends Actor with ActorLogging {
 
   import Container._
 
@@ -76,6 +88,26 @@ class Container extends Actor with ActorLogging {
     case DeleteComponent(name)           ⇒ deleteComponent(name)
     case Terminated(actorRef)            ⇒ componentDied(actorRef)
     case LifecycleManager.Stopped(name)  ⇒ shutdownComponent(name)
+
+      /*
+       case Initialize =>
+      sender() ! InitializeFailed(name, LifecycleTransitionError(currentState, Initialize))
+
+    case Startup =>
+      sender() ! StartupFailed(name, LifecycleTransitionError(currentState, Startup))
+
+    case Shutdown =>
+      sender() ! ShutdownFailed(name, LifecycleTransitionError(currentState, Shutdown))
+
+    case Uninitialize =>
+      sender() ! UninitializeFailed(name, LifecycleTransitionError(currentState, Uninitialize))
+
+    // Message from component confirming current state
+    case Loaded(n) => updateState(n, component, _, loaded(component))
+    case Initialized(n) => updateState(n, component, _, initialized(component))
+    case Running(n) => updateState(n, component, _, running(component))
+
+       */
   }
 
   private def createComponent(props: Props, regInfo: RegInfo): Unit = {
@@ -90,25 +122,25 @@ class Container extends Actor with ActorLogging {
     }
   }
 
-  // Deletes a component by sending a stop message to the lifecycle manager.
-  // A Stopped message should be the reply. Then we shutdown the component's system.
-  private def deleteComponent(name: String): Unit = {
-    components.get(name) match {
-      case Some(componentInfo) ⇒ componentInfo.lifecycleManager ! LifecycleManager.Stop
-      case None                ⇒ log.error(s"Component $name does not exist")
-    }
-  }
+//  // Deletes a component by sending a stop message to the lifecycle manager.
+//  // A Stopped message should be the reply. Then we shutdown the component's system.
+//  private def deleteComponent(name: String): Unit = {
+//    components.get(name) match {
+//      case Some(componentInfo) ⇒ componentInfo.lifecycleManager ! LifecycleManager.Stop
+//      case None                ⇒ log.error(s"Component $name does not exist")
+//    }
+//  }
 
-  // Completes deleting a component by shutting down it's actor system
-  // and removing it from the map
-  private def shutdownComponent(name: String): Unit = {
-    components.get(name) match {
-      case Some(componentInfo) ⇒
-        componentInfo.system.shutdown()
-        components -= name
-      case None ⇒ log.error(s"Component $name does not exist")
-    }
-  }
+//  // Completes deleting a component by shutting down it's actor system
+//  // and removing it from the map
+//  private def shutdownComponent(name: String): Unit = {
+//    components.get(name) match {
+//      case Some(componentInfo) ⇒
+//        componentInfo.system.shutdown()
+//        components -= name
+//      case None ⇒ log.error(s"Component $name does not exist")
+//    }
+//  }
 
   // Called whan a component (lifecycle manager) terminates
   private def componentDied(actorRef: ActorRef): Unit = {

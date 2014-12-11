@@ -14,7 +14,7 @@ case class TestHcd(name: String, configPath: String) extends Hcd with CommandSer
 
   override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, 3), name)
 
-  override def receive: Receive = receiveCommands
+  override def receive: Receive = receiveCommands orElse receiveLifecycleCommands
 
   val serviceId = ServiceId(name, ServiceType.HCD)
   registerWithLocationService(serviceId, Some(configPath))

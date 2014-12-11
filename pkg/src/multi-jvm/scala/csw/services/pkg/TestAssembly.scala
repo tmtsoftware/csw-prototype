@@ -18,5 +18,5 @@ case class TestAssembly(name: String) extends Assembly with AssemblyCommandServi
     ServiceId("HCD-2B", ServiceType.HCD)
   ))
 
-  def receive: Receive = receiveCommands
+  def receive: Receive = receiveCommands orElse receiveLifecycleCommands
 }

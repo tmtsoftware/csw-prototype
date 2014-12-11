@@ -23,7 +23,7 @@ Example
 For example, from the top level directory of this project (containerCmd), run:
 
 ```
-    target/universal/stage/bin/containercmd src/test/resources/container1.conf
+target/universal/stage/bin/containercmd src/test/resources/container1.conf
 ```
 
 to start `Container-1`, which is described by this config file:
@@ -47,7 +47,7 @@ is created using the given class and optional constructor arguments.
 Now run this command:
 
 ```
-    target/universal/stage/bin/containercmd src/test/resources/container2.conf
+target/universal/stage/bin/containercmd src/test/resources/container2.conf
 ```
 
 This creates `Container-2` from this config file:
