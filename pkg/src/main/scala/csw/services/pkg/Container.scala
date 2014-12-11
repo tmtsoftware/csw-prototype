@@ -1,8 +1,11 @@
 package csw.services.pkg
 
+import java.net.URI
+
 import akka.actor._
 import com.typesafe.config.Config
 import csw.services.ls.LocationService.RegInfo
+import csw.services.ls.LocationServiceActor.{ServiceId, ServiceType}
 
 /**
  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
@@ -31,14 +34,14 @@ object Container {
   /**
    * Used to create the actor
    */
-  def props(name: String): Props = Props(classOf[Container], name)
+  def props(config: Config): Props = Props(classOf[Container], config)
 
   /**
    * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
    */
   def create(config: Config): ActorRef = {
     val name = config.getString("container.name")
-    ActorSystem(s"$name-system").actorOf(props(name), name)
+    ActorSystem(s"$name-system").actorOf(props(config), name)
   }
 
   /**
@@ -49,103 +52,128 @@ object Container {
   case class ContainerInfo(system: ActorSystem, container: ActorRef)
 
   /**
-   * The container handles the lifecycle of components. It accepts a few kinds of messages including:
-   *
-   * CreateComponent – creates a specific component with a name
-   *
-   * DeleteComponent – shuts a component down if it is running and removes it from the container
+   * Type of messages the container receives
    */
   sealed trait ContainerMessage
 
-  case class CreateComponent(props: Props, regInfo: RegInfo) extends ContainerMessage
+  /**
+   * Creates a component in the container
+   * @param props used to create the component actor
+   * @param regInfo used to register the component with the location service
+   * @param services list of services required by the component
+   */
+  case class CreateComponent(props: Props, regInfo: RegInfo, services: List[ServiceId]) extends ContainerMessage
 
+  /**
+   * Deletes the component from the container
+   * @param name name of the component
+   */
   case class DeleteComponent(name: String) extends ContainerMessage
 
   /**
    * Reply messages.
-   * CreatedComponent - sent when a new child component was createed
    */
   sealed trait ContainerReplyMessage
 
+  /**
+   * Reply sent when a new child component was created.
+   * @param actorRef the new actor
+   * @param name the name of the component
+   */
   case class CreatedComponent(actorRef: ActorRef, name: String) extends ContainerReplyMessage
 
 }
 
 /**
  * Implements the container actor based on the contents of the given config.
- * XXX TODO: Add description of format, pointer to example file
+ * XXX TODO: Document config format.
  */
-class Container(name: String) extends Actor with ActorLogging {
+class Container(config: Config) extends Actor with ActorLogging {
 
-  import Container._
+  import LifecycleManager._
 
   // Maps component name to the info returned when creating it
-  private var components = Map[String, Component.ComponentInfo]()
+  private val components = parseConfig()
+
+  // Startup the components
+  allComponents(Startup)
 
   // Receive messages
   override def receive: Receive = {
-    case CreateComponent(props, regInfo) ⇒ createComponent(props, regInfo)
-    case DeleteComponent(name)           ⇒ deleteComponent(name)
-    case Terminated(actorRef)            ⇒ componentDied(actorRef)
-    case LifecycleManager.Stopped(name)  ⇒ shutdownComponent(name)
+    case Initialize => allComponents(Initialize)
+    case Startup => allComponents(Startup)
+    case Shutdown => allComponents(Shutdown)
+    case Uninitialize => allComponents(Uninitialize)
 
-      /*
-       case Initialize =>
-      sender() ! InitializeFailed(name, LifecycleTransitionError(currentState, Initialize))
+    case Terminated(actorRef) ⇒ componentDied(actorRef)
 
-    case Startup =>
-      sender() ! StartupFailed(name, LifecycleTransitionError(currentState, Startup))
-
-    case Shutdown =>
-      sender() ! ShutdownFailed(name, LifecycleTransitionError(currentState, Shutdown))
-
-    case Uninitialize =>
-      sender() ! UninitializeFailed(name, LifecycleTransitionError(currentState, Uninitialize))
-
-    // Message from component confirming current state
-    case Loaded(n) => updateState(n, component, _, loaded(component))
-    case Initialized(n) => updateState(n, component, _, initialized(component))
-    case Running(n) => updateState(n, component, _, running(component))
-
-       */
+    case x => log.error(s"Unexpected message: $x")
   }
 
-  private def createComponent(props: Props, regInfo: RegInfo): Unit = {
+  private def createComponent(props: Props, regInfo: RegInfo, services: List[ServiceId],
+                              components: Map[String, Component.ComponentInfo]): Option[Component.ComponentInfo] = {
     val name = regInfo.serviceId.name
     components.get(name) match {
-      case Some(componentInfo) ⇒ log.error(s"Component $name already exists")
+      case Some(componentInfo) ⇒
+        log.error(s"Component $name already exists")
+        None
       case None ⇒
-        val componentInfo = Component.create(props, regInfo)
-        components += (name -> componentInfo)
+        val componentInfo = Component.create(props, regInfo, services)
         context.watch(componentInfo.lifecycleManager)
-        componentInfo.lifecycleManager.tell(LifecycleManager.Start, sender())
+        Some(componentInfo)
     }
   }
 
-//  // Deletes a component by sending a stop message to the lifecycle manager.
-//  // A Stopped message should be the reply. Then we shutdown the component's system.
-//  private def deleteComponent(name: String): Unit = {
-//    components.get(name) match {
-//      case Some(componentInfo) ⇒ componentInfo.lifecycleManager ! LifecycleManager.Stop
-//      case None                ⇒ log.error(s"Component $name does not exist")
-//    }
-//  }
-
-//  // Completes deleting a component by shutting down it's actor system
-//  // and removing it from the map
-//  private def shutdownComponent(name: String): Unit = {
-//    components.get(name) match {
-//      case Some(componentInfo) ⇒
-//        componentInfo.system.shutdown()
-//        components -= name
-//      case None ⇒ log.error(s"Component $name does not exist")
-//    }
-//  }
-
   // Called whan a component (lifecycle manager) terminates
   private def componentDied(actorRef: ActorRef): Unit = {
-    // TODO: recreate if component was not deleted (restart count?)
     log.info(s"Actor $actorRef terminated")
   }
+
+  // Parses the config file argument and creates the container,
+  // adding the components specified in the config file.
+  private def parseConfig(): Map[String, Component.ComponentInfo] = {
+    val conf = config.getConfig("container.components")
+    val names = conf.root.keySet()
+    val entries = for (key ← names)
+    yield (key, parseComponentConfig(key, conf.getConfig(key)))
+    Map(entries)
+  }
+
+  // Parse the "components" section of the config file
+  private def parseComponentConfig(name: String, conf: Config): Option[Component.ComponentInfo] = {
+    import scala.collection.JavaConversions._
+    val className = conf.getString("class")
+    val args =
+      if (conf.hasPath("args"))
+        conf.getList("args").toList.map(_.unwrapped().toString)
+      else List()
+    log.info(s"Create component with class $className and args $args")
+    val props = Props(Class.forName(className), args: _*)
+    val serviceType = ServiceType(conf.getString("type"))
+    if (serviceType == ServiceType.Unknown) {
+      log.error(s"Unknown service type: ${conf.getString("type")}")
+      None
+    } else {
+      val serviceId = ServiceId(name, serviceType)
+      val configPath = if (conf.hasPath("path")) Some(conf.getString("path")) else None
+      val uri = if (conf.hasPath("uri")) Some(new URI(conf.getString("uri"))) else None
+      val regInfo = RegInfo(serviceId, configPath, uri)
+      val services = if (conf.hasPath("services"))
+        parseServices(conf.getConfig("services"))
+      else Nil
+      createComponent(props, regInfo, services, Map.empty)
+    }
+  }
+
+  // Parse the "services" section of the component config
+  private def parseServices(conf: Config): List[ServiceId] = {
+    for (key ← conf.root.keySet()) yield ServiceId(key, ServiceType(conf.getString(key)))
+  }
+
+  // Sends the given lifecycle command to all components
+  private def allComponents(cmd: LifecycleCommand): Unit =
+    for ((name, info) <- components) {
+      info.lifecycleManager ! Startup
+    }
 }
 

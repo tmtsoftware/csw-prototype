@@ -116,6 +116,16 @@ object LocationServiceActor {
   object ServiceType {
 
     /**
+     * Returns the named service type (default: Service)
+     */
+    def apply(name: String): ServiceType = name.toLowerCase match {
+      case "assembly" => Assembly
+      case "hcd" => HCD
+      case "service" => Service
+      case _ => Unknown
+    }
+
+    /**
      * A service that controls a hardware device
      */
     case object HCD extends ServiceType
@@ -129,6 +139,11 @@ object LocationServiceActor {
      * A general purpose service (actor and/or web service application)
      */
     case object Service extends ServiceType
+
+    /**
+     * An unknown service type
+     */
+    case object Unknown extends ServiceType
   }
 
   /**

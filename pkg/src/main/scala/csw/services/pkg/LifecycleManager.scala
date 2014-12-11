@@ -56,141 +56,161 @@ object LifecycleManager {
   case class UninitializeFailed(name: String, reason: Throwable) extends LifecycleError
 
 
-  case class LifecycleTransitionError(name: String, currentState: LifecycleState, commandReceived: LifecycleCommand)
-    extends Exception(s"$name received $commandReceived while in state $currentState")
-
-
   /**
    * Used to create the LifecycleManager actor
    * @param componentProps used to create the component
    * @param regInfo used to register the component with the location service
-   * @param dependencies a list of service ids for the services the component depends on
+   * @param services a list of service ids for the services the component depends on
    * @return an object to be used to create the LifecycleManager actor
    */
-  def props(componentProps: Props, regInfo: RegInfo, dependencies: List[ServiceId], container: ActorRef): Props =
-    Props(classOf[LifecycleManager], componentProps, regInfo, dependencies)
+  def props(componentProps: Props, regInfo: RegInfo, services: List[ServiceId]): Props =
+    Props(classOf[LifecycleManager], componentProps, regInfo, services)
 }
 
 // A lifecycle manager actor that manages the component actor given by the arguments
 // (see props() for argument descriptions).
-case class LifecycleManager(componentProps: Props, regInfo: RegInfo, dependencies: List[ServiceId])
+case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: List[ServiceId])
   extends Actor with ActorLogging {
 
   import LifecycleManager._
 
   val name = regInfo.serviceId.name
-  startComponent()
+  val component = startComponent()
 
   // Not used
   override def receive: Receive = {
     case msg =>
   }
 
-  // --- Receive states ---
+  // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
 
   // Behavior in the Loaded state
-  def loaded(component: ActorRef, connected: Boolean): Receive = {
+  def loaded(connected: Boolean, targetState: LifecycleState): Receive = {
     case Initialize =>
-      component ! _
+      component ! Initialize
       registerWithLocationService()
+      context.become(loaded(connected, Initialized(name)))
 
     case Startup =>
-      sender() ! StartupFailed(name, LifecycleTransitionError(name, Loaded(name), Startup))
+      component ! Initialize
+      registerWithLocationService()
+      context.become(loaded(connected, Running(name)))
 
     case Shutdown =>
-      sender() ! ShutdownFailed(name, LifecycleTransitionError(name, Loaded(name), Shutdown))
+      component ! Initialize
+      context.become(loaded(connected, Initialized(name)))
 
     case Uninitialize =>
-      log.warning(s"$name ignoring Unitialize request since already in the Loaded state")
+      context.become(loaded(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case Loaded(n) =>
-      updateState(n, component, _, loaded(component, connected))
-    case Initialized(n) =>
-      updateState(n, component, _, initialized(component, connected))
-    case Running(n) =>
-      log.warning(s"$name reports that it is Running while in Loaded state")
-      updateState(n, component, _, running(component, connected)) // XXX shouldn't happen
+    case Loaded(_) =>
+      updateState(_, targetState, loaded(connected, targetState))
+
+    case Initialized(_) =>
+      updateState(_, targetState, initialized(connected, targetState))
+
+    case Running(_) =>
+      updateState(_, targetState, running(connected, targetState))
 
     case Terminated(actorRef) => terminated(actorRef)
 
     case Connected(servicesReady) =>
       component ! servicesReady
-      context.become(loaded(component, connected = true))
+      context.become(loaded(connected = true, targetState))
 
     case Disconnected =>
-      context.become(loaded(component, connected = false))
+      context.become(loaded(connected = false, targetState))
 
-    case msg => unexpectedMessage(msg, "loaded", connected)
+    case msg =>
+      unexpectedMessage(msg, "loaded", connected)
   }
 
 
   // Behavior in the Initialized state
-  def initialized(component: ActorRef, connected: Boolean): Receive = {
+  def initialized(connected: Boolean, targetState: LifecycleState): Receive = {
     case Initialize =>
-      log.warning(s"$name ignoring Itialize request since already in the Itialized state")
+      context.become(initialized(connected, Initialized(name)))
 
-    case Startup | Uninitialize =>
+    case Startup =>
       component ! _
       requestServices()
+      context.become(initialized(connected, Running(name)))
 
     case Shutdown =>
-      sender() ! ShutdownFailed(name, LifecycleTransitionError(name, Initialized(name), Shutdown))
+      context.become(initialized(connected, Initialized(name)))
 
     case Uninitialize =>
-      sender() ! UninitializeFailed(name, LifecycleTransitionError(name, Initialized(name), Uninitialize))
+      component ! _
+      context.become(initialized(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case Loaded(n) => updateState(n, component, _, loaded(component, connected))
-    case Initialized(n) => updateState(n, component, _, initialized(component, connected))
-    case Running(n) => updateState(n, component, _, running(component, connected))
+    case Loaded(_) =>
+      updateState(_, targetState, loaded(connected, targetState))
 
-    case Terminated(actorRef) => terminated(actorRef)
+    case Initialized(_) =>
+      updateState(_, targetState, initialized(connected, targetState))
+
+    case Running(_) =>
+      updateState(_, targetState, running(connected, targetState))
+
+    case Terminated(actorRef) =>
+      terminated(actorRef)
 
     case Connected(servicesReady) =>
       component ! servicesReady
-      context.become(initialized(component, connected = true))
+      context.become(initialized(connected = true, targetState))
 
     case Disconnected =>
-      context.become(initialized(component, connected = false))
+      context.become(initialized(connected = false, targetState))
 
-    case msg => unexpectedMessage(msg, "initialized", connected)
+    case msg =>
+      unexpectedMessage(msg, "initialized", connected)
   }
 
 
   // Behavior in the Running state
-  def running(component: ActorRef, connected: Boolean): Receive = {
+  def running(connected: Boolean, targetState: LifecycleState): Receive = {
     case Initialize =>
-      sender() ! InitializeFailed(name, LifecycleTransitionError(name, Running(name), Initialize))
+      component ! Shutdown
+      context.become(running(connected, Initialized(name)))
 
     case Startup =>
-      log.warning(s"$name ignoring Startup request since already in the Running state")
+      context.become(running(connected, Running(name)))
 
     case Shutdown =>
       component ! _
+      context.become(running(connected, Initialized(name)))
 
     case Uninitialize =>
-      sender() ! UninitializeFailed(name, LifecycleTransitionError(name, Running(name), Uninitialize))
+      component ! Shutdown
+      context.become(running(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case Loaded(n) =>
-      log.warning(s"$name reports that it is Loaded while in Running state")
-      updateState(n, component, _, loaded(component, connected)) // XXX shouldn't happen
-    case Initialized(n) => updateState(n, component, _, initialized(component, connected))
-    case Running(n) => updateState(n, component, _, running(component, connected))
+    case Loaded(_) =>
+      updateState(_, targetState, loaded(connected, targetState))
 
-    case Terminated(actorRef) => terminated(actorRef)
+    case Initialized(_) =>
+      updateState(_, targetState, initialized(connected, targetState))
+
+    case Running(_) =>
+      updateState(_, targetState, running(connected, targetState))
+
+    case Terminated(actorRef) =>
+      terminated(actorRef)
 
     case Connected(servicesReady) =>
       component ! servicesReady
-      context.become(running(component, connected = true))
+      context.become(running(connected = true, targetState))
 
     case Disconnected =>
-      context.become(running(component, connected = false))
+      context.become(running(connected = false, targetState))
 
-    case msg if connected => component.tell(msg, sender())
+    case msg if connected =>
+      component.tell(msg, sender())
 
-    case msg => log.warning(s"Ignoring message $msg since $name is not connected")
+    case msg =>
+      log.warning(s"Ignoring message $msg since $name is not connected")
   }
 
   // ---
@@ -208,11 +228,12 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, dependencie
   }
 
   // Starts the component actor
-  private def startComponent(): Unit = {
+  private def startComponent(): ActorRef = {
     log.info(s"Starting $name")
-    val component = context.actorOf(componentProps, name)
-    context.watch(component)
-    context.become(loaded(component, connected = dependencies.isEmpty))
+    val actorRef = context.actorOf(componentProps, name)
+    context.watch(actorRef)
+    context.become(loaded(connected = services.isEmpty, Loaded(name)))
+    actorRef
   }
 
   // Starts an actor to manage registering this actor with the location service
@@ -223,19 +244,15 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, dependencie
   }
 
   // Starts an actor to manage getting the services the component depends on.
-  // Once all the dependencies are available, it sends a Connected message.
-  // If any dependency terminates, a Disconnected message is sent to this actor.
+  // Once all the services are available, it sends a Connected message.
+  // If any service terminates, a Disconnected message is sent to this actor.
   private def requestServices(): Unit = {
-    context.actorOf(LocationServiceClientActor.props(dependencies))
+    context.actorOf(LocationServiceClientActor.props(services))
   }
 
   // Called when a lifecycle state message is received from the component
-  private def updateState(name: String, component: ActorRef, state: LifecycleState, actorState: Receive): Unit = {
-    if (name == this.name && sender() == component) {
-      context become actorState
-      context.parent ! state
-    } else {
-      log.error(s"Received state change message for wrong component: $name, expected ${this.name}")
-    }
+  private def updateState(currentState: LifecycleState, targetState: LifecycleState, nextState: Receive): Unit = {
+    if (currentState != targetState) component ! targetState
+    context become nextState
   }
 }
