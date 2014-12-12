@@ -5,7 +5,8 @@ import java.net.URI
 import akka.actor._
 import com.typesafe.config.Config
 import csw.services.ls.LocationService.RegInfo
-import csw.services.ls.LocationServiceActor.{ServiceId, ServiceType}
+import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
+import scala.collection.JavaConversions._
 
 /**
  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
@@ -100,14 +101,14 @@ class Container(config: Config) extends Actor with ActorLogging {
 
   // Receive messages
   override def receive: Receive = {
-    case Initialize => allComponents(Initialize)
-    case Startup => allComponents(Startup)
-    case Shutdown => allComponents(Shutdown)
-    case Uninitialize => allComponents(Uninitialize)
+    case Initialize           ⇒ allComponents(Initialize)
+    case Startup              ⇒ allComponents(Startup)
+    case Shutdown             ⇒ allComponents(Shutdown)
+    case Uninitialize         ⇒ allComponents(Uninitialize)
 
     case Terminated(actorRef) ⇒ componentDied(actorRef)
 
-    case x => log.error(s"Unexpected message: $x")
+    case x                    ⇒ log.error(s"Unexpected message: $x")
   }
 
   private def createComponent(props: Props, regInfo: RegInfo, services: List[ServiceId],
@@ -133,15 +134,16 @@ class Container(config: Config) extends Actor with ActorLogging {
   // adding the components specified in the config file.
   private def parseConfig(): Map[String, Component.ComponentInfo] = {
     val conf = config.getConfig("container.components")
-    val names = conf.root.keySet()
-    val entries = for (key ← names)
-    yield (key, parseComponentConfig(key, conf.getConfig(key)))
-    Map(entries)
+    val names = conf.root.keySet().toList
+    val entries = for {
+      key ← names
+      value ← parseComponentConfig(key, conf.getConfig(key))
+    } yield (key, value)
+    Map(entries: _*)
   }
 
   // Parse the "components" section of the config file
   private def parseComponentConfig(name: String, conf: Config): Option[Component.ComponentInfo] = {
-    import scala.collection.JavaConversions._
     val className = conf.getString("class")
     val args =
       if (conf.hasPath("args"))
@@ -167,12 +169,12 @@ class Container(config: Config) extends Actor with ActorLogging {
 
   // Parse the "services" section of the component config
   private def parseServices(conf: Config): List[ServiceId] = {
-    for (key ← conf.root.keySet()) yield ServiceId(key, ServiceType(conf.getString(key)))
+    for (key ← conf.root.keySet().toList) yield ServiceId(key, ServiceType(conf.getString(key)))
   }
 
   // Sends the given lifecycle command to all components
   private def allComponents(cmd: LifecycleCommand): Unit =
-    for ((name, info) <- components) {
+    for ((name, info) ← components) {
       info.lifecycleManager ! Startup
     }
 }

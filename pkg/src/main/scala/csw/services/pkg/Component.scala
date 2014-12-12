@@ -38,7 +38,6 @@ object Component {
   }
 }
 
-
 trait Component
 
 /**

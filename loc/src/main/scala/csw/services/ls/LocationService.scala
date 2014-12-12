@@ -119,10 +119,10 @@ object LocationServiceActor {
      * Returns the named service type (default: Service)
      */
     def apply(name: String): ServiceType = name.toLowerCase match {
-      case "assembly" => Assembly
-      case "hcd" => HCD
-      case "service" => Service
-      case _ => Unknown
+      case "assembly" ⇒ Assembly
+      case "hcd"      ⇒ HCD
+      case "service"  ⇒ Service
+      case _          ⇒ Unknown
     }
 
     /**

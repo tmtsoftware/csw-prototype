@@ -63,5 +63,8 @@ object Dependencies {
   val scalaCompiler = "org.scala-lang" % "scala-compiler" % scalaVersion
   val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion
   val jline = "jline" % "jline" % "2.11"
+
+  // sbt launcher for standalone apps or servers
+  val launcherInterface = "org.scala-sbt" % "launcher-interface" % "0.13.7"
 }
 

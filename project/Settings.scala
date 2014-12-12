@@ -28,9 +28,10 @@ object Settings {
     //    resolvers += Resolver.sonatypeRepo("snapshots"),
     //    resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/",
     resolvers += "rediscala" at "http://dl.bintray.com/etaty/maven",
-    resolvers += "mDialog releases" at "http://mdialog.github.io/releases/"
+    resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     // local maven repo
     //    resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
+    resolvers += sbtResolver.value
   )
 
   lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(

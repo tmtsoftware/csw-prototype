@@ -1,7 +1,7 @@
 package csw.services.ls
 
 import akka.actor._
-import csw.services.ls.LocationServiceActor.{ServiceId, LocationServiceInfo, ServicesReady}
+import csw.services.ls.LocationServiceActor.{ ServiceId, LocationServiceInfo, ServicesReady }
 
 /**
  * An actor that does the job of requesting information about a list of services
@@ -29,15 +29,16 @@ class LocationServiceClientActor(serviceIds: List[ServiceId]) extends Actor with
 
   // Initial state until we get a list of running services
   def waitingForServices: Receive = {
-    case ServicesReady(services) ⇒
+    case s @ ServicesReady(services) ⇒
       log.debug(s"All requested services are ready: $services")
       for (actorRef ← services.map(_.actorRefOpt).flatten) context.watch(actorRef)
       context.become(ready(services))
-      context.parent ! Connected(_)
+      context.parent ! Connected(s)
 
     case Terminated(actorRef) ⇒
 
-    case x ⇒ log.error(s"Unexpected message from ${sender()} while waiting for services: $x")
+    case x ⇒
+      log.error(s"Unexpected message from ${sender()} while waiting for services: $x")
   }
 
   // Messages received in the ready state.
