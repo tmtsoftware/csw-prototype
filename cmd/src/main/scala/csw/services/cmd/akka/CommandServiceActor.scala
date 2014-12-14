@@ -101,7 +101,7 @@ object CommandServiceActor {
  * include the queue controller) and also to the original submitter of
  * the config (The sender is passed along with the submit message).
  */
-trait CommandServiceActor extends Actor with ActorLogging {
+trait CommandServiceActor extends Actor with Stash with ActorLogging {
 
   import CommandServiceActor._
   import CommandQueueActor._
@@ -118,6 +118,7 @@ trait CommandServiceActor extends Actor with ActorLogging {
 
   // Connect the config actor, which is defined later in a derived class, to the queue on start
   override def preStart(): Unit = {
+    super.preStart()
     commandQueueActor ! CommandQueueActor.QueueClient(configActor)
   }
 
@@ -137,25 +138,14 @@ trait CommandServiceActor extends Actor with ActorLogging {
     context.become(waitingForReady(queueActorReady = false, configActorReady = true))
   }
 
-  // Initial state while waiting for queue and config actors to be ready
+  // Initial state while waiting for queue and config actors to be ready.
+  // Any messages received while waiting are saved for later.
   def waitingForReady(queueActorReady: Boolean, configActorReady: Boolean): Receive = {
     case Ready(ready) ⇒ checkIfReady(ready, queueActorReady, configActorReady)
 
-    case s @ Submit(config, submitter) ⇒
-      notReadyError(s, RunId(), submitter)
-
-    case s @ SubmitWithRunId(config, submitter, runId) ⇒
-      notReadyError(s, runId, submitter)
-
-    case s @ QueueBypassRequest(config) ⇒
-      notReadyError(s, RunId(), sender())
-
-    case s @ QueueBypassRequestWithRunId(config, submitter, runId) ⇒
-      notReadyError(s, runId, submitter)
-
-    case StatusRequest ⇒ handleStatusRequest(sender(), ready = false)
-
-    case x             ⇒ log.error(s"Not yet ready to receive message $x")
+    case msg ⇒
+      log.info(s"XXX stashing $msg from ${sender()}")
+      stash()
   }
 
   // Receive only the command server commands
@@ -236,20 +226,28 @@ trait CommandServiceActor extends Actor with ActorLogging {
   }
 
   /**
-   * Called when a Ready message is received: If the queue and config actors are ready, enter the ready state.
+   * Called when a Ready message is received: If the queue and config actors are ready,
+   * enter the ready state and handle the saved messages.
    */
   def checkIfReady(ready: Boolean, queueActorReady: Boolean, configActorReady: Boolean): Unit = {
     val queueReady = if (sender() == commandQueueActor) ready else queueActorReady
     val configReady = if (sender() == configActor) ready else configActorReady
     if (queueReady && configReady) {
       log.info("Ready to receive commands")
-      context.become(receive)
+      this.ready()
     } else {
       context.become(waitingForReady(queueReady, configReady))
     }
-
   }
 
+  /**
+   * Called when the actor is ready (queue and config actors are ready).
+   * Handle the saved messages that were received while waiting to be ready.
+   */
+  def ready(): Unit = {
+    context.become(receive)
+    unstashAll()
+  }
 }
 
 /**

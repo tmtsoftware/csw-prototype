@@ -204,6 +204,7 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       context.become(running(connected = false, targetState))
 
     case msg if connected ⇒
+      log.info(s"XXX forwarding $msg from ${sender()} to $component")
       component.tell(msg, sender())
 
     case msg ⇒
@@ -247,9 +248,31 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
     context.actorOf(LocationServiceClientActor.props(services))
   }
 
-  // Called when a lifecycle state message is received from the component
+  // Called when a lifecycle state message is received from the component.
+  // If not yet in the target state, sends a command to the component to go
+  // there (without skipping any states).
   private def updateState(currentState: LifecycleState, targetState: LifecycleState, nextState: Receive): Unit = {
-    if (currentState != targetState) component ! targetState
+    log.info(s"XXX $name update state: current: $currentState, target: $targetState")
+    targetState match {
+      case `currentState` ⇒
+      case Loaded(_) ⇒
+        currentState match {
+          case Loaded(_) ⇒
+          case _         ⇒ component ! Initialize
+        }
+      case Initialized(_) ⇒
+        currentState match {
+          case Loaded(_)      ⇒ component ! Initialize
+          case Initialized(_) ⇒
+          case Running(_)     ⇒ component ! Shutdown
+        }
+      case Running(_) ⇒
+        currentState match {
+          case Loaded(_)      ⇒ component ! Initialize
+          case Initialized(_) ⇒ component ! Startup
+          case Running(_)     ⇒
+        }
+    }
     context become nextState
   }
 }

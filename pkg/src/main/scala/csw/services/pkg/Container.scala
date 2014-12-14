@@ -41,8 +41,13 @@ object Container {
    * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
    */
   def create(config: Config): ActorRef = {
+    import csw.util.akka.Terminator
     val name = config.getString("container.name")
-    ActorSystem(s"$name-system").actorOf(props(config), name)
+    val system = ActorSystem(s"$name-system")
+    val actorRef = system.actorOf(props(config), name)
+    // Exit when the container shuts down
+    system.actorOf(Props(classOf[Terminator], actorRef), "terminator")
+    actorRef
   }
 
   /**

@@ -201,7 +201,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   // The original submitter receives the command status.
   private def dequeue(): Unit = {
     log.debug(s"Dequeue and sent to: ${sender()}")
-    if (!queueMap.isEmpty) {
+    if (queueMap.nonEmpty) {
       val (runId, submit) = queueMap.iterator.next()
       queueMap = queueMap - runId
       queueClient ! submit
@@ -230,7 +230,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   // Notify the queue controller if there are messages in the queue.
   // The queue controller should then send a Dequeue message to remove a message from the queue when ready.
   private def notifyQueueController(): Unit = {
-    if (!queueMap.isEmpty) {
+    if (queueMap.nonEmpty) {
       queueController ! QueueWorkAvailable
     }
   }

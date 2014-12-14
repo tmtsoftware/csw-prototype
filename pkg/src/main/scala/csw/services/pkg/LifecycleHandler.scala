@@ -1,11 +1,10 @@
 package csw.services.pkg
 
 import akka.actor.{ ActorLogging, Actor }
+import csw.services.pkg.LifecycleManager._
 
 import scala.concurrent.Future
 import scala.util.{ Failure, Success }
-
-import csw.services.pkg.LifecycleManager._
 
 /**
  * Containers and Components can override these to handle lifecycle changes.
@@ -21,40 +20,36 @@ trait LifecycleHandler {
 
   def receiveLifecycleCommands: Receive = {
     case Initialize ⇒
-      val replyTo = sender()
       initialize().onComplete {
-        case Success(_)  ⇒ replyTo ! Initialized(name)
-        case Failure(ex) ⇒ replyTo ! InitializeFailed(name, ex)
+        case Success(_)  ⇒ context.parent ! Initialized(name)
+        case Failure(ex) ⇒ context.parent ! InitializeFailed(name, ex)
       }
 
     case Startup ⇒
-      val replyTo = sender()
       startup().onComplete {
-        case Success(_)  ⇒ replyTo ! Running(name)
-        case Failure(ex) ⇒ replyTo ! StartupFailed(name, ex)
+        case Success(_)  ⇒ context.parent ! Running(name)
+        case Failure(ex) ⇒ context.parent ! StartupFailed(name, ex)
       }
 
     case Shutdown ⇒
-      val replyTo = sender()
       shutdown().onComplete {
-        case Success(_)  ⇒ replyTo ! Initialized(name)
-        case Failure(ex) ⇒ replyTo ! ShutdownFailed(name, ex)
+        case Success(_)  ⇒ context.parent ! Initialized(name)
+        case Failure(ex) ⇒ context.parent ! ShutdownFailed(name, ex)
       }
 
     case Uninitialize ⇒
-      val replyTo = sender()
       uninitialize().onComplete {
-        case Success(_)  ⇒ replyTo ! Loaded(name)
-        case Failure(ex) ⇒ replyTo ! UninitializeFailed(name, ex)
+        case Success(_)  ⇒ context.parent ! Loaded(name)
+        case Failure(ex) ⇒ context.parent ! UninitializeFailed(name, ex)
       }
   }
 
-  def initialize(): Future[Unit] = Future {}
+  def initialize(): Future[Unit] = Future { log.info(s"XXX initialize") }
 
-  def startup(): Future[Unit] = Future {}
+  def startup(): Future[Unit] = Future { log.info(s"XXX startup") }
 
-  def shutdown(): Future[Unit] = Future {}
+  def shutdown(): Future[Unit] = Future { log.info(s"XXX shutdown") }
 
-  def uninitialize(): Future[Unit] = Future {}
+  def uninitialize(): Future[Unit] = Future { log.info(s"XXX uninitialize") }
 }
 
