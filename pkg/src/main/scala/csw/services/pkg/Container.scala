@@ -63,18 +63,23 @@ object Container {
   sealed trait ContainerMessage
 
   /**
-   * Creates a component in the container
-   * @param props used to create the component actor
-   * @param regInfo used to register the component with the location service
-   * @param services list of services required by the component
+   * Returns
    */
-  case class CreateComponent(props: Props, regInfo: RegInfo, services: List[ServiceId]) extends ContainerMessage
+  case object GetComponents
 
-  /**
-   * Deletes the component from the container
-   * @param name name of the component
-   */
-  case class DeleteComponent(name: String) extends ContainerMessage
+  //  /**
+  //   * Creates a component in the container
+  //   * @param props used to create the component actor
+  //   * @param regInfo used to register the component with the location service
+  //   * @param services list of services required by the component
+  //   */
+  //  case class CreateComponent(props: Props, regInfo: RegInfo, services: List[ServiceId]) extends ContainerMessage
+  //
+  //  /**
+  //   * Deletes the component from the container
+  //   * @param name name of the component
+  //   */
+  //  case class DeleteComponent(name: String) extends ContainerMessage
 
   /**
    * Reply messages.
@@ -82,11 +87,17 @@ object Container {
   sealed trait ContainerReplyMessage
 
   /**
-   * Reply sent when a new child component was created.
-   * @param actorRef the new actor
-   * @param name the name of the component
+   * Reply to GetComponents
+   * @param map a map of component name to actor for the component (actually the lifecycle manager)
    */
-  case class CreatedComponent(actorRef: ActorRef, name: String) extends ContainerReplyMessage
+  case class Components(map: Map[String, ActorRef])
+
+  //  /**
+  //   * Reply sent when a new child component was created.
+  //   * @param actorRef the new actor
+  //   * @param name the name of the component
+  //   */
+  //  case class CreatedComponent(actorRef: ActorRef, name: String) extends ContainerReplyMessage
 
 }
 
@@ -97,6 +108,7 @@ object Container {
 class Container(config: Config) extends Actor with ActorLogging {
 
   import LifecycleManager._
+  import Container._
 
   // Maps component name to the info returned when creating it
   private val components = parseConfig()
@@ -110,6 +122,8 @@ class Container(config: Config) extends Actor with ActorLogging {
     case Startup              ⇒ allComponents(Startup)
     case Shutdown             ⇒ allComponents(Shutdown)
     case Uninitialize         ⇒ allComponents(Uninitialize)
+
+    case GetComponents        ⇒ sender() ! getComponents
 
     case Terminated(actorRef) ⇒ componentDied(actorRef)
 
@@ -182,5 +196,8 @@ class Container(config: Config) extends Actor with ActorLogging {
     for ((name, info) ← components) {
       info.lifecycleManager ! Startup
     }
+
+  private def getComponents: Components =
+    Components(components.mapValues(_.lifecycleManager))
 }
 

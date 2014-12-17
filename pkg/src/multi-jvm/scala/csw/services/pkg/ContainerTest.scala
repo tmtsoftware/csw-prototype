@@ -4,11 +4,9 @@ import akka.actor._
 import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import csw.services.cmd.akka.CommandServiceActor.{CommandServiceStatus, StatusRequest, Submit}
+import csw.services.cmd.akka.CommandServiceActor.Submit
 import csw.services.cmd.akka.CommandStatus
-import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor
-import csw.services.ls.LocationServiceActor.{ServiceId, ServiceType}
 import csw.util.cfg.TestConfig
 
 import scala.concurrent.duration._
@@ -38,7 +36,7 @@ class TestMultiJvmLocationService extends ContainerSpec
 
 class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec with ImplicitSender {
 
-  import csw.services.pkg.ContainerConfig._
+  import ContainerConfig._
 
   override def initialParticipants: Int = roles.size
 
@@ -52,63 +50,48 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       runOn(container1) {
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
-        val config = TestConfig.testConfig
-        val container = Container.create("Container-1")
-        val assembly1Props = TestAssembly.props("Assembly-1")
+        val container = Container.create(ConfigFactory.load("container1.conf"))
         within(10.seconds) {
-          val serviceId = ServiceId("Assembly-1", ServiceType.Assembly)
-          val regInfo = RegInfo(serviceId)
-          container ! Container.CreateComponent(assembly1Props, regInfo)
-          val started = expectMsgType[LifecycleManager.Started]
-          assert(started.name == "Assembly-1")
-          val assembly1 = started.actorRef
-          waitForReady(assembly1)
-          assembly1 ! Submit(config)
-          val s1 = expectMsgType[CommandStatus.Queued]
-          val s2 = expectMsgType[CommandStatus.Busy]
-          val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
-          val s3 = expectMsgType[CommandStatus.Completed]
-          assert(s1.runId == s2.runId)
-          assert(s3.runId == s2.runId)
-          assert(s3a.runId == s3.runId)
-
+          container ! Container.GetComponents
+          val map = expectMsgType[Container.Components].map
+          assert(map.size == 1)
+          for((name, assembly1) <- map) {
+            assembly1 ! LifecycleManager.SubscribeToLifecycleStates(
+              (state, connected) => connected && state == LifecycleManager.Running(name)
+            )
+            expectMsgType[LifecycleManager.Running]
+            assembly1 ! Submit(TestConfig.testConfig)
+            val s1 = expectMsgType[CommandStatus.Queued]
+            val s2 = expectMsgType[CommandStatus.Busy]
+            val s3a = expectMsgType[CommandStatus.PartiallyCompleted]
+            val s3 = expectMsgType[CommandStatus.Completed]
+            assert(s1.runId == s2.runId)
+            assert(s3.runId == s2.runId)
+            assert(s3a.runId == s3.runId)
+          }
           println("\nContainer1 tests passed\n")
-
-          assembly1 ! LifecycleManager.Stop
-          val stopped = expectMsgType[LifecycleManager.Stopped]
-          assert(stopped.name == "Assembly-1")
-
-          assembly1 ! LifecycleManager.Start
-          val started2 = expectMsgType[LifecycleManager.Started]
-          assert(started2.name == "Assembly-1")
-
-//          container ! Container.DeleteComponent("Assembly-1")
-
           enterBarrier("done")
+          container ! LifecycleManager.Uninitialize
         }
       }
 
       runOn(container2) {
         enterBarrier("locationServiceStarted")
-        val container = Container.create("Container-2")
-
-        for((name, configPath) <- List(("HCD-2A", "tmt.tel.base.pos"), ("HCD-2B", "tmt.tel.ao.pos.one"))) {
-          val serviceId = ServiceId(name, ServiceType.HCD)
-          val regInfo = RegInfo(serviceId, Some(configPath))
-          val props = TestHcd.props(name, configPath)
-          container ! Container.CreateComponent(props, regInfo)
-          val started = expectMsgType[LifecycleManager.Started]
-          assert(started.name == name)
+        val container = Container.create(ConfigFactory.load("container2.conf"))
+        container ! Container.GetComponents
+        val componentInfo = expectMsgType[Container.Components]
+        for ((name, actorRef) <- componentInfo.map) {
+          actorRef ! LifecycleManager.SubscribeToLifecycleStates(
+            (state, connected) => connected && state == LifecycleManager.Running(name)
+          )
+          val s = expectMsgType[LifecycleManager.Running]
+          println(s"container2: $s")
         }
 
         println("\nContainer2 tests passed\n")
 
         enterBarrier("deployed")
         enterBarrier("done")
-
-//        container ! Container.DeleteComponent("HCD-2A")
-//        container ! Container.DeleteComponent("HCD-2B")
-//        container ! PoisonPill
       }
 
       runOn(locationService) {
@@ -116,22 +99,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
         enterBarrier("done")
-//        ls ! PoisonPill
       }
 
       enterBarrier("finished")
-    }
-  }
-
-  // Wait for the command service to be ready before returning (should only be necessary when testing)
-  def waitForReady(commandServiceActor: ActorRef): ActorRef = {
-    commandServiceActor ! StatusRequest
-    val status = expectMsgType[CommandServiceStatus]
-    if (status.ready) {
-      commandServiceActor
-    } else {
-      Thread.sleep(200)
-      waitForReady(commandServiceActor)
     }
   }
 }

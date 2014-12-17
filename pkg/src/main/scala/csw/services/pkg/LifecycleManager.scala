@@ -3,7 +3,7 @@ package csw.services.pkg
 import akka.actor._
 import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor.ServiceId
-import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
+import csw.services.ls.LocationServiceClientActor.{ Connected, Disconnected }
 import csw.services.ls.{ LocationServiceClientActor, LocationServiceRegisterActor }
 
 /**
@@ -45,7 +45,10 @@ object LifecycleManager {
   /**
    * Reply from component for failed lifecycle changes
    */
-  sealed trait LifecycleError
+  sealed trait LifecycleError {
+    val name: String
+    val reason: Throwable
+  }
 
   case class InitializeFailed(name: String, reason: Throwable) extends LifecycleError
 
@@ -54,6 +57,16 @@ object LifecycleManager {
   case class ShutdownFailed(name: String, reason: Throwable) extends LifecycleError
 
   case class UninitializeFailed(name: String, reason: Throwable) extends LifecycleError
+
+  /**
+   * Filter for lifecycle states (The second argument is true if connected)
+   */
+  type LifecycleFilter = (LifecycleState, Boolean) ⇒ Boolean
+
+  /**
+   * The sender is sent any LifecycleState messages matching the given filter
+   */
+  case class SubscribeToLifecycleStates(filter: LifecycleFilter)
 
   /**
    * Used to create the LifecycleManager actor
@@ -71,140 +84,174 @@ object LifecycleManager {
 case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: List[ServiceId])
     extends Actor with ActorLogging {
 
-  import LifecycleManager._
+  import csw.services.pkg.LifecycleManager._
+
+  // Used to notify registered listeners of a change in the lifecycle, if it matches the filter
+  var lifecycleStateListeners = Map[ActorRef, LifecycleFilter]()
 
   val name = regInfo.serviceId.name
   val component = startComponent()
 
   // Not used
   override def receive: Receive = {
-    case msg ⇒
+    case e: LifecycleError ⇒ // XXX TODO: Add listener
+      log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
+
+    case Terminated(actorRef) ⇒
+      terminated(actorRef)
   }
 
   // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
 
   // Behavior in the Loaded state
-  def loaded(connected: Boolean, targetState: LifecycleState): Receive = {
+  def loaded(connected: Boolean, targetState: LifecycleState): Receive = receive orElse {
     case Initialize ⇒
+      log.debug(s"$name received Initialize")
       component ! Initialize
       registerWithLocationService()
       context.become(loaded(connected, Initialized(name)))
 
     case Startup ⇒
+      log.debug(s" $name received Startup")
       component ! Initialize
       registerWithLocationService()
       context.become(loaded(connected, Running(name)))
 
     case Shutdown ⇒
+      log.debug(s" $name received Shutdown")
       component ! Initialize
       context.become(loaded(connected, Initialized(name)))
 
     case Uninitialize ⇒
+      log.debug(s" $name received Uninitialize")
       context.become(loaded(connected, Loaded(name)))
 
     // Message from component indicating current state
     case s @ Loaded(_) ⇒
-      updateState(s, targetState, loaded(connected, targetState))
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, loaded(connected, targetState))
 
     case s @ Initialized(_) ⇒
-      updateState(s, targetState, initialized(connected, targetState))
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, initialized(connected, targetState))
 
     case s @ Running(_) ⇒
-      updateState(s, targetState, running(connected, targetState))
-
-    case Terminated(actorRef) ⇒ terminated(actorRef)
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, running(connected, targetState))
 
     case Connected(servicesReady) ⇒
+      log.debug(s" $name received Connected")
       component ! servicesReady
       context.become(loaded(connected = true, targetState))
 
     case Disconnected ⇒
+      log.debug(s" $name received Disconnected")
       context.become(loaded(connected = false, targetState))
+
+    case SubscribeToLifecycleStates(filter) ⇒
+      subscribeToLifecycleStates(Loaded(name), connected, filter)
 
     case msg ⇒
       unexpectedMessage(msg, "loaded", connected)
   }
 
   // Behavior in the Initialized state
-  def initialized(connected: Boolean, targetState: LifecycleState): Receive = {
+  def initialized(connected: Boolean, targetState: LifecycleState): Receive = receive orElse {
     case Initialize ⇒
       context.become(initialized(connected, Initialized(name)))
 
     case Startup ⇒
+      log.debug(s" $name received Startup")
       component ! _
       requestServices()
       context.become(initialized(connected, Running(name)))
 
     case Shutdown ⇒
+      log.debug(s" $name received Shutdown")
       context.become(initialized(connected, Initialized(name)))
 
     case Uninitialize ⇒
+      log.debug(s" $name received Uninitialize")
       component ! _
       context.become(initialized(connected, Loaded(name)))
 
     // Message from component indicating current state
     case s @ Loaded(_) ⇒
-      updateState(s, targetState, loaded(connected, targetState))
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, loaded(connected = connected, targetState))
 
     case s @ Initialized(_) ⇒
-      updateState(s, targetState, initialized(connected, targetState))
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, initialized(connected, targetState))
 
     case s @ Running(_) ⇒
-      updateState(s, targetState, running(connected, targetState))
-
-    case Terminated(actorRef) ⇒
-      terminated(actorRef)
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, running(connected, targetState))
 
     case Connected(servicesReady) ⇒
+      log.debug(s" $name received Connected")
       component ! servicesReady
       context.become(initialized(connected = true, targetState))
 
     case Disconnected ⇒
+      log.debug(s" $name received Disconnected")
       context.become(initialized(connected = false, targetState))
+
+    case SubscribeToLifecycleStates(filter) ⇒
+      subscribeToLifecycleStates(Initialized(name), connected, filter)
 
     case msg ⇒
       unexpectedMessage(msg, "initialized", connected)
   }
 
   // Behavior in the Running state
-  def running(connected: Boolean, targetState: LifecycleState): Receive = {
+  def running(connected: Boolean, targetState: LifecycleState): Receive = receive orElse {
     case Initialize ⇒
+      log.debug(s" $name received Initialize")
       component ! Shutdown
       context.become(running(connected, Initialized(name)))
 
     case Startup ⇒
+      log.debug(s" $name received Startup")
       context.become(running(connected, Running(name)))
 
     case Shutdown ⇒
+      log.debug(s" $name received Shutdown")
       component ! _
       context.become(running(connected, Initialized(name)))
 
     case Uninitialize ⇒
+      log.debug(s" $name received Uninitialize")
       component ! Shutdown
       context.become(running(connected, Loaded(name)))
 
     // Message from component indicating current state
     case s @ Loaded(_) ⇒
-      updateState(s, targetState, loaded(connected, targetState))
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, loaded(connected, targetState))
 
     case s @ Initialized(_) ⇒
-      updateState(s, targetState, initialized(connected, targetState))
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, initialized(connected, targetState))
 
     case s @ Running(_) ⇒
-      updateState(s, targetState, running(connected, targetState))
-
-    case Terminated(actorRef) ⇒
-      terminated(actorRef)
+      log.debug(s" $name received $s")
+      updateState(s, connected, targetState, running(connected, targetState))
 
     case Connected(servicesReady) ⇒
+      log.debug(s" $name received Connected")
       component ! servicesReady
-      context.become(running(connected = true, targetState))
+      updateState(Running(name), connected = true, targetState, running(connected = true, targetState))
 
     case Disconnected ⇒
-      context.become(running(connected = false, targetState))
+      log.debug(s" $name received Disconnected")
+      updateState(Running(name), connected = false, targetState, running(connected = false, targetState))
+
+    case SubscribeToLifecycleStates(filter) ⇒
+      subscribeToLifecycleStates(Running(name), connected, filter)
 
     case msg if connected ⇒
-      log.info(s"XXX forwarding $msg from ${sender()} to $component")
+      log.debug(s" forwarding $msg from ${sender()} to $component")
       component.tell(msg, sender())
 
     case msg ⇒
@@ -245,14 +292,19 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
   // Once all the services are available, it sends a Connected message.
   // If any service terminates, a Disconnected message is sent to this actor.
   private def requestServices(): Unit = {
+    log.debug(s" requestServices $services")
     context.actorOf(LocationServiceClientActor.props(services))
   }
 
   // Called when a lifecycle state message is received from the component.
   // If not yet in the target state, sends a command to the component to go
   // there (without skipping any states).
-  private def updateState(currentState: LifecycleState, targetState: LifecycleState, nextState: Receive): Unit = {
-    log.info(s"XXX $name update state: current: $currentState, target: $targetState")
+  private def updateState(currentState: LifecycleState, connected: Boolean,
+                          targetState: LifecycleState, nextState: Receive): Unit = {
+    log.debug(s" $name update state: current: $currentState, target: $targetState, connected: $connected")
+
+    notifyLifecycleListeners(currentState, connected)
+
     targetState match {
       case `currentState` ⇒
       case Loaded(_) ⇒
@@ -268,11 +320,27 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
         }
       case Running(_) ⇒
         currentState match {
-          case Loaded(_)      ⇒ component ! Initialize
-          case Initialized(_) ⇒ component ! Startup
-          case Running(_)     ⇒
+          case Loaded(_) ⇒ component ! Initialize
+          case Initialized(_) ⇒
+            component ! Startup; requestServices()
+          case Running(_) ⇒
         }
     }
     context become nextState
+  }
+
+  // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state
+  private def subscribeToLifecycleStates(state: LifecycleState, connected: Boolean,
+                                         filter: LifecycleFilter): Unit = {
+    lifecycleStateListeners += (sender() -> filter)
+    if (filter(state, connected)) sender() ! state
+
+  }
+
+  // Notifies any listeners of the new state, if the filter matches
+  private def notifyLifecycleListeners(state: LifecycleState, connected: Boolean) = {
+    for ((actorRef, filter) ← lifecycleStateListeners) {
+      if (filter(state, connected)) actorRef ! state
+    }
   }
 }

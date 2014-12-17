@@ -43,13 +43,13 @@ trait Component
 /**
  * An assembly is a component and may optionally also extend CommandServiceActor (or AssemblyCommandServiceActor)
  */
-trait Assembly extends Component with LifecycleHandler {
+trait Assembly extends Component {
   this: Actor with ActorLogging ⇒
 }
 
 /**
  * An HCD is a component and may optionally also extend CommandServiceActor
  */
-trait Hcd extends Component with LifecycleHandler {
+trait Hcd extends Component {
   this: Actor with ActorLogging ⇒
 }

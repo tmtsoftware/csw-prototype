@@ -44,12 +44,12 @@ trait LifecycleHandler {
       }
   }
 
-  def initialize(): Future[Unit] = Future { log.info(s"XXX initialize") }
+  def initialize(): Future[Unit] = Future { log.debug(s"initialize") }
 
-  def startup(): Future[Unit] = Future { log.info(s"XXX startup") }
+  def startup(): Future[Unit] = Future { log.debug(s"startup") }
 
-  def shutdown(): Future[Unit] = Future { log.info(s"XXX shutdown") }
+  def shutdown(): Future[Unit] = Future { log.debug(s"shutdown") }
 
-  def uninitialize(): Future[Unit] = Future { log.info(s"XXX uninitialize") }
+  def uninitialize(): Future[Unit] = Future { log.debug(s"uninitialize") }
 }
 

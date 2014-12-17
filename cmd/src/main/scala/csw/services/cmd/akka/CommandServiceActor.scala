@@ -1,16 +1,13 @@
 package csw.services.cmd.akka
 
 import akka.actor._
-import csw.services.cmd.akka.CommandQueueActor.ConfigQueueStatus
-import java.net.URI
-import csw.services.ls.LocationServiceActor
-import LocationServiceActor.ServiceId
-import csw.services.ls.LocationServiceRegisterActor
-import akka.util.Timeout
-import scala.concurrent.duration._
 import akka.pattern.ask
-import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
+import akka.util.Timeout
+import csw.services.cmd.akka.CommandQueueActor.ConfigQueueStatus
+import csw.services.ls.LocationServiceActor.ServicesReady
 import csw.util.cfg.Configurations.ConfigList
+
+import scala.concurrent.duration._
 
 object CommandServiceActor {
   // Child actor names
@@ -70,12 +67,6 @@ object CommandServiceActor {
   case class CommandServiceStatus(name: String, ready: Boolean,
                                   queueStatus: ConfigQueueStatus,
                                   queueControllerClass: String)
-
-  /**
-   * Message sent to this actor by queue and config actors to indicate if they are ready to receive commands.
-   */
-  case class Ready(ready: Boolean) extends CommandServiceMessage
-
 }
 
 /**
@@ -103,9 +94,9 @@ object CommandServiceActor {
  */
 trait CommandServiceActor extends Actor with Stash with ActorLogging {
 
-  import CommandServiceActor._
-  import CommandQueueActor._
-  import ConfigActor._
+  import csw.services.cmd.akka.CommandQueueActor._
+  import csw.services.cmd.akka.CommandServiceActor._
+  import csw.services.cmd.akka.ConfigActor._
 
   // actor receiving config and command status messages and passing them to subscribers
   val commandStatusActor = context.actorOf(Props[CommandStatusActor], name = commandStatusActorName)
@@ -129,24 +120,7 @@ trait CommandServiceActor extends Actor with Stash with ActorLogging {
   def commandQueueControllerType: String
 
   // Needed for "ask"
-
   import context.dispatcher
-
-  waitForReady()
-
-  def waitForReady(): Unit = {
-    context.become(waitingForReady(queueActorReady = false, configActorReady = true))
-  }
-
-  // Initial state while waiting for queue and config actors to be ready.
-  // Any messages received while waiting are saved for later.
-  def waitingForReady(queueActorReady: Boolean, configActorReady: Boolean): Receive = {
-    case Ready(ready) ⇒ checkIfReady(ready, queueActorReady, configActorReady)
-
-    case msg ⇒
-      log.info(s"XXX stashing $msg from ${sender()}")
-      stash()
-  }
 
   // Receive only the command server commands
   def receiveCommands: Receive = {
@@ -163,36 +137,16 @@ trait CommandServiceActor extends Actor with Stash with ActorLogging {
     case QueueBypassRequestWithRunId(config, submitter, runId) ⇒
       queueBypassRequest(SubmitWithRunId(config, submitter, runId))
 
-    case s @ QueueStop                ⇒ commandQueueActor forward s
-    case s @ QueuePause               ⇒ commandQueueActor forward s
-    case s @ QueueStart               ⇒ commandQueueActor forward s
-    case s @ QueueDelete(runId)       ⇒ commandQueueActor forward s
+    case QueueStop                   ⇒ commandQueueActor forward QueueStop
+    case QueuePause                  ⇒ commandQueueActor forward QueuePause
+    case QueueStart                  ⇒ commandQueueActor forward QueueStart
+    case msg @ QueueDelete(runId)    ⇒ commandQueueActor forward msg
 
-    case configMessage: ConfigMessage ⇒ configActor forward configMessage
+    case msg: ConfigMessage          ⇒ configActor forward msg
 
-    case StatusRequest                ⇒ handleStatusRequest(sender(), ready = true)
+    case StatusRequest               ⇒ handleStatusRequest(sender())
 
-    case Ready(ready)                 ⇒ checkIfReady(ready, queueActorReady = true, configActorReady = true)
-  }
-
-  // Logs an error message and report an error status if we receive a command
-  // when not in the ready state.
-  def notReadyError(msg: AnyRef, runId: RunId, submitter: ActorRef): Unit = {
-    log.error(s"Not yet ready to receive command $msg")
-    commandStatusActor ! StatusUpdate(CommandStatus.Error(runId, "Not ready yet"), submitter)
-
-  }
-
-  /**
-   * Register with the location service (which must be started as a separate process).
-   * @param serviceId holds the name and service type (HCD or Assembly) of this actor
-   * @param configPathOpt an optional path in a config message that this actor is interested in
-   * @param httpUri an optional HTTP/REST URI for the actor (if it uses Spray, for example)
-   */
-  def registerWithLocationService(serviceId: ServiceId, configPathOpt: Option[String] = None,
-                                  httpUri: Option[URI] = None) {
-    // Start an actor to re-register when the location service restarts
-    context.actorOf(LocationServiceRegisterActor.props(serviceId, Some(self), configPathOpt, httpUri))
+    case s @ ServicesReady(services) ⇒ configActor ! s
   }
 
   /**
@@ -216,37 +170,15 @@ trait CommandServiceActor extends Actor with Stash with ActorLogging {
    * Answers a request for status.
    * @param requester the actor requesting the status
    */
-  def handleStatusRequest(requester: ActorRef, ready: Boolean): Unit = {
+  def handleStatusRequest(requester: ActorRef): Unit = {
     implicit val timeout = Timeout(5.seconds)
     for {
       queueStatus ← (commandQueueActor ? StatusRequest).mapTo[ConfigQueueStatus]
     } {
+      val ready = queueStatus.status == "started" // XXX TODO FIXME
+      log.info(s"${self.path.name} queue is ${queueStatus.status}")
       requester ! CommandServiceStatus(self.path.name, ready, queueStatus, commandQueueControllerType)
     }
-  }
-
-  /**
-   * Called when a Ready message is received: If the queue and config actors are ready,
-   * enter the ready state and handle the saved messages.
-   */
-  def checkIfReady(ready: Boolean, queueActorReady: Boolean, configActorReady: Boolean): Unit = {
-    val queueReady = if (sender() == commandQueueActor) ready else queueActorReady
-    val configReady = if (sender() == configActor) ready else configActorReady
-    if (queueReady && configReady) {
-      log.info("Ready to receive commands")
-      this.ready()
-    } else {
-      context.become(waitingForReady(queueReady, configReady))
-    }
-  }
-
-  /**
-   * Called when the actor is ready (queue and config actors are ready).
-   * Handle the saved messages that were received while waiting to be ready.
-   */
-  def ready(): Unit = {
-    context.become(receive)
-    unstashAll()
   }
 }
 

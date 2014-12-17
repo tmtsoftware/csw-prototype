@@ -170,7 +170,7 @@ trait CommandServiceHttpRoute extends HttpService
             }
           } ~
           // If none of the above paths matched, it must be a bad request
-          logRequestResponse("Unrecognized path passed to Spray route: ", Logging.InfoLevel) {
+          logRequestResponse(s"Unrecognized path passed to Spray route: ", Logging.InfoLevel) {
             complete(StatusCodes.BadRequest)
           }
 

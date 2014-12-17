@@ -35,6 +35,7 @@ object LocationService {
     val host = settings.hostname
     val port = settings.port
     val path = s"akka.tcp://$systemName@$host:$port/user/$locationServiceName"
+    println(s"using location service at $path")
     val actorPath = ActorPath.fromString(path)
     system.actorSelection(actorPath)
   }
@@ -89,6 +90,7 @@ object LocationService {
    * @param serviceIds a list of services to check for
    */
   def requestServices(system: ActorSystem, actorRef: ActorRef, serviceIds: List[ServiceId]): Unit = {
+    //    println(s"XXX Request Services: $serviceIds ($actorRef)")
     getLocationService(system).tell(RequestServices(serviceIds), actorRef)
   }
 
@@ -278,7 +280,7 @@ class LocationServiceActor extends Actor with ActorLogging {
   def register(serviceId: ServiceId, configPath: Option[String], httpUri: Option[URI]): Unit = {
     val endpoints = List(Some(new URI(sender().path.toString)), httpUri).flatten
     registry += (serviceId -> LocationServiceInfo(serviceId, endpoints, configPath, Some(sender())))
-    log.info(s"Registered ${serviceId.name} (${serviceId.serviceType}) with endpoints: $endpoints for config paths: $configPath")
+    log.info(s"Registered ${serviceId.name} (${serviceId.serviceType}) with endpoints: $endpoints for config paths: $configPath (actor: ${sender()}})")
     context.watch(sender())
 
     // If there are outstanding requests, check if they can now be completed

@@ -2,25 +2,18 @@ package csw.services.cmd.akka
 
 import akka.actor._
 import akka.pattern.ask
-import scala.concurrent.Future
 import akka.util.Timeout
-import scala.concurrent.duration._
-import csw.services.cmd.akka.ConfigActor._
-import csw.services.ls.LocationServiceActor
-import LocationServiceActor.LocationServiceInfo
-import csw.services.cmd.akka.CommandServiceActor._
-import csw.services.ls.LocationService
-import csw.services.cmd.akka.QueryWorkerActor.QueryInfo
-import csw.services.ls.LocationServiceActor.ServicesReady
-import scala.util.Failure
 import csw.services.cmd.akka.CommandQueueActor.SubmitWithRunId
-import scala.util.Success
-import csw.services.ls.LocationServiceActor.ServiceId
-import csw.services.cmd.akka.ConfigActor.ConfigGet
-import csw.services.cmd.akka.ConfigActor.ConfigResponse
-import akka.actor.Terminated
+import csw.services.cmd.akka.CommandServiceActor._
+import csw.services.cmd.akka.ConfigActor.{ ConfigGet, ConfigResponse, _ }
 import csw.services.cmd.akka.ConfigDistributorActor.SubmitInfo
+import csw.services.cmd.akka.QueryWorkerActor.QueryInfo
+import csw.services.ls.LocationServiceActor.{ LocationServiceInfo, ServicesReady }
 import csw.util.cfg.Configurations._
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.{ Failure, Success }
 
 /**
  * Adding this trait to a command service causes it to use a ConfigDistributorActor
@@ -31,25 +24,16 @@ trait ConfigDistributor {
   this: CommandServiceActor ⇒
 
   // Add a ConfigDistributorActor to distribute the incoming configs to the HCDs
-  val configDistributorActor = context.actorOf(ConfigDistributorActor.props(commandStatusActor), name = configDistributorActorName)
-  override val configActor = configDistributorActor
+  override val configActor = context.actorOf(ConfigDistributorActor.props(commandStatusActor),
+    name = configDistributorActorName)
 
-  /**
-   * Override to specify that the config actor (configDistributorActor) is not ready on start,
-   * but needs to wait for the ServicesReady message
-   */
-  override def waitForReady(): Unit = {
-    context.become(waitingForReady(queueActorReady = false, configActorReady = false))
-  }
-
-  /**
-   * Request information about the services (HCDs, other assemblies) that will be used by this actor.
-   * @param serviceIds a list of the names and types of the HCDs that will be used
-   */
-  def requestServices(serviceIds: List[ServiceId]): Unit = {
-    log.debug(s"Request services: $serviceIds")
-    LocationService.requestServices(context.system, configDistributorActor, serviceIds)
-  }
+  //  /**
+  //   * Override to specify that the config actor (configDistributorActor) is not ready on start,
+  //   * but needs to wait for the ServicesReady message
+  //   */
+  //  override def waitForReady(): Unit = {
+  //    context.become(waitingForReady(queueActorReady = false, configActorReady = false))
+  //  }
 }
 
 object ConfigDistributorActor {
@@ -75,7 +59,7 @@ object ConfigDistributorActor {
  */
 class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with ActorLogging {
 
-  import ConfigActor._
+  import csw.services.cmd.akka.ConfigActor._
 
   // Used to create and get the submit worker actor that is handling a submit
   val submitWorkers = WorkerPerRunId("submitWorker", context, log)
@@ -87,19 +71,12 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
   def waitingForServices: Receive = {
     case ServicesReady(services) ⇒
       log.debug(s"All services ready: $services")
-      val targetActors = for (service ← services if service.actorRefOpt.isDefined) yield service.actorRefOpt.get
-      if (targetActors.size == services.size) {
-        for (a ← targetActors) context.watch(a)
-        log.debug(s"Setting state to ready")
-        context.become(ready(services))
-        context.parent ! CommandServiceActor.Ready(ready = true)
-      }
+      context.become(ready(services))
+    //      context.parent ! CommandServiceActor.Ready(ready = true)
 
-    case Terminated(actorRef) ⇒
+    case ConfigPut(config) ⇒ internalConfig(config)
 
-    case ConfigPut(config)    ⇒ internalConfig(config)
-
-    case x                    ⇒ log.error(s"Unexpected message from ${sender()} (while waiting for services): $x")
+    case x                 ⇒ log.error(s"Unexpected message from ${sender()} (while waiting for services): $x")
   }
 
   // Messages received in the ready state.
@@ -111,14 +88,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
     case c: ConfigControlMessage ⇒ forwardToSubmitWorker(c.runId, c)
 
-    // If a target actor died, go back and wait for it (and any others that are needed) to restart
-    case Terminated(actorRef) ⇒
-      log.debug(s"Received terminated message for $actorRef: Switch to waitingForServices state")
-      LocationService.requestServices(context.system, self, services.map(_.serviceId))
-      context.parent ! CommandServiceActor.Ready(ready = false)
-      context.become(waitingForServices)
-
-    case x ⇒ log.error(s"Unexpected message from ${sender()}(): $x")
+    case x                       ⇒ log.error(s"Unexpected message from ${sender()}(): $x")
   }
 
   // Forwards the given message to the submit worker actor
@@ -155,6 +125,7 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    */
   private def query(config: SetupConfigList, targetActors: List[LocationServiceInfo]): Unit = {
     // Hand this off to a new query worker actor to gather the results from the target actors
+    log.debug(s"query $config, $targetActors")
     context.actorOf(QueryWorkerActor.props(config, targetActors, sender()))
   }
 

@@ -62,7 +62,7 @@ case class LocationServiceRegisterActor(serviceId: ServiceId, actorRef: Option[A
   }
 
   private def registerWithLocationService(ls: ActorRef): Unit = {
-    log.info(s"Registering $serviceId ($configPath) with the location service")
+    log.info(s"Registering $serviceId ($configPath) with the location service ($actorRef)")
     val a = if (actorRef.isDefined) actorRef.get else self
     ls.tell(Register(serviceId, configPath, httpUri), a)
     context.watch(ls)

@@ -106,6 +106,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
 
    */
   override def query(configs: SetupConfigList, replyTo: ActorRef): Unit = {
+    log.info(s"XXX query $configs, reply to: $replyTo")
     val configList = savedConfig match {
       // XXX TODO: should only fill in the values that are passed in!
       case Some(c) ⇒ c

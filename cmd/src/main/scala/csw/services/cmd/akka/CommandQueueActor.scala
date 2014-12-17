@@ -82,7 +82,6 @@ object CommandQueueActor {
    * Reply to StatusRequest message
    */
   case class ConfigQueueStatus(status: String, queueMap: Map[RunId, SubmitWithRunId], count: Int)
-
 }
 
 /**
@@ -222,7 +221,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
 
   private def maybeStartQueue(): Unit = {
     if (queueClient != Actor.noSender && queueController != Actor.noSender) {
-      context.parent ! CommandServiceActor.Ready(ready = true)
+      //      context.parent ! CommandServiceActor.Ready
       queueStart()
     }
   }

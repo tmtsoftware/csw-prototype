@@ -74,7 +74,7 @@ object CommandServiceHttpServerTestApp extends App {
   class TestAssemblyCommandServiceActor(hcds: List[LocationServiceInfo]) extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
     override def receive: Receive = receiveCommands
 
-    configDistributorActor ! ServicesReady(hcds)
+    configActor ! ServicesReady(hcds)
   }
 
   /**
