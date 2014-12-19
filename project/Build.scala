@@ -99,14 +99,14 @@ object Build extends Build {
 
   // -- Apps --
 
-//  // Build the containerCmd command line application
-//  lazy val containerCmd = Project(id = "containerCmd", base = file("apps/containerCmd"))
-//    .settings(defaultSettings: _*)
-//    .settings(libraryDependencies ++=
-//    provided(akkaActor, launcherInterface) ++
-//      compile(akkaRemote) ++
-//      test(scalaLogging, logback)
-//    ) dependsOn(pkg, cmd, loc, util)
+  // Build the containerCmd command line application
+  lazy val containerCmd = Project(id = "containerCmd", base = file("apps/containerCmd"))
+    .settings(defaultSettings: _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor, launcherInterface) ++
+      compile(akkaRemote) ++
+      test(scalaLogging, logback)
+    ) dependsOn(pkg, cmd, loc, util)
 
   // Build the sequencer command line application
   lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))

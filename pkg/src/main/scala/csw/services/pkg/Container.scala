@@ -6,6 +6,7 @@ import akka.actor._
 import com.typesafe.config.Config
 import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
+
 import scala.collection.JavaConversions._
 
 /**
@@ -107,8 +108,8 @@ object Container {
  */
 class Container(config: Config) extends Actor with ActorLogging {
 
-  import LifecycleManager._
-  import Container._
+  import csw.services.pkg.Container._
+  import csw.services.pkg.LifecycleManager._
 
   // Maps component name to the info returned when creating it
   private val components = parseConfig()

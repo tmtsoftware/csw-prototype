@@ -2,31 +2,40 @@ package csw.services.apps.containerCmd
 
 import java.io.File
 
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigResolveOptions
+import com.typesafe.config.{ ConfigResolveOptions, ConfigFactory }
 import csw.services.pkg.Container
-import xsbti._
 
 /**
- * A command line application for creating containers with components specified in a config file.
+ * Can be used by a command line application to create a container with components
+ * (HCDs, assemblies) specified in a config file, which can be either a resource,
+ * a local file, or a file checked out from the config service.
+ * Note that all the dependencies for the created components must already be in the classpath.
+ *
+ * @param args the command line arguments
+ * @param resource optional name of default config file (under src/main/resources)
  */
-class ContainerCmd extends AppMain with Continue {
-  override def run(configuration: AppConfiguration): MainResult = {
-    val args = configuration.arguments
-    if (args.length != 1) error("Expected a config file argument")
-    val configFile = new File(args(0))
-    if (!configFile.exists()) {
-      error(s"File '$configFile' does not exist")
-    }
-    val configResolveOptions = ConfigResolveOptions.noSystem()
-    val config = ConfigFactory.parseFileAnySyntax(configFile).resolve(configResolveOptions)
-    Container.create(config)
-    this // keep running after main thread exits
-  }
-
-  // For startup errors
-  private def error(msg: String) {
-    println(msg)
+case class ContainerCmd(args: Array[String], resource: Option[String]) {
+  if (args.length > 1) {
+    println("Error: Expected a single file argument (or no args for the default)")
     System.exit(1)
+  }
+  if (args.length == 0) {
+    if (resource.isDefined) {
+      println(s" Using default resource: $resource")
+      Container.create(ConfigFactory.load(resource.get))
+    } else {
+      println("Error: No config file was specified")
+      System.exit(1)
+    }
+  } else if (args.length == 1) {
+    val file = new File(args(0))
+    if (file.exists) {
+      println(s" Using file: $file")
+      val configResolveOptions = ConfigResolveOptions.noSystem()
+      val config = ConfigFactory.parseFileAnySyntax(file).resolve(configResolveOptions)
+      Container.create(config)
+    } else {
+      // XXX TODO: Get from config service
+    }
   }
 }
