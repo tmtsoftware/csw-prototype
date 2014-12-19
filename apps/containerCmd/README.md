@@ -4,7 +4,7 @@ ContainerCmd
 This project adds support for building a command line application that takes a config file
 and then starts a container with the given HCDs or assemblies.
 
-See the [csw-pkg-demo](../../../csw-pkg-demo/) project for examples.
+See the [csw-pkg-demo](https://github.com/tmtsoftware/csw-pkg-demo) project for examples.
 
 Location Service must be running
 --------------------------------
@@ -113,7 +113,7 @@ Unfortunately, the sbt launcher only includes the classpath of the one sbt proje
 launcher property file. So you need to either supply a special build.sbt with the necessary classpath
 or specify another project that has the required classpath.
 
-See the [csw-pkg-demo](../../../csw-pkg-demo/containerX/) project for an example.
+See the [csw-pkg-demo](https://github.com/tmtsoftware/csw-pkg-demo/containerX/) project for an example.
 
 
 
