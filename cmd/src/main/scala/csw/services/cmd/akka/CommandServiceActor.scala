@@ -109,7 +109,7 @@ trait CommandServiceActor extends Actor with Stash with ActorLogging {
 
   // Connect the config actor, which is defined later in a derived class, to the queue on start
   override def preStart(): Unit = {
-    super.preStart()
+    //    super.preStart()
     commandQueueActor ! CommandQueueActor.QueueClient(configActor)
   }
 

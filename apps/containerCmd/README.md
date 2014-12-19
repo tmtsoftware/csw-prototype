@@ -107,14 +107,77 @@ The SbtContainerLauncher class can be used to start a container using the
 [Sbt Launcher](http://www.scala-sbt.org/0.13.5/docs/Launcher/GettingStarted.html) API.
 The idea is to be able to build containers without having to write any code.
 The problem is that all required dependencies for the components that are started in the container
-need to be in the classpath.
+need to be in the classpath (and also available in the local ~/.ivy2 repository).
 
 Unfortunately, the sbt launcher only includes the classpath of the one sbt project mentioned in the
 launcher property file. So you need to either supply a special build.sbt with the necessary classpath
 or specify another project that has the required classpath.
 
-See the [csw-pkg-demo](https://github.com/tmtsoftware/csw-pkg-demo/containerX/) project for an example.
+Here is an example property file for use with the sbt launcher:
 
+```
+[scala]
+  version: 2.11.4
+[app]
+  org: org.tmt
+  name: containerx
+  version: 0.1-SNAPSHOT
+  class: csw.services.apps.containerCmd.SbtContainerLauncher
+  cross-versioned: binary
+[repositories]
+  local
+[boot]
+  directory: ${user.home}/.csw/boot
+```
 
+This defines a container using the classpath of the "containerx" project,
+and the SbtContainerLauncher class as the main class. The jar files for the dependencies
+are cached under ~/.csw/boot the first time the container app is run. (If you want to
+update the jar files, you need to change the versions, or delete the cache.)
 
+If you don't already have an sbt project available with the necessary dependencies
+(for all the HCDs and assemblies listed in the config file), you can add a simple
+build.sbt file, like the following:
+
+```
+val Version = "0.1-SNAPSHOT"
+
+lazy val settings = Seq(
+  organization := "org.tmt",
+  version := Version,
+  scalaVersion := "2.11.4"
+)
+
+val containerCmd = "org.tmt" %% "containercmd" % Version
+val container2 = "org.tmt" %% "container2" % Version
+
+lazy val root = (project in file(".")).
+  settings(settings: _*).
+  settings(
+    name := "containerx",
+    libraryDependencies ++= Seq(containerCmd, container2)
+  )
+```
+
+along with a build.properties file:
+
+```
+sbt.version=0.13.7
+```
+
+Then run `sbt publishLocal` to install the (empty) project (required).
+
+A script like the following can be used to start the container:
+
+```
+#!/bin/sh
+
+name=containerX
+launcher=/opt/local/share/sbt/sbt-launch.jar
+
+java -Dsbt.boot.properties=$name.props -jar $launcher $name.conf
+```
+
+See the [csw-pkg-demo/containerX](https://github.com/tmtsoftware/csw-pkg-demo/containerX)
+project for an example.
 
