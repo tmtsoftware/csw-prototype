@@ -63,7 +63,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
-    val csClient = ConfigServiceClient(system, csActor, manager.name)
+    val csClient = ConfigServiceClient(csActor)
 
     // Sequential, non-blocking for-comprehension
     for {
@@ -149,7 +149,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
-    val csClient = ConfigServiceClient(system, csActor, manager.name)
+    val csClient = ConfigServiceClient(csActor)
 
     // Sequential, non-blocking for-comprehension
     for {

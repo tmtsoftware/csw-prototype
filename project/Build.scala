@@ -107,7 +107,7 @@ object Build extends Build {
     provided(akkaActor, launcherInterface) ++
       compile(akkaRemote) ++
       test(scalaLogging, logback)
-    ) dependsOn(pkg, cmd, loc, util)
+    ) dependsOn(pkg, cmd, loc, util, cs)
 
   // Build the sequencer command line application
   lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))

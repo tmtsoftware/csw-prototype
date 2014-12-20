@@ -92,13 +92,13 @@ object ConfigServiceActor {
   /**
    * Convenience method that gets the config service actor with the matching name
    * from the location service.
-   * @param name the unique name that the config service was registered with
    * @param system the actor system
    * @return a future reference to the named config service actor
    */
-  def locateConfigService(name: String)(implicit system: ActorSystem): Future[ActorRef] = {
+  def locateConfigService()(implicit system: ActorSystem): Future[ActorRef] = {
     import system.dispatcher
-    val serviceId = ServiceId(name, ServiceType.Service)
+    val settings = ConfigServiceSettings(system)
+    val serviceId = ServiceId(settings.name, ServiceType.Service)
     LocationService.resolve(system, serviceId).map(_.actorRefOpt.get)
   }
 }

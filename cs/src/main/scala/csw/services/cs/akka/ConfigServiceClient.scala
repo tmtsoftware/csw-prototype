@@ -1,23 +1,59 @@
 package csw.services.cs.akka
 
-import scala.concurrent.Future
-import akka.pattern.ask
-import akka.actor.{ ActorSystem, ActorRef }
-import akka.util.Timeout
-import ConfigServiceActor._
 import java.io.File
+
+import akka.actor.{ ActorRef, ActorSystem }
+import akka.pattern.ask
+import akka.util.Timeout
+import com.typesafe.config.{ Config, ConfigResolveOptions, ConfigFactory }
+import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.core._
+
+import scala.concurrent.Future
+
+object ConfigServiceClient {
+  /**
+   * Convenience method that gets the contents of the given file from the config service
+   * by first looking up the config service with the location service and
+   * then fetching the contents of the file using a config service client.
+   * (Use only for small files.)
+   */
+  def getStringFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[String] = {
+    import system.dispatcher
+    for {
+      cs ← locateConfigService()
+      configDataOpt ← ConfigServiceClient(cs).get(path, id)
+      s ← configDataOpt.get.toFutureString
+    } yield s
+  }
+
+  /**
+   * Convenience method that gets a Typesafe Config from the config service
+   * by first looking up the config service with the location service and
+   * then fetching the contents of the given file using a config service client.
+   * Finally, the file contents is parsed as a Typesafe config file and the
+   * Config object returned.
+   */
+  def getConfigFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Config] = {
+    import system.dispatcher
+    for {
+      s ← getStringFromConfigService(path, id)
+    } yield ConfigFactory.parseString(s).resolve(ConfigResolveOptions.noSystem())
+  }
+}
 
 /**
  * Adds a convenience layer over the Akka actor interface to the configuration service.
  * Note:Only one instance of this class should exist for a given local Git repository.
  *
- * @param system the caller's actor system
  * @param configServiceActor the config service actor reference to use
- * @param name a unique name for this config service
+ * @param system the caller's actor system
  * @param timeout amount of time to wait for config service operations to complete
  */
-case class ConfigServiceClient(system: ActorSystem, configServiceActor: ActorRef, override val name: String)(implicit timeout: Timeout) extends ConfigManager {
+case class ConfigServiceClient(configServiceActor: ActorRef)(implicit system: ActorSystem, timeout: Timeout) extends ConfigManager {
+
+  val settings = ConfigServiceSettings(system)
+  override val name = settings.name
 
   import system.dispatcher
 

@@ -75,8 +75,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
       runOn(configServiceClient) {
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
-        val settings = ConfigServiceSettings(system)
-        val cs = Await.result(ConfigServiceActor.locateConfigService(settings.name), 5.seconds)
+        val cs = Await.result(ConfigServiceActor.locateConfigService(), 5.seconds)
         println(s"Got a config service: $cs")
         runTests(cs, oversize = true)
         enterBarrier("done")
@@ -108,7 +107,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
     import system.dispatcher
     implicit val timeout: Timeout = 30.seconds
 
-    val csClient = ConfigServiceClient(system, configServiceActor, "Config Service Client")
+    val csClient = ConfigServiceClient(configServiceActor)
 
     // Sequential, non-blocking for-comprehension
     val result = for {

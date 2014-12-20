@@ -4,6 +4,22 @@ Configuration Service
 This module implements the Configuration Service, which is used to manage configuration
 files by storing them in a Git repository.
 
+Config Service Application
+--------------------------
+
+You can start the config service with the `cs` command (found under target/universal/stage/bin).
+The default name and location of the local and main repositories is defined in resources/reference.conf.
+You can override the values with system properties. For example:
+
+```
+     cs -Dcsw.services.cs.name=MyConfigServiceName \
+        -Dcsw.services.cs.main-repository=http://myHost/MyMainRepo/
+        -Dcsw.services.cs.local-repository=/myPath/MyLocalRepo
+```
+
+Note that multiple config service instances may be running in the network, but the names should
+each be unique. Only a single config service instance should access a given local repository.
+
 Main Packages:
 --------------
 
