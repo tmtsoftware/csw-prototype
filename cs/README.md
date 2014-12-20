@@ -43,4 +43,12 @@ so that the files do not have to be pulled from the server each time they are ne
 However care needs to be taken not to allow different threads to potentially read and write the
 same files at once.
 
+Running the tests
+-----------------
+
+To run the unit tests, use `sbt test`.
+To run the multi-jvm tests, use `sbt multi-jvm:test`.
+
+
+
 

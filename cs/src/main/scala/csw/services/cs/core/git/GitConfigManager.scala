@@ -99,6 +99,7 @@ object GitConfigManager {
    */
   def initBareRepo(dir: File)(implicit context: ActorRefFactory): Unit = {
     // Create the new main repo
+    deleteDirectoryRecursively(dir)
     Git.init.setDirectory(dir).setBare(true).call
 
     // Add a README file to a temporary clone of the main repo and push it to the new repo.

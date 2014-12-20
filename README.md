@@ -12,6 +12,7 @@ To build, run 'sbt' in the top level directory and type one of the following com
 
 * compile - compiles the sources
 * test - run the tests
+* multi-jvm:test - run tests that use multiple JVMs
 * stage - create the standalone apps and test apps (installed in */target/universal/stage/bin)
 * publish-local - publish artifacts to the local ivy repository (~/.ivy2)
 

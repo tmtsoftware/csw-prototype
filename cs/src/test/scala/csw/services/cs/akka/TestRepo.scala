@@ -20,7 +20,6 @@ object TestRepo {
 
     val gitMainRepo = new File(settings.gitMainRepository.getPath)
     // Delete the main and local test repositories (Only use this in test cases!)
-    GitConfigManager.deleteDirectoryRecursively(gitMainRepo)
     GitConfigManager.initBareRepo(gitMainRepo)
     GitConfigManager.deleteDirectoryRecursively(settings.gitLocalRepository)
   }

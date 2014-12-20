@@ -1,3 +1,4 @@
+import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import play.twirl.sbt.SbtTwirl
 import sbt.Keys._
@@ -68,7 +69,7 @@ object Build extends Build {
     .settings(defaultSettings: _*)
     .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
     .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
-    .settings(multiJvmSettings: _*)
+    .settings(SbtMultiJvm.multiJvmSettings: _*)
     .dependsOn(log, loc, util, configServiceAnnex)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
@@ -79,7 +80,7 @@ object Build extends Build {
   // Package (Container, Component) classes
   lazy val pkg = project
     .settings(defaultSettings: _*)
-    .settings(multiJvmSettings: _*)
+    .settings(SbtMultiJvm.multiJvmSettings: _*)
     .dependsOn(cmd % "compile->compile;test->test", util % "compile->compile;test->test", loc)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++

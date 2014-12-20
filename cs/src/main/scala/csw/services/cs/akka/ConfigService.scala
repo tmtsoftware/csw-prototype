@@ -2,7 +2,6 @@ package csw.services.cs.akka
 
 import akka.actor._
 import csw.services.cs.akka.ConfigServiceActor.RegisterWithLocationService
-import csw.services.ls.LocationServiceActor.{ ServicesReady, ServiceType, ServiceId }
 import csw.util.akka.Terminator
 
 /**

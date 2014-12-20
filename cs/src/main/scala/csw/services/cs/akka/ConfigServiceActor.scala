@@ -5,13 +5,12 @@ import java.io.File
 import akka.actor._
 import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.{ ConfigFileHistory, _ }
-import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
-import csw.services.ls.LocationServiceRegisterActor
+import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
+import csw.services.ls.{ LocationService, LocationServiceRegisterActor }
 
-import scala.concurrent.Future
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
-import scala.concurrent.Await
+import scala.util.{ Failure, Success, Try }
 
 /**
  * Config service actor.
@@ -89,6 +88,19 @@ object ConfigServiceActor {
     val settings = ConfigServiceSettings(system)
     GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
   }
+
+  /**
+   * Convenience method that gets the config service actor with the matching name
+   * from the location service.
+   * @param name the unique name that the config service was registered with
+   * @param system the actor system
+   * @return a future reference to the named config service actor
+   */
+  def locateConfigService(name: String)(implicit system: ActorSystem): Future[ActorRef] = {
+    import system.dispatcher
+    val serviceId = ServiceId(name, ServiceType.Service)
+    LocationService.resolve(system, serviceId).map(_.actorRefOpt.get)
+  }
 }
 
 /**
@@ -97,8 +109,8 @@ object ConfigServiceActor {
  */
 class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorLogging {
 
-  import ConfigServiceActor._
   import context.dispatcher
+  import csw.services.cs.akka.ConfigServiceActor._
 
   // timeout for blocking wait (used to make sure local Git repo working dir access is not concurrent)
   val timeout = 60.seconds

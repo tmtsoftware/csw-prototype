@@ -1,6 +1,6 @@
 package csw.services.cs.akka
 
-import java.io.{IOException, FileNotFoundException, File}
+import java.io.{File, FileNotFoundException, IOException}
 
 import akka.actor._
 import akka.remote.testkit._
@@ -10,11 +10,10 @@ import com.typesafe.config.ConfigFactory
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.core.ConfigData
-import csw.services.ls.LocationServiceActor.{ServicesReady, ServiceType, ServiceId}
-import csw.services.ls.{LocationService, LocationServiceActor}
+import csw.services.ls.LocationServiceActor
 
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
  * A test that runs the config service, annex http server, location service
@@ -76,15 +75,10 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
       runOn(configServiceClient) {
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
-        locateConfigService(self)
-        within(5.seconds) {
-          val services = expectMsgType[ServicesReady].services
-          assert(services.size == 1)
-          assert(services(0).actorRefOpt.isDefined)
-          val cs = services(0).actorRefOpt.get
-          println(s"XXX Got a config service: $cs")
-          runTests(cs, oversize = true)
-        }
+        val settings = ConfigServiceSettings(system)
+        val cs = Await.result(ConfigServiceActor.locateConfigService(settings.name), 5.seconds)
+        println(s"Got a config service: $cs")
+        runTests(cs, oversize = true)
         enterBarrier("done")
       }
 
@@ -97,20 +91,6 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
 
       enterBarrier("finished")
     }
-  }
-
-  /**
-   * Locates a running config service actor using the location service
-   * (based on the settings in the config file).
-   * The given actorRef should receive a ServicesReady message with the information needed.
-   *
-   * @param actorRef reference to the actor that should receive the reply
-   */
-  def locateConfigService(actorRef: ActorRef)(implicit system: ActorSystem): Unit = {
-    val settings = ConfigServiceSettings(system)
-    val serviceId = ServiceId(settings.name, ServiceType.Service)
-    LocationService.requestServices(system, actorRef, List(serviceId))
-    println(s"locating ${settings.name}: reply to $actorRef")
   }
 
   val path1 = new File("some/test1/TestConfig1")
