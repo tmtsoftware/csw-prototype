@@ -12,7 +12,7 @@ The default name and location of the local and main repositories is defined in r
 You can override the values with system properties. For example:
 
 ```
-     cs -Dcsw.services.cs.name=MyConfigServiceName \
+     cs -Dcsw.services.cs.name=MyConfigServiceName
         -Dcsw.services.cs.main-repository=http://myHost/MyMainRepo/
         -Dcsw.services.cs.local-repository=/myPath/MyLocalRepo
 ```

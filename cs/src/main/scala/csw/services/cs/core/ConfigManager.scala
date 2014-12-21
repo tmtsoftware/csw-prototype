@@ -1,17 +1,16 @@
 package csw.services.cs.core
 
-import java.io.{ FileOutputStream, ByteArrayOutputStream, File }
+import java.io.{ ByteArrayOutputStream, File, FileOutputStream, OutputStream }
 import java.nio.file.Files
 import java.util.Date
 
 import akka.actor.ActorRefFactory
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.{ ForeachSink, Source }
+import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
 
 import scala.concurrent.Future
-import akka.util.ByteString
-
 import scala.util.Try
 
 /**
@@ -152,15 +151,11 @@ trait ConfigData {
   def source: Source[ByteString]
 
   /**
-   * Writes the contents of the source to the given file.
+   * Writes the contents of the source to the given output stream.
    */
-  def writeToFile(file: File)(implicit context: ActorRefFactory): Future[Unit] = {
-    implicit val materializer = FlowMaterializer()
+  def writeToOutputStream(out: OutputStream)(implicit context: ActorRefFactory): Future[Unit] = {
     import context.dispatcher
-    val path = file.toPath
-    if (!Files.isDirectory(path.getParent))
-      Files.createDirectories(path.getParent)
-    val out = new FileOutputStream(file)
+    implicit val materializer = FlowMaterializer()
     val sink = ForeachSink[ByteString] { bytes ⇒
       out.write(bytes.toArray)
     }
@@ -169,6 +164,17 @@ trait ConfigData {
     val result = materialized.get(sink)
     result.andThen { case _ ⇒ Try(out.close()) }
     result
+  }
+
+  /**
+   * Writes the contents of the source to the given file.
+   */
+  def writeToFile(file: File)(implicit context: ActorRefFactory): Future[Unit] = {
+    val path = file.toPath
+    if (!Files.isDirectory(path.getParent))
+      Files.createDirectories(path.getParent)
+    val out = new FileOutputStream(file)
+    writeToOutputStream(out)
   }
 
   /**

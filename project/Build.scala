@@ -127,4 +127,12 @@ object Build extends Build {
       test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
     ) dependsOn(loc, util)
 
+  // Build the config service annex application
+  lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
+    .settings(packageSettings("CSW Config Service Client", "Command line client for Config Service"): _*)
+    .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaRemote, akkaStream, akkaHttp) ++
+      test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
+    ) dependsOn cs
 }
