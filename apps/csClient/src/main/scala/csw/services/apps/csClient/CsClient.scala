@@ -8,7 +8,7 @@ import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.akka.ConfigServiceClient
 import csw.services.cs.core.ConfigId
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
  * Command line client for the config service.
@@ -26,9 +26,9 @@ object CsClient extends App {
     cs ← locateConfigService()
   } yield ConfigServiceClient(cs)
   f.onComplete {
-    case Success(client) =>
+    case Success(client) ⇒
       commandLine(client, args)
-    case Failure(ex) =>
+    case Failure(ex) ⇒
       error(s"Failed to locate config service")
       System.exit(1)
   }
@@ -65,27 +65,27 @@ object CsClient extends App {
 
   private def commandLine(client: ConfigServiceClient, args: Array[String]): Unit = {
     args(0) match {
-      case "get" => get()
-      case _ => usage()
+      case "get" ⇒ get()
+      case _     ⇒ usage()
     }
 
     def get(): Unit = {
       val path = new File(args(1))
       val idOpt = if (args.length > 2) Some(ConfigId(args(2))) else None
       for {
-        clientDataOpt <- client.get(path, idOpt)
+        clientDataOpt ← client.get(path, idOpt)
       } {
         clientDataOpt match {
-          case Some(clientData) => clientData.writeToOutputStream(System.out)
-          case None => error(s"$path not found")
+          case Some(clientData) ⇒ clientData.writeToOutputStream(System.out)
+          case None             ⇒ error(s"$path not found")
         }
       }
     }
 
-//    def create(): Unit = {
-//      val path = new File(args(1))
-//      client.create(path, configData, oversize, comment)
-//    }
+    //    def create(): Unit = {
+    //      val path = new File(args(1))
+    //      client.create(path, configData, oversize, comment)
+    //    }
 
   }
 }

@@ -41,7 +41,7 @@ public class JGitConfigManagerTests {
 
         // Start the config service annex http server and wait for it to be ready for connections
         // (In normal operations, this server would already be running)
-        ConfigServiceAnnexServer server = Await.result(ConfigServiceAnnexServer.startup(false), timeout);
+        ConfigServiceAnnexServer server = new ConfigServiceAnnexServer(false);
 
         runTests(server, true);
     }

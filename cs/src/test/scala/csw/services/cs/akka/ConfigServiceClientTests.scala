@@ -40,7 +40,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
     // Start the config service annex http server and wait for it to be ready for connections
     // (In normal operations, this server would already be running)
-    val annexServer = Await.result(ConfigServiceAnnexServer.startup(), 5.seconds)
+    val annexServer = ConfigServiceAnnexServer()
 
     val f = for {
       _ ← runTests(settings, oversize = false)

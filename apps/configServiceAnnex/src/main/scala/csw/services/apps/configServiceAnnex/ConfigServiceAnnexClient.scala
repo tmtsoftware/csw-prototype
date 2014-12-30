@@ -7,8 +7,6 @@ import akka.http.Http
 import akka.http.model.HttpEntity.ChunkStreamPart
 import akka.http.model.HttpMethods._
 import akka.http.model._
-import akka.io.IO
-import akka.pattern.ask
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.{ ForeachSink, Sink, Source }
 import akka.util.ByteString
@@ -26,12 +24,31 @@ object ConfigServiceAnnexClient {
   // but using a separate one was suggested, to avoid congestion and slowing down actor
   // messages while large files are being transferred.
   implicit val system = ActorSystem("ConfigServiceAnnexClient")
-  import system.dispatcher
+  import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient.system.dispatcher
 
   val settings = ConfigServiceAnnexSettings(system)
   val host = settings.interface
   val port = settings.port
   implicit val askTimeout = settings.timeout
+
+  /*
+  val host = "www.reactive-streams.org"
+  val httpClient = Http(system).outgoingConnection(host, 80).flow
+
+  val printChunksConsumer = Sink.foreach[HttpResponse] { res =>
+    if(res.status == StatusCodes.OK) {
+      res.entity.getDataBytes().map { chunk =>
+        System.out.write(chunk.toArray)
+        System.out.flush()
+      }.to(Sink.ignore).run()
+    } else
+      println(res.status)
+  }
+
+  val finishFuture = Source.single(HttpRequest()).via(httpClient).runWith(printChunksConsumer)
+
+   */
+
 
   /**
    * Downloads the file with the given id from the server and saves it to the given file.
@@ -50,10 +67,9 @@ object ConfigServiceAnnexClient {
       out.write(bytes.toArray)
     }
 
-    val result = for {
-      connection ← IO(Http).ask(Http.Connect(host, port)).mapTo[Http.OutgoingConnection]
-      response ← sendRequest(HttpRequest(GET, uri = s"/$id"), connection)
-    } yield response
+    val connection = Http().outgoingConnection(host, port)
+    val request = HttpRequest(GET, uri = s"/$id")
+    val result = sendRequest(request, connection)
 
     val status = Promise[File]()
     result onComplete {
@@ -95,14 +111,11 @@ object ConfigServiceAnnexClient {
 
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
-    val chunks = Source(iterator).map(ChunkStreamPart.apply)
-
+    val chunks = Source(() ⇒ iterator).map(ChunkStreamPart.apply)
     val entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks)
-
-    val result = for {
-      connection ← IO(Http).ask(Http.Connect(host, port)).mapTo[Http.OutgoingConnection]
-      response ← sendRequest(HttpRequest(method = POST, uri = s"/$id", entity = entity), connection)
-    } yield response
+    val connection = Http().outgoingConnection(host, port)
+    val request = HttpRequest(method = POST, uri = s"/$id", entity = entity)
+    val result = sendRequest(request, connection)
 
     val status = Promise[String]()
     result onComplete {
@@ -132,10 +145,9 @@ object ConfigServiceAnnexClient {
     logger.info(s"Checking existence of $uri")
     implicit val materializer = FlowMaterializer()
 
-    val result = for {
-      connection ← IO(Http).ask(Http.Connect(host, port)).mapTo[Http.OutgoingConnection]
-      response ← sendRequest(HttpRequest(HEAD, uri = s"/$id"), connection)
-    } yield response
+    val connection = Http().outgoingConnection(host, port)
+    val request = HttpRequest(HEAD, uri = s"/$id")
+    val result = sendRequest(request, connection)
 
     val status = Promise[Boolean]()
     result onComplete {
@@ -160,10 +172,9 @@ object ConfigServiceAnnexClient {
     logger.info(s"Deleting $uri")
     implicit val materializer = FlowMaterializer()
 
-    val result = for {
-      connection ← IO(Http).ask(Http.Connect(host, port)).mapTo[Http.OutgoingConnection]
-      response ← sendRequest(HttpRequest(DELETE, uri = s"/$id"), connection)
-    } yield response
+    val connection = Http().outgoingConnection(host, port)
+    val request = HttpRequest(DELETE, uri = s"/$id")
+    val result = sendRequest(request, connection)
 
     val status = Promise[Boolean]()
     result onComplete {
@@ -178,10 +189,7 @@ object ConfigServiceAnnexClient {
   }
 
   private def sendRequest(request: HttpRequest, connection: Http.OutgoingConnection)(implicit fm: FlowMaterializer): Future[HttpResponse] = {
-    Source(List(request -> 'NoContext))
-      .to(Sink(connection.requestSubscriber))
-      .run()
-    Source(connection.responsePublisher).map(_._1).runWith(Sink.head)
+    Source.single(request).via(connection.flow).runWith(Sink.head)
   }
 
   def shutdown(): Unit = system.shutdown()

@@ -218,7 +218,7 @@ case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
   override def source: Source[ByteString] = {
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
-    Source(iterator)
+    Source(() ⇒ iterator)
   }
 }
 

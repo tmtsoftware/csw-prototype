@@ -1,12 +1,10 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.RandomAccessFile
+import java.io.{File, RandomAccessFile}
 import java.nio.file.Files
-import java.io.File
 
 import net.codejava.security.HashGeneratorUtils
 
-import scala.util.{ Failure, Success }
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -15,10 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object ConfigServiceAnnexTests extends App {
 
   // Start the http server and wait for it to be ready for connections
-  ConfigServiceAnnexServer.startup().onComplete {
-    case Success(server) ⇒ runTest(server)
-    case Failure(ex)     ⇒ println(s"Error starting server: $ex")
-  }
+  runTest(ConfigServiceAnnexServer())
 
   def runTest(server: ConfigServiceAnnexServer): Unit = {
     // client instance

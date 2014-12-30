@@ -4,19 +4,17 @@ import java.io.{ File, FileOutputStream }
 import java.net.{ InetSocketAddress, URI }
 import java.nio.file.{ Files, Path, Paths }
 
-import akka.actor.ActorSystem
 import akka.http.Http
 import akka.http.model.HttpEntity.ChunkStreamPart
-import akka.http.model._
-import akka.io.IO
-import akka.pattern.ask
-import akka.stream.FlowMaterializer
-import akka.stream.scaladsl.{ ForeachSink, Sink, Source }
+import akka.stream.scaladsl.{ ForeachSink, Source }
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
 import csw.services.ls.LocationServiceRegisterActor
 import org.slf4j.LoggerFactory
+import akka.actor.ActorSystem
+import akka.http.model._
+import akka.stream.FlowMaterializer
 
 import scala.concurrent.{ Promise, Future }
 import scala.util.{ Failure, Success, Try }
@@ -36,22 +34,10 @@ import scala.util.control.NonFatal
  */
 object ConfigServiceAnnexServerApp extends App {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServerApp"))
-  ConfigServiceAnnexServer.startup(registerWithLoc = true)
+  ConfigServiceAnnexServer(registerWithLoc = true)
 }
 
-object ConfigServiceAnnexServer {
-  /**
-   * Starts the server and returns a future that completes when it is ready to accept connections
-   * (needed for testing)
-   */
-  def startup(registerWithLoc: Boolean = false): Future[ConfigServiceAnnexServer] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    val server = new ConfigServiceAnnexServer()
-    server.start(registerWithLoc).map(_ ⇒ server)
-  }
-}
-
-class ConfigServiceAnnexServer {
+case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServer"))
   logger.info("Config service annex started")
   implicit val system = ActorSystem("ConfigServiceAnnexServer")
@@ -63,33 +49,26 @@ class ConfigServiceAnnexServer {
   if (!settings.dir.exists()) settings.dir.mkdirs()
 
   implicit val materializer = FlowMaterializer()
-  implicit val askTimeout = settings.timeout
+  //  implicit val askTimeout = settings.timeout
 
-  val requestHandler: HttpRequest ⇒ Future[HttpResponse] = {
-    case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
-    case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
-    case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
-    case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
-    case _: HttpRequest                       ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
+
+  val binding = Http().bind(interface = settings.interface, port = settings.port)
+  binding.connections.foreach { c ⇒
+      logger.info(s"Accepted new connection from ${c.remoteAddress}")
+      c.handleWithAsyncHandler {
+        case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
+        case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
+        case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
+        case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
+        case _: HttpRequest                       ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
+      }
   }
 
-  private def start(registerWithLoc: Boolean): Future[Any] = {
-    val bindingFuture = IO(Http) ? Http.Bind(interface = settings.interface, port = settings.port)
-    bindingFuture foreach {
-      case Http.ServerBinding(localAddress, connectionStream) ⇒
-        logger.info(s"Listening on http:/$localAddress/")
-        if (registerWithLoc) registerWithLocationService(localAddress)
-        Source(connectionStream).foreach {
-          case Http.IncomingConnection(remoteAddress, requestProducer, responseConsumer) ⇒
-            logger.info(s"Accepted new connection from $remoteAddress")
-            Source(requestProducer).mapAsync(requestHandler).to(Sink(responseConsumer)).run()
-        }
-    }
-    bindingFuture.recover {
-      case ex ⇒
-        logger.error(ex.getMessage)
-        system.shutdown() // XXX TODO error handling
-    }
+  //  binding.localAddress()
+  if (registerWithLoc) {
+    // XXX TODO FIXME
+    val localAddress = InetSocketAddress.createUnresolved(settings.interface, settings.port)
+    registerWithLocationService(localAddress)
   }
 
   /**
@@ -110,7 +89,7 @@ class ConfigServiceAnnexServer {
     val result = Try {
       val mappedByteBuffer = FileUtils.mmap(path)
       val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
-      val chunks = Source(iterator).map(ChunkStreamPart.apply)
+      val chunks = Source(() ⇒ iterator).map(ChunkStreamPart.apply)
       HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
     } recover {
       case NonFatal(cause) ⇒
@@ -160,11 +139,14 @@ class ConfigServiceAnnexServer {
   // Implements Http HEAD: Returns OK if the file exists on the server
   private def httpHead(uri: Uri): Future[HttpResponse] = {
     val path = makePath(settings.dir, new File(uri.path.toString()))
-    logger.info(s"Received HEAD request for $path (uri = $uri)")
-    val result = if (path.toFile.exists())
+    val result = if (path.toFile.exists()) {
+      logger.info(s"Received HEAD request for $path (uri = $uri) (exists)")
       HttpResponse(StatusCodes.OK)
-    else
+    }
+    else {
+      logger.info(s"Received HEAD request for $path (uri = $uri) (not found)")
       HttpResponse(StatusCodes.NotFound)
+    }
     Future.successful(result)
   }
 
@@ -174,8 +156,11 @@ class ConfigServiceAnnexServer {
     val path = makePath(settings.dir, new File(uri.path.toString()))
     logger.info(s"Received DELETE request for $path (uri = $uri)")
     val result = Try { if (path.toFile.exists()) Files.delete(path) } match {
-      case Success(_)  ⇒ HttpResponse(StatusCodes.OK)
-      case Failure(ex) ⇒ HttpResponse(StatusCodes.InternalServerError, entity = ex.getMessage)
+      case Success(_)  ⇒
+        HttpResponse(StatusCodes.OK)
+      case Failure(ex) ⇒
+        logger.error(s"Failed to delete file $path")
+        HttpResponse(StatusCodes.InternalServerError, entity = ex.getMessage)
     }
     Future.successful(result)
   }

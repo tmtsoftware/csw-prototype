@@ -123,7 +123,7 @@ object Build extends Build {
     .settings(packageSettings("CSW Config Service Annex", "Store/retrieve large files for Config Service"): _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaRemote, akkaStream, akkaHttp) ++
+      compile(akkaRemote, akkaStream, akkaHttpCore, akkaHttp) ++
       test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
     ) dependsOn(loc, util)
 

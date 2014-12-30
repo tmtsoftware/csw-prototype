@@ -5,7 +5,8 @@ import sbt._
 object Dependencies {
 
   val scalaVersion = "2.11.4"
-  val akkaVersion = "2.3.7"
+  val akkaVersion = "2.3.8"
+  val akkaStreamsVersion = "1.0-M2"
   val sprayVersion = "1.3.2"
   val hornetqVersion = "2.4.0.Final"
   //  val hornetqVersion = "2.5.0-SNAPSHOT"
@@ -24,9 +25,11 @@ object Dependencies {
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
   val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+
   // Akka streams (experimental)
-  val akkaStream = "com.typesafe.akka" %% "akka-stream-experimental" % "0.11"
-  val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % "0.11"
+  val akkaStream = "com.typesafe.akka" % "akka-stream-experimental_2.11" % akkaStreamsVersion
+  val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamsVersion
+  val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamsVersion
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.3"
   val typesafeConfig = "com.typesafe" % "config" % "1.2.0"

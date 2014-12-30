@@ -57,7 +57,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
     "be able to start the config service, annex, and client to manage files" in {
       runOn(configServiceAnnex) {
         enterBarrier("locationServiceStarted")
-        Await.result(ConfigServiceAnnexServer.startup(registerWithLoc = true), 30.seconds)
+        ConfigServiceAnnexServer()
         enterBarrier("deployed")
         enterBarrier("done")
       }
