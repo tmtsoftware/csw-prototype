@@ -188,7 +188,9 @@ trait ConfigData {
       out.write(bytes.toArray)
     }
     val materialized = source.to(sink).run()
-    for { _ ← materialized.get(sink) } yield out.toString
+    for { _ ← materialized.get(sink) } yield {
+      out.toString
+    }
   }
 }
 

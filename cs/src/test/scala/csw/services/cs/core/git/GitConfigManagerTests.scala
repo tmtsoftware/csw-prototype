@@ -1,6 +1,6 @@
 package csw.services.cs.core.git
 
-import java.io.{ File, FileNotFoundException, IOException }
+import java.io.{ IOException, File, FileNotFoundException }
 
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -28,6 +28,7 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
   val comment3 = "update 2 comment"
 
   implicit val system = ActorSystem()
+
   import system.dispatcher
 
   test("Test creating a GitConfigManager, storing and retrieving some files") {
@@ -65,7 +66,6 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
       result5 ← manager.get(path2).flatMap(_.get.toFutureString)
       result6 ← manager.get(path2, Some(createId2)).flatMap(_.get.toFutureString)
 
-      // test history()
       historyList1 ← manager.history(path1)
       historyList2 ← manager.history(path2)
 
@@ -88,12 +88,14 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
       assert(updateIdNull == null)
+
       assert(result1 == contents3)
       assert(result2 == contents1)
       assert(result3 == contents2)
       assert(result4 == contents3)
       assert(result5 == contents1)
       assert(result6 == contents1)
+
       assert(createIdNull == null)
 
       assert(historyList1.size == 3)
@@ -105,7 +107,6 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
 
       assert(list.size == 3) // +1 for RENAME file added when creating the bare rep
       for (info ← list) {
-        println(s"XXX list: ${info.path}")
         info.path match {
           case this.path1 ⇒ assert(info.comment == this.comment3)
           case this.path2 ⇒ assert(info.comment == this.comment1)
@@ -118,7 +119,7 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
       assert(default3 == contents3)
     }
 
-    Await.result(result, 30.seconds)
+    Await.result(result, 10.seconds)
     if (annexServer.isDefined) {
       logger.info("Shutting down annex server")
       annexServer.get.shutdown()

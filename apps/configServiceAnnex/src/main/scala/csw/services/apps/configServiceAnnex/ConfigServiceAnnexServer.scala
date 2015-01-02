@@ -20,23 +20,6 @@ import scala.concurrent.{ Promise, Future }
 import scala.util.{ Failure, Success, Try }
 import scala.util.control.NonFatal
 
-/**
- * An HTTP server application that allows storing and retrieving files.
- * This is intended to be used by the config service to store large/binary
- * files.
- *
- * The URL format is http://host:port/filename, where filename is the SHA-1
- * hash of the file's contents.
- *
- * To upload a file, use POST, to download, use GET.
- * Use HEAD to check if a file already exists, DELETE to delete.
- * Files are immutable. (TODO: Should delete be available?)
- */
-object ConfigServiceAnnexServerApp extends App {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServerApp"))
-  ConfigServiceAnnexServer(registerWithLoc = true)
-}
-
 case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServer"))
   logger.info("Config service annex started")
@@ -51,17 +34,16 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   implicit val materializer = FlowMaterializer()
   //  implicit val askTimeout = settings.timeout
 
-
   val binding = Http().bind(interface = settings.interface, port = settings.port)
   binding.connections.foreach { c ⇒
-      logger.info(s"Accepted new connection from ${c.remoteAddress}")
-      c.handleWithAsyncHandler {
-        case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
-        case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
-        case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
-        case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
-        case _: HttpRequest                       ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
-      }
+    logger.info(s"Accepted new connection from ${c.remoteAddress}")
+    c.handleWithAsyncHandler {
+      case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
+      case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
+      case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
+      case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
+      case _: HttpRequest                       ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
+    }
   }
 
   //  binding.localAddress()
@@ -95,6 +77,9 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
       case NonFatal(cause) ⇒
         logger.error(s"Nonfatal error while attempting to get $path (uri = $uri): cause = ${cause.getMessage}")
         HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
+      case ex ⇒
+        logger.error(s"Error while attempting to get $path (uri = $uri): cause = ${ex.getMessage}", ex)
+        HttpResponse(StatusCodes.InternalServerError, entity = ex.getMessage)
     }
     Future.successful(result.get)
   }
@@ -142,8 +127,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val result = if (path.toFile.exists()) {
       logger.info(s"Received HEAD request for $path (uri = $uri) (exists)")
       HttpResponse(StatusCodes.OK)
-    }
-    else {
+    } else {
       logger.info(s"Received HEAD request for $path (uri = $uri) (not found)")
       HttpResponse(StatusCodes.NotFound)
     }
@@ -156,7 +140,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val path = makePath(settings.dir, new File(uri.path.toString()))
     logger.info(s"Received DELETE request for $path (uri = $uri)")
     val result = Try { if (path.toFile.exists()) Files.delete(path) } match {
-      case Success(_)  ⇒
+      case Success(_) ⇒
         HttpResponse(StatusCodes.OK)
       case Failure(ex) ⇒
         logger.error(s"Failed to delete file $path")

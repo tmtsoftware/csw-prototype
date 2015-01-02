@@ -1,9 +1,9 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{ IOException, File }
-import java.nio.{ ByteBuffer, MappedByteBuffer }
+import java.io.{ File, IOException }
 import java.nio.channels.FileChannel
-import java.nio.file.{ StandardOpenOption, Path }
+import java.nio.file.{ Path, StandardOpenOption }
+import java.nio.{ ByteBuffer, MappedByteBuffer }
 
 import akka.util.ByteString
 import net.codejava.security.HashGeneratorUtils
@@ -33,10 +33,11 @@ object FileUtils {
    * @param status the return status is success(file), or failure(exception)
    */
   def validate(id: String, file: File, status: Promise[File]): Unit =
-    if (validate(id, file))
+    if (validate(id, file)) {
       status.success(file)
-    else
+    } else {
       status.failure(validateError(id, file))
+    }
 
   /**
    * Verifies that the given file's content matches the SHA-1 id

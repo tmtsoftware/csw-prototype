@@ -15,7 +15,7 @@ import net.codejava.security.HashGeneratorUtils
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ Future, Promise }
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Try, Failure, Success }
 
 object ConfigServiceAnnexClient {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexClient"))
@@ -24,31 +24,13 @@ object ConfigServiceAnnexClient {
   // but using a separate one was suggested, to avoid congestion and slowing down actor
   // messages while large files are being transferred.
   implicit val system = ActorSystem("ConfigServiceAnnexClient")
+
   import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient.system.dispatcher
 
   val settings = ConfigServiceAnnexSettings(system)
   val host = settings.interface
   val port = settings.port
   implicit val askTimeout = settings.timeout
-
-  /*
-  val host = "www.reactive-streams.org"
-  val httpClient = Http(system).outgoingConnection(host, 80).flow
-
-  val printChunksConsumer = Sink.foreach[HttpResponse] { res =>
-    if(res.status == StatusCodes.OK) {
-      res.entity.getDataBytes().map { chunk =>
-        System.out.write(chunk.toArray)
-        System.out.flush()
-      }.to(Sink.ignore).run()
-    } else
-      println(res.status)
-  }
-
-  val finishFuture = Source.single(HttpRequest()).via(httpClient).runWith(printChunksConsumer)
-
-   */
-
 
   /**
    * Downloads the file with the given id from the server and saves it to the given file.
@@ -81,27 +63,30 @@ object ConfigServiceAnnexClient {
             Try(out.close())
             FileUtils.validate(id, file, status)
           case Failure(e) ⇒
-            logger.error(s"Failed to download $uri to $file: ${e.getMessage}")
             Try(out.close())
+            logger.error(s"Failed to download $uri to $file: ${e.getMessage}")
             status.failure(e)
         }
 
       case Success(res) ⇒
+        Try(out.close())
         val s = s"HTTP response code for $uri: ${res.status}"
         logger.error(s)
         status.failure(new IOException(s))
 
       case Failure(error) ⇒
+        Try(out.close())
         logger.error(s"$error")
         status.failure(error)
     }
+
     status.future
   }
 
   /**
    * Uploads the given file to the server, storing it under the given SHA-1 hash of the contents.
    * @param file the local file to upload to the server
-   * @return a future containing the file, if successful, or the exception if there was an error
+   * @return a future containing the file id (SHA-1), if successful, or the exception if there was an error
    */
   def post(file: File): Future[String] = {
     val id = HashGeneratorUtils.generateSHA1(file)
