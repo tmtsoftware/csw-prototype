@@ -4,13 +4,13 @@ import java.io.File
 
 import akka.actor._
 import csw.services.cs.core.git.GitConfigManager
-import csw.services.cs.core.{ ConfigFileHistory, _ }
-import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
-import csw.services.ls.{ LocationService, LocationServiceRegisterActor }
+import csw.services.cs.core.{ConfigFileHistory, _}
+import csw.services.ls.LocationServiceActor.{ServiceId, ServiceType}
+import csw.services.ls.{LocationService, LocationServiceRegisterActor}
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * Config service actor.
@@ -143,7 +143,6 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(configId) ⇒ replyTo ! CreateResult(path, Success(configId))
       case Failure(ex)       ⇒ replyTo ! CreateResult(path, Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 
   def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit = {
@@ -152,7 +151,6 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(configId) ⇒ replyTo ! UpdateResult(path, Success(configId))
       case Failure(ex)       ⇒ replyTo ! UpdateResult(path, Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 
   def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
@@ -161,7 +159,6 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(configDataOpt) ⇒ replyTo ! GetResult(path, id, Success(configDataOpt))
       case Failure(ex)            ⇒ replyTo ! GetResult(path, id, Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 
   def handleExistsRequest(replyTo: ActorRef, path: File): Unit = {
@@ -170,7 +167,6 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(bool) ⇒ replyTo ! ExistsResult(path, Success(bool))
       case Failure(ex)   ⇒ replyTo ! ExistsResult(path, Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 
   def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit = {
@@ -183,7 +179,6 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(list) ⇒ replyTo ! ListResult(Success(list))
       case Failure(ex)   ⇒ replyTo ! ListResult(Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 
   def handleHistoryRequest(replyTo: ActorRef, path: File, maxResults: Int = Int.MaxValue): Unit = {
@@ -192,7 +187,6 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(list) ⇒ replyTo ! HistoryResult(path, Success(list))
       case Failure(ex)   ⇒ replyTo ! HistoryResult(path, Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 
   def handleSetDefaultRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
@@ -209,7 +203,6 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(configDataOpt) ⇒ replyTo ! GetResult(path, None, Success(configDataOpt))
       case Failure(ex)            ⇒ replyTo ! GetResult(path, None, Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 
   private def unitReply(replyTo: ActorRef, path: File, result: Future[Unit]): Unit = {
@@ -217,6 +210,5 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
       case Success(u)  ⇒ replyTo ! UnitResult(path, Success(u))
       case Failure(ex) ⇒ replyTo ! UnitResult(path, Failure(ex))
     }
-    Await.ready(result, timeout)
   }
 }

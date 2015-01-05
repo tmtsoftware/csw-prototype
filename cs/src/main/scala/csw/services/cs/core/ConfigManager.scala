@@ -1,17 +1,17 @@
 package csw.services.cs.core
 
-import java.io.{ ByteArrayOutputStream, File, FileOutputStream, OutputStream }
+import java.io.{ByteArrayOutputStream, File, FileOutputStream, OutputStream}
 import java.nio.file.Files
 import java.util.Date
 
 import akka.actor.ActorRefFactory
 import akka.stream.FlowMaterializer
-import akka.stream.scaladsl.{ ForeachSink, Source }
+import akka.stream.scaladsl.{ForeachSink, Source}
 import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
 
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Success, Try}
 
 /**
  * Defines an interface for storing and retrieving configuration information
@@ -170,11 +170,20 @@ trait ConfigData {
    * Writes the contents of the source to the given file.
    */
   def writeToFile(file: File)(implicit context: ActorRefFactory): Future[Unit] = {
+    import context.dispatcher
     val path = file.toPath
-    if (!Files.isDirectory(path.getParent))
-      Files.createDirectories(path.getParent)
-    val out = new FileOutputStream(file)
-    writeToOutputStream(out)
+    val dir = path.getParent
+    if (!Files.isDirectory(dir))
+      Files.createDirectories(dir)
+
+    // Write to a tmp file and then rename
+    val tmpFile = File.createTempFile(file.getName, null, dir.toFile)
+    val out = new FileOutputStream(tmpFile)
+    writeToOutputStream(out).andThen {
+      case Success(_) =>
+        Try {file.delete()}
+        tmpFile.renameTo(file)
+    }
   }
 
   /**

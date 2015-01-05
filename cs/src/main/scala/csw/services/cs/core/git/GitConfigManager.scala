@@ -278,7 +278,6 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
           Some(ConfigData(git.getRepository.open(objId).getBytes))
         } else {
           // return the latest version of the file from the working dir
-          // (XXX TODO FIXME: it would be safer to get it from Git here: need to get the id of the current version!!!)
           Some(ConfigData(file))
         }
       }
@@ -336,7 +335,9 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     treeWalk.setRecursive(true)
     treeWalk.addTree(tree)
 
-    list(treeWalk, List())
+    val result = list(treeWalk, List())
+    walk.dispose()
+    result
   }
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] =
