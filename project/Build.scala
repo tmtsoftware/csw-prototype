@@ -73,7 +73,7 @@ object Build extends Build {
     .dependsOn(log, loc, util, configServiceAnnex)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(jgit, scalaLogging, logback) ++
+      compile(jgit, scalaLogging, logback, akkaStream, akkaHttpCore, akkaHttp, sprayClient) ++
       test(scalaTest, akkaTestKit, junit, akkaMultiNodeTest)
     ) configs MultiJvm
 

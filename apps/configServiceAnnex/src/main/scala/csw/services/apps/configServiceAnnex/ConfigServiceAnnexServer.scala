@@ -86,8 +86,9 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
 
   // Implements Http POST
   private def httpPost(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
-    val id = new File(uri.path.toString()).getName
-    val path = makePath(settings.dir, new File(uri.path.toString()))
+    val uriPath = uri.path.toString()
+    val id = new File(uriPath).getName
+    val path = makePath(settings.dir, new File(uriPath))
     val file = path.toFile
     file.getParentFile.mkdirs()
     val response = Promise[HttpResponse]()
@@ -102,6 +103,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
       }
       val materialized = entity.getDataBytes().to(sink).run()
       // ensure the output file is closed and the system shutdown upon completion
+      // XXX TODO: Use a for comprehension here instead?
       materialized.get(sink).onComplete {
         case Success(_) ⇒
           Try(out.close())

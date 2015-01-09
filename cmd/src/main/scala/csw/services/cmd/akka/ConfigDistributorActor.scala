@@ -72,7 +72,6 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
     case ServicesReady(services) ⇒
       log.debug(s"All services ready: $services")
       context.become(ready(services))
-    //      context.parent ! CommandServiceActor.Ready(ready = true)
 
     case ConfigPut(config) ⇒ internalConfig(config)
 
@@ -88,7 +87,11 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
     case c: ConfigControlMessage ⇒ forwardToSubmitWorker(c.runId, c)
 
-    case x                       ⇒ log.error(s"Unexpected message from ${sender()}(): $x")
+    case ServicesReady(newServices) ⇒
+      log.debug(s"All services ready again: $newServices")
+      context.become(ready(newServices))
+
+    case x ⇒ log.error(s"Unexpected message from ${sender()}(): $x")
   }
 
   // Forwards the given message to the submit worker actor

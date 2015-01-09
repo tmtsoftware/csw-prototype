@@ -4,13 +4,13 @@ import java.io.File
 
 import akka.actor._
 import csw.services.cs.core.git.GitConfigManager
-import csw.services.cs.core.{ConfigFileHistory, _}
-import csw.services.ls.LocationServiceActor.{ServiceId, ServiceType}
-import csw.services.ls.{LocationService, LocationServiceRegisterActor}
+import csw.services.cs.core.{ ConfigFileHistory, _ }
+import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
+import csw.services.ls.{ LocationService, LocationServiceRegisterActor }
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 /**
  * Config service actor.

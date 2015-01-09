@@ -25,7 +25,7 @@ object ConfigServiceAnnexClient {
   // messages while large files are being transferred.
   implicit val system = ActorSystem("ConfigServiceAnnexClient")
 
-  import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient.system.dispatcher
+  import system.dispatcher
 
   val settings = ConfigServiceAnnexSettings(system)
   val host = settings.interface
