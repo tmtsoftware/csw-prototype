@@ -51,7 +51,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
    * Register with the location service (which must be started as a separate process).
    */
   def registerWithLocationService(addr: InetSocketAddress) {
-    val serviceId = ServiceId("ConfigServiceAnnex", ServiceType.Service)
+    val serviceId = ServiceId("ConfigServiceHttpServer", ServiceType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
     logger.info(s"Registering with the location service with URI $httpUri")
     // Start an actor to re-register when the location service restarts
@@ -206,7 +206,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
       exists ← client.exists(new File(uri.path.toString()))
     } yield HttpResponse(if (exists) StatusCodes.OK else StatusCodes.NotFound)
     result.recover {
-      case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+      case ex ⇒ HttpResponse(StatusCodes.NotFound)
     }
   }
 

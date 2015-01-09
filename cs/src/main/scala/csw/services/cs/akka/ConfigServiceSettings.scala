@@ -26,7 +26,7 @@ case class ConfigServiceSettings(config: Config) extends Extension {
   val name = config.getString(s"$prefix.name")
   val gitMainRepository = new URI(config.getString(s"$prefix.main-repository"))
   val gitLocalRepository = new File(subst(config.getString(s"$prefix.local-repository")))
-  val chunkSize = config.getInt("csw.services.apps.configServiceAnnex.chunkSize")
+  val chunkSize = config.getInt(s"$prefix.chunkSize")
   val httpInterface = config.getString(s"$prefix.http-interface")
   val httpPort = config.getInt(s"$prefix.http-port")
   val timeout = Timeout(config.getDuration(s"$prefix.timeout", MILLISECONDS), MILLISECONDS)
