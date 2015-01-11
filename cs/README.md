@@ -32,10 +32,18 @@ There is also a scala ConfigServiceHttpClient class that can be used to access t
 
 The HTTP/REST interface to the command service follows the scala and java APIs:
 
-| Method | Path    | Query Arguments
----------|---------|--------------------------------------------
-| POST   | /create | path=_filePath_, comment=_create+comment_ |
-| POST   | /update | path=_filePath_, comment=_create+comment_ |
+| Method | Path    | Query Arguments                                       | Response
+---------|---------|-------------------------------------------------------|---------
+| POST   | /create | path=_filePath_, comment=_create+comment_ _(optional)_| _id_ can be used to reference version of file
+| GET    | /get    | path=_filePath_, id=_id_ _(optional)                  | Contents of file (current or version _id_)
+| POST   | /update | path=_filePath_, comment=_update+comment_ _(optional)_| _id_ can be used to reference version of file
+| GET    | /exists | path=_filePath_                                       | Status: OK if file exists, otherwise NotFound
+| GET    | /list   |                                                       | JSON list of available files
+| GET    | /history| path=_filePath_, maxResults=_count_ _(optional)_      | JSON list of file history
+| GET    | /getDefault | path=_filePath_                                   | Contents of _default_ version of file
+| POST   | /setDefault | path=_filePath_, id=_id_ _(optional)_             | Sets the _default_ version of the file
+| POST   | /resetDefault | path=_filePath_                                 | Resets the _default_ version of the file to _current_
+---------|---------|-------------------------------------------------------|---------
 
 
 Example or using curl to access the Config Service Http Server
