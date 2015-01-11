@@ -32,10 +32,10 @@ There is also a scala ConfigServiceHttpClient class that can be used to access t
 
 The HTTP/REST interface to the command service follows the scala and java APIs:
 
- Method| Path    | Query Arguments
---------------------------------------------
-| POST | /create | path=_filePath_, comment=_create+comment_
-| POST | /update | path=_filePath_, comment=_create+comment_
+| Method | Path    | Query Arguments
+---------|---------|--------------------------------------------
+| POST   | /create | path=_filePath_, comment=_create+comment_ |
+| POST   | /update | path=_filePath_, comment=_create+comment_ |
 
 
 Example or using curl to access the Config Service Http Server
