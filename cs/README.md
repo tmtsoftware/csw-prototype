@@ -32,19 +32,21 @@ There is also a scala ConfigServiceHttpClient class that can be used to access t
 
 The HTTP/REST interface to the command service follows the scala and java APIs:
 
-| Method | Path    | Query Arguments                                       | Response
----------|---------|-------------------------------------------------------|---------
-| POST   | /create | path=_filePath_, comment=_create+comment_ _(optional)_| _id_ can be used to reference version of file
-| GET    | /get    | path=_filePath_, id=_id_ _(optional)                  | Contents of file (current or version _id_)
-| POST   | /update | path=_filePath_, comment=_update+comment_ _(optional)_| _id_ can be used to reference version of file
-| GET    | /exists | path=_filePath_                                       | Status: OK if file exists, otherwise NotFound
-| GET    | /list   |                                                       | JSON list of available files
-| GET    | /history| path=_filePath_, maxResults=_count_ _(optional)_      | JSON list of file history
-| GET    | /getDefault | path=_filePath_                                   | Contents of _default_ version of file
-| POST   | /setDefault | path=_filePath_, id=_id_ _(optional)_             | Sets the _default_ version of the file
-| POST   | /resetDefault | path=_filePath_                                 | Resets the _default_ version of the file to _current_
----------|---------|-------------------------------------------------------|---------
+| Method | Path    | Query Arguments                           | Response
+---------|---------|-------------------------------------------|---------
+| POST   | /create | path=_filePath_, comment=_create+comment_ | _id_ can be used to reference version of file
+| GET    | /get    | path=_filePath_, id=_id_                  | Contents of file (current or version _id_)
+| POST   | /update | path=_filePath_, comment=_update+comment_ | _id_ can be used to reference version of file
+| GET    | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
+| GET    | /list   |                                           | JSON list of available files
+| GET    | /history      | path=_filePath_, maxResults=_count_ | JSON list of file history
+| GET    | /getDefault   | path=_filePath_                     | Contents of _default_ version of file
+| POST   | /setDefault   | path=_filePath_, id=_id_            | Sets the _default_ version of the file
+| POST   | /resetDefault | path=_filePath_                     | Resets the _default_ version of the file to _current_
 
+The _create_ and _update_ methods expect the file data to be posted.
+The _path_ query argument is always required. All other query arguments are optional.
+The _id_ argument must be taken from the result of _create_, _update_, _list_, or _history_.
 
 Example or using curl to access the Config Service Http Server
 --------------------------------------------------------------
@@ -63,13 +65,55 @@ Assuming that the config service http server is running on localhost on port 854
 
     Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.
 
-`curl 'http://localhost:8541/history?path=some/test1/TestConfig1'`
+`curl -s 'http://localhost:8541/history?path=some/test1/TestConfig1'`
 
-    Returns JSON describing the history of some/test1/TestConfig1.
+    Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:
+
+    ```
+    [
+       {
+          "comment" : "update 2 comment",
+          "time" : 1421010506000,
+          "id" : "3007e3369de4c05d4fb85d515df0be417243ecca"
+       },
+       {
+          "comment" : "update 1 comment",
+          "time" : 1421010505000,
+          "id" : "0fff71d0f3f4f88aa5986aa02c32d3c495c1c652"
+       },
+       {
+          "comment" : "create comment",
+          "time" : 1421010505000,
+          "id" : "f6e5266afc159f5d870ea1ac48c048ffa3913434"
+       }
+    ]
+
+    ```
 
 `curl 'http://localhost:8541/list'`
 
     Returns JSON listing the files in the config service repository.
+
+    ```
+    [
+       {
+          "comment" : "create comment",
+          "id" : "f6e5266afc159f5d870ea1ac48c048ffa3913434",
+          "path" : "some/test2/TestConfig2"
+       },
+       {
+          "comment" : "update 2 comment",
+          "id" : "3007e3369de4c05d4fb85d515df0be417243ecca",
+          "path" : "some/test1/TestConfig1"
+       },
+       {
+          "comment" : "",
+          "id" : "77c35d529c1e46113bd2f68b6f0550e81d8dbfec",
+          "path" : "README"
+       }
+    ]
+
+    ```
 
 `curl 'http://localhost:8541/getDefault?path=some/test1/TestConfig1`
 
