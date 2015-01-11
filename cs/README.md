@@ -7,9 +7,13 @@ files by storing them in a Git repository.
 Config Service Application
 --------------------------
 
+Before starting the config service, the [location service](../loc/README.md)
+and the the [config service annex server](../apps/configServiceAnnex/README.md)
+should both be running.
 You can start the config service with the `cs` command (found under target/universal/stage/bin).
-The default name and location of the local and main repositories is defined in resources/reference.conf.
-You can override the values with system properties. For example:
+The default config service name and the location of the local and main Git repositories is defined in resources/reference.conf.
+Alternatively you can specify a different config file on the command line in the same format.
+You can also override the values with system properties. For example:
 
 ```
      cs -Dcsw.services.cs.name=MyConfigServiceName
@@ -17,14 +21,67 @@ You can override the values with system properties. For example:
         -Dcsw.services.cs.local-repository=/myPath/MyLocalRepo
 ```
 
-Note that multiple config service instances may be running in the network, but the names should
+Note that multiple config service instances may be running in the network, but the names an host:port combinations should
 each be unique. Only a single config service instance should access a given local repository.
+
+Config Service Http Server
+--------------------------
+
+The config service application (cs) also starts an http server (on a port configured in the config file).
+There is also a scala ConfigServiceHttpClient class that can be used to access the http server.
+
+The HTTP/REST interface to the command service follows the scala and java APIs:
+
+| POST | /create | path=_filePath_
+                   comment=_create+comment_
+--------------------------------------------
+| POST | /update | path=_filePath_
+                   comment=_create+comment_
+--------------------------------------------
+
+Example or using curl to access the Config Service Http Server
+--------------------------------------------------------------
+
+Assuming that the config service http server is running on localhost on port 8541 (see config file, default: reference.conf):
+
+`curl -X POST 'http://localhost:8541/create?path=some/test1/TestConfig1&comment=comment+here' --data-binary @TestConfig1`
+
+   Creates a new file in the config service named some/test1/TestConfig1 using the data in the local file TestConfig1.
+
+`curl 'http://localhost:8541/get?path=some/test1/TestConfig1' > TestConfig1a`
+
+    Gets the contents of some/test1/TestConfig1 from the service and store in a local file.
+
+`curl -X POST 'http://localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
+
+    Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.
+
+`curl 'http://localhost:8541/history?path=some/test1/TestConfig1'`
+
+    Returns JSON describing the history of some/test1/TestConfig1.
+
+`curl 'http://localhost:8541/list'`
+
+    Returns JSON listing the files in the config service repository.
+
+`curl 'http://localhost:8541/getDefault?path=some/test1/TestConfig1`
+
+    Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).
+
+`curl -X POST 'http://localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
+
+    Sets the default version of the file to the one with the given id (an id returned by the history command).
+
+`curl -X POST 'http://localhost:8541/resetDefault?path=some/test1/TestConfig1'`
+
+    Resets the default version of the file to be the latest version.
+
 
 Main Packages:
 --------------
 
 * core - the core implementation of the API based on JGit
-* akka - the Akka actor interface (based on core)
+* akka - (based on core) the Akka actor interface as well as the http server and client interfaces.
 
 Large/binary files can slow down the Git repository, so these are stored separately using
 the the [ConfigServiceAnnex](../apps/configServiceAnnex/README.md) http file server.
@@ -64,7 +121,5 @@ Running the tests
 
 To run the unit tests, use `sbt test`.
 To run the multi-jvm tests, use `sbt multi-jvm:test`.
-
-
 
 

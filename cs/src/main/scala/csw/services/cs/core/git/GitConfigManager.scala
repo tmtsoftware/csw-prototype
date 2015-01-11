@@ -216,7 +216,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
       pull()
       if (isOversize(file)) {
         deleteFile(shaFile(path), comment)
-        file.delete()
+        if (file.exists()) file.delete()
       } else {
         if (!file.exists) {
           throw new FileNotFoundException("Can't delete " + path + " because it does not exist")
@@ -224,7 +224,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
         git.rm.addFilepattern(path.getPath).call()
         git.commit().setMessage(comment).call
         git.push.call()
-        file.delete()
+        if (file.exists()) file.delete()
       }
     }
 
