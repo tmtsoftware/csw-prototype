@@ -4,6 +4,14 @@ Configuration Service
 This module implements the Configuration Service, which is used to manage configuration
 files by storing them in a Git repository.
 
+Config Service API
+------------------
+
+The config service can be accessed by sending messages to the config service actor,
+however the ConfigServiceClient wrapper class implements the ConfigManager trait
+and provides a somewhat simpler API.
+
+
 Config Service Application
 --------------------------
 
