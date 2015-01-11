@@ -27,9 +27,8 @@ each be unique. Only a single config service instance should access a given loca
 Config Service Http Server
 --------------------------
 
-The config service application (cs) also starts an http server (on a port configured in the config file).
-There is also a scala ConfigServiceHttpClient class that can be used to access the http server.
-
+The config service application (cs) also starts an http server
+(optionally, if host and port configured in the config file).
 The HTTP/REST interface to the command service follows the scala and java APIs:
 
 | Method | Path    | Query Arguments                           | Response
@@ -59,15 +58,15 @@ Assuming that the config service http server is running on localhost on port 854
 
 `curl 'http://localhost:8541/get?path=some/test1/TestConfig1' > TestConfig1a`
 
-    Gets the contents of some/test1/TestConfig1 from the service and store in a local file.
+   Gets the contents of some/test1/TestConfig1 from the service and store in a local file.
 
 `curl -X POST 'http://localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
 
-    Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.
+   Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.
 
 `curl -s 'http://localhost:8541/history?path=some/test1/TestConfig1'`
 
-    Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:
+   Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:
 
     ```
     [
@@ -92,7 +91,7 @@ Assuming that the config service http server is running on localhost on port 854
 
 `curl 'http://localhost:8541/list'`
 
-    Returns JSON listing the files in the config service repository.
+   Returns JSON listing the files in the config service repository.
 
     ```
     [
@@ -117,15 +116,15 @@ Assuming that the config service http server is running on localhost on port 854
 
 `curl 'http://localhost:8541/getDefault?path=some/test1/TestConfig1`
 
-    Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).
+   Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).
 
 `curl -X POST 'http://localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
 
-    Sets the default version of the file to the one with the given id (an id returned by the history command).
+   Sets the default version of the file to the one with the given id (an id returned by the history command).
 
 `curl -X POST 'http://localhost:8541/resetDefault?path=some/test1/TestConfig1'`
 
-    Resets the default version of the file to be the latest version.
+   Resets the default version of the file to be the latest version.
 
 
 Main Packages:

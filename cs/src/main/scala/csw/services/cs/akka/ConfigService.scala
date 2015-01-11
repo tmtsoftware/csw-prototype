@@ -30,5 +30,6 @@ object ConfigService extends App {
   system.actorOf(Props(classOf[Terminator], configServiceActor), "terminator")
 
   // Start an HTTP server with the REST interface to the config service
-  ConfigServiceHttpServer(configServiceActor, settings, registerWithLoc = true)
+  if (settings.startHttpServer)
+    ConfigServiceHttpServer(configServiceActor, settings, registerWithLoc = true)
 }

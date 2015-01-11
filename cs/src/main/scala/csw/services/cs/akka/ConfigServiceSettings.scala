@@ -27,9 +27,11 @@ case class ConfigServiceSettings(config: Config) extends Extension {
   val gitMainRepository = new URI(config.getString(s"$prefix.main-repository"))
   val gitLocalRepository = new File(subst(config.getString(s"$prefix.local-repository")))
   val chunkSize = config.getInt(s"$prefix.chunkSize")
-  val httpInterface = config.getString(s"$prefix.http-interface")
-  val httpPort = config.getInt(s"$prefix.http-port")
   val timeout = Timeout(config.getDuration(s"$prefix.timeout", MILLISECONDS), MILLISECONDS)
+
+  val startHttpServer = config.hasPath(s"$prefix.http.interface")
+  val httpInterface = if (startHttpServer) config.getString(s"$prefix.http.interface") else ""
+  val httpPort = if (config.hasPath(s"$prefix.http.port")) config.getInt(s"$prefix.http.port") else 0
 
   // Do any required substitution on the setting values
   def subst(s: String): String = {
