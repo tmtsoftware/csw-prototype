@@ -36,7 +36,7 @@ Config Service Http Server
 --------------------------
 
 The config service application (cs) also starts an http server
-(optionally, if host and port configured in the config file).
+(optionally, if csw.services.cs.http.host is defined in the config file).
 The HTTP/REST interface to the command service follows the scala and java APIs:
 
 | Method | Path    | Query Arguments                           | Response
