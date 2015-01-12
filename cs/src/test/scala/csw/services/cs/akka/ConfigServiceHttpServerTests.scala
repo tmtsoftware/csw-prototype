@@ -55,13 +55,7 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
     val server = ConfigServiceHttpServer(csActor, settings)
     val csClient = ConfigServiceHttpClient(settings)
 
-    val result = ConfigManagerTestHelper.runTests(csClient, oversize)
-    result.onComplete {
-      case x ⇒
-          logger.info(s"XXX runTests complete: $x")
-//        system.stop(csActor)
-    }
-    result
+    ConfigManagerTestHelper.runTests(csClient, oversize)
   }
 
   // Verify that a second config service can still see all the files that were checked in by the first
@@ -75,14 +69,6 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
     val csActor = system.actorOf(ConfigServiceActor.props(manager)/*, name = "configService2"*/)
     val csClient = ConfigServiceClient(csActor)
 
-    val result = ConfigManagerTestHelper.runTests2(csClient, oversize)
-//    result.onComplete {
-//      case _ ⇒ system.stop(csActor)
-//    }
-    result
+    ConfigManagerTestHelper.runTests2(csClient, oversize)
   }
-
-//  override def afterAll(): Unit = {
-//    system.shutdown()
-//  }
 }
