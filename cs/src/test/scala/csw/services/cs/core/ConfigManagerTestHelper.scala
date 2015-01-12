@@ -1,6 +1,6 @@
 package csw.services.cs.core
 
-import java.io.{File, IOException}
+import java.io.{ File, IOException }
 
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.Logger
@@ -8,7 +8,7 @@ import org.scalatest.FunSuite
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
  * Common test code for classes that implement the ConfigManager trait
@@ -64,10 +64,10 @@ object ConfigManagerTestHelper extends FunSuite {
       // test list()
       list ← manager.list()
 
-//      // Should throw exception if we try to create a file that already exists
-//      createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
-//        case e: IOException ⇒ null
-//      }
+      //      // Should throw exception if we try to create a file that already exists
+      //      createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
+      //        case e: IOException ⇒ null
+      //      }
 
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
@@ -80,7 +80,7 @@ object ConfigManagerTestHelper extends FunSuite {
       assert(result5 == contents1)
       assert(result6 == contents1)
 
-//      assert(createIdNull == null)
+      //      assert(createIdNull == null)
 
       assert(historyList1.size == 3)
       assert(historyList2.size == 1)
@@ -107,7 +107,7 @@ object ConfigManagerTestHelper extends FunSuite {
     result.onComplete {
       case Success(_) ⇒
         logger.info("runTest done")
-      case Failure(ex) =>
+      case Failure(ex) ⇒
         logger.error("runTest failed", ex)
     }
     result
@@ -161,7 +161,7 @@ object ConfigManagerTestHelper extends FunSuite {
     result.onComplete {
       case Success(_) ⇒
         logger.info("runTest done")
-      case Failure(ex) =>
+      case Failure(ex) ⇒
         logger.error("runTest failed", ex)
     }
     result
