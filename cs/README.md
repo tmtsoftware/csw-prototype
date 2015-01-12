@@ -41,9 +41,9 @@ The HTTP/REST interface to the command service follows the scala and java APIs:
 
 | Method | Path    | Query Arguments                           | Response
 ---------|---------|-------------------------------------------|---------
-| POST   | /create | path=_filePath_, comment=_create+comment_ | _id_ can be used to reference version of file
+| POST   | /create | path=_filePath_, comment=_create+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /get    | path=_filePath_, id=_id_                  | Contents of file (current or version _id_)
-| POST   | /update | path=_filePath_, comment=_update+comment_ | _id_ can be used to reference version of file
+| POST   | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
 | GET    | /list   |                                           | JSON list of available files
 | GET    | /history      | path=_filePath_, maxResults=_count_ | JSON list of file history
@@ -53,7 +53,11 @@ The HTTP/REST interface to the command service follows the scala and java APIs:
 
 The _create_ and _update_ methods expect the file data to be posted.
 The _path_ query argument is always required. All other query arguments are optional.
-The _id_ argument must be taken from the result of _create_, _update_, _list_, or _history_.
+The _id_ argument (a _ConfigId_) must be taken from the JSON result of _create_, _update_, _list_, or _history_.
+
+The format of the JSON returned from _create_ and _update_ is:
+`{"ConfigId":"da807342bcc21766316c3a91a01f4a513a1adbb3"}`. The _id_ query argument passed to the other methods is
+ the value at right.
 
 Example or using curl to access the Config Service Http Server
 --------------------------------------------------------------
