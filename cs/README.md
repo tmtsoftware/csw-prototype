@@ -163,11 +163,9 @@ No concurrent access to local Git repository
 --------------------------------------------
 
 Note that each instance of the config service should manage its own local Git repository.
-All of the local repositories may reference a common central repository, however it is not
+All of the local repositories may reference a common central repository, however it is probably not
 safe to allow concurrent access to the local Git repository, which reads and writes files
-in the Git working directory. The config service actor also enforces one-at-a-time processing
-of commands acting on the local repository to ensure that reading and writing of the same files
-does not conflict.
+in the Git working directory.
 
 Having copies of the files in the Git working directory has the advantage of being a kind of *cache*,
 so that the files do not have to be pulled from the server each time they are needed.
@@ -181,3 +179,8 @@ To run the unit tests, use `sbt test`.
 To run the multi-jvm tests, use `sbt multi-jvm:test`.
 
 
+Error log messages from akka-http (1.0-M2)
+------------------------------------------
+
+The current akka-http version (1.0-M2) produces a lot of error messages in the logs, even though the tests pass.
+This seems to be an internal issue that should be fixed in a future version.
