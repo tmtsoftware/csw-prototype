@@ -167,7 +167,9 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
           HttpResponse(StatusCodes.OK, entity = HttpEntity(MediaTypes.`application/json`, json))
         }
         result.recover {
-          case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+          case ex ⇒
+            logger.error(s"error processing $uri", ex)
+            HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
       case None ⇒
         unknownResource("")

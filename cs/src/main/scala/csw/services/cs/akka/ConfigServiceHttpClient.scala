@@ -40,15 +40,15 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings) extends Conf
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
     val uri = makeUri("/create", "path" -> path.toString, "oversize" -> oversize.toString, "comment" -> comment)
-    createOrUpdate(uri, configData, oversize, comment, create = true)
+    createOrUpdate(uri, configData, comment, create = true)
   }
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
     val uri = makeUri("/update", "path" -> path.toString, "comment" -> comment)
-    createOrUpdate(uri, configData, oversize = false, comment, create = false)
+    createOrUpdate(uri, configData, comment, create = false)
   }
 
-  def createOrUpdate(uri: Uri, configData: ConfigData, oversize: Boolean, comment: String, create: Boolean): Future[ConfigId] = {
+  def createOrUpdate(uri: Uri, configData: ConfigData, comment: String, create: Boolean): Future[ConfigId] = {
     logger.info(s"$uri")
     implicit val materializer = FlowMaterializer()
 
