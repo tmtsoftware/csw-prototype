@@ -42,16 +42,16 @@ for starting the CSW applications.
 Projects and Directories
 ------------------------
 
-* apps - contains some standalone applications
-* cmd - the Command Service (for sending commands to HCDs and Assemblies)
-* cs - the Configuration Service (manages configuration files in Git repos)
-* doc - for documentation
-* event - the Event Service, based on HornetQ
-* kvs - provides key/value store and publish/subscribe features based on Redis
-* loc - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
-* log - contains logging related code
-* pkg - a packaging layer over the command service that provides HCD and Assembly classes
-* util - for reusable utility code
+* [apps](apps) - contains some standalone applications
+* [cmd](cmd) - the Command Service (for sending commands to HCDs and Assemblies)
+* [cs](cs) - the Configuration Service (manages configuration files in Git repos)
+* [doc](doc) - for documentation
+* [event](event) - the Event Service, based on HornetQ
+* [kvs](kvs) - provides key/value store and publish/subscribe features based on Redis
+* [loc](loc) - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
+* [log](log) - contains logging related code
+* [pkg](pkg) - a packaging layer over the command service that provides HCD and Assembly classes
+* [util](util) - for reusable utility code
 
 Applications
 -----------

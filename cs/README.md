@@ -15,8 +15,8 @@ and provides a somewhat simpler API.
 Config Service Application
 --------------------------
 
-Before starting the config service, the [location service](../loc/README.md)
-and the the [config service annex server](../apps/configServiceAnnex/README.md)
+Before starting the config service, the [location service](../loc)
+and the the [config service annex server](../apps/configServiceAnnex)
 should both be running.
 You can start the config service with the `cs` command (found under target/universal/stage/bin).
 The default config service name and the location of the local and main Git repositories is defined in resources/reference.conf.
@@ -146,7 +146,7 @@ Main Packages:
 * akka - (based on core) the Akka actor interface as well as the http server and client interfaces.
 
 Large/binary files can slow down the Git repository, so these are stored separately using
-the the [ConfigServiceAnnex](../apps/configServiceAnnex/README.md) http file server.
+the the [ConfigServiceAnnex](../apps/configServiceAnnex) http file server.
 
 When you first create a config file, you can choose to store it in the normal way (in the Git repository)
 or as a *large/binary* file, in which case only *$file.sha1* is checked in, containing the SHA-1 hash of the
@@ -158,7 +158,7 @@ If there is no default, this file is not present and the latest version is alway
 
 The config service can be started as a standalone application. *sbt stage* installs the command under
 target/universal/stage/bin.
-The standalone configs service registers itself with the [location service](../loc/README.md) so that it
+The standalone configs service registers itself with the [location service](../loc) so that it
 can be found by other applications.
 
 The contents of the files are exchanged using [Akka reactive streams](http://www.typesafe.com/activator/template/akka-stream-scala).

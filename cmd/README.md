@@ -66,8 +66,7 @@ The Akka URI can be used to locate the actor and the HTTP URI points to the web 
 for the actor, if available. Assemblies request information about the HCDs they want to
 use and receive a single reply when all of the HCDs are available.
 HCDs can also optionally specify which parts of config messages they should receive.
-See <a href="../ls/README.md">extjs/README.md</a> for more information.
-
+See the [location service](../loc) for more information.
 
 
 Assembly View
