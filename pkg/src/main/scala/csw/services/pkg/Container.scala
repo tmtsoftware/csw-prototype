@@ -68,20 +68,6 @@ object Container {
    */
   case object GetComponents
 
-  //  /**
-  //   * Creates a component in the container
-  //   * @param props used to create the component actor
-  //   * @param regInfo used to register the component with the location service
-  //   * @param services list of services required by the component
-  //   */
-  //  case class CreateComponent(props: Props, regInfo: RegInfo, services: List[ServiceId]) extends ContainerMessage
-  //
-  //  /**
-  //   * Deletes the component from the container
-  //   * @param name name of the component
-  //   */
-  //  case class DeleteComponent(name: String) extends ContainerMessage
-
   /**
    * Reply messages.
    */
@@ -92,19 +78,10 @@ object Container {
    * @param map a map of component name to actor for the component (actually the lifecycle manager)
    */
   case class Components(map: Map[String, ActorRef])
-
-  //  /**
-  //   * Reply sent when a new child component was created.
-  //   * @param actorRef the new actor
-  //   * @param name the name of the component
-  //   */
-  //  case class CreatedComponent(actorRef: ActorRef, name: String) extends ContainerReplyMessage
-
 }
 
 /**
  * Implements the container actor based on the contents of the given config.
- * XXX TODO: Document config format.
  */
 class Container(config: Config) extends Actor with ActorLogging {
 

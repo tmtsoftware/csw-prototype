@@ -19,7 +19,7 @@ import scala.concurrent.duration._
  * @param args the command line arguments
  * @param resource optional name of default config file (under src/main/resources)
  */
-case class ContainerCmd(args: Array[String], resource: Option[String]) {
+case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
   if (args.length == 0) {
     if (resource.isDefined) {
       println(s" Using default resource: $resource")

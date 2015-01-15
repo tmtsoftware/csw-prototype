@@ -32,6 +32,12 @@ The following sbt commands generate packages that can be installed on various sy
 * universal:packageOsxDmg - Generates a DMG file with the same contents as the universal zip/tgz.
 * windows:packageBin - Generates an MSI
 
+Install script
+-----------
+
+The script ./install.sh creates an install directory (../install) containing scripts and all of the required dependencies
+for starting the CSW applications.
+
 
 Projects and Directories
 ------------------------
@@ -43,6 +49,23 @@ Projects and Directories
 * event - the Event Service, based on HornetQ
 * kvs - provides key/value store and publish/subscribe features based on Redis
 * loc - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
+* log - contains logging related code
 * pkg - a packaging layer over the command service that provides HCD and Assembly classes
 * util - for reusable utility code
+
+Applications
+-----------
+
+The following standalone applications are installed here:
+
+* [cs](cs) - the config service
+* [loc](loc) - the location service
+
+The following applications are defined under ../apps:
+
+* [configServiceAnnex](configServiceAnnex) - an http server used to store and retrieve large files, used by the config server
+* [containerCmd](containerCmd) - used to start containers of HCDs or assemblies, based on a given config file (This is not an application, but us used to simplify creating such applications)
+* [sequencer](sequencer) - implements the command line sequencer application, which is a Scala REPL shell
+
+
 
