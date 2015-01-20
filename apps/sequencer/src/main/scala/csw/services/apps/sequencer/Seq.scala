@@ -1,22 +1,22 @@
 package csw.services.apps.sequencer
 
 import akka.actor.ActorSystem
-import csw.services.ls.{ LocationServiceActor, LocationService }
-import LocationServiceActor.{ ServiceId, ServiceType }
-import csw.services.cmd.akka.{ BlockingCommandServiceClient, CommandServiceClientActor, CommandServiceClient }
+import csw.services.cmd.akka.{ BlockingCommandServiceClient, CommandServiceClient, CommandServiceClientActor }
+import csw.services.ls.LocationService
+import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import csw.services.ls.LocationService
 
 /**
  * Defines utility method and shortcuts for use in the sequencer shell
  */
 object Seq {
-  val system = ActorSystem("Sequencer")
+  implicit val system = ActorSystem("Sequencer")
   val duration = 5.seconds
 
   private def resolve(name: String, serviceType: ServiceType): BlockingCommandServiceClient = {
-    val info = Await.result(LocationService.resolve(system, ServiceId(name, serviceType)), duration)
+    val info = Await.result(LocationService.resolve(ServiceId(name, serviceType)), duration)
     val actorRef = info.actorRefOpt.get
     val clientActor = system.actorOf(CommandServiceClientActor.props(actorRef, duration))
     BlockingCommandServiceClient(CommandServiceClient(clientActor, duration))

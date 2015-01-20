@@ -2,10 +2,10 @@ package csw.services.cmd.akka
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.{ ActorRef, ActorSystem }
+import csw.services.cmd.spray.CommandServiceSettings
 import csw.util.cfg.TestConfig
 import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.cmd.spray.CommandServiceTestSettings
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -23,7 +23,7 @@ class CommandServiceClientTests extends TestKit(ActorSystem("test")) with TestHe
 
   // Note: Adjust this value and the one used by TestConfigActor
   // to match the time needed for the tests and avoid timeouts
-  val duration = CommandServiceTestSettings(system).timeout
+  val duration = CommandServiceSettings(system).timeout
 
   def getCommandServiceClientActor: ActorRef = {
     system.actorOf(CommandServiceClientActor.props(getCommandServiceActor(), duration),

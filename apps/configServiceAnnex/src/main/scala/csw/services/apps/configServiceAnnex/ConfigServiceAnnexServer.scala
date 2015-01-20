@@ -32,7 +32,6 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   if (!settings.dir.exists()) settings.dir.mkdirs()
 
   implicit val materializer = FlowMaterializer()
-  //  implicit val askTimeout = settings.timeout
 
   val binding = Http().bind(interface = settings.interface, port = settings.port)
   binding.connections.foreach { c ⇒

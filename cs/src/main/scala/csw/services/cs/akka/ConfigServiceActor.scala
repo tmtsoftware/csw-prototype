@@ -92,14 +92,14 @@ object ConfigServiceActor {
   /**
    * Convenience method that gets the config service actor with the matching name
    * from the location service.
+   * @param name the name of the config service (set in the config file, property csw.services.cs.name)
    * @param system the actor system
    * @return a future reference to the named config service actor
    */
-  def locateConfigService()(implicit system: ActorSystem): Future[ActorRef] = {
+  def locateConfigService(name: String)(implicit system: ActorSystem): Future[ActorRef] = {
     import system.dispatcher
-    val settings = ConfigServiceSettings(system)
-    val serviceId = ServiceId(settings.name, ServiceType.Service)
-    LocationService.resolve(system, serviceId).map(_.actorRefOpt.get)
+    val serviceId = ServiceId(name, ServiceType.Service)
+    LocationService.resolve(serviceId).map(_.actorRefOpt.get)
   }
 }
 
@@ -114,6 +114,8 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
 
   // timeout for blocking wait (used to make sure local Git repo working dir access is not concurrent)
   val timeout = 60.seconds
+
+  log.info("Started config service")
 
   // Start an actor to re-register when the location service restarts
   def registerWithLocationService(): Unit = {

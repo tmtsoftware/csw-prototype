@@ -20,8 +20,9 @@ object ConfigServiceClient {
    */
   def getStringFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[String] = {
     import system.dispatcher
+    val settings = ConfigServiceSettings(system)
     for {
-      cs ← locateConfigService()
+      cs ← locateConfigService(settings.name)
       configDataOpt ← ConfigServiceClient(cs).get(path, id)
       s ← configDataOpt.get.toFutureString
     } yield s

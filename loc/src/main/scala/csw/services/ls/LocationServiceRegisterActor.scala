@@ -57,7 +57,8 @@ case class LocationServiceRegisterActor(serviceId: ServiceId, actorRef: Option[A
   }
 
   private def identify(): Unit = {
-    LocationService.getLocationService(context.system) ! Identify(0)
+    implicit val system = context.system
+    LocationService.getLocationService() ! Identify(0)
     context.become(waitingForId)
   }
 

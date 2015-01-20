@@ -57,7 +57,7 @@ class LocationServiceClientActor(serviceIds: List[ServiceId]) extends Actor with
   // Request the services from the location service, which should eventually result in a
   // ServicesReady message being sent as a reply.
   private def requestServices(): Unit = {
-    log.debug(s"requestServices $serviceIds")
-    LocationService.requestServices(context.system, self, serviceIds)
+    implicit val system = context.system
+    LocationService.requestServices(self, serviceIds)(context.system)
   }
 }

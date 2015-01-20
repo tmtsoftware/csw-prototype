@@ -1,7 +1,7 @@
 package csw.services.cs.core
 
 import java.io.{ ByteArrayOutputStream, File, FileOutputStream, OutputStream }
-import java.nio.file.Files
+import java.nio.file.{ Files, StandardCopyOption }
 import java.util.Date
 
 import akka.actor.ActorRefFactory
@@ -11,7 +11,7 @@ import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
 
 import scala.concurrent.Future
-import scala.util.{ Success, Try }
+import scala.util.Try
 
 /**
  * Defines an interface for storing and retrieving configuration information
@@ -161,9 +161,11 @@ trait ConfigData {
     }
     val materialized = source.to(sink).run()
     // ensure the output file is closed when done
-    val result = materialized.get(sink)
-    result.andThen { case _ ⇒ Try(out.close()) }
-    result
+    for {
+      _ ← materialized.get(sink)
+    } yield {
+      Try(out.close())
+    }
   }
 
   /**
@@ -179,10 +181,10 @@ trait ConfigData {
     // Write to a tmp file and then rename
     val tmpFile = File.createTempFile(file.getName, null, dir.toFile)
     val out = new FileOutputStream(tmpFile)
-    writeToOutputStream(out).andThen {
-      case Success(_) ⇒
-        Try { file.delete() }
-        tmpFile.renameTo(file)
+    for {
+      _ ← writeToOutputStream(out)
+    } yield {
+      Files.move(tmpFile.toPath, path, StandardCopyOption.ATOMIC_MOVE)
     }
   }
 

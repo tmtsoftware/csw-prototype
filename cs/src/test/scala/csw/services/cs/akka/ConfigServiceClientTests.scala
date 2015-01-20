@@ -36,8 +36,8 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
       _ ← runTests2(settings2, oversize = false)
 
       _ ← runTests(settings, oversize = true)
-      x ← runTests2(settings2, oversize = true)
-    } yield x
+      _ ← runTests2(settings2, oversize = true)
+    } yield ()
 
     Await.ready(f, 60.seconds)
 
@@ -68,10 +68,11 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     logger.info(s"--- Verify config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
+    GitConfigManager.deleteDirectoryRecursively(settings.gitLocalRepository)
     val manager = GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
 
     // Create the actor
-    val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
+    val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService2")
     val csClient = ConfigServiceClient(csActor)
 
     val result = ConfigManagerTestHelper.runTests2(csClient, oversize)

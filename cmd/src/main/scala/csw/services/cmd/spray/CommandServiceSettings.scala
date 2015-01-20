@@ -18,14 +18,14 @@ class CommandServiceSettings(system: ExtendedActorSystem) extends Extension {
   /**
    * The network interface the command service service gets bound to, e.g. `"localhost"`.
    */
-  val interface: String = system.settings.config getString "csw.commandService.interface"
+  val interface: String = system.settings.config getString "csw.services.cmd.http.interface"
 
   /**
    * The port the command service service gets bound to, e.g. `8080`.
    */
-  val port: Int = system.settings.config getInt "csw.commandService.port"
+  val port: Int = system.settings.config getInt "csw.services.cmd.http.port"
 
   val timeout: FiniteDuration =
-    Duration(system.settings.config.getDuration("csw.commandService.timeout", MILLISECONDS),
+    Duration(system.settings.config.getDuration("csw.services.cmd.http.timeout", MILLISECONDS),
       MILLISECONDS)
 }

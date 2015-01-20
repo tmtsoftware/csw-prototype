@@ -7,6 +7,7 @@ dir=../install
 test -d $dir || mkdir -p $dir/{bin,lib,conf}
 sbt publish-local stage
 for i in bin lib ; do cp -f */target/universal/stage/$i/* $dir/$i/; done
+for i in bin lib ; do cp -f apps/*/target/universal/stage/$i/* $dir/$i/; done
 rm -f $dir/bin/*.log.* $dir/bin/*.bat
 
 # create the scalas script, for scala scriping (see http://www.scala-sbt.org/release/docs/Scripts.html)

@@ -16,13 +16,15 @@ import spray.json._
 
 import scala.concurrent.Future
 
-case class ConfigServiceHttpClient(settings: ConfigServiceSettings) extends ConfigManager with ConfigServiceJsonFormats {
+case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit system: ActorSystem)
+    extends ConfigManager with ConfigServiceJsonFormats {
+
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceHttpClient"))
 
-  // Note: We could take the actor system as an implicit argument from the caller,
-  // but using a separate one was suggested, to avoid congestion and slowing down actor
-  // messages while large files are being transferred.
-  implicit val system = ActorSystem("ConfigServiceHttpClient")
+  //  // Note: We could take the actor system as an implicit argument from the caller,
+  //  // but using a separate one was suggested, to avoid congestion and slowing down actor
+  //  // messages while large files are being transferred.
+  //  implicit val system = ActorSystem("ConfigServiceHttpClient")
 
   import system.dispatcher
 
@@ -139,7 +141,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings) extends Conf
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
     val uri = makeUri("/history", "path" -> path.toString, "maxResults" -> maxResults.toString)
-    logger.info(s"list files")
+    logger.info(s"history for $path")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)

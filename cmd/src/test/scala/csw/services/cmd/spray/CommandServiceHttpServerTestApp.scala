@@ -41,9 +41,9 @@ object CommandServiceHttpServerTestApp extends App {
    */
   sys.addShutdownHook(system.shutdown())
 
-  val interface = CommandServiceTestSettings(system).interface
-  val port = CommandServiceTestSettings(system).port
-  val timeout = CommandServiceTestSettings(system).timeout
+  val interface = CommandServiceSettings(system).interface
+  val port = CommandServiceSettings(system).port
+  val timeout = CommandServiceSettings(system).timeout
   system.actorOf(CommandServiceHttpServer.props(getCommandServiceActor(), interface, port, timeout), "commandService")
 
   // Test HCD

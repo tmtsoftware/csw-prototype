@@ -5,6 +5,7 @@
 <configuration>
     <logger name="com.prosysopc.ua" level="INFO"/>
     <logger name="org.opcfoundation.ua" level="ERROR"/>
+    <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
 
     <if condition='isDefined("application-name")'>
         <then>

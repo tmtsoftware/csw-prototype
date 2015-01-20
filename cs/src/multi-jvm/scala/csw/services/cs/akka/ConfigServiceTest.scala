@@ -73,7 +73,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
       runOn(configServiceClient) {
         enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
-        val cs = Await.result(ConfigServiceActor.locateConfigService(), 5.seconds)
+        val cs = Await.result(ConfigServiceActor.locateConfigService(ConfigServiceSettings(system).name), 5.seconds)
         println(s"Got a config service: $cs")
         runTests(cs, oversize = true)
         enterBarrier("done")

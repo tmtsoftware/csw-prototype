@@ -1,13 +1,14 @@
 package csw.services.cmd.spray
 
+import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import akka.actor.{ ActorRef, ActorSystem }
+import csw.services.cmd.akka._
 import csw.util.cfg.TestConfig
 import org.scalatest.FunSuiteLike
-import scala.concurrent.duration._
-import csw.services.cmd.akka._
 import spray.http.StatusCodes
+
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
  * Tests the Command Service HTTP/REST interface in an actor environment.
@@ -23,8 +24,8 @@ class CommandServiceHttpServerTests extends TestKit(ActorSystem("test")) with Co
   val duration: FiniteDuration = 5.seconds
 
   // Settings
-  val interface = CommandServiceTestSettings(system).interface
-  val port = CommandServiceTestSettings(system).port
+  val interface = CommandServiceSettings(system).interface
+  val port = CommandServiceSettings(system).port
 
   startCommandServiceHttpServer()
 

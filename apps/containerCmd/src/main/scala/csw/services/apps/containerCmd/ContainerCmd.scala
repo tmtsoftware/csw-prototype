@@ -5,10 +5,13 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.{ ConfigFactory, ConfigResolveOptions }
+import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.akka.ConfigServiceClient
 import csw.services.pkg.Container
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
+import scala.util.{ Success, Failure }
 
 /**
  * Can be used by a command line application to create a container with components
@@ -20,25 +23,27 @@ import scala.concurrent.duration._
  * @param resource optional name of default config file (under src/main/resources)
  */
 case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
+  val logger = Logger(LoggerFactory.getLogger("ContainerCmd"))
+
   if (args.length == 0) {
     if (resource.isDefined) {
-      println(s" Using default resource: $resource")
+      logger.info(s" Using default resource: $resource")
       Container.create(ConfigFactory.load(resource.get))
     } else {
-      println("Error: No config file or resource was specified")
+      logger.error("Error: No config file or resource was specified")
       System.exit(1)
     }
   } else if (args.length == 1) {
     val file = new File(args(0))
     if (file.exists) {
-      println(s" Using file: $file")
+      logger.info(s" Using file: $file")
       Container.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
     } else {
-      println(s" Attempting to get '$file'from the config service")
+      logger.info(s" Attempting to get '$file' from the config service")
       initFromConfigService(file)
     }
   } else {
-    println("Error: Expected either a single config file argument, or no arguments for the default resource)")
+    logger.error("Error: Expected either a single config file argument, or no arguments for the default resource)")
     System.exit(1)
   }
 
@@ -47,10 +52,14 @@ case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
     implicit val system = ActorSystem()
     implicit val timeout: Timeout = 30.seconds
     import system.dispatcher
-    for {
+    val f = for {
       config ← ConfigServiceClient.getConfigFromConfigService(file)
-    } {
+    } yield {
       Container.create(config)
+    }
+    f.onComplete {
+      case Success(_)  ⇒ logger.info(s"XXX Created container based on $file")
+      case Failure(ex) ⇒ logger.error(s"Error getting $file from config service", ex)
     }
   }
 }

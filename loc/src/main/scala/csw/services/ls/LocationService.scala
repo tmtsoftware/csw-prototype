@@ -1,19 +1,25 @@
 package csw.services.ls
 
-import akka.actor._
-import scala.concurrent.Future
-import akka.pattern.ask
-import scala.concurrent.duration._
-import akka.util.Timeout
 import java.net.URI
+
+import akka.actor._
+import akka.pattern.{ AskTimeoutException, ask }
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.slf4j.Logger
 import csw.util.akka.Terminator
+import org.slf4j.LoggerFactory
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
  * Location service
  */
 object LocationService {
-  import LocationServiceActor._
+  import csw.services.ls.LocationServiceActor._
+
+  val logger = Logger(LoggerFactory.getLogger("LocationService"))
 
   /**
    * Stores information needed to register with the location service
@@ -29,13 +35,12 @@ object LocationService {
    * settings in reference.conf.
    * @param system the caller's actor system
    */
-  def getLocationService(system: ActorSystem): ActorSelection = {
+  def getLocationService()(implicit system: ActorSystem): ActorSelection = {
     val settings = LocationServiceSettings(system)
     val systemName = settings.systemName
     val host = settings.hostname
     val port = settings.port
     val path = s"akka.tcp://$systemName@$host:$port/user/$locationServiceName"
-    println(s"using location service at $path")
     val actorPath = ActorPath.fromString(path)
     system.actorSelection(actorPath)
   }
@@ -46,52 +51,72 @@ object LocationService {
    * If the actor dies, the location service will remove the reference and the service will need to
    * register again when restarting.
    *
-   * @param system the caller's actor system
    * @param actorRef reference to the actor for the service
    * @param serviceId name and service type to register with
    * @param configPath for command service actors (HCDs and Assemblies), an optional
    *                   dot-separated path indicating the part of command configurations
    *                   to be sent to the actor (default is to send the entire command)
    * @param httpUri optional HTTP URI for the actor registering
+   * @param system the caller's actor system
    */
-  def register(system: ActorSystem, actorRef: ActorRef, serviceId: ServiceId,
-               configPath: Option[String] = None, httpUri: Option[URI] = None): Unit = {
-    getLocationService(system).tell(Register(serviceId, configPath, httpUri), actorRef)
+  def register(actorRef: ActorRef, serviceId: ServiceId,
+               configPath: Option[String] = None, httpUri: Option[URI] = None)(implicit system: ActorSystem): Unit = {
+    getLocationService().tell(Register(serviceId, configPath, httpUri), actorRef)
   }
 
   /**
    * Convenience method that gets the location service information from the service given the serviceId.
-   * @param system the caller's actor system
    * @param serviceId name and service type to match on
+   * @param system the caller's actor system
    * @return a future LocationServiceInfo object, with the serviceId set
    *         (and the other fields only set if the service was found)
    */
-  def resolve(system: ActorSystem, serviceId: ServiceId): Future[LocationServiceInfo] = {
+  def resolve(serviceId: ServiceId)(implicit system: ActorSystem): Future[LocationServiceInfo] = {
+    class ServiceNotFoundException extends RuntimeException
+    import system.dispatcher
     implicit val timeout = Timeout(5.seconds)
-    (getLocationService(system) ? Resolve(serviceId)).mapTo[LocationServiceInfo]
+    val f = (getLocationService() ? Resolve(serviceId)).mapTo[LocationServiceInfo].map {
+      info ⇒
+        if (info == LocationServiceInfo.notFound(serviceId)) {
+          throw new ServiceNotFoundException()
+        }
+        info
+    }
+    f.recoverWith {
+      case e: AskTimeoutException ⇒
+        logger.warn(s"Resolving ${serviceId.name}: timed out, retrying...")
+        resolve(serviceId)
+      case e: ServiceNotFoundException ⇒
+        logger.warn(s"Resolving ${serviceId.name}: not found, retrying...")
+        akka.pattern.after(1.second, using = system.scheduler) {
+          resolve(serviceId)
+        }
+      case ex ⇒
+        logger.error(s"Failed to resolve ${serviceId.name}", ex)
+        f
+    }
   }
 
   /**
    * Convenience method  to search for services matching the given name or service type.
-   * @param system the caller's actor system
    * @param name optional service name (default: any)
    * @param serviceType optional service type: Defaults to any type
+   * @param system the caller's actor system
    */
-  def browse(system: ActorSystem, name: Option[String], serviceType: Option[ServiceType]): Future[BrowseResults] = {
+  def browse(name: Option[String], serviceType: Option[ServiceType])(implicit system: ActorSystem): Future[BrowseResults] = {
     implicit val timeout = Timeout(5.seconds)
-    (getLocationService(system) ? Browse(name, serviceType)).mapTo[BrowseResults]
+    (getLocationService() ? Browse(name, serviceType)).mapTo[BrowseResults]
   }
 
   /**
    * Convenience method to request to be notified when a list of services is up and running.
    * The given actorRef will receive a ServicesReady message when all the requested services are registered and running.
-   * @param system the caller's actor system
    * @param actorRef reference to the actor that should receive the reply
    * @param serviceIds a list of services to check for
+   * @param system the caller's actor system
    */
-  def requestServices(system: ActorSystem, actorRef: ActorRef, serviceIds: List[ServiceId]): Unit = {
-    //    println(s"XXX Request Services: $serviceIds ($actorRef)")
-    getLocationService(system).tell(RequestServices(serviceIds), actorRef)
+  def requestServices(actorRef: ActorRef, serviceIds: List[ServiceId])(implicit system: ActorSystem): Unit = {
+    getLocationService().tell(RequestServices(serviceIds), actorRef)
   }
 
   // Location service main
@@ -229,7 +254,7 @@ object LocationServiceActor {
 
 //
 class LocationServiceActor extends Actor with ActorLogging {
-  import LocationServiceActor._
+  import csw.services.ls.LocationServiceActor._
 
   // Information is saved here when a Register message is received
   private var registry = Map[ServiceId, LocationServiceInfo]()

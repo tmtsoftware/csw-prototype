@@ -99,13 +99,13 @@ object GitConfigManager {
    */
   def initBareRepo(dir: File)(implicit context: ActorRefFactory): Unit = {
     // Create the new main repo
-    deleteDirectoryRecursively(dir)
     Git.init.setDirectory(dir).setBare(true).call
 
     // Add a README file to a temporary clone of the main repo and push it to the new repo.
     val tmpDir = Files.createTempDirectory("TempConfigServiceRepo").toFile
     val gm = GitConfigManager(tmpDir, dir.toURI)
     try {
+      // XXX TODO: return Future[Unit] instead?
       Await.result(
         gm.create(new File("README"), ConfigData("This is the main Config Service Git repository.")),
         10.seconds)
