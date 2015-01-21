@@ -10,4 +10,7 @@ the target directories.
 * containerCmd - a command line application that takes a config file and starts a
   container with given  HCDs or assemblies.
 
+* csClient - a command line client to the config service
+
 * sequencer - A scala REPL shell for working with HCDs and assemblies
+

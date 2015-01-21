@@ -96,7 +96,8 @@ object CsClient extends App {
       case "update"  ⇒ update()
       case "list"    ⇒ list()
       case "history" ⇒ history()
-      case _         ⇒ list() // should not happen
+      case x ⇒
+        throw new RuntimeException(s"Unknown subcommand: $x")
     }
   }
 }

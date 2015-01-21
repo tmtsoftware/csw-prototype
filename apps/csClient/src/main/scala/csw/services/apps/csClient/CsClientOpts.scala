@@ -7,14 +7,6 @@ import java.io.File
  */
 object CsClientOpts {
 
-  //  // Subcommand enum
-  //  object Subcommands extends Enumeration {
-  //    type Subcommands = Value
-  //    val Get, Create, Update, List, History = Value
-  //  }
-  //  implicit val SubcommandsRead: scopt.Read[Subcommands.Value] =
-  //    scopt.Read.reads(Subcommands.withName)
-
   // Holds the options
   case class Config(subcmd: String = "", path: File = null, inputFile: File = null, outputFile: File = null,
                     id: Option[String] = None, oversize: Boolean = false, comment: String = "")
@@ -85,6 +77,10 @@ object CsClientOpts {
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
       } text "path name in Git repository")
+
+    checkConfig { c ⇒
+      if (c.subcmd.isEmpty) failure("Please specify one (get, create, update, list, history)") else success
+    }
   }
 
   /**
