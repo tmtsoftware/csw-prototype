@@ -104,7 +104,7 @@ object Build extends Build {
   lazy val containerCmd = Project(id = "containerCmd", base = file("apps/containerCmd"))
     .settings(defaultSettings: _*)
     .settings(libraryDependencies ++=
-    provided(akkaActor, launcherInterface) ++
+    provided(akkaActor) ++
       compile(akkaRemote) ++
       test(scalaLogging, logback)
     ) dependsOn(pkg, cmd, loc, util, cs)
@@ -132,7 +132,7 @@ object Build extends Build {
     .settings(packageSettings("CSW Config Service Client", "Command line client for Config Service"): _*)
     .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaRemote, akkaStream, akkaHttp) ++
+      compile(akkaRemote, akkaStream, scopt) ++
       test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
     ) dependsOn cs
 }
