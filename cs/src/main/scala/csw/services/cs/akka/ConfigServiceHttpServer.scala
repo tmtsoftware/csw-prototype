@@ -17,9 +17,11 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.Future
 import spray.json._
 
-case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: ConfigServiceSettings, registerWithLoc: Boolean = false)(implicit system: ActorSystem) extends ConfigServiceJsonFormats {
+case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: ConfigServiceSettings, registerWithLoc: Boolean = false) extends ConfigServiceJsonFormats {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceHttpServer"))
   logger.info("Config service http server started")
+
+  implicit val system = ActorSystem("ConfigServiceAnnexServer")
 
   import akka.http.model.HttpMethods._
   import system.dispatcher
@@ -30,7 +32,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   val binding = Http().bind(interface = settings.httpInterface, port = settings.httpPort)
   binding.connections.foreach { c ⇒
-    logger.info(s"Accepted new connection from ${c.remoteAddress}")
+    logger.info(s"${c.localAddress} accepted new connection from ${c.remoteAddress}")
     c.handleWithAsyncHandler {
       case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
       case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
@@ -40,11 +42,18 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     }
   }
 
-  //  binding.localAddress()
   if (registerWithLoc) {
-    // XXX TODO FIXME
+    // XXX TODO FIXME: binding.localAddress()?
     val localAddress = InetSocketAddress.createUnresolved(settings.httpInterface, settings.httpPort)
     registerWithLocationService(localAddress)
+  }
+
+  /**
+   * Shuts down this HTTP server
+   */
+  def shutdown(): Unit = {
+    // XXX Is there another way? unbind()?
+    system.shutdown()
   }
 
   /**

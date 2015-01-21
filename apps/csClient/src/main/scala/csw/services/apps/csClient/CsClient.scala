@@ -22,6 +22,7 @@ object CsClient extends App {
 
   if (args.length == 0) {
     usage()
+    System.exit(1)
   }
 
   val settings = ConfigServiceSettings(system)
@@ -47,7 +48,7 @@ object CsClient extends App {
         |Usage: Note: -D options override default values in the config file.
         |       If no config file is given, the default config is used (from resources).
         |
-        | csClient [-config file.conf] (XXX TODO)
+        | csclient [-config file.conf] (XXX TODO)
         |          [-Dcsw.services.cs.name=MyConfigServiceName]
         |           $command [args]
         |

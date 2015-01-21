@@ -51,11 +51,16 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
     val manager = TestRepo.getConfigManager(settings)
 
     // Create the actor
-    val csActor = system.actorOf(ConfigServiceActor.props(manager) /*, name = "configService1"*/ )
+    val csActor = system.actorOf(ConfigServiceActor.props(manager))
     val server = ConfigServiceHttpServer(csActor, settings)
     val csClient = ConfigServiceHttpClient(settings)
 
-    ConfigManagerTestHelper.runTests(csClient, oversize)
+    for {
+      _ ← ConfigManagerTestHelper.runTests(csClient, oversize)
+    } yield {
+      system.stop(csActor)
+      server.shutdown()
+    }
   }
 
   // Verify that a second config service can still see all the files that were checked in by the first
@@ -67,9 +72,13 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
     val manager = GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
 
     // Create the actor
-    val csActor = system.actorOf(ConfigServiceActor.props(manager) /*, name = "configService2"*/ )
+    val csActor = system.actorOf(ConfigServiceActor.props(manager))
     val csClient = ConfigServiceClient(csActor)
 
-    ConfigManagerTestHelper.runTests2(csClient, oversize)
+    for {
+      _ ← ConfigManagerTestHelper.runTests2(csClient, oversize)
+    } yield {
+      system.stop(csActor)
+    }
   }
 }
