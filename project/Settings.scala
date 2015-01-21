@@ -1,5 +1,5 @@
 import com.typesafe.sbt.SbtNativePackager._
-import com.typesafe.sbt.{SbtMultiJvm, SbtScalariform}
+import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.packager.Keys._
 import play.twirl.sbt.Import.TwirlKeys
@@ -18,6 +18,7 @@ object Settings {
     scalaVersion := Dependencies.scalaVersion,
     crossPaths := true,
     parallelExecution in Test := false,
+    fork := true,
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     //    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
