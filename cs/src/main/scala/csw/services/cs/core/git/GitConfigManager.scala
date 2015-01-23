@@ -201,6 +201,12 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     }
   }
 
+  override def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] =
+    for {
+      exists ← exists(path)
+      result ← if (exists) update(path, configData, comment) else create(path, configData, oversize, comment)
+    } yield result
+
   override def exists(path: File): Future[Boolean] = Future {
     logger.debug(s"exists $path")
     pull()

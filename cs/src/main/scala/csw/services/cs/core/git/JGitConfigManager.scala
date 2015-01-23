@@ -36,6 +36,10 @@ case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit context
     Await.result(manager.update(path, configData, comment), timeout)
   }
 
+  override def createOrUpdate(path: File, configData: ConfigData, oversize: lang.Boolean, comment: String): ConfigId = {
+    Await.result(manager.createOrUpdate(path, configData, oversize, comment), timeout)
+  }
+
   override def get(path: File): JConfigData = {
     val result = Await.result(manager.get(path), timeout).orNull
     if (result != null) JGitConfigData(result) else null

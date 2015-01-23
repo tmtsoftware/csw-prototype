@@ -31,16 +31,16 @@ object ConfigManagerTestHelper extends FunSuite {
   def runTests(manager: ConfigManager, oversize: Boolean)(implicit system: ActorSystem): Future[Unit] = {
     import system.dispatcher
     val result = for {
-      //      // Try to update a file that does not exist (should fail)
-      //      updateIdNull ← manager.update(path1, ConfigData(contents2), comment2) recover {
-      //        case e: IOException ⇒ null
-      //      }
+      // Try to update a file that does not exist (should fail)
+      updateIdNull ← manager.update(path1, ConfigData(contents2), comment2) recover {
+        case e: IOException ⇒ null
+      }
 
       // Add, then update the file twice
       createId1 ← manager.create(path1, ConfigData(contents1), oversize, comment1)
-      createId2 ← manager.create(path2, ConfigData(contents1), oversize, comment1)
+      createId2 ← manager.createOrUpdate(path2, ConfigData(contents1), oversize, comment1)
       updateId1 ← manager.update(path1, ConfigData(contents2), comment2)
-      updateId2 ← manager.update(path1, ConfigData(contents3), comment3)
+      updateId2 ← manager.createOrUpdate(path1, ConfigData(contents3), oversize, comment3)
 
       // Check that we can access each version
       result1 ← manager.get(path1).flatMap(_.get.toFutureString)
@@ -64,14 +64,14 @@ object ConfigManagerTestHelper extends FunSuite {
       // test list()
       list ← manager.list()
 
-      //      // Should throw exception if we try to create a file that already exists
-      //      createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
-      //        case e: IOException ⇒ null
-      //      }
+      // Should throw exception if we try to create a file that already exists
+      createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
+        case e: IOException ⇒ null
+      }
 
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
-      //      assert(updateIdNull == null)
+      assert(updateIdNull == null)
 
       assert(result1 == contents3)
       assert(result2 == contents1)
@@ -79,8 +79,6 @@ object ConfigManagerTestHelper extends FunSuite {
       assert(result4 == contents3)
       assert(result5 == contents1)
       assert(result6 == contents1)
-
-      //      assert(createIdNull == null)
 
       assert(historyList1.size == 3)
       assert(historyList2.size == 1)
@@ -101,6 +99,8 @@ object ConfigManagerTestHelper extends FunSuite {
       assert(default1 == contents3)
       assert(default2 == contents2)
       assert(default3 == contents3)
+
+      assert(createIdNull == null)
 
       logger.info(s"\n\n runTests passed\n\n")
     }

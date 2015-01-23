@@ -50,7 +50,8 @@ object Settings {
     rpmLicense := Some("MIT"),
     rpmGroup := Some("CSW"),
     packageSummary := summary,
-    packageDescription := desc
+    packageDescription := desc,
+    bashScriptExtraDefines ++= Seq(s"addJava -DCSW_VERSION=$Version")
   )
 
   lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(

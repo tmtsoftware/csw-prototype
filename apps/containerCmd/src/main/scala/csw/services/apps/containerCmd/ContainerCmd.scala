@@ -6,12 +6,36 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.{ ConfigFactory, ConfigResolveOptions }
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.cs.akka.ConfigServiceClient
+import csw.services.cs.akka.{ ConfigServiceSettings, ConfigServiceClient }
 import csw.services.pkg.Container
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.util.{ Success, Failure }
+
+object ContainerCmd {
+
+  /**
+   * Command line options: [--config config] file
+   * @param csConfig optional config file to use for config service settings, if needed
+   * @param file optional container config file to override the default
+   */
+  case class Config(csConfig: Option[File] = None, file: Option[File] = None)
+
+  val parser = new scopt.OptionParser[Config]("scopt") {
+    head("csclient", System.getProperty("CSW_VERSION"))
+
+    opt[File]('c', "config") action { (x, c) ⇒
+      c.copy(csConfig = Some(x))
+    } text "optional config file to use for config service settings"
+
+    arg[File]("<file>") action { (x, c) ⇒
+      c.copy(file = Some(x))
+    } text "optional container config file to override the default"
+  }
+
+  def parse(args: Seq[String]): Option[Config] = parser.parse(args, Config())
+}
 
 /**
  * Can be used by a command line application to create a container with components
@@ -25,35 +49,46 @@ import scala.util.{ Success, Failure }
 case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
   val logger = Logger(LoggerFactory.getLogger("ContainerCmd"))
 
-  if (args.length == 0) {
-    if (resource.isDefined) {
-      logger.info(s" Using default resource: $resource")
-      Container.create(ConfigFactory.load(resource.get))
-    } else {
-      logger.error("Error: No config file or resource was specified")
-      System.exit(1)
+  ContainerCmd.parse(args) match {
+    case Some(options) ⇒ run(options)
+    case None          ⇒ System.exit(1)
+  }
+
+  private def run(options: ContainerCmd.Config): Unit = {
+    options.file match {
+      case Some(file) ⇒
+        if (file.exists) {
+          logger.info(s" Using file: $file")
+          Container.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
+        } else {
+          logger.info(s" Attempting to get '$file' from the config service")
+          initFromConfigService(file, options.csConfig)
+        }
+
+      case None ⇒
+        if (resource.isDefined) {
+          logger.info(s" Using default resource: $resource")
+          Container.create(ConfigFactory.load(resource.get))
+        } else {
+          logger.error("Error: No config file or resource was specified")
+          System.exit(1)
+        }
     }
-  } else if (args.length == 1) {
-    val file = new File(args(0))
-    if (file.exists) {
-      logger.info(s" Using file: $file")
-      Container.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
-    } else {
-      logger.info(s" Attempting to get '$file' from the config service")
-      initFromConfigService(file)
-    }
-  } else {
-    logger.error("Error: Expected either a single config file argument, or no arguments for the default resource)")
-    System.exit(1)
   }
 
   // Gets the named config file from the config service and uses it to initialize the container
-  private def initFromConfigService(file: File): Unit = {
+  private def initFromConfigService(file: File, csConfig: Option[File]): Unit = {
     implicit val system = ActorSystem()
-    implicit val timeout: Timeout = 30.seconds
     import system.dispatcher
+
+    implicit val timeout: Timeout = 30.seconds
+    val settings = csConfig match {
+      case Some(csConfigFile) ⇒ ConfigServiceSettings(ConfigFactory.parseFile(csConfigFile))
+      case None               ⇒ ConfigServiceSettings(system)
+    }
+
     val f = for {
-      config ← ConfigServiceClient.getConfigFromConfigService(file)
+      config ← ConfigServiceClient.getConfigFromConfigService(settings, file)
     } yield {
       Container.create(config)
     }
@@ -63,3 +98,4 @@ case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
     }
   }
 }
+

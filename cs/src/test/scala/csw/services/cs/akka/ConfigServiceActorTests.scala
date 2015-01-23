@@ -141,28 +141,28 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
   }
 
   def checkCreateResult(path: File): ConfigId = {
-    val result = expectMsgType[CreateResult]
+    val result = expectMsgType[CreateOrUpdateResult]
     assert(result.path == path)
     assert(result.configId.isSuccess)
     result.configId.get
   }
 
   def checkCreateResultFailed(path: File): Unit = {
-    val result = expectMsgType[CreateResult]
+    val result = expectMsgType[CreateOrUpdateResult]
     assert(result.path == path)
     assert(result.configId.isFailure)
     assert(result.configId.failed.get.isInstanceOf[IOException])
   }
 
   def checkUpdateResult(path: File): ConfigId = {
-    val result = expectMsgType[UpdateResult]
+    val result = expectMsgType[CreateOrUpdateResult]
     assert(result.path == path)
     assert(result.configId.isSuccess)
     result.configId.get
   }
 
   def checkUpdateResultFailed(path: File): Unit = {
-    val result = expectMsgType[UpdateResult]
+    val result = expectMsgType[CreateOrUpdateResult]
     assert(result.path == path)
     assert(result.configId.isFailure)
     assert(result.configId.failed.get.isInstanceOf[IOException])

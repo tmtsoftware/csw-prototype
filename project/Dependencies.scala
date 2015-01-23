@@ -4,8 +4,8 @@ import sbt._
 
 object Dependencies {
 
-  val scalaVersion = "2.11.4"
-  val akkaVersion = "2.3.8"
+  val scalaVersion = "2.11.5"
+  val akkaVersion = "2.3.9"
   val akkaStreamsVersion = "1.0-M2"
   val sprayVersion = "1.3.2"
   val hornetqVersion = "2.4.0.Final"

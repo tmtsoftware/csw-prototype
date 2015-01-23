@@ -18,9 +18,8 @@ object ConfigServiceClient {
    * then fetching the contents of the file using a config service client.
    * (Use only for small files.)
    */
-  def getStringFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[String] = {
+  def getStringFromConfigService(settings: ConfigServiceSettings, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[String] = {
     import system.dispatcher
-    val settings = ConfigServiceSettings(system)
     for {
       cs ← locateConfigService(settings.name)
       configDataOpt ← ConfigServiceClient(cs).get(path, id)
@@ -35,10 +34,10 @@ object ConfigServiceClient {
    * Finally, the file contents is parsed as a Typesafe config file and the
    * Config object returned.
    */
-  def getConfigFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Config] = {
+  def getConfigFromConfigService(settings: ConfigServiceSettings, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Config] = {
     import system.dispatcher
     for {
-      s ← getStringFromConfigService(path, id)
+      s ← getStringFromConfigService(settings, path, id)
     } yield ConfigFactory.parseString(s).resolve(ConfigResolveOptions.noSystem())
   }
 }
@@ -60,11 +59,15 @@ case class ConfigServiceClient(configServiceActor: ActorRef)(implicit system: Ac
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] =
     (configServiceActor ? CreateRequest(path, configData, oversize, comment))
-      .mapTo[CreateResult].map(_.configId.get)
+      .mapTo[CreateOrUpdateResult].map(_.configId.get)
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] =
     (configServiceActor ? UpdateRequest(path, configData, comment)).
-      mapTo[UpdateResult].map(_.configId.get)
+      mapTo[CreateOrUpdateResult].map(_.configId.get)
+
+  override def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] =
+    (configServiceActor ? CreateOrUpdateRequest(path, configData, oversize, comment))
+      .mapTo[CreateOrUpdateResult].map(_.configId.get)
 
   override def get(path: File, id: Option[ConfigId] = None): Future[Option[ConfigData]] =
     (configServiceActor ? GetRequest(path, id)).mapTo[GetResult].map(_.configData.get)

@@ -37,6 +37,8 @@ object ConfigServiceActor {
 
   case class UpdateRequest(path: File, configData: ConfigData, comment: String = "") extends ConfigServiceRequest
 
+  case class CreateOrUpdateRequest(path: File, configData: ConfigData, oversize: Boolean, comment: String = "") extends ConfigServiceRequest
+
   case class GetRequest(path: File, id: Option[ConfigId] = None) extends ConfigServiceRequest
 
   case class ExistsRequest(path: File) extends ConfigServiceRequest
@@ -59,9 +61,7 @@ object ConfigServiceActor {
   // Reply messages (The final arguments, wrapped in Try[], give the actual results)
   sealed trait ConfigServiceResult
 
-  case class CreateResult(path: File, configId: Try[ConfigId]) extends ConfigServiceResult
-
-  case class UpdateResult(path: File, configId: Try[ConfigId]) extends ConfigServiceResult
+  case class CreateOrUpdateResult(path: File, configId: Try[ConfigId]) extends ConfigServiceResult
 
   case class GetResult(path: File, id: Option[ConfigId], configData: Try[Option[ConfigData]]) extends ConfigServiceResult
 
@@ -126,6 +126,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   override def receive: Receive = {
     case CreateRequest(path, configData, oversize, comment) ⇒ handleCreateRequest(sender(), path, configData, oversize, comment)
     case UpdateRequest(path, configData, comment) ⇒ handleUpdateRequest(sender(), path, configData, comment)
+    case CreateOrUpdateRequest(path, configData, oversize, comment) ⇒ handleCreateOrUpdateRequest(sender(), path, configData, oversize, comment)
     case GetRequest(path, id) ⇒ handleGetRequest(sender(), path, id)
     case ExistsRequest(path) ⇒ handleExistsRequest(sender(), path)
     case DeleteRequest(path, comment) ⇒ handleDeleteRequest(sender(), path, comment)
@@ -142,16 +143,24 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit = {
     val result = configManager.create(path, configData, oversize, comment)
     result onComplete {
-      case Success(configId) ⇒ replyTo ! CreateResult(path, Success(configId))
-      case Failure(ex)       ⇒ replyTo ! CreateResult(path, Failure(ex))
+      case Success(configId) ⇒ replyTo ! CreateOrUpdateResult(path, Success(configId))
+      case Failure(ex)       ⇒ replyTo ! CreateOrUpdateResult(path, Failure(ex))
     }
   }
 
   def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit = {
     val result = configManager.update(path, configData, comment)
     result onComplete {
-      case Success(configId) ⇒ replyTo ! UpdateResult(path, Success(configId))
-      case Failure(ex)       ⇒ replyTo ! UpdateResult(path, Failure(ex))
+      case Success(configId) ⇒ replyTo ! CreateOrUpdateResult(path, Success(configId))
+      case Failure(ex)       ⇒ replyTo ! CreateOrUpdateResult(path, Failure(ex))
+    }
+  }
+
+  def handleCreateOrUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit = {
+    val result = configManager.createOrUpdate(path, configData, oversize, comment)
+    result onComplete {
+      case Success(configId) ⇒ replyTo ! CreateOrUpdateResult(path, Success(configId))
+      case Failure(ex)       ⇒ replyTo ! CreateOrUpdateResult(path, Failure(ex))
     }
   }
 

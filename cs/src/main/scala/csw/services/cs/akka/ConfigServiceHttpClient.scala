@@ -50,6 +50,11 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     createOrUpdate(uri, configData, comment, create = false)
   }
 
+  override def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
+    val uri = makeUri("/createOrUpdate", "path" -> path.toString, "oversize" -> oversize.toString, "comment" -> comment)
+    createOrUpdate(uri, configData, comment, create = true)
+  }
+
   def createOrUpdate(uri: Uri, configData: ConfigData, comment: String, create: Boolean): Future[ConfigId] = {
     logger.info(s"$uri")
     implicit val materializer = FlowMaterializer()

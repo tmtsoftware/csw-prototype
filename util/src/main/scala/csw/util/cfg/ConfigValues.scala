@@ -69,9 +69,9 @@ object ConfigValues {
 
     // DSL support (XXX deal with duration implicit defs)
     implicit def toValueData[A](elem: A) = elem match {
-      case s: Seq[A] ⇒ ValueData(s)
+      case s: Seq[A @unchecked] ⇒ ValueData(s)
       //      case p: Product => ValueData(p.productIterator.toList)
-      case _         ⇒ ValueData(Seq(elem))
+      case _                    ⇒ ValueData(Seq(elem))
     }
   }
 
@@ -111,9 +111,9 @@ object ConfigValues {
     def apply[A](name: String, units: Units, data: A*): CValue[A] = CValue[A](name, ValueData[A](data, units))
 
     implicit def tupleToCValue[A](t: (String, A)): CValue[A] = t._2 match {
-      case v: ValueData[A] ⇒
+      case v: ValueData[A @unchecked] ⇒
         CValue[A](t._1, v)
-      case s: Seq[A] ⇒
+      case s: Seq[A @unchecked] ⇒
         CValue[A](t._1, ValueData[A](s, NoUnits))
       //      case p: Product =>
       //        CValue[A](t._1, ValueData[A](p.productIterator.toSeq, NoUnits))

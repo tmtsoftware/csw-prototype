@@ -149,62 +149,46 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val path = uri.path.toString()
     logger.info(s"Received POST request for $path (uri = $uri)")
     path match {
-      case "/create"       ⇒ create(uri, entity)
-      case "/update"       ⇒ update(uri, entity)
-      case "/setDefault"   ⇒ setDefault(uri)
-      case "/resetDefault" ⇒ resetDefault(uri)
-      case _               ⇒ unknownResource(path)
+      case "/create"         ⇒ createOrUpdate(uri, entity)
+      case "/update"         ⇒ createOrUpdate(uri, entity)
+      case "/createOrUpdate" ⇒ createOrUpdate(uri, entity)
+      case "/setDefault"     ⇒ setDefault(uri)
+      case "/resetDefault"   ⇒ resetDefault(uri)
+      case _                 ⇒ unknownResource(path)
     }
   }
 
   // Creates a new file
-  private def create(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
+  private def createOrUpdate(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
+    val op = uri.path.toString().substring(1)
     val pathOpt = uri.query.get("path")
     val oversize = uri.query.get("oversize").getOrElse("false").equalsIgnoreCase("true")
     val comment = uri.query.get("comment").getOrElse("")
 
-    logger.info(s"create $pathOpt oversize=$oversize comment=$comment")
+    if (op.startsWith("create"))
+      logger.info(s"$op $pathOpt oversize=$oversize comment=$comment")
+    else
+      logger.info(s"$op $pathOpt comment=$comment")
 
     pathOpt match {
       case Some(path) ⇒
         val configData = ConfigData(entity.dataBytes)
+        val file = new File(path)
         val result = for {
-          configId ← client.create(new File(path), configData, oversize, comment)
+          configId ← op match {
+            case "create" ⇒ client.create(file, configData, oversize, comment)
+            case "update" ⇒ client.update(file, configData, comment)
+            case _        ⇒ client.createOrUpdate(file, configData, oversize, comment)
+          }
         } yield {
           val json = configId.toJson.toString()
-          logger.info(s"Returing configId as: $json")
+          //          logger.info(s"Returing configId as: $json")
           HttpResponse(StatusCodes.OK, entity = HttpEntity(MediaTypes.`application/json`, json))
         }
         result.recover {
           case ex ⇒
-            logger.error(s"error processing $uri", ex)
+            //            logger.error(s"error processing $uri", ex)
             HttpResponse(StatusCodes.NotFound, entity = ex.toString)
-        }
-      case None ⇒
-        unknownResource("")
-    }
-  }
-
-  // Updates an existing file
-  private def update(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
-    val pathOpt = uri.query.get("path")
-    val oversize = uri.query.get("oversize").getOrElse("false").equalsIgnoreCase("true")
-    val comment = uri.query.get("comment").getOrElse("")
-
-    logger.info(s"update $pathOpt comment=$comment")
-
-    pathOpt match {
-      case Some(path) ⇒
-        val configData = ConfigData(entity.dataBytes)
-        val result = for {
-          configId ← client.update(new File(path), configData, comment)
-        } yield {
-          val json = configId.toJson.toString()
-          logger.info(s"Returing configId as: $json")
-          HttpResponse(StatusCodes.OK, entity = HttpEntity(MediaTypes.`application/json`, json))
-        }
-        result.recover {
-          case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
       case None ⇒
         unknownResource("")

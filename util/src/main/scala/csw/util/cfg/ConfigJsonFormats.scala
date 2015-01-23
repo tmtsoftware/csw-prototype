@@ -166,24 +166,24 @@ private object ConfigJsonFormats {
 
   // -- write --
 
-  def valueToJsValue[A](value: A): JsValue = value match {
-    case Nil             ⇒ JsNull
-    case s: String       ⇒ JsString(s)
-    case i: Int          ⇒ JsNumber(i)
-    case i: Integer      ⇒ JsNumber(i)
-    case l: Long         ⇒ JsNumber(l)
-    case f: Float        ⇒ JsNumber(f)
-    case d: Double       ⇒ JsNumber(d)
-    case x: Byte         ⇒ JsNumber(x)
-    case x: Short        ⇒ JsNumber(x)
-    case x: BigInt       ⇒ JsNumber(x)
-    case x: BigDecimal   ⇒ JsNumber(x)
-    case c: Char         ⇒ JsString(String.valueOf(c))
-    case s: Seq[A]       ⇒ JsArray(s.map(valueToJsValue).toList: _*)
-    case (a, b)          ⇒ valueToJsValue(Seq(a, b))
-    case (a, b, c)       ⇒ valueToJsValue(Seq(a, b, c))
-    case (a, b, c, d)    ⇒ valueToJsValue(Seq(a, b, c, d))
-    case (a, b, c, d, e) ⇒ valueToJsValue(Seq(a, b, c, d, e))
+  def valueToJsValue[A](value: A): JsValue = value match { // XXX FIXME
+    case Nil                  ⇒ JsNull
+    case s: String            ⇒ JsString(s)
+    case i: Int               ⇒ JsNumber(i)
+    case i: Integer           ⇒ JsNumber(i)
+    case l: Long              ⇒ JsNumber(l)
+    case f: Float             ⇒ JsNumber(f)
+    case d: Double            ⇒ JsNumber(d)
+    case x: Byte              ⇒ JsNumber(x)
+    case x: Short             ⇒ JsNumber(x)
+    case x: BigInt            ⇒ JsNumber(x)
+    case x: BigDecimal        ⇒ JsNumber(x)
+    case c: Char              ⇒ JsString(String.valueOf(c))
+    case s: Seq[A @unchecked] ⇒ JsArray(s.map(valueToJsValue).toList: _*)
+    case (a, b)               ⇒ valueToJsValue(Seq(a, b))
+    case (a, b, c)            ⇒ valueToJsValue(Seq(a, b, c))
+    case (a, b, c, d)         ⇒ valueToJsValue(Seq(a, b, c, d))
+    case (a, b, c, d, e)      ⇒ valueToJsValue(Seq(a, b, c, d, e))
   }
 
   def seqToJsValue[A](values: Seq[A]): JsValue = values.size match {
