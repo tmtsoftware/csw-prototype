@@ -4,52 +4,93 @@ import akka.actor.{ ActorLogging, Actor }
 import csw.services.pkg.LifecycleManager._
 
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
 
 /**
  * Containers and Components can override these to handle lifecycle changes.
  * Add "orElse receiveLifecycleCommands" to the receive method to use the
- * methods here. The handler methods all return a future, which if successful
- * causes a reply to be sent with the new state. If the future failed, a failed
- * message is sent as a reply.
+ * methods here. The handler methods all return either the new state, if successful,
+ * or an error status, on failure, which is sent to the parent actor (the lifecycle manager).
+ * If a future fails with an exception, a failed message is automatically sent.
  */
 trait LifecycleHandler {
   this: Actor with ActorLogging ⇒
+
   import context.dispatcher
+
   val name: String
 
   def receiveLifecycleCommands: Receive = {
     case Initialize ⇒
-      initialize().onComplete {
-        case Success(_)  ⇒ context.parent ! Initialized(name)
-        case Failure(ex) ⇒ context.parent ! InitializeFailed(name, ex)
+      for (
+        result ← Future(initialize()) recover {
+          case ex ⇒ Left(InitializeFailed(name, ex.getMessage))
+        }
+      ) yield {
+        context.parent ! result.merge
       }
 
     case Startup ⇒
-      startup().onComplete {
-        case Success(_)  ⇒ context.parent ! Running(name)
-        case Failure(ex) ⇒ context.parent ! StartupFailed(name, ex)
+      for (
+        result ← Future(startup()) recover {
+          case ex ⇒ Left(StartupFailed(name, ex.getMessage))
+        }
+      ) yield {
+        context.parent ! result.merge
       }
 
     case Shutdown ⇒
-      shutdown().onComplete {
-        case Success(_)  ⇒ context.parent ! Initialized(name)
-        case Failure(ex) ⇒ context.parent ! ShutdownFailed(name, ex)
+      for (
+        result ← Future(shutdown()) recover {
+          case ex ⇒ Left(ShutdownFailed(name, ex.getMessage))
+        }
+      ) yield {
+        context.parent ! result.merge
       }
 
     case Uninitialize ⇒
-      uninitialize().onComplete {
-        case Success(_)  ⇒ context.parent ! Loaded(name)
-        case Failure(ex) ⇒ context.parent ! UninitializeFailed(name, ex)
+      for (
+        result ← Future(uninitialize()) recover {
+          case ex ⇒ Left(UninitializeFailed(name, ex.getMessage))
+        }
+      ) yield {
+        context.parent ! result.merge
       }
   }
 
-  def initialize(): Future[Unit] = Future { log.debug(s"initialize") }
+  /**
+   * Components can override this method to run code when initializing.
+   * @return either the new lifecycle state, or the lifecycle error
+   */
+  def initialize(): Either[InitializeFailed, Initialized] = {
+    log.debug(s"initialize $name")
+    Right(Initialized(name))
+  }
 
-  def startup(): Future[Unit] = Future { log.debug(s"startup") }
+  /**
+   * Components can override this method to run code when starting up.
+   * @return either the new lifecycle state, or the lifecycle error
+   */
+  def startup(): Either[StartupFailed, Running] = {
+    log.debug(s"startup $name")
+    Right(Running(name))
+  }
 
-  def shutdown(): Future[Unit] = Future { log.debug(s"shutdown") }
+  /**
+   * Components can override this method to run code when shutting down.
+   * @return either the new lifecycle state, or the lifecycle error
+   */
+  def shutdown(): Either[ShutdownFailed, Initialized] = {
+    log.debug(s"shutdown $name")
+    Right(Initialized(name))
+  }
 
-  def uninitialize(): Future[Unit] = Future { log.debug(s"uninitialize") }
+  /**
+   * Components can override this method to run code when uninitializing.
+   * @return either the new lifecycle state, or the lifecycle error
+   */
+  def uninitialize(): Either[UninitializeFailed, Loaded] = {
+    log.debug(s"uninitialize $name")
+    Right(Loaded(name))
+  }
 }
 

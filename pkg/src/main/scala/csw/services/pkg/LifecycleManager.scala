@@ -47,16 +47,16 @@ object LifecycleManager {
    */
   sealed trait LifecycleError {
     val name: String
-    val reason: Throwable
+    val reason: String
   }
 
-  case class InitializeFailed(name: String, reason: Throwable) extends LifecycleError
+  case class InitializeFailed(name: String, reason: String) extends LifecycleError
 
-  case class StartupFailed(name: String, reason: Throwable) extends LifecycleError
+  case class StartupFailed(name: String, reason: String) extends LifecycleError
 
-  case class ShutdownFailed(name: String, reason: Throwable) extends LifecycleError
+  case class ShutdownFailed(name: String, reason: String) extends LifecycleError
 
-  case class UninitializeFailed(name: String, reason: Throwable) extends LifecycleError
+  case class UninitializeFailed(name: String, reason: String) extends LifecycleError
 
   /**
    * Filter for lifecycle states (The second argument is true if connected)
