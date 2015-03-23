@@ -91,9 +91,6 @@ class Container(config: Config) extends Actor with ActorLogging {
   // Maps component name to the info returned when creating it
   private val components = parseConfig()
 
-  // Startup the components
-  allComponents(Startup)
-
   // Receive messages
   override def receive: Receive = {
     case Initialize           ⇒ allComponents(Initialize)

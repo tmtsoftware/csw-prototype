@@ -3,6 +3,7 @@ package csw.services.pkg
 import akka.actor._
 import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor.ServiceId
+import csw.services.pkg.LifecycleManager.Startup
 
 /**
  * Represents a Component, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).
@@ -34,6 +35,7 @@ object Component {
     val name = regInfo.serviceId.name
     val system = ActorSystem(s"$name-system")
     val lifecycleManager = system.actorOf(LifecycleManager.props(props, regInfo, services), s"$name-lifecycle-manager")
+    lifecycleManager ! Startup
     ComponentInfo(props, regInfo, services, system, lifecycleManager)
   }
 }
