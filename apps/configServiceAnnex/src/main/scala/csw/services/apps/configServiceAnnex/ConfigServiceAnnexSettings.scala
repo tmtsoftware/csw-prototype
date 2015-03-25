@@ -11,7 +11,6 @@ import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProv
 import akka.util.Timeout
 import com.typesafe.config.Config
 
-import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
 
 object ConfigServiceAnnexSettings extends ExtensionId[ConfigServiceAnnexSettings] with ExtensionIdProvider {

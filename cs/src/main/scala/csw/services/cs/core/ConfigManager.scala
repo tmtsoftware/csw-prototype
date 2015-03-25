@@ -5,8 +5,8 @@ import java.nio.file.{ Files, StandardCopyOption }
 import java.util.Date
 
 import akka.actor.ActorRefFactory
-import akka.stream.FlowMaterializer
-import akka.stream.scaladsl.{ ForeachSink, Source }
+import akka.stream.ActorFlowMaterializer
+import akka.stream.scaladsl.{ Sink, Source }
 import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
 
@@ -159,21 +159,21 @@ trait ConfigData {
   /**
    * Returns a stream which can be used to read the data
    */
-  def source: Source[ByteString]
+  def source: Source[ByteString, Unit]
 
   /**
    * Writes the contents of the source to the given output stream.
    */
   def writeToOutputStream(out: OutputStream)(implicit context: ActorRefFactory): Future[Unit] = {
     import context.dispatcher
-    implicit val materializer = FlowMaterializer()
-    val sink = ForeachSink[ByteString] { bytes ⇒
+    implicit val materializer = ActorFlowMaterializer()
+    val sink = Sink.foreach[ByteString] { bytes ⇒
       out.write(bytes.toArray)
     }
-    val materialized = source.to(sink).run()
+    val materialized = source.runWith(sink)
     // ensure the output file is closed when done
     for {
-      _ ← materialized.get(sink)
+      _ ← materialized
     } yield {
       Try(out.close())
     }
@@ -203,16 +203,14 @@ trait ConfigData {
    * Returns a future string by reading the source.
    */
   def toFutureString(implicit context: ActorRefFactory): Future[String] = {
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
     import context.dispatcher
     val out = new ByteArrayOutputStream
-    val sink = ForeachSink[ByteString] { bytes ⇒
+    val sink = Sink.foreach[ByteString] { bytes ⇒
       out.write(bytes.toArray)
     }
-    val materialized = source.to(sink).run()
-    for { _ ← materialized.get(sink) } yield {
-      out.toString
-    }
+    val materialized = source.runWith(sink)
+    for (_ ← materialized) yield out.toString
   }
 }
 
@@ -223,27 +221,27 @@ object ConfigData {
 
   def apply(file: File, chunkSize: Int = 4096): ConfigData = ConfigFile(file, chunkSize)
 
-  def apply(source: Source[ByteString]): ConfigData = ConfigSource(source)
+  def apply(source: Source[ByteString, Unit]): ConfigData = ConfigSource(source)
 }
 
 case class ConfigString(str: String) extends ConfigData {
-  override def source: Source[ByteString] = Source(List(ByteString(str.getBytes)))
+  override def source: Source[ByteString, Unit] = Source(List(ByteString(str.getBytes)))
 
   override def toString: String = str
 }
 
 case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
-  override def source: Source[ByteString] = Source(List(ByteString(bytes)))
+  override def source: Source[ByteString, Unit] = Source(List(ByteString(bytes)))
 
   override def toString: String = new String(bytes)
 }
 
 case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
-  override def source: Source[ByteString] = {
+  override def source: Source[ByteString, Unit] = {
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
     Source(() ⇒ iterator)
   }
 }
 
-case class ConfigSource(override val source: Source[ByteString]) extends ConfigData
+case class ConfigSource(override val source: Source[ByteString, Unit]) extends ConfigData

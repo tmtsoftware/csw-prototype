@@ -6,7 +6,8 @@ import java.nio.file.{ Files, Path, Paths }
 
 import akka.http.Http
 import akka.http.model.HttpEntity.ChunkStreamPart
-import akka.stream.scaladsl.{ ForeachSink, Source }
+import akka.stream.ActorFlowMaterializer
+import akka.stream.scaladsl.{ Sink, Source }
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
@@ -14,7 +15,6 @@ import csw.services.ls.LocationServiceRegisterActor
 import org.slf4j.LoggerFactory
 import akka.actor.ActorSystem
 import akka.http.model._
-import akka.stream.FlowMaterializer
 
 import scala.concurrent.{ Promise, Future }
 import scala.util.{ Failure, Success, Try }
@@ -31,10 +31,10 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   val settings = ConfigServiceAnnexSettings(system)
   if (!settings.dir.exists()) settings.dir.mkdirs()
 
-  implicit val materializer = FlowMaterializer()
+  implicit val materializer = ActorFlowMaterializer()
 
   val binding = Http().bind(interface = settings.interface, port = settings.port)
-  binding.connections.foreach { c ⇒
+  binding.runForeach { c ⇒
     logger.info(s"Accepted new connection from ${c.remoteAddress}")
     c.handleWithAsyncHandler {
       case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
@@ -97,13 +97,13 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     } else {
       logger.info(s"Received POST request for $file (uri = $uri)")
       val out = new FileOutputStream(file)
-      val sink = ForeachSink[ByteString] { bytes ⇒
+      val sink = Sink.foreach[ByteString] { bytes ⇒
         out.write(bytes.toArray)
       }
-      val materialized = entity.getDataBytes().to(sink).run()
+      val materialized = entity.dataBytes.runWith(sink)
       // ensure the output file is closed and the system shutdown upon completion
       // XXX TODO: Use a for comprehension here instead?
-      materialized.get(sink).onComplete {
+      materialized.onComplete {
         case Success(_) ⇒
           Try(out.close())
           if (FileUtils.validate(id, file)) {

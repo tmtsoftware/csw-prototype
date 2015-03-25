@@ -7,7 +7,7 @@ import akka.actor.{ ActorRef, ActorSystem }
 import akka.http.Http
 import akka.http.model.HttpEntity.ChunkStreamPart
 import akka.http.model._
-import akka.stream.FlowMaterializer
+import akka.stream.ActorFlowMaterializer
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.core.{ ConfigData, ConfigId }
 import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
@@ -28,10 +28,10 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   implicit val askTimeout = settings.timeout
   val client = ConfigServiceClient(configServiceActor)
-  implicit val materializer = FlowMaterializer()
+  implicit val materializer = ActorFlowMaterializer()
 
   val binding = Http().bind(interface = settings.httpInterface, port = settings.httpPort)
-  binding.connections.foreach { c ⇒
+  binding.runForeach { c ⇒
     logger.info(s"${c.localAddress} accepted new connection from ${c.remoteAddress}")
     c.handleWithAsyncHandler {
       case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)

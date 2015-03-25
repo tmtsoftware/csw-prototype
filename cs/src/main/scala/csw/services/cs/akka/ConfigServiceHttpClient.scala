@@ -4,11 +4,12 @@ import java.io.{ File, IOException }
 
 import akka.actor.ActorSystem
 import akka.http.Http
+import akka.http.Http.OutgoingConnection
 import akka.http.model.HttpEntity.ChunkStreamPart
 import akka.http.model.HttpMethods._
 import akka.http.model._
-import akka.stream.FlowMaterializer
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.ActorFlowMaterializer
+import akka.stream.scaladsl.{ Flow, Sink, Source }
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.core._
 import org.slf4j.LoggerFactory
@@ -32,8 +33,9 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
   val port = settings.httpPort
   implicit val askTimeout = settings.timeout
 
-  private def sendRequest(request: HttpRequest, connection: Http.OutgoingConnection)(implicit fm: FlowMaterializer): Future[HttpResponse] = {
-    Source.single(request).via(connection.flow).runWith(Sink.head)
+  private def sendRequest(request: HttpRequest,
+                          connection: Flow[HttpRequest, HttpResponse, Future[OutgoingConnection]])(implicit fm: ActorFlowMaterializer): Future[HttpResponse] = {
+    Source.single(request).via(connection).runWith(Sink.head())
   }
 
   private def makeUri(path: String, kvp: (String, String)*): Uri = Uri().withPath(Uri.Path(path)).withQuery(kvp: _*)
@@ -57,7 +59,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   def createOrUpdate(uri: Uri, configData: ConfigData, comment: String, create: Boolean): Future[ConfigId] = {
     logger.info(s"$uri")
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     val chunks = configData.source.map(ChunkStreamPart.apply)
     val entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks)
@@ -85,14 +87,14 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
       makeUri("/get", "path" -> path.toString)
     logger.info(s"$uri")
 
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)
 
     for {
       result ← sendRequest(request, connection)
     } yield if (result.status == StatusCodes.OK)
-      Some(ConfigData(result.entity.getDataBytes()))
+      Some(ConfigData(result.entity.dataBytes))
     else None
   }
 
@@ -102,7 +104,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(HEAD, uri = uri)
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     for {
       result ← sendRequest(request, connection)
@@ -115,7 +117,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(DELETE, uri = uri)
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     for {
       result ← sendRequest(request, connection)
@@ -128,7 +130,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     for {
       result ← sendRequest(request, connection)
@@ -150,7 +152,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     for {
       result ← sendRequest(request, connection)
@@ -175,7 +177,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(POST, uri = uri)
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     for {
       _ ← sendRequest(request, connection)
@@ -188,7 +190,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(POST, uri = uri)
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     for {
       _ ← sendRequest(request, connection)
@@ -201,12 +203,12 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)
-    implicit val materializer = FlowMaterializer()
+    implicit val materializer = ActorFlowMaterializer()
 
     for {
       result ← sendRequest(request, connection)
     } yield if (result.status == StatusCodes.OK)
-      Some(ConfigData(result.entity.getDataBytes()))
+      Some(ConfigData(result.entity.dataBytes))
     else None
   }
 }

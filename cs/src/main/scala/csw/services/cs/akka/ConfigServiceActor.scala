@@ -105,7 +105,7 @@ object ConfigServiceActor {
 
 /**
  * An Akka actor class implementing the Config Service.
- * @param configManager the configManager to use (See [[ConfigServiceActor.defaultConfigManager]])
+ * @param configManager the configManager to use
  */
 class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorLogging {
 
