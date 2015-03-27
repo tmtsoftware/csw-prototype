@@ -40,6 +40,9 @@ object Component {
   }
 }
 
+/**
+ * Marker trait for a component (HCD, Assembly, etc.)
+ */
 trait Component
 
 /**

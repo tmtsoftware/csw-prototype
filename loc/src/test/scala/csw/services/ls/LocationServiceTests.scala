@@ -36,7 +36,7 @@ class LocationServiceTests extends TestKit(ActorSystem("Test"))
     val r3 = expectMsgType[BrowseResults]
     val r4 = expectMsgType[BrowseResults]
     assert(r1.results.size == 1)
-    assert(r1.results(0) == info)
+    assert(r1.results.head == info)
     assert(r2 == r1)
     assert(r3 == r1)
     assert(r4 == r1)
@@ -54,7 +54,7 @@ class LocationServiceTests extends TestKit(ActorSystem("Test"))
     ls ! RequestServices(List(serviceId))
     val sr = expectMsgType[ServicesReady]
     assert(sr.services.size == 1)
-    assert(sr.services(0) == info)
+    assert(sr.services.head == info)
   }
 
   override def afterAll(): Unit = {

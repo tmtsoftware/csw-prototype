@@ -9,6 +9,7 @@ import csw.services.cmd.akka.ConfigActor.{ ConfigGet, ConfigResponse, _ }
 import csw.services.cmd.akka.ConfigDistributorActor.SubmitInfo
 import csw.services.cmd.akka.QueryWorkerActor.QueryInfo
 import csw.services.ls.LocationServiceActor.{ LocationServiceInfo, ServicesReady }
+import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
 import csw.util.cfg.Configurations._
 
 import scala.concurrent.Future
@@ -69,9 +70,11 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
   // Initial state until we get a list of running services to use as target actors
   def waitingForServices: Receive = {
-    case ServicesReady(services) ⇒
-      log.debug(s"All services ready: $services")
-      context.become(ready(services))
+    case Connected(servicesReady) ⇒
+      context.become(ready(servicesReady.services))
+      connected(servicesReady)
+
+    case Disconnected      ⇒ disconnected()
 
     case ConfigPut(config) ⇒ internalConfig(config)
 
@@ -87,9 +90,13 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
 
     case c: ConfigControlMessage ⇒ forwardToSubmitWorker(c.runId, c)
 
-    case ServicesReady(newServices) ⇒
-      log.debug(s"All services ready again: $newServices")
-      context.become(ready(newServices))
+    case Connected(servicesReady) ⇒
+      context.become(ready(servicesReady.services))
+      connected(servicesReady)
+
+    case Disconnected ⇒
+      context.become(waitingForServices)
+      disconnected()
 
     case x ⇒ log.error(s"Unexpected message from ${sender()}(): $x")
   }
@@ -138,6 +145,21 @@ class ConfigDistributorActor(commandStatusActor: ActorRef) extends Actor with Ac
    */
   private def internalConfig(config: SetupConfigList): Unit = {
     // XXX TODO to be defined...
+  }
+
+  /**
+   * Called when the services requested from the location service are all available.
+   * @param ready contains a list describing the available services
+   */
+  private def connected(ready: ServicesReady): Unit = {
+    log.debug(s"Connected: services ready: ${ready.services}")
+  }
+
+  /**
+   * Called when one or more of the services requested from the location service is no longer available.
+   */
+  private def disconnected(): Unit = {
+    log.debug("Disconnected")
   }
 
 }

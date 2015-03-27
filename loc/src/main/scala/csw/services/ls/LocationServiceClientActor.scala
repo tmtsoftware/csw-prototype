@@ -12,8 +12,8 @@ import csw.services.ls.LocationServiceActor.{ ServiceId, LocationServiceInfo, Se
 object LocationServiceClientActor {
 
   sealed trait LocationServiceClientMessage
-  case class Connected(msg: ServicesReady)
-  case object Disconnected
+  case class Connected(msg: ServicesReady) extends LocationServiceClientMessage
+  case object Disconnected extends LocationServiceClientMessage
 
   def props(serviceIds: List[ServiceId]): Props = Props(classOf[LocationServiceClientActor], serviceIds)
 }

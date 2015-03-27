@@ -6,6 +6,8 @@ import csw.services.ls.LocationServiceActor
 import LocationServiceActor.{ ServicesReady, ServiceType, ServiceId, LocationServiceInfo }
 import java.net.URI
 
+import csw.services.ls.LocationServiceClientActor.Connected
+
 /**
  * Standalone command service test application.
  *
@@ -74,7 +76,7 @@ object CommandServiceHttpServerTestApp extends App {
   class TestAssemblyCommandServiceActor(hcds: List[LocationServiceInfo]) extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
     override def receive: Receive = receiveCommands
 
-    configActor ! ServicesReady(hcds)
+    configActor ! Connected(ServicesReady(hcds))
   }
 
   /**

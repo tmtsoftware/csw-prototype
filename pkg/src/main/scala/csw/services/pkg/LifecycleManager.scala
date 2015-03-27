@@ -139,13 +139,14 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
-    case Connected(servicesReady) ⇒
+    case s @ Connected(servicesReady) ⇒
       log.debug(s" $name received Connected")
-      component ! servicesReady
+      component ! s
       context.become(loaded(connected = true, targetState))
 
     case Disconnected ⇒
       log.debug(s" $name received Disconnected")
+      component ! Disconnected
       context.become(loaded(connected = false, targetState))
 
     case SubscribeToLifecycleStates(filter) ⇒
@@ -188,13 +189,14 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
-    case Connected(servicesReady) ⇒
+    case s @ Connected(servicesReady) ⇒
       log.debug(s" $name received Connected")
-      component ! servicesReady
+      component ! s
       context.become(initialized(connected = true, targetState))
 
     case Disconnected ⇒
       log.debug(s" $name received Disconnected")
+      component ! Disconnected
       context.become(initialized(connected = false, targetState))
 
     case SubscribeToLifecycleStates(filter) ⇒
@@ -238,13 +240,14 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
-    case Connected(servicesReady) ⇒
+    case s @ Connected(servicesReady) ⇒
       log.debug(s" $name received Connected")
-      component ! servicesReady
+      component ! s
       updateState(Running(name), connected = true, targetState, running(connected = true, targetState))
 
     case Disconnected ⇒
       log.debug(s" $name received Disconnected")
+      component ! Disconnected
       updateState(Running(name), connected = false, targetState, running(connected = false, targetState))
 
     case SubscribeToLifecycleStates(filter) ⇒
@@ -288,12 +291,16 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       regInfo.configPath, regInfo.httpUri))
   }
 
-  // Starts an actor to manage getting the services the component depends on.
+  // If not already started, start an actor to manage getting the services the
+  // component depends on.
   // Once all the services are available, it sends a Connected message.
   // If any service terminates, a Disconnected message is sent to this actor.
   private def requestServices(): Unit = {
     log.debug(s" requestServices $services")
-    context.actorOf(LocationServiceClientActor.props(services))
+    val actorName = s"$name-ls-client"
+    if (context.child(actorName).isEmpty)
+      context.actorOf(LocationServiceClientActor.props(services), actorName)
+
   }
 
   // Called when a lifecycle state message is received from the component.
@@ -320,10 +327,10 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
         }
       case Running(_) ⇒
         currentState match {
-          case Loaded(_) ⇒ component ! Initialize
+          case Loaded(_)      ⇒ component ! Initialize
           case Initialized(_) ⇒
             component ! Startup; requestServices()
-          case Running(_) ⇒
+          case Running(_)     ⇒
         }
     }
     context become nextState

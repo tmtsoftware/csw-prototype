@@ -6,6 +6,7 @@ import akka.actor.{ ActorRef, Props }
 import akka.testkit.{ ImplicitSender, TestKit }
 import csw.services.cmd.akka.CommandServiceActor.{ CommandServiceStatus, StatusRequest }
 import csw.services.ls.LocationServiceActor._
+import csw.services.ls.LocationServiceClientActor.Connected
 
 // Test HCD
 object TestHcdCommandServiceActor {
@@ -35,7 +36,7 @@ object TestAssemblyCommandServiceActor {
 class TestAssemblyCommandServiceActor(hcds: List[LocationServiceInfo]) extends AssemblyCommandServiceActor with OneAtATimeCommandQueueController {
   override def receive: Receive = receiveCommands
 
-  configActor ! ServicesReady(hcds)
+  configActor ! Connected(ServicesReady(hcds))
 }
 
 /**

@@ -1,6 +1,8 @@
 package csw.services.cmd.akka
 
 import akka.actor.{ ActorLogging, Actor, ActorRef }
+import csw.services.ls.LocationServiceActor.ServicesReady
+import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
 import scala.util.Try
 import csw.util.cfg.Configurations._
 import akka.actor.Terminated
@@ -84,17 +86,20 @@ trait ConfigActor extends Actor with ActorLogging {
    * Messages received in the normal state.
    */
   def receiveConfigs: Receive = {
-    case s: SubmitWithRunId  ⇒ submit(s)
-    case ConfigCancel(runId) ⇒ cancel(runId)
-    case ConfigAbort(runId)  ⇒ abort(runId)
-    case ConfigPause(runId)  ⇒ pause(runId)
-    case ConfigResume(runId) ⇒ resume(runId)
+    case s: SubmitWithRunId       ⇒ submit(s)
+    case ConfigCancel(runId)      ⇒ cancel(runId)
+    case ConfigAbort(runId)       ⇒ abort(runId)
+    case ConfigPause(runId)       ⇒ pause(runId)
+    case ConfigResume(runId)      ⇒ resume(runId)
 
-    case ConfigGet(config)   ⇒ query(config, sender())
-    case ConfigPut(config)   ⇒ internalConfig(config)
+    case ConfigGet(config)        ⇒ query(config, sender())
+    case ConfigPut(config)        ⇒ internalConfig(config)
+
+    case Connected(servicesReady) ⇒ connected(servicesReady)
+    case Disconnected             ⇒ disconnected()
 
     // An actor was terminated (normal when done)
-    case Terminated(actor)   ⇒ terminated(actor)
+    case Terminated(actor)        ⇒ terminated(actor)
   }
 
   /**
@@ -148,6 +153,21 @@ trait ConfigActor extends Actor with ActorLogging {
    */
   def internalConfig(config: SetupConfigList): Unit = {
     // XXX TODO to be defined... (make abstract)
+  }
+
+  /**
+   * Called when the services requested from the location service are all available.
+   * @param ready contains a list describing the available services
+   */
+  def connected(ready: ServicesReady): Unit = {
+    log.debug(s"Connected: services ready: ${ready.services}")
+  }
+
+  /**
+   * Called when one or more of the services requested from the location service is no longer available.
+   */
+  def disconnected(): Unit = {
+    log.debug("Disconnected")
   }
 
   /**

@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.cmd.akka.CommandQueueActor.ConfigQueueStatus
 import csw.services.ls.LocationServiceActor.ServicesReady
+import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
 import csw.util.cfg.Configurations.ConfigList
 
 import scala.concurrent.duration._
@@ -137,16 +138,17 @@ trait CommandServiceActor extends Actor with Stash with ActorLogging {
     case QueueBypassRequestWithRunId(config, submitter, runId) ⇒
       queueBypassRequest(SubmitWithRunId(config, submitter, runId))
 
-    case QueueStop                   ⇒ commandQueueActor forward QueueStop
-    case QueuePause                  ⇒ commandQueueActor forward QueuePause
-    case QueueStart                  ⇒ commandQueueActor forward QueueStart
-    case msg @ QueueDelete(runId)    ⇒ commandQueueActor forward msg
+    case QueueStop                    ⇒ commandQueueActor forward QueueStop
+    case QueuePause                   ⇒ commandQueueActor forward QueuePause
+    case QueueStart                   ⇒ commandQueueActor forward QueueStart
+    case msg @ QueueDelete(runId)     ⇒ commandQueueActor forward msg
 
-    case msg: ConfigMessage          ⇒ configActor forward msg
+    case msg: ConfigMessage           ⇒ configActor forward msg
 
-    case StatusRequest               ⇒ handleStatusRequest(sender())
+    case StatusRequest                ⇒ handleStatusRequest(sender())
 
-    case s @ ServicesReady(services) ⇒ configActor ! s
+    case s @ Connected(servicesReady) ⇒ configActor ! s
+    case Disconnected                 ⇒ configActor ! Disconnected
   }
 
   /**
