@@ -7,6 +7,7 @@ import com.typesafe.config.ConfigFactory
 import csw.services.cmd.akka.CommandServiceActor.Submit
 import csw.services.cmd.akka.CommandStatus
 import csw.services.ls.LocationServiceActor
+import csw.services.pkg.LifecycleManager.{Running, LifecycleError, LifecycleStateChanged}
 import csw.util.cfg.TestConfig
 
 import scala.concurrent.duration._
@@ -56,10 +57,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           val map = expectMsgType[Container.Components].map
           assert(map.size == 1)
           for((name, assembly1) <- map) {
-            assembly1 ! LifecycleManager.SubscribeToLifecycleStates(
-              (state, connected) => connected && state == LifecycleManager.Running(name)
-            )
-            expectMsgType[LifecycleManager.Running]
+            assembly1 ! LifecycleManager.SubscribeToLifecycleStates(onlyRunningAndConnected = true)
+            val stateChange = expectMsgType[LifecycleStateChanged]
+            assert(stateChange.connected && stateChange.state.isRunning)
             assembly1 ! Submit(TestConfig.testConfig)
             val s1 = expectMsgType[CommandStatus.Queued]
             val s2 = expectMsgType[CommandStatus.Busy]
@@ -81,11 +81,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         container ! Container.GetComponents
         val componentInfo = expectMsgType[Container.Components]
         for ((name, actorRef) <- componentInfo.map) {
-          actorRef ! LifecycleManager.SubscribeToLifecycleStates(
-            (state, connected) => connected && state == LifecycleManager.Running(name)
-          )
-          val s = expectMsgType[LifecycleManager.Running]
-          println(s"container2: $s")
+          actorRef ! LifecycleManager.SubscribeToLifecycleStates(onlyRunningAndConnected = true)
+          val stateChange = expectMsgType[LifecycleStateChanged]
+          assert(stateChange.connected && stateChange.state.isRunning)
         }
 
         println("\nContainer2 tests passed\n")

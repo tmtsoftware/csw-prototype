@@ -17,5 +17,4 @@ case class TestHcd(name: String, configPath: String) extends Hcd
   override def receive: Receive = receiveCommands orElse receiveLifecycleCommands
 
   val serviceId = ServiceId(name, ServiceType.HCD)
-//  registerWithLocationService(serviceId, Some(configPath))
 }

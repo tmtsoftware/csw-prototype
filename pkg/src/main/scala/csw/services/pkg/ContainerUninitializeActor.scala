@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.{ ActorLogging, Actor, Props }
-import csw.services.pkg.LifecycleManager.{ Startup, Loaded }
+import csw.services.pkg.LifecycleManager.{ LifecycleStateChanged, Startup }
 
 // Used to uninitialize components and then wait for confirmation before exiting or restarting
 private[pkg] object ContainerUninitializeActor {
@@ -15,8 +15,7 @@ private[pkg] class ContainerUninitializeActor(components: Map[String, Component.
   // Subscribe to Loaded lifecycle state messages from all components
   components.foreach {
     case (name, info) ⇒
-      info.lifecycleManager ! LifecycleManager.SubscribeToLifecycleStates(
-        (state, _) ⇒ state == LifecycleManager.Loaded(name))
+      info.lifecycleManager ! LifecycleManager.SubscribeToLifecycleStates()
       info.lifecycleManager ! LifecycleManager.Uninitialize
   }
 
@@ -28,7 +27,8 @@ private[pkg] class ContainerUninitializeActor(components: Map[String, Component.
   }
 
   def receiveState(componentsLeft: List[String]): Receive = {
-    case Loaded(name) ⇒ checkDone(componentsLeft.filter(_ != name))
+    case LifecycleStateChanged(state, error, connected) if state.isLoaded ⇒
+      checkDone(componentsLeft.filter(_ != state.name))
   }
 
   def checkDone(componentsLeft: List[String]): Unit = {
