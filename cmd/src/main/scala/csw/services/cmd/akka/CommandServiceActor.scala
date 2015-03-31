@@ -4,6 +4,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.cmd.akka.CommandQueueActor.ConfigQueueStatus
+import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
 import csw.services.ls.LocationServiceActor.ServicesReady
 import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
 import csw.util.cfg.Configurations.ConfigList
@@ -149,6 +150,9 @@ trait CommandServiceActor extends Actor with Stash with ActorLogging {
 
     case s @ Connected(servicesReady) ⇒ configActor ! s
     case Disconnected                 ⇒ configActor ! Disconnected
+
+    // This comes from the lifecycle manager. Just pass on to the command status actor
+    case s: StatusUpdate              ⇒ commandStatusActor ! s
   }
 
   /**

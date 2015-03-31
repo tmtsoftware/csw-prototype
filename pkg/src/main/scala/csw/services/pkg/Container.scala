@@ -6,6 +6,7 @@ import akka.actor._
 import com.typesafe.config.Config
 import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
+import csw.services.ls.LocationServiceRegisterActor
 
 import scala.collection.JavaConversions._
 
@@ -64,9 +65,24 @@ object Container {
   sealed trait ContainerMessage
 
   /**
-   * Returns
+   * Requests the list of components being managed by the container (A Components(map) object is sent to the sender)
    */
-  case object GetComponents
+  case object GetComponents extends ContainerMessage
+
+  /**
+   * Tells the container to uninitialize all of its components.
+   */
+  case object Stop extends ContainerMessage
+
+  /**
+   * Tells the container to stop all its components and then quit, ending execution of the container process.
+   */
+  case object Halt extends ContainerMessage
+
+  /**
+   * Indicates the container should take all its component to uninitialized and then to running.
+   */
+  case object Restart extends ContainerMessage
 
   /**
    * Reply messages.
@@ -77,7 +93,8 @@ object Container {
    * Reply to GetComponents
    * @param map a map of component name to actor for the component (actually the lifecycle manager)
    */
-  case class Components(map: Map[String, ActorRef])
+  case class Components(map: Map[String, ActorRef]) extends ContainerReplyMessage
+
 }
 
 /**
@@ -91,18 +108,30 @@ class Container(config: Config) extends Actor with ActorLogging {
   // Maps component name to the info returned when creating it
   private val components = parseConfig()
 
+  registerWithLocationService()
+
   // Receive messages
   override def receive: Receive = {
-    case Initialize           ⇒ allComponents(Initialize)
-    case Startup              ⇒ allComponents(Startup)
-    case Shutdown             ⇒ allComponents(Shutdown)
-    case Uninitialize         ⇒ allComponents(Uninitialize)
+    case cmd: LifecycleCommand ⇒ allComponents(cmd)
 
-    case GetComponents        ⇒ sender() ! getComponents
+    case GetComponents         ⇒ sender() ! getComponents
 
-    case Terminated(actorRef) ⇒ componentDied(actorRef)
+    case Stop                  ⇒ stop()
+    case Halt                  ⇒ halt()
+    case Restart               ⇒ restart()
 
-    case x                    ⇒ log.error(s"Unexpected message: $x")
+    case Terminated(actorRef)  ⇒ componentDied(actorRef)
+
+    case x                     ⇒ log.error(s"Unexpected message: $x")
+  }
+
+  // Starts an actor to manage registering this actor with the location service
+  // (as a proxy for the component)
+  private def registerWithLocationService(): Unit = {
+    val name = config.getString("container.name")
+    val regInfo = RegInfo(ServiceId(name, ServiceType.Container))
+    context.actorOf(LocationServiceRegisterActor.props(regInfo.serviceId, Some(self),
+      regInfo.configPath, regInfo.httpUri))
   }
 
   private def createComponent(props: Props, regInfo: RegInfo, services: List[ServiceId],
@@ -119,7 +148,7 @@ class Container(config: Config) extends Actor with ActorLogging {
     }
   }
 
-  // Called whan a component (lifecycle manager) terminates
+  // Called when a component (lifecycle manager) terminates
   private def componentDied(actorRef: ActorRef): Unit = {
     log.info(s"Actor $actorRef terminated")
   }
@@ -169,10 +198,25 @@ class Container(config: Config) extends Actor with ActorLogging {
   // Sends the given lifecycle command to all components
   private def allComponents(cmd: LifecycleCommand): Unit =
     for ((name, info) ← components) {
-      info.lifecycleManager ! Startup
+      info.lifecycleManager ! cmd
     }
 
   private def getComponents: Components =
     Components(components.mapValues(_.lifecycleManager))
+
+  // Tell all components to uninitialize
+  private def stop(): Unit = {
+    allComponents(Uninitialize)
+  }
+
+  // Tell all components to uninitialize and start an actor to wait until they do before exiting.
+  private def halt(): Unit = {
+    context.actorOf(ContainerUninitializeActor.props(components, exit = true))
+  }
+
+  // Tell all components to uninitialize and start an actor to wait until they do before restarting them.
+  private def restart(): Unit = {
+    context.actorOf(ContainerUninitializeActor.props(components, exit = false))
+  }
 }
 

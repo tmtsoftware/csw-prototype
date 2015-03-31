@@ -28,8 +28,7 @@ Example Session
 
 After initializing the environment, it presents you with the `seq>` prompt, where you can enter Scala code.
 The [csw.services.apps.sequencer.Seq](src/main/scala/csw/services/apps/sequencer/Seq.scala) class provides 
-some convenient utility methods for use in the shell to
-get started. 
+some convenient utility methods for use in the shell to get started.
 The initialization code (see [resources/Init.scala](src/main/resources/Init.scala)) automatically imports 
 the contents of the Seq object.
 
@@ -57,8 +56,14 @@ the contents of the Seq object.
     
     seq> a1.getConfig(conf)
     res3: csw.util.Configuration = config{tmt{mobie{blue{filter{value=red,timestamp=1400266750419}}}}}
-    
-    seq> 
+
+    // Container lifecycle commands: "stop" unitializes the container's components, restart starts does uninit followed
+    // by a restart, halt causes the container to uninit and then exit.
+    seq> val c2 = resolveContainer("Container-2")
+    c2: csw.services.apps.sequencer.Seq.ContainerClient = ContainerClient(Actor[akka.tcp://Container-2-system@127.0.0.1:57192/user/Container-2#2046294920])
+    seq> c2.stop
+    seq> c2.restart
+    seq> c2.halt
 
 
 Ending the session

@@ -1,10 +1,17 @@
 package csw.services.pkg
 
 import akka.actor._
+import csw.services.cmd.akka.CommandQueueActor.SubmitWithRunId
+import csw.services.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
+import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
+import csw.services.cmd.akka.ConfigActor.{ ConfigResponse, ConfigGet }
+import csw.services.cmd.akka.{ RunId, CommandStatus }
 import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor.ServiceId
 import csw.services.ls.LocationServiceClientActor.{ Connected, Disconnected }
 import csw.services.ls.{ LocationServiceClientActor, LocationServiceRegisterActor }
+
+import scala.util.Failure
 
 /**
  * The Lifecycle Manager is an actor that deals with component lifecycle messages
@@ -152,6 +159,15 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
     case SubscribeToLifecycleStates(filter) ⇒
       subscribeToLifecycleStates(Loaded(name), connected, filter)
 
+    case SubmitWithRunId(config, submitter, runId) ⇒
+      cmdStatusError(runId, submitter, "loaded", "running")
+
+    case QueueBypassRequestWithRunId(config, submitter, runId) ⇒
+      cmdStatusError(runId, submitter, "loaded", "running")
+
+    case ConfigGet(config) ⇒
+      configGetError(sender(), "loaded", "running")
+
     case msg ⇒
       unexpectedMessage(msg, "loaded", connected)
   }
@@ -201,6 +217,15 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
 
     case SubscribeToLifecycleStates(filter) ⇒
       subscribeToLifecycleStates(Initialized(name), connected, filter)
+
+    case SubmitWithRunId(config, submitter, runId) ⇒
+      cmdStatusError(runId, submitter, "initialized", "running")
+
+    case QueueBypassRequestWithRunId(config, submitter, runId) ⇒
+      cmdStatusError(runId, submitter, "initialized", "running")
+
+    case ConfigGet(config) ⇒
+      configGetError(sender(), "initialized", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "initialized", connected)
@@ -252,6 +277,15 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
 
     case SubscribeToLifecycleStates(filter) ⇒
       subscribeToLifecycleStates(Running(name), connected, filter)
+
+    case SubmitWithRunId(config, submitter, runId) if !connected ⇒
+      cmdStatusError(runId, submitter, "running", "connected")
+
+    case QueueBypassRequestWithRunId(config, submitter, runId) if !connected ⇒
+      cmdStatusError(runId, submitter, "running", "connected")
+
+    case ConfigGet(config) if !connected ⇒
+      configGetError(sender(), "running", "connected")
 
     case msg if connected ⇒
       log.debug(s" forwarding $msg from ${sender()} to $component")
@@ -313,30 +347,52 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
     notifyLifecycleListeners(currentState, connected)
 
     targetState match {
-      case `currentState` ⇒
+      case `currentState` ⇒ // same state, ignore
+
       case Loaded(_) ⇒
         currentState match {
-          case Loaded(_) ⇒
-          case _         ⇒ component ! Initialize
+          case Loaded(_)      ⇒
+          case Initialized(_) ⇒ component ! Uninitialize
+          case Running(_)     ⇒ component ! Shutdown
         }
+
       case Initialized(_) ⇒
         currentState match {
           case Loaded(_)      ⇒ component ! Initialize
           case Initialized(_) ⇒
           case Running(_)     ⇒ component ! Shutdown
         }
+
       case Running(_) ⇒
         currentState match {
-          case Loaded(_)      ⇒ component ! Initialize
+          case Loaded(_) ⇒ component ! Initialize
           case Initialized(_) ⇒
             component ! Startup; requestServices()
-          case Running(_)     ⇒
+          case Running(_) ⇒
         }
     }
     context become nextState
   }
 
+  // Sends a command status error message indicating that the component is not in the required state or condition.
+  // Note that we send it to the component, which forwards it to its commandStatusActor, so it is handled like
+  // other status messages.
+  private def cmdStatusError(runId: RunId, actorRef: ActorRef, currentCond: String, requiredCond: String): Unit = {
+    val msg = s"$name is $currentCond, but not $requiredCond"
+    log.warning(msg)
+    log.debug(s"XXX sending error status through ${component.path}")
+    component ! StatusUpdate(CommandStatus.Error(runId, msg), actorRef)
+  }
+
+  // Sends a config response error message to the given actor indicating that the component is not in the required state or condition
+  private def configGetError(actorRef: ActorRef, currentCond: String, requiredCond: String): Unit = {
+    val msg = s"$name is $currentCond, but not $requiredCond"
+    log.warning(msg)
+    actorRef ! ConfigResponse(Failure(new Exception(msg)))
+  }
+
   // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state
+  // XXX TODO: Cleanup old subscribers?
   private def subscribeToLifecycleStates(state: LifecycleState, connected: Boolean,
                                          filter: LifecycleFilter): Unit = {
     lifecycleStateListeners += (sender() -> filter)

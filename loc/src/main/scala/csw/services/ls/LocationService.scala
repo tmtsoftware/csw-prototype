@@ -146,11 +146,17 @@ object LocationServiceActor {
      * Returns the named service type (default: Service)
      */
     def apply(name: String): ServiceType = name.toLowerCase match {
-      case "assembly" ⇒ Assembly
-      case "hcd"      ⇒ HCD
-      case "service"  ⇒ Service
-      case _          ⇒ Unknown
+      case "container" ⇒ Container
+      case "assembly"  ⇒ Assembly
+      case "hcd"       ⇒ HCD
+      case "service"   ⇒ Service
+      case _           ⇒ Unknown
     }
+
+    /**
+     * A container for services, assemblies and HCDs
+     */
+    case object Container extends ServiceType
 
     /**
      * A service that controls a hardware device

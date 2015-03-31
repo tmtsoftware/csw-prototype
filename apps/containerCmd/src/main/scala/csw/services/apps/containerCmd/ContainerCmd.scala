@@ -29,7 +29,7 @@ object ContainerCmd {
       c.copy(csConfig = Some(x))
     } text "optional config file to use for config service settings"
 
-    arg[File]("<file>") optional () maxOccurs (1) action { (x, c) ⇒
+    arg[File]("<file>") optional () maxOccurs 1 action { (x, c) ⇒
       c.copy(file = Some(x))
     } text "optional container config file to override the default"
   }

@@ -67,6 +67,6 @@ object Dependencies {
   val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion
   val scalaCompiler = "org.scala-lang" % "scala-compiler" % scalaVersion
   val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion
-  val jline = "jline" % "jline" % "2.11"
+  val jline = "jline" % "jline" % "2.12.1"
 }
 

@@ -62,7 +62,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def initialize(): Either[InitializeFailed, Initialized] = {
-    log.debug(s"initialize $name")
+    log.info(s"initialize $name")
     Right(Initialized(name))
   }
 
@@ -71,7 +71,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def startup(): Either[StartupFailed, Running] = {
-    log.debug(s"startup $name")
+    log.info(s"startup $name")
     Right(Running(name))
   }
 
@@ -80,7 +80,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def shutdown(): Either[ShutdownFailed, Initialized] = {
-    log.debug(s"shutdown $name")
+    log.info(s"shutdown $name")
     Right(Initialized(name))
   }
 
@@ -89,7 +89,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def uninitialize(): Either[UninitializeFailed, Loaded] = {
-    log.debug(s"uninitialize $name")
+    log.info(s"uninitialize $name")
     Right(Loaded(name))
   }
 }
