@@ -66,8 +66,12 @@ trait CommandServiceHttpRoute extends HttpService
                     resp ⇒
                       resp.tryConfig match {
                         case Success(c) ⇒
-                          log.info(s"get ${c.toJson.toString()}"); c.toJson.toString()
-                        case Failure(ex) ⇒ log.error(s"$ex"); ""
+                          log.info(s"get ${c.toJson.toString()}")
+                          c.toJson.toString()
+                        case Failure(ex) ⇒
+                          log.error(s"$ex")
+                          // XXX TODO: How to return an error to here?
+                          ""
                       }
                   }
                 }
