@@ -127,6 +127,7 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
   }
 
   // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
+  // XXX TODO: Maybe combine to one receive methods with a state parameter?
 
   // Behavior in the Loaded state
   def loaded(connected: Boolean, targetState: LifecycleState): Receive = receive orElse {
@@ -371,6 +372,9 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
   // there (without skipping any states).
   private def updateState(currentState: LifecycleState, connected: Boolean,
                           targetState: LifecycleState, nextState: Receive): Unit = {
+
+    // XXX TODO: Try to simplify?
+
     log.debug(s" $name update state: current: $currentState, target: $targetState, connected: $connected")
 
     notifyLifecycleListeners(LifecycleStateChanged(currentState, None, connected))
