@@ -10,7 +10,7 @@ import redis.RedisClient
 trait EventPublisher {
   this: Actor with ActorLogging ⇒
 
-  implicit val actorSystem = context.system
+  private val actorSystem = context.system
   private val settings = KvsSettings(actorSystem)
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
 
