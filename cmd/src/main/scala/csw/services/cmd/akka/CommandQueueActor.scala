@@ -5,6 +5,8 @@ import csw.services.cmd.akka.CommandServiceActor.StatusRequest
 import csw.util.cfg.Configurations._
 import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
 
+import scala.collection.immutable.ListMap
+
 object CommandQueueActor {
 
   /**
@@ -94,7 +96,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   import CommandQueueActor._
 
   // The queue (indexed by RunId, so selected items can be removed)
-  private var queueMap = Map[RunId, SubmitWithRunId]()
+  private var queueMap = ListMap[RunId, SubmitWithRunId]()
 
   // The actor receiving and processing items from the queue
   private var queueClient: ActorRef = Actor.noSender
@@ -170,7 +172,7 @@ class CommandQueueActor(commandStatusActor: ActorRef)
   // No components are accepted or processed while stopped.
   private def queueStop(): Unit = {
     log.debug("Queue stopped")
-    queueMap = Map.empty
+    queueMap = ListMap.empty
     context become queueStopped
   }
 
