@@ -4,22 +4,12 @@ import sbt._
 
 object Dependencies {
 
-  val scalaVersion = "2.11.6"
+  val scalaVersion = "2.11.7"
   val akkaVersion = "2.3.9"
   val akkaStreamsVersion = "1.0-M4"
   val sprayVersion = "1.3.2"
-  val hornetqVersion = "2.4.0.Final"
+  val hornetqVersion = "2.4.7.Final"
   //  val hornetqVersion = "2.5.0-SNAPSHOT"
-
-  def compile(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "compile")
-
-  def provided(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "provided")
-
-  def test(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "test")
-
-  def runtime(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "runtime")
-
-  def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
@@ -51,6 +41,7 @@ object Dependencies {
 
   val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
+  val ficus = "net.ceedubs" % "ficus_2.11" % "1.1.2"
 
   val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.5.0"
 

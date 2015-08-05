@@ -10,6 +10,8 @@
     <logger name="akka.remote" level="ERROR"/>
     <logger name="spray" level="INFO"/>
     <logger name="csw" level="DEBUG"/>
+    <logger name="org.hornetq" level="ERROR"/>
+    <logger name="io.netty" level="ERROR"/>
 
     <if condition='isDefined("application-name")'>
         <then>

@@ -15,6 +15,12 @@ import scala.concurrent.ExecutionContext
 class EventPubSubTests extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
+  val settings = EventServiceSettings(system)
+  if (settings.useEmbeddedHornetq) {
+    // Start an embedded HornetQ server
+    Hq.startEmbeddedHornetQ()
+  }
+
   val numSecs = 20
   // number of seconds to run
   val subscriber = system.actorOf(Props(classOf[Subscriber], "Subscriber-1"))
@@ -68,7 +74,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
     nextId = nextId + 1
     TelemetryEvent(
       source = "test",
-      s"$channel",
+      channel,
       "eventId" -> nextId,
       "exposureTime" -> expTime.ms, // XXX deal with duration implicit defs
       "startTime" -> (time - expTime),

@@ -5,11 +5,9 @@ import akka.actor.{ ActorLogging, Actor }
 /**
  * Adds the ability to publish events.
  */
-trait EventPublisher {
+trait EventPublisher extends Hq {
   this: Actor with ActorLogging ⇒
 
-  // Connect to Hornetq server
-  private val hq = connectToHornetQ(context.system)
   private val producer = hq.session.createProducer()
 
   /**

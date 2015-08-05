@@ -9,11 +9,8 @@ import java.util.UUID
  * Adds the ability to subscribe to events.
  * The subscribed actor wil receive Event messages for the given channel.
  */
-trait EventSubscriber {
+trait EventSubscriber extends Hq {
   this: Actor with ActorLogging ⇒
-
-  // Connect to Hornetq server
-  private val hq = connectToHornetQ(context.system)
 
   // Unique id for this subscriber
   private val subscriberId = UUID.randomUUID().toString
