@@ -4,9 +4,11 @@ import java.io.{ File, FileOutputStream }
 import java.net.{ InetSocketAddress, URI }
 import java.nio.file.{ Files, Path, Paths }
 
-import akka.http.Http
-import akka.http.model.HttpEntity.ChunkStreamPart
-import akka.stream.ActorFlowMaterializer
+import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.stream.ActorMaterializer
+import akka.http.scaladsl.Http
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
@@ -14,7 +16,6 @@ import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
 import csw.services.ls.LocationServiceRegisterActor
 import org.slf4j.LoggerFactory
 import akka.actor.ActorSystem
-import akka.http.model._
 
 import scala.concurrent.{ Promise, Future }
 import scala.util.{ Failure, Success, Try }
@@ -26,12 +27,11 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   implicit val system = ActorSystem("ConfigServiceAnnexServer")
 
   import system.dispatcher
-  import akka.http.model.HttpMethods._
 
   val settings = ConfigServiceAnnexSettings(system)
   if (!settings.dir.exists()) settings.dir.mkdirs()
 
-  implicit val materializer = ActorFlowMaterializer()
+  implicit val materializer = ActorMaterializer()
 
   val binding = Http().bind(interface = settings.interface, port = settings.port)
   binding.runForeach { c ⇒

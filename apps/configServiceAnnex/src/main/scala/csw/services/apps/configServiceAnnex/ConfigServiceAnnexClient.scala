@@ -3,13 +3,13 @@ package csw.services.apps.configServiceAnnex
 import java.io.{ File, FileOutputStream, IOException }
 
 import akka.actor.ActorSystem
-import akka.http.Http
-import akka.http.Http.OutgoingConnection
-import akka.http.model.HttpEntity.ChunkStreamPart
-import akka.http.model.HttpMethods._
-import akka.http.model._
-import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.{ Flow, Sink, Source }
+import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
+import akka.stream.scaladsl.Sink
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl._
+import akka.http.scaladsl.Http
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
 import net.codejava.security.HashGeneratorUtils
@@ -43,7 +43,7 @@ object ConfigServiceAnnexClient {
   def get(id: String, file: File): Future[File] = {
     val uri = s"http://$host:$port/$id"
     logger.info(s"Downloading $file from $uri")
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
 
     val out = new FileOutputStream(file)
     val sink = Sink.foreach[ByteString] { bytes ⇒
@@ -93,7 +93,7 @@ object ConfigServiceAnnexClient {
     val id = HashGeneratorUtils.generateSHA1(file)
     val uri = s"http://$host:$port/$id"
     logger.info(s"Uploading $file to $uri")
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
 
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
@@ -129,7 +129,7 @@ object ConfigServiceAnnexClient {
   def head(id: String): Future[Boolean] = {
     val uri = s"http://$host:$port/$id"
     logger.info(s"Checking existence of $uri")
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(HEAD, uri = s"/$id")
@@ -156,7 +156,7 @@ object ConfigServiceAnnexClient {
   def delete(id: String): Future[Boolean] = {
     val uri = s"http://$host:$port/$id"
     logger.info(s"Deleting $uri")
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(DELETE, uri = s"/$id")
@@ -175,8 +175,8 @@ object ConfigServiceAnnexClient {
   }
 
   private def sendRequest(request: HttpRequest,
-                          connection: Flow[HttpRequest, HttpResponse, Future[OutgoingConnection]])(implicit fm: ActorFlowMaterializer): Future[HttpResponse] = {
-    Source.single(request).via(connection).runWith(Sink.head())
+                          connection: Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]])(implicit fm: ActorMaterializer): Future[HttpResponse] = {
+    Source.single(request).via(connection).runWith(Sink.head)
   }
 
   def shutdown(): Unit = system.shutdown()

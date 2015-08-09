@@ -5,7 +5,7 @@ import java.nio.file.{ Files, StandardCopyOption }
 import java.util.Date
 
 import akka.actor.ActorRefFactory
-import akka.stream.ActorFlowMaterializer
+import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
@@ -159,14 +159,14 @@ trait ConfigData {
   /**
    * Returns a stream which can be used to read the data
    */
-  def source: Source[ByteString, Unit]
+  def source: Source[ByteString, Any]
 
   /**
    * Writes the contents of the source to the given output stream.
    */
   def writeToOutputStream(out: OutputStream)(implicit context: ActorRefFactory): Future[Unit] = {
     import context.dispatcher
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
     val sink = Sink.foreach[ByteString] { bytes ⇒
       out.write(bytes.toArray)
     }
@@ -203,7 +203,7 @@ trait ConfigData {
    * Returns a future string by reading the source.
    */
   def toFutureString(implicit context: ActorRefFactory): Future[String] = {
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
     import context.dispatcher
     val out = new ByteArrayOutputStream
     val sink = Sink.foreach[ByteString] { bytes ⇒
@@ -221,7 +221,7 @@ object ConfigData {
 
   def apply(file: File, chunkSize: Int = 4096): ConfigData = ConfigFile(file, chunkSize)
 
-  def apply(source: Source[ByteString, Unit]): ConfigData = ConfigSource(source)
+  def apply(source: Source[ByteString, Any]): ConfigData = ConfigSource(source)
 }
 
 case class ConfigString(str: String) extends ConfigData {
@@ -244,4 +244,4 @@ case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
   }
 }
 
-case class ConfigSource(override val source: Source[ByteString, Unit]) extends ConfigData
+case class ConfigSource(override val source: Source[ByteString, Any]) extends ConfigData

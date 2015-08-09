@@ -4,10 +4,12 @@ import java.io.File
 import java.net.{ InetSocketAddress, URI }
 
 import akka.actor.{ ActorRef, ActorSystem }
-import akka.http.Http
-import akka.http.model.HttpEntity.ChunkStreamPart
-import akka.http.model._
-import akka.stream.ActorFlowMaterializer
+import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.HttpMethods._
+import akka.stream.ActorMaterializer
+import akka.http.scaladsl.Http
+import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.core.{ ConfigData, ConfigId }
 import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
@@ -23,12 +25,11 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   implicit val system = ActorSystem("ConfigServiceAnnexServer")
 
-  import akka.http.model.HttpMethods._
   import system.dispatcher
 
   implicit val askTimeout = settings.timeout
   val client = ConfigServiceClient(configServiceActor)
-  implicit val materializer = ActorFlowMaterializer()
+  implicit val materializer = ActorMaterializer()
 
   val binding = Http().bind(interface = settings.httpInterface, port = settings.httpPort)
   binding.runForeach { c ⇒
