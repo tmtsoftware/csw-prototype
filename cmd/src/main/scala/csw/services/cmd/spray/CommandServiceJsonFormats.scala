@@ -1,15 +1,14 @@
 package csw.services.cmd.spray
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
-import spray.httpx.marshalling.MetaMarshallers
-import spray.httpx.SprayJsonSupport
 import csw.services.cmd.akka.{ RunId, CommandStatus }
 import java.util.UUID
 
 /**
  * Defines JSON marshallers/unmarshallers for the objects used in REST messages.
  */
-trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with MetaMarshallers {
+trait CommandServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport {
 
   /**
    * Instance of RootJsonFormat for RunId

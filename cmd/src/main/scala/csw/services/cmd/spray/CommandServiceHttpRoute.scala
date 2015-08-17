@@ -1,66 +1,60 @@
 package csw.services.cmd.spray
 
+import akka.actor.ActorRefFactory
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Route
+import akka.stream.ActorMaterializer
 import csw.util.cfg.ConfigJsonFormats
 import csw.util.cfg.Configurations._
-import spray.routing._
-import spray.http.MediaTypes._
-import csw.services.cmd.akka.{ CommandServiceClientHelper, CommandStatus, RunId }
-import spray.http.{ HttpRequest, StatusCodes }
-import spray.routing.directives.{ LogEntry, DebuggingDirectives }
-import akka.event.{ LoggingAdapter, Logging }
-import scala.concurrent.ExecutionContext
-import scala.util._
-import com.typesafe.config.ConfigFactory
+import csw.services.cmd.akka.{ CommandStatus, CommandServiceClientHelper, RunId }
+import akka.event.LoggingAdapter
+import de.heikoseeberger.akkasse.{ EventStreamMarshalling, ServerSentEvent }
+import scala.language.implicitConversions
+import scala.util.Success
+import scala.util.Failure
 import spray.json._
-import ExecutionContext.Implicits.global
+import akka.http.scaladsl.server.Directives._
 
 /**
  * The command service HTTP (spray) route, defined as a trait, so that it can be used in tests
  * without actually running an HTTP server.
  */
-trait CommandServiceHttpRoute extends HttpService
-    with CommandServiceClientHelper with CommandServiceJsonFormats with ConfigJsonFormats {
-
-  // Log messages at INFO level (XXX does this work?)
-  def requestMessageAsInfo(req: HttpRequest): LogEntry = LogEntry(req.message, Logging.InfoLevel)
-  DebuggingDirectives.logRequest(requestMessageAsInfo _)
+trait CommandServiceHttpRoute extends CommandServiceClientHelper
+    with CommandServiceJsonFormats
+    with ConfigJsonFormats
+    with EventStreamMarshalling {
 
   // Implementing classes need to define logging
   def log: LoggingAdapter
 
-  // the root of the ExtJS workspace, which contains all the ExtJS web apps.
-  // (use uncompiled sources during development, minified app.js from build dir in production release)
-  val extjsRoot = ConfigFactory.defaultReference().getString("csw.extjs.root")
-  ConfigFactory.defaultOverrides()
-  println(s"Using ExtJS root = $extjsRoot")
-
-  /**
-   * Route for static web page
-   * (default route is the top level index.html file that can provide links to the apps)
-   */
-  def staticRoute: Route =
-    path("")(getFromDirectory(s"$extjsRoot/index.html")) ~
-      getFromDirectory(extjsRoot)
+  // Converts a command status to a JSON string wrapped in a ServerSentEvent
+  def commandStatusToServerSentEvent(status: CommandStatus): ServerSentEvent = {
+    ServerSentEvent(status.toJson.toString())
+  }
 
   /**
    * This defines the HTTP/REST interface for the command service.
    */
-  def apiRoute: Route =
-    path("request")(
-      // "POST /request {config: $config}" submits a config to the command service (bypassing the queue) and returns the runId
-      post(
-        entity(as[List[ConfigType]]) {
-          config ⇒
-            respondWithMediaType(`application/json`) {
-              complete(StatusCodes.Accepted, requestCommand(config))
-            }
-        })) ~
-      path("get")(
-        // "POST /get {config: $config}" submits a config to be filled in with the current values
+  def route(implicit actorRefFactory: ActorRefFactory): Route =
+    logRequestResult("command service") {
+      implicit val mat = ActorMaterializer()
+      import actorRefFactory.dispatcher
+
+      path("request")(
+        // "POST /request {config: $config}" submits a config to the command service (bypassing the queue) and returns
+        // a stream of server sent events containing the command status
         post(
-          entity(as[List[SetupConfig]]) {
+          entity(as[List[ConfigType]]) {
             config ⇒
-              respondWithMediaType(`application/json`) {
+              complete {
+                requestCommand(config).map(commandStatusToServerSentEvent)
+              }
+          })) ~
+        path("get")(
+          // "POST /get {config: $config}" submits a config to be filled in with the current values
+          post(
+            entity(as[List[SetupConfig]]) {
+              config ⇒
                 complete {
                   configGet(config).map {
                     resp ⇒
@@ -75,68 +69,56 @@ trait CommandServiceHttpRoute extends HttpService
                       }
                   }
                 }
-              }
-          })) ~
-        path("status")(
-          // "GET /status" returns the internal status of the command server in HTML format
-          get(
-            respondWithMediaType(`text/html`) {
+            })) ~
+          path("status")(
+            // "GET /status" returns the internal status of the command server in HTML format
+            get(
               complete {
                 commandServiceStatus()
-              }
-            })) ~
-          pathPrefix("queue") {
-            path("submit")(
-              // "POST /queue/submit {config: $config}" submits a config to the command service and returns the runId
-              post(
-                entity(as[List[ConfigType]]) {
-                  config ⇒
-                    respondWithMediaType(`application/json`) {
-                      complete(StatusCodes.Accepted, submitCommand(config))
-                    }
-                })) ~
-              path("stop")(
-                // "POST /queue/stop stops the command queue
+              })) ~
+            pathPrefix("queue") {
+              path("submit")(
+                // "POST /queue/submit {config: $config}" submits a config to the command service and returns
+                // a stream of server sent events containing the command status
                 post(
-                  complete {
-                    queueStop()
-                    StatusCodes.Accepted
+                  entity(as[List[ConfigType]]) {
+                    config ⇒
+                      complete {
+                        submitCommand(config).map(commandStatusToServerSentEvent)
+                      }
                   })) ~
-                path("pause")(
-                  // "POST /queue/pause pauses the command queue
+                path("stop")(
+                  // "POST /queue/stop stops the command queue
                   post(
                     complete {
-                      queuePause()
+                      queueStop()
                       StatusCodes.Accepted
                     })) ~
-                  path("start")(
-                    // "POST /queue/start restarts the command queue
+                  path("pause")(
+                    // "POST /queue/pause pauses the command queue
                     post(
                       complete {
-                        queueStart()
+                        queuePause()
                         StatusCodes.Accepted
                       })) ~
-                    path(JavaUUID)(uuid ⇒
-                      // "DELETE /queue/$runId" deletes the command with the given $runId from the command queue
-                      delete(
+                    path("start")(
+                      // "POST /queue/start restarts the command queue
+                      post(
                         complete {
-                          queueDelete(RunId(uuid))
+                          queueStart()
                           StatusCodes.Accepted
-                        }))
-          } ~
-          pathPrefix("config" / JavaUUID) {
-            uuid ⇒
-              val runId = RunId(uuid)
-              path("status")(
-                // "GET /config/$runId/status" returns the CommandStatus for the given $runId
-                get(
-                  respondWithMediaType(`application/json`) {
-                    produce(instanceOf[Option[CommandStatus]]) {
-                      completer ⇒
-                        _ ⇒ checkCommandStatus(runId,
-                          CommandServiceClientHelper.CommandStatusCompleter(completer))
-                    }
-                  })) ~
+                        })) ~
+                      path(JavaUUID)(uuid ⇒
+                        // "DELETE /queue/$runId" deletes the command with the given $runId from the command queue
+                        delete(
+                          complete {
+                            queueDelete(RunId(uuid))
+                            StatusCodes.Accepted
+                          }))
+            } ~
+            pathPrefix("config" / JavaUUID) {
+              uuid ⇒
+                val runId = RunId(uuid)
                 path("cancel")(
                   // "POST /config/$runId/cancel" cancels the command with the given runId
                   post(
@@ -165,20 +147,17 @@ trait CommandServiceHttpRoute extends HttpService
                             configResume(runId)
                             StatusCodes.Accepted
                           }))
-          } ~
-          pathPrefix("test") {
-            path("error") {
-              // "POST /test/error" throws an exception (for testing error handling)
-              post(
-                complete(testError()))
-            }
-          } ~
-          // If none of the above paths matched, it must be a bad request
-          logRequestResponse(s"Unrecognized path passed to Spray route: ", Logging.InfoLevel) {
+            } ~
+            pathPrefix("test") {
+              path("error") {
+                // "POST /test/error" throws an exception (for testing error handling)
+                post(
+                  complete(testError()))
+              }
+            } ~
+            // If none of the above paths matched, it must be a bad request
             complete(StatusCodes.BadRequest)
-          }
-
-  def route: Route = staticRoute ~ apiRoute
+    }
 
   /**
    *

@@ -1,8 +1,7 @@
 package csw.util.cfg
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
-import spray.httpx.marshalling.MetaMarshallers
-import spray.httpx.SprayJsonSupport
 import csw.util.cfg.Configurations._
 import csw.util.cfg.ConfigValues.{ CValue, ValueData }
 import csw.util.cfg.UnitsOfMeasure.Units
@@ -11,7 +10,7 @@ import csw.util.cfg.UnitsOfMeasure.Units
  * Defines JSON marshallers/unmarshallers for config classes.
  * This adds toJson and parseJson methods to the config classes.
  */
-trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with MetaMarshallers {
+trait ConfigJsonFormats extends DefaultJsonProtocol with SprayJsonSupport {
 
   import ConfigJsonFormats._
 
@@ -195,7 +194,7 @@ private object ConfigJsonFormats {
   // If the sequence contains elements of non default types (String, Double), Some(typeName)
   def typeOption[A](elems: Seq[A]): Option[String] = {
     if (elems.isEmpty) None
-    else elems(0) match {
+    else elems.head match {
       case _: String ⇒ None
       case _: Double ⇒ None
       case _: Int    ⇒ Some("Int")

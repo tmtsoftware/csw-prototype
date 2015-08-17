@@ -1,5 +1,8 @@
 package csw.services.cmd.akka
 
+import akka.stream.scaladsl.Source
+import de.heikoseeberger.akkasse.ServerSentEvent
+
 import scala.concurrent.Future
 import csw.util.cfg.Configurations._
 import csw.services.cmd.akka.ConfigActor.ConfigResponse
@@ -20,31 +23,18 @@ object CommandServiceClientHelper {
 trait CommandServiceClientHelper {
 
   /**
-   * Handles a command submit and returns the runId, which can be used to request the command status.
+   * Handles a command submit and returns a Source reporting the command status changes.
    * @param config the command configuration
-   * @return the runId for the command
+   * @return a stream of command status changes, such as Busy, PartiallyCompleted, and Done
    */
-  def submitCommand(config: ConfigList): RunId
+  def submitCommand(config: ConfigList): Source[CommandStatus, Unit]
 
   /**
    * Handles a command (queue bypass) request and returns the runId, which can be used to request the command status.
    * @param config the command configuration
    * @return the runId for the command
    */
-  def requestCommand(config: ConfigList): RunId
-
-  /**
-   * Handles a request for command status (using long polling). Since the command may take a long time to run
-   * and the HTTP request may time out, this method does not return the status, but calls the completer
-   * when the command status is known. If the HTTP request times out, nothing is done and the caller needs
-   * to try again.
-   */
-  def checkCommandStatus(runId: RunId, completer: CommandServiceClientHelper.CommandStatusCompleter): Unit
-
-  /**
-   * Returns true if the status request for the given runId timed out (and should be retried)
-   */
-  def statusRequestTimedOut(runId: RunId): Boolean
+  def requestCommand(config: ConfigList): Source[CommandStatus, Unit]
 
   /**
    * Handles a request to stop the command queue.

@@ -1,29 +1,27 @@
 package csw.services.cmd.spray
 
-import akka.event.{ Logging, LoggingAdapter }
-import csw.util.cfg.{ TestConfig, ConfigValues, ConfigJsonFormats }
+import akka.event.Logging
+import akka.http.scaladsl.model._
+import csw.util.cfg.{ TestConfig, ConfigJsonFormats }
 import csw.util.cfg.Configurations._
-import csw.util.cfg.Configurations.{ SetupConfigList, SetupConfig }
-import ConfigValues.ValueData._
-import spray.json._
-import org.specs2.mutable.Specification
-import spray.testkit.Specs2RouteTest
-import org.specs2.time.NoTimeConversions
+import csw.util.cfg.Configurations.SetupConfigList
 import csw.services.cmd.akka.{ CommandStatus, RunId }
-import spray.http.{ ContentTypes, StatusCodes }
-import scala.Some
 import akka.actor.ActorSystem
 import scala.util.Success
 import csw.services.cmd.akka.ConfigActor.ConfigResponse
-import csw.services.cmd.akka.CommandServiceClientHelper._
 import scala.concurrent.Future
+import akka.stream.scaladsl.Source
+import org.scalatest.{ Matchers, WordSpec }
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.server._
 
 /**
  * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run
  * without using actors.
  */
-class CommandServiceHttpRouteTests extends Specification
-    with Specs2RouteTest with CommandServiceHttpRoute with NoTimeConversions with ConfigJsonFormats {
+class CommandServiceHttpRouteTests extends WordSpec
+    with Matchers with ScalatestRouteTest with CommandServiceHttpRoute with ConfigJsonFormats {
 
   // Required by HttpService
   def actorRefFactory: ActorSystem = system
@@ -33,111 +31,63 @@ class CommandServiceHttpRouteTests extends Specification
   // The Configuration used in the tests below
   val config = TestConfig.testConfig
 
-  //  // The config in JSON format
-  //  val configJson = config.toJson.prettyPrint
-
-  // Polls the command status for the given runId until the command completes
-  def getCommandStatus(runId: RunId): CommandStatus = {
-    Get(s"/config/$runId/status") ~> route ~> check {
-      assert(status == StatusCodes.OK)
-      assert(contentType == ContentTypes.`application/json`)
-      responseAs[CommandStatus]
-    }
-  }
+  val httpRoute = route
 
   // -- Tests --
 
   "The command service" should {
     "return a runId for a POST /queue/submit [$config] and return the command status for GET /$runId/status" in {
-      val runId = Post("/queue/submit", config) ~> route ~> check {
+      val xxx = Post("/queue/submit", config) ~> httpRoute ~> check {
+        println(s"XXX status = $status, contentType = $contentType")
         status == StatusCodes.Accepted
         contentType == ContentTypes.`application/json`
-        responseAs[RunId]
+        //        responseAs[RunId] // XXX How to test?
       }
 
-      val commandStatus = getCommandStatus(runId)
-      commandStatus.isInstanceOf[CommandStatus.Completed]
-    }
-  }
-
-  "The command service" should {
-    "return a runId for a POST /request [$config] and return the command status for GET /$runId/status" in {
-      val runId = Post("/request", config) ~> route ~> check {
-        status == StatusCodes.Accepted
-        contentType == ContentTypes.`application/json`
-        responseAs[RunId]
-      }
-
-      val commandStatus = getCommandStatus(runId)
-      commandStatus.isInstanceOf[CommandStatus.Completed]
-
+      println(s"XXX result of post /queue/submit: $xxx")
     }
   }
 
   "The command service" should {
     "return an OK status for other commands" in {
 
-      Post("/queue/stop") ~> route ~> check {
+      Post("/queue/stop") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
-      Post("/queue/pause") ~> route ~> check {
+      Post("/queue/pause") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
-      Post("/queue/start") ~> route ~> check {
+      Post("/queue/start") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
 
       val runId = RunId()
-      Delete(s"/queue/$runId") ~> route ~> check {
+      Delete(s"/queue/$runId") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
 
-      Post(s"/config/$runId/cancel") ~> route ~> check {
+      Post(s"/config/$runId/cancel") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
-      Post(s"/config/$runId/abort") ~> route ~> check {
+      Post(s"/config/$runId/abort") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
-      Post(s"/config/$runId/pause") ~> route ~> check {
+      Post(s"/config/$runId/pause") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
-      Post(s"/config/$runId/resume") ~> route ~> check {
+      Post(s"/config/$runId/resume") ~> httpRoute ~> check {
         status == StatusCodes.Accepted
       }
     }
   }
 
-  // Commented out for now since this leaves a stack trace in the output
-  //  "The command service" should {
-  //    "return an error status for unknown commands" in {
-  //
-  //      // Unknown path
-  //      Post("/junk") ~> route ~> check {
-  //        assert(status == StatusCodes.BadRequest)
-  //      }
-  //
-  //      // Should be Post
-  //      Get("/queue/start") ~> route ~> check {
-  //        assert(status == StatusCodes.BadRequest)
-  //      }
-  //
-  //      // When the server (http route code) throws an exception, we should get a InternalServerError
-  //      Post("/test/error") ~> route ~> check {
-  //        assert(status == StatusCodes.InternalServerError)
-  //      }
-  //    }
-  //  }
-
   // -- Override CommandServiceRoute methods with stubs for testing --
 
-  override def submitCommand(config: ConfigList): RunId = RunId()
+  override def submitCommand(config: ConfigList): Source[CommandStatus, Unit] =
+    Source(List(CommandStatus.Completed(RunId())))
 
-  override def requestCommand(config: ConfigList): RunId = RunId()
-
-  override def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit =
-    completer.complete(Some(CommandStatus.Completed(runId)))
-
-  override def statusRequestTimedOut(runId: RunId): Boolean = false
+  override def requestCommand(config: ConfigList): Source[CommandStatus, Unit] =
+    Source(List(CommandStatus.Completed(RunId())))
 
   override def queueStop(): Unit = {}
 

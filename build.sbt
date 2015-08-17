@@ -24,7 +24,7 @@ lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(sprayJson, sprayHttpx, scalaLogging, logback, protobufJava) ++
+      compile(akkaHttpSprayJson, akkaHttp, scalaLogging, logback, protobufJava) ++
       test(scalaTest, akkaTestKit)
   )
 
@@ -68,8 +68,8 @@ lazy val cmd = project.enablePlugins(SbtTwirl)
   .settings(twirlSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(scalaLogging, logback, sprayRouting, sprayJson, sprayCan, sprayClient) ++
-      test(scalaTest, specs2, akkaTestKit, sprayTestkit)
+      compile(scalaLogging, logback, akkaSse) ++
+      test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
   ) dependsOn(loc, util % "compile->compile;test->test")
 
 // Config Service
@@ -81,7 +81,7 @@ lazy val cs = project
   .dependsOn(log, loc, util, configServiceAnnex)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(jgit, scalaLogging, logback, akkaStream, akkaHttpCore, akkaHttp, sprayClient, scopt) ++
+      compile(jgit, scalaLogging, logback, akkaHttp, scopt) ++
       test(scalaTest, akkaTestKit, junit, akkaMultiNodeTest)
   ) configs MultiJvm
 
@@ -131,7 +131,7 @@ lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("ap
   .settings(packageSettings("CSW Config Service Annex", "Store/retrieve large files for Config Service"): _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaRemote, akkaStream, akkaHttpCore, akkaHttp) ++
+      compile(akkaRemote, akkaHttp) ++
       test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
   ) dependsOn(loc, util)
 

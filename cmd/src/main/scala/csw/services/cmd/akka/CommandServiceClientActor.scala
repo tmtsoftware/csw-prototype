@@ -30,7 +30,6 @@ class CommandServiceClientActor(val commandServiceActor: ActorRef, val timeout: 
     // Queue related commands
     case Submit(config, _)          ⇒ sender() ! submitCommand(config)
     case QueueBypassRequest(config) ⇒ sender() ! requestCommand(config)
-    case GetStatus(runId)           ⇒ checkCommandStatus(runId, getCompleter(sender()))
     case m @ QueueStop              ⇒ commandServiceActor forward m
     case m @ QueuePause             ⇒ commandServiceActor forward m
     case m @ QueueStart             ⇒ commandServiceActor forward m
@@ -43,12 +42,5 @@ class CommandServiceClientActor(val commandServiceActor: ActorRef, val timeout: 
 
     case x                          ⇒ log.error(s"Unknown CommandServiceClientActor message: $x")
   }
-
-  // Returns a function that takes a command status and sends it to the given actor
-  private def getCompleter(ref: ActorRef): CommandServiceClientHelper.CommandStatusCompleter =
-    CommandServiceClientHelper.CommandStatusCompleter {
-      case Some(status) ⇒ ref ! status
-      case None         ⇒
-    }
 }
 

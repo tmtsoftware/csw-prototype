@@ -1,6 +1,8 @@
 package csw.services.cmd.akka
 
 import akka.actor._
+import akka.stream.actor.ActorPublisher
+import akka.stream.scaladsl.Source
 import scala.concurrent.duration._
 import csw.services.cmd.akka.CommandServiceActor._
 import scala.concurrent.Future
@@ -16,7 +18,6 @@ import akka.actor.OneForOneStrategy
  */
 trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Actor with ActorLogging {
 
-  import CommandServiceClientHelper._
   import CommandQueueActor._
   import ConfigActor._
 
@@ -47,19 +48,15 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
     s"CommandServiceMonitor-${runId.id}"
   }
 
-  /**
-   * Handles a command submit and returns the runId, which can be used to request the command status.
-   * @param config the command configuration
-   * @return the runId for the command
-   */
-  override def submitCommand(config: ConfigList): RunId = {
+  override def submitCommand(config: ConfigList): Source[CommandStatus, Unit] = {
     val runId = RunId()
     val monitor = newMonitorFor(runId)
+    val publisher = ActorPublisher[CommandStatus](monitor)
     val submit = SubmitWithRunId(config, monitor, runId)
-    log.debug(s"Submitting $config")
     // Submit to the command service actor using the monitor actor as the return address for status updates
+    val result = Source(publisher)
     commandServiceActor ! submit
-    runId
+    result
   }
 
   /**
@@ -67,42 +64,15 @@ trait CommandServiceActorClientHelper extends CommandServiceClientHelper with Ac
    * @param config the command configuration
    * @return the runId for the command
    */
-  override def requestCommand(config: ConfigList): RunId = {
+  override def requestCommand(config: ConfigList): Source[CommandStatus, Unit] = {
     val runId = RunId()
     val monitor = newMonitorFor(runId)
+    val publisher = ActorPublisher[CommandStatus](monitor)
+    // Send to the command service actor using the monitor actor as the return address for status updates
     val request = QueueBypassRequestWithRunId(config, monitor, runId)
-    // Send request to the command service actor using the monitor actor as the return address for status updates
+    val result = Source(publisher)
     commandServiceActor ! request
-    runId
-  }
-
-  /**
-   * Handles a request for command status (using long polling). Since the command may take a long time to run
-   * and the request may time out, this method does not return the status, but calls the completer
-   * when the command status is known. If the request times out, nothing is done and the caller needs
-   * to try again.
-   */
-  override def checkCommandStatus(runId: RunId, completer: CommandStatusCompleter): Unit = {
-    // If the monitoring actor (which was started when the command was submitted) is still running,
-    // send it the the "completer", which it can call to complete the request.
-    // If it timed out and the actor quit, do nothing (This case is handled by the caller).
-    log.debug(s"Checking status for $runId")
-    getMonitorFor(runId) match {
-      case Some(monitor) ⇒
-        monitor ! completer
-      case None ⇒
-        completer.complete(
-          Some(CommandStatus.Error(runId,
-            "Unknown runId: Request may have timed out").asInstanceOf[CommandStatus]))
-    }
-  }
-
-  /**
-   * Returns true if the status request for the given runId timed out (and should be retried)
-   * or the runId is not known.
-   */
-  override def statusRequestTimedOut(runId: RunId): Boolean = {
-    getMonitorFor(runId).isEmpty
+    result
   }
 
   /**

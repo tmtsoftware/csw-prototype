@@ -3,15 +3,14 @@ package csw.services.cs.akka
 import java.io.File
 import java.util.Date
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import csw.services.cs.core.{ ConfigFileHistory, ConfigFileInfo, ConfigId }
-import spray.httpx.SprayJsonSupport
-import spray.httpx.marshalling.MetaMarshallers
 import spray.json._
 
 /**
  * Defines JSON marshallers/unmarshallers for the objects used in HTTP/REST messages.
  */
-trait ConfigServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with MetaMarshallers {
+trait ConfigServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport {
 
   /**
    * ConfigId JSON support

@@ -1,5 +1,9 @@
 package csw.services.cmd.akka
 
+import akka.actor.ActorRefFactory
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Sink
+
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import csw.util.cfg.Configurations._
@@ -7,7 +11,7 @@ import csw.util.cfg.Configurations._
 /**
  * A simple, blocking command service client for use in scripts, in the REPL, or tests.
  */
-case class BlockingCommandServiceClient(client: CommandServiceClient) {
+case class BlockingCommandServiceClient(client: CommandServiceClient)(implicit actorRefFactory: ActorRefFactory) {
 
   /**
    * Submits a config to the queue for the given command service and waits for it to complete
@@ -16,8 +20,9 @@ case class BlockingCommandServiceClient(client: CommandServiceClient) {
    * @return the command completion status
    */
   def submit(conf: ConfigList, timeout: Duration = client.statusTimeout): CommandStatus = {
-    val runId = Await.result(client.queueSubmit(conf), timeout)
-    Await.result(client.pollCommandStatus(runId), timeout)
+    implicit val mat = ActorMaterializer()
+    val source = Await.result(client.queueSubmit(conf), timeout)
+    Await.result(source.filter(_.done).runWith(Sink.head), timeout)
   }
 
   /**
@@ -27,8 +32,9 @@ case class BlockingCommandServiceClient(client: CommandServiceClient) {
    * @return the command completion status
    */
   def request(conf: ConfigList, timeout: Duration = client.statusTimeout): CommandStatus = {
-    val runId = Await.result(client.queueBypassRequest(conf), timeout)
-    Await.result(client.pollCommandStatus(runId), timeout)
+    implicit val mat = ActorMaterializer()
+    val source = Await.result(client.queueBypassRequest(conf), timeout)
+    Await.result(source.filter(_.done).runWith(Sink.head), timeout)
   }
 
   /**

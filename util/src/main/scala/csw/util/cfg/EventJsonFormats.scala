@@ -1,14 +1,13 @@
 package csw.util.cfg
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import csw.util.cfg.Events._
 import spray.json._
-import spray.httpx.marshalling.MetaMarshallers
-import spray.httpx.SprayJsonSupport
 
 /**
  * Support for converting Events to and from JSON (adds toJson and parseJson methods)
  */
-trait EventJsonFormats extends DefaultJsonProtocol with SprayJsonSupport with MetaMarshallers {
+trait EventJsonFormats extends DefaultJsonProtocol with SprayJsonSupport {
 
   // JSON I/O for TelemetryEvent
   implicit object TelemetryEventJsonFormat extends RootJsonFormat[TelemetryEvent] {
