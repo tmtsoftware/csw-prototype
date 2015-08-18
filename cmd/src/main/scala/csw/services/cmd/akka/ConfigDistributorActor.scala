@@ -221,8 +221,8 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
   // Reports an error if there are no subscribers for the config.
   private def sendToTargetActors(): Unit = {
     // First get a list of the config parts we need to send and the target actors that should get them
-    val submitInfoList = targetActors.map(getSubmitInfo(submit, _)).flatten.toList
-    if (submitInfoList.length == 0) {
+    val submitInfoList = targetActors.flatMap(getSubmitInfo(submit, _))
+    if (submitInfoList.isEmpty) {
       log.error(s"No subscribers for submit: ${submit.config}")
       commandStatusActor ! CommandStatusActor.StatusUpdate(CommandStatus.Error(submit.runId, "No subscribers"), submit.submitter)
       context.stop(self)
@@ -243,7 +243,7 @@ private class SubmitWorkerActor(commandStatusActor: ActorRef, submit: SubmitWith
   private def getSubmitInfo(submit: SubmitWithRunId, targetActor: LocationServiceInfo): Option[SubmitInfo] = {
     val pathOpt = targetActor.configPathOpt
     val setupConfigs = submit.config.prefixStartsWith(pathOpt)
-    if (setupConfigs.size == 0) None
+    if (setupConfigs.isEmpty) None
     else for {
       actorRef ← targetActor.actorRefOpt
     } yield SubmitInfo(pathOpt, SubmitWithRunId(setupConfigs, self, RunId()), actorRef)
@@ -317,7 +317,7 @@ private class QueryWorkerActor(config: SetupConfigList, targetActors: List[Locat
   // Send parts of the query to the target actors and when all replies are in,
   // combine and return to sender.
   val list = getQueryInfoList
-  if (list.length == 0) {
+  if (list.isEmpty) {
     log.error(s"No subscribers for config/get query: $config")
     sender() ! ConfigResponse(Failure(new Error("No subscribers for config/get query")))
     context.stop(self)
@@ -332,15 +332,15 @@ private class QueryWorkerActor(config: SetupConfigList, targetActors: List[Locat
 
   // Gets a list of the config parts we need to send and the target actors that should get them.
   private def getQueryInfoList: List[QueryInfo] = {
-    targetActors.map {
+    targetActors.flatMap {
       targetActor ⇒
         val pathOpt = targetActor.configPathOpt
         val setupConfigs = config.prefixStartsWith(pathOpt)
-        if (setupConfigs.size == 0) None
+        if (setupConfigs.isEmpty) None
         else for {
           actorRef ← targetActor.actorRefOpt
         } yield QueryInfo(actorRef, ConfigGet(setupConfigs), pathOpt)
-    }.flatten.toList
+    }
   }
 
   /**

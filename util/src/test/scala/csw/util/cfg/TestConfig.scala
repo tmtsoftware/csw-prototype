@@ -5,7 +5,7 @@ import csw.util.cfg.Configurations._
 object TestConfig {
   val obsId = "TMT-2021A-C-2-1"
 
-  // Config to use for testing
+  // Config to u/se for testing
   val testConfig = List(
     SetupConfig(
       obsId = obsId,
