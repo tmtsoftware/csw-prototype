@@ -1,7 +1,7 @@
 package csw.services.cmd.akka
 
 import akka.stream.scaladsl.Source
-import de.heikoseeberger.akkasse.ServerSentEvent
+import csw.shared.{ CommandStatus, RunId }
 
 import scala.concurrent.Future
 import csw.util.cfg.Configurations._

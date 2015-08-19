@@ -5,11 +5,11 @@ import csw.services.cmd.akka.CommandQueueActor.SubmitWithRunId
 import csw.services.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
 import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
 import csw.services.cmd.akka.ConfigActor.{ ConfigResponse, ConfigGet }
-import csw.services.cmd.akka.{ RunId, CommandStatus }
 import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor.ServiceId
 import csw.services.ls.LocationServiceClientActor.{ Connected, Disconnected }
 import csw.services.ls.{ LocationServiceClientActor, LocationServiceRegisterActor }
+import csw.shared.{ CommandStatus, RunId }
 
 import scala.util.Failure
 

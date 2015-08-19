@@ -2,10 +2,10 @@ package csw.services.cmd.spray
 
 import akka.event.Logging
 import akka.http.scaladsl.model._
+import csw.shared.{ RunId, CommandStatus }
 import csw.util.cfg.{ TestConfig, ConfigJsonFormats }
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Configurations.SetupConfigList
-import csw.services.cmd.akka.{ CommandStatus, RunId }
 import akka.actor.ActorSystem
 import scala.util.Success
 import csw.services.cmd.akka.ConfigActor.ConfigResponse
@@ -14,7 +14,6 @@ import akka.stream.scaladsl.Source
 import org.scalatest.{ Matchers, WordSpec }
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.http.scaladsl.server._
 
 /**
  * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run

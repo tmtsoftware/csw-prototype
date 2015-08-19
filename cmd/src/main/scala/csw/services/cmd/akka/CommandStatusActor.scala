@@ -1,6 +1,7 @@
 package csw.services.cmd.akka
 
 import akka.actor.{ Terminated, ActorRef, Actor, ActorLogging }
+import csw.shared.CommandStatus
 
 // Defines messages used by the CommandStatusActor
 object CommandStatusActor {

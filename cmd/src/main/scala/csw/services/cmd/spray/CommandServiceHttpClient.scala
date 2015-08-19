@@ -2,7 +2,7 @@ package csw.services.cmd.spray
 
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
-import csw.services.cmd.akka.{ CommandStatus, RunId }
+import csw.shared.{ CommandStatus, RunId }
 import csw.util.cfg.ConfigJsonFormats
 import csw.util.cfg.Configurations._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -19,7 +19,7 @@ import spray.json._
 /**
  * Helper methods for command service http clients
  */
-trait CommandServiceHttpClient extends CommandServiceJsonFormats with ConfigJsonFormats with LazyLogging {
+trait CommandServiceHttpClient extends ConfigJsonFormats with LazyLogging {
 
   /**
    * The HTTP server host
@@ -49,7 +49,9 @@ trait CommandServiceHttpClient extends CommandServiceJsonFormats with ConfigJson
 
   // Converts a ServerSentEvent to a CommandStatus
   private def serverSentEventToCommandStatus(event: ServerSentEvent): CommandStatus = {
-    CommandStatusJsonFormat.read(event.data.parseJson)
+    import upickle.default._
+    val status = read[CommandStatus](event.data)
+    status
   }
 
   /**

@@ -3,10 +3,10 @@ package csw.services.cmd.spray
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{ Broadcast, FlowGraph, Sink }
-import akka.stream.testkit.scaladsl.TestSink
+import akka.stream.scaladsl.Sink
 import akka.testkit.TestKit
 import csw.services.cmd.akka._
+import csw.shared.CommandStatus
 import csw.util.cfg.TestConfig
 import org.scalatest.FunSuiteLike
 

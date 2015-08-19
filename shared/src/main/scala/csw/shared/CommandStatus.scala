@@ -1,4 +1,4 @@
-package csw.services.cmd.akka
+package csw.shared
 
 /**
  * The status of a running command

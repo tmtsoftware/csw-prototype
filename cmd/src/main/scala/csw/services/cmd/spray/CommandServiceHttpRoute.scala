@@ -4,9 +4,10 @@ import akka.actor.ActorRefFactory
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
+import csw.shared.{ RunId, CommandStatus }
 import csw.util.cfg.ConfigJsonFormats
 import csw.util.cfg.Configurations._
-import csw.services.cmd.akka.{ CommandStatus, CommandServiceClientHelper, RunId }
+import csw.services.cmd.akka.CommandServiceClientHelper
 import akka.event.LoggingAdapter
 import de.heikoseeberger.akkasse.{ EventStreamMarshalling, ServerSentEvent }
 import scala.language.implicitConversions
@@ -20,7 +21,6 @@ import akka.http.scaladsl.server.Directives._
  * without actually running an HTTP server.
  */
 trait CommandServiceHttpRoute extends CommandServiceClientHelper
-    with CommandServiceJsonFormats
     with ConfigJsonFormats
     with EventStreamMarshalling {
 
@@ -29,7 +29,10 @@ trait CommandServiceHttpRoute extends CommandServiceClientHelper
 
   // Converts a command status to a JSON string wrapped in a ServerSentEvent
   def commandStatusToServerSentEvent(status: CommandStatus): ServerSentEvent = {
-    ServerSentEvent(status.toJson.toString())
+    import upickle.default._
+
+    val json = write(status)
+    ServerSentEvent(json)
   }
 
   /**

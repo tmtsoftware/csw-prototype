@@ -3,6 +3,7 @@ package csw.services.cmd.akka
 import akka.actor._
 import akka.stream.actor.ActorPublisher
 import akka.stream.scaladsl.Source
+import csw.shared.{ RunId, CommandStatus }
 import scala.concurrent.duration._
 import csw.services.cmd.akka.CommandServiceActor._
 import scala.concurrent.Future

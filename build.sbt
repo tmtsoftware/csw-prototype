@@ -19,7 +19,15 @@ def runtime(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "runtime")
 def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 
 
-// Shared utils
+// Contains classes that are shared between the scala and scala.js code
+lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
+  .settings(defaultSettings: _*)
+  .settings(fork := false)
+
+lazy val sharedJvm = shared.jvm
+lazy val sharedJs = shared.js
+
+// Utility classes
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
@@ -28,7 +36,7 @@ lazy val util = project
       test(scalaTest, akkaTestKit)
   )
 
-// Support classes
+// Supporting classes
 lazy val support = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
@@ -68,9 +76,9 @@ lazy val cmd = project.enablePlugins(SbtTwirl)
   .settings(twirlSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(scalaLogging, logback, akkaSse) ++
+      compile(scalaLogging, logback, akkaSse, upickle) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(loc, util % "compile->compile;test->test")
+  ) dependsOn(sharedJvm, loc, util % "compile->compile;test->test")
 
 // Config Service
 lazy val cs = project

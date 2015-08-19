@@ -5,9 +5,9 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import csw.services.cmd.akka.CommandServiceActor.Submit
-import csw.services.cmd.akka.CommandStatus
 import csw.services.ls.LocationServiceActor
-import csw.services.pkg.LifecycleManager.{Running, LifecycleError, LifecycleStateChanged}
+import csw.services.pkg.LifecycleManager.LifecycleStateChanged
+import csw.shared.CommandStatus
 import csw.util.cfg.TestConfig
 
 import scala.concurrent.duration._

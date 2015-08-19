@@ -2,6 +2,7 @@ package csw.services.cmd.akka
 
 import akka.actor.{ Cancellable, ActorLogging, Props }
 import akka.stream.actor.ActorPublisher
+import csw.shared.{ CommandStatus, RunId }
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.FiniteDuration
 import akka.stream.actor.ActorPublisherMessage._

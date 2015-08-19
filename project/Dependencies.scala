@@ -1,4 +1,6 @@
+import sbt.Keys._
 import sbt._
+import sbt.Project.projectToRef
 
 // Dependencies
 
@@ -29,13 +31,7 @@ object Dependencies {
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.1"
   val janino = "org.codehaus.janino" % "janino" % "2.7.6"
   val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1"
-
-//  val sprayCan = "io.spray" %% "spray-can" % sprayVersion
-//  val sprayHttpx = "io.spray" %% "spray-httpx" % sprayVersion
-//  val sprayClient = "io.spray" %% "spray-client" % sprayVersion
-//  val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
-//  val sprayJson = "io.spray" %% "spray-json" % "1.3.1"
-//  val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
+  val upickle = "com.lihaoyi" %% "upickle" % "0.3.4"
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r"
 

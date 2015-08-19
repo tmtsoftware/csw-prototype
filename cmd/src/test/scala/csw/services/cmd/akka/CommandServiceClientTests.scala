@@ -5,6 +5,7 @@ import akka.stream.scaladsl.Sink
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.{ ActorRef, ActorSystem }
 import csw.services.cmd.spray.CommandServiceSettings
+import csw.shared.CommandStatus
 import csw.util.cfg.TestConfig
 import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
 import com.typesafe.scalalogging.slf4j.LazyLogging

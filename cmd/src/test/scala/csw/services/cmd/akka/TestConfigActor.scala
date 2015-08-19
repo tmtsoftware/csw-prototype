@@ -3,6 +3,7 @@ package csw.services.cmd.akka
 import akka.actor._
 import csw.services.cmd.akka.ConfigActor._
 import csw.services.cmd.akka.CommandQueueActor._
+import csw.shared.{ CommandStatus, RunId }
 import csw.util.cfg.ConfigJsonFormats
 import csw.util.cfg.Configurations._
 import scala.util.Success
@@ -39,7 +40,7 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
     val props = TestConfigActorWorker.props(submit, commandStatusActor, numberOfSecondsToRun)
     configWorkers.newWorkerFor(props, submit.runId) match {
       case Some(configWorkerActor) ⇒
-        log.info(s"Forwarding config ${submit.config.toJson.toString} to worker")
+        log.info(s"Forwarding config ${submit.config.toJson.toString()} to worker")
         context.watch(configWorkerActor)
       case None ⇒
     }
