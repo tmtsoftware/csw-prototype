@@ -43,6 +43,7 @@ Projects and Directories
 ------------------------
 
 * [apps](apps) - contains some standalone applications
+* [shared](shared) - shared Scala/Scala.js project, for data transfer objects between client and server
 * [cmd](cmd) - the Command Service (for sending commands to HCDs and Assemblies)
 * [cs](cs) - the Configuration Service (manages configuration files in Git repos)
 * [doc](doc) - for documentation
