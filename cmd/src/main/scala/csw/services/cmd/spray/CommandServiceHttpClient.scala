@@ -9,11 +9,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{ Sink, Flow, Source }
 import de.heikoseeberger.akkasse.{ EventStreamUnmarshalling, ServerSentEvent }
 import EventStreamUnmarshalling._
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import spray.json._
 
 /**
@@ -132,39 +132,6 @@ trait CommandServiceHttpClient extends ConfigJsonFormats with LazyLogging {
     sendRequest(request, connection)
   }
 
-  //  /**
-  //   * Gets the command status (once). This method returns the current command status.
-  //   * @param runId identifies a configuration previously submitted or requested
-  //   * @return the future command status
-  //   */
-  //  def getCommandStatus(runId: RunId): Future[CommandStatus] = {
-  //    logger.debug(s"Attempting to get command status for runId $runId")
-  //    val pipeline = sendReceive ~> unmarshal[CommandStatus]
-  //    pipeline(Get(s"http://$host:$port/config/$runId/status"))
-  //  }
-  //
-  //  /**
-  //   * Polls the command status for the given runId until the command completes (commandStatus.done is true).
-  //   * The command status normally starts out as Queued, then becomes Busy and eventually Complete,
-  //   * although other statuses are possible, such as Aborted or Canceled.
-  //   * @param runId identifies a configuration previously submitted or requested
-  //   * @param maxAttempts max number of times to ask for the command status before giving up if the command does not complete
-  //   * @return the future command status
-  //   */
-  //  def pollCommandStatus(runId: RunId, maxAttempts: Int = 10): Future[CommandStatus] = {
-  //    val f = for (commandStatus ← getCommandStatus(runId)) yield {
-  //      if (commandStatus.done) {
-  //        Future.successful(commandStatus)
-  //      } else if (maxAttempts > 0) {
-  //        pollCommandStatus(runId, maxAttempts - 1)
-  //      } else {
-  //        Future.successful(CommandStatus.Error(runId, "Timed out while waiting for command status"))
-  //      }
-  //    }
-  //    // Flatten the result, which is of type Future[Future[CommandStatus]], to get a Future[CommandStatus]
-  //    f.flatMap[CommandStatus] { x ⇒ x }
-  //  }
-
   /**
    * Posts a config cancel command with the given runId
    * @return a future http response
@@ -188,6 +155,35 @@ trait CommandServiceHttpClient extends ConfigJsonFormats with LazyLogging {
    * @return a future http response
    */
   def configResume(runId: RunId): Future[HttpResponse] = configPost(runId, "resume")
+
+  /**
+   * Used to query the current state of a device. A config is passed in (the values are ignored)
+   * and a reply will be sent containing the same config with the current values filled out.
+   *
+   * @param config used to specify the keys for the values that should be returned
+   * @return the future response (a config wrapped in a Try)
+   */
+  def configGet(config: SetupConfigList): Future[SetupConfigList] = {
+    implicit val mat = ActorMaterializer()
+    val uri = s"http://$host:$port/get"
+    val entity = HttpEntity(ContentTypes.`application/json`, config.toJson.toString())
+    val connection = Http().outgoingConnection(host, port)
+    val request = HttpRequest(method = POST, uri = uri, entity = entity)
+
+    val f = for {
+      result ← sendRequest(request, connection)
+      response ← Unmarshal(result.entity.withContentType(ContentTypes.`application/json`)).to[SetupConfigList]
+    } yield {
+      logger.debug(s"configGet response = $response")
+      response
+    }
+
+    f.onFailure {
+      case ex ⇒
+        logger.error("Error in configGet", ex)
+    }
+    f
+  }
 
   // Posts the queue command with the given name
   private def queuePost(name: String): Future[HttpResponse] = {

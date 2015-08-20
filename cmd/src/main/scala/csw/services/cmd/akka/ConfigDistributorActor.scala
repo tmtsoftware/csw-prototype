@@ -365,9 +365,11 @@ private class QueryWorkerActor(config: SetupConfigList, targetActors: List[Locat
 
     Future.sequence(listOfFutureResponses).onComplete {
       case Success(responseList) ⇒
+        log.debug(s"query responseList = $responseList")
         replyTo ! mergeConfigResponses(responseList.toList)
         context.stop(self)
       case Failure(ex) ⇒
+        log.error(ex, "query failed")
         replyTo ! ConfigResponse(Failure(ex))
         context.stop(self)
     }
@@ -381,8 +383,12 @@ private class QueryWorkerActor(config: SetupConfigList, targetActors: List[Locat
   private def mergeConfigResponses(responses: List[ConfigResponse]): ConfigResponse = {
     // return first failure if found, otherwise the merged response
     val configs = for (resp ← responses) yield resp.tryConfig match {
-      case Success(conf) ⇒ conf
-      case Failure(ex)   ⇒ return resp // XXX FIXME
+      case Success(conf) ⇒
+        log.debug(s"query merge $conf")
+        conf
+      case Failure(ex) ⇒
+        log.error(ex, "query merge failed")
+        return resp // XXX FIXME
     }
     ConfigResponse(Success(configs.flatten))
   }

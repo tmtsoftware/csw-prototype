@@ -7,9 +7,6 @@ import scala.Some
 
 object CommandServiceClientActor {
 
-  // Message sent to get the command status for the given runId
-  case class GetStatus(runId: RunId)
-
   // Used to create the actor
   def props(commandServiceActor: ActorRef, timeout: FiniteDuration): Props =
     Props(classOf[CommandServiceClientActor], commandServiceActor, timeout)

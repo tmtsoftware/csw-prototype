@@ -126,7 +126,9 @@ class TestConfigActor(override val commandStatusActor: ActorRef, numberOfSeconds
         }
     }
 
-    sender() ! ConfigResponse(Success(configList))
+    log.debug(s"query: sending response to $replyTo: $configList")
+
+    replyTo ! ConfigResponse(Success(configList))
     savedConfig = Some(configList)
   }
 }

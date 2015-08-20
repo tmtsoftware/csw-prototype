@@ -62,12 +62,14 @@ trait CommandServiceHttpRoute extends CommandServiceClientHelper
                   configGet(config).map {
                     resp ⇒
                       resp.tryConfig match {
-                        case Success(c) ⇒
-                          log.info(s"get ${c.toJson.toString()}")
-                          c.toJson.toString()
+                        case Success(setupConfigList) ⇒
+                          val json = setupConfigList.toJson.toString()
+                          log.debug(s"configGet http response $json")
+                          json
                         case Failure(ex) ⇒
                           log.error(s"$ex")
                           // XXX TODO: How to return an error to here?
+                          // throw ex
                           ""
                       }
                   }
