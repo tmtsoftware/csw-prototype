@@ -3,7 +3,8 @@ package csw.services.cmd.akka
 import akka.actor._
 import csw.services.cmd.akka.ConfigActor._
 import csw.services.cmd.akka.CommandQueueActor._
-import csw.shared.{ CommandStatus, RunId }
+import csw.shared.CommandStatus
+import csw.shared.cmd.RunId
 import csw.util.cfg.ConfigJsonFormats
 import csw.util.cfg.Configurations._
 import scala.util.Success

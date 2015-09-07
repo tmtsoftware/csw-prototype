@@ -1,4 +1,4 @@
-package csw.shared
+package csw.shared.cmd
 
 import java.util.UUID
 

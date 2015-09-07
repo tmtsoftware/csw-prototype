@@ -2,7 +2,8 @@ package csw.services.cmd.spray
 
 import akka.event.Logging
 import akka.http.scaladsl.model._
-import csw.shared.{ RunId, CommandStatus }
+import csw.shared.CommandStatus
+import csw.shared.cmd.RunId
 import csw.util.cfg.{ TestConfig, ConfigJsonFormats }
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Configurations.SetupConfigList

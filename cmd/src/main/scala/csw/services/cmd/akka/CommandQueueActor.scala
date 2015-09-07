@@ -2,7 +2,8 @@ package csw.services.cmd.akka
 
 import akka.actor._
 import csw.services.cmd.akka.CommandServiceActor.StatusRequest
-import csw.shared.{ RunId, CommandStatus }
+import csw.shared.CommandStatus
+import csw.shared.cmd.RunId
 import csw.util.cfg.Configurations._
 import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
 
