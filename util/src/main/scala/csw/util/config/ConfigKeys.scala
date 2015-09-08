@@ -3,6 +3,9 @@ package csw.util.config
 import csw.util.config.ConfigKeys._
 import csw.util.config.UnitsOfMeasure.Units
 
+/**
+ * Defines config key types and standard keys
+ */
 object ConfigKeys {
 
   trait IntValued extends Key {
@@ -33,6 +36,10 @@ object ConfigKeys {
     type Value = Units
   }
 
+
+  /**
+   * Exposure classes
+   */
   sealed abstract class ExposureClass(val description: String) extends Ordered[ExposureClass] {
     override def toString = description
     def compare(that: ExposureClass) = description.compare(that.description)
@@ -46,6 +53,10 @@ object ConfigKeys {
     type Value = ExposureClass
   }
 
+
+  /**
+   * Exposure types: flat, arc, bias, observe
+   */
   sealed abstract class ExposureType(val description: String) extends Ordered[ExposureType] {
     override def toString = description
     def compare(that: ExposureType) = description.compare(that.description)
@@ -59,6 +70,10 @@ object ConfigKeys {
     type Value = ExposureType
   }
 
+
+  /**
+   * Cloud Cover
+   */
   sealed abstract class CloudCoverType(val description: String, val percentage: Int) extends Ordered[CloudCoverType] {
     override def toString = description
     def compare(that: CloudCoverType) = percentage.compare(that.percentage)
@@ -76,6 +91,10 @@ object ConfigKeys {
 
 }
 
+
+/**
+ * Defines some standard config keys
+ */
 object StandardKeys {
 
   // Common keys
@@ -91,14 +110,14 @@ object StandardKeys {
   val cloudCover = new Key(CLOUDCOVER) with CloudCoverValued
 
   // ObserveConfig
-  val EXPOSURETIME = "exposureTime"
-  val EXPOSURETYPE = "exposureType"
-  val EXPOSURECLASS = "exposureClass"
+  val EXPOSURE_TIME = "exposureTime"
+  val EXPOSURE_TYPE = "exposureType"
+  val EXPOSURE_CLASS = "exposureClass"
   val REPEATS = "repeats"
 
-  val exposureTime = new Key(EXPOSURETIME) with DoubleValued
+  val exposureTime = new Key(EXPOSURE_TIME) with DoubleValued
 
-  val exposureType = new Key(EXPOSURETYPE) with ExposureTypeValued
-  val exposureClass = new Key(EXPOSURECLASS) with ExposureClassValued
+  val exposureType = new Key(EXPOSURE_TYPE) with ExposureTypeValued
+  val exposureClass = new Key(EXPOSURE_CLASS) with ExposureClassValued
   val repeats = new Key(REPEATS) with IntValued
 }

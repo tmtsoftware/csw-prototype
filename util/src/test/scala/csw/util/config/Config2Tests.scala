@@ -19,7 +19,7 @@ class Config2Tests extends FunSpec with Matchers {
     import StandardKeys._
 
     val ck = "wfos.blue.filter"
-    val ck1 = "wfos.prog.cloudcover"
+//    val ck1 = "wfos.prog.cloudcover"
     val ck2 = "wfos.red.filter"
     val ck3 = "wfos.red.detector"
 
@@ -46,7 +46,7 @@ class Config2Tests extends FunSpec with Matchers {
     println("SCN: " + ob1)
 
     implicit val mycdata = ConfigInfo("testing")
-    val obsId1 = "2014-C2-4-44"
+//    val obsId1 = "2014-C2-4-44"
     val sca1 = SetupConfigArg(sc1, sc2)
 
     println("Sca1: " + sca1)
@@ -69,8 +69,8 @@ class Config2Tests extends FunSpec with Matchers {
     val s1 = Seq(sc1, sc2, ob1, w1)
     println("Sca1: " + s1)
 
-    it("should see 3 prefixes - one is duplicate") {
-      val r1 = ConfigFilters.prefixes(s1)
+    it("should see 3 paths - one is duplicate") {
+      val r1 = ConfigFilters.paths(s1)
       assert(r1.size == 3)
     }
 
@@ -94,7 +94,7 @@ class Config2Tests extends FunSpec with Matchers {
     import Configurations.ConfigKey._
 
     val ck = "wfos.blue.filter"
-    val ck2 = "wfos.red.filter"
+//    val ck2 = "wfos.red.filter"
     val ck3 = "iris.imager.detector"
 
     val sc1: SetupConfig = SetupConfig(ck)

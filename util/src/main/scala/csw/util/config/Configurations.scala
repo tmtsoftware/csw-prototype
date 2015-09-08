@@ -15,19 +15,10 @@ object Configurations {
     // Path separator
     val SEPARATOR = '.'
 
-    // Returned if no prefix was found
-    val DEFAULT_PREFIX = "BAD.prefix"
-
     /**
      * Creates a ConfigKey from the given string
      */
-    implicit def apply(in: String): ConfigKey = ConfigKey(subsystem(in), prefix(in))
-
-    // Returns the prefix of the given string (up to last SEPARATOR), or DEFAULT_PREFIX, if no SEPARATOR was found
-    private def prefix(keyText: String): String = keyText.splitAt(keyText.lastIndexOf(SEPARATOR))._1 match {
-      case s if s.nonEmpty ⇒ s
-      case _ ⇒ DEFAULT_PREFIX
-    }
+    implicit def apply(in: String): ConfigKey = ConfigKey(subsystem(in), in)
 
     // Returns the subsystem for the given string (up to first SEPARATOR), or Subsystem.BAD, if no SEPARATOR was found
     private def subsystem(keyText: String): Subsystem =
@@ -37,32 +28,62 @@ object Configurations {
   /**
    * Convenience class for getting the subsystem and prefix from a config key string
    */
-  case class ConfigKey(subsystem: Subsystem, prefix: String) {
-    override def toString = "[" + subsystem + ", " + prefix + "]"
+  case class ConfigKey(subsystem: Subsystem, path: String) {
+    override def toString = "[" + subsystem + ", " + path + "]"
   }
 
 
+  /**
+   * Base trait for configurations: Defines the subsystem, prefix and a method to get the value for a key.
+   * The config key is based on a string like subsystem.x.y.z, where the prefix is then subsystem.x.y.
+   */
   sealed trait ConfigType {
     def configKey: ConfigKey
 
+    /**
+     * The subsystem for the config
+     */
     def subsystem: Subsystem = configKey.subsystem
 
-    def prefix: String = configKey.prefix
+    /**
+     * The prefix for the config
+     */
+    def path: String = configKey.path
 
+    /**
+     * Holds the typed key/value pairs
+     */
     def data: ConfigData
 
+    /**
+     * The number of key/value pairs
+     */
     def size = data.size
 
+    /**
+     * Returns the value for the key, if found
+     */
     def get(key: Key): Option[key.Value] = data.get(key)
 
     def doToString(kind: String) =
-      kind + "[" + subsystem + ", " + prefix + "] " + data.toString
+      kind + "[" + subsystem + ", " + path + "] " + data.toString
   }
 
+  /**
+   * Marker trait for sequence configurations
+   */
   trait SequenceConfig
 
+  /**
+   * Marker trait for control configurations
+   */
   trait ControlConfig
 
+  /**
+   * Defines a setup configuration, which is a config key plus a set of key/value pairs
+   * @param configKey the key for the configuration, containing subsystem and prefix
+   * @param data the typed key/value pairs
+   */
   case class SetupConfig(configKey: ConfigKey, data: ConfigData = ConfigData())
     extends ConfigType with SequenceConfig with ControlConfig {
 
@@ -73,6 +94,11 @@ object Configurations {
     override def toString = doToString("SC")
   }
 
+  /**
+   * Defines an observe configuration, which is a config key plus a set of key/value pairs
+   * @param configKey the key for the configuration, containing subsystem and prefix
+   * @param data the typed key/value pairs
+   */
   case class ObserveConfig(configKey: ConfigKey, data: ConfigData = ConfigData())
     extends ConfigType with SequenceConfig with ControlConfig {
     def set(key: Key)(value: key.Value): ObserveConfig = ObserveConfig(configKey, data.set(key)(value))
@@ -82,6 +108,11 @@ object Configurations {
     override def toString = doToString("OC")
   }
 
+  /**
+   * Defines a wait configuration
+   * @param configKey the key for the configuration, containing subsystem and prefix
+   * @param data the typed key/value pairs
+   */
   case class WaitConfig(configKey: ConfigKey, data: ConfigData = ConfigData())
     extends ConfigType with SequenceConfig {
     def set(key: Key)(value: key.Value): WaitConfig = WaitConfig(configKey, data.set(key)(value))
@@ -92,13 +123,13 @@ object Configurations {
   }
 
   /**
-   * Filters for
+   * Filters for sequences of configs
    */
   object ConfigFilters {
     // A filter type for various ConfigData
     type ConfigFilter[A] = A ⇒ Boolean
 
-    def prefixes(configs: Seq[ConfigType]): Set[String] = configs.map(_.prefix).toSet
+    def paths(configs: Seq[ConfigType]): Set[String] = configs.map(_.path).toSet
 
     def onlySetupConfigs(configs: Seq[ConfigType]): Seq[SetupConfig] = configs.collect { case ct: SetupConfig ⇒ ct }
 
@@ -106,12 +137,12 @@ object Configurations {
 
     def onlyWaitConfigs(configs: Seq[ConfigType]): Seq[WaitConfig] = configs.collect { case ct: WaitConfig ⇒ ct }
 
-    val prefixStartsWithFilter: String ⇒ ConfigFilter[ConfigType] = query ⇒ sc ⇒ sc.prefix.startsWith(query)
-    val prefixContainsFilter: String ⇒ ConfigFilter[ConfigType] = query ⇒ sc ⇒ sc.prefix.contains(query)
+    private val pathStartsWithFilter: String ⇒ ConfigFilter[ConfigType] = query ⇒ sc ⇒ sc.path.startsWith(query)
+    private val pathContainsFilter: String ⇒ ConfigFilter[ConfigType] = query ⇒ sc ⇒ sc.path.contains(query)
 
-    def prefixStartsWith(query: String, configs: Seq[ConfigType]): Seq[ConfigType] = configs.filter(prefixStartsWithFilter(query))
+    def pathStartsWith(query: String, configs: Seq[ConfigType]): Seq[ConfigType] = configs.filter(pathStartsWithFilter(query))
 
-    def prefixContains(query: String, configs: Seq[ConfigType]): Seq[ConfigType] = configs.filter(prefixContainsFilter(query))
+    def pathContains(query: String, configs: Seq[ConfigType]): Seq[ConfigType] = configs.filter(pathContainsFilter(query))
   }
 
   /**
@@ -125,12 +156,13 @@ object Configurations {
   }
 
   /**
-   * A ConfigArg is what is placed in a queue in Command Service.
+   * A ConfigArg is what is placed in a Submit message in the Command Service queue.
    * It can be one or more SetupConfigs, one or more ObserveConfigs or a WaitConfig
    * Each ConfigArg includes a ConfigInfo which will contain information about the executing
    * observation.
    */
   sealed trait ConfigArg
+
 
   final case class SetupConfigArg(info: ConfigInfo, configs: Seq[SetupConfig]) extends ConfigArg
 
@@ -138,17 +170,20 @@ object Configurations {
     def apply(configs: SetupConfig*)(implicit info: ConfigInfo): SetupConfigArg = SetupConfigArg(info, configs.toSeq)
   }
 
+
   final case class ObserveConfigArg(info: ConfigInfo, configs: Seq[ObserveConfig]) extends ConfigArg
 
   object ObserveConfigArg {
     def apply(configs: ObserveConfig*)(implicit info: ConfigInfo): ObserveConfigArg = ObserveConfigArg(info, configs.toSeq)
   }
 
-  final class WaitConfigArg(val info: ConfigInfo, val config: WaitConfig) extends ConfigArg
+
+  final case class WaitConfigArg(info: ConfigInfo, config: WaitConfig) extends ConfigArg
 
   object WaitConfigArg {
-    def apply(configInfo: ConfigInfo, wc: WaitConfig) = new WaitConfigArg(configInfo, wc)
+    def apply(config: WaitConfig)(implicit info: ConfigInfo): WaitConfigArg = WaitConfigArg(info, config)
   }
+
 
   type ConfigArgList = Seq[SequenceConfig]
 

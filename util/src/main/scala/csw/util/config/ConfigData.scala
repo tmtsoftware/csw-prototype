@@ -1,7 +1,8 @@
 package csw.util.config
 
 /**
- * The shared class for storing telemetry and configuration data.
+ * A key that defines the type of value it expects.
+ * @param name the name of the key
  */
 abstract class Key(name: String) extends Serializable {
   type Value
@@ -9,7 +10,12 @@ abstract class Key(name: String) extends Serializable {
   override def toString = name
 }
 
-class ConfigData(val data: Map[Key, Any]) extends Serializable {
+/**
+ * The shared class for storing telemetry and configuration data.
+ *
+ * @param data a map of typed keys and values
+ */
+case class ConfigData(data: Map[Key, Any] = Map.empty[Key, Any]) extends Serializable {
   // Should we just use a mutable Map?
   def get(key: Key): Option[key.Value] = data.get(key).asInstanceOf[Option[key.Value]]
 
@@ -22,6 +28,3 @@ class ConfigData(val data: Map[Key, Any]) extends Serializable {
   override def toString = data.mkString("(", ", ", ")")
 }
 
-object ConfigData {
-  def apply(data: Map[Key, Any] = Map.empty[Key, Any]): ConfigData = new ConfigData(data)
-}

@@ -8,37 +8,46 @@ import java.util.UUID
 object Events {
 
   /**
-   * Base trait for all Configuration Types
+   * Base trait for all event types
    */
   sealed trait EventType {
     def eventId: String
     def timestamp: Long
     def source: String
 
-    var data: ConfigData = ConfigData()
+    /**
+     * Holds the typed key/value pairs
+     */
+    def data: ConfigData
 
+    /**
+     * The number of key/value pairs
+     */
     def size = data.size
 
+    /**
+     * Returns the value for the key, if found
+     */
     def get(key: Key): Option[key.Value] = data.get(key)
 
-    def set(key: Key)(value: key.Value): Unit = {
-      data = data.set(key)(value)
-    }
-
-    def remove(key: Key): Unit = {
-      data = data.remove(key)
-    }
-
-    // Shold do something about default value if no mapped value?
-    def apply(key: Key): key.Value = data.get(key).get
-
-    protected def doToString(kind: String) = kind + "[" + eventId + ", " + source + ", " + timestamp + "] " + data.toString
+    protected def doToString(kind: String) =
+      kind + "[" + eventId + ", " + source + ", " + timestamp + "] " + data.toString
 
   }
   /**
    * Defines an observe event
+   * @param eventId a unique event id
+   * @param timestamp the time the event was created
+   * @param source the event source
+   * @param data the typed key/value pairs
    */
-  case class ObserveEvent(eventId: String, timestamp: Long, source: String) extends EventType {
+  case class ObserveEvent(eventId: String, timestamp: Long, source: String,
+                          data: ConfigData = ConfigData()) extends EventType {
+
+    def set(key: Key)(value: key.Value): ObserveEvent = ObserveEvent(eventId, timestamp, source, data.set(key)(value))
+
+    def remove(key: Key): ObserveEvent = ObserveEvent(eventId, timestamp, source, data.remove(key))
+
     override def toString = doToString("OE")
   }
 
@@ -48,9 +57,15 @@ object Events {
    * @param timestamp the time the event was created
    * @param source the event source
    * @param prefix the prefix for the values (which only use simple names)
+   * @param data the typed key/value pairs
    */
   case class TelemetryEvent(eventId: String, timestamp: Long, source: String,
-                            prefix: String) extends EventType {
+                            prefix: String, data: ConfigData = ConfigData()) extends EventType {
+
+    def set(key: Key)(value: key.Value): TelemetryEvent = TelemetryEvent(eventId, timestamp, source, prefix, data.set(key)(value))
+
+    def remove(key: Key): TelemetryEvent = TelemetryEvent(eventId, timestamp, source, prefix, data.remove(key))
+
     override def toString = doToString("TE")
   }
 
