@@ -3,7 +3,7 @@ package csw.util.config
 /**
  * Represents a TMT subsystem
  */
-sealed abstract class Subsystem(val name: String, val prefix: String, val description: String) extends Ordered[Subsystem] {
+sealed abstract class Subsystem(val name: String, val prefix: String, val description: String) extends Ordered[Subsystem] with Serializable {
 
   override def toString = name
 

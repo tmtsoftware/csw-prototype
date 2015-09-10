@@ -15,7 +15,7 @@ abstract class Key(val name: String) extends Serializable {
  *
  * @param data a map of typed keys and values
  */
-case class  ConfigData(data: Map[Key, Any] = Map.empty[Key, Any]) extends Serializable {
+case class ConfigData(data: Map[Key, Any] = Map.empty[Key, Any]) extends Serializable {
   // Should we just use a mutable Map?
   def get(key: Key): Option[key.Value] = data.get(key).asInstanceOf[Option[key.Value]]
 

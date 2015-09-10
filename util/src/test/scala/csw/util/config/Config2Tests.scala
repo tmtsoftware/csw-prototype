@@ -164,8 +164,8 @@ class Config2Tests extends FunSpec with Matchers {
       .set(exposureType)(OBSERVE)
       .set(exposureClass)(SCIENCE)
 
-    val json = ob1.pickle
-    println(s"JSON = $json")
+    val json = ob1.pickle.value
+    println(s"JSON size = ${json.length}")
     val ob2 = json.unpickle[ObserveConfig]
 
     it("Should support I/O to and from JSON") {
@@ -176,5 +176,33 @@ class Config2Tests extends FunSpec with Matchers {
       assert(ob1 == ob2)
     }
   }
+
+  describe("Binary Serialization test") {
+    import scala.pickling.Defaults._
+    import scala.pickling.binary._
+    import Configurations.ConfigKey._
+    import StandardKeys._
+
+    val ck = "wfos.blue.detector"
+
+    val ob1 = ObserveConfig(ck)
+      .set(exposureTime)(22)
+      .set(repeats)(2)
+      .set(exposureType)(OBSERVE)
+      .set(exposureClass)(SCIENCE)
+
+    val ar = ob1.pickle.value
+    println(s"binary size = ${ar.length}")
+    val ob2 = ar.unpickle[ObserveConfig]
+
+    it("Should support I/O to and from JSON") {
+      assert(ob2.get(exposureTime).contains(22.0))
+      assert(ob2.get(repeats).contains(2))
+      assert(ob2.get(exposureType).contains(OBSERVE))
+      assert(ob2.get(exposureClass).contains(SCIENCE))
+      assert(ob1 == ob2)
+    }
+  }
+
 
 }

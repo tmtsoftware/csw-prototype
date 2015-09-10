@@ -1,13 +1,14 @@
 package csw.util.config
 
-import csw.util.config.ConfigKeys.{ IntValued, DoubleValued, StringValued }
+import csw.util.config.ConfigKeys.{IntValued, DoubleValued, StringValued}
 import csw.util.config.Configurations._
 import org.scalatest.FunSuite
 
 /**
- * Created by gillies on 7/30/15.
+ * Tests serializing and deserializing configurations
  */
 class SerializationTests extends FunSuite {
+
   import Configurations.ConfigKey._
 
   val obsId = ObsID("2023-Q22-4-33")
@@ -18,29 +19,36 @@ class SerializationTests extends FunSuite {
   val fqn2 = "tcs.base.pos.ra"
   val fqn3 = "tcs.base.pos.dec"
 
-  val ra = new Key("ra") with StringValued
-  val dec = new Key("dec") with StringValued
-  val epoch = new Key("epoch") with DoubleValued
-  val test = new Key("test") with IntValued
+  case object ra extends Key("ra") with StringValued
 
-  val prefix1 = "tcs.pos"
-  val sc1 = SetupConfig(prefix1)
-  sc1.set(ra)("12:32:11")
-  sc1.set(dec)("30:22:22")
-  sc1.set(epoch)(1950)
-  sc1.set(test)(1) //.second
+  case object dec extends Key("dec") with StringValued
 
-  val disperser = new Key("disperser") with StringValued
-  val filter1 = new Key("filter1") with StringValued
+  case object epoch extends Key("epoch") with DoubleValued
+
+  case object test extends Key("test") with IntValued
+
+  val sc1 = SetupConfig("tcs.pos")
+    .set(ra)("12:32:11")
+    .set(dec)("30:22:22")
+    .set(epoch)(1950)
+    .set(test)(1)
+
+  //.second
+
+  case object disperser extends Key("disperser") with StringValued
+
+  case object filter1 extends Key("filter1") with StringValued
+
   val prefix2 = "wfos.blue"
   val sc2 = SetupConfig(prefix2)
-  sc2.set(disperser)("gr243")
-  sc2.set(filter1)("GG433")
+    .set(disperser)("gr243")
+    .set(filter1)("GG433")
 
   import StandardKeys._
+
   val ob1 = ObserveConfig(prefix2)
-  ob1.set(exposureTime)(22.3) // .sec,
-  ob1.set(repeats)(3)
+    .set(exposureTime)(22.3) // .sec,
+    .set(repeats)(3)
 
   val wc1 = WaitConfig(prefix2)
 

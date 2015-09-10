@@ -27,7 +27,7 @@ object Configurations {
   /**
    * Convenience class for getting the subsystem and prefix from a config key string
    */
-  case class ConfigKey(subsystem: Subsystem, path: String) {
+  case class ConfigKey(subsystem: Subsystem, path: String) extends Serializable {
     override def toString = "[" + subsystem + ", " + path + "]"
   }
 
@@ -36,7 +36,7 @@ object Configurations {
    * Base trait for configurations: Defines the subsystem, prefix and a method to get the value for a key.
    * The config key is based on a string like subsystem.x.y.z, where the prefix is then subsystem.x.y.
    */
-  sealed trait ConfigType {
+  sealed trait ConfigType extends Serializable {
     def configKey: ConfigKey
 
     /**
@@ -160,7 +160,7 @@ object Configurations {
    * Each ConfigArg includes a ConfigInfo which will contain information about the executing
    * observation.
    */
-  sealed trait ConfigArg
+  sealed trait ConfigArg extends Serializable
 
 
   final case class SetupConfigArg(info: ConfigInfo, configs: Seq[SetupConfig]) extends ConfigArg
