@@ -32,7 +32,7 @@ lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaHttpSprayJson, akkaHttp, scalaLogging, logback, protobufJava) ++
+      compile(akkaHttpSprayJson, akkaHttp, scalaLogging, logback, protobufJava, scalaPickling) ++
       test(scalaTest, akkaTestKit)
   )
 

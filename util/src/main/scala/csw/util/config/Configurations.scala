@@ -1,7 +1,6 @@
 package csw.util.config
 
 import scala.language.implicitConversions
-import csw.util.config.Subsystem.Subsystem
 
 /**
  * Defines the different types of configurations: setup, observe, wait, ...

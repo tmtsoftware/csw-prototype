@@ -1,17 +1,21 @@
 package csw.util.config
 
 /**
+ * Represents a TMT subsystem
+ */
+sealed abstract class Subsystem(val name: String, val prefix: String, val description: String) extends Ordered[Subsystem] {
+
+  override def toString = name
+
+  def longName = name + " - " + description
+
+  def compare(that: Subsystem) = name.compare(that.name)
+}
+
+/**
  * Defines constants for the available subsystems
  */
 object Subsystem {
-  sealed abstract class Subsystem(val name: String, val prefix: String, val description: String) extends Ordered[Subsystem] {
-
-    override def toString = name
-
-    def longName = name + " - " + description
-
-    def compare(that: Subsystem) = name.compare(that.name)
-  }
 
   case object AOESW extends Subsystem("AOESW", "aoesw", "AO Executive Software")
   case object APS extends Subsystem("APS", "aps", "Alignment and Phasing System")

@@ -42,11 +42,16 @@ object ConfigKeys {
    */
   sealed abstract class ExposureClass(val description: String) extends Ordered[ExposureClass] {
     override def toString = description
+
     def compare(that: ExposureClass) = description.compare(that.description)
   }
+
   case object SCIENCE extends ExposureClass("science")
+
   case object NIGHTTIME_CALIBRATION extends ExposureClass("nighttime-calibration")
+
   case object DAYTIME_CALIBRATION extends ExposureClass("daytime-calibration")
+
   case object ACQUISITION extends ExposureClass("acquisition")
 
   trait ExposureClassValued extends Key {
@@ -59,11 +64,16 @@ object ConfigKeys {
    */
   sealed abstract class ExposureType(val description: String) extends Ordered[ExposureType] {
     override def toString = description
+
     def compare(that: ExposureType) = description.compare(that.description)
   }
+
   case object FLAT extends ExposureType("flat")
+
   case object ARC extends ExposureType("arc")
+
   case object BIAS extends ExposureType("bias")
+
   case object OBSERVE extends ExposureType("observe")
 
   trait ExposureTypeValued extends Key {
@@ -76,13 +86,20 @@ object ConfigKeys {
    */
   sealed abstract class CloudCoverType(val description: String, val percentage: Int) extends Ordered[CloudCoverType] {
     override def toString = description
+
     def compare(that: CloudCoverType) = percentage.compare(that.percentage)
   }
+
   case object PERCENT_20 extends CloudCoverType("20%", 20)
+
   case object PERCENT_50 extends CloudCoverType("50%/Clear", 50)
+
   case object PERCENT_70 extends CloudCoverType("70%/Cirrus", 70)
+
   case object PERCENT_80 extends CloudCoverType("80%/Cloudy", 80)
+
   case object PERCENT_90 extends CloudCoverType("90%", 90)
+
   case object ANY extends CloudCoverType("Any", 100)
 
   trait CloudCoverValued extends Key {
@@ -97,27 +114,18 @@ object ConfigKeys {
  */
 object StandardKeys {
 
-  // Common keys
-  val UNITS = "units"
+  case object units extends Key("units") with UnitsValued
 
-  val units = new Key(UNITS) with UnitsValued
+  case object position extends Key("position") with StringValued
 
-  // Setup keys
-  val POSITION = "position"
-  val CLOUDCOVER = "cloudCover"
+  case object cloudCover extends Key("cloudCover") with CloudCoverValued
 
-  val position = new Key(POSITION) with StringValued
-  val cloudCover = new Key(CLOUDCOVER) with CloudCoverValued
+  case object exposureTime extends Key("exposureTime") with DoubleValued
 
-  // ObserveConfig
-  val EXPOSURE_TIME = "exposureTime"
-  val EXPOSURE_TYPE = "exposureType"
-  val EXPOSURE_CLASS = "exposureClass"
-  val REPEATS = "repeats"
+  case object exposureType extends Key("exposureType") with ExposureTypeValued
 
-  val exposureTime = new Key(EXPOSURE_TIME) with DoubleValued
+  case object exposureClass extends Key("exposureClass") with ExposureClassValued
 
-  val exposureType = new Key(EXPOSURE_TYPE) with ExposureTypeValued
-  val exposureClass = new Key(EXPOSURE_CLASS) with ExposureClassValued
-  val repeats = new Key(REPEATS) with IntValued
+  case object repeats extends Key("repeats") with IntValued
+
 }
