@@ -10,10 +10,10 @@ object TestConfig {
 
   val obsId = "TMT-2021A-C-2-1"
 
-  val posName = new Key("posName") with StringValued
-  val c1 = new Key("c1") with StringValued
-  val c2 = new Key("c2") with StringValued
-  val equinox = new Key("equinox") with StringValued
+  object posName extends Key("posName") with StringValued
+  object c1 extends Key("c1") with StringValued
+  object c2 extends Key("c2") with StringValued
+  object equinox extends Key("equinox") with StringValued
 
   val k1 = "tcs.base.pos"
   val k2 = "tcs.base.pos.one"

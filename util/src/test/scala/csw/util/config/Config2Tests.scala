@@ -156,9 +156,7 @@ class Config2Tests extends FunSpec with Matchers {
     import Configurations.ConfigKey._
     import StandardKeys._
 
-    val ck = "wfos.blue.detector"
-
-    val ob1 = ObserveConfig(ck)
+    val ob1 = ObserveConfig("wfos.blue.detector")
       .set(exposureTime)(22)
       .set(repeats)(2)
       .set(exposureType)(OBSERVE)
@@ -183,9 +181,7 @@ class Config2Tests extends FunSpec with Matchers {
     import Configurations.ConfigKey._
     import StandardKeys._
 
-    val ck = "wfos.blue.detector"
-
-    val ob1 = ObserveConfig(ck)
+    val ob1 = ObserveConfig("wfos.blue.detector")
       .set(exposureTime)(22)
       .set(repeats)(2)
       .set(exposureType)(OBSERVE)
