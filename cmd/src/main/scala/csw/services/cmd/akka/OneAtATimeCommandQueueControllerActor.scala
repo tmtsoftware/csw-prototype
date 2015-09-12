@@ -1,7 +1,7 @@
 package csw.services.cmd.akka
 
 import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
-import csw.shared.CommandStatus
+import csw.shared.cmd.CommandStatus
 
 object OneAtATimeCommandQueueControllerActor {
   /**

@@ -4,6 +4,7 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream,
 
 import csw.util.config.Configurations._
 
+// XXX Not currently used
 object ConfigSerializer {
 
   /**

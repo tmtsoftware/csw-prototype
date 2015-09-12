@@ -1,7 +1,7 @@
 package csw.services.cmd.spray
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import csw.shared.CommandStatus
+import csw.shared.cmd.CommandStatus
 import csw.shared.cmd.RunId
 import spray.json._
 import java.util.UUID

@@ -36,7 +36,6 @@ object ConfigKeys {
     type Value = Units
   }
 
-
   /**
    * Exposure classes
    */
@@ -58,7 +57,6 @@ object ConfigKeys {
     type Value = ExposureClass
   }
 
-
   /**
    * Exposure types: flat, arc, bias, observe
    */
@@ -79,7 +77,6 @@ object ConfigKeys {
   trait ExposureTypeValued extends Key {
     type Value = ExposureType
   }
-
 
   /**
    * Cloud Cover
@@ -107,7 +104,6 @@ object ConfigKeys {
   }
 
 }
-
 
 /**
  * Defines some standard config keys

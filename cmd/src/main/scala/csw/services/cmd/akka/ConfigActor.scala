@@ -3,7 +3,7 @@ package csw.services.cmd.akka
 import akka.actor.{ ActorLogging, Actor, ActorRef }
 import csw.services.ls.LocationServiceActor.ServicesReady
 import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
-import csw.shared.CommandStatus
+import csw.shared.cmd.CommandStatus
 import csw.shared.cmd.RunId
 import scala.util.Try
 import csw.util.cfg.Configurations._

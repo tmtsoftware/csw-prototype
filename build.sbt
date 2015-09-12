@@ -70,10 +70,19 @@ lazy val loc = project
       test(scalaTest, akkaTestKit)
   ) dependsOn(log, util)
 
-// Command Service
+// Command Service (old)
 lazy val cmd = project.enablePlugins(SbtTwirl)
   .settings(defaultSettings: _*)
   .settings(twirlSettings: _*)
+  .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(scalaLogging, logback, akkaSse, upickle) ++
+      test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
+  ) dependsOn(sharedJvm, loc, util % "compile->compile;test->test")
+
+// Command Service (new)
+lazy val cmds = project
+  .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(scalaLogging, logback, akkaSse, upickle) ++

@@ -70,7 +70,7 @@ class Config2Tests extends FunSpec with Matchers {
     println("Sca1: " + s1)
 
     it("should see 3 paths - one is duplicate") {
-      val r1 = ConfigFilters.paths(s1)
+      val r1 = ConfigFilters.prefixes(s1)
       assert(r1.size == 3)
     }
 
@@ -173,6 +173,7 @@ class Config2Tests extends FunSpec with Matchers {
       assert(ob2.get(exposureClass).contains(SCIENCE))
       assert(ob1 == ob2)
     }
+
   }
 
   describe("Binary Serialization test") {

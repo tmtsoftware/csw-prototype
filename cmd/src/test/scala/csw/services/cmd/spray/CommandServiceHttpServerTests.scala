@@ -6,7 +6,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import akka.testkit.TestKit
 import csw.services.cmd.akka._
-import csw.shared.CommandStatus
+import csw.shared.cmd.CommandStatus
 import csw.util.cfg.TestConfig
 import org.scalatest.FunSuiteLike
 

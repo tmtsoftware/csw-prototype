@@ -7,7 +7,7 @@ import com.typesafe.config.ConfigFactory
 import csw.services.cmd.akka.CommandServiceActor.Submit
 import csw.services.ls.LocationServiceActor
 import csw.services.pkg.LifecycleManager.LifecycleStateChanged
-import csw.shared.CommandStatus
+import csw.shared.cmd.CommandStatus
 import csw.util.cfg.TestConfig
 
 import scala.concurrent.duration._
