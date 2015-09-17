@@ -1,7 +1,5 @@
 package csw.shared.cmd
 
-import csw.shared.cmd.RunId
-
 /**
  * The status of a running command
  */

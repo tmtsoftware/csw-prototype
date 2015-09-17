@@ -61,12 +61,21 @@ lazy val kvs = project
       test(scalaTest, akkaTestKit)
   ) dependsOn util
 
-// Location Service
+// Location Service (old)
 lazy val loc = project
   .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(akkaRemote) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(log, util)
+
+// Location Service (new)
+lazy val locs = project
+  .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
+  .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(akkaRemote, jmdns) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(log, util)
 
@@ -87,7 +96,7 @@ lazy val cmds = project
     provided(akkaActor) ++
       compile(scalaLogging, logback, akkaSse, upickle) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(sharedJvm, loc, util % "compile->compile;test->test")
+  ) dependsOn(sharedJvm, locs, util % "compile->compile;test->test")
 
 // Config Service
 lazy val cs = project

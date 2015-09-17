@@ -46,6 +46,8 @@ object Dependencies {
 
   val scopt = "com.github.scopt" %% "scopt" % "3.3.0"
 
+  val jmdns = "javax.jmdns" % "jmdns" % "3.4.1"
+
   // Test dependencies
   val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit-experimental" % akkaStreamsVersion
   val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamsVersion
