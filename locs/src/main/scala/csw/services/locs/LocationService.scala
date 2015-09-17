@@ -126,25 +126,6 @@ object LocationService {
   }
 }
 
-/*
- static class SampleListener implements ServiceListener {
-      @Override
-      public void serviceAdded(ServiceEvent event) {
-          System.out.println("Service added   : " + event.getName() + "." + event.getType());
-      }
-
-      @Override
-      public void serviceRemoved(ServiceEvent event) {
-          System.out.println("Service removed : " + event.getName() + "." + event.getType());
-      }
-
-      @Override
-      public void serviceResolved(ServiceEvent event) {
-          System.out.println("Service resolved: " + event.getInfo());
-      }
-  }
- */
-
 case class LocationService(serviceRefs: List[ServiceRef]) extends Actor with ActorLogging {
 
   val jmdns = JmDNS.create()
@@ -154,7 +135,15 @@ case class LocationService(serviceRefs: List[ServiceRef]) extends Actor with Act
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
-      println(s"XXX serviceResolved ${event.getName}")
+      val info = event.getInfo
+      val domain = info.getDomain
+      val app = info.getApplication
+      val name = info.getName
+      val key = info.getKey
+      val addresses = info.getHostAddresses
+      val port = info.getPort
+      val typ = info.getType
+      println(s"XXX serviceResolved name=$name, domain=$domain, app=$app, key=$key, port=$port, type=$typ, adrs=$addresses")
     }
 
     override def serviceRemoved(event: ServiceEvent): Unit = {
