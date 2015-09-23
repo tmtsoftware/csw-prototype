@@ -15,7 +15,7 @@ object TestServiceClientApp extends App {
  */
 class TestServiceClient extends Actor with ActorLogging {
   val serviceRefs = Set(TestAkkaService.serviceRef, TestHttpService.serviceRef)
-  context.actorOf(LocationService.props(serviceRefs, self))
+  context.actorOf(LocationService.props(serviceRefs))
 
   override def receive: Receive = {
     case ServicesReady(services) =>

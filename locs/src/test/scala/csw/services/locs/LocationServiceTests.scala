@@ -18,20 +18,11 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   test("Test location service") {
     val serviceRefs = Set(ServiceRef(ServiceId("TestService", ServiceType.Assembly), AkkaType))
-    system.actorOf(LocationService.props(serviceRefs, self))
+    system.actorOf(LocationService.props(serviceRefs, Some(self)))
 
     // register
-    val f = LocationService.registerAkkaService(serviceRefs.head.serviceId, testActor, "test.prefix")
-    f.onComplete {
-      case Success(reg) =>
-        logger.info("Wating for services...")
-//        logger.info("Test passed, closing")
-//        reg.close()
-      case Failure(ex) =>
-        logger.error("Test failed", ex)
-    }
-    Await.ready(f, 10.second)
-    within(10.seconds) {
+    LocationService.registerAkkaService(serviceRefs.head.serviceId, testActor, "test.prefix")
+    within(15.seconds) {
       val ready = expectMsgType[ServicesReady](10.seconds)
       logger.info(s"Services ready: $ready")
       assert(serviceRefs == ready.services.keys)

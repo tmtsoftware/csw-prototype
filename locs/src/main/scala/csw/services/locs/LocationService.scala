@@ -38,7 +38,8 @@ object LocationService {
    * Used to create the actor
    * @param serviceRefs list of services to look for
    */
-  def props(serviceRefs: Set[ServiceRef], replyTo: ActorRef): Props = Props(classOf[LocationService], serviceRefs, replyTo)
+  def props(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRef] = None): Props =
+    Props(classOf[LocationService], serviceRefs, replyTo)
 
   /**
    * Returned from register calls so that client can close the connection and deregister the service
@@ -54,11 +55,17 @@ object LocationService {
     override def close(): Unit = registry.close()
   }
 
-  // Holds information for a resolved service
-  case class ResolvedService(serviceRef: ServiceRef, uri: Uri, prefix: String = "")
+  /**
+   * Holds information for a resolved service
+   * @param serviceRef describes the service
+   * @param uri the URI for the service
+   * @param actorRefOpt set if this is an Akka/actor based service
+   * @param prefix for actor based services, indicates the part of a configuration it is interested in, otherwise empty string
+   */
+  case class ResolvedService(serviceRef: ServiceRef, uri: Uri, prefix: String = "", actorRefOpt: Option[ActorRef] = None)
 
   /**
-   * Message sent to the replyTo actor whenever all the requested services become available
+   * Message sent to the parent actor whenever all the requested services become available
    * @param services maps requested services to the resolved information
    */
   case class ServicesReady(services: Map[ServiceRef, ResolvedService])
@@ -131,7 +138,7 @@ object LocationService {
     }
   }
 
-  // Used to get the full path URI of an actor from the actorRef
+  // --- Used to get the full path URI of an actor from the actorRef ---
   private class RemoteAddressExtensionImpl(system: ExtendedActorSystem) extends Extension {
     def address = system.provider.getDefaultAddress
   }
@@ -142,9 +149,18 @@ object LocationService {
   private def getActorUri(actorRef: ActorRef, system: ActorSystem): Uri =
     Uri(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
+
 }
 
-case class LocationService(serviceRefs: Set[ServiceRef], replyTo: ActorRef) extends Actor with ActorLogging with ServiceListener {
+/**
+ * An actor that notifies the parent actor if all the requested services are available.
+ * If all services are available, a ServicesReady message is sent. If any of the requested
+ * services stops being available, a Disconnected messages is sent.
+ *
+ * @param serviceRefs set of requested services
+ * @param replyTo optional actorRef to reply to (default: parent of this actor)
+ */
+case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRef] = None) extends Actor with ActorLogging with ServiceListener {
 
   // Set of resolved services
   var resolved = Map.empty[ServiceRef, ResolvedService]
@@ -153,7 +169,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: ActorRef) exte
 
 
   val serviceInfo = registry.list(dnsType).toList
-  for(info <- serviceInfo) resolveService(info)
+  for (info <- serviceInfo) resolveService(info)
 
   registry.addServiceListener(dnsType, this)
   sys.addShutdownHook(registry.close())
@@ -173,13 +189,25 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: ActorRef) exte
   }
 
   override def serviceRemoved(event: ServiceEvent): Unit = {
-    log.info(s"service removed: ${event.getName}")
-    val info = event.getInfo
-    val serviceRef = ServiceRef(info.getName)
+    removeService(ServiceRef(event.getInfo.getName))
+  }
+
+  // Removes the given service
+  private def removeService(serviceRef: ServiceRef): Unit = {
     if (resolved.contains(serviceRef)) {
       resolved -= serviceRef
-      replyTo ! Disconnected(serviceRef)
+      log.info(s"Removed service $serviceRef")
+      replyTo.getOrElse(context.parent) ! Disconnected(serviceRef)
     }
+  }
+
+  private def getAkkaUri(uriStr: String, userInfo: String): Option[Uri] = try {
+    Some(Uri(uriStr).withUserInfo(userInfo).withScheme("akka.tcp"))
+  } catch {
+    case e: Exception ⇒
+      // dome issue with ipv6 addresses?
+      log.error(s"Couldn't make URI from $uriStr and userInfo $userInfo", e)
+      None
   }
 
   private def resolveService(info: ServiceInfo): Unit = {
@@ -187,35 +215,66 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: ActorRef) exte
       val serviceRef = ServiceRef(info.getName)
       if (serviceRefs.contains(serviceRef)) {
         // Gets the URI, adding the akka system as user if needed
-        def getUri(urlStr: String) = serviceRef.accessType match {
-          case AkkaType ⇒
-            val system = info.getPropertyString(SYSTEM_KEY)
-            try {
-              // fails for ipv6 addresses
-              val uri = Uri(urlStr)
-              Some(uri.withUserInfo(system).withScheme("akka.tcp"))
-            } catch {
-              case e: Exception ⇒
-                None
-            }
-          case _ ⇒
-            Some(Uri(urlStr).withScheme("akka.tcp"))
+        def getUri(uriStr: String) = serviceRef.accessType match {
+          case AkkaType ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
+          case _ ⇒ Some(Uri(uriStr))
         }
         val prefix = info.getPropertyString(PREFIX_KEY)
         val uriList = info.getURLs(serviceRef.accessType.name).toList.flatMap(getUri)
-        resolved += serviceRef -> ResolvedService(serviceRef, uriList.head, prefix)
-        if (resolved.keySet == serviceRefs) {
-          log.info(s"Services ready: $resolved")
-          replyTo ! ServicesReady(resolved)
-        }
+        val uri = uriList.head
+        val rs = ResolvedService(serviceRef, uri, prefix)
+        if (serviceRef.accessType == AkkaType) identify(rs)
+        resolved += serviceRef -> rs
+        checkResolved()
       }
     } catch {
       case e: Exception ⇒ log.error(e, "resolve error")
     }
   }
 
+  // True if the service is an Akka service and the actorRef is not yet known
+  private def isActorRefUnknown(rs: ResolvedService): Boolean = {
+    rs.serviceRef.accessType == AkkaType && rs.actorRefOpt.isEmpty
+  }
+
+  // Checks if all services have been resolved and the actors identified, and if so,
+  // sends a ServicesReady message to the parent actor.
+  private def checkResolved(): Unit = {
+    if (resolved.keySet == serviceRefs && !resolved.values.toList.exists(isActorRefUnknown)) {
+      replyTo.getOrElse(context.parent) ! ServicesReady(resolved)
+    }
+  }
+
+  // Sends an Identify message to the URI for the actor, which should result in an
+  // ActorIdentity reply containing the actorRef.
+  private def identify(rs: ResolvedService): Unit = {
+    val actorPath = ActorPath.fromString(rs.uri.toString())
+    context.actorSelection(actorPath) ! Identify(rs)
+  }
+
+  // Called when an actor is identified.
+  // Update the resolved map and check if we have everything that was requested.
+  private def actorIdentified(actorRefOpt: Option[ActorRef], rs: ResolvedService): Unit = {
+    if (actorRefOpt.isDefined) {
+      resolved += rs.serviceRef -> rs.copy(actorRefOpt = actorRefOpt)
+      context.watch(actorRefOpt.get)
+      checkResolved()
+    } else log.warning(s"Could not identify actor for ${rs.uri}")
+  }
+
+  // Receive messages
   override def receive: Receive = {
-    //    case ResolvedService(serviceRef, uri, prefix) =>
+    // Result of sending an Identify message to the actor's URI (actorSelection)
+    case ActorIdentity(id, actorRefOpt) ⇒
+      id match {
+        case rs: ResolvedService => actorIdentified(actorRefOpt, rs)
+        case _ => log.warning(s"Received unexpected ActorIdentity id: $id")
+      }
+
+    case Terminated(actorRef) =>
+      // If a requested Akka service terminates, remove it, just in case it didn't unregister with mDns...
+      resolved.values.toList.find(_.actorRefOpt.contains(actorRef)).foreach(rs => removeService(rs.serviceRef))
+
     case x ⇒
       log.error(s"Received unexpected message $x")
   }
