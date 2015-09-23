@@ -72,12 +72,12 @@ lazy val loc = project
 
 // Location Service (new)
 lazy val locs = project
-  .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
+  .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
-      compile(akkaRemote, jmdns) ++
+      compile(akkaRemote, jmdns, akkaHttp, scalaLogging, logback) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(log, util)
+  ) dependsOn log
 
 // Command Service (old)
 lazy val cmd = project.enablePlugins(SbtTwirl)
