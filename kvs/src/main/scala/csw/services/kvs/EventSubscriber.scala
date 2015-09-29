@@ -1,7 +1,7 @@
 package csw.services.kvs
 
 import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
-import csw.util.cfg.Events.EventType
+import csw.util.cfg_old.Events.EventType
 import redis.actors.{ DecodeReplies, RedisWorkerIO }
 import java.net.InetSocketAddress
 import redis.api.pubsub._
@@ -28,8 +28,8 @@ trait EventSubscriber {
    */
   def subscribe(keys: String*): Unit = {
     val (patterns, channels) = keys.partition(_.endsWith("*"))
-    if (patterns.size != 0) redis ! PSUBSCRIBE(patterns: _*)
-    if (channels.size != 0) redis ! SUBSCRIBE(channels: _*)
+    if (patterns.nonEmpty) redis ! PSUBSCRIBE(patterns: _*)
+    if (channels.nonEmpty) redis ! SUBSCRIBE(channels: _*)
   }
 
   /**
@@ -40,8 +40,8 @@ trait EventSubscriber {
    */
   def unsubscribe(keys: String*): Unit = {
     val (patterns, channels) = keys.partition(_.endsWith("*"))
-    if (patterns.size != 0) redis ! PUNSUBSCRIBE(patterns: _*)
-    if (channels.size != 0) redis ! UNSUBSCRIBE(channels: _*)
+    if (patterns.nonEmpty) redis ! PUNSUBSCRIBE(patterns: _*)
+    if (channels.nonEmpty) redis ! UNSUBSCRIBE(channels: _*)
   }
 }
 
@@ -63,7 +63,7 @@ private object SubscribeActor {
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
 private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort: Int)
-    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort)) with DecodeReplies {
+    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) ⇒ ()) with DecodeReplies {
 
   /**
    * Keep states of channels and actor in case of connection reset

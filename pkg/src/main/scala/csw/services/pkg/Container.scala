@@ -1,12 +1,8 @@
 package csw.services.pkg
 
-import java.net.URI
-
 import akka.actor._
 import com.typesafe.config.Config
-import csw.services.ls.LocationService.RegInfo
-import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
-import csw.services.ls.LocationServiceRegisterActor
+import csw.services.loc.{LocationService, ServiceType, ServiceId}
 
 import scala.collection.JavaConversions._
 
@@ -129,20 +125,19 @@ class Container(config: Config) extends Actor with ActorLogging {
   // (as a proxy for the component)
   private def registerWithLocationService(): Unit = {
     val name = config.getString("container.name")
-    val regInfo = RegInfo(ServiceId(name, ServiceType.Container))
-    context.actorOf(LocationServiceRegisterActor.props(regInfo.serviceId, Some(self),
-      regInfo.configPath, regInfo.httpUri))
+    val serviceId = ServiceId(name, ServiceType.Container)
+    LocationService.registerAkkaService(serviceId, self)
   }
 
-  private def createComponent(props: Props, regInfo: RegInfo, services: List[ServiceId],
+  private def createComponent(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId],
                               components: Map[String, Component.ComponentInfo]): Option[Component.ComponentInfo] = {
-    val name = regInfo.serviceId.name
+    val name = serviceId.name
     components.get(name) match {
       case Some(componentInfo) ⇒
         log.error(s"Component $name already exists")
         None
       case None ⇒
-        val componentInfo = Component.create(props, regInfo, services)
+        val componentInfo = Component.create(props, serviceId, prefix, services)
         context.watch(componentInfo.lifecycleManager)
         Some(componentInfo)
     }
@@ -180,13 +175,9 @@ class Container(config: Config) extends Actor with ActorLogging {
       None
     } else {
       val serviceId = ServiceId(name, serviceType)
-      val configPath = if (conf.hasPath("path")) Some(conf.getString("path")) else None
-      val uri = if (conf.hasPath("uri")) Some(new URI(conf.getString("uri"))) else None
-      val regInfo = RegInfo(serviceId, configPath, uri)
-      val services = if (conf.hasPath("services"))
-        parseServices(conf.getConfig("services"))
-      else Nil
-      createComponent(props, regInfo, services, Map.empty)
+      val configPath = if (conf.hasPath("path")) conf.getString("path") else ""
+      val services = if (conf.hasPath("services")) parseServices(conf.getConfig("services")) else Nil
+      createComponent(props, serviceId, configPath, services, Map.empty)
     }
   }
 

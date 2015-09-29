@@ -60,7 +60,7 @@ object Settings {
   )
 
   lazy val twirlSettings = Seq(
-    TwirlKeys.templateImports += "csw.services.cmd.akka.CommandServiceActor.CommandServiceStatus"
+    TwirlKeys.templateImports += "csw.services.cmd_old.akka.CommandServiceActor.CommandServiceStatus"
   )
 
   import scalariform.formatter.preferences._

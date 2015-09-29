@@ -1,6 +1,6 @@
 package csw.services
 
-import csw.util.cfg.Events.EventType
+import csw.util.cfg_old.Events.EventType
 import redis.ByteStringFormatter
 import akka.util.ByteString
 

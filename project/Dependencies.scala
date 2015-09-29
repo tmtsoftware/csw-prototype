@@ -36,7 +36,7 @@ object Dependencies {
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r"
 
-  val redisScala = "com.etaty.rediscala" %% "rediscala" % "1.4.0"
+  val redisScala = "com.etaty.rediscala" %% "rediscala" % "1.5.0"
 
   val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"

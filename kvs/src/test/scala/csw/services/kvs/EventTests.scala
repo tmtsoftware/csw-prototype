@@ -1,7 +1,7 @@
 package csw.services.kvs
 
-import csw.util.cfg.ConfigValues.ValueData
-import csw.util.cfg.Events.TelemetryEvent
+import csw.util.cfg_old.ConfigValues.ValueData
+import csw.util.cfg_old.Events.TelemetryEvent
 import org.scalatest.FunSuite
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import redis.ByteStringFormatter

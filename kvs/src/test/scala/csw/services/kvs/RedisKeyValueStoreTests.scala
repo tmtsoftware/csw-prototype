@@ -2,7 +2,7 @@ package csw.services.kvs
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.ActorSystem
-import csw.util.cfg.Events.TelemetryEvent
+import csw.util.cfg_old.Events.TelemetryEvent
 import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.Await

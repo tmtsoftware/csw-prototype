@@ -1,7 +1,7 @@
 package csw.services.event
 
 import akka.actor.{ Props, ActorRef, ActorLogging, Actor }
-import csw.util.cfg.Events.EventType
+import csw.util.cfg_old.Events.EventType
 import org.hornetq.api.core.client._
 import java.util.UUID
 

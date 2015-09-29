@@ -2,7 +2,7 @@ package csw.util.config
 
 import csw.util.config.ConfigKeys._
 import csw.util.config.Configurations._
-import org.scalatest.{Matchers, FunSpec}
+import org.scalatest.{ Matchers, FunSpec }
 
 /**
  * Tests the config classes
@@ -19,7 +19,7 @@ class Config2Tests extends FunSpec with Matchers {
     import StandardKeys._
 
     val ck = "wfos.blue.filter"
-//    val ck1 = "wfos.prog.cloudcover"
+    //    val ck1 = "wfos.prog.cloudcover"
     val ck2 = "wfos.red.filter"
     val ck3 = "wfos.red.detector"
 
@@ -46,7 +46,7 @@ class Config2Tests extends FunSpec with Matchers {
     println("SCN: " + ob1)
 
     implicit val mycdata = ConfigInfo("testing")
-//    val obsId1 = "2014-C2-4-44"
+    //    val obsId1 = "2014-C2-4-44"
     val sca1 = SetupConfigArg(sc1, sc2)
 
     println("Sca1: " + sca1)
@@ -94,7 +94,7 @@ class Config2Tests extends FunSpec with Matchers {
     import Configurations.ConfigKey._
 
     val ck = "wfos.blue.filter"
-//    val ck2 = "wfos.red.filter"
+    //    val ck2 = "wfos.red.filter"
     val ck3 = "iris.imager.detector"
 
     val sc1: SetupConfig = SetupConfig(ck)
@@ -163,7 +163,8 @@ class Config2Tests extends FunSpec with Matchers {
       .set(exposureClass)(SCIENCE)
 
     val json = ob1.pickle.value
-    println(s"JSON size = ${json.length}")
+    //    println(s"JSON size = ${json.length}")
+    println(s"JSON = ${json}")
     val ob2 = json.unpickle[ObserveConfig]
 
     it("Should support I/O to and from JSON") {
@@ -200,6 +201,5 @@ class Config2Tests extends FunSpec with Matchers {
       assert(ob1 == ob2)
     }
   }
-
 
 }

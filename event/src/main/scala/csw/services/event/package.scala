@@ -1,6 +1,6 @@
 package csw.services
 
-import csw.util.cfg.Events.EventType
+import csw.util.cfg_old.Events.EventType
 
 package object event {
 

@@ -1,14 +1,10 @@
 package csw.services.pkg
 
 import akka.actor._
-import csw.services.cmd.akka.CommandQueueActor.SubmitWithRunId
-import csw.services.cmd.akka.CommandServiceActor.QueueBypassRequestWithRunId
-import csw.services.cmd.akka.CommandStatusActor.StatusUpdate
-import csw.services.cmd.akka.ConfigActor.{ ConfigResponse, ConfigGet }
-import csw.services.ls.LocationService.RegInfo
-import csw.services.ls.LocationServiceActor.ServiceId
-import csw.services.ls.LocationServiceClientActor.{ Connected, Disconnected }
-import csw.services.ls.{ LocationServiceClientActor, LocationServiceRegisterActor }
+import csw.services.cmd.HcdController.{ConfigResponse, ConfigGet, Submit}
+import csw.services.loc.AccessType.AkkaType
+import csw.services.loc.LocationService.{Disconnected, ServicesReady}
+import csw.services.loc.{ServiceRef, LocationService, ServiceId}
 import csw.shared.cmd.CommandStatus
 import csw.shared.cmd.RunId
 
@@ -99,25 +95,29 @@ object LifecycleManager {
   /**
    * Used to create the LifecycleManager actor
    * @param componentProps used to create the component
-   * @param regInfo used to register the component with the location service
+   * @param serviceId service used to register the component with the location service
+   * @param prefix the configuration prefix (part of configs that component should receive)
    * @param services a list of service ids for the services the component depends on
    * @return an object to be used to create the LifecycleManager actor
    */
-  def props(componentProps: Props, regInfo: RegInfo, services: List[ServiceId]): Props =
-    Props(classOf[LifecycleManager], componentProps, regInfo, services)
+  def props(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): Props =
+    Props(classOf[LifecycleManager], componentProps, serviceId, prefix, services)
 }
 
-// A lifecycle manager actor that manages the component actor given by the arguments
-// (see props() for argument descriptions).
-case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: List[ServiceId])
-    extends Actor with ActorLogging {
+/**
+ * A lifecycle manager actor that manages the component actor given by the arguments
+ * (see props() for argument descriptions).
+ */
+case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId])
+  extends Actor with ActorLogging {
 
-  import csw.services.pkg.LifecycleManager._
+  import LifecycleManager._
 
   // Used to notify subscribers of a change in the lifecycle
   var lifecycleStateListeners = Map[ActorRef, Boolean]()
 
-  val name = regInfo.serviceId.name
+  val name = serviceId.name
+  val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
   val component = startComponent()
 
   context.become(loaded(connected = services.isEmpty, Loaded(name)))
@@ -154,15 +154,15 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       context.become(loaded(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case s @ Loaded(_) ⇒
+    case s@Loaded(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, loaded(connected, targetState))
 
-    case s @ Initialized(_) ⇒
+    case s@Initialized(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, initialized(connected, targetState))
 
-    case s @ Running(_) ⇒
+    case s@Running(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
@@ -170,26 +170,23 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
       notifyLifecycleListeners(LifecycleStateChanged(Loaded(name), Some(e), connected))
 
-    case s @ Connected(servicesReady) ⇒
-      log.debug(s" $name received Connected")
+    case s@ServicesReady(serviceMap) ⇒
+      log.debug(s" $name: All services ready")
       component ! s
       context.become(loaded(connected = true, targetState))
 
-    case Disconnected ⇒
-      log.debug(s" $name received Disconnected")
-      component ! Disconnected
+    case s@Disconnected(serviceRef) ⇒
+      log.debug(s" $name: Received disconnect message for: $serviceRef ")
+      component ! s
       context.become(loaded(connected = false, targetState))
 
     case SubscribeToLifecycleStates(onlyRunningAndConnected) ⇒
       subscribeToLifecycleStates(Loaded(name), connected, onlyRunningAndConnected)
 
-    case SubmitWithRunId(config, submitter, runId) ⇒
+    case Submit(config, submitter, runId) ⇒
       cmdStatusError(runId, submitter, "loaded", "running")
 
-    case QueueBypassRequestWithRunId(config, submitter, runId) ⇒
-      cmdStatusError(runId, submitter, "loaded", "running")
-
-    case ConfigGet(config) ⇒
+    case ConfigGet ⇒
       configGetError(sender(), "loaded", "running")
 
     case msg ⇒
@@ -217,15 +214,15 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       context.become(initialized(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case s @ Loaded(_) ⇒
+    case s@Loaded(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, loaded(connected = connected, targetState))
 
-    case s @ Initialized(_) ⇒
+    case s@Initialized(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, initialized(connected, targetState))
 
-    case s @ Running(_) ⇒
+    case s@Running(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
@@ -233,26 +230,23 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
       notifyLifecycleListeners(LifecycleStateChanged(Initialized(name), Some(e), connected))
 
-    case s @ Connected(servicesReady) ⇒
-      log.debug(s" $name received Connected")
+    case s@ServicesReady(serviceMap) ⇒
+      log.debug(s" $name: All services ready")
       component ! s
       context.become(initialized(connected = true, targetState))
 
-    case Disconnected ⇒
-      log.debug(s" $name received Disconnected")
-      component ! Disconnected
+    case s@Disconnected(serviceRef) ⇒
+      log.debug(s" $name: Received disconnect message for: $serviceRef ")
+      component ! s
       context.become(initialized(connected = false, targetState))
 
     case SubscribeToLifecycleStates(onlyRunningAndConnected) ⇒
       subscribeToLifecycleStates(Initialized(name), connected, onlyRunningAndConnected)
 
-    case SubmitWithRunId(config, submitter, runId) ⇒
+    case Submit(config, submitter, runId) ⇒
       cmdStatusError(runId, submitter, "initialized", "running")
 
-    case QueueBypassRequestWithRunId(config, submitter, runId) ⇒
-      cmdStatusError(runId, submitter, "initialized", "running")
-
-    case ConfigGet(config) ⇒
+    case ConfigGet ⇒
       configGetError(sender(), "initialized", "running")
 
     case msg ⇒
@@ -281,15 +275,15 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       context.become(running(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case s @ Loaded(_) ⇒
+    case s@Loaded(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, loaded(connected, targetState))
 
-    case s @ Initialized(_) ⇒
+    case s@Initialized(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, initialized(connected, targetState))
 
-    case s @ Running(_) ⇒
+    case s@Running(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
@@ -297,26 +291,23 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
       log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
       notifyLifecycleListeners(LifecycleStateChanged(Running(name), Some(e), connected))
 
-    case s @ Connected(servicesReady) ⇒
-      log.debug(s" $name received Connected")
+    case s@ServicesReady(serviceMap) ⇒
+      log.debug(s" $name: All services ready")
       component ! s
       updateState(Running(name), connected = true, targetState, running(connected = true, targetState))
 
-    case Disconnected ⇒
-      log.debug(s" $name received Disconnected")
-      component ! Disconnected
+    case s@Disconnected(serviceRef) ⇒
+      log.debug(s" $name: Received disconnect message for: $serviceRef ")
+      component ! s
       updateState(Running(name), connected = false, targetState, running(connected = false, targetState))
 
     case SubscribeToLifecycleStates(onlyRunningAndConnected) ⇒
       subscribeToLifecycleStates(Running(name), connected, onlyRunningAndConnected)
 
-    case SubmitWithRunId(config, submitter, runId) if !connected ⇒
+    case Submit(config, submitter, runId) if !connected ⇒
       cmdStatusError(runId, submitter, "running", "connected")
 
-    case QueueBypassRequestWithRunId(config, submitter, runId) if !connected ⇒
-      cmdStatusError(runId, submitter, "running", "connected")
-
-    case ConfigGet(config) if !connected ⇒
+    case ConfigGet if !connected ⇒
       configGetError(sender(), "running", "connected")
 
     case msg if connected ⇒
@@ -352,8 +343,7 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
   // Starts an actor to manage registering this actor with the location service
   // (as a proxy for the component)
   private def registerWithLocationService(): Unit = {
-    context.actorOf(LocationServiceRegisterActor.props(regInfo.serviceId, Some(self),
-      regInfo.configPath, regInfo.httpUri))
+    LocationService.registerAkkaService(serviceId, self, prefix)
   }
 
   // If not already started, start an actor to manage getting the services the
@@ -362,10 +352,9 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
   // If any service terminates, a Disconnected message is sent to this actor.
   private def requestServices(): Unit = {
     log.debug(s" requestServices $services")
-    val actorName = s"$name-ls-client"
+    val actorName = s"$name-loc-client"
     if (context.child(actorName).isEmpty)
-      context.actorOf(LocationServiceClientActor.props(services), actorName)
-
+      context.actorOf(LocationService.props(serviceRefs), actorName)
   }
 
   // Called when a lifecycle state message is received from the component.
@@ -385,16 +374,16 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
 
       case Loaded(_) ⇒
         currentState match {
-          case Loaded(_)      ⇒
+          case Loaded(_) ⇒
           case Initialized(_) ⇒ component ! Uninitialize
-          case Running(_)     ⇒ component ! Shutdown
+          case Running(_) ⇒ component ! Shutdown
         }
 
       case Initialized(_) ⇒
         currentState match {
-          case Loaded(_)      ⇒ component ! Initialize
+          case Loaded(_) ⇒ component ! Initialize
           case Initialized(_) ⇒
-          case Running(_)     ⇒ component ! Shutdown
+          case Running(_) ⇒ component ! Shutdown
         }
 
       case Running(_) ⇒
@@ -414,8 +403,7 @@ case class LifecycleManager(componentProps: Props, regInfo: RegInfo, services: L
   private def cmdStatusError(runId: RunId, actorRef: ActorRef, currentCond: String, requiredCond: String): Unit = {
     val msg = s"$name is $currentCond, but not $requiredCond"
     log.warning(msg)
-    log.debug(s"XXX sending error status through ${component.path}")
-    component ! StatusUpdate(CommandStatus.Error(runId, msg), actorRef)
+    actorRef ! CommandStatus.Error(runId, msg)
   }
 
   // Sends a config response error message to the given actor indicating that the component is not in the required state or condition

@@ -53,6 +53,14 @@ lazy val log = project
   )
 
 // Key Value Store
+lazy val kvs_old = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(redisScala, scalaLogging, logback) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn util
+
 lazy val kvs = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
@@ -61,8 +69,9 @@ lazy val kvs = project
       test(scalaTest, akkaTestKit)
   ) dependsOn util
 
+
 // Location Service (old)
-lazy val loc = project
+lazy val loc_old = project
   .settings(packageSettings("CSW Location Service", "Used to lookup command service actors"): _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
@@ -71,7 +80,7 @@ lazy val loc = project
   ) dependsOn(log, util)
 
 // Location Service (new)
-lazy val locs = project
+lazy val loc = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
@@ -80,23 +89,23 @@ lazy val locs = project
   ) dependsOn log
 
 // Command Service (old)
-lazy val cmd = project.enablePlugins(SbtTwirl)
+lazy val cmd_old = project.enablePlugins(SbtTwirl)
   .settings(defaultSettings: _*)
   .settings(twirlSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(scalaLogging, logback, akkaSse, upickle) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(sharedJvm, loc, util % "compile->compile;test->test")
+  ) dependsOn(sharedJvm, loc_old, util % "compile->compile;test->test")
 
 // Command Service (new)
-lazy val cmds = project
+lazy val cmd = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(scalaLogging, logback, akkaSse, upickle) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(sharedJvm, locs, util % "compile->compile;test->test")
+  ) dependsOn(sharedJvm, loc, util % "compile->compile;test->test")
 
 // Config Service
 lazy val cs = project
@@ -104,7 +113,7 @@ lazy val cs = project
   .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
   .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(log, loc, util, configServiceAnnex)
+  .dependsOn(log, loc_old, util, configServiceAnnex)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(jgit, scalaLogging, logback, akkaHttp, scopt) ++
@@ -112,6 +121,16 @@ lazy val cs = project
   ) configs MultiJvm
 
 // Package (Container, Component) classes
+lazy val pkg_old = project
+  .settings(defaultSettings: _*)
+  .settings(SbtMultiJvm.multiJvmSettings: _*)
+  .dependsOn(cmd_old % "compile->compile;test->test", util % "compile->compile;test->test", loc_old)
+  .settings(libraryDependencies ++=
+    provided(akkaActor) ++
+      compile(scalaLogging, logback) ++
+      test(scalaTest, akkaTestKit, akkaMultiNodeTest)
+  ) configs MultiJvm
+
 lazy val pkg = project
   .settings(defaultSettings: _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
@@ -141,7 +160,7 @@ lazy val containerCmd = Project(id = "containerCmd", base = file("apps/container
     provided(akkaActor) ++
       compile(akkaRemote, scopt) ++
       test(scalaLogging, logback)
-  ) dependsOn(pkg, cmd, loc, util, cs)
+  ) dependsOn(pkg_old, cmd_old, loc_old, util, cs)
 
 // Build the sequencer command line application
 lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
@@ -150,7 +169,7 @@ lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
     provided(akkaActor) ++
       compile(akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++
       test(scalaLogging, logback)
-  ) dependsOn(pkg, cmd, loc, util)
+  ) dependsOn(pkg_old, cmd_old, loc_old, util)
 
 // Build the config service annex application
 lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("apps/configServiceAnnex"))
@@ -159,7 +178,7 @@ lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("ap
     provided(akkaActor) ++
       compile(akkaRemote, akkaHttp) ++
       test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
-  ) dependsOn(loc, util)
+  ) dependsOn(loc_old, util)
 
 // Build the config service annex application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))

@@ -1,10 +1,10 @@
 package csw.services.apps.sequencer
 
 import akka.actor.{ ActorRef, ActorSystem }
-import csw.services.cmd.akka.{ BlockingCommandServiceClient, CommandServiceClient, CommandServiceClientActor }
+import csw.services.cmd_old.akka.{ BlockingCommandServiceClient, CommandServiceClient, CommandServiceClientActor }
 import csw.services.ls.LocationService
 import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
-import csw.services.pkg.{ LifecycleManager, Container }
+import csw.services.pkg_old.{ LifecycleManager, Container }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

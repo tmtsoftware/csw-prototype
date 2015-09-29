@@ -1,9 +1,9 @@
 package csw.services.pkg
 
-import akka.actor.{ ActorLogging, Actor }
-import csw.services.pkg.LifecycleManager._
+import akka.actor.{ActorLogging, Actor}
 
 import scala.concurrent.Future
+import LifecycleManager._
 
 /**
  * Containers and Components can override these to handle lifecycle changes.

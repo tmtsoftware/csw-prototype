@@ -6,7 +6,7 @@ import csw.services.ls.LocationServiceActor
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import java.io.StringReader
-import csw.services.cmd.akka._
+import csw.services.cmd_old.akka._
 import LocationServiceActor.ServiceId
 import csw.services.ls.LocationServiceActor
 import LocationServiceActor._

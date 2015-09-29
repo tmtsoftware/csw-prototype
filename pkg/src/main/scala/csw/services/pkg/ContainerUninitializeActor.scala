@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.{ ActorLogging, Actor, Props }
-import csw.services.pkg.LifecycleManager.{ LifecycleStateChanged, Startup }
+import LifecycleManager._
 
 // Used to uninitialize components and then wait for confirmation before exiting or restarting
 private[pkg] object ContainerUninitializeActor {
@@ -32,7 +32,7 @@ private[pkg] class ContainerUninitializeActor(components: Map[String, Component.
   }
 
   def checkDone(componentsLeft: List[String]): Unit = {
-    if (componentsLeft.size == 0) {
+    if (componentsLeft.isEmpty) {
       if (exit) System.exit(0) else context.parent ! Startup
       context.stop(self)
     } else

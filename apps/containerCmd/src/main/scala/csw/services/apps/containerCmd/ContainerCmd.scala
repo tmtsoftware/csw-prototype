@@ -7,7 +7,7 @@ import akka.util.Timeout
 import com.typesafe.config.{ ConfigFactory, ConfigResolveOptions }
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.akka.{ ConfigServiceSettings, ConfigServiceClient }
-import csw.services.pkg.Container
+import csw.services.pkg_old.Container
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._

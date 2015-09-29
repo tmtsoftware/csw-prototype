@@ -1,5 +1,7 @@
 package csw.util.config
 
+import java.util.UUID
+
 import scala.language.implicitConversions
 
 /**
@@ -36,6 +38,9 @@ object Configurations {
    * The config key is based on a string like subsystem.x.y.z, where the prefix is then subsystem.x.y.
    */
   sealed trait ConfigType extends Serializable {
+    /**
+     * Returns an object providing the subsystem and prefix for the config
+     */
     def configKey: ConfigKey
 
     /**

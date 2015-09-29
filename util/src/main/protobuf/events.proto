@@ -1,4 +1,4 @@
-package csw.util.cfg;
+package csw.util.cfg_old;
 
 option java_outer_classname = "Protobuf";
 
