@@ -2,7 +2,7 @@ package csw.services.cmd_old.akka
 
 import akka.actor.{ ActorContext, ActorRef, Props }
 import akka.event.LoggingAdapter
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.RunId
 
 /**
  * A utility class for managing worker actors where there is one worker per run id.

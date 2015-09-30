@@ -1,6 +1,6 @@
 package csw.services.pkg
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ ActorLogging, Actor }
 
 import scala.concurrent.Future
 import LifecycleManager._

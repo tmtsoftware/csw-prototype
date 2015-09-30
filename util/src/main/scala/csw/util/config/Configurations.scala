@@ -75,12 +75,12 @@ object Configurations {
   /**
    * Marker trait for sequence configurations
    */
-  trait SequenceConfig
+  sealed trait SequenceConfig extends ConfigType
 
   /**
    * Marker trait for control configurations
    */
-  trait ControlConfig
+  sealed trait ControlConfig extends ConfigType
 
   /**
    * Defines a setup configuration, which is a config key plus a set of key/value pairs
@@ -88,7 +88,7 @@ object Configurations {
    * @param data the typed key/value pairs
    */
   case class SetupConfig(configKey: ConfigKey, data: ConfigData = ConfigData())
-      extends ConfigType with SequenceConfig with ControlConfig {
+      extends SequenceConfig with ControlConfig {
 
     def set(key: Key)(value: key.Value): SetupConfig = SetupConfig(configKey, data.set(key)(value))
 
@@ -103,7 +103,7 @@ object Configurations {
    * @param data the typed key/value pairs
    */
   case class ObserveConfig(configKey: ConfigKey, data: ConfigData = ConfigData())
-      extends ConfigType with SequenceConfig with ControlConfig {
+      extends SequenceConfig with ControlConfig {
     def set(key: Key)(value: key.Value): ObserveConfig = ObserveConfig(configKey, data.set(key)(value))
 
     def remove(key: Key): ObserveConfig = ObserveConfig(configKey, data.remove(key))
@@ -117,7 +117,7 @@ object Configurations {
    * @param data the typed key/value pairs
    */
   case class WaitConfig(configKey: ConfigKey, data: ConfigData = ConfigData())
-      extends ConfigType with SequenceConfig {
+      extends SequenceConfig {
     def set(key: Key)(value: key.Value): WaitConfig = WaitConfig(configKey, data.set(key)(value))
 
     def remove(key: Key): WaitConfig = WaitConfig(configKey, data.remove(key))
@@ -151,8 +151,15 @@ object Configurations {
   /**
    * This will include information related to the observation that is related to a configuration.
    * This will grow and develop.
+   *
+   * @param obsId the observation ID
    */
-  case class ConfigInfo(obsId: ObsID)
+  case class ConfigInfo(obsId: ObsID) {
+    /**
+     * Unique ID for this configuration
+     */
+    val runId: UUID = UUID.randomUUID()
+  }
 
   object ConfigInfo {
     implicit def apply(obsId: String): ConfigInfo = ConfigInfo(ObsID(obsId))
@@ -164,21 +171,36 @@ object Configurations {
    * Each ConfigArg includes a ConfigInfo which will contain information about the executing
    * observation.
    */
-  sealed trait ConfigArg extends Serializable
+  sealed trait ConfigArg extends Serializable {
+    def info: ConfigInfo
+  }
 
-  final case class SetupConfigArg(info: ConfigInfo, configs: Seq[SetupConfig]) extends ConfigArg
+  /**
+   * Marker trait for sequence config args
+   */
+  sealed trait SequenceConfigArg extends ConfigArg
+
+  /**
+   * Marker trait for control config args
+   */
+  sealed trait ControlConfigArg extends ConfigArg
+
+  final case class SetupConfigArg(info: ConfigInfo, configs: Seq[SetupConfig])
+    extends SequenceConfigArg with ControlConfigArg
 
   object SetupConfigArg {
     def apply(configs: SetupConfig*)(implicit info: ConfigInfo): SetupConfigArg = SetupConfigArg(info, configs.toSeq)
   }
 
-  final case class ObserveConfigArg(info: ConfigInfo, configs: Seq[ObserveConfig]) extends ConfigArg
+  final case class ObserveConfigArg(info: ConfigInfo, configs: Seq[ObserveConfig])
+    extends SequenceConfigArg with ControlConfigArg
 
   object ObserveConfigArg {
     def apply(configs: ObserveConfig*)(implicit info: ConfigInfo): ObserveConfigArg = ObserveConfigArg(info, configs.toSeq)
   }
 
-  final case class WaitConfigArg(info: ConfigInfo, config: WaitConfig) extends ConfigArg
+  final case class WaitConfigArg(info: ConfigInfo, config: WaitConfig)
+    extends SequenceConfigArg
 
   object WaitConfigArg {
     def apply(config: WaitConfig)(implicit info: ConfigInfo): WaitConfigArg = WaitConfigArg(info, config)
@@ -186,13 +208,14 @@ object Configurations {
 
   type ConfigArgList = Seq[SequenceConfig]
 
-  // For getting device configuration
-  final case class ConfigQuery(configs: Seq[SetupConfig])
-
-  sealed trait ConfigQueryResponse
-
-  final case class QuerySuccess(configs: Seq[SetupConfig]) extends ConfigQueryResponse
-
-  final case class QueryFailure(reason: String) extends ConfigQueryResponse
+  //  // For getting device configuration
+  //  // XXX Allan: Should be part of command service actor messages
+  //  final case class ConfigQuery(configs: Seq[SetupConfig])
+  //
+  //  sealed trait ConfigQueryResponse
+  //
+  //  final case class QuerySuccess(configs: Seq[SetupConfig]) extends ConfigQueryResponse
+  //
+  //  final case class QueryFailure(reason: String) extends ConfigQueryResponse
 
 }

@@ -2,7 +2,7 @@ package csw.services.cmd_old.akka
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.ActorSystem
-import csw.shared.cmd.CommandStatus
+import csw.shared.cmd_old.CommandStatus
 import csw.util.cfg_old.{ TestConfig, ConfigJsonFormats }
 import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
 import akka.util.Timeout

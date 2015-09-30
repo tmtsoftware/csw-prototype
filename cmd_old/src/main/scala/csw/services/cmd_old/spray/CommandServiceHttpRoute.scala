@@ -4,8 +4,8 @@ import akka.actor.ActorRefFactory
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import csw.shared.cmd.CommandStatus
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.CommandStatus
+import csw.shared.cmd_old.RunId
 import csw.util.cfg_old.ConfigJsonFormats
 import csw.util.cfg_old.Configurations._
 import csw.services.cmd_old.akka.CommandServiceClientHelper

@@ -1,7 +1,7 @@
 package csw.services.cmd_old.akka
 
 import akka.actor._
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.RunId
 import scala.concurrent.duration._
 import scala.Some
 

@@ -9,8 +9,8 @@ import csw.services.ls.LocationService.RegInfo
 import csw.services.ls.LocationServiceActor.ServiceId
 import csw.services.ls.LocationServiceClientActor.{ Connected, Disconnected }
 import csw.services.ls.{ LocationServiceClientActor, LocationServiceRegisterActor }
-import csw.shared.cmd.CommandStatus
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.CommandStatus
+import csw.shared.cmd_old.RunId
 
 import scala.util.Failure
 

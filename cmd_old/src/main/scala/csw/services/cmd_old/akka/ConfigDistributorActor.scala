@@ -10,8 +10,8 @@ import csw.services.cmd_old.akka.ConfigDistributorActor.SubmitInfo
 import csw.services.cmd_old.akka.QueryWorkerActor.QueryInfo
 import csw.services.ls.LocationServiceActor.{ LocationServiceInfo, ServicesReady }
 import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
-import csw.shared.cmd.CommandStatus
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.CommandStatus
+import csw.shared.cmd_old.RunId
 import csw.util.cfg_old.Configurations._
 
 import scala.concurrent.Future

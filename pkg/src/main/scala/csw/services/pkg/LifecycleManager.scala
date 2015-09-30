@@ -1,12 +1,14 @@
 package csw.services.pkg
 
+import java.util.UUID
+
 import akka.actor._
-import csw.services.cmd.HcdController.{ConfigResponse, ConfigGet, Submit}
+import csw.services.cmd.Controller.{ ConfigResponse, ConfigGet }
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{Disconnected, ServicesReady}
-import csw.services.loc.{ServiceRef, LocationService, ServiceId}
+import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
+import csw.services.loc.{ ServiceRef, LocationService, ServiceId }
 import csw.shared.cmd.CommandStatus
-import csw.shared.cmd.RunId
+import csw.util.config.Configurations.ControlConfigArg
 
 import scala.util.Failure
 
@@ -109,7 +111,7 @@ object LifecycleManager {
  * (see props() for argument descriptions).
  */
 case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId])
-  extends Actor with ActorLogging {
+    extends Actor with ActorLogging {
 
   import LifecycleManager._
 
@@ -154,15 +156,15 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       context.become(loaded(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case s@Loaded(_) ⇒
+    case s @ Loaded(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, loaded(connected, targetState))
 
-    case s@Initialized(_) ⇒
+    case s @ Initialized(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, initialized(connected, targetState))
 
-    case s@Running(_) ⇒
+    case s @ Running(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
@@ -170,12 +172,12 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
       notifyLifecycleListeners(LifecycleStateChanged(Loaded(name), Some(e), connected))
 
-    case s@ServicesReady(serviceMap) ⇒
+    case s @ ServicesReady(serviceMap) ⇒
       log.debug(s" $name: All services ready")
       component ! s
       context.become(loaded(connected = true, targetState))
 
-    case s@Disconnected(serviceRef) ⇒
+    case s @ Disconnected(serviceRef) ⇒
       log.debug(s" $name: Received disconnect message for: $serviceRef ")
       component ! s
       context.become(loaded(connected = false, targetState))
@@ -183,11 +185,11 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case SubscribeToLifecycleStates(onlyRunningAndConnected) ⇒
       subscribeToLifecycleStates(Loaded(name), connected, onlyRunningAndConnected)
 
-    case Submit(config, submitter, runId) ⇒
-      cmdStatusError(runId, submitter, "loaded", "running")
+    case configArg: ControlConfigArg ⇒
+      cmdStatusError(configArg.info.runId, "loaded", "running")
 
     case ConfigGet ⇒
-      configGetError(sender(), "loaded", "running")
+      configGetError("loaded", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "loaded", connected)
@@ -214,15 +216,15 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       context.become(initialized(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case s@Loaded(_) ⇒
+    case s @ Loaded(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, loaded(connected = connected, targetState))
 
-    case s@Initialized(_) ⇒
+    case s @ Initialized(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, initialized(connected, targetState))
 
-    case s@Running(_) ⇒
+    case s @ Running(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
@@ -230,12 +232,12 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
       notifyLifecycleListeners(LifecycleStateChanged(Initialized(name), Some(e), connected))
 
-    case s@ServicesReady(serviceMap) ⇒
+    case s @ ServicesReady(serviceMap) ⇒
       log.debug(s" $name: All services ready")
       component ! s
       context.become(initialized(connected = true, targetState))
 
-    case s@Disconnected(serviceRef) ⇒
+    case s @ Disconnected(serviceRef) ⇒
       log.debug(s" $name: Received disconnect message for: $serviceRef ")
       component ! s
       context.become(initialized(connected = false, targetState))
@@ -243,11 +245,11 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case SubscribeToLifecycleStates(onlyRunningAndConnected) ⇒
       subscribeToLifecycleStates(Initialized(name), connected, onlyRunningAndConnected)
 
-    case Submit(config, submitter, runId) ⇒
-      cmdStatusError(runId, submitter, "initialized", "running")
+    case configArg: ControlConfigArg ⇒
+      cmdStatusError(configArg.info.runId, "initialized", "running")
 
     case ConfigGet ⇒
-      configGetError(sender(), "initialized", "running")
+      configGetError("initialized", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "initialized", connected)
@@ -275,15 +277,15 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       context.become(running(connected, Loaded(name)))
 
     // Message from component indicating current state
-    case s@Loaded(_) ⇒
+    case s @ Loaded(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, loaded(connected, targetState))
 
-    case s@Initialized(_) ⇒
+    case s @ Initialized(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, initialized(connected, targetState))
 
-    case s@Running(_) ⇒
+    case s @ Running(_) ⇒
       log.debug(s" $name received $s")
       updateState(s, connected, targetState, running(connected, targetState))
 
@@ -291,12 +293,12 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
       notifyLifecycleListeners(LifecycleStateChanged(Running(name), Some(e), connected))
 
-    case s@ServicesReady(serviceMap) ⇒
+    case s @ ServicesReady(serviceMap) ⇒
       log.debug(s" $name: All services ready")
       component ! s
       updateState(Running(name), connected = true, targetState, running(connected = true, targetState))
 
-    case s@Disconnected(serviceRef) ⇒
+    case s @ Disconnected(serviceRef) ⇒
       log.debug(s" $name: Received disconnect message for: $serviceRef ")
       component ! s
       updateState(Running(name), connected = false, targetState, running(connected = false, targetState))
@@ -304,11 +306,11 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case SubscribeToLifecycleStates(onlyRunningAndConnected) ⇒
       subscribeToLifecycleStates(Running(name), connected, onlyRunningAndConnected)
 
-    case Submit(config, submitter, runId) if !connected ⇒
-      cmdStatusError(runId, submitter, "running", "connected")
+    case configArg: ControlConfigArg if !connected ⇒
+      cmdStatusError(configArg.info.runId, "running", "connected")
 
     case ConfigGet if !connected ⇒
-      configGetError(sender(), "running", "connected")
+      configGetError("running", "connected")
 
     case msg if connected ⇒
       log.debug(s" forwarding $msg from ${sender()} to $component")
@@ -343,7 +345,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
   // Starts an actor to manage registering this actor with the location service
   // (as a proxy for the component)
   private def registerWithLocationService(): Unit = {
-    LocationService.registerAkkaService(serviceId, self, prefix)
+    LocationService.registerAkkaService(serviceId, self, prefix)(context.system)
   }
 
   // If not already started, start an actor to manage getting the services the
@@ -374,16 +376,16 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
 
       case Loaded(_) ⇒
         currentState match {
-          case Loaded(_) ⇒
+          case Loaded(_)      ⇒
           case Initialized(_) ⇒ component ! Uninitialize
-          case Running(_) ⇒ component ! Shutdown
+          case Running(_)     ⇒ component ! Shutdown
         }
 
       case Initialized(_) ⇒
         currentState match {
-          case Loaded(_) ⇒ component ! Initialize
+          case Loaded(_)      ⇒ component ! Initialize
           case Initialized(_) ⇒
-          case Running(_) ⇒ component ! Shutdown
+          case Running(_)     ⇒ component ! Shutdown
         }
 
       case Running(_) ⇒
@@ -400,17 +402,18 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
   // Sends a command status error message indicating that the component is not in the required state or condition.
   // Note that we send it to the component, which forwards it to its commandStatusActor, so it is handled like
   // other status messages.
-  private def cmdStatusError(runId: RunId, actorRef: ActorRef, currentCond: String, requiredCond: String): Unit = {
+  private def cmdStatusError(runId: UUID, currentCond: String, requiredCond: String): Unit = {
     val msg = s"$name is $currentCond, but not $requiredCond"
     log.warning(msg)
-    actorRef ! CommandStatus.Error(runId, msg)
+    // XXX FIXME
+    sender() ! CommandStatus.Error(runId, msg)
   }
 
   // Sends a config response error message to the given actor indicating that the component is not in the required state or condition
-  private def configGetError(actorRef: ActorRef, currentCond: String, requiredCond: String): Unit = {
+  private def configGetError(currentCond: String, requiredCond: String): Unit = {
     val msg = s"$name is $currentCond, but not $requiredCond"
     log.warning(msg)
-    actorRef ! ConfigResponse(Failure(new Exception(msg)))
+    sender() ! ConfigResponse(Failure(new Exception(msg)))
   }
 
   // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state

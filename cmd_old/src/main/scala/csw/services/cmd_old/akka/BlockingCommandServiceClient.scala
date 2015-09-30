@@ -3,7 +3,7 @@ package csw.services.cmd_old.akka
 import akka.actor.ActorRefFactory
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
-import csw.shared.cmd.CommandStatus
+import csw.shared.cmd_old.CommandStatus
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await

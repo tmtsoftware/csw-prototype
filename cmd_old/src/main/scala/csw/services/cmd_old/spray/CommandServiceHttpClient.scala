@@ -2,8 +2,8 @@ package csw.services.cmd_old.spray
 
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model._
-import csw.shared.cmd.CommandStatus
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.CommandStatus
+import csw.shared.cmd_old.RunId
 import csw.util.cfg_old.ConfigJsonFormats
 import csw.util.cfg_old.Configurations._
 import scala.concurrent.{ ExecutionContext, Future }

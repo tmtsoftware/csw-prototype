@@ -1,8 +1,8 @@
 package csw.services.cmd_old.akka
 
 import akka.stream.scaladsl.Source
-import csw.shared.cmd.CommandStatus
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.CommandStatus
+import csw.shared.cmd_old.RunId
 
 import scala.concurrent.Future
 import csw.util.cfg_old.Configurations._

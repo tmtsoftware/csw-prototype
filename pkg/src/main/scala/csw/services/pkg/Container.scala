@@ -2,7 +2,7 @@ package csw.services.pkg
 
 import akka.actor._
 import com.typesafe.config.Config
-import csw.services.loc.{LocationService, ServiceType, ServiceId}
+import csw.services.loc.{ LocationService, ServiceType, ServiceId }
 
 import scala.collection.JavaConversions._
 
@@ -126,7 +126,7 @@ class Container(config: Config) extends Actor with ActorLogging {
   private def registerWithLocationService(): Unit = {
     val name = config.getString("container.name")
     val serviceId = ServiceId(name, ServiceType.Container)
-    LocationService.registerAkkaService(serviceId, self)
+    LocationService.registerAkkaService(serviceId, self)(context.system)
   }
 
   private def createComponent(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId],

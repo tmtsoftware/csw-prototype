@@ -7,7 +7,7 @@ import csw.services.cmd_old.akka.CommandQueueActor.ConfigQueueStatus
 import csw.services.cmd_old.akka.CommandStatusActor.StatusUpdate
 import csw.services.ls.LocationServiceActor.ServicesReady
 import csw.services.ls.LocationServiceClientActor.{ Disconnected, Connected }
-import csw.shared.cmd.RunId
+import csw.shared.cmd_old.RunId
 import csw.util.cfg_old.Configurations.ConfigList
 
 import scala.concurrent.duration._
