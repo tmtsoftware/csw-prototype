@@ -7,12 +7,12 @@ import redis.RedisClient
 /**
  * Adds the ability to publish objects of type T.
  */
-trait Publisher[T] {
-  this: Actor with ActorLogging ⇒
+abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging with Implicits {
 
   private val actorSystem = context.system
   private val settings = KvsSettings(actorSystem)
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
+  private val formatter = implicitly[ByteStringFormatter[T]]
 
   /**
    * Publishes the given event on the given channel, and also saves it in a list
@@ -20,10 +20,8 @@ trait Publisher[T] {
    * @param channel the channel or key for this event
    * @param value the event to publish
    * @param history number of previous events to keep in a list for reference (set to 0 for no history)
-   * @param formatter converts objects of type T to ByteStrings
    */
-  def publish(channel: String, value: T, history: Int = KeyValueStore.defaultHistory)
-             (implicit formatter: ByteStringFormatter[T]): Unit = {
+  def publish(channel: String, value: T, history: Int = KeyValueStore.defaultHistory): Unit = {
     // Serialize the event
     val bs = formatter.serialize(value) // only do this once
 

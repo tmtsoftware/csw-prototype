@@ -31,7 +31,6 @@ with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
       val count = expectMsgType[Int]
       val msgPerSec = count / numSecs
       logger.info(s"Recieved $count events in $numSecs seconds ($msgPerSec per second)")
-//      assert(count > numSecs * 1000)
     }
   }
 
@@ -41,11 +40,10 @@ with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 }
 
 
-object PubSubTests {
+object PubSubTests extends Implicits {
 
   // A test class that publishes events
-  case class TestPublisher(caller: ActorRef, numSecs: Int)
-    extends Actor with ActorLogging with Implicits with Publisher[TelemetryEvent] {
+  case class TestPublisher(caller: ActorRef, numSecs: Int) extends Publisher[TelemetryEvent] {
     val root = "tmt.mobie.red.dat.exposureInfo"
     val expTime = 1
     var nextId = 0
@@ -61,19 +59,14 @@ object PubSubTests {
     while (!done) {
       publish(root, nextEvent())
       Thread.`yield`() // don't want to hog the cpu here
-      //    Thread.sleep(1000)
     }
 
     def nextEvent(): TelemetryEvent = {
-//      val time = System.currentTimeMillis()
       nextId = nextId + 1
       TelemetryEvent(
         source = "test",
         prefix = s"$root")
         .set(exposureTime)(expTime) // XXX change to be a Duration
-      //      "eventId" -> nextId,
-      //      "startTime" -> (time - expTime),
-      //      "endTime" -> time)
     }
 
     override def receive: Receive = {
@@ -82,10 +75,7 @@ object PubSubTests {
   }
 
   // A test class that subscribes to events
-  case class TestSubscriber(name: String)
-    extends Actor with ActorLogging with Implicits with Subscriber[TelemetryEvent] {
-//    override val formatter = telemetryEventByteStringFormatter
-    val formatter = implicitly[ByteStringFormatter[TelemetryEvent]]
+  case class TestSubscriber(name: String) extends Subscriber[TelemetryEvent] {
     implicit val execContext: ExecutionContext = context.dispatcher
     implicit val actorSytem = context.system
     var count = 0

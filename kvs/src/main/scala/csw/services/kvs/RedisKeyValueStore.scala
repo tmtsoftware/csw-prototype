@@ -11,9 +11,8 @@ import csw.services.kvs.KeyValueStore._
  * The host and port can be configured in resources/reference.conf.
  *
  * @param system the Akka actor system, needed to access the settings and RedisClient
- * @param formatter converts objects of type T to ByteStrings
  */
-case class RedisKeyValueStore[T](implicit system: ActorSystem, formatter: ByteStringFormatter[T]) extends KeyValueStore[T] {
+case class RedisKeyValueStore[T: ByteStringFormatter](implicit system: ActorSystem) extends KeyValueStore[T] {
 
   private val settings = KvsSettings(system)
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
@@ -37,6 +36,7 @@ case class RedisKeyValueStore[T](implicit system: ActorSystem, formatter: ByteSt
   override def lset(key: String, value: T, history: Int): Future[Boolean] = {
     if (history >= 0) {
       // Serialize the value
+      val formatter = implicitly[ByteStringFormatter[T]]
       val bs = formatter.serialize(value)
 
       // Use a transaction to send all commands at once
