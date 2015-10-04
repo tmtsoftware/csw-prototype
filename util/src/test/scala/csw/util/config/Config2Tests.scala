@@ -164,7 +164,7 @@ class Config2Tests extends FunSpec with Matchers {
 
     val json = ob1.pickle.value
     //    println(s"JSON size = ${json.length}")
-    println(s"JSON = ${json}")
+    println(s"JSON = $json")
     val ob2 = json.unpickle[ObserveConfig]
 
     it("Should support I/O to and from JSON") {

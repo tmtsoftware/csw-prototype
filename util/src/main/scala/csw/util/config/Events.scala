@@ -10,30 +10,17 @@ object Events {
   /**
    * Base trait for all event types
    */
-  sealed trait EventType {
+  sealed trait EventType extends KvsType {
     def eventId: String
+
     def timestamp: Long
+
     def source: String
-
-    /**
-     * Holds the typed key/value pairs
-     */
-    def data: ConfigData
-
-    /**
-     * The number of key/value pairs
-     */
-    def size = data.size
-
-    /**
-     * Returns the value for the key, if found
-     */
-    def get(key: Key): Option[key.Value] = data.get(key)
 
     protected def doToString(kind: String) =
       kind + "[" + eventId + ", " + source + ", " + timestamp + "] " + data.toString
-
   }
+
   /**
    * Defines an observe event
    * @param eventId a unique event id
@@ -50,6 +37,26 @@ object Events {
 
     override def toString = doToString("OE")
   }
+
+  //  object ObserveEvent {
+  //    import scala.pickling.Defaults._
+  //    import scala.pickling.binary._
+  //
+  //    /**
+  //     * Defines the automatic conversion to a ByteString and back again.
+  //     */
+  //    implicit val byteStringFormatter = new ByteStringFormatter[ObserveEvent] {
+  //      def serialize(t: ObserveEvent): ByteString = {
+  //        ByteString(t.pickle.value)
+  //      }
+  //
+  //      def deserialize(bs: ByteString): ObserveEvent = {
+  //        val ar = Array.ofDim[Byte](bs.length)
+  //        bs.asByteBuffer.get(ar)
+  //        ar.unpickle[ObserveEvent]
+  //      }
+  //    }
+  //  }
 
   /**
    * A basic telemetry event
@@ -70,6 +77,24 @@ object Events {
   }
 
   object TelemetryEvent {
+    //    import scala.pickling.Defaults._
+    //    import scala.pickling.binary._
+    //
+    //    /**
+    //     * Defines the automatic conversion to a ByteString and back again.
+    //     */
+    //    implicit val byteStringFormatter = new ByteStringFormatter[TelemetryEvent] {
+    //      def serialize(t: TelemetryEvent): ByteString = {
+    //        ByteString(t.pickle.value)
+    //      }
+    //
+    //      def deserialize(bs: ByteString): TelemetryEvent = {
+    //        val ar = Array.ofDim[Byte](bs.length)
+    //        bs.asByteBuffer.get(ar)
+    //        ar.unpickle[TelemetryEvent]
+    //      }
+    //    }
+
     val DEFAULT_PREFIX = ""
 
     def apply(source: String, prefix: String): TelemetryEvent = {

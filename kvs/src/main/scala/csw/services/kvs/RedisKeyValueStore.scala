@@ -11,14 +11,15 @@ import csw.services.kvs.KeyValueStore._
  * The host and port can be configured in resources/reference.conf.
  *
  * @param system the Akka actor system, needed to access the settings and RedisClient
+ * @param formatter converts objects of type T to ByteStrings
  */
-case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStore {
+case class RedisKeyValueStore[T](implicit system: ActorSystem, formatter: ByteStringFormatter[T]) extends KeyValueStore[T] {
+
   private val settings = KvsSettings(system)
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
-  val formatter = implicitly[ByteStringFormatter[Event]]
   implicit val execContext = system.dispatcher
 
-  override def set(key: String, event: Event, expire: Option[FiniteDuration],
+  override def set(key: String, value: T, expire: Option[FiniteDuration],
                    setCond: SetCondition): Future[Boolean] = {
     val msOpt = if (expire.isDefined) Some(expire.get.toMillis) else None
     val (nx, xx) = setCond match {
@@ -26,18 +27,17 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
       case SetOnlyIfExists    ⇒ (false, true)
       case SetAlways          ⇒ (false, false)
     }
-    redis.set(key, event, None, msOpt, nx, xx)
+    redis.set(key, value, None, msOpt, nx, xx)
   }
 
-  override def get(key: String): Future[Option[Event]] = {
+  override def get(key: String): Future[Option[T]] = {
     redis.get(key)
   }
 
-  override def lset(key: String, event: Event, history: Int): Future[Boolean] = {
+  override def lset(key: String, value: T, history: Int): Future[Boolean] = {
     if (history >= 0) {
-      // Serialize the event
-      val formatter = implicitly[ByteStringFormatter[Event]]
-      val bs = formatter.serialize(event)
+      // Serialize the value
+      val bs = formatter.serialize(value)
 
       // Use a transaction to send all commands at once
       val redisTransaction = redis.transaction()
@@ -51,11 +51,11 @@ case class RedisKeyValueStore(implicit system: ActorSystem) extends KeyValueStor
     }
   }
 
-  override def lget(key: String): Future[Option[Event]] = {
+  override def lget(key: String): Future[Option[T]] = {
     redis.lindex(key, 0)
   }
 
-  override def getHistory(key: String, n: Int): Future[Seq[Event]] = {
+  override def getHistory(key: String, n: Int): Future[Seq[T]] = {
     redis.lrange(key, 0, n - 1)
   }
 

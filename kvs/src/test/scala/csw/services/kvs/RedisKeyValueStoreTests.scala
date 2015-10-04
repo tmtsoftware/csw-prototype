@@ -2,7 +2,8 @@ package csw.services.kvs
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.ActorSystem
-import csw.util.cfg_old.Events.TelemetryEvent
+import csw.util.config.Events.TelemetryEvent
+import csw.util.config.StandardKeys.exposureTime
 import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.Await
@@ -12,14 +13,14 @@ import scala.concurrent.duration._
 @DoNotDiscover
 class RedisKeyValueStoreTests
     extends TestKit(ActorSystem("Test"))
-    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
+    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll with Implicits {
 
   implicit val execContext = system.dispatcher
-  val kvs: KeyValueStore = RedisKeyValueStore()
+  val kvs = RedisKeyValueStore[TelemetryEvent]
 
   test("Test Set and Get") {
-    val event1 = TelemetryEvent(source = "test", "test", "eventId" -> 1)
-    val event2 = TelemetryEvent(source = "test", "test", "eventId" -> 2)
+    val event1 = TelemetryEvent(source = "test", prefix = "test") //, "eventId" -> 1
+    val event2 = TelemetryEvent(source = "test", prefix = "test") //, "eventId" -> 2
 
     val f = for {
       res1 ← kvs.set("test1", event1)
@@ -32,9 +33,9 @@ class RedisKeyValueStoreTests
       res6 ← kvs.delete("test1", "test2")
     } yield {
       assert(res1)
-      assert(val1 == Some(event1))
+      assert(val1.contains(event1))
       assert(res2)
-      assert(val2 == Some(event2))
+      assert(val2.contains(event2))
       assert(res3 == 2)
       assert(res4.isEmpty)
       assert(res5.isEmpty)
@@ -44,27 +45,27 @@ class RedisKeyValueStoreTests
   }
 
   test("Test lset, lget and getHistory") {
-    val event = TelemetryEvent(source = "testSource", "testPrefix")
+    val event = TelemetryEvent(source = "testSource", "testPrefix").set(exposureTime)(2)
     val key = "test"
-    val testKey = "testKey"
+//    val testKey = "testKey"
     val n = 3
 
     val f = for {
-      _ ← kvs.lset(key, event.withValues(testKey -> "test1"), n)
-      _ ← kvs.lset(key, event.withValues(testKey -> "test2"), n)
-      _ ← kvs.lset(key, event.withValues(testKey -> "test3"), n)
-      _ ← kvs.lset(key, event.withValues(testKey -> "test4"), n)
-      _ ← kvs.lset(key, event.withValues(testKey -> "test5"), n)
+      _ ← kvs.lset(key, event.set(exposureTime)(3), n)
+      _ ← kvs.lset(key, event.set(exposureTime)(4), n)
+      _ ← kvs.lset(key, event.set(exposureTime)(5), n)
+      _ ← kvs.lset(key, event.set(exposureTime)(6), n)
+      _ ← kvs.lset(key, event.set(exposureTime)(7), n)
       v ← kvs.lget(key)
       h ← kvs.getHistory(key, n + 1)
       _ ← kvs.delete(key)
     } yield {
       assert(v.isDefined)
-      assert(v.get.asInstanceOf[TelemetryEvent](testKey).elems.head == "test5")
+      assert(v.get.get(exposureTime).get == 7.0)
       assert(h.size == n + 1)
       for (i ← 0 to n) {
         logger.info(s"History: $i: ${h(i)}")
-        assert(h(i).asInstanceOf[TelemetryEvent](testKey).elems.head == s"test${n + 2 - i}")
+//        assert(h(i).asInstanceOf[TelemetryEvent](testKey).elems.head == s"test${n + 2 - i}")
       }
     }
     Await.result(f, 5.seconds)

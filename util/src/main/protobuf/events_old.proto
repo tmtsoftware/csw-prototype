@@ -1,4 +1,4 @@
-package csw.util.config;
+package csw.util.cfg_old;
 
 option java_outer_classname = "Protobuf";
 
@@ -11,7 +11,7 @@ message ObserveEvent {
 }
 
 // Protobufs don't support generic types, so add any types needed here
-message Any {
+message A {
     optional string stringVal = 1;
     optional int32 intVal = 2;
     optional int64 longVal = 3;
@@ -20,12 +20,12 @@ message Any {
 }
 
 message ValueData {
-    repeated Any elems = 1;
+    repeated A elems = 1;
     optional string units = 2 [default = "none"];
 }
 
 message CV {
-    required string Key = 1;
+    required string trialName = 1;
     required ValueData data = 2;
 }
 

@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.Props
-import csw.services.cmd.akka.{AssemblyCommandServiceActor, OneAtATimeCommandQueueController}
+import csw.services.ccs.akka.{AssemblyCommandServiceActor, OneAtATimeCommandQueueController}
 
 object TestAssembly {
   def props(name: String): Props = Props(classOf[TestAssembly], name)

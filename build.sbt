@@ -99,7 +99,7 @@ lazy val cmd_old = project.enablePlugins(SbtTwirl)
   ) dependsOn(sharedJvm, loc_old, util % "compile->compile;test->test")
 
 // Command Service (new)
-lazy val cmd = project
+lazy val ccs = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
@@ -134,7 +134,7 @@ lazy val pkg_old = project
 lazy val pkg = project
   .settings(defaultSettings: _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(cmd % "compile->compile;test->test", util % "compile->compile;test->test", loc)
+  .dependsOn(ccs % "compile->compile;test->test", util % "compile->compile;test->test", loc)
   .settings(libraryDependencies ++=
     provided(akkaActor) ++
       compile(scalaLogging, logback) ++

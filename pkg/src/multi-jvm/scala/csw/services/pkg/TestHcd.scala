@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.Props
-import csw.services.cmd.akka._
+import csw.services.ccs.akka._
 import csw.services.ls.LocationServiceActor
 import LocationServiceActor._
 

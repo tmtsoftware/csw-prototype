@@ -31,8 +31,10 @@ object Dependencies {
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.1"
   val janino = "org.codehaus.janino" % "janino" % "2.7.6"
   val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1"
+
   val upickle = "com.lihaoyi" %% "upickle" % "0.3.4"
   val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1"
+//  val boopickle = "me.chrons" %% "boopickle" % "1.1.0"
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r"
 

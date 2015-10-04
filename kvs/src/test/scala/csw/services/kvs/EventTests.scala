@@ -1,32 +1,37 @@
 package csw.services.kvs
 
-import csw.util.cfg_old.ConfigValues.ValueData
-import csw.util.cfg_old.Events.TelemetryEvent
+import akka.util.ByteString
+import csw.util.config.ConfigKeys.PERCENT_20
+import csw.util.config.Configurations.SetupConfig
+import csw.util.config.Events.TelemetryEvent
+import csw.util.config.StandardKeys.{cloudCover, position, exposureTime}
+import csw.util.config.TestConfig.posName
 import org.scalatest.FunSuite
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import redis.ByteStringFormatter
 
 object EventTests {
 
-  import ValueData._
-
-  val testEvent = TelemetryEvent(
+  val telemetryEvent = TelemetryEvent(
     source = "test",
-    "tmt.mobie.red.dat.exposureInfo",
-    "exposureTime" -> 220.seconds,
-    "startTime" -> "2022-07-14 22:00:01",
-    "endTime" -> "2022-07-14 22:03:41")
+    prefix = "tmt.mobie.red.dat.exposureInfo")
+    .set(exposureTime)(220) // XXX make it a duration!
+  //    "startTime" -> "2022-07-14 22:00:01",
+  //    "endTime" -> "2022-07-14 22:03:41")
+
+  val setupConfig = SetupConfig("wfos.red.filter")
+    .set(position)("IR2")
+    .set(cloudCover)(PERCENT_20)
 }
 
 /**
- * Test the Config object
+ * Test s
  */
-class EventTests extends FunSuite with LazyLogging {
-
+class EventTests extends FunSuite with LazyLogging with Implicits {
   test("Test serializing an Event to a ByteBuffer") {
-    val event = EventTests.testEvent
-    val formatter = implicitly[ByteStringFormatter[Event]]
-    assert(formatter.deserialize(formatter.serialize(event)) == event)
+    import EventTests._
+    assert(telemetryEventByteStringFormatter.deserialize(telemetryEventByteStringFormatter.serialize(telemetryEvent)) == telemetryEvent)
+    assert(setupConfigByteStringFormatter.deserialize(setupConfigByteStringFormatter.serialize(setupConfig)) == setupConfig)
   }
 }
 

@@ -5,9 +5,9 @@ import akka.actor.{ ActorLogging, Actor }
 import redis.RedisClient
 
 /**
- * Adds the ability to publish events.
+ * Adds the ability to publish objects of type T.
  */
-trait EventPublisher {
+trait Publisher[T] {
   this: Actor with ActorLogging ⇒
 
   private val actorSystem = context.system
@@ -18,13 +18,14 @@ trait EventPublisher {
    * Publishes the given event on the given channel, and also saves it in a list
    * of at most n items.
    * @param channel the channel or key for this event
-   * @param event the event to publish
+   * @param value the event to publish
    * @param history number of previous events to keep in a list for reference (set to 0 for no history)
+   * @param formatter converts objects of type T to ByteStrings
    */
-  def publish(channel: String, event: Event, history: Int = KeyValueStore.defaultHistory): Unit = {
+  def publish(channel: String, value: T, history: Int = KeyValueStore.defaultHistory)
+             (implicit formatter: ByteStringFormatter[T]): Unit = {
     // Serialize the event
-    val formatter = implicitly[ByteStringFormatter[Event]]
-    val bs = formatter.serialize(event) // only do this once
+    val bs = formatter.serialize(value) // only do this once
 
     if (history >= 0) {
       // Use a transaction to send all commands at once

@@ -29,7 +29,7 @@ object Configurations {
   /**
    * Convenience class for getting the subsystem and prefix from a config key string
    */
-  case class ConfigKey(subsystem: Subsystem, prefix: String) extends Serializable {
+  case class ConfigKey(subsystem: Subsystem, prefix: String) {
     override def toString = "[" + subsystem + ", " + prefix + "]"
   }
 
@@ -37,7 +37,7 @@ object Configurations {
    * Base trait for configurations: Defines the subsystem, prefix and a method to get the value for a key.
    * The config key is based on a string like subsystem.x.y.z, where the prefix is then subsystem.x.y.
    */
-  sealed trait ConfigType extends Serializable {
+  sealed trait ConfigType extends KvsType {
     /**
      * Returns an object providing the subsystem and prefix for the config
      */
@@ -52,21 +52,6 @@ object Configurations {
      * The prefix for the config
      */
     def prefix: String = configKey.prefix
-
-    /**
-     * Holds the typed key/value pairs
-     */
-    def data: ConfigData
-
-    /**
-     * The number of key/value pairs
-     */
-    def size = data.size
-
-    /**
-     * Returns the value for the key, if found
-     */
-    def get(key: Key): Option[key.Value] = data.get(key)
 
     def doToString(kind: String) =
       kind + "[" + subsystem + ", " + prefix + "] " + data.toString
@@ -97,6 +82,26 @@ object Configurations {
     override def toString = doToString("SC")
   }
 
+  //  object SetupConfig {
+  //    import scala.pickling.Defaults._
+  //    import scala.pickling.binary._
+  //
+  //    /**
+  //     * Defines the automatic conversion to a ByteString and back again.
+  //     */
+  //    implicit val byteStringFormatter = new ByteStringFormatter[SetupConfig] {
+  //      def serialize(t: SetupConfig): ByteString = {
+  //        ByteString(t.pickle.value)
+  //      }
+  //
+  //      def deserialize(bs: ByteString): SetupConfig = {
+  //        val ar = Array.ofDim[Byte](bs.length)
+  //        bs.asByteBuffer.get(ar)
+  //        ar.unpickle[SetupConfig]
+  //      }
+  //    }
+  //  }
+
   /**
    * Defines an observe configuration, which is a config key plus a set of key/value pairs
    * @param configKey the key for the configuration, containing subsystem and prefix
@@ -110,6 +115,26 @@ object Configurations {
 
     override def toString = doToString("OC")
   }
+
+  //  object ObserveConfig {
+  //    import scala.pickling.Defaults._
+  //    import scala.pickling.binary._
+  //
+  //    /**
+  //     * Defines the automatic conversion to a ByteString and back again.
+  //     */
+  //    implicit val byteStringFormatter = new ByteStringFormatter[ObserveConfig] {
+  //      def serialize(t: ObserveConfig): ByteString = {
+  //        ByteString(t.pickle.value)
+  //      }
+  //
+  //      def deserialize(bs: ByteString): ObserveConfig = {
+  //        val ar = Array.ofDim[Byte](bs.length)
+  //        bs.asByteBuffer.get(ar)
+  //        ar.unpickle[ObserveConfig]
+  //      }
+  //    }
+  //  }
 
   /**
    * Defines a wait configuration

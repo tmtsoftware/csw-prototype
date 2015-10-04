@@ -2,7 +2,6 @@ package csw.services.kvs
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
-import csw.services.kvs.KeyValueStore._
 
 object KeyValueStore {
 
@@ -23,17 +22,18 @@ object KeyValueStore {
 /**
  * The interface of a key value store.
  */
-trait KeyValueStore {
+trait KeyValueStore[T] {
+  import KeyValueStore._
 
   /**
    * Sets the value for the given key
    * @param key the key
-   * @param event the value to store
+   * @param value the value to store
    * @param expire optional amount of time until value expires
    * @param setCond optional condition for setting the value
    * @return the future result (true if successful)
    */
-  def set(key: String, event: Event,
+  def set(key: String, value: T,
           expire: Option[FiniteDuration] = None,
           setCond: SetCondition = SetAlways): Future[Boolean]
 
@@ -42,30 +42,30 @@ trait KeyValueStore {
    * @param key the key
    * @return the future result, None if the key was not found
    */
-  def get(key: String): Future[Option[Event]]
+  def get(key: String): Future[Option[T]]
 
   /**
    * Sets the value for the given key as the head of a list, which is used to remember the previous values.
    * @param key the key to use to store the value
-   * @param event the value to store
+   * @param value the value to store
    * @param history number of previous events to keep in a list for reference (must be a positive number)
    * @return the future result (true if successful)
    */
-  def lset(key: String, event: Event, history: Int = defaultHistory): Future[Boolean]
+  def lset(key: String, value: T, history: Int = defaultHistory): Future[Boolean]
 
   /**
    * Gets the most recent value of the given key that was previously set with lset
    * @param key the key
    * @return the future result, None if the key was not found
    */
-  def lget(key: String): Future[Option[Event]]
+  def lget(key: String): Future[Option[T]]
 
   /**
    * Returns a list containing up to the last n values for the given key
    * @param key the key to use
    * @param n max number of history values to return
    */
-  def getHistory(key: String, n: Int = defaultHistory + 1): Future[Seq[Event]]
+  def getHistory(key: String, n: Int = defaultHistory + 1): Future[Seq[T]]
 
   /**
    * Deletes the given key(s) from the store
