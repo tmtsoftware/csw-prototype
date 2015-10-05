@@ -1,5 +1,7 @@
 package csw.services.kvs
 
+import csw.util.config.KvsType
+
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
 
@@ -71,5 +73,28 @@ trait KeyValueStore[T] {
    * Deletes the given key(s) from the store
    * @return the future number of keys that were deleted
    */
+
   def delete(key: String*): Future[Long]
+
+  /**
+   * Sets a value for the given key, where the value itself is a map with keys and values.
+   * In this case, in adition to saving the serialized byte string of the value for use
+   * by Scala applications, the keys and values in the map are stored in a map that
+   * is readable by any client using any language. The keys and values in the map are
+   * stored as strings.
+   *
+   * @param key the key
+   * @param value the value to store
+   * @return the future result (true if successful)
+   */
+  def hmset[K <: KvsType with T](key: String, value: K): Future[Boolean]
+
+  /**
+   * This method is mainly useful for testing hmset. It gets the value of the given field
+   * in the map that is the value for the given key. The value is returned here as a String.
+   * @param key the key
+   * @param field the key for a value in the map
+   * @return the future string value for the field, if found
+   */
+  def hmget(key: String, field: String): Future[Option[String]]
 }

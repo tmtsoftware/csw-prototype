@@ -1,6 +1,7 @@
 package csw.services.kvs
 
 import akka.actor.ActorSystem
+import csw.util.config.KvsType
 import redis.{ ByteStringFormatter, RedisClient }
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
@@ -14,8 +15,8 @@ import csw.services.kvs.KeyValueStore._
  */
 case class RedisKeyValueStore[T: ByteStringFormatter](implicit system: ActorSystem) extends KeyValueStore[T] {
 
-  private val settings = KvsSettings(system)
-  private val redis = RedisClient(settings.redisHostname, settings.redisPort)
+  protected val settings = KvsSettings(system)
+  protected val redis = RedisClient(settings.redisHostname, settings.redisPort)
   implicit val execContext = system.dispatcher
 
   override def set(key: String, value: T, expire: Option[FiniteDuration],
@@ -58,5 +59,17 @@ case class RedisKeyValueStore[T: ByteStringFormatter](implicit system: ActorSyst
   override def delete(keys: String*): Future[Long] = {
     redis.del(keys: _*)
   }
+
+  override def hmset[K <: KvsType with T](key: String, value: K): Future[Boolean] = {
+    val map = value.data.data.map {
+      case (k, v) => k.name -> v.toString
+    }
+    redis.hmset(key, map)
+  }
+
+  override def hmget(key: String, field: String): Future[Option[String]] = {
+    redis.hmget[String](key, field).map(_.head)
+  }
 }
+
 
