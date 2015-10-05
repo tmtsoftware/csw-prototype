@@ -7,7 +7,7 @@ import redis.RedisClient
 /**
  * Adds the ability to publish objects of type T.
  */
-abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging with Implicits {
+abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging {
 
   private val actorSystem = context.system
   private val settings = KvsSettings(actorSystem)

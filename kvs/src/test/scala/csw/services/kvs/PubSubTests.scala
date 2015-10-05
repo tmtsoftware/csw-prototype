@@ -43,7 +43,7 @@ with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 object PubSubTests extends Implicits {
 
   // A test class that publishes events
-  case class TestPublisher(caller: ActorRef, numSecs: Int) extends Publisher[TelemetryEvent] {
+  case class TestPublisher(caller: ActorRef, numSecs: Int) extends Publisher[TelemetryEvent] with Implicits {
     val root = "tmt.mobie.red.dat.exposureInfo"
     val expTime = 1
     var nextId = 0
@@ -75,7 +75,7 @@ object PubSubTests extends Implicits {
   }
 
   // A test class that subscribes to events
-  case class TestSubscriber(name: String) extends Subscriber[TelemetryEvent] {
+  case class TestSubscriber(name: String) extends Subscriber[TelemetryEvent] with Implicits {
     implicit val execContext: ExecutionContext = context.dispatcher
     implicit val actorSytem = context.system
     var count = 0

@@ -12,7 +12,7 @@ import redis.protocol.{MultiBulk, RedisReply}
  * Adds the ability to subscribe to objects of type T.
  * The subscribed actor wil receive messages for the given channel.
  */
-abstract class Subscriber[T: ByteStringFormatter] extends Actor with ActorLogging with Implicits {
+abstract class Subscriber[T: ByteStringFormatter] extends Actor with ActorLogging {
 
   private val settings = KvsSettings(context.system)
 
