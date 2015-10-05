@@ -35,14 +35,10 @@ case class RedisKeyValueStore[T: ByteStringFormatter](implicit system: ActorSyst
 
   override def lset(key: String, value: T, history: Int): Future[Boolean] = {
     if (history >= 0) {
-      // Serialize the value
-      val formatter = implicitly[ByteStringFormatter[T]]
-      val bs = formatter.serialize(value)
-
       // Use a transaction to send all commands at once
       val redisTransaction = redis.transaction()
       redisTransaction.watch(key)
-      redisTransaction.lpush(key, bs)
+      redisTransaction.lpush(key, value)
       redisTransaction.ltrim(key, 0, history + 1)
       val f = redisTransaction.exec()
       f.map(_.responses.isDefined) // XXX How to check if transaction was successful?

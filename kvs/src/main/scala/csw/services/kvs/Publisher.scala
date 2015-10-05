@@ -12,7 +12,6 @@ abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging
   private val actorSystem = context.system
   private val settings = KvsSettings(actorSystem)
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
-  private val formatter = implicitly[ByteStringFormatter[T]]
 
   /**
    * Publishes the given event on the given channel, and also saves it in a list
@@ -23,6 +22,7 @@ abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging
    */
   def publish(channel: String, value: T, history: Int = KeyValueStore.defaultHistory): Unit = {
     // Serialize the event
+    val formatter = implicitly[ByteStringFormatter[T]]
     val bs = formatter.serialize(value) // only do this once
 
     if (history >= 0) {

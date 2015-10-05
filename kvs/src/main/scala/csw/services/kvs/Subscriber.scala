@@ -64,8 +64,6 @@ private object SubscribeActor {
 private class SubscribeActor[T: ByteStringFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int)
   extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) ⇒ ()) with DecodeReplies {
 
-  private val formatter = implicitly[ByteStringFormatter[T]]
-
   /**
    * Keep states of channels and actor in case of connection reset
    */
@@ -96,6 +94,8 @@ private class SubscribeActor[T: ByteStringFormatter](subscriber: ActorRef, redis
   }
 
   def onDecodedReply(reply: RedisReply) {
+    val formatter = implicitly[ByteStringFormatter[T]]
+
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" ⇒
         subscriber ! formatter.deserialize(list(2).toByteString)
