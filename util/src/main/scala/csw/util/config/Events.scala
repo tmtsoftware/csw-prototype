@@ -38,26 +38,6 @@ object Events {
     override def toString = doToString("OE")
   }
 
-  //  object ObserveEvent {
-  //    import scala.pickling.Defaults._
-  //    import scala.pickling.binary._
-  //
-  //    /**
-  //     * Defines the automatic conversion to a ByteString and back again.
-  //     */
-  //    implicit val byteStringFormatter = new ByteStringFormatter[ObserveEvent] {
-  //      def serialize(t: ObserveEvent): ByteString = {
-  //        ByteString(t.pickle.value)
-  //      }
-  //
-  //      def deserialize(bs: ByteString): ObserveEvent = {
-  //        val ar = Array.ofDim[Byte](bs.length)
-  //        bs.asByteBuffer.get(ar)
-  //        ar.unpickle[ObserveEvent]
-  //      }
-  //    }
-  //  }
-
   /**
    * A basic telemetry event
    * @param eventId a unique event id
@@ -77,23 +57,6 @@ object Events {
   }
 
   object TelemetryEvent {
-    //    import scala.pickling.Defaults._
-    //    import scala.pickling.binary._
-    //
-    //    /**
-    //     * Defines the automatic conversion to a ByteString and back again.
-    //     */
-    //    implicit val byteStringFormatter = new ByteStringFormatter[TelemetryEvent] {
-    //      def serialize(t: TelemetryEvent): ByteString = {
-    //        ByteString(t.pickle.value)
-    //      }
-    //
-    //      def deserialize(bs: ByteString): TelemetryEvent = {
-    //        val ar = Array.ofDim[Byte](bs.length)
-    //        bs.asByteBuffer.get(ar)
-    //        ar.unpickle[TelemetryEvent]
-    //      }
-    //    }
 
     val DEFAULT_PREFIX = ""
 

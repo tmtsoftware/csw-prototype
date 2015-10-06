@@ -5,8 +5,6 @@ package csw.util.config
  */
 sealed trait StateVariable {
 
-  import StateVariable._
-
   /**
    * The prefix for component
    */
@@ -32,11 +30,6 @@ sealed trait StateVariable {
    */
   def get(key: Key): Option[key.Value] = data.get(key)
 
-  /**
-   * An implementation supplied function that returns true if two state variables match (or are close enough)
-   */
-  def matcher: Matcher
-
   override def toString = s"$extKey -> $data"
 
 }
@@ -47,7 +40,7 @@ object StateVariable {
    * Type of a function that returns true if two state variables (demand and current)
    * match (or are close enough, which is implementation dependent)
    */
-  type Matcher = (StateVariable, StateVariable) ⇒ Boolean
+  type Matcher = (DemandState, CurrentState) ⇒ Boolean
 
   /**
    * The default matcher for state variables tests for an exact match
@@ -55,16 +48,17 @@ object StateVariable {
    * @param current the current state
    * @return true if the demand and current states match (in this case, are equal)
    */
-  def defaultMatcher(demand: StateVariable, current: StateVariable) =
+  def defaultMatcher(demand: DemandState, current: CurrentState) =
     demand.prefix == current.prefix && demand.data == current.data
+
 
   /**
    * The demand (requested) state for the given prefix.
    */
-  case class DemandState(prefix: String, data: ConfigData = ConfigData(), matcher: Matcher = defaultMatcher)
-      extends StateVariable {
+  case class DemandState(prefix: String, data: ConfigData = ConfigData())
+    extends StateVariable {
 
-    override val extKey = s"demand:$prefix"
+    override def extKey = DemandState.makeExtKey(prefix)
 
     /**
      * Adds a key/value pair to the data map and returns the new state
@@ -75,39 +69,22 @@ object StateVariable {
      * Removes a key/value pair from the data map and returns the new state
      */
     def remove(key: Key): DemandState = DemandState(prefix, data.remove(key))
-
-    /**
-     * Returns true if the given current state matches this demand state
-     */
-    def matches(current: CurrentState): Boolean = matcher(this, current)
   }
 
-  //  object DemandState {
-  //    import scala.pickling.Defaults._
-  //    import scala.pickling.binary._
-  //    /**
-  //     * Defines the automatic conversion to a ByteString and back again.
-  //     */
-  //    implicit val byteStringFormatter = new ByteStringFormatter[DemandState] {
-  //      def serialize(t: DemandState): ByteString = {
-  //        ByteString(t.pickle.value)
-  //      }
-  //
-  //      def deserialize(bs: ByteString): DemandState = {
-  //        val ar = Array.ofDim[Byte](bs.length)
-  //        bs.asByteBuffer.get(ar)
-  //        ar.unpickle[DemandState]
-  //      }
-  //    }
-  //  }
+  object DemandState {
+    /**
+     * Returns the key used to store the demand state for the given prefix
+     */
+    def makeExtKey(prefix: String): String = s"demand:$prefix"
+  }
 
   /**
    * The current (actual) state for the given prefix.
    */
   case class CurrentState(prefix: String, data: ConfigData = ConfigData(), matcher: Matcher = defaultMatcher)
-      extends StateVariable {
+    extends StateVariable {
 
-    override val extKey = s"current:$prefix"
+    override def extKey = CurrentState.makeExtKey(prefix)
 
     /**
      * Adds a key/value pair to the data map and returns the new state
@@ -118,30 +95,19 @@ object StateVariable {
      * Removes a key/value pair from the data map and returns the new state
      */
     def remove(key: Key): CurrentState = CurrentState(prefix, data.remove(key))
-
-    /**
-     * Returns true if the given demand state matches this current state
-     */
-    def matches(demand: DemandState): Boolean = matcher(demand, this)
   }
 
-  //  object CurrentState {
-  //    import scala.pickling.Defaults._
-  //    import scala.pickling.binary._
-  //    /**
-  //     * Defines the automatic conversion to a ByteString and back again.
-  //     */
-  //    implicit val byteStringFormatter = new ByteStringFormatter[CurrentState] {
-  //      def serialize(t: CurrentState): ByteString = {
-  //        ByteString(t.pickle.value)
-  //      }
-  //
-  //      def deserialize(bs: ByteString): CurrentState = {
-  //        val ar = Array.ofDim[Byte](bs.length)
-  //        bs.asByteBuffer.get(ar)
-  //        ar.unpickle[CurrentState]
-  //      }
-  //    }
-  //  }
+  object CurrentState {
+    /**
+     * Returns the key used to store the current state for the given prefix
+     */
+    def makeExtKey(prefix: String): String = s"current:$prefix"
+
+    /**
+     * Returns the key used to store the current state for the given demand state
+     */
+    def makeExtKey(demand: DemandState): String = s"current:${demand.prefix}"
+  }
+
 }
 

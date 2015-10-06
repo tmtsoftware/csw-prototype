@@ -3,7 +3,7 @@ package csw.services.pkg
 import java.util.UUID
 
 import akka.actor._
-import csw.services.ccs.HcdController.{ ConfigResponse, ConfigGet }
+import csw.services.ccs.PeriodicHcdController.{ ConfigResponse, ConfigGet }
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
 import csw.services.loc.{ ServiceRef, LocationService, ServiceId }

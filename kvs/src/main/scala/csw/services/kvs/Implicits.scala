@@ -76,3 +76,8 @@ trait Implicits {
   }
 
 }
+
+/**
+ * Use import csw.services.kvs.Implicits._ to get the implicit definitions in scope.
+ */
+object Implicits extends Implicits

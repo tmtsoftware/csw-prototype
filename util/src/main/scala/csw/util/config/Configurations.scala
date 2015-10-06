@@ -82,26 +82,6 @@ object Configurations {
     override def toString = doToString("SC")
   }
 
-  //  object SetupConfig {
-  //    import scala.pickling.Defaults._
-  //    import scala.pickling.binary._
-  //
-  //    /**
-  //     * Defines the automatic conversion to a ByteString and back again.
-  //     */
-  //    implicit val byteStringFormatter = new ByteStringFormatter[SetupConfig] {
-  //      def serialize(t: SetupConfig): ByteString = {
-  //        ByteString(t.pickle.value)
-  //      }
-  //
-  //      def deserialize(bs: ByteString): SetupConfig = {
-  //        val ar = Array.ofDim[Byte](bs.length)
-  //        bs.asByteBuffer.get(ar)
-  //        ar.unpickle[SetupConfig]
-  //      }
-  //    }
-  //  }
-
   /**
    * Defines an observe configuration, which is a config key plus a set of key/value pairs
    * @param configKey the key for the configuration, containing subsystem and prefix
@@ -115,26 +95,6 @@ object Configurations {
 
     override def toString = doToString("OC")
   }
-
-  //  object ObserveConfig {
-  //    import scala.pickling.Defaults._
-  //    import scala.pickling.binary._
-  //
-  //    /**
-  //     * Defines the automatic conversion to a ByteString and back again.
-  //     */
-  //    implicit val byteStringFormatter = new ByteStringFormatter[ObserveConfig] {
-  //      def serialize(t: ObserveConfig): ByteString = {
-  //        ByteString(t.pickle.value)
-  //      }
-  //
-  //      def deserialize(bs: ByteString): ObserveConfig = {
-  //        val ar = Array.ofDim[Byte](bs.length)
-  //        bs.asByteBuffer.get(ar)
-  //        ar.unpickle[ObserveConfig]
-  //      }
-  //    }
-  //  }
 
   /**
    * Defines a wait configuration

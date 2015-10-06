@@ -28,10 +28,10 @@ object HcdController {
 }
 
 /**
- * Base trait of command service controller actors.
- * This is the main actor that accepts setup or observe configurations to execute.
+ * Base trait for an HCD controller actor that checks its queue for inputs and updates its
+ * state variables at a given rate.
  */
-trait HcdController extends Actor with ActorLogging {
+trait PeriodicHcdController extends Actor with ActorLogging {
 
   import HcdController._
   import context.dispatcher
@@ -39,38 +39,37 @@ trait HcdController extends Actor with ActorLogging {
   /**
    * The queue of incoming configs
    */
-  protected var queue = Queue.empty[SetupConfig]
-
-//  /**
-//   * Removes and returns the next SetupConfig from the queue, or None if the queue is empty
-//   */
-//  protected def nextConfig: Option[SetupConfig] = {
-//    if (queue.nonEmpty) {
-//      val (config, q) = queue.dequeue
-//      queue = q
-//      Some(config)
-//    } else None
-//  }
-//
-//  /**
-//   * Returns the next SetupConfig in the queue without removing it, or None if the queue is empty
-//   */
-//  protected def peekConfig: Option[SetupConfig] = {
-//    queue.headOption
-//  }
+  private var queue = Queue.empty[SetupConfig]
 
   /**
-   * Periodic method to be implemented by the HCD.
-   * This method can use the nextConfig method to pop the next config from the queue
-   * and the key/value store API (XXX TODO) to set the demand and current values.
+   * Removes and returns the next SetupConfig from the queue, or None if the queue is empty
    */
-  protected def process(): Unit
+  protected def nextConfig: Option[SetupConfig] = {
+    if (queue.nonEmpty) {
+      val (config, q) = queue.dequeue
+      queue = q
+      Some(config)
+    } else None
+  }
+
+  /**
+   * Returns the next SetupConfig in the queue without removing it, or None if the queue is empty
+   */
+  protected def peekConfig: Option[SetupConfig] = {
+    queue.headOption
+  }
 
   /**
    * The controller update rate: The controller inputs and outputs are processed at this rate
    */
   def rate: FiniteDuration
 
+  /**
+   * Periodic method to be implemented by the HCD.
+   * This method can use the nextConfig method to pop the next config from the queue
+   * and the key/value store API (kvs) to set the demand and current values.
+   */
+  protected def process(): Unit
 
 
   // Sends the Update message at the specified rate

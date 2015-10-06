@@ -76,12 +76,7 @@ object PubSubTests extends Implicits {
 
   // A test class that subscribes to events
   case class TestSubscriber(name: String) extends Subscriber[TelemetryEvent] with Implicits {
-    implicit val execContext: ExecutionContext = context.dispatcher
-    implicit val actorSytem = context.system
     var count = 0
-    val kvs = RedisKeyValueStore[TelemetryEvent]
-    val root = "tmt.mobie.red.dat.exposureInfo"
-    val idKey = s"$root.eventId"
 
     subscribe("tmt.mobie.red.dat.*")
 

@@ -14,7 +14,7 @@ abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging
   private val redis = RedisClient(settings.redisHostname, settings.redisPort)
 
   /**
-   * Publishes the given event on the given channel, and also saves it in a list
+   * Publishes the given item on the given channel, and also saves it in a list
    * of at most n items.
    * @param channel the channel or key for this event
    * @param value the event to publish

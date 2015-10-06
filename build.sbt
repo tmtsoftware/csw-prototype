@@ -105,7 +105,7 @@ lazy val ccs = project
     provided(akkaActor) ++
       compile(scalaLogging, logback, akkaSse, upickle) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(sharedJvm, loc, util % "compile->compile;test->test")
+  ) dependsOn(sharedJvm, loc, kvs, util % "compile->compile;test->test")
 
 // Config Service
 lazy val cs = project

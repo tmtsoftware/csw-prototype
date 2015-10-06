@@ -29,9 +29,7 @@ class Config2Tests extends FunSpec with Matchers {
 
     val sc2 = SetupConfig(ck2)
       .set(position)("IR2")
-      .set(cloudCover)(PERCENT_20)
     assert(sc2.get(position).contains("IR2"))
-    assert(sc2.get(cloudCover).contains(PERCENT_20))
 
     val ob1 = ObserveConfig(ck3)
       .set(exposureTime)(22)
