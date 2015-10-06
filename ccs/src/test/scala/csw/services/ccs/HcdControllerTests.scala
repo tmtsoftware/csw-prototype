@@ -13,14 +13,15 @@ import scala.concurrent.duration._
 
 object HcdControllerTests extends Implicits {
 
-  val testPrefix = "wfos.blue.filter"
+  val testPrefix1 = "wfos.blue.filter"
+  val testPrefix2 = "wfos.red.filter"
 
-  // -- Test implementation of an HCD controller --
-  object TestHcdController {
-    def props(): Props = Props(classOf[TestHcdController])
+  // -- Test implementation of a periodic HCD controller --
+  object TestPeriodicHcdController {
+    def props(): Props = Props(classOf[TestPeriodicHcdController])
   }
 
-  class TestHcdController extends PeriodicHcdController {
+  class TestPeriodicHcdController extends PeriodicHcdController {
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
@@ -35,6 +36,23 @@ object HcdControllerTests extends Implicits {
       nextConfig.foreach { config =>
         worker ! config
       }
+    }
+  }
+
+
+  // -- Test implementation of a non-periodic HCD controller --
+  object TestHcdController {
+    def props(): Props = Props(classOf[TestHcdController])
+  }
+
+  class TestHcdController extends HcdController {
+
+    // Use single worker actor to do work in the background
+    // (could also use a worker per job/message if needed)
+    val worker = context.actorOf(TestWorker.props())
+
+    override protected def process(config: SetupConfig): Unit = {
+        worker ! config
     }
   }
 
@@ -54,7 +72,7 @@ object HcdControllerTests extends Implicits {
     import context.dispatcher
 
     // Simulate getting the initial state from the device and publishing to the kvs
-    val initialState = CurrentState(testPrefix).set(position)("None")
+    val initialState = CurrentState(testPrefix1).set(position)("None")
     publish(initialState.extKey, initialState)
 
     def receive: Receive = {
@@ -84,17 +102,32 @@ with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import HcdControllerTests._
 
-  test("Test basic setup") {
-    val hcdController = system.actorOf(TestHcdController.props())
+  test("Test periodic HCD controller") {
+    val hcdController = system.actorOf(TestPeriodicHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix).set(position)("IR2")
+    val config = SetupConfig(testPrefix1).set(position)("IR2")
     hcdController ! config
     val demand = DemandState(config.prefix, config.data)
     system.actorOf(StateMatcherActor.props(demand, self))
     within(10.seconds) {
       val matcherReply = expectMsgType[CurrentState]
-      logger.info(s"Done. Received reply from matcher with current state: $matcherReply")
+      logger.info(s"Done (1). Received reply from matcher with current state: $matcherReply")
     }
   }
+
+  test("Test non-periodic HCD controller") {
+    val hcdController = system.actorOf(TestHcdController.props())
+
+    // Send a setup config to the HCD
+    val config = SetupConfig(testPrefix2).set(position)("IR3")
+    hcdController ! config
+    val demand = DemandState(config.prefix, config.data)
+    system.actorOf(StateMatcherActor.props(demand, self))
+    within(10.seconds) {
+      val matcherReply = expectMsgType[CurrentState]
+      logger.info(s"Done (2). Received reply from matcher with current state: $matcherReply")
+    }
+  }
+
 }

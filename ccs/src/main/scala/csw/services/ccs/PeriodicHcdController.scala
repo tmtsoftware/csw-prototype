@@ -85,3 +85,24 @@ trait PeriodicHcdController extends Actor with ActorLogging {
     case x ⇒ log.error(s"Received unexpected message $x")
   }
 }
+
+
+/**
+ * Base trait for an HCD controller actor that reacts immediately to SetupConfig messages.
+ */
+trait HcdController extends Actor with ActorLogging {
+
+  /**
+   * Processes the config and updates the state variable
+   */
+  protected def process(config: SetupConfig): Unit
+
+
+  def receive: Receive = {
+
+    case config: SetupConfig ⇒
+      process(config)
+
+    case x ⇒ log.error(s"Received unexpected message $x")
+  }
+}
