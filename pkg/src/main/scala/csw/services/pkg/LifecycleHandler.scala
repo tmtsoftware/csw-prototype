@@ -17,6 +17,9 @@ trait LifecycleHandler {
 
   import context.dispatcher
 
+  /**
+   * The name of the component (for error messages)
+   */
   val name: String
 
   def receiveLifecycleCommands: Receive = {

@@ -1,20 +1,21 @@
 package csw.services.pkg
 
 import akka.actor.Props
-import csw.services.ccs.akka._
-import csw.services.ls.LocationServiceActor
-import LocationServiceActor._
+import csw.services.ccs.PeriodicController
+import csw.services.loc.{ServiceType, ServiceId}
 
-object TestHcd {
-  def props(name: String, configPath: String): Props = Props(classOf[TestHcd], name, configPath)
-}
+import scala.concurrent.duration._
 
-case class TestHcd(name: String, configPath: String) extends Hcd
-  with CommandServiceActor with OneAtATimeCommandQueueController with LifecycleHandler {
-
-  override val configActor = context.actorOf(TestConfigActor.props(commandStatusActor, 3), name)
+case class TestHcd(name: String) extends Hcd
+  with PeriodicController with LifecycleHandler {
 
   override def receive: Receive = receiveCommands orElse receiveLifecycleCommands
 
-  val serviceId = ServiceId(name, ServiceType.HCD)
+  override def rate: FiniteDuration = 1.second
+
+  override def process(): Unit = {
+    nextConfig match {
+      case Some(config) =>
+    }
+  }
 }

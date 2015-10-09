@@ -9,7 +9,7 @@ import scala.concurrent.duration.{ Duration, FiniteDuration }
 /**
  * Command service controller
  */
-object HcdController {
+object Controller {
 
   /**
    * The type of the queue of incoming configs
@@ -19,21 +19,21 @@ object HcdController {
   /**
    * Base trait of all received messages
    */
-  sealed trait HcdControllerMessage
+  sealed trait ControllerMessage
 
   /**
    * Tells the controller to check its inputs and update its outputs
    */
-  case object Process extends HcdControllerMessage
+  case object Process extends ControllerMessage
 }
 
 /**
- * Base trait for an HCD controller actor that checks its queue for inputs and updates its
+ * Base trait for a controller actor that checks its queue for inputs and updates its
  * state variables at a given rate.
  */
-trait PeriodicHcdController extends Actor with ActorLogging {
+trait PeriodicController extends Actor with ActorLogging {
 
-  import HcdController._
+  import Controller._
   import context.dispatcher
 
   /**
@@ -65,7 +65,7 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   def rate: FiniteDuration
 
   /**
-   * Periodic method to be implemented by the HCD.
+   * Periodic method to be implemented by the HCD or assembly.
    * This method can use the nextConfig method to pop the next config from the queue
    * and the key/value store API (kvs) to set the demand and current values.
    */
@@ -75,7 +75,11 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   // Sends the Update message at the specified rate
   context.system.scheduler.schedule(Duration.Zero, rate, self, Process)
 
-  def receive: Receive = {
+  /**
+   * This should be used by the implementer actor's receive method.
+   * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
+   */
+  def receiveCommands: Receive = {
     case Process ⇒
       process()
 
@@ -88,21 +92,22 @@ trait PeriodicHcdController extends Actor with ActorLogging {
 
 
 /**
- * Base trait for an HCD controller actor that reacts immediately to SetupConfig messages.
+ * Base trait for a controller actor that reacts immediately to SetupConfig messages.
  */
-trait HcdController extends Actor with ActorLogging {
+trait Controller extends Actor with ActorLogging {
 
   /**
    * Processes the config and updates the state variable
    */
   protected def process(config: SetupConfig): Unit
 
-
-  def receive: Receive = {
+  /**
+   * This should be used by the implementer actor's receive method.
+   * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
+   */
+  def receiveCommands: Receive = {
 
     case config: SetupConfig ⇒
       process(config)
-
-    case x ⇒ log.error(s"Received unexpected message $x")
   }
 }

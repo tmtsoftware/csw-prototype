@@ -21,7 +21,7 @@ object HcdControllerTests extends Implicits {
     def props(): Props = Props(classOf[TestPeriodicHcdController])
   }
 
-  class TestPeriodicHcdController extends PeriodicHcdController {
+  class TestPeriodicHcdController extends PeriodicController {
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
@@ -37,6 +37,8 @@ object HcdControllerTests extends Implicits {
         worker ! config
       }
     }
+
+    override def receive: Receive = receiveCommands
   }
 
 
@@ -45,7 +47,7 @@ object HcdControllerTests extends Implicits {
     def props(): Props = Props(classOf[TestHcdController])
   }
 
-  class TestHcdController extends HcdController {
+  class TestHcdController extends Controller {
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
@@ -54,6 +56,8 @@ object HcdControllerTests extends Implicits {
     override protected def process(config: SetupConfig): Unit = {
         worker ! config
     }
+
+    override def receive: Receive = receiveCommands
   }
 
 

@@ -3,19 +3,16 @@ package csw.services.pkg
 import java.util.UUID
 
 import akka.actor._
-import csw.services.ccs.PeriodicHcdController.{ ConfigResponse, ConfigGet }
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
 import csw.services.loc.{ ServiceRef, LocationService, ServiceId }
 import csw.shared.cmd.CommandStatus
 import csw.util.config.Configurations.ControlConfigArg
 
-import scala.util.Failure
-
 /**
  * The Lifecycle Manager is an actor that deals with component lifecycle messages
  * so components don't have to. There is one Lifecycle Manager per component.
- * It registers with location service and is responsible for starting and stopping the component
+ * It registers with the location service and is responsible for starting and stopping the component
  * as well as managing its state.
  * All component messages go through the Lifecycle Manager, so it can reject any
  * messages that are not allowed in a given lifecycle.
@@ -188,9 +185,6 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case configArg: ControlConfigArg ⇒
       cmdStatusError(configArg.info.runId, "loaded", "running")
 
-    case ConfigGet ⇒
-      configGetError("loaded", "running")
-
     case msg ⇒
       unexpectedMessage(msg, "loaded", connected)
   }
@@ -247,9 +241,6 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
 
     case configArg: ControlConfigArg ⇒
       cmdStatusError(configArg.info.runId, "initialized", "running")
-
-    case ConfigGet ⇒
-      configGetError("initialized", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "initialized", connected)
@@ -308,9 +299,6 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
 
     case configArg: ControlConfigArg if !connected ⇒
       cmdStatusError(configArg.info.runId, "running", "connected")
-
-    case ConfigGet if !connected ⇒
-      configGetError("running", "connected")
 
     case msg if connected ⇒
       log.debug(s" forwarding $msg from ${sender()} to $component")
@@ -407,13 +395,6 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     log.warning(msg)
     // XXX FIXME
     sender() ! CommandStatus.Error(runId, msg)
-  }
-
-  // Sends a config response error message to the given actor indicating that the component is not in the required state or condition
-  private def configGetError(currentCond: String, requiredCond: String): Unit = {
-    val msg = s"$name is $currentCond, but not $requiredCond"
-    log.warning(msg)
-    sender() ! ConfigResponse(Failure(new Exception(msg)))
   }
 
   // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state
