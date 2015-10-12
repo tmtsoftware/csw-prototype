@@ -5,7 +5,7 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import csw.services.pkg.LifecycleManager.LifecycleStateChanged
-import csw.shared.cmd_old.CommandStatus
+import csw.shared.cmd.CommandStatus
 import csw.util.config.TestConfig
 
 import scala.concurrent.duration._
@@ -40,7 +40,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       runOn(container1) {
         enterBarrier("deployed")
         val container = Container.create(ConfigFactory.load("container1.conf"))
-        within(10.seconds) {
+        within(30.seconds) {
           container ! Container.GetComponents
           val map = expectMsgType[Container.Components].map
           assert(map.size == 1)
@@ -60,8 +60,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       runOn(container2) {
         val container = Container.create(ConfigFactory.load("container2.conf"))
         container ! Container.GetComponents
-        val componentInfo = expectMsgType[Container.Components]
-        for ((name, hcd) <- componentInfo.map) {
+        val map = expectMsgType[Container.Components].map
+        assert(map.size == 2)
+        for ((name, hcd) <- map) {
           hcd ! LifecycleManager.SubscribeToLifecycleStates(onlyRunningAndConnected = true)
           val stateChange = expectMsgType[LifecycleStateChanged]
           assert(stateChange.connected && stateChange.state.isRunning)

@@ -48,15 +48,14 @@ object StateVariable {
    * @param current the current state
    * @return true if the demand and current states match (in this case, are equal)
    */
-  def defaultMatcher(demand: DemandState, current: CurrentState) =
+  def defaultMatcher(demand: DemandState, current: CurrentState): Boolean =
     demand.prefix == current.prefix && demand.data == current.data
-
 
   /**
    * The demand (requested) state for the given prefix.
    */
   case class DemandState(prefix: String, data: ConfigData = ConfigData())
-    extends StateVariable {
+      extends StateVariable {
 
     override def extKey = DemandState.makeExtKey(prefix)
 
@@ -82,7 +81,7 @@ object StateVariable {
    * The current (actual) state for the given prefix.
    */
   case class CurrentState(prefix: String, data: ConfigData = ConfigData(), matcher: Matcher = defaultMatcher)
-    extends StateVariable {
+      extends StateVariable {
 
     override def extKey = CurrentState.makeExtKey(prefix)
 

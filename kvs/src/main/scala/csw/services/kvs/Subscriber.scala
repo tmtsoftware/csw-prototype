@@ -1,18 +1,18 @@
 package csw.services.kvs
 
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
-import redis.ByteStringFormatter
-import redis.actors.{DecodeReplies, RedisWorkerIO}
+import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
+import csw.services.kvs.KeyValueStore.KvsFormatter
+import redis.actors.{ DecodeReplies, RedisWorkerIO }
 import java.net.InetSocketAddress
 import redis.api.pubsub._
 import akka.util.ByteString
-import redis.protocol.{MultiBulk, RedisReply}
+import redis.protocol.{ MultiBulk, RedisReply }
 
 /**
  * Adds the ability to subscribe to objects of type T.
  * The subscribed actor wil receive messages for the given channel.
  */
-abstract class Subscriber[T: ByteStringFormatter] extends Actor with ActorLogging {
+abstract class Subscriber[T: KvsFormatter] extends Actor with ActorLogging {
 
   private val settings = KvsSettings(context.system)
 
@@ -47,7 +47,7 @@ abstract class Subscriber[T: ByteStringFormatter] extends Actor with ActorLoggin
 // -- Implementation --
 
 private object SubscribeActor {
-  def props[T: ByteStringFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int): Props =
+  def props[T: KvsFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int): Props =
     Props(new SubscribeActor[T](subscriber, redisHost, redisPort))
 
   val dispatcherName = "rediscala.rediscala-client-worker-dispatcher"
@@ -61,8 +61,8 @@ private object SubscribeActor {
 // The actor that receives the messages from Redis.
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
-private class SubscribeActor[T: ByteStringFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int)
-  extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) ⇒ ()) with DecodeReplies {
+private class SubscribeActor[T: KvsFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int)
+    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) ⇒ ()) with DecodeReplies {
 
   /**
    * Keep states of channels and actor in case of connection reset
@@ -74,9 +74,9 @@ private class SubscribeActor[T: ByteStringFormatter](subscriber: ActorRef, redis
     case message: SubscribeMessage ⇒
       write(message.toByteString)
       message match {
-        case s: SUBSCRIBE ⇒ channelsSubscribed ++= s.channel
-        case u: UNSUBSCRIBE ⇒ channelsSubscribed --= u.channel
-        case ps: PSUBSCRIBE ⇒ patternsSubscribed ++= ps.pattern
+        case s: SUBSCRIBE     ⇒ channelsSubscribed ++= s.channel
+        case u: UNSUBSCRIBE   ⇒ channelsSubscribed --= u.channel
+        case ps: PSUBSCRIBE   ⇒ patternsSubscribed ++= ps.pattern
         case pu: PUNSUBSCRIBE ⇒ patternsSubscribed --= pu.pattern
       }
   }
@@ -94,7 +94,7 @@ private class SubscribeActor[T: ByteStringFormatter](subscriber: ActorRef, redis
   }
 
   def onDecodedReply(reply: RedisReply) {
-    val formatter = implicitly[ByteStringFormatter[T]]
+    val formatter = implicitly[KvsFormatter[T]]
 
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" ⇒

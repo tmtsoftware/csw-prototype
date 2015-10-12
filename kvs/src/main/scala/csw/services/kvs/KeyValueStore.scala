@@ -1,6 +1,7 @@
 package csw.services.kvs
 
 import csw.util.config.KvsType
+import redis.ByteStringFormatter
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
@@ -19,6 +20,14 @@ object KeyValueStore {
   case object SetAlways extends SetCondition
 
   final val defaultHistory = 6
+
+  /**
+   * All generic objects stored in the KVS need to implement this trait,
+   * which is just a wrapper for the Redis specific ByteStringFormatter trait,
+   * to hide the Redis dependency from the API.
+   * @tparam T the type of the items being stored in the KVS
+   */
+  trait KvsFormatter[T] extends ByteStringFormatter[T]
 }
 
 /**

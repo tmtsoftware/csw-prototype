@@ -6,7 +6,7 @@ import akka.actor._
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
 import csw.services.loc.{ ServiceRef, LocationService, ServiceId }
-import csw.shared.cmd.CommandStatus
+import csw.shared.cmd.{ RunId, CommandStatus }
 import csw.util.config.Configurations.ControlConfigArg
 
 /**
@@ -390,7 +390,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
   // Sends a command status error message indicating that the component is not in the required state or condition.
   // Note that we send it to the component, which forwards it to its commandStatusActor, so it is handled like
   // other status messages.
-  private def cmdStatusError(runId: UUID, currentCond: String, requiredCond: String): Unit = {
+  private def cmdStatusError(runId: RunId, currentCond: String, requiredCond: String): Unit = {
     val msg = s"$name is $currentCond, but not $requiredCond"
     log.warning(msg)
     // XXX FIXME

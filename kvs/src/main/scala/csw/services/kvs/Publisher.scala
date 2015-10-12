@@ -1,13 +1,13 @@
 package csw.services.kvs
 
-import redis.ByteStringFormatter
 import akka.actor.{ ActorLogging, Actor }
+import csw.services.kvs.KeyValueStore.KvsFormatter
 import redis.RedisClient
 
 /**
  * Adds the ability to publish objects of type T.
  */
-abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging {
+abstract class Publisher[T: KvsFormatter] extends Actor with ActorLogging {
 
   private val actorSystem = context.system
   private val settings = KvsSettings(actorSystem)
@@ -22,7 +22,7 @@ abstract class Publisher[T: ByteStringFormatter] extends Actor with ActorLogging
    */
   def publish(channel: String, value: T, history: Int = KeyValueStore.defaultHistory): Unit = {
     // Serialize the event
-    val formatter = implicitly[ByteStringFormatter[T]]
+    val formatter = implicitly[KvsFormatter[T]]
     val bs = formatter.serialize(value) // only do this once
 
     if (history >= 0) {

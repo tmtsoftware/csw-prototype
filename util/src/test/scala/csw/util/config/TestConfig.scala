@@ -28,19 +28,5 @@ object TestConfig {
     .set(equinox)("J2000")
 
   val testConfigArg = SetupConfigArg("obs0001", Seq(testConfig1, testConfig2))
-
-//  // Reference config for use with checkValid: Tests only presence of keys and value types
-//  val refConfig1 = SetupConfig(k1)
-//    .set(posName)("")
-//    .set(c1)("")
-//    .set(c2)("")
-//    .set(equinox)("")
-//
-//  val refConfig2 = SetupConfig(k1)
-//    .set(c1)("")
-//    .set(c2)("")
-//    .set(equinox)("")
-//
-//  val refConfigArg = SetupConfigArg(obsId, Seq(refConfig1, refConfig2))
 }
 

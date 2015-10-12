@@ -179,11 +179,11 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   }
 
   override def serviceAdded(event: ServiceEvent): Unit = {
-    log.info(s"service added: ${event.getName} ${event.getInfo}")
+    //    log.info(s"service added: ${event.getName} ${event.getInfo}")
   }
 
   override def serviceResolved(event: ServiceEvent): Unit = {
-    log.info(s"service resolved: ${event.getName} ${event.getInfo}")
+    log.info(s"service resolved: ${event.getName}")
     resolveService(event.getInfo)
   }
 
@@ -205,7 +205,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   } catch {
     case e: Exception ⇒
       // dome issue with ipv6 addresses?
-      log.error(s"Couldn't make URI from $uriStr and userInfo $userInfo", e)
+      //      log.error(s"Couldn't make URI from $uriStr and userInfo $userInfo", e)
       None
   }
 
@@ -214,9 +214,14 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
       val serviceRef = ServiceRef(info.getName)
       if (serviceRefs.contains(serviceRef)) {
         // Gets the URI, adding the akka system as user if needed
-        def getUri(uriStr: String) = serviceRef.accessType match {
-          case AkkaType ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
-          case _        ⇒ Some(Uri(uriStr))
+        def getUri(uriStr: String): Option[Uri] = {
+          // XXX ignore ipv6 URLs for now
+          if (uriStr.count(_ == ':') > 2) None else {
+            serviceRef.accessType match {
+              case AkkaType ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
+              case _        ⇒ Some(Uri(uriStr))
+            }
+          }
         }
         val prefix = info.getPropertyString(PREFIX_KEY)
         val uriList = info.getURLs(serviceRef.accessType.name).toList.flatMap(getUri)
@@ -258,7 +263,9 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
       resolved += rs.serviceRef -> rs.copy(actorRefOpt = actorRefOpt)
       context.watch(actorRefOpt.get)
       checkResolved()
-    } else log.warning(s"Could not identify actor for ${rs.uri}")
+    } else {
+      log.warning(s"Could not identify actor for ${rs.uri}")
+    }
   }
 
   // Receive messages

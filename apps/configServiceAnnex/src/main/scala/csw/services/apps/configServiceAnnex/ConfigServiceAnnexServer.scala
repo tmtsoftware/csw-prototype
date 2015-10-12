@@ -153,7 +153,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   /**
    * Shuts down the server
    */
-  def shutdown(): Unit = system.shutdown()
+  def shutdown(): Unit = system.terminate()
 
   // Returns the name of the file to use in the configured directory.
   // Like Git, distribute the files in directories based on the first 2 chars of the SHA-1 hash

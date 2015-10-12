@@ -1,14 +1,11 @@
 package csw.services.kvs
 
-import akka.util.ByteString
 import csw.util.config.ConfigKeys.PERCENT_20
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.Events.TelemetryEvent
 import csw.util.config.StandardKeys.{cloudCover, position, exposureTime}
-import csw.util.config.TestConfig.posName
 import org.scalatest.FunSuite
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import redis.ByteStringFormatter
 
 object EventTests {
 
@@ -30,8 +27,8 @@ object EventTests {
 class EventTests extends FunSuite with LazyLogging with Implicits {
   test("Test serializing an Event to a ByteBuffer") {
     import EventTests._
-    assert(telemetryEventByteStringFormatter.deserialize(telemetryEventByteStringFormatter.serialize(telemetryEvent)) == telemetryEvent)
-    assert(setupConfigByteStringFormatter.deserialize(setupConfigByteStringFormatter.serialize(setupConfig)) == setupConfig)
+    assert(telemetryEventKvsFormatter.deserialize(telemetryEventKvsFormatter.serialize(telemetryEvent)) == telemetryEvent)
+    assert(setupConfigKvsFormatter.deserialize(setupConfigKvsFormatter.serialize(setupConfig)) == setupConfig)
   }
 }
 

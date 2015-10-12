@@ -7,7 +7,7 @@ import sbt.Project.projectToRef
 object Dependencies {
 
   val scalaVersion = "2.11.7"
-  val akkaVersion = "2.3.12"
+  val akkaVersion = "2.4.0"
   val akkaStreamsVersion = "1.0"
 //  val sprayVersion = "1.3.3"
   val hornetqVersion = "2.4.7.Final"
@@ -23,10 +23,10 @@ object Dependencies {
   val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamsVersion
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaStreamsVersion
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamsVersion
-  val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.0.0"
+  val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.1.0"
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.3"
-  val typesafeConfig = "com.typesafe" % "config" % "1.2.0"
+//  val typesafeConfig = "com.typesafe" % "config" % "1.3.0"
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.1"
   val janino = "org.codehaus.janino" % "janino" % "2.7.6"

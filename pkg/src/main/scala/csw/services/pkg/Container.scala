@@ -61,7 +61,7 @@ object Container {
   sealed trait ContainerMessage
 
   /**
-   * Requests the list of components being managed by the container (A Components(map) object is sent to the sender)
+   * Requests information about the components being managed by the container (A Components(map) object is sent to the sender)
    */
   case object GetComponents extends ContainerMessage
 

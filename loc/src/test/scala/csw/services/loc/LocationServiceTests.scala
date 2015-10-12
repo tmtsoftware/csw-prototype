@@ -22,8 +22,8 @@ with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
     // register
     LocationService.registerAkkaService(serviceRefs.head.serviceId, testActor, "test.prefix")
-    within(15.seconds) {
-      val ready = expectMsgType[ServicesReady](10.seconds)
+    within(25.seconds) {
+      val ready = expectMsgType[ServicesReady](20.seconds)
       logger.info(s"Services ready: $ready")
       assert(serviceRefs == ready.services.keys)
     }

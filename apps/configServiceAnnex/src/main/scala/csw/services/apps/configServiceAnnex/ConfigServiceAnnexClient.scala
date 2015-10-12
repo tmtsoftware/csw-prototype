@@ -179,5 +179,5 @@ object ConfigServiceAnnexClient {
     Source.single(request).via(connection).runWith(Sink.head)
   }
 
-  def shutdown(): Unit = system.shutdown()
+  def shutdown(): Unit = system.terminate()
 }

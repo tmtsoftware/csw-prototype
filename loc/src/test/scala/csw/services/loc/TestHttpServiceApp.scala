@@ -6,7 +6,7 @@ import csw.services.loc.AccessType.HttpType
 object TestHttpServiceApp extends App {
   implicit lazy val system = ActorSystem("TestHttpServiceApp")
   implicit val dispatcher = system.dispatcher
-  sys.addShutdownHook(system.shutdown())
+  sys.addShutdownHook(system.terminate())
   system.actorOf(Props(classOf[TestHttpService]))
 }
 

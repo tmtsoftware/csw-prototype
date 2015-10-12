@@ -2,7 +2,7 @@ package csw.services.kvs
 
 import akka.actor.ActorSystem
 import csw.util.config.KvsType
-import redis.{ ByteStringFormatter, RedisClient }
+import redis.RedisClient
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
 import csw.services.kvs.KeyValueStore._
@@ -13,7 +13,7 @@ import csw.services.kvs.KeyValueStore._
  *
  * @param system the Akka actor system, needed to access the settings and RedisClient
  */
-case class RedisKeyValueStore[T: ByteStringFormatter](implicit system: ActorSystem) extends KeyValueStore[T] {
+case class RedisKeyValueStore[T: KvsFormatter](implicit system: ActorSystem) extends KeyValueStore[T] {
 
   protected val settings = KvsSettings(system)
   protected val redis = RedisClient(settings.redisHostname, settings.redisPort)
@@ -62,7 +62,7 @@ case class RedisKeyValueStore[T: ByteStringFormatter](implicit system: ActorSyst
 
   override def hmset[K <: KvsType with T](key: String, value: K): Future[Boolean] = {
     val map = value.data.data.map {
-      case (k, v) => k.name -> v.toString
+      case (k, v) ⇒ k.name -> v.toString
     }
     redis.hmset(key, map)
   }
@@ -71,5 +71,4 @@ case class RedisKeyValueStore[T: ByteStringFormatter](implicit system: ActorSyst
     redis.hmget[String](key, field).map(_.head)
   }
 }
-
 

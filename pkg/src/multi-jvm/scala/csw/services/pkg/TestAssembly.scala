@@ -1,14 +1,8 @@
 package csw.services.pkg
 
-import akka.actor.Props
-import csw.services.ccs.Controller
-import csw.util.config.Configurations.SetupConfig
+import csw.services.ccs.AssemblyDistributorController
 
-// A test assembly
-case class TestAssembly(name: String) extends Assembly with Controller with LifecycleHandler {
-
+// A test assembly that just forwards configs to HCDs based on prefix
+case class TestAssembly(name: String) extends Assembly with AssemblyDistributorController with LifecycleHandler {
   def receive: Receive = receiveCommands orElse receiveLifecycleCommands
-
-  override def process(config: SetupConfig): Unit = {
-  }
 }

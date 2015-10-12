@@ -6,7 +6,7 @@ import csw.services.loc.LocationService.{Disconnected, ServicesReady}
 object TestServiceClientApp extends App {
   implicit lazy val system = ActorSystem("TestServiceClientApp")
   implicit val dispatcher = system.dispatcher
-  sys.addShutdownHook(system.shutdown())
+  sys.addShutdownHook(system.terminate())
   system.actorOf(Props(classOf[TestServiceClient]))
 }
 

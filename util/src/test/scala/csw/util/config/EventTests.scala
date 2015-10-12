@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.util.Date
 
 import csw.util.config.ConfigKeys._
-import csw.util.config.Events.{TelemetryEvent, ObserveEvent, EventType}
+import csw.util.config.Events.{ TelemetryEvent, ObserveEvent, EventType }
 import csw.util.config.StandardKeys._
 import org.scalatest.FunSuite
 
@@ -31,7 +31,6 @@ class EventTests extends FunSuite {
       ConfigData()
         .set(cloudCover)(PERCENT_90)
         .set(position)("12:34:56, 03:22:11"))
-
 
     val o = obsEvent.pickle.value
     val t = telEvent.pickle.value

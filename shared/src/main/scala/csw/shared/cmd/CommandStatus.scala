@@ -1,6 +1,5 @@
 package csw.shared.cmd
 
-import java.util.UUID
 
 /**
  * The status of a running command
@@ -10,7 +9,7 @@ sealed trait CommandStatus {
   /**
    * The unique id for the command
    */
-  def runId: UUID
+  def runId: RunId
 
   /**
    * Optional error message (or path, for PartiallyCompleted)
@@ -28,12 +27,12 @@ sealed trait CommandStatus {
  */
 object CommandStatus {
 
-  case class Completed(runId: UUID) extends CommandStatus
+  case class Completed(runId: RunId) extends CommandStatus
 
-  case class Error(runId: UUID, override val message: String) extends CommandStatus
+  case class Error(runId: RunId, override val message: String) extends CommandStatus
 
-  case class Aborted(runId: UUID) extends CommandStatus
+  case class Aborted(runId: RunId) extends CommandStatus
 
-  case class Canceled(runId: UUID) extends CommandStatus
+  case class Canceled(runId: RunId) extends CommandStatus
 
 }

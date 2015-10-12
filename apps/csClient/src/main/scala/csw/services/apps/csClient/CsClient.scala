@@ -38,10 +38,10 @@ object CsClient extends App {
 
     f.onComplete {
       case Success(client) ⇒
-        system.shutdown()
+        system.terminate()
       case Failure(ex) ⇒
         System.err.println(s"Error: ${ex.getMessage}")
-        system.shutdown()
+        system.terminate()
         System.exit(1)
     }
   }

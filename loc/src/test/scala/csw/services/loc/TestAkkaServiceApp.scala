@@ -7,7 +7,7 @@ import csw.services.loc.AccessType.AkkaType
 object TestAkkaServiceApp extends App {
   implicit lazy val system = ActorSystem("TestAkkaServiceApp")
   implicit val dispatcher = system.dispatcher
-  sys.addShutdownHook(system.shutdown())
+  sys.addShutdownHook(system.terminate())
   system.actorOf(Props(classOf[TestAkkaService]))
 }
 

@@ -1,7 +1,10 @@
 package csw.services.ccs
 
 import akka.actor.{ ActorLogging, Actor }
+import csw.services.loc.LocationService.{ ResolvedService, Disconnected, ServicesReady }
+import csw.services.loc.ServiceRef
 import csw.util.config.Configurations._
+import csw.util.config.StateVariable.DemandState
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.{ Duration, FiniteDuration }
@@ -9,12 +12,12 @@ import scala.concurrent.duration.{ Duration, FiniteDuration }
 /**
  * Command service controller
  */
-object Controller {
+object HcdController {
 
   /**
    * The type of the queue of incoming configs
    */
-  type QueueType = Queue[SetupConfig]
+  type HcdQueueType = Queue[DemandState]
 
   /**
    * Base trait of all received messages
@@ -25,26 +28,27 @@ object Controller {
    * Tells the controller to check its inputs and update its outputs
    */
   case object Process extends ControllerMessage
+
 }
 
 /**
- * Base trait for a controller actor that checks its queue for inputs and updates its
+ * Base trait for an HCD controller actor that checks its queue for inputs and updates its
  * state variables at a given rate.
  */
-trait PeriodicController extends Actor with ActorLogging {
+trait PeriodicHcdController extends Actor with ActorLogging {
 
-  import Controller._
+  import HcdController._
   import context.dispatcher
 
   /**
    * The queue of incoming configs
    */
-  private var queue = Queue.empty[SetupConfig]
+  private var queue = Queue.empty[DemandState]
 
   /**
    * Removes and returns the next SetupConfig from the queue, or None if the queue is empty
    */
-  protected def nextConfig: Option[SetupConfig] = {
+  protected def nextConfig: Option[DemandState] = {
     if (queue.nonEmpty) {
       val (config, q) = queue.dequeue
       queue = q
@@ -55,7 +59,7 @@ trait PeriodicController extends Actor with ActorLogging {
   /**
    * Returns the next SetupConfig in the queue without removing it, or None if the queue is empty
    */
-  protected def peekConfig: Option[SetupConfig] = {
+  protected def peekConfig: Option[DemandState] = {
     queue.headOption
   }
 
@@ -71,7 +75,6 @@ trait PeriodicController extends Actor with ActorLogging {
    */
   protected def process(): Unit
 
-
   // Sends the Update message at the specified rate
   context.system.scheduler.schedule(Duration.Zero, rate, self, Process)
 
@@ -83,23 +86,19 @@ trait PeriodicController extends Actor with ActorLogging {
     case Process ⇒
       process()
 
-    case config: SetupConfig ⇒
-      queue = queue.enqueue(config)
-
-    case x ⇒ log.error(s"Received unexpected message $x")
+    case config: DemandState ⇒ queue = queue.enqueue(config)
   }
 }
 
-
 /**
- * Base trait for a controller actor that reacts immediately to SetupConfig messages.
+ * Base trait for an HCD controller actor that reacts immediately to DemandState messages.
  */
-trait Controller extends Actor with ActorLogging {
+trait HcdController extends Actor with ActorLogging {
 
   /**
    * Processes the config and updates the state variable
    */
-  protected def process(config: SetupConfig): Unit
+  protected def process(config: DemandState): Unit
 
   /**
    * This should be used by the implementer actor's receive method.
@@ -107,7 +106,43 @@ trait Controller extends Actor with ActorLogging {
    */
   def receiveCommands: Receive = {
 
-    case config: SetupConfig ⇒
-      process(config)
+    case config: DemandState ⇒ process(config)
   }
 }
+
+/**
+ * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
+ */
+trait AssemblyController extends Actor with ActorLogging {
+
+  /**
+   * Processes the config and updates the state variable
+   */
+  protected def process(config: SetupConfigArg): Unit
+
+  /**
+   * Called once the required services (HCDs, other assemblies) for this assembly
+   * have been located by the location service
+   * @param services map with an entry fo each service
+   */
+  protected def servicesReady(services: Map[ServiceRef, ResolvedService]): Unit
+
+  /**
+   * Called when the connection to any of the required services is lost
+   */
+  protected def disconnected(): Unit
+
+  /**
+   * This should be used by the implementer actor's receive method.
+   * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
+   */
+  def receiveCommands: Receive = {
+
+    case config: SetupConfigArg ⇒ process(config)
+
+    case ServicesReady(map)     ⇒ servicesReady(map)
+
+    case Disconnected           ⇒ disconnected()
+  }
+}
+

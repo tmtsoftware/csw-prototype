@@ -54,7 +54,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
    */
   def shutdown(): Unit = {
     // XXX Is there another way? unbind()?
-    system.shutdown()
+    system.terminate()
   }
 
   /**

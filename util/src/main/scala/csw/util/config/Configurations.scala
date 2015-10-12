@@ -1,6 +1,6 @@
 package csw.util.config
 
-import java.util.UUID
+import csw.shared.cmd.RunId
 
 import scala.language.implicitConversions
 
@@ -143,7 +143,7 @@ object Configurations {
     /**
      * Unique ID for this configuration
      */
-    val runId: UUID = UUID.randomUUID()
+    val runId: RunId = RunId()
   }
 
   object ConfigInfo {
