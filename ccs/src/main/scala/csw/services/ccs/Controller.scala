@@ -22,12 +22,12 @@ object HcdController {
   /**
    * Base trait of all received messages
    */
-  sealed trait ControllerMessage
+  sealed trait HcdControllerMessage
 
   /**
    * Tells the controller to check its inputs and update its outputs
    */
-  case object Process extends ControllerMessage
+  case object Process extends HcdControllerMessage
 
 }
 
@@ -111,26 +111,60 @@ trait HcdController extends Actor with ActorLogging {
 }
 
 /**
+ * Assembly controller
+ */
+object AssemblyController {
+
+  /**
+   * Base trait of all received messages
+   */
+  sealed trait AssemblyControllerMessage
+
+//  /**
+//   * Requests the current states for the given prefixes
+//   */
+//  case class GetRequest(prefixes: List[String]) extends AssemblyControllerMessage
+//
+//  /**
+//   * Reply from GetRequest message that contains the current values for the given prefixes.
+//   * Only values that were found in the KVS are included in the return list.
+//   */
+//  case class GetResult(result: List[CurrentState])
+}
+
+/**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
 trait AssemblyController extends Actor with ActorLogging {
 
   /**
-   * Processes the config and updates the state variable
+   * Processes the configArg and replies to the sender with the command status
    */
-  protected def process(config: SetupConfigArg): Unit
+  protected def process(configArg: SetupConfigArg): Unit
+
+//  /**
+//   * Replies to the sender with a GetResult message containing the values for the
+//   * given prefixes
+//   */
+//  protected def handleGetRequest(prefixes: List[String]): Unit = {
+//    val replyTo = sender()
+//    val kvs = RedisKeyValueStore[CurrentState]()
+//    for(list <- Future.sequence(prefixes.map(CurrentState.makeExtKey).map(kvs.get))) yield {
+//      replyTo ! GetResult(list.flatten)
+//    }
+//  }
 
   /**
    * Called once the required services (HCDs, other assemblies) for this assembly
    * have been located by the location service
    * @param services map with an entry fo each service
    */
-  protected def servicesReady(services: Map[ServiceRef, ResolvedService]): Unit
+  protected def servicesReady(services: Map[ServiceRef, ResolvedService]): Unit = {}
 
   /**
    * Called when the connection to any of the required services is lost
    */
-  protected def disconnected(): Unit
+  protected def disconnected(): Unit = {}
 
   /**
    * This should be used by the implementer actor's receive method.
@@ -139,6 +173,8 @@ trait AssemblyController extends Actor with ActorLogging {
   def receiveCommands: Receive = {
 
     case config: SetupConfigArg ⇒ process(config)
+
+//    case GetRequest(prefixes) => handleGetRequest(prefixes)
 
     case ServicesReady(map)     ⇒ servicesReady(map)
 

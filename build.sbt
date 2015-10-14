@@ -103,7 +103,7 @@ lazy val cs = project
   .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
   .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(log, loc_old, util, configServiceAnnex)
+  .dependsOn(log, loc, util, configServiceAnnex)
   .settings(libraryDependencies ++=
     compile(akkaActor, jgit, scalaLogging, logback, akkaHttp, scopt) ++
       test(scalaTest, akkaTestKit, junit, akkaMultiNodeTest)
@@ -145,7 +145,7 @@ lazy val containerCmd = Project(id = "containerCmd", base = file("apps/container
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, scopt) ++
       test(scalaLogging, logback)
-  ) dependsOn(pkg_old, cmd_old, loc_old, util, cs)
+  ) dependsOn(pkg, ccs, loc, util, cs)
 
 // Build the sequencer command line application
 lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
@@ -153,7 +153,7 @@ lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline) ++
       test(scalaLogging, logback)
-  ) dependsOn(pkg_old, cmd_old, loc_old, util)
+  ) dependsOn(pkg, ccs, loc, util)
 
 // Build the config service annex application
 lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("apps/configServiceAnnex"))
@@ -161,7 +161,7 @@ lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("ap
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaLogging, logback, scalaTest, specs2, akkaTestKit)
-  ) dependsOn(loc_old, util)
+  ) dependsOn(loc, util)
 
 // Build the config service annex application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))

@@ -2,14 +2,11 @@
 
 import akka.actor._
 import akka.util.Timeout
-import csw.services.ls.LocationServiceActor
+import csw.services.loc.LocationService
 import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import java.io.StringReader
-import csw.services.cmd_old.akka._
-import LocationServiceActor.ServiceId
-import csw.services.ls.LocationServiceActor
-import LocationServiceActor._
+import csw.services.ccs._
 import scala.concurrent.{Await, Future}
 import akka.pattern.ask
 import scala.concurrent.duration._

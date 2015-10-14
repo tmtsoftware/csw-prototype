@@ -175,9 +175,9 @@ class Container(config: Config) extends Actor with ActorLogging {
       None
     } else {
       val serviceId = ServiceId(name, serviceType)
-      val configPath = if (conf.hasPath("path")) conf.getString("path") else ""
+      val prefix = if (conf.hasPath("prefix")) conf.getString("prefix") else ""
       val services = if (conf.hasPath("services")) parseServices(conf.getConfig("services")) else Nil
-      createComponent(props, serviceId, configPath, services, Map.empty)
+      createComponent(props, serviceId, prefix, services, Map.empty)
     }
   }
 

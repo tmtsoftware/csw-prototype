@@ -344,7 +344,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     log.debug(s" requestServices $services")
     val actorName = s"$name-loc-client"
     if (context.child(actorName).isEmpty)
-      context.actorOf(LocationService.props(serviceRefs), actorName)
+      context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
   }
 
   // Called when a lifecycle state message is received from the component.
