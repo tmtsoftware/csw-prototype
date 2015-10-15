@@ -33,6 +33,9 @@ case class ConfigServiceSettings(config: Config) extends Extension {
   val httpInterface = if (startHttpServer) config.getString(s"$prefix.http.interface") else ""
   val httpPort = if (config.hasPath(s"$prefix.http.port")) config.getInt(s"$prefix.http.port") else 0
 
+  // XXX
+  val hostname = if (config.hasPath("akka.remote.netty.tcp.hostname")) config.getString("akka.remote.netty.tcp.hostname") else ""
+
   // Do any required substitution on the setting values
   def subst(s: String): String = {
     s.replaceFirst("~", System.getProperty("user.home"))

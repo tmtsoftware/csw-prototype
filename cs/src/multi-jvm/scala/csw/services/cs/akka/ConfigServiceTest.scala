@@ -4,11 +4,9 @@ import akka.actor._
 import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.core.ConfigManagerTestHelper
-import csw.services.ls.LocationServiceActor
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -25,10 +23,11 @@ object TestConfig extends MultiNodeConfig {
 
   val configServiceClient = role("configServiceClient")
 
-  val locationService = role("locationService")
-
-  // We need to configure the location service to run on a known port
-  nodeConfig(locationService)(ConfigFactory.load("testLocationService.conf"))
+  // Note: The "multinode.host" system property needs to be set to empty so that the MultiNodeSpec
+  // base class below will use the actual host name.
+  // (By default it ends up with "localhost", which breaks the test, since the LocationService
+  // registers the config service with the actual host name.)
+  System.setProperty("multinode.host", "")
 }
 
 class TestMultiJvmConfigServiceAnnex extends TestSpec
@@ -36,9 +35,6 @@ class TestMultiJvmConfigServiceAnnex extends TestSpec
 class TestMultiJvmConfigService extends TestSpec
 
 class TestMultiJvmConfigServiceClient extends TestSpec
-
-class TestMultiJvmLocationService extends TestSpec
-
 
 class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with ImplicitSender {
 
@@ -54,35 +50,26 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
 
     "be able to start the config service, annex, and client to manage files" in {
       runOn(configServiceAnnex) {
-        enterBarrier("locationServiceStarted")
         ConfigServiceAnnexServer()
         enterBarrier("deployed")
         enterBarrier("done")
       }
 
       runOn(configService) {
-        enterBarrier("locationServiceStarted")
-        val manager = TestRepo.getConfigManager(ConfigServiceSettings(system))
+        val config = ConfigServiceSettings(system)
+        val host = config.hostname
+        val manager = TestRepo.getConfigManager(config)
         val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
         configServiceActor ! RegisterWithLocationService
-        Thread.sleep(1000) // XXX FIXME: need reply from location service?
         enterBarrier("deployed")
         enterBarrier("done")
       }
 
       runOn(configServiceClient) {
-        enterBarrier("locationServiceStarted")
         enterBarrier("deployed")
-        val cs = Await.result(ConfigServiceActor.locateConfigService(ConfigServiceSettings(system).name), 5.seconds)
+        val cs = Await.result(ConfigServiceActor.locateConfigService(ConfigServiceSettings(system).name), 20.seconds)
         println(s"Got a config service: $cs")
         runTests(cs, oversize = true)
-        enterBarrier("done")
-      }
-
-      runOn(locationService) {
-        system.actorOf(Props[LocationServiceActor], LocationServiceActor.locationServiceName)
-        enterBarrier("locationServiceStarted")
-        enterBarrier("deployed")
         enterBarrier("done")
       }
 

@@ -41,7 +41,7 @@ object CommandServiceHttpServerTestApp extends App {
   /**
    * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
    */
-  sys.addShutdownHook(system.shutdown())
+  sys.addShutdownHook(system.terminate())
 
   val interface = CommandServiceSettings(system).interface
   val port = CommandServiceSettings(system).port

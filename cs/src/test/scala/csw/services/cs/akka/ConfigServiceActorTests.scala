@@ -53,6 +53,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
 
     // Create the actor
     val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
+    //    configServiceActor ! RegisterWithLocationService
 
     within(20 seconds) {
       // Should throw exception if we try to update a file that does not exist

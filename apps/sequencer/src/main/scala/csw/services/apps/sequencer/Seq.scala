@@ -15,7 +15,7 @@ import scala.concurrent.duration._
  */
 object Seq {
   implicit val system = ActorSystem("Sequencer")
-  implicit val timeout: Timeout = 6.seconds
+  implicit val timeout: Timeout = 60.seconds
 
   private def resolve(name: String, serviceType: ServiceType): BlockingAssemblyClient = {
     val serviceRef = ServiceRef(ServiceId(name, serviceType), AkkaType)

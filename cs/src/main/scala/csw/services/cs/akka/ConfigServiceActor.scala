@@ -101,7 +101,7 @@ object ConfigServiceActor {
     import system.dispatcher
     val serviceId = ServiceId(name, ServiceType.Service)
     val serviceRef = ServiceRef(serviceId, AkkaType)
-    implicit val timeout: Timeout = 6.seconds
+    implicit val timeout: Timeout = 60.seconds
     LocationService.resolve(Set(serviceRef)).map { servicesReady ⇒
       servicesReady.services(serviceRef).actorRefOpt.get
     }

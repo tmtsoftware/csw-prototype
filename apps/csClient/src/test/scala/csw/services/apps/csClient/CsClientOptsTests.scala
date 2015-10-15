@@ -20,19 +20,19 @@ class CsClientOptsTests extends FunSuite {
         assert(c.subcmd == "get")
         assert(c.path == path)
         assert(c.outputFile == file)
-        assert(c.id == Some(id))
-        assert(c.config == Some(file))
+        assert(c.id.contains(id))
+        assert(c.config.contains(file))
       case None ⇒
         fail()
     }
 
     CsClientOpts.parse(Array("get", path.toString, "-o", file.toString)) match {
       case Some(c) ⇒
-        assert(c.config == None)
+        assert(c.config.isEmpty)
         assert(c.subcmd == "get")
         assert(c.path == path)
         assert(c.outputFile == file)
-        assert(c.id == None)
+        assert(c.id.isEmpty)
       case None ⇒
         fail()
     }
@@ -118,7 +118,7 @@ class CsClientOptsTests extends FunSuite {
       case Some(c) ⇒
         assert(c.subcmd == "setDefault")
         assert(c.path == path)
-        assert(c.id == Some(id))
+        assert(c.id.contains(id))
       case None ⇒
         fail()
     }

@@ -229,6 +229,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
 
   private def resolveService(info: ServiceInfo): Unit = {
     try {
+      log.info(s"XXX resolveService $info")
       val serviceRef = ServiceRef(info.getName)
       if (serviceRefs.contains(serviceRef)) {
         // Gets the URI, adding the akka system as user if needed
@@ -271,6 +272,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   // ActorIdentity reply containing the actorRef.
   private def identify(rs: ResolvedService): Unit = {
     val actorPath = ActorPath.fromString(rs.uri.toString())
+    log.info(s"Attempting to identify actor ${rs.uri}")
     context.actorSelection(actorPath) ! Identify(rs)
   }
 
@@ -282,7 +284,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
       context.watch(actorRefOpt.get)
       checkResolved()
     } else {
-      log.warning(s"Could not identify actor for ${rs.uri}")
+      log.warning(s"Could not identify actor for ${rs.serviceRef} ${rs.uri}")
     }
   }
 

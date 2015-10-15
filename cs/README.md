@@ -183,8 +183,3 @@ To run the unit tests, use `sbt test`.
 To run the multi-jvm tests, use `sbt multi-jvm:test`.
 
 
-Error log messages from akka-http (1.0-M2)
-------------------------------------------
-
-The current akka-http version (1.0-M2) produces a lot of error messages in the logs, even though the tests pass.
-This seems to be an internal issue that should be fixed in a future version.

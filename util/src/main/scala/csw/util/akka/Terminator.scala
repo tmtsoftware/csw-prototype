@@ -12,7 +12,6 @@ class Terminator(ref: ActorRef) extends Actor with ActorLogging {
   def receive = {
     case Terminated(_) ⇒
       log.info("{} has terminated, shutting down system", ref.path)
-      //      context.system.shutdown()
       context.system.terminate()
   }
 }

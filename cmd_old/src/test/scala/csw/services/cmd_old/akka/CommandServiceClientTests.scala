@@ -61,6 +61,6 @@ class CommandServiceClientTests extends TestKit(ActorSystem("test")) with TestHe
   }
 
   override def afterAll(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 }
