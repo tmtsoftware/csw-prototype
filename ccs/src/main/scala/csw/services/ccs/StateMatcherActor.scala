@@ -3,6 +3,7 @@ package csw.services.ccs
 import akka.actor.{ Actor, Props, ActorRef }
 import akka.util.Timeout
 import csw.services.kvs.Subscriber
+import csw.shared.cmd.{ RunId, CommandStatus }
 import csw.util.config.StateVariable
 import csw.util.config.StateVariable._
 import scala.concurrent.duration._
@@ -13,46 +14,31 @@ import csw.services.kvs.Implicits.currentStateKvsFormatter
 object StateMatcherActor {
 
   /**
-   * Base trait of reply messages
-   */
-  sealed trait StateMatcherReply
-
-  /**
-   * Reply when all states match
-   * @param states the current states
-   */
-  case class StatesMatched(states: Set[CurrentState]) extends StateMatcherReply
-
-  /**
-   * Reply when matching timed out
-   */
-  case object MatchingTimeout extends StateMatcherReply
-
-  /**
    * Props used to create the actor.
    *
    * @param demands the target states that will be compared to their current states
    * @param replyTo the actor to reply to
+   * @param runId the runId to use in the reply
    * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
    * @param matcher the function used to compare the demand and current states
    */
-  def props(demands: List[DemandState], replyTo: ActorRef,
+  def props(demands: List[DemandState], replyTo: ActorRef, runId: RunId = RunId(),
             timeout: Timeout = Timeout(10.seconds),
             matcher: Matcher = StateVariable.defaultMatcher): Props =
-    Props(classOf[StateMatcherActor], demands, replyTo, timeout, matcher)
+    Props(classOf[StateMatcherActor], demands, replyTo, runId, timeout, matcher)
 }
 
 /**
  * Subscribes to the current values for the given demand values and notifies the
- * replyTo actor with the current states when they all match the
- * respective demand states, or with a timeout message if the given timeout expires.
+ * replyTo actor with the command status when they all match the respective demand states,
+ * or with an error status message if the given timeout expires.
  *
  * See props for a description of the arguments.
  */
-class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, timeout: Timeout, matcher: Matcher)
+class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, runId: RunId,
+                        timeout: Timeout, matcher: Matcher)
     extends Subscriber[CurrentState] {
 
-  import csw.services.ccs.StateMatcherActor._
   import context.dispatcher
   context.become(waiting(Set[CurrentState]()))
   val keys = demands.map(CurrentState.makeExtKey)
@@ -72,7 +58,7 @@ class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, timeout: 
           val set = results + current
           if (set.size == demands.size) {
             timer.cancel()
-            replyTo ! StatesMatched(set)
+            replyTo ! CommandStatus.Completed(runId)
             context.stop(self)
           } else context.become(waiting(set))
         }
@@ -80,7 +66,7 @@ class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, timeout: 
 
     case `timeout` ⇒
       log.info(s"received timeout")
-      replyTo ! MatchingTimeout
+      replyTo ! CommandStatus.Error(runId, "Command timed out")
       context.stop(self)
 
     case x ⇒ log.error(s"Unexpected message $x")

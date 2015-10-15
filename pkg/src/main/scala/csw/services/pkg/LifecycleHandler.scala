@@ -22,7 +22,10 @@ trait LifecycleHandler {
    */
   val name: String
 
-  def receiveLifecycleCommands: Receive = {
+  /**
+   * This implements additional behavior (used in receive method of ccs controller actors)
+   */
+  protected def additionalReceive: Receive = {
     case Initialize ⇒
       for (
         result ← Future(initialize()) recover {

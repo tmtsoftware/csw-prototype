@@ -151,7 +151,7 @@ object Configurations {
   }
 
   /**
-   * A ConfigArg is what is placed in a Submit message in the Command Service queue.
+   * A ConfigArg is what is submitted to the Command Service queue.
    * It can be one or more SetupConfigs, one or more ObserveConfigs or a WaitConfig
    * Each ConfigArg includes a ConfigInfo which will contain information about the executing
    * observation.
@@ -170,6 +170,9 @@ object Configurations {
    */
   sealed trait ControlConfigArg extends ConfigArg
 
+  /**
+   * Contains a list of setup configs along with some related information about the observation
+   */
   final case class SetupConfigArg(info: ConfigInfo, configs: Seq[SetupConfig])
     extends SequenceConfigArg with ControlConfigArg
 
@@ -177,6 +180,9 @@ object Configurations {
     def apply(configs: SetupConfig*)(implicit info: ConfigInfo): SetupConfigArg = SetupConfigArg(info, configs.toSeq)
   }
 
+  /**
+   * Contains a list of observe configs along with some related information about the observation
+   */
   final case class ObserveConfigArg(info: ConfigInfo, configs: Seq[ObserveConfig])
     extends SequenceConfigArg with ControlConfigArg
 
@@ -184,6 +190,9 @@ object Configurations {
     def apply(configs: ObserveConfig*)(implicit info: ConfigInfo): ObserveConfigArg = ObserveConfigArg(info, configs.toSeq)
   }
 
+  /**
+   * Contains a single wait config along with some related information about the observation
+   */
   final case class WaitConfigArg(info: ConfigInfo, config: WaitConfig)
     extends SequenceConfigArg
 
@@ -191,7 +200,10 @@ object Configurations {
     def apply(config: WaitConfig)(implicit info: ConfigInfo): WaitConfigArg = WaitConfigArg(info, config)
   }
 
-  type ConfigArgList = Seq[SequenceConfig]
+  /**
+   * Contains a list of configs that can be sent to a sequencer
+   */
+  final case class ConfigArgList(configs: Seq[SequenceConfig]) // XXX should be Seq[SequenceConfigArg]?
 
   //  // For getting device configuration
   //  // XXX Allan: Should be part of command service actor messages

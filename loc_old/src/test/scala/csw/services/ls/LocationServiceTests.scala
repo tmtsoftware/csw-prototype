@@ -2,12 +2,13 @@ package csw.services.ls
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
-import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
+import org.scalatest.{ DoNotDiscover, FunSuiteLike, BeforeAndAfterAll }
 import LocationServiceActor._
 
 /**
  * Simple standalone test of local location service (normally it should be run as a remote actor)
  */
+@DoNotDiscover
 class LocationServiceTests extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll {
 
@@ -58,7 +59,7 @@ class LocationServiceTests extends TestKit(ActorSystem("Test"))
   }
 
   override def afterAll(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 }
 

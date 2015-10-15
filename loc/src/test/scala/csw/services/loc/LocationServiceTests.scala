@@ -1,18 +1,18 @@
 package csw.services.loc
 
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{Disconnected, ServicesReady}
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
+import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
+import org.scalatest.{ BeforeAndAfterAll, FunSuiteLike }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
+import scala.util.{ Success, Failure }
 
 class LocationServiceTests extends TestKit(ActorSystem("Test"))
-with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   import system.dispatcher
 

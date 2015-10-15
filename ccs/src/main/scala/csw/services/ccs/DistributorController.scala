@@ -1,85 +1,95 @@
 package csw.services.ccs
 
-import akka.actor.{ ActorRef, Props, Actor, ActorLogging }
+import akka.actor.{ Props, Actor, ActorLogging }
 import akka.util.Timeout
-import csw.services.ccs.StateMatcherActor.{ MatchingTimeout, StatesMatched }
+import akka.pattern.ask
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{Disconnected, ServicesReady, ResolvedService}
-import csw.services.loc.ServiceRef
+import csw.services.loc.LocationService.{ Disconnected, ServicesReady, ResolvedService }
+import csw.services.loc.{ LocationService, ServiceRef }
 import csw.shared.cmd.CommandStatus
 import csw.util.config.Configurations.SetupConfigArg
-import csw.util.config.StateVariable
-import csw.util.config.StateVariable._
+import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{ Failure, Success }
 
 /**
- * An assembly controller that forwards configs to HCDs or other assemblies based on
- * the service's prefix (as registered with the location service)
+ * A controller that forwards lists of configs (SetupConfigArg) to assemblies based on
+ * the prefix (as registered with the location service).
+ *
+ * The list of possible target assemblies must be passed in the serviceRefs argument.
+ *
+ * Once all the replies are in from the assemblies, a single command status message
+ * is sent back to the sender (Either Completed or, if any of the commands failed,
+ * an Error message).
+ *
+ * An error command status is also returned to the sender if the replies are not received
+ * in the given timeout period.
  */
 object DistributorController {
   /**
    * Used to create the DistributorController actor
-   * @param matcher Matcher to use when matching demand and current states (default checks for equality)
-   * @param timeout Timeout when matching demand and current state variables(default: 10 secs)
+   * @param serviceRefs set of services required
+   * @param timeout Timeout while waiting for all configs to complete (default: 10 secs)
    * @return
    */
-  def props(matcher: Matcher = StateVariable.defaultMatcher, timeout: Timeout = Timeout(10.seconds)): Props =
-    Props(classOf[DistributorController], matcher, timeout)
+  def props(serviceRefs: Set[ServiceRef], timeout: Timeout = Timeout(10.seconds)): Props =
+    Props(classOf[DistributorController], serviceRefs, timeout)
 
 }
 
-case class DistributorController(matcher: Matcher, timeout: Timeout) extends Actor with ActorLogging {
+protected case class DistributorController(serviceRefs: Set[ServiceRef], timeout: Timeout) extends Actor with ActorLogging {
 
-  private var services = Map[ServiceRef, ResolvedService]()
+  // Start the location service actor
+  context.actorOf(LocationService.props(serviceRefs))
 
-  private def process(configArg: SetupConfigArg): Unit = {
-    context.actorOf(DistributorWorker.props(configArg, services, sender(), timeout, matcher))
+  override def receive = waitingForServices
+
+  def waitingForServices: Receive = {
+    case config: SetupConfigArg ⇒ log.warning(s"Ignoring config since services connected: $config")
+
+    case ServicesReady(map)     ⇒ context.become(connected(map))
+
+    case Disconnected           ⇒
+
+    case x                      ⇒ log.warning(s"Received unexpected message: $x")
   }
 
-  private def servicesReady(services: Map[ServiceRef, ResolvedService]): Unit = {
-    this.services = services
+  def connected(services: Map[ServiceRef, ResolvedService]): Receive = {
+    case config: SetupConfigArg ⇒ process(services, config)
+
+    case ServicesReady(map)     ⇒ context.become(connected(map))
+
+    case Disconnected           ⇒ context.become(waitingForServices)
+
+    case x                      ⇒ log.warning(s"Received unexpected message: $x")
   }
 
-  private def disconnected(): Unit = {
-    this.services = Map[ServiceRef, ResolvedService]()
-  }
-
-  override def receive: Receive = {
-
-    case config: SetupConfigArg ⇒ process(config)
-
-    case ServicesReady(map)     ⇒ servicesReady(map)
-
-    case Disconnected           ⇒ disconnected()
+  /**
+   * Called to process the configs and reply to the sender with the command status
+   * @param services contains information about any required services
+   * @param configArg contains a list of configurations
+   */
+  private def process(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg): Unit = {
+    implicit val t = timeout
+    import context.dispatcher
+    val replyTo = sender()
+    Future.sequence(for {
+      config ← configArg.configs
+      service ← services.values.find(v ⇒ v.prefix == config.configKey.prefix && v.serviceRef.accessType == AkkaType)
+      actorRef ← service.actorRefOpt
+    } yield {
+      (actorRef ? config).mapTo[CommandStatus]
+    }).onComplete {
+      case Success(commandStatusList) ⇒
+        if (commandStatusList.exists(_.isFailed)) {
+          val msg = commandStatusList.filter(_.isFailed).map(_.message).mkString(", ")
+          replyTo ! CommandStatus.Error(configArg.info.runId, msg)
+        } else {
+          replyTo ! CommandStatus.Completed(configArg.info.runId)
+        }
+      case Failure(ex) ⇒
+        replyTo ! CommandStatus.Error(configArg.info.runId, ex.getMessage)
+    }
   }
 }
 
-/**
- * Worker that distributes the configs based on prefix and then waits for them to complete.
- */
-object DistributorWorker {
-  def props(configArg: SetupConfigArg, services: Map[ServiceRef, ResolvedService], replyTo: ActorRef,
-            timeout: Timeout, matcher: Matcher): Props =
-    Props(classOf[DistributorWorker], configArg, services, replyTo, timeout, matcher)
-}
-
-class DistributorWorker(configArg: SetupConfigArg, services: Map[ServiceRef, ResolvedService],
-                        replyTo: ActorRef, timeout: Timeout, matcher: Matcher)
-    extends Actor with ActorLogging {
-
-  val demandStates = for {
-    config ← configArg.configs
-    service ← services.values.find(v ⇒ v.prefix == config.configKey.prefix && v.serviceRef.accessType == AkkaType)
-    actorRef ← service.actorRefOpt
-  } yield {
-    val demand = DemandState(config.configKey.prefix, config.data)
-    actorRef ! demand
-    demand
-  }
-  context.actorOf(StateMatcherActor.props(demandStates.toList, self, timeout, matcher))
-
-  override def receive: Receive = {
-    case StatesMatched(states) ⇒ replyTo ! CommandStatus.Completed(configArg.info.runId)
-    case MatchingTimeout       ⇒ replyTo ! CommandStatus.Error(configArg.info.runId, "Command timed out")
-  }
-}

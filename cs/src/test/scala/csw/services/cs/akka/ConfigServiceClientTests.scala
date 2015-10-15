@@ -83,6 +83,6 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
   }
 
   override def afterAll(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 }

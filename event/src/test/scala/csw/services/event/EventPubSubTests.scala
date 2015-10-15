@@ -39,7 +39,7 @@ class EventPubSubTests extends TestKit(ActorSystem("Test"))
   }
 
   override def afterAll(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 }
 
@@ -54,7 +54,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
 
   import context.dispatcher
 
-//  context.system.scheduler.maxFrequency
+  //  context.system.scheduler.maxFrequency
   context.system.scheduler.scheduleOnce(numSecs.seconds) {
     caller ! "done"
     done = true

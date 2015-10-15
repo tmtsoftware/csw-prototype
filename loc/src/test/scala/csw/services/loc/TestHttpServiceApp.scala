@@ -24,7 +24,7 @@ class TestHttpService extends Actor with ActorLogging {
   val port = 12345 // This should the actually port the HTTP server is running on...
   LocationService.registerHttpService(TestHttpService.serviceId, port, "test.http.prefix")
   override def receive: Receive = {
-    case x =>
+    case x ⇒
       log.error(s"Received unexpected message $x")
   }
 }

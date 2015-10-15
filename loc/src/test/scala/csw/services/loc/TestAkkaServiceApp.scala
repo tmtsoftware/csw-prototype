@@ -3,7 +3,6 @@ package csw.services.loc
 import akka.actor._
 import csw.services.loc.AccessType.AkkaType
 
-
 object TestAkkaServiceApp extends App {
   implicit lazy val system = ActorSystem("TestAkkaServiceApp")
   implicit val dispatcher = system.dispatcher
@@ -22,7 +21,7 @@ object TestAkkaService {
 class TestAkkaService extends Actor with ActorLogging {
   LocationService.registerAkkaService(TestAkkaService.serviceId, self, "test.akka.prefix")(context.system)
   override def receive: Receive = {
-    case x =>
+    case x ⇒
       log.error(s"Received unexpected message $x")
   }
 }

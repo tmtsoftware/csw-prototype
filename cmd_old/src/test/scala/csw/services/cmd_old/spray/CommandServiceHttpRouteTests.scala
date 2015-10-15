@@ -12,7 +12,7 @@ import scala.util.Success
 import csw.services.cmd_old.akka.ConfigActor.ConfigResponse
 import scala.concurrent.Future
 import akka.stream.scaladsl.Source
-import org.scalatest.{ Matchers, WordSpec }
+import org.scalatest.{ DoNotDiscover, Matchers, WordSpec }
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 
@@ -20,6 +20,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
  * Tests the command service HTTP route in isolation by overriding the CommandServiceRoute implementation to run
  * without using actors.
  */
+@DoNotDiscover
 class CommandServiceHttpRouteTests extends WordSpec
     with Matchers with ScalatestRouteTest with CommandServiceHttpRoute with ConfigJsonFormats {
 

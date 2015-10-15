@@ -2,7 +2,7 @@ package csw.services.pkg
 
 import akka.actor.Props
 import csw.services.ccs.PeriodicHcdController
-import csw.services.kvs.{Implicits, Publisher}
+import csw.services.kvs.Publisher
 import csw.services.kvs.Implicits._
 import csw.util.config.StateVariable.{CurrentState, DemandState}
 
@@ -18,14 +18,12 @@ object TestHcd {
 
 case class TestHcd(name: String) extends Hcd with PeriodicHcdController with LifecycleHandler {
 
-  override def receive: Receive = receiveCommands orElse receiveLifecycleCommands
-
   override def rate: FiniteDuration = 1.second
 
   override def process(): Unit = {
-    nextConfig.foreach { demand =>
+    nextConfig.foreach { config =>
       // Simulate work being done
-      context.actorOf(TestWorker.props(demand))
+      context.actorOf(TestWorker.props(DemandState(config.prefix, config.data)))
     }
   }
 }

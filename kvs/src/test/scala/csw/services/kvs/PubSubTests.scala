@@ -1,10 +1,10 @@
 package csw.services.kvs
 
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
 import csw.util.config.Events.TelemetryEvent
 import csw.util.config.StandardKeys.exposureTime
-import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -12,7 +12,7 @@ import scala.language.postfixOps
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
 class PubSubTests extends TestKit(ActorSystem("Test"))
-with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
+    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   import PubSubTests._
 
@@ -33,10 +33,9 @@ with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   }
 
   override def afterAll(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 }
-
 
 object PubSubTests extends Implicits {
 
@@ -86,10 +85,9 @@ object PubSubTests extends Implicits {
           log.info(s"Received $count events so far: $event")
 
       case "done" ⇒ sender ! count
-      case x ⇒ log.error(s"Unexpected message $x")
+      case x      ⇒ log.error(s"Unexpected message $x")
     }
   }
-
 
 }
 

@@ -4,7 +4,6 @@ import akka.actor.{ ActorLogging, Actor }
 import csw.services.loc.LocationService.{ ResolvedService, Disconnected, ServicesReady }
 import csw.services.loc.ServiceRef
 import csw.util.config.Configurations._
-import csw.util.config.StateVariable.DemandState
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.{ Duration, FiniteDuration }
@@ -17,7 +16,7 @@ object HcdController {
   /**
    * The type of the queue of incoming configs
    */
-  type HcdQueueType = Queue[DemandState]
+  type HcdQueueType = Queue[SetupConfig]
 
   /**
    * Base trait of all received messages
@@ -43,12 +42,25 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   /**
    * The queue of incoming configs
    */
-  private var queue = Queue.empty[DemandState]
+  private var queue = Queue.empty[SetupConfig]
+
+  /**
+   * This should be used by the implementer actor's receive method.
+   * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
+   */
+  def receive: Receive = additionalReceive orElse {
+    case Process ⇒
+      process()
+
+    case config: SetupConfig ⇒ queue = queue.enqueue(config)
+
+    case x                   ⇒ log.warning(s"Received unexpected message: $x")
+  }
 
   /**
    * Removes and returns the next SetupConfig from the queue, or None if the queue is empty
    */
-  protected def nextConfig: Option[DemandState] = {
+  protected def nextConfig: Option[SetupConfig] = {
     if (queue.nonEmpty) {
       val (config, q) = queue.dequeue
       queue = q
@@ -59,7 +71,7 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   /**
    * Returns the next SetupConfig in the queue without removing it, or None if the queue is empty
    */
-  protected def peekConfig: Option[DemandState] = {
+  protected def peekConfig: Option[SetupConfig] = {
     queue.headOption
   }
 
@@ -79,35 +91,36 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   context.system.scheduler.schedule(Duration.Zero, rate, self, Process)
 
   /**
-   * This should be used by the implementer actor's receive method.
-   * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
+   * Derived classes and traits can extend this to accept additional messages
    */
-  def receiveCommands: Receive = {
-    case Process ⇒
-      process()
-
-    case config: DemandState ⇒ queue = queue.enqueue(config)
-  }
+  protected def additionalReceive: Receive = Actor.emptyBehavior
 }
 
 /**
- * Base trait for an HCD controller actor that reacts immediately to DemandState messages.
+ * Base trait for an HCD controller actor that reacts immediately to SetupConfig messages.
  */
 trait HcdController extends Actor with ActorLogging {
 
   /**
-   * Processes the config and updates the state variable
-   */
-  protected def process(config: DemandState): Unit
-
-  /**
    * This should be used by the implementer actor's receive method.
    * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
    */
-  def receiveCommands: Receive = {
+  override def receive: Receive = additionalReceive orElse {
 
-    case config: DemandState ⇒ process(config)
+    case config: SetupConfig ⇒ process(config)
+
+    case x                   ⇒ log.warning(s"Received unexpected message: $x")
   }
+
+  /**
+   * Processes the config and updates the current state variable
+   */
+  protected def process(config: SetupConfig): Unit
+
+  /**
+   * Derived classes and traits can extend this to accept additional messages
+   */
+  protected def additionalReceive: Receive = Actor.emptyBehavior
 }
 
 /**
@@ -120,16 +133,6 @@ object AssemblyController {
    */
   sealed trait AssemblyControllerMessage
 
-//  /**
-//   * Requests the current states for the given prefixes
-//   */
-//  case class GetRequest(prefixes: List[String]) extends AssemblyControllerMessage
-//
-//  /**
-//   * Reply from GetRequest message that contains the current values for the given prefixes.
-//   * Only values that were found in the KVS are included in the return list.
-//   */
-//  case class GetResult(result: List[CurrentState])
 }
 
 /**
@@ -137,48 +140,39 @@ object AssemblyController {
  */
 trait AssemblyController extends Actor with ActorLogging {
 
-  /**
-   * Processes the configArg and replies to the sender with the command status
-   */
-  protected def process(configArg: SetupConfigArg): Unit
+  override def receive = waitingForServices
 
-//  /**
-//   * Replies to the sender with a GetResult message containing the values for the
-//   * given prefixes
-//   */
-//  protected def handleGetRequest(prefixes: List[String]): Unit = {
-//    val replyTo = sender()
-//    val kvs = RedisKeyValueStore[CurrentState]()
-//    for(list <- Future.sequence(prefixes.map(CurrentState.makeExtKey).map(kvs.get))) yield {
-//      replyTo ! GetResult(list.flatten)
-//    }
-//  }
+  def waitingForServices: Receive = additionalReceive orElse {
+    case config: SetupConfigArg ⇒ log.warning(s"Ignoring config since services connected: $config")
 
-  /**
-   * Called once the required services (HCDs, other assemblies) for this assembly
-   * have been located by the location service
-   * @param services map with an entry fo each service
-   */
-  protected def servicesReady(services: Map[ServiceRef, ResolvedService]): Unit = {}
+    case ServicesReady(map)     ⇒ context.become(connected(map))
 
-  /**
-   * Called when the connection to any of the required services is lost
-   */
-  protected def disconnected(): Unit = {}
+    case Disconnected           ⇒
 
-  /**
-   * This should be used by the implementer actor's receive method.
-   * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
-   */
-  def receiveCommands: Receive = {
-
-    case config: SetupConfigArg ⇒ process(config)
-
-//    case GetRequest(prefixes) => handleGetRequest(prefixes)
-
-    case ServicesReady(map)     ⇒ servicesReady(map)
-
-    case Disconnected           ⇒ disconnected()
+    case x                      ⇒ log.warning(s"Received unexpected message: $x")
   }
+
+  def connected(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
+    case config: SetupConfigArg ⇒ process(services, config)
+
+    case ServicesReady(map)     ⇒ context.become(connected(map))
+
+    case Disconnected           ⇒ context.become(waitingForServices)
+
+    case x                      ⇒ log.warning(s"Received unexpected message: $x")
+  }
+
+  /**
+   * Called to process the config and reply to the sender with the command status
+   * @param services contains information about any required services
+   * @param configArg contains a list of configurations
+   */
+  protected def process(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg): Unit
+
+  /**
+   * Derived classes and traits can extend this to accept additional messages
+   */
+  protected def additionalReceive: Receive
+
 }
 

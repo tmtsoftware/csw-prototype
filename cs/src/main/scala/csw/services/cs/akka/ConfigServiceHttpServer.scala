@@ -9,11 +9,9 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
-import akka.stream.scaladsl.{ Sink, Source }
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.core.{ ConfigData, ConfigId }
-import csw.services.ls.LocationServiceActor.{ ServiceId, ServiceType }
-import csw.services.ls.LocationServiceRegisterActor
+import csw.services.loc.{ LocationService, ServiceType, ServiceId }
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
@@ -64,8 +62,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val serviceId = ServiceId("ConfigServiceHttpServer", ServiceType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
     logger.info(s"Registering with the location service with URI $httpUri")
-    // Start an actor to re-register when the location service restarts
-    system.actorOf(LocationServiceRegisterActor.props(serviceId, actorRef = None, configPath = None, httpUri = Some(httpUri)))
+    LocationService.registerHttpService(serviceId, addr.getPort)
   }
 
   // Error returned for invalid requests

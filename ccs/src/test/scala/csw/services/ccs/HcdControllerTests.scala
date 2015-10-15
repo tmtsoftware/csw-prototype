@@ -3,8 +3,9 @@ package csw.services.ccs
 import akka.actor._
 import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.ccs.StateMatcherActor.StatesMatched
 import csw.services.kvs.{ Publisher, Implicits }
+import csw.shared.cmd.CommandStatus
+import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StandardKeys.position
 import csw.util.config.StateVariable.{ DemandState, CurrentState }
 import org.scalatest.FunSuiteLike
@@ -34,11 +35,9 @@ object HcdControllerTests extends Implicits {
       // if there is more than one in the queue. (nextConfig is an Option, so this
       // only takes one config from the queue, if there is one there).
       nextConfig.foreach { config ⇒
-        worker ! config
+        worker ! DemandState(config.prefix, config.data)
       }
     }
-
-    override def receive: Receive = receiveCommands
   }
 
   // -- Test implementation of a non-periodic HCD controller --
@@ -52,11 +51,9 @@ object HcdControllerTests extends Implicits {
     // (could also use a worker per job/message if needed)
     val worker = context.actorOf(TestWorker.props())
 
-    override protected def process(config: DemandState): Unit = {
-      worker ! config
+    override protected def process(config: SetupConfig): Unit = {
+      worker ! DemandState(config.prefix, config.data)
     }
-
-    override def receive: Receive = receiveCommands
   }
 
   // -- Test worker actor that simulates doing some work --
@@ -108,12 +105,13 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
     val hcdController = system.actorOf(TestPeriodicHcdController.props())
 
     // Send a setup config to the HCD
-    val demand = DemandState(testPrefix1).set(position)("IR2")
-    hcdController ! demand
+    val config = SetupConfig(testPrefix1).set(position)("IR2")
+    hcdController ! config
+    val demand = DemandState(config.prefix, config.data)
     system.actorOf(StateMatcherActor.props(List(demand), self))
     within(10.seconds) {
-      val matcherReply = expectMsgType[StatesMatched]
-      logger.info(s"Done (1). Received reply from matcher with current state: $matcherReply")
+      val status = expectMsgType[CommandStatus.Completed]
+      logger.info(s"Done (1). Received reply from matcher with current state: $status")
     }
   }
 
@@ -121,12 +119,13 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val demand = DemandState(testPrefix2).set(position)("IR3")
-    hcdController ! demand
+    val config = SetupConfig(testPrefix2).set(position)("IR3")
+    hcdController ! config
+    val demand = DemandState(config.prefix, config.data)
     system.actorOf(StateMatcherActor.props(List(demand), self))
     within(10.seconds) {
-      val matcherReply = expectMsgType[StatesMatched]
-      logger.info(s"Done (2). Received reply from matcher with current state: $matcherReply")
+      val status = expectMsgType[CommandStatus.Completed]
+      logger.info(s"Done (2). Received reply from matcher with current state: $status")
     }
   }
 }

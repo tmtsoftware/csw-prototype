@@ -10,7 +10,7 @@ based on the SHA-1 hash of the file contents (This is the same way Git stores da
 The file checked in to the Git repository is then named $file.sha1 and contains only
 the SHA-1 hash value.
 
-The server is based on akka-http (experimental), which uses reactive streams to manage the
+The server is based on akka-http, which uses reactive streams to manage the
 flow of data between the client and server.
 
 

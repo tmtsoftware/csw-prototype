@@ -27,7 +27,7 @@ private[pkg] class ContainerUninitializeActor(components: Map[String, Component.
   }
 
   def receiveState(componentsLeft: List[String]): Receive = {
-    case LifecycleStateChanged(state, error, connected) if state.isLoaded ⇒
+    case LifecycleStateChanged(state, error) if state.isLoaded ⇒
       checkDone(componentsLeft.filter(_ != state.name))
   }
 

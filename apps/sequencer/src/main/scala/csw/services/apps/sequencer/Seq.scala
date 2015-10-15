@@ -1,7 +1,10 @@
 package csw.services.apps.sequencer
 
 import akka.actor.{ ActorRef, ActorSystem }
-import csw.services.loc.{ServiceId, LocationService, ServiceType}
+import akka.util.Timeout
+import csw.services.ccs.{ AssemblyClient, BlockingAssemblyClient }
+import csw.services.loc.AccessType.AkkaType
+import csw.services.loc.{ ServiceRef, ServiceId, LocationService, ServiceType }
 import csw.services.pkg.{ LifecycleManager, Container }
 
 import scala.concurrent.Await
@@ -12,28 +15,21 @@ import scala.concurrent.duration._
  */
 object Seq {
   implicit val system = ActorSystem("Sequencer")
-  val duration = 5.seconds
+  implicit val timeout: Timeout = 6.seconds
 
-  private def resolve(name: String, serviceType: ServiceType): BlockingCommandServiceClient = {
-    val info = Await.result(LocationService.resolve(ServiceId(name, serviceType)), duration)
-    val actorRef = info.actorRefOpt.get
-    val clientActor = system.actorOf(CommandServiceClientActor.props(actorRef, duration))
-    BlockingCommandServiceClient(CommandServiceClient(clientActor, duration))
+  private def resolve(name: String, serviceType: ServiceType): BlockingAssemblyClient = {
+    val serviceRef = ServiceRef(ServiceId(name, serviceType), AkkaType)
+    val info = Await.result(LocationService.resolve(Set(serviceRef)), timeout.duration)
+    val actorRef = info.services(serviceRef).actorRefOpt.get
+    BlockingAssemblyClient(AssemblyClient(actorRef))
   }
-
-  /**
-   * Returns a client object to use to access the given HCD
-   * @param name the name of the HCD
-   * @return the client object
-   */
-  def resolveHcd(name: String): BlockingCommandServiceClient = resolve(name, ServiceType.HCD)
 
   /**
    * Returns a client object to use to access the given assembly
    * @param name the name of the assembly
    * @return the client object
    */
-  def resolveAssembly(name: String): BlockingCommandServiceClient = resolve(name, ServiceType.Assembly)
+  def resolveAssembly(name: String): BlockingAssemblyClient = resolve(name, ServiceType.Assembly)
 
   /**
    * Returns a client object to use to access the given container
@@ -41,8 +37,9 @@ object Seq {
    * @return the client object
    */
   def resolveContainer(name: String): ContainerClient = {
-    val info = Await.result(LocationService.resolve(ServiceId(name, ServiceType.Container)), duration)
-    ContainerClient(info.actorRefOpt.get)
+    val serviceRef = ServiceRef(ServiceId(name, ServiceType.Container), AkkaType)
+    val info = Await.result(LocationService.resolve(Set(serviceRef)), timeout.duration)
+    ContainerClient(info.services(serviceRef).actorRefOpt.get)
   }
 
   /**

@@ -4,7 +4,7 @@ import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.ActorSystem
 import csw.shared.cmd_old.CommandStatus
 import csw.util.cfg_old.{ TestConfig, ConfigJsonFormats }
-import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
+import org.scalatest.{ DoNotDiscover, FunSuiteLike, BeforeAndAfterAll }
 import akka.util.Timeout
 import scala.concurrent.duration._
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -19,6 +19,7 @@ import scala.util._
  * Note: The build settings include "parallelExecution in Test := false", so the
  * tests run one after the other.
  */
+@DoNotDiscover
 class CommandServiceActorTests extends TestKit(ActorSystem("test")) with TestHelper
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging with ConfigJsonFormats {
 

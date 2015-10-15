@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.{ Future, Promise }
 import scala.util.{ Try, Failure, Success }
 
+/**
+ * Provides a client API to the ConfigServiceAnnexServer.
+ */
 object ConfigServiceAnnexClient {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexClient"))
 

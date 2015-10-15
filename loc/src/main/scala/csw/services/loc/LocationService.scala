@@ -4,6 +4,7 @@ import java.net.InetAddress
 import javax.jmdns.{ ServiceEvent, ServiceListener, ServiceInfo, JmDNS }
 import akka.actor._
 import akka.http.scaladsl.model.Uri
+import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.AccessType.AkkaType
 import org.slf4j.LoggerFactory
@@ -81,7 +82,9 @@ object LocationService {
   private def getRegistry: JmDNS = {
     val addr = InetAddress.getLocalHost
     val hostname = InetAddress.getByName(addr.getHostName).toString
-    JmDNS.create(addr, hostname)
+    val registry = JmDNS.create(addr, hostname)
+    sys.addShutdownHook(registry.close())
+    registry
   }
 
   // Note: DNS Service Discovery specifies the following service instance naming convention:
@@ -108,7 +111,6 @@ object LocationService {
       val service = ServiceInfo.create(dnsType, serviceRef.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered $serviceRef")
-      sys.addShutdownHook(registry.close())
       RegisterResult(registry)
     }
   }
@@ -134,7 +136,6 @@ object LocationService {
       val service = ServiceInfo.create(dnsType, serviceRef.toString, uri.authority.port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered $serviceRef at $uri")
-      sys.addShutdownHook(registry.close())
       RegisterResult(registry)
     }
   }
@@ -150,17 +151,35 @@ object LocationService {
   private def getActorUri(actorRef: ActorRef, system: ActorSystem): Uri =
     Uri(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
+  /**
+   * Convenience method that gets the location service information for a given set of services.
+   *
+   * @param serviceRefs set of requested services
+   * @param system the caller's actor system
+   * @return a future ServicesReady object describing the services found
+   */
+  def resolve(serviceRefs: Set[ServiceRef])(implicit system: ActorSystem, timeout: Timeout): Future[ServicesReady] = {
+    import akka.pattern.ask
+    import system.dispatcher
+    val actorRef = system.actorOf(LocationServiceWorker.props())
+    val f = (actorRef ? LocationServiceWorker.Request(serviceRefs)).mapTo[ServicesReady]
+    f.onComplete {
+      case _ ⇒ system.stop(actorRef)
+    }
+    f
+  }
 }
 
 /**
- * An actor that notifies the parent actor when all the requested services are available.
+ * An actor that notifies the replyTo actor when all the requested services are available.
  * If all services are available, a ServicesReady message is sent. If any of the requested
  * services stops being available, a Disconnected messages is sent.
  *
  * @param serviceRefs set of requested services
  * @param replyTo optional actorRef to reply to (default: parent of this actor)
  */
-case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRef] = None) extends Actor with ActorLogging with ServiceListener {
+case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRef] = None)
+    extends Actor with ActorLogging with ServiceListener {
 
   // Set of resolved services
   var resolved = Map.empty[ServiceRef, ResolvedService]
@@ -171,7 +190,6 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   for (info ← serviceInfo) resolveService(info)
 
   registry.addServiceListener(dnsType, this)
-  sys.addShutdownHook(registry.close())
 
   override def postStop(): Unit = {
     log.info("Closing JmDNS")
@@ -242,7 +260,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   }
 
   // Checks if all services have been resolved and the actors identified, and if so,
-  // sends a ServicesReady message to the parent actor.
+  // sends a ServicesReady message to the replyTo actor.
   private def checkResolved(): Unit = {
     if (resolved.keySet == serviceRefs && !resolved.values.toList.exists(isActorRefUnknown)) {
       replyTo.getOrElse(context.parent) ! ServicesReady(resolved)
@@ -286,3 +304,23 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   }
 
 }
+
+/**
+ * A class that can be started from non-actor code that runs a location service actor until it
+ * gets a result.
+ */
+protected object LocationServiceWorker {
+  case class Request(serviceRefs: Set[ServiceRef])
+
+  def props(): Props = Props(classOf[LocationServiceWorker])
+}
+
+protected class LocationServiceWorker extends Actor with ActorLogging {
+  import LocationServiceWorker._
+
+  override def receive: Receive = {
+    case Request(serviceRefs) ⇒
+      context.actorOf(LocationService.props(serviceRefs, Some(sender())))
+  }
+}
+

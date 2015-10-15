@@ -33,7 +33,7 @@ class PubSubTests extends TestKit(ActorSystem("Test"))
   }
 
   override def afterAll(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 }
 

@@ -8,7 +8,7 @@ import akka.testkit.TestKit
 import csw.services.cmd_old.akka._
 import csw.shared.cmd_old.CommandStatus
 import csw.util.cfg_old.TestConfig
-import org.scalatest.FunSuiteLike
+import org.scalatest.{ DoNotDiscover, FunSuiteLike }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -16,6 +16,7 @@ import scala.concurrent.duration._
 /**
  * Tests the Command Service HTTP/REST interface in an actor environment.
  */
+@DoNotDiscover
 class CommandServiceHttpServerTests extends TestKit(ActorSystem("test")) with CommandServiceHttpClient
     with TestHelper with FunSuiteLike {
 
@@ -80,7 +81,7 @@ class CommandServiceHttpServerTests extends TestKit(ActorSystem("test")) with Co
       //      assert(res4c.status == StatusCodes.Accepted)
       //      checkReturnStatus("4c", commandStatus4c, runId4, CommandStatus.Error(runId4, CommandServiceHttpServer.unknownRunIdMessage))
 
-      system.shutdown()
+      system.terminate()
     }, 10.seconds)
   }
 

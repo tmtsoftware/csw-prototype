@@ -2,7 +2,7 @@ package csw.services.kvs_old
 
 import csw.util.cfg_old.ConfigValues.ValueData
 import csw.util.cfg_old.Events.TelemetryEvent
-import org.scalatest.FunSuite
+import org.scalatest.{ DoNotDiscover, FunSuite }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import redis.ByteStringFormatter
 
@@ -21,6 +21,7 @@ object EventTests {
 /**
  * Test the Config object
  */
+@DoNotDiscover
 class EventTests extends FunSuite with LazyLogging {
 
   test("Test serializing an Event to a ByteBuffer") {

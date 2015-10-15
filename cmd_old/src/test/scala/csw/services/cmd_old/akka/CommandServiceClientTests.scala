@@ -7,7 +7,7 @@ import akka.actor.{ ActorRef, ActorSystem }
 import csw.services.cmd_old.spray.CommandServiceSettings
 import csw.shared.cmd_old.CommandStatus
 import csw.util.cfg_old.TestConfig
-import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
+import org.scalatest.{ DoNotDiscover, FunSuiteLike, BeforeAndAfterAll }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.Future
 import scala.concurrent.Await
@@ -16,6 +16,7 @@ import scala.concurrent.duration._
 /**
  * Tests the Command Service Client actor
  */
+@DoNotDiscover
 class CommandServiceClientTests extends TestKit(ActorSystem("test")) with TestHelper
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 

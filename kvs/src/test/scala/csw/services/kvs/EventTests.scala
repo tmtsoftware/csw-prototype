@@ -3,7 +3,7 @@ package csw.services.kvs
 import csw.util.config.ConfigKeys.PERCENT_20
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.Events.TelemetryEvent
-import csw.util.config.StandardKeys.{cloudCover, position, exposureTime}
+import csw.util.config.StandardKeys.{ cloudCover, position, exposureTime }
 import org.scalatest.FunSuite
 import com.typesafe.scalalogging.slf4j.LazyLogging
 

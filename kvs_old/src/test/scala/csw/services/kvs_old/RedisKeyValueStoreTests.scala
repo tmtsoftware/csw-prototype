@@ -71,6 +71,6 @@ class RedisKeyValueStoreTests
   }
 
   override def afterAll(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 }

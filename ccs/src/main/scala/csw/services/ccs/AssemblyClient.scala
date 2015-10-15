@@ -5,7 +5,7 @@ import akka.util.Timeout
 import csw.shared.cmd.CommandStatus
 import csw.util.config.Configurations.SetupConfigArg
 
-import scala.concurrent.Future
+import scala.concurrent.{ Await, Future }
 import akka.pattern.ask
 
 /**
@@ -14,13 +14,21 @@ import akka.pattern.ask
  * @param assemblyController the actor for the target assembly
  * @param timeout amount of time to wait for a command to complete before reporting an error
  */
-case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val timeout: Timeout) {
+case class AssemblyClient(assemblyController: ActorRef)(implicit val timeout: Timeout) {
 
   def submit(config: SetupConfigArg): Future[CommandStatus] = {
     (assemblyController ? config).mapTo[CommandStatus]
   }
+}
 
-//  def current: Future[CommandStatus] = {
-//
-//  }
+/**
+ * A synchronous, blocking client API for assemblies that hides the actor API.
+ *
+ * @param client a client for the target assembly
+ */
+case class BlockingAssemblyClient(client: AssemblyClient)(implicit val timeout: Timeout) {
+
+  def submit(config: SetupConfigArg): CommandStatus = {
+    Await.result(client.submit(config), timeout.duration)
+  }
 }

@@ -1,7 +1,7 @@
 package csw.services.loc
 
-import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
-import csw.services.loc.LocationService.{Disconnected, ServicesReady}
+import akka.actor.{ Props, ActorSystem, ActorLogging, Actor }
+import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
 
 object TestServiceClientApp extends App {
   implicit lazy val system = ActorSystem("TestServiceClientApp")
@@ -18,11 +18,11 @@ class TestServiceClient extends Actor with ActorLogging {
   context.actorOf(LocationService.props(serviceRefs))
 
   override def receive: Receive = {
-    case ServicesReady(services) =>
+    case ServicesReady(services) ⇒
       log.info(s"Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString(", ")}")
-    case Disconnected(serviceRef) =>
+    case Disconnected(serviceRef) ⇒
       log.info(s"Disconnected service: ${serviceRef.serviceId.name}")
-    case x =>
+    case x ⇒
       log.error(s"Received unexpected message $x")
   }
 }

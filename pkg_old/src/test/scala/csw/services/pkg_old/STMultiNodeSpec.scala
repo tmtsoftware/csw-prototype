@@ -1,12 +1,12 @@
 package csw.services.pkg_old
 
-import org.scalatest.{ BeforeAndAfterAll, WordSpecLike }
-import org.scalatest.Matchers
+import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, WordSpecLike, Matchers }
 import akka.remote.testkit.MultiNodeSpecCallbacks
 
 /**
  * Hooks up MultiNodeSpec with ScalaTest
  */
+@DoNotDiscover
 trait STMultiNodeSpec extends MultiNodeSpecCallbacks
     with WordSpecLike with Matchers with BeforeAndAfterAll {
 

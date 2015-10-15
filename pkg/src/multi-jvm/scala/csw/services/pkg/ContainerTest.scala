@@ -45,9 +45,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           val map = expectMsgType[Container.Components].map
           assert(map.size == 1)
           for((name, assembly1) <- map) {
-            assembly1 ! LifecycleManager.SubscribeToLifecycleStates(onlyRunningAndConnected = true)
+            assembly1 ! LifecycleManager.SubscribeToLifecycleStates(onlyRunning = true)
             val stateChange = expectMsgType[LifecycleStateChanged]
-            assert(stateChange.connected && stateChange.state.isRunning)
+            assert(stateChange.state.isRunning)
             assembly1 ! TestConfig.testConfigArg
             val status = expectMsgType[CommandStatus.Completed]
           }
@@ -63,9 +63,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val map = expectMsgType[Container.Components].map
         assert(map.size == 2)
         for ((name, hcd) <- map) {
-          hcd ! LifecycleManager.SubscribeToLifecycleStates(onlyRunningAndConnected = true)
+          hcd ! LifecycleManager.SubscribeToLifecycleStates(onlyRunning = true)
           val stateChange = expectMsgType[LifecycleStateChanged]
-          assert(stateChange.connected && stateChange.state.isRunning)
+          assert(stateChange.state.isRunning)
         }
 
         println("\nContainer2 tests passed\n")

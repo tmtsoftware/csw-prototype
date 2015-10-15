@@ -12,8 +12,7 @@ import akka.http.scaladsl.Http
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.ls.LocationServiceActor.{ ServiceType, ServiceId }
-import csw.services.ls.LocationServiceRegisterActor
+import csw.services.loc.{ LocationService, ServiceType, ServiceId }
 import org.slf4j.LoggerFactory
 import akka.actor.ActorSystem
 
@@ -21,6 +20,21 @@ import scala.concurrent.{ Promise, Future }
 import scala.util.{ Failure, Success, Try }
 import scala.util.control.NonFatal
 
+/**
+ * An akka-http based service used by the Config Service to store and retrieve large/binary files
+ * that should not be stored in the Git repository.
+ *
+ * See [reference.conf](src/main/resources/reference.conf) for configuration options.
+ * The files are stored in the configured directory using a file name and directory structure
+ * based on the SHA-1 hash of the file contents (This is the same way Git stores data).
+ * The file checked in to the Git repository is then named $file.sha1 and contains only
+ * the SHA-1 hash value.
+ *
+ * The server is based on akka-http, which uses reactive streams to manage the
+ * flow of data between the client and server.
+ *
+ * @param registerWithLoc if true, register with the location service (default: false)
+ */
 case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServer"))
   logger.info("Config service annex started")
@@ -59,8 +73,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val serviceId = ServiceId("ConfigServiceAnnex", ServiceType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
     logger.info(s"Registering with the location service with URI $httpUri")
-    // Start an actor to re-register when the location service restarts
-    system.actorOf(LocationServiceRegisterActor.props(serviceId, actorRef = None, configPath = None, httpUri = Some(httpUri)))
+    LocationService.registerHttpService(serviceId, addr.getPort)
   }
 
   // Implements Http GET
