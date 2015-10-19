@@ -5,9 +5,9 @@ import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.kvs.{ Publisher, Implicits }
 import csw.shared.cmd.CommandStatus
-import csw.util.config.Configurations.SetupConfig
-import csw.util.config.StandardKeys.position
-import csw.util.config.StateVariable.{ DemandState, CurrentState }
+import csw.util.cfg.Configurations.SetupConfig
+import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState }
+import csw.util.cfg.StandardKeys.position
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
@@ -29,6 +29,8 @@ object HcdControllerTests extends Implicits {
     val worker = context.actorOf(TestWorker.props())
 
     override def rate: FiniteDuration = 1.second
+
+    override def additionalReceive: Receive = Actor.emptyBehavior
 
     override protected def process(): Unit = {
       // Note: There could be some logic here to decide when to take the next config,
@@ -71,7 +73,7 @@ object HcdControllerTests extends Implicits {
     import context.dispatcher
 
     // Simulate getting the initial state from the device and publishing to the kvs
-    val initialState = CurrentState(testPrefix1).set(position)("None")
+    val initialState = CurrentState(testPrefix1).set(position, "None")
     publish(initialState.extKey, initialState)
 
     def receive: Receive = {
@@ -105,7 +107,7 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
     val hcdController = system.actorOf(TestPeriodicHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix1).set(position)("IR2")
+    val config = SetupConfig(testPrefix1).set(position, "IR2")
     hcdController ! config
     val demand = DemandState(config.prefix, config.data)
     system.actorOf(StateMatcherActor.props(List(demand), self))
@@ -119,7 +121,7 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix2).set(position)("IR3")
+    val config = SetupConfig(testPrefix2).set(position, "IR3")
     hcdController ! config
     val demand = DemandState(config.prefix, config.data)
     system.actorOf(StateMatcherActor.props(List(demand), self))

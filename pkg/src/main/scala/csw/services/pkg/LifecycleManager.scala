@@ -5,7 +5,7 @@ import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ ResolvedService, ServicesReady }
 import csw.services.loc.{ ServiceRef, LocationService, ServiceId }
 import csw.shared.cmd.{ RunId, CommandStatus }
-import csw.util.config.Configurations.ControlConfigArg
+import csw.util.cfg.Configurations.ControlConfigArg
 
 /**
  * The Lifecycle Manager is an actor that deals with component lifecycle messages
@@ -168,7 +168,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       subscribeToLifecycleStates(Loaded(name), onlyRunning)
 
     case configArg: ControlConfigArg ⇒
-      cmdStatusError(configArg.info.runId, "loaded", "running")
+      cmdStatusError(RunId(configArg.info.runId), "loaded", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "loaded")
@@ -215,7 +215,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       subscribeToLifecycleStates(Initialized(name), onlyRunning)
 
     case configArg: ControlConfigArg ⇒
-      cmdStatusError(configArg.info.runId, "initialized", "running")
+      cmdStatusError(RunId(configArg.info.runId), "initialized", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "initialized")
@@ -371,7 +371,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
   // Notifies any listeners of the new state, if the filter matches
   private def notifyLifecycleListeners(msg: LifecycleStateChanged) = {
     for ((actorRef, onlyRunning) ← lifecycleStateListeners) {
-      if (!onlyRunning || (msg.state.isRunning))
+      if (!onlyRunning || msg.state.isRunning)
         actorRef ! msg
     }
   }

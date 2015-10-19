@@ -2,10 +2,9 @@ package csw.services.kvs
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.ActorSystem
-import csw.util.config.ConfigKeys.{ StringValued, IntValued }
-import csw.util.config.Events.TelemetryEvent
-import csw.util.config.Key
-import csw.util.config.StandardKeys.exposureTime
+import csw.util.cfg.Configurations.SetupConfig
+import csw.util.cfg.Key
+import csw.util.cfg.StandardKeys._
 import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.Await
@@ -14,9 +13,9 @@ import scala.concurrent.duration._
 object RedisKeyValueStoreTests {
 
   // Define keys for testing
-  case object eventId extends Key("eventId") with IntValued
+  val infoValue = Key.create[Int]("infoValue")
 
-  case object infoStr extends Key("infoStr") with StringValued
+  val infoStr = Key.create[String]("infoStr")
 
 }
 
@@ -29,36 +28,35 @@ class RedisKeyValueStoreTests
   import RedisKeyValueStoreTests._
 
   implicit val execContext = system.dispatcher
-  val kvs: KeyValueStore[TelemetryEvent] = RedisKeyValueStore[TelemetryEvent]
+  val kvs: KeyValueStore[SetupConfig] = RedisKeyValueStore[SetupConfig]
 
   test("Test Set and Get") {
-    val event1 = TelemetryEvent(source = "test", prefix = "test")
-      .set(eventId)(1)
-      .set(infoStr)("info 1")
-    val event2 = TelemetryEvent(source = "test", prefix = "test")
-      .set(eventId)(2)
-      .set(infoStr)("info 2")
+    val config1 = SetupConfig("test")
+      .set(infoValue, 1)
+      .set(infoStr, "info 1")
+    val config2 = SetupConfig("test")
+      .set(infoValue, 2)
+      .set(infoStr, "info 2")
 
     val f = for {
-      res1 ← kvs.set("test1", event1)
+      res1 ← kvs.set("test1", config1)
       val1 ← kvs.get("test1")
-      res2 ← kvs.set("test2", event2)
+      res2 ← kvs.set("test2", config2)
       val2 ← kvs.get("test2")
       res3 ← kvs.delete("test1", "test2")
       res4 ← kvs.get("test1")
       res5 ← kvs.get("test2")
       res6 ← kvs.delete("test1", "test2")
-      res7 ← kvs.hmset("testx", event1)
-      res8 ← kvs.hmget("testx", eventId.name)
+      res7 ← kvs.hmset("testx", config1.getStringMap)
+      res8 ← kvs.hmget("testx", infoValue.name)
       res9 ← kvs.hmget("testx", infoStr.name)
     } yield {
       assert(res1)
-      assert(val1.exists(_.source == "test"))
       assert(val1.exists(_.prefix == "test"))
-      assert(val1.exists(_.get(eventId).contains(1)))
+      assert(val1.exists(_.get(infoValue).contains(1)))
       assert(val1.exists(_.get(infoStr).contains("info 1")))
       assert(res2)
-      assert(val2.exists(_.get(eventId).contains(2)))
+      assert(val2.exists(_.get(infoValue).contains(2)))
       assert(val2.exists(_.get(infoStr).contains("info 2")))
       assert(res3 == 2)
       assert(res4.isEmpty)
@@ -72,17 +70,17 @@ class RedisKeyValueStoreTests
   }
 
   test("Test lset, lget and getHistory") {
-    val event = TelemetryEvent(source = "testSource", "testPrefix").set(exposureTime)(2)
+    val config = SetupConfig("testPrefix").set(exposureTime, 2)
     val key = "test"
     //    val testKey = "testKey"
     val n = 3
 
     val f = for {
-      _ ← kvs.lset(key, event.set(exposureTime)(3), n)
-      _ ← kvs.lset(key, event.set(exposureTime)(4), n)
-      _ ← kvs.lset(key, event.set(exposureTime)(5), n)
-      _ ← kvs.lset(key, event.set(exposureTime)(6), n)
-      _ ← kvs.lset(key, event.set(exposureTime)(7), n)
+      _ ← kvs.lset(key, config.set(exposureTime, 3), n)
+      _ ← kvs.lset(key, config.set(exposureTime, 4), n)
+      _ ← kvs.lset(key, config.set(exposureTime, 5), n)
+      _ ← kvs.lset(key, config.set(exposureTime, 6), n)
+      _ ← kvs.lset(key, config.set(exposureTime, 7), n)
       v ← kvs.lget(key)
       h ← kvs.getHistory(key, n + 1)
       _ ← kvs.delete(key)
@@ -92,7 +90,6 @@ class RedisKeyValueStoreTests
       assert(h.size == n + 1)
       for (i ← 0 to n) {
         logger.info(s"History: $i: ${h(i)}")
-        //        assert(h(i).asInstanceOf[TelemetryEvent](testKey).elems.head == s"test${n + 2 - i}")
       }
     }
     Await.result(f, 5.seconds)

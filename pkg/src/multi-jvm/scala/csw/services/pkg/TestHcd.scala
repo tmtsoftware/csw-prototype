@@ -4,7 +4,7 @@ import akka.actor.Props
 import csw.services.ccs.PeriodicHcdController
 import csw.services.kvs.Publisher
 import csw.services.kvs.Implicits._
-import csw.util.config.StateVariable.{CurrentState, DemandState}
+import csw.util.cfg.Configurations.StateVariable.{CurrentState, DemandState}
 
 import scala.concurrent.duration._
 

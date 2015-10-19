@@ -4,10 +4,12 @@ import akka.actor._
 import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
+import csw.services.loc.{ServiceRef, ServiceId, LocationService}
 import csw.services.pkg.LifecycleManager.LifecycleStateChanged
 import csw.shared.cmd.CommandStatus
-import csw.util.config.TestConfig
+import csw.util.cfg.TestConfig
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
@@ -18,6 +20,12 @@ object ContainerConfig extends MultiNodeConfig {
   val container1 = role("container1")
 
   val container2 = role("container2")
+
+  // Note: The "multinode.host" system property needs to be set to empty so that the MultiNodeSpec
+  // base class below will use the actual host name.
+  // (By default it ends up with "localhost", which breaks the test, since the LocationService
+  // registers the config service with the actual host name.)
+  System.setProperty("multinode.host", "")
 }
 
 class TestMultiJvmContainer1 extends ContainerSpec
@@ -48,8 +56,14 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             assembly1 ! LifecycleManager.SubscribeToLifecycleStates(onlyRunning = true)
             val stateChange = expectMsgType[LifecycleStateChanged]
             assert(stateChange.state.isRunning)
+
+            // Make sure the HCDs are ready
+//            val serviceRef = ServiceRef(ServiceId())
+//            Await.result(LocationService.resolve(serviceRef), 20.seconds)
+            Thread.sleep(6000)
+
             assembly1 ! TestConfig.testConfigArg
-            val status = expectMsgType[CommandStatus.Completed]
+            expectMsgType[CommandStatus.Completed]
           }
           println("\nContainer1 tests passed\n")
           enterBarrier("done")

@@ -1,12 +1,13 @@
 package csw.util.cfg_old
 
-import org.scalatest.FunSuite
+import org.scalatest.{ DoNotDiscover, FunSuite }
 import csw.util.cfg_old.Configurations._
 import ConfigValues.ValueData._
 import spray.json._
 import csw.util.cfg_old.UnitsOfMeasure.{ NoUnits, Meters, Deg }
 import scala.language.postfixOps
 
+@DoNotDiscover
 class ConfigJsonFormatsTests extends FunSuite with ConfigJsonFormats {
 
   test("Test converting a SetupConfig to JSON and back again") {

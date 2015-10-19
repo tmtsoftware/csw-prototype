@@ -3,9 +3,10 @@ package csw.services.pkg
 import csw.services.ccs.{StateMatcherActor, AssemblyController}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
-import csw.services.loc.{AccessType, ServiceType, ServiceId, ServiceRef}
-import csw.util.config.Configurations.SetupConfigArg
-import csw.util.config.StateVariable.DemandState
+import csw.services.loc.ServiceRef
+import csw.shared.cmd.RunId
+import csw.util.cfg.Configurations.SetupConfigArg
+import csw.util.cfg.Configurations.StateVariable.DemandState
 
 // A test assembly that just forwards configs to HCDs based on prefix
 case class TestAssembly(name: String) extends Assembly with AssemblyController with LifecycleHandler {
@@ -29,7 +30,7 @@ case class TestAssembly(name: String) extends Assembly with AssemblyController w
       }
 
     // Wait for the demand states to match the current states, then reply to the sender
-    context.actorOf(StateMatcherActor.props(demandStates.toList, sender(), configArg.info.runId))
+    context.actorOf(StateMatcherActor.props(demandStates.toList, sender(), RunId(configArg.info.runId)))
 
   }
 }

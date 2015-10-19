@@ -2,11 +2,12 @@ package csw.util.config
 
 import csw.util.config.ConfigKeys._
 import csw.util.config.Configurations._
-import org.scalatest.{ Matchers, FunSpec }
+import org.scalatest.{ DoNotDiscover, Matchers, FunSpec }
 
 /**
  * Tests the config classes
  */
+@DoNotDiscover
 class Config2Tests extends FunSpec with Matchers {
   val testObsId = "2020-Q22-2-3"
   val testConfigInfo = ConfigInfo(ObsID(testObsId))

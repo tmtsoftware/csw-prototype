@@ -4,8 +4,8 @@ import akka.actor.{ Actor, Props, ActorRef }
 import akka.util.Timeout
 import csw.services.kvs.Subscriber
 import csw.shared.cmd.{ RunId, CommandStatus }
-import csw.util.config.StateVariable
-import csw.util.config.StateVariable._
+import csw.util.cfg.Configurations.StateVariable
+import csw.util.cfg.Configurations.StateVariable.{ Matcher, CurrentState, DemandState }
 import scala.concurrent.duration._
 
 // Needed for Subscriber below

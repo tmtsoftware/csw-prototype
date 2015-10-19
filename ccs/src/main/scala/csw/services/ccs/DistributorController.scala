@@ -6,8 +6,8 @@ import akka.pattern.ask
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ Disconnected, ServicesReady, ResolvedService }
 import csw.services.loc.{ LocationService, ServiceRef }
-import csw.shared.cmd.CommandStatus
-import csw.util.config.Configurations.SetupConfigArg
+import csw.shared.cmd.{ RunId, CommandStatus }
+import csw.util.cfg.Configurations.SetupConfigArg
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
@@ -45,7 +45,7 @@ protected case class DistributorController(serviceRefs: Set[ServiceRef], timeout
   override def receive = waitingForServices
 
   def waitingForServices: Receive = {
-    case config: SetupConfigArg ⇒ log.warning(s"Ignoring config since services connected: $config")
+    case config: SetupConfigArg ⇒ log.warning(s"Ignoring config since services not connected: $config")
 
     case ServicesReady(map)     ⇒ context.become(connected(map))
 
@@ -83,12 +83,12 @@ protected case class DistributorController(serviceRefs: Set[ServiceRef], timeout
       case Success(commandStatusList) ⇒
         if (commandStatusList.exists(_.isFailed)) {
           val msg = commandStatusList.filter(_.isFailed).map(_.message).mkString(", ")
-          replyTo ! CommandStatus.Error(configArg.info.runId, msg)
+          replyTo ! CommandStatus.Error(RunId(configArg.info.runId), msg)
         } else {
-          replyTo ! CommandStatus.Completed(configArg.info.runId)
+          replyTo ! CommandStatus.Completed(RunId(configArg.info.runId))
         }
       case Failure(ex) ⇒
-        replyTo ! CommandStatus.Error(configArg.info.runId, ex.getMessage)
+        replyTo ! CommandStatus.Error(RunId(configArg.info.runId), ex.getMessage)
     }
   }
 }

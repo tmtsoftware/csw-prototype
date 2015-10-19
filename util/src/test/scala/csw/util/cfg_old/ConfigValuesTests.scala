@@ -1,11 +1,12 @@
 package csw.util.cfg_old
 
 import csw.util.cfg_old.Configurations._
-import org.scalatest.{ Matchers, FunSpec }
+import org.scalatest.{ DoNotDiscover, Matchers, FunSpec }
 import csw.util.cfg_old.ConfigValues.{ ValueData, CValue }
 import csw.util.cfg_old.FullyQualifiedName.Fqn
 import csw.util.cfg_old.UnitsOfMeasure.{ Meters, NoUnits, Units }
 
+@DoNotDiscover
 class ConfigValuesTests extends FunSpec with Matchers {
   val numbers1 = (1 to 5).toVector
   val numbers2 = Vector(2.3, 40.22)

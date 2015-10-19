@@ -2,10 +2,11 @@ package csw.util.cfg_old
 
 import csw.util.cfg_old.Events._
 import csw.util.cfg_old.UnitsOfMeasure.{ NoUnits, Meters, Deg }
-import org.scalatest.FunSuite
+import org.scalatest.{ DoNotDiscover, FunSuite }
 import ConfigValues.ValueData._
 import spray.json._
 
+@DoNotDiscover
 class EventTests extends FunSuite with EventJsonFormats {
 
   val telemetryEvent = TelemetryEvent(

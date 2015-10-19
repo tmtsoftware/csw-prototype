@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor.ActorRef
 import akka.util.Timeout
 import csw.shared.cmd.CommandStatus
-import csw.util.config.Configurations.SetupConfigArg
+import csw.util.cfg.Configurations.SetupConfigArg
 
 import scala.concurrent.{ Await, Future }
 import akka.pattern.ask

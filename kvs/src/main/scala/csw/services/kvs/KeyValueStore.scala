@@ -1,6 +1,5 @@
 package csw.services.kvs
 
-import csw.util.config.KvsType
 import redis.ByteStringFormatter
 
 import scala.concurrent.duration.FiniteDuration
@@ -87,16 +86,12 @@ trait KeyValueStore[T] {
 
   /**
    * Sets a value for the given key, where the value itself is a map with keys and values.
-   * In this case, in adition to saving the serialized byte string of the value for use
-   * by Scala applications, the keys and values in the map are stored in a map that
-   * is readable by any client using any language. The keys and values in the map are
-   * stored as strings.
    *
    * @param key the key
-   * @param value the value to store
+   * @param value the map of values to store
    * @return the future result (true if successful)
    */
-  def hmset[K <: KvsType with T](key: String, value: K): Future[Boolean]
+  def hmset(key: String, value: Map[String, String]): Future[Boolean]
 
   /**
    * This method is mainly useful for testing hmset. It gets the value of the given field

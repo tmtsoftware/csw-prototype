@@ -2,25 +2,26 @@ package csw.services.kvs
 
 import akka.util.ByteString
 import csw.services.kvs.KeyValueStore.KvsFormatter
-import csw.util.config.Configurations.{ SetupConfigArg, SetupConfig }
-import csw.util.config.Events.{ ObserveEvent, TelemetryEvent }
-import csw.util.config.StateVariable.{ CurrentState, DemandState }
+import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState }
+import csw.util.cfg.Configurations._
+import csw.util.cfg.Events.{ SystemEvent, ObserveEvent, StatusEvent }
 import scala.pickling.Defaults._
 import scala.pickling.binary._
+import redis.ByteStringDeserializerDefault
 
 /**
  * Defines the automatic conversion to a ByteString and back again for commonly used value types
  */
-trait Implicits {
-  implicit val telemetryEventKvsFormatter = new KvsFormatter[TelemetryEvent] {
-    def serialize(t: TelemetryEvent): ByteString = {
-      ByteString(t.pickle.value)
+trait Implicits extends ByteStringDeserializerDefault {
+  implicit val statusEventKvsFormatter = new KvsFormatter[StatusEvent] {
+    def serialize(e: StatusEvent): ByteString = {
+      ByteString(e.pickle.value)
     }
 
-    def deserialize(bs: ByteString): TelemetryEvent = {
+    def deserialize(bs: ByteString): StatusEvent = {
       val ar = Array.ofDim[Byte](bs.length)
       bs.asByteBuffer.get(ar)
-      ar.unpickle[TelemetryEvent]
+      ar.unpickle[StatusEvent]
     }
   }
 
@@ -33,6 +34,18 @@ trait Implicits {
       val ar = Array.ofDim[Byte](bs.length)
       bs.asByteBuffer.get(ar)
       ar.unpickle[ObserveEvent]
+    }
+  }
+
+  implicit val systemEventKvsFormatter = new KvsFormatter[SystemEvent] {
+    def serialize(t: SystemEvent): ByteString = {
+      ByteString(t.pickle.value)
+    }
+
+    def deserialize(bs: ByteString): SystemEvent = {
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      ar.unpickle[SystemEvent]
     }
   }
 

@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor.{ ActorLogging, Actor }
 import csw.services.loc.LocationService.{ ResolvedService, Disconnected, ServicesReady }
 import csw.services.loc.ServiceRef
-import csw.util.config.Configurations._
+import csw.util.cfg.Configurations._
 
 import scala.collection.immutable.Queue
 import scala.concurrent.duration.{ Duration, FiniteDuration }
@@ -93,7 +93,7 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   /**
    * Derived classes and traits can extend this to accept additional messages
    */
-  protected def additionalReceive: Receive = Actor.emptyBehavior
+  protected def additionalReceive: Receive
 }
 
 /**
@@ -143,7 +143,7 @@ trait AssemblyController extends Actor with ActorLogging {
   override def receive = waitingForServices
 
   def waitingForServices: Receive = additionalReceive orElse {
-    case config: SetupConfigArg ⇒ log.warning(s"Ignoring config since services connected: $config")
+    case config: SetupConfigArg ⇒ log.warning(s"Ignoring config since services not connected: $config")
 
     case ServicesReady(map)     ⇒ context.become(connected(map))
 

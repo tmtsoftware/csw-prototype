@@ -2,9 +2,6 @@ package csw.services.event
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
-import csw.util.cfg_old.ConfigValues
-import ConfigValues.ValueData._
-import csw.util.cfg_old.Events.TelemetryEvent
 import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._

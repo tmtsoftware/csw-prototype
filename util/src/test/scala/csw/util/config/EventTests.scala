@@ -6,11 +6,12 @@ import java.util.Date
 import csw.util.config.ConfigKeys._
 import csw.util.config.Events.{ TelemetryEvent, ObserveEvent, EventType }
 import csw.util.config.StandardKeys._
-import org.scalatest.FunSuite
+import org.scalatest.{ DoNotDiscover, FunSuite }
 
 /**
  * Tests the event classes
  */
+@DoNotDiscover
 class EventTests extends FunSuite {
 
   def timestamp(): Long = new Date().getTime
