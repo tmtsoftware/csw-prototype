@@ -33,7 +33,7 @@ object Configurations {
    * The base trait for various configuration types whether command configurations or events
    * @tparam T the subclass of ConfigType
    */
-  sealed trait Configuration[T <: Configuration[T]] {
+  sealed trait ConfigType[T <: ConfigType[T]] {
     self: T ⇒
 
     /**
@@ -117,19 +117,19 @@ object Configurations {
    */
   sealed trait ControlConfig
 
-  case class SetupConfig(configKey: ConfigKey, data: ConfigData = ConfigData()) extends Configuration[SetupConfig] with SequenceConfig with ControlConfig {
+  case class SetupConfig(configKey: ConfigKey, data: ConfigData = ConfigData()) extends ConfigType[SetupConfig] with SequenceConfig with ControlConfig {
     override protected def create(data: ConfigData) = SetupConfig(configKey, data)
 
     override def toString = doToString("SC")
   }
 
-  case class ObserveConfig(configKey: ConfigKey, data: ConfigData = ConfigData()) extends Configuration[ObserveConfig] with SequenceConfig with ControlConfig {
+  case class ObserveConfig(configKey: ConfigKey, data: ConfigData = ConfigData()) extends ConfigType[ObserveConfig] with SequenceConfig with ControlConfig {
     override protected def create(data: ConfigData) = ObserveConfig(configKey, data)
 
     override def toString = doToString("OC")
   }
 
-  case class WaitConfig(configKey: ConfigKey, data: ConfigData = ConfigData()) extends Configuration[WaitConfig] with SequenceConfig {
+  case class WaitConfig(configKey: ConfigKey, data: ConfigData = ConfigData()) extends ConfigType[WaitConfig] with SequenceConfig {
     override protected def create(data: ConfigData) = WaitConfig(configKey, data)
 
     override def toString = doToString("WAIT")
@@ -160,7 +160,7 @@ object Configurations {
       demand.prefix == current.prefix && demand.data == current.data
 
     case class DemandState(configKey: ConfigKey, data: ConfigData = ConfigData())
-        extends Configuration[DemandState] with StateVariable {
+        extends ConfigType[DemandState] with StateVariable {
 
       override protected def create(data: ConfigData) = DemandState(configKey, data)
 
@@ -177,7 +177,7 @@ object Configurations {
     }
 
     case class CurrentState(configKey: ConfigKey, data: ConfigData = ConfigData())
-        extends Configuration[CurrentState] with StateVariable {
+        extends ConfigType[CurrentState] with StateVariable {
 
       override protected def create(data: ConfigData) = CurrentState(configKey, data)
 
@@ -207,7 +207,7 @@ object Configurations {
     // A filter type for various ConfigData
     type ConfigFilter[A] = A ⇒ Boolean
 
-    def prefixes(configs: Seq[Configuration[_]]): Set[String] = configs.map(_.prefix).toSet
+    def prefixes(configs: Seq[ConfigType[_]]): Set[String] = configs.map(_.prefix).toSet
 
     def onlySetupConfigs(configs: Seq[SequenceConfig]): Seq[SetupConfig] = configs.collect { case ct: SetupConfig ⇒ ct }
 
@@ -215,15 +215,15 @@ object Configurations {
 
     def onlyWaitConfigs(configs: Seq[SequenceConfig]): Seq[WaitConfig] = configs.collect { case ct: WaitConfig ⇒ ct }
 
-    val prefixStartsWithFilter: String ⇒ ConfigFilter[Configuration[_]] = query ⇒ sc ⇒ sc.prefix.startsWith(query)
-    val prefixContainsFilter: String ⇒ ConfigFilter[Configuration[_]] = query ⇒ sc ⇒ sc.prefix.contains(query)
-    val prefixIsSubsystem: Subsystem ⇒ ConfigFilter[Configuration[_]] = query ⇒ sc ⇒ sc.subsystem.equals(query)
+    val prefixStartsWithFilter: String ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.prefix.startsWith(query)
+    val prefixContainsFilter: String ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.prefix.contains(query)
+    val prefixIsSubsystem: Subsystem ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.subsystem.equals(query)
 
-    def prefixStartsWith(query: String, configs: Seq[Configuration[_]]): Seq[Configuration[_]] = configs.filter(prefixStartsWithFilter(query))
+    def prefixStartsWith(query: String, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixStartsWithFilter(query))
 
-    def prefixContains(query: String, configs: Seq[Configuration[_]]): Seq[Configuration[_]] = configs.filter(prefixContainsFilter(query))
+    def prefixContains(query: String, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixContainsFilter(query))
 
-    def prefixIsSubsystem(query: Subsystem, configs: Seq[Configuration[_]]): Seq[Configuration[_]] = configs.filter(prefixIsSubsystem(query))
+    def prefixIsSubsystem(query: Subsystem, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixIsSubsystem(query))
   }
 
   // --- Config args ---
@@ -296,9 +296,12 @@ object Configurations {
   //  final case class QueryFailure(reason: String) extends ConfigQueryResponse
 }
 
+/**
+ * Defines events used by the event and telemetry services
+ */
 object Events {
 
-  import Configurations.{ ConfigKey, Configuration }
+  import Configurations.{ ConfigKey, ConfigType }
 
   case class EventTime(time: Long) {
     override def toString = time.toString
@@ -341,113 +344,82 @@ object Events {
   }
 
   /**
-   * Defines the possible event types, for use in serialization and deserialization
+   * Base trait for event configurations
+   *
+   * @tparam T the subclass of ConfigType
    */
-  sealed trait EventType {
-    val code: String
-
-    override def toString = code
-  }
-
-  case object StatusEventType extends EventType {
-    val code = "status event"
-  }
-
-  case object ObserveEventType extends EventType {
-    val code = "observe event"
-  }
-
-  case object SystemEventType extends EventType {
-    val code = "system event"
-  }
-
-  /**
-   * A concrete intermediate event class that can be used to serialize and deserialize events.
-   */
-  final case class SerializableEvent(eventType: EventType, info: EventInfo, data: ConfigData) {
-    def getEvent: Event[_] = eventType match {
-      case StatusEventType  ⇒ StatusEvent(info, data)
-      case ObserveEventType ⇒ ObserveEvent(info, data)
-      case SystemEventType  ⇒ SystemEvent(info, data)
-    }
-  }
-
-  /**
-   * Marker trait for event configurations
-   */
-  sealed trait Event[T <: Event[T]] extends Configuration[T] {
+  sealed trait EventType[T <: EventType[T]] extends ConfigType[T] {
     self: T ⇒
 
-    def eventType: EventType
-
+    /**
+     * Contains related event information
+     */
     def info: EventInfo
 
-    override def configKey = info.source
+    override def configKey: ConfigKey = info.source
 
-    def source = configKey.prefix
+    /**
+     * The event source is the prefix
+     */
+    def source: String = configKey.prefix
 
-    def rawTime = info.time
+    /**
+     * The time the event was created
+     */
+    def rawTime: EventTime = info.time
 
-    def eventId = info.eventId
+    /**
+     * The event id
+     */
+    def eventId: UUID = info.eventId
 
-    def obsId = info.obsId
-
-    override def toString = doToString(eventType.code)
-
-    def toByteArray: Array[Byte] = {
-      import scala.pickling.Defaults._
-      import scala.pickling.binary._
-      val se = SerializableEvent(eventType, info, data)
-      se.pickle.value
-    }
+    /**
+     * The observation ID
+     */
+    def obsIdOption[ObsId] = info.obsId
   }
 
-  object Event {
-    def apply(ar: Array[Byte]): Event[_] = {
-      import scala.pickling.Defaults._
-      import scala.pickling.binary._
-      val se = ar.unpickle[SerializableEvent]
-      se.getEvent
-    }
+  /**
+   * Type of event used in the event service
+   */
+  sealed trait EventServiceEvent {
+    /**
+     * See prefix in ConfigType
+     */
+    def prefix: String
   }
 
-  case class StatusEvent(info: EventInfo, data: ConfigData = ConfigData()) extends Event[StatusEvent] {
-    override def eventType = StatusEvent.eventType
-
+  case class StatusEvent(info: EventInfo, data: ConfigData = ConfigData()) extends EventType[StatusEvent] {
     override protected def create(data: ConfigData) = StatusEvent(info, data)
+
+    override def toString = doToString("StatusEvent")
   }
 
   object StatusEvent {
-    val eventType = StatusEventType
-
     def apply(prefix: String, time: EventTime): StatusEvent = StatusEvent(EventInfo(prefix, time))
 
     def apply(prefix: String, time: EventTime, obsId: ObsId): StatusEvent = StatusEvent(EventInfo(prefix, time, Some(obsId)))
   }
 
-  case class ObserveEvent(info: EventInfo, data: ConfigData = ConfigData()) extends Event[ObserveEvent] {
-    override def eventType = ObserveEvent.eventType
-
+  case class ObserveEvent(info: EventInfo, data: ConfigData = ConfigData()) extends EventType[ObserveEvent] with EventServiceEvent {
     override protected def create(data: ConfigData) = ObserveEvent(info, data)
+
+    override def toString = doToString("ObserveEvent")
   }
 
   object ObserveEvent {
-    val eventType = ObserveEventType
-
     def apply(prefix: String, time: EventTime): ObserveEvent = ObserveEvent(EventInfo(prefix, time))
 
     def apply(prefix: String, time: EventTime, obsId: ObsId): ObserveEvent = ObserveEvent(EventInfo(prefix, time, Some(obsId)))
   }
 
-  case class SystemEvent(info: EventInfo, data: ConfigData = ConfigData()) extends Event[SystemEvent] {
-    override def eventType = SystemEvent.eventType
-
+  case class SystemEvent(info: EventInfo, data: ConfigData = ConfigData()) extends EventType[SystemEvent] with EventServiceEvent {
     override protected def create(data: ConfigData) = SystemEvent(info, data)
+
+    override def toString = doToString("SystemEvent")
   }
 
   object SystemEvent {
-    val eventType = SystemEventType
-
     def apply(prefix: String, time: EventTime): SystemEvent = SystemEvent(EventInfo(prefix, time))
 
     def apply(prefix: String, time: EventTime, obsId: ObsId): SystemEvent = SystemEvent(EventInfo(prefix, time, Some(obsId)))

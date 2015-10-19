@@ -71,8 +71,8 @@ object Hq {
     import org.hornetq.core.server.embedded.EmbeddedHornetQ
 
     val config = new ConfigurationImpl()
-    config.setPersistenceEnabled(false);
-    config.setSecurityEnabled(false);
+    config.setPersistenceEnabled(false)
+    config.setSecurityEnabled(false)
     val transports = new java.util.HashSet[TransportConfiguration]()
     transports.add(new TransportConfiguration(classOf[NettyAcceptorFactory].getName))
     transports.add(new TransportConfiguration(classOf[InVMAcceptorFactory].getName))
@@ -80,7 +80,6 @@ object Hq {
     val server = new EmbeddedHornetQ()
     server.setConfiguration(config)
     server.start()
-    //    server.stop()
   }
 }
 

@@ -3,8 +3,7 @@ package csw.util.cfg
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
 
 import csw.util.cfg.Configurations._
-
-// XXX Use this or scala-pickle?
+import csw.util.cfg.Events._
 
 object ConfigSerializer {
 
@@ -73,5 +72,41 @@ object ConfigSerializer {
     def write(in: WaitConfigArg): Array[Byte] = writeObj(in)
 
     def read(bytes: Array[Byte]): WaitConfigArg = readObj[WaitConfigArg](bytes)
+  }
+
+  implicit object SequenceConfigArgSerializer extends ConfigSerializer[SequenceConfigArg] {
+    def write(in: SequenceConfigArg): Array[Byte] = writeObj(in)
+
+    def read(bytes: Array[Byte]): SequenceConfigArg = readObj[SequenceConfigArg](bytes)
+  }
+
+  implicit object ControlConfigArgSerializer extends ConfigSerializer[ControlConfigArg] {
+    def write(in: ControlConfigArg): Array[Byte] = writeObj(in)
+
+    def read(bytes: Array[Byte]): ControlConfigArg = readObj[ControlConfigArg](bytes)
+  }
+
+  implicit object StatusEventSerializer extends ConfigSerializer[StatusEvent] {
+    def write(in: StatusEvent): Array[Byte] = writeObj(in)
+
+    def read(bytes: Array[Byte]): StatusEvent = readObj[StatusEvent](bytes)
+  }
+
+  implicit object ObserveEventSerializer extends ConfigSerializer[ObserveEvent] {
+    def write(in: ObserveEvent): Array[Byte] = writeObj(in)
+
+    def read(bytes: Array[Byte]): ObserveEvent = readObj[ObserveEvent](bytes)
+  }
+
+  implicit object SystemEventSerializer extends ConfigSerializer[SystemEvent] {
+    def write(in: SystemEvent): Array[Byte] = writeObj(in)
+
+    def read(bytes: Array[Byte]): SystemEvent = readObj[SystemEvent](bytes)
+  }
+
+  implicit object EventServiceEventSerializer extends ConfigSerializer[EventServiceEvent] {
+    def write(in: EventServiceEvent): Array[Byte] = writeObj(in)
+
+    def read(bytes: Array[Byte]): EventServiceEvent = readObj[EventServiceEvent](bytes)
   }
 }

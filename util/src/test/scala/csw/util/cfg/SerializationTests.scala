@@ -1,12 +1,9 @@
 package csw.util.cfg
 
 import csw.util.cfg.Configurations._
-import csw.util.cfg.Events.{StatusEventType, Event, StatusEvent}
+import csw.util.cfg.Events.{ SystemEvent, EventServiceEvent }
 import org.scalatest.FunSuite
 
-/**
- * Created by gillies on 7/30/15.
- */
 class SerializationTests extends FunSuite {
   import StandardKeys._
 
@@ -90,15 +87,26 @@ class SerializationTests extends FunSuite {
     assert(out1 == wca1)
   }
 
-  test("Event built-in pickler serialization support") {
-    val event = StatusEvent(fqn1prefix)
+  test("Base trait config Java serialization") {
+    import ConfigSerializer._
+
+    val wca1 = WaitConfigArg(ConfigInfo(obsId), wc1)
+    val bytes1 = write(wca1)
+
+    val out1 = read[SequenceConfigArg](bytes1)
+    assert(out1 == wca1)
+  }
+
+  test("Base trait event Java serialization") {
+    import ConfigSerializer._
+    val event = SystemEvent(fqn1prefix)
       .set(ra, "12:32:11")
       .set(dec, "30:22:22")
 
-    val ar = event.toByteArray
-    val eventCopy = Event(ar)
-    assert(event.eventType == StatusEventType)
-    assert(event == eventCopy.asInstanceOf[StatusEvent])
+    val bytes1 = write(event)
+
+    val out1 = read[EventServiceEvent](bytes1)
+    assert(out1 == event)
   }
 
 }

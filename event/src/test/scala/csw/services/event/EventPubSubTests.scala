@@ -2,19 +2,19 @@ package csw.services.event
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
+import csw.util.cfg.Events.ObserveEvent
+import csw.util.cfg.StandardKeys._
 import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-// Added annotation below, since test depends on Hornetq server running (Remove to include in tests)
-@DoNotDiscover
 class EventPubSubTests extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   val settings = EventServiceSettings(system)
   if (settings.useEmbeddedHornetq) {
-    // Start an embedded HornetQ server
+    // Start an embedded HornetQ server, so no need to have it running externally!
     Hq.startEmbeddedHornetQ()
   }
 
@@ -42,7 +42,7 @@ class EventPubSubTests extends TestKit(ActorSystem("Test"))
 
 // A test class that publishes events
 private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging with EventPublisher {
-  val channel = "tmt.mobie.red.dat.exposureInfo"
+  val channel = "tcs.mobie.red.dat.exposureInfo"
   val expTime = 1
   var nextId = 0
   var done = false
@@ -59,7 +59,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
 
   while (!done) {
     val event = nextEvent()
-    publish(channel, event)
+    publish(event)
     Thread.`yield`() // don't want to hog the cpu here
     if (nextId % 10000 == 0)
       log.info(s"Published $nextId events so far: $event")
@@ -69,13 +69,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
   def nextEvent(): Event = {
     val time = System.currentTimeMillis()
     nextId = nextId + 1
-    TelemetryEvent(
-      source = "test",
-      channel,
-      "eventId" -> nextId,
-      "exposureTime" -> expTime.ms, // XXX deal with duration implicit defs
-      "startTime" -> (time - expTime),
-      "endTime" -> time)
+    ObserveEvent(channel).set(exposureTime, 1.0).set(repeats, 2)
   }
 
   override def receive: Receive = {
@@ -89,9 +83,9 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
   implicit val actorSytem = context.system
   var count = 0
 
-  //  val channel = "tmt.mobie.red.dat.exposureInfo"
-  val channel = "tmt.mobie.red.dat.*" // using wildcard
-  subscribe(channel)
+  //  val prefix = "tcs.mobie.red.dat.exposureInfo"
+  val prefix = "tcs.mobie.red.dat.*" // using wildcard
+  subscribe(prefix)
 
   override def receive: Receive = {
     case event: Event ⇒
@@ -101,7 +95,7 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
 
     case "done" ⇒
       sender() ! count
-      unsubscribe(channel)
+      unsubscribe(prefix)
 
     case x ⇒ log.error(s"Unexpected message $x")
   }

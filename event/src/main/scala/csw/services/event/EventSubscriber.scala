@@ -1,6 +1,7 @@
 package csw.services.event
 
 import akka.actor.{ Props, ActorRef, ActorLogging, Actor }
+import csw.util.cfg.ConfigSerializer
 import org.hornetq.api.core.client._
 import java.util.UUID
 
@@ -43,12 +44,12 @@ trait EventSubscriber extends Hq {
   private var map = Map[String, SubscriberInfo]()
 
   /**
-   * Subscribes this actor to events with the given channels.
+   * Subscribes this actor to events with the given prefixes.
    *
-   * @param channels the channel for the events you want to subscribe to.
+   * @param prefix the prefixes for the events you want to subscribe to.
    */
-  def subscribe(channels: String*): Unit = {
-    for (channel ← channels) {
+  def subscribe(prefix: String*): Unit = {
+    for (channel ← prefix) {
       map += (channel -> SubscriberInfo(channel))
     }
   }
@@ -75,12 +76,13 @@ trait EventSubscriber extends Hq {
 // Worker class used to process incoming messages rather than block the receiver thread
 // while unpacking the message
 case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorLogging {
+  import ConfigSerializer._
   override def receive: Receive = {
     case message: ClientMessage ⇒
       try {
         val ar = Array.ofDim[Byte](message.getBodySize)
         message.getBodyBuffer.readBytes(ar)
-        subscriber ! EventType(ar)
+        subscriber ! read[Event](ar)
       } catch {
         case ex: Throwable ⇒ log.error(ex, s"Error forwarding message to $subscriber: $message")
       }
