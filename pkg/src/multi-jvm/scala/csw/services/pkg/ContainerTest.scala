@@ -3,7 +3,11 @@ package csw.services.pkg
 import akka.actor._
 import akka.remote.testkit._
 import akka.testkit.ImplicitSender
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import csw.services.loc.AccessType.AkkaType
+import csw.services.loc.LocationService.Disconnected
+import csw.services.loc.ServiceType.HCD
 import csw.services.loc.{ServiceRef, ServiceId, LocationService}
 import csw.services.pkg.LifecycleManager.LifecycleStateChanged
 import csw.shared.cmd.CommandStatus
@@ -57,10 +61,13 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             val stateChange = expectMsgType[LifecycleStateChanged]
             assert(stateChange.state.isRunning)
 
-            // Make sure the HCDs are ready
-//            val serviceRef = ServiceRef(ServiceId())
-//            Await.result(LocationService.resolve(serviceRef), 20.seconds)
-            Thread.sleep(6000)
+            // Make sure the HCDs are ready before sending the test config
+            val serviceRefs = Set(
+              ServiceRef(ServiceId("HCD-2A", HCD), AkkaType),
+              ServiceRef(ServiceId("HCD-2B", HCD), AkkaType)
+            )
+            implicit val timeout: Timeout = 20.seconds
+            Await.result(LocationService.resolve(serviceRefs), timeout.duration)
 
             assembly1 ! TestConfig.testConfigArg
             expectMsgType[CommandStatus.Completed]
