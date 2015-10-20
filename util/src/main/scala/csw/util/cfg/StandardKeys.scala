@@ -4,7 +4,7 @@ import csw.util.cfg.UnitsOfMeasure.Units
 
 object StandardKeys {
 
-  protected[StandardKeys] sealed abstract class ExposureClass(val description: String) {
+  protected[StandardKeys] sealed abstract class ExposureClass(val description: String) extends Serializable {
     override def toString = description
   }
 
@@ -16,7 +16,7 @@ object StandardKeys {
 
   case object ACQUISITION extends ExposureClass("acquisition")
 
-  protected[StandardKeys] sealed abstract class ExposureType(val description: String) {
+  protected[StandardKeys] sealed abstract class ExposureType(val description: String) extends Serializable {
     override def toString = description
   }
 
@@ -28,7 +28,7 @@ object StandardKeys {
 
   case object OBSERVE extends ExposureType("observe")
 
-  protected[StandardKeys] sealed abstract class CloudCoverType(val description: String, val percentage: Int) {
+  protected[StandardKeys] sealed abstract class CloudCoverType(val description: String, val percentage: Int) extends Serializable {
     override def toString = description
   }
 

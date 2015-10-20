@@ -39,13 +39,26 @@ object Container {
    * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
    */
   def create(config: Config): ActorRef = {
-    import csw.util.akka.Terminator
     val name = config.getString("container.name")
     val system = ActorSystem(s"$name-system")
     val actorRef = system.actorOf(props(config), name)
     // Exit when the container shuts down
     system.actorOf(Props(classOf[Terminator], actorRef), "terminator")
     actorRef
+  }
+
+  /**
+   * Exits the application when the given actor stops
+   * @param ref reference to the main actor of an application
+   */
+  class Terminator(ref: ActorRef) extends Actor with ActorLogging {
+    context watch ref
+
+    def receive = {
+      case Terminated(_) ⇒
+        log.info("{} has terminated, shutting down system", ref.path)
+        context.system.terminate()
+    }
   }
 
   /**

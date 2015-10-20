@@ -8,7 +8,7 @@ import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState }
 import csw.util.cfg.StandardKeys.position
-import org.scalatest.FunSuiteLike
+import org.scalatest.{ DoNotDiscover, FunSuiteLike }
 
 import scala.concurrent.duration._
 
@@ -98,6 +98,9 @@ object HcdControllerTests extends Implicits {
 // Tests sending a DemandState to a test HCD, then starting a matcher actor to subscribe
 // to the current state (a state variable updated by the HCD). When the current state matches
 // the demand state, the matcher actor replies with a message (containing the current state).
+
+// Test requires that Redis is running externally
+@DoNotDiscover
 class HcdControllerTests extends TestKit(ActorSystem("test"))
     with ImplicitSender with FunSuiteLike with LazyLogging {
 

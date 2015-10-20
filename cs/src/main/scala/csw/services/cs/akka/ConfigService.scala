@@ -7,7 +7,6 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.akka.ConfigServiceActor.RegisterWithLocationService
 import csw.services.cs.core.git.GitConfigManager
-import csw.util.akka.Terminator
 import org.slf4j.LoggerFactory
 
 /**
@@ -100,4 +99,19 @@ object ConfigService extends App {
     if (settings.startHttpServer && !options.nohttp)
       ConfigServiceHttpServer(configServiceActor, settings, registerWithLoc = true)
   }
+
+  /**
+   * Exits the application when the given actor stops
+   * @param ref reference to the main actor of an application
+   */
+  class Terminator(ref: ActorRef) extends Actor with ActorLogging {
+    context watch ref
+
+    def receive = {
+      case Terminated(_) ⇒
+        log.info("{} has terminated, shutting down system", ref.path)
+        context.system.terminate()
+    }
+  }
+
 }
