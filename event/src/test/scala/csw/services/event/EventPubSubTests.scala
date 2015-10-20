@@ -88,7 +88,7 @@ private case class Subscriber(name: String) extends Actor with ActorLogging with
   subscribe(prefix)
 
   override def receive: Receive = {
-    case event: Event ⇒
+    case event: ObserveEvent ⇒
       count = count + 1
       if (count % 10000 == 0)
         log.info(s"Received $count events so far: $event")

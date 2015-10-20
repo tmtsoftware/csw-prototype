@@ -285,15 +285,6 @@ object Configurations {
    * Contains a list of configs that can be sent to a sequencer
    */
   final case class ConfigArgList(configs: Seq[SequenceConfig])
-
-  // XXX Allan: Should be part of command service actor messages?
-  //
-  //  // For getting device configuration
-  //  final case class ConfigQuery(configs: Seq[SetupConfig])
-  //
-  //  sealed trait ConfigQueryResponse
-  //  final case class QuerySuccess(configs: Seq[SetupConfig]) extends ConfigQueryResponse
-  //  final case class QueryFailure(reason: String) extends ConfigQueryResponse
 }
 
 /**
@@ -424,71 +415,4 @@ object Events {
 
     def apply(prefix: String, time: EventTime, obsId: ObsId): SystemEvent = SystemEvent(EventInfo(prefix, time, Some(obsId)))
   }
-
-  // Experiemental -- one way to keep from adding methods into each
-  // Just testing
-  def toStatusEvent(prefix: String) = (time: EventTime) ⇒ {
-    val configKey: ConfigKey = prefix
-    val evInfo = EventInfo(prefix, time)
-    StatusEvent(evInfo)
-  }
-
-  trait EventAccess[A] {
-    def subsystem(in: A): Subsystem
-
-    def source(in: A): String
-
-    def rawTime(in: A): EventTime
-
-    def eventId(in: A): UUID
-
-    def obsId(in: A): Option[ObsId]
-  }
-
-  def subsystem[A](in: A)(implicit ea: EventAccess[A]): Subsystem = ea.subsystem(in)
-
-  def source[A](in: A)(implicit ea: EventAccess[A]): String = ea.source(in)
-
-  def rawTime[A](in: A)(implicit ea: EventAccess[A]): EventTime = ea.rawTime(in)
-
-  def eventId[A](in: A)(implicit ea: EventAccess[A]): UUID = ea.eventId(in)
-
-  def obsID[A](in: A)(implicit ea: EventAccess[A]): Option[ObsId] = ea.obsId(in)
-
-  implicit object StatusEventAccess extends EventAccess[StatusEvent] {
-    def subsystem(in: StatusEvent) = in.subsystem
-
-    def source(in: StatusEvent) = in.prefix
-
-    def rawTime(in: StatusEvent) = in.info.time
-
-    def eventId(in: StatusEvent) = in.info.eventId
-
-    def obsId(in: StatusEvent) = in.info.obsId
-  }
-
-  implicit object ObserveEventAccess extends EventAccess[ObserveEvent] {
-    def subsystem(in: ObserveEvent) = in.subsystem
-
-    def source(in: ObserveEvent) = in.prefix
-
-    def rawTime(in: ObserveEvent) = in.info.time
-
-    def eventId(in: ObserveEvent) = in.info.eventId
-
-    def obsId(in: ObserveEvent) = in.info.obsId
-  }
-
-  implicit object SystemEventAccess extends EventAccess[SystemEvent] {
-    def subsystem(in: SystemEvent) = in.subsystem
-
-    def source(in: SystemEvent) = in.prefix
-
-    def rawTime(in: SystemEvent) = in.info.time
-
-    def eventId(in: SystemEvent) = in.info.eventId
-
-    def obsId(in: SystemEvent) = in.info.obsId
-  }
-
 }
