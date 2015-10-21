@@ -9,7 +9,7 @@ import org.scalatest.{ DoNotDiscover, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 
-object BlockingKeyValueStoreTests {
+object TelemetryServiceTests {
 
   // Define keys for testing
   val infoValue = Key.create[Int]("infoValue")
@@ -20,13 +20,13 @@ object BlockingKeyValueStoreTests {
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
-class BlockingKeyValueStoreTests
-    extends TestKit(ActorSystem("Test"))
-    with ImplicitSender with FunSuiteLike with LazyLogging with Implicits {
+class TelemetryServiceTests
+  extends TestKit(ActorSystem("Test"))
+  with ImplicitSender with FunSuiteLike with LazyLogging with Implicits {
 
-  import BlockingKeyValueStoreTests._
+  import TelemetryServiceTests._
 
-  val kvs = BlockingKeyValueStore[SetupConfig](5.seconds)
+  val kvs = new TelemetryService(5.seconds)
 
   test("Test Set and Get") {
     val config1 = SetupConfig("tcs.test")

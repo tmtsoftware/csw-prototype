@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object RedisKeyValueStoreTests {
+object KeyValueStoreTests {
 
   // Define keys for testing
   val infoValue = Key.create[Int]("infoValue")
@@ -22,14 +22,14 @@ object RedisKeyValueStoreTests {
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 @DoNotDiscover
-class RedisKeyValueStoreTests
+class KeyValueStoreTests
     extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll with Implicits {
 
-  import RedisKeyValueStoreTests._
+  import KeyValueStoreTests._
 
   implicit val execContext = system.dispatcher
-  val kvs: KeyValueStore[SetupConfig] = RedisKeyValueStore[SetupConfig]
+  val kvs = KeyValueStore[SetupConfig]
 
   test("Test Set and Get") {
     val config1 = SetupConfig("tcs.test")
@@ -111,6 +111,7 @@ class RedisKeyValueStoreTests
             assert(setupConfig.get(infoValue).get == 2)
             assert(setupConfig.get(infoStr).get == "info 2")
             assert(setupConfig.get(boolValue).get)
+            setupConfig
         }
     }
   }

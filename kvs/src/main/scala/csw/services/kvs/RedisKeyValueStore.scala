@@ -20,13 +20,20 @@ case class RedisKeyValueStore[T: KvsFormatter](implicit system: ActorSystem) ext
 
   override def set(key: String, value: T, expire: Option[FiniteDuration],
                    setCond: SetCondition): Future[Boolean] = {
+    // Do this once, since we will need the value once for set and again for publish
+    val formatter = implicitly[KvsFormatter[T]]
+    val bs = formatter.serialize(value)
+
     val msOpt = if (expire.isDefined) Some(expire.get.toMillis) else None
     val (nx, xx) = setCond match {
       case SetOnlyIfNotExists ⇒ (true, false)
       case SetOnlyIfExists    ⇒ (false, true)
       case SetAlways          ⇒ (false, false)
     }
-    redis.set(key, value, None, msOpt, nx, xx)
+
+    val result = redis.set(key, bs, None, msOpt, nx, xx)
+    redis.publish(key, bs)
+    result
   }
 
   override def get(key: String): Future[Option[T]] = {
