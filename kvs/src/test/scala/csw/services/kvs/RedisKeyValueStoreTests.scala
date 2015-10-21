@@ -31,10 +31,11 @@ class RedisKeyValueStoreTests
   val kvs: KeyValueStore[SetupConfig] = RedisKeyValueStore[SetupConfig]
 
   test("Test Set and Get") {
-    val config1 = SetupConfig("test")
+    val config1 = SetupConfig("tcs.test")
       .set(infoValue, 1)
       .set(infoStr, "info 1")
-    val config2 = SetupConfig("test")
+
+    val config2 = SetupConfig("tcs.test")
       .set(infoValue, 2)
       .set(infoStr, "info 2")
 
@@ -52,7 +53,7 @@ class RedisKeyValueStoreTests
       res9 ← kvs.hmget("testx", infoStr.name)
     } yield {
       assert(res1)
-      assert(val1.exists(_.prefix == "test"))
+      assert(val1.exists(_.prefix == "tcs.test"))
       assert(val1.exists(_.get(infoValue).contains(1)))
       assert(val1.exists(_.get(infoStr).contains("info 1")))
       assert(res2)
