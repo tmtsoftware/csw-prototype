@@ -17,6 +17,7 @@ object RedisKeyValueStoreTests {
 
   val infoStr = Key.create[String]("infoStr")
 
+  val boolValue = Key.create[Boolean]("boolValue")
 }
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
@@ -96,7 +97,25 @@ class RedisKeyValueStoreTests
     Await.result(f, 5.seconds)
   }
 
-  override def afterAll(): Unit = {
+  test("Test usage") {
+    val config = SetupConfig("tcs.test")
+      .set(infoValue, 2)
+      .set(infoStr, "info 2")
+      .set(boolValue, true)
+
+
+    kvs.set("test3", config).onSuccess {
+      case result if result =>
+        kvs.get("test3").onSuccess {
+          case Some(setupConfig) =>
+            assert(setupConfig.get(infoValue).get == 2)
+            assert(setupConfig.get(infoStr).get == "info 2")
+            assert(setupConfig.get(boolValue).get)
+        }
+    }
+  }
+
+    override def afterAll(): Unit = {
     system.terminate()
   }
 }
