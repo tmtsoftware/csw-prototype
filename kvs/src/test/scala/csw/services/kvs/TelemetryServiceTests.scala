@@ -26,7 +26,7 @@ class TelemetryServiceTests
 
   import TelemetryServiceTests._
 
-  val kvs = new TelemetryService(5.seconds)
+  val kvs = TelemetryService(5.seconds)
 
   test("Test Set and Get") {
     val config1 = SetupConfig("tcs.test")

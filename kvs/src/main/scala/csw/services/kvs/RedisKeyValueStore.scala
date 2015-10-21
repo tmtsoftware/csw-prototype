@@ -54,8 +54,8 @@ case class RedisKeyValueStore[T: KvsFormatter](implicit system: ActorSystem) ext
     }
   }
 
-  override def lget(key: String): Future[Option[T]] = {
-    redis.lindex(key, 0)
+  override def lget(key: String, index: Int = 0): Future[Option[T]] = {
+    redis.lindex(key, index)
   }
 
   override def getHistory(key: String, n: Int): Future[Seq[T]] = {

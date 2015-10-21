@@ -74,9 +74,10 @@ trait KeyValueStore[T] {
   /**
     * Gets the most recent value of the given key that was previously set with lset
     * @param key the key
+    * @param index the index of the value to get (defaults to 0, for the most recent value)
     * @return the future result, None if the key was not found
     */
-  def lget(key: String): Future[Option[T]]
+  def lget(key: String, index: Int = 0): Future[Option[T]]
 
   /**
     * Returns a list containing up to the last n values for the given key
