@@ -42,6 +42,7 @@ class TestWorker(demand: DemandState) extends Actor with ActorLogging {
   import TestWorker._
   import context.dispatcher
 
+  implicit val sys = context.system
   val kvs = KeyValueStore[CurrentState]
 
   // Simulate doing work
@@ -53,7 +54,7 @@ class TestWorker(demand: DemandState) extends Actor with ActorLogging {
       // Simulate getting the current value from the device and publishing it to the kvs
       val currentState = CurrentState(config.prefix, config.data)
       log.info(s"Publishing $currentState")
-      kvs.publish(currentState.extKey, currentState)
+      kvs.set(currentState.extKey, currentState)
   }
 }
 

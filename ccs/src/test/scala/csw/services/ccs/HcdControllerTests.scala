@@ -77,7 +77,7 @@ object HcdControllerTests extends Implicits {
 
     // Simulate getting the initial state from the device and publishing to the kvs
     val initialState = CurrentState(testPrefix1).set(position, "None")
-    kvs.publish(initialState.extKey, initialState)
+    kvs.set(initialState.extKey, initialState)
 
     def receive: Receive = {
       case config: DemandState ⇒
@@ -90,7 +90,7 @@ object HcdControllerTests extends Implicits {
         // Simulate getting the current value from the device and publishing it to the kvs
         val currentState = CurrentState(config.prefix, config.data)
         log.info(s"Publishing $currentState")
-        kvs.publish(currentState.extKey, currentState)
+        kvs.set(currentState.extKey, currentState)
 
       case x ⇒ log.error(s"Unexpected message $x")
     }
