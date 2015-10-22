@@ -7,12 +7,12 @@ import scala.concurrent.Future
 import csw.services.kvs.KeyValueStore._
 
 /**
- * Support for accessing a Redis server.
+ * An implementation of the KeyValueStore trait based on Redis.
  * The host and port can be configured in resources/reference.conf.
  *
  * @param system the Akka actor system, needed to access the settings and RedisClient
  */
-case class RedisKeyValueStore[T: KvsFormatter](implicit system: ActorSystem) extends KeyValueStore[T] {
+case class KeyValueStoreImpl[T: KvsFormatter](implicit system: ActorSystem) extends KeyValueStore[T] {
 
   protected val settings = KvsSettings(system)
   protected val redis = RedisClient(settings.redisHostname, settings.redisPort)
@@ -73,5 +73,33 @@ case class RedisKeyValueStore[T: KvsFormatter](implicit system: ActorSystem) ext
   override def hmget(key: String, field: String): Future[Option[String]] = {
     redis.hmget[String](key, field).map(_.head)
   }
+
+  /**
+   * Publishes the given value for the given key, and also saves it in a list
+   * of at most n items.
+   * @param key the key to publish the value to
+   * @param value the event to publish
+   * @param history number of previous events to keep in a list for reference (set to 0 for no history)
+   * @return the number of subscribers that received the value
+   */
+  override def publish(key: String, value: T, history: Int = KeyValueStore.defaultHistory): Future[Long] = {
+    // Serialize the event
+    val formatter = implicitly[KvsFormatter[T]]
+    val bs = formatter.serialize(value) // only do this once
+
+    if (history >= 0) {
+      // Use a transaction to send all commands at once
+      val redisTransaction = redis.transaction()
+      redisTransaction.watch(key)
+      redisTransaction.lpush(key, bs)
+      redisTransaction.ltrim(key, 0, history + 1)
+      val result = redisTransaction.publish(key, bs)
+      redisTransaction.exec()
+      result
+    } else {
+      redis.publish(key, bs)
+    }
+  }
+
 }
 

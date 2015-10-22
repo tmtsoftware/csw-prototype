@@ -10,7 +10,7 @@ import redis.protocol.{ MultiBulk, RedisReply }
 
 /**
  * Adds the ability to subscribe to objects of type T.
- * The subscribed actor wil receive messages for the given channel.
+ * The subscribed actor wil receive messages of type T for the given keys.
  */
 abstract class Subscriber[T: KvsFormatter] extends Actor with ActorLogging {
 

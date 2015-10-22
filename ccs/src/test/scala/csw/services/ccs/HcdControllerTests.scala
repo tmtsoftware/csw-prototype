@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor._
 import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.kvs.{ Publisher, Implicits }
+import csw.services.kvs.{ KeyValueStore, Implicits }
 import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState }
@@ -67,14 +67,17 @@ object HcdControllerTests extends Implicits {
 
   }
 
-  class TestWorker extends Publisher[CurrentState] {
+  class TestWorker extends Actor with ActorLogging {
 
     import TestWorker._
     import context.dispatcher
 
+    implicit val sys = context.system
+    val kvs = KeyValueStore[CurrentState]
+
     // Simulate getting the initial state from the device and publishing to the kvs
     val initialState = CurrentState(testPrefix1).set(position, "None")
-    publish(initialState.extKey, initialState)
+    kvs.publish(initialState.extKey, initialState)
 
     def receive: Receive = {
       case config: DemandState ⇒
@@ -87,7 +90,7 @@ object HcdControllerTests extends Implicits {
         // Simulate getting the current value from the device and publishing it to the kvs
         val currentState = CurrentState(config.prefix, config.data)
         log.info(s"Publishing $currentState")
-        publish(currentState.extKey, currentState)
+        kvs.publish(currentState.extKey, currentState)
 
       case x ⇒ log.error(s"Unexpected message $x")
     }

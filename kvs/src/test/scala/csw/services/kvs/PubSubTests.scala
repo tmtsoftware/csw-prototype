@@ -19,7 +19,6 @@ class PubSubTests extends TestKit(ActorSystem("Test"))
   // number of seconds to run
   val numSecs = 10
   val subscriber = system.actorOf(Props(classOf[TestSubscriber], "Subscriber-1"))
-  //  val subscriber2 = system.actorOf(Props(classOf[Subscriber], "Subscriber-2"))
   val publisher = system.actorOf(Props(classOf[TestPublisher], self, numSecs))
 
   test("Test subscriber") {
@@ -37,11 +36,14 @@ class PubSubTests extends TestKit(ActorSystem("Test"))
   }
 }
 
-object PubSubTests extends Implicits {
+object PubSubTests {
+  import Implicits._
 
   // A test class that publishes configs
-  case class TestPublisher(caller: ActorRef, numSecs: Int) extends Publisher[SetupConfig] with Implicits {
-    val root = "tmt.mobie.red.dat.exposureInfo"
+  case class TestPublisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging {
+    implicit val sys = context.system
+    val kvs = KeyValueStore[SetupConfig]
+    val prefix = "tcs.mobie.red.dat.exposureInfo"
     val expTime = 1
     var nextId = 0
     var done = false
@@ -54,13 +56,13 @@ object PubSubTests extends Implicits {
     }
 
     while (!done) {
-      publish(root, nextConfig())
+      kvs.publish(prefix, nextConfig())
       Thread.`yield`() // don't want to hog the cpu here
     }
 
     def nextConfig(): SetupConfig = {
       nextId = nextId + 1
-      SetupConfig("test").set(exposureTime, expTime) // XXX change to be a Duration
+      SetupConfig(prefix).set(exposureTime, expTime) // XXX change to be a Duration
     }
 
     override def receive: Receive = {
@@ -69,10 +71,10 @@ object PubSubTests extends Implicits {
   }
 
   // A test class that subscribes to configs
-  case class TestSubscriber(name: String) extends Subscriber[SetupConfig] with Implicits {
+  case class TestSubscriber(name: String) extends Subscriber[SetupConfig] {
     var count = 0
 
-    subscribe("tmt.mobie.red.dat.*")
+    subscribe("tcs.mobie.red.dat.*")
 
     override def receive: Receive = {
       case config: SetupConfig ⇒

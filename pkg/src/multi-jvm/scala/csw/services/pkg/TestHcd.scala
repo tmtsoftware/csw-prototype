@@ -1,8 +1,8 @@
 package csw.services.pkg
 
-import akka.actor.Props
+import akka.actor.{ActorLogging, Actor, Props}
 import csw.services.ccs.PeriodicHcdController
-import csw.services.kvs.Publisher
+import csw.services.kvs.KeyValueStore
 import csw.services.kvs.Implicits._
 import csw.util.cfg.Configurations.StateVariable.{CurrentState, DemandState}
 
@@ -37,10 +37,12 @@ object TestWorker {
 
 }
 
-class TestWorker(demand: DemandState) extends Publisher[CurrentState] {
+class TestWorker(demand: DemandState) extends Actor with ActorLogging {
 
   import TestWorker._
   import context.dispatcher
+
+  val kvs = KeyValueStore[CurrentState]
 
   // Simulate doing work
   log.info(s"Start processing $demand")
@@ -51,7 +53,7 @@ class TestWorker(demand: DemandState) extends Publisher[CurrentState] {
       // Simulate getting the current value from the device and publishing it to the kvs
       val currentState = CurrentState(config.prefix, config.data)
       log.info(s"Publishing $currentState")
-      publish(currentState.extKey, currentState)
+      kvs.publish(currentState.extKey, currentState)
   }
 }
 
