@@ -56,7 +56,7 @@ object PubSubTests {
     }
 
     while (!done) {
-      kvs.publish(prefix, nextConfig())
+      kvs.set(prefix, nextConfig())
       Thread.`yield`() // don't want to hog the cpu here
     }
 

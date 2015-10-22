@@ -13,22 +13,20 @@ import scala.concurrent.duration.{ Duration, FiniteDuration }
  * @tparam T the type (or base type) of objects to store
  */
 case class BlockingKeyValueStore[T: KvsFormatter](timeout: Duration)(implicit system: ActorSystem) {
+
   import KeyValueStore._
 
   val kvs = KeyValueStore[T]
 
   /**
-   * Sets the value for the given key
+   * Sets (and publishes) the value for the given key
    * @param key the key
    * @param value the value to store
-   * @param expire optional amount of time until value expires
-   * @param setCond optional condition for setting the value
+   * @param n the max number of history values to keep (default: 0, no history)
    * @return the result (true if successful)
    */
-  def set(key: String, value: T,
-          expire: Option[FiniteDuration] = None,
-          setCond: SetCondition = SetAlways): Boolean =
-    Await.result[Boolean](kvs.set(key, value, expire, setCond), timeout)
+  def set(key: String, value: T, n: Int = 0): Unit =
+    Await.result[Unit](kvs.set(key, value, n), timeout)
 
   /**
    * Gets the value of the given key
@@ -39,36 +37,17 @@ case class BlockingKeyValueStore[T: KvsFormatter](timeout: Duration)(implicit sy
     Await.result[Option[T]](kvs.get(key), timeout)
 
   /**
-   * Sets the value for the given key as the head of a list, which is used to remember the previous values.
-   * @param key the key to use to store the value
-   * @param value the value to store
-   * @param history number of previous events to keep in a list for reference (must be a positive number)
-   * @return the result (true if successful)
-   */
-  def lset(key: String, value: T, history: Int = defaultHistory): Boolean =
-    Await.result[Boolean](kvs.lset(key, value, history), timeout)
-
-  /**
-   * Gets the most recent value of the given key that was previously set with lset
-   * @param key the key
-   * @return the result, None if the key was not found
-   */
-  def lget(key: String): Option[T] =
-    Await.result[Option[T]](kvs.lget(key), timeout)
-
-  /**
    * Returns a list containing up to the last n values for the given key
    * @param key the key to use
    * @param n max number of history values to return
    */
-  def getHistory(key: String, n: Int = defaultHistory + 1): Seq[T] =
+  def getHistory(key: String, n: Int): Seq[T] =
     Await.result[Seq[T]](kvs.getHistory(key, n), timeout)
 
   /**
    * Deletes the given key(s) from the store
    * @return the number of keys that were deleted
    */
-
   def delete(key: String*): Long =
     Await.result[Long](kvs.delete(key: _*), timeout)
 
@@ -91,5 +70,6 @@ case class BlockingKeyValueStore[T: KvsFormatter](timeout: Duration)(implicit sy
    */
   def hmget(key: String, field: String): Option[String] =
     Await.result[Option[String]](kvs.hmget(key, field), timeout)
+
 }
 

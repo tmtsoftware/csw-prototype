@@ -55,11 +55,9 @@ class KeyValueStoreTests
       res8 ← kvs.hmget("tcs.testx", infoValue.name)
       res9 ← kvs.hmget("tcs.testx", infoStr.name)
     } yield {
-      assert(res1)
       assert(val1.exists(_.prefix == prefix1))
       assert(val1.exists(_.get(infoValue).contains(1)))
       assert(val1.exists(_.get(infoStr).contains("info 1")))
-      assert(res2)
       assert(val2.exists(_.get(infoValue).contains(2)))
       assert(val2.exists(_.get(infoStr).contains("info 2")))
       assert(res3 == 2)
@@ -73,19 +71,19 @@ class KeyValueStoreTests
     Await.result(f, 5.seconds)
   }
 
-  test("Test lset, lget and getHistory") {
+  test("Test set, get and getHistory") {
     val prefix = "tcs.test2"
     val config = SetupConfig(prefix).set(exposureTime, 2)
     //    val testKey = "testKey"
     val n = 3
 
     val f = for {
-      _ ← kvs.lset(prefix, config.set(exposureTime, 3), n)
-      _ ← kvs.lset(prefix, config.set(exposureTime, 4), n)
-      _ ← kvs.lset(prefix, config.set(exposureTime, 5), n)
-      _ ← kvs.lset(prefix, config.set(exposureTime, 6), n)
-      _ ← kvs.lset(prefix, config.set(exposureTime, 7), n)
-      v ← kvs.lget(prefix)
+      _ ← kvs.set(prefix, config.set(exposureTime, 3), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 4), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 5), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 6), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 7), n)
+      v ← kvs.get(prefix)
       h ← kvs.getHistory(prefix, n + 1)
       _ ← kvs.delete(prefix)
     } yield {
@@ -107,7 +105,7 @@ class KeyValueStoreTests
       .set(boolValue, true)
 
     kvs.set(prefix, config).onSuccess {
-      case result if result ⇒
+      case _ ⇒
         kvs.get(prefix).onSuccess {
           case Some(setupConfig) ⇒
             assert(setupConfig.get(infoValue).get == 2)
@@ -117,32 +115,6 @@ class KeyValueStoreTests
         }
     }
   }
-
-  test("Test publish with get") {
-    val prefix = "tcs.test4"
-    val config = SetupConfig(prefix).set(exposureTime, 2)
-    val n = 3
-
-    val f = for {
-      _ ← kvs.publish(prefix, config.set(exposureTime, 3), n)
-      _ ← kvs.publish(prefix, config.set(exposureTime, 4), n)
-      _ ← kvs.publish(prefix, config.set(exposureTime, 5), n)
-      _ ← kvs.publish(prefix, config.set(exposureTime, 6), n)
-      _ ← kvs.publish(prefix, config.set(exposureTime, 7), n)
-      v ← kvs.lget(prefix)
-      h ← kvs.getHistory(prefix, n + 1)
-      _ ← kvs.delete(prefix)
-    } yield {
-      assert(v.isDefined)
-      assert(v.get.get(exposureTime).get == 7.0)
-      assert(h.size == n + 1)
-      for (i ← 0 to n) {
-        logger.info(s"History: $i: ${h(i)}")
-      }
-    }
-    Await.result(f, 5.seconds)
-  }
-
 
   override def afterAll(): Unit = {
     system.terminate()

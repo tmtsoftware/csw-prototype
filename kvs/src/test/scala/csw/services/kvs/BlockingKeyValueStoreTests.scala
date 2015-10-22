@@ -28,7 +28,7 @@ class BlockingKeyValueStoreTests
 
   val kvs = BlockingKeyValueStore[SetupConfig](5.seconds)
 
-  test("Test Set and Get") {
+  test("Test set and get") {
     val config1 = SetupConfig("tcs.test")
       .set(infoValue, 1)
       .set(infoStr, "info 1")
@@ -37,14 +37,14 @@ class BlockingKeyValueStoreTests
       .set(infoValue, 2)
       .set(infoStr, "info 2")
 
-    assert(kvs.set("test1", config1))
+    kvs.set("test1", config1)
 
     val val1 = kvs.get("test1").get
     assert(val1.prefix == "tcs.test")
     assert(val1.get(infoValue).contains(1))
     assert(val1.get(infoStr).contains("info 1"))
 
-    assert(kvs.set("test2", config2))
+    kvs.set("test2", config2)
 
     val val2 = kvs.get("test2")
     assert(val2.exists(_.get(infoValue).contains(2)))
@@ -56,33 +56,31 @@ class BlockingKeyValueStoreTests
     assert(kvs.get("test2").isEmpty)
 
     assert(kvs.delete("test1", "test2") == 0)
-
-    assert(kvs.hmset("testx", config1.getStringMap))
-    assert(kvs.hmget("testx", infoValue.name).contains("1"))
-    assert(kvs.hmget("testx", infoStr.name).contains("info 1"))
   }
 
-  test("Test lset, lget and getHistory") {
+  test("Test set, get and getHistory") {
     val config = SetupConfig("tcs.testPrefix").set(exposureTime, 2)
     val key = "test"
     val n = 3
 
-    kvs.lset(key, config.set(exposureTime, 3), n)
-    kvs.lset(key, config.set(exposureTime, 4), n)
-    kvs.lset(key, config.set(exposureTime, 5), n)
-    kvs.lset(key, config.set(exposureTime, 6), n)
-    kvs.lset(key, config.set(exposureTime, 7), n)
-    val v = kvs.lget(key)
-    val h = kvs.getHistory(key, n + 1)
-    kvs.delete(key)
+    kvs.set(key, config.set(exposureTime, 3), n)
+    kvs.set(key, config.set(exposureTime, 4), n)
+    kvs.set(key, config.set(exposureTime, 5), n)
+    kvs.set(key, config.set(exposureTime, 6), n)
+    kvs.set(key, config.set(exposureTime, 7), n)
 
+    val v = kvs.get(key)
     assert(v.isDefined)
     assert(v.get.get(exposureTime).get == 7.0)
-    assert(h.size == n + 1)
 
+    val h = kvs.getHistory(key, n+1)
+    assert(h.size == n+1)
     for (i ← 0 to n) {
       logger.info(s"History: $i: ${h(i)}")
     }
+
+    kvs.delete(key)
+
   }
 }
 

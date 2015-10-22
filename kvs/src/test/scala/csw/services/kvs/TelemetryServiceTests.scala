@@ -37,14 +37,14 @@ class TelemetryServiceTests
       .set(infoValue, 2)
       .set(infoStr, "info 2")
 
-    assert(kvs.set("test1", config1))
+    kvs.set("test1", config1)
 
     val val1 = kvs.get("test1").get
     assert(val1.prefix == "tcs.test")
     assert(val1.get(infoValue).contains(1))
     assert(val1.get(infoStr).contains("info 1"))
 
-    assert(kvs.set("test2", config2))
+    kvs.set("test2", config2)
 
     val val2 = kvs.get("test2")
     assert(val2.exists(_.get(infoValue).contains(2)))
@@ -67,12 +67,12 @@ class TelemetryServiceTests
     val key = "test"
     val n = 3
 
-    kvs.lset(key, config.set(exposureTime, 3), n)
-    kvs.lset(key, config.set(exposureTime, 4), n)
-    kvs.lset(key, config.set(exposureTime, 5), n)
-    kvs.lset(key, config.set(exposureTime, 6), n)
-    kvs.lset(key, config.set(exposureTime, 7), n)
-    val v = kvs.lget(key)
+    kvs.set(key, config.set(exposureTime, 3), n)
+    kvs.set(key, config.set(exposureTime, 4), n)
+    kvs.set(key, config.set(exposureTime, 5), n)
+    kvs.set(key, config.set(exposureTime, 6), n)
+    kvs.set(key, config.set(exposureTime, 7), n)
+    val v = kvs.get(key)
     val h = kvs.getHistory(key, n + 1)
     kvs.delete(key)
 

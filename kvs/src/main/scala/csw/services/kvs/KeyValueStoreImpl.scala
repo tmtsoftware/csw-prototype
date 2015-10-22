@@ -2,7 +2,6 @@ package csw.services.kvs
 
 import akka.actor.ActorSystem
 import redis.RedisClient
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
 import csw.services.kvs.KeyValueStore._
 
@@ -18,43 +17,17 @@ case class KeyValueStoreImpl[T: KvsFormatter](implicit system: ActorSystem) exte
   protected val redis = RedisClient(settings.redisHostname, settings.redisPort)
   implicit val execContext = system.dispatcher
 
-  override def set(key: String, value: T, expire: Option[FiniteDuration],
-                   setCond: SetCondition): Future[Boolean] = {
-    // Do this once, since we will need the value once for set and again for publish
-    val formatter = implicitly[KvsFormatter[T]]
-    val bs = formatter.serialize(value)
+  override def set(key: String, value: T, history: Int): Future[Unit] = publish(key, value, history).map(_ ⇒ ())
 
-    val msOpt = if (expire.isDefined) Some(expire.get.toMillis) else None
-    val (nx, xx) = setCond match {
-      case SetOnlyIfNotExists ⇒ (true, false)
-      case SetOnlyIfExists    ⇒ (false, true)
-      case SetAlways          ⇒ (false, false)
-    }
+  override def get(key: String): Future[Option[T]] = lget(key, 0)
 
-    val result = redis.set(key, bs, None, msOpt, nx, xx)
-    redis.publish(key, bs)
-    result
-  }
-
-  override def get(key: String): Future[Option[T]] = {
-    redis.get(key)
-  }
-
-  override def lset(key: String, value: T, history: Int): Future[Boolean] = {
-    if (history >= 0) {
-      // Use a transaction to send all commands at once
-      val redisTransaction = redis.transaction()
-      redisTransaction.watch(key)
-      redisTransaction.lpush(key, value)
-      redisTransaction.ltrim(key, 0, history + 1)
-      val f = redisTransaction.exec()
-      f.map(_.responses.isDefined) // XXX How to check if transaction was successful?
-    } else {
-      Future.successful(false)
-    }
-  }
-
-  override def lget(key: String, index: Int = 0): Future[Option[T]] = {
+  /**
+   * Gets the most recent value of the given key that was previously set with lset
+   * @param key the key
+   * @param index the index of the value to get (defaults to 0, for the most recent value)
+   * @return the future result, None if the key was not found
+   */
+  def lget(key: String, index: Int = 0): Future[Option[T]] = {
     redis.lindex(key, index)
   }
 
@@ -66,10 +39,24 @@ case class KeyValueStoreImpl[T: KvsFormatter](implicit system: ActorSystem) exte
     redis.del(keys: _*)
   }
 
+  /**
+   * Sets a value for the given key, where the value itself is a map with keys and values.
+   *
+   * @param key the key
+   * @param value the map of values to store
+   * @return the future result (true if successful)
+   */
   override def hmset(key: String, value: Map[String, String]): Future[Boolean] = {
     redis.hmset(key, value)
   }
 
+  /**
+   * This method is mainly useful for testing hmset. It gets the value of the given field
+   * in the map that is the value for the given key. The value is returned here as a String.
+   * @param key the key
+   * @param field the key for a value in the map
+   * @return the future string value for the field, if found
+   */
   override def hmget(key: String, field: String): Future[Option[String]] = {
     redis.hmget[String](key, field).map(_.head)
   }
@@ -82,23 +69,19 @@ case class KeyValueStoreImpl[T: KvsFormatter](implicit system: ActorSystem) exte
    * @param history number of previous events to keep in a list for reference (set to 0 for no history)
    * @return the number of subscribers that received the value
    */
-  override def publish(key: String, value: T, history: Int = KeyValueStore.defaultHistory): Future[Long] = {
+  def publish(key: String, value: T, history: Int): Future[Long] = {
     // Serialize the event
     val formatter = implicitly[KvsFormatter[T]]
     val bs = formatter.serialize(value) // only do this once
-
-    if (history >= 0) {
-      // Use a transaction to send all commands at once
-      val redisTransaction = redis.transaction()
-      redisTransaction.watch(key)
-      redisTransaction.lpush(key, bs)
-      redisTransaction.ltrim(key, 0, history + 1)
-      val result = redisTransaction.publish(key, bs)
-      redisTransaction.exec()
-      result
-    } else {
-      redis.publish(key, bs)
-    }
+    val h = if (history >= 0) history else 0
+    // Use a transaction to send all commands at once
+    val redisTransaction = redis.transaction()
+    redisTransaction.watch(key)
+    redisTransaction.lpush(key, bs)
+    redisTransaction.ltrim(key, 0, h + 1)
+    val result = redisTransaction.publish(key, bs)
+    redisTransaction.exec()
+    result
   }
 
 }
