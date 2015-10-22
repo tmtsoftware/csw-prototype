@@ -24,6 +24,6 @@ object TestConfig {
     .set(c2, "33:58:21.69")
     .set(equinox, "J2000")
 
-  val testConfigArg = SetupConfigArg("obs0001", Seq(testConfig1, testConfig2))
+  val testConfigArg = SetupConfigArg("obs0001", testConfig1, testConfig2)
 }
 

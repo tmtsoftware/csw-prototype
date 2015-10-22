@@ -263,16 +263,16 @@ object Configurations {
    */
   sealed trait ControlConfigArg extends ConfigArg
 
-  final case class SetupConfigArg(info: ConfigInfo, configs: Seq[SetupConfig]) extends SequenceConfigArg with ControlConfigArg
+  final case class SetupConfigArg(info: ConfigInfo, configs: SetupConfig*) extends SequenceConfigArg with ControlConfigArg
 
   object SetupConfigArg {
-    def apply(configs: SetupConfig*)(implicit info: ConfigInfo): SetupConfigArg = SetupConfigArg(info, configs.toSeq)
+    def apply(configs: SetupConfig*)(implicit info: ConfigInfo): SetupConfigArg = SetupConfigArg(info, configs: _*)
   }
 
-  final case class ObserveConfigArg(info: ConfigInfo, configs: Seq[ObserveConfig]) extends SequenceConfigArg with ControlConfigArg
+  final case class ObserveConfigArg(info: ConfigInfo, configs: ObserveConfig*) extends SequenceConfigArg with ControlConfigArg
 
   object ObserveConfigArg {
-    def apply(configs: ObserveConfig*)(implicit info: ConfigInfo): ObserveConfigArg = ObserveConfigArg(info, configs.toSeq)
+    def apply(configs: ObserveConfig*)(implicit info: ConfigInfo): ObserveConfigArg = ObserveConfigArg(info, configs: _*)
   }
 
   final case class WaitConfigArg(info: ConfigInfo, config: WaitConfig) extends SequenceConfigArg

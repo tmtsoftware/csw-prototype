@@ -73,8 +73,8 @@ class BlockingKeyValueStoreTests
     assert(v.isDefined)
     assert(v.get.get(exposureTime).get == 7.0)
 
-    val h = kvs.getHistory(key, n+1)
-    assert(h.size == n+1)
+    val h = kvs.getHistory(key, n + 1)
+    assert(h.size == n + 1)
     for (i ← 0 to n) {
       logger.info(s"History: $i: ${h(i)}")
     }

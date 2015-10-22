@@ -60,7 +60,7 @@ class SerializationTests extends FunSuite {
   test("SetupConfigArg Java serialization") {
     import ConfigSerializer._
 
-    val sca1 = SetupConfigArg(ConfigInfo(obsId), Seq(sc1))
+    val sca1 = SetupConfigArg(ConfigInfo(obsId), sc1)
     val bytes1 = write(sca1)
 
     val sout1 = read[SetupConfigArg](bytes1)
@@ -70,7 +70,7 @@ class SerializationTests extends FunSuite {
   test("ObserveConfigArg Java serialization") {
     import ConfigSerializer._
 
-    val oca1 = ObserveConfigArg(ConfigInfo(obsId), Seq(ob1))
+    val oca1 = ObserveConfigArg(ConfigInfo(obsId), ob1)
     val bytes1 = write(oca1)
 
     val out1 = read[ObserveConfigArg](bytes1)
