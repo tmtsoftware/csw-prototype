@@ -4,7 +4,7 @@ import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor._
 import csw.util.cfg.Events.ObserveEvent
 import csw.util.cfg.StandardKeys._
-import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
+import org.scalatest.{ BeforeAndAfterAll, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
@@ -15,7 +15,7 @@ class EventPubSubTests extends TestKit(ActorSystem("Test"))
   val settings = EventServiceSettings(system)
   if (settings.useEmbeddedHornetq) {
     // Start an embedded HornetQ server, so no need to have it running externally!
-    Hq.startEmbeddedHornetQ()
+    EventService.startEmbeddedHornetQ()
   }
 
   val numSecs = 20
@@ -41,17 +41,17 @@ class EventPubSubTests extends TestKit(ActorSystem("Test"))
 }
 
 // A test class that publishes events
-private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging with EventPublisher {
+private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging {
   val channel = "tcs.mobie.red.dat.exposureInfo"
   val expTime = 1
   var nextId = 0
   var done = false
 
-  //Use the system's dispatcher as ExecutionContext
-
   import context.dispatcher
 
-  //  context.system.scheduler.maxFrequency
+  val settings = EventServiceSettings(context.system)
+  val eventService = EventService(settings)
+
   context.system.scheduler.scheduleOnce(numSecs.seconds) {
     caller ! "done"
     done = true
@@ -59,7 +59,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
 
   while (!done) {
     val event = nextEvent()
-    publish(event)
+    eventService.publish(event)
     Thread.`yield`() // don't want to hog the cpu here
     if (nextId % 10000 == 0)
       log.info(s"Published $nextId events so far: $event")
@@ -67,7 +67,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
 
   // Returns the next event to publish
   def nextEvent(): Event = {
-    val time = System.currentTimeMillis()
+//    val time = System.currentTimeMillis()
     nextId = nextId + 1
     ObserveEvent(channel).set(exposureTime, 1.0).set(repeats, 2)
   }
