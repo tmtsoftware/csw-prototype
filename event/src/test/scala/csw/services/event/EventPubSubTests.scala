@@ -67,7 +67,7 @@ private case class Publisher(caller: ActorRef, numSecs: Int) extends Actor with 
 
   // Returns the next event to publish
   def nextEvent(): Event = {
-//    val time = System.currentTimeMillis()
+    //    val time = System.currentTimeMillis()
     nextId = nextId + 1
     ObserveEvent(channel).set(exposureTime, 1.0).set(repeats, 2)
   }

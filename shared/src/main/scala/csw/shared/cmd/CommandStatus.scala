@@ -30,6 +30,11 @@ sealed trait CommandStatus {
    * True if not the Completed status
    */
   def isFailed: Boolean = !isSuccess
+
+  /**
+    * True if execution of the command has completed
+    */
+  def isDone: Boolean = true
 }
 
 /**
@@ -37,14 +42,32 @@ sealed trait CommandStatus {
  */
 object CommandStatus {
 
+  /**
+    * The command has completed successfully
+    */
   case class Completed(runId: RunId) extends CommandStatus {
     override def isSuccess: Boolean = true
   }
 
+  /**
+    * The command has been accepted (checked requirements, etc.)
+    */
+  case class Accepted(runId: RunId) extends CommandStatus {
+    override def isDone: Boolean = false
+  }
+
+  /**
+    * The command failed with the given message
+    */
   case class Error(runId: RunId, override val message: String) extends CommandStatus
 
+  /**
+    * The command was aborted
+    */
   case class Aborted(runId: RunId) extends CommandStatus
 
+  /**
+    * The command was canceled
+    */
   case class Canceled(runId: RunId) extends CommandStatus
-
 }

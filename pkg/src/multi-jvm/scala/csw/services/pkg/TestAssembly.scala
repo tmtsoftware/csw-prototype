@@ -1,10 +1,11 @@
 package csw.services.pkg
 
+import akka.actor.ActorRef
 import csw.services.ccs.{StateMatcherActor, AssemblyController}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
 import csw.services.loc.ServiceRef
-import csw.shared.cmd.RunId
+import csw.shared.cmd.{CommandStatus, RunId}
 import csw.util.cfg.Configurations.SetupConfigArg
 import csw.util.cfg.Configurations.StateVariable.DemandState
 
@@ -14,9 +15,13 @@ case class TestAssembly(name: String) extends Assembly with AssemblyController w
   //  val hcd2aServiceRef = ServiceRef(ServiceId("HCD-2A", ServiceType.HCD), AkkaType)
   //  val hcd2bServiceRef = ServiceRef(ServiceId("HCD-2B", ServiceType.HCD), AkkaType)
 
-  override protected def process(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg): Unit = {
+  override protected def process(services: Map[ServiceRef, ResolvedService],
+                                 configArg: SetupConfigArg, replyTo: ActorRef): Unit = {
     //    val hcd2a = services(hcd2aServiceRef)
     //    val hcd2b = services(hcd2bServiceRef)
+
+    // Here we should validate the config arguments before sending the accepted message
+    replyTo ! CommandStatus.Accepted(configArg.info.runId)
 
     // The code below just distributes the configs to the HCDs based on matching prefix,
     // but you could just as well generate new configs and send them here...
@@ -29,8 +34,8 @@ case class TestAssembly(name: String) extends Assembly with AssemblyController w
         DemandState(config.configKey.prefix, config.data)
       }
 
-    // Wait for the demand states to match the current states, then reply to the sender
-    context.actorOf(StateMatcherActor.props(demandStates.toList, sender(), RunId(configArg.info.runId)))
+    // Wait for the demand states to match the current states, then reply to the sender with the command status
+    context.actorOf(StateMatcherActor.props(demandStates.toList, replyTo, configArg.info.runId))
 
   }
 }

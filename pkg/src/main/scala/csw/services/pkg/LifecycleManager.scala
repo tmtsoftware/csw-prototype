@@ -168,7 +168,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       subscribeToLifecycleStates(Loaded(name), onlyRunning)
 
     case configArg: ControlConfigArg ⇒
-      cmdStatusError(RunId(configArg.info.runId), "loaded", "running")
+      cmdStatusError(configArg.info.runId, "loaded", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "loaded")
@@ -215,7 +215,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
       subscribeToLifecycleStates(Initialized(name), onlyRunning)
 
     case configArg: ControlConfigArg ⇒
-      cmdStatusError(RunId(configArg.info.runId), "initialized", "running")
+      cmdStatusError(configArg.info.runId, "initialized", "running")
 
     case msg ⇒
       unexpectedMessage(msg, "initialized")

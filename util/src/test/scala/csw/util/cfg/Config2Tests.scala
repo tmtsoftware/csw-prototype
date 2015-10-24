@@ -1,13 +1,13 @@
 package csw.util.cfg
 
 import csw.util.cfg.Configurations._
-import csw.util.cfg.Subsystem.{AOESW, IRIS, WFOS}
-import csw.util.cfg.UnitsOfMeasure.{Meters, Seconds}
+import csw.util.cfg.Subsystem.{ AOESW, IRIS, WFOS }
+import csw.util.cfg.UnitsOfMeasure.{ Meters, Seconds }
 import org.scalatest.FunSpec
 
 /**
-  * Tests the config classes
-  */
+ * Tests the config classes
+ */
 class Config2Tests extends FunSpec {
   val fqn1 = "tcs.base.pos.name"
   val fqn1prefix = "tcs.base.pos"
@@ -28,8 +28,8 @@ class Config2Tests extends FunSpec {
   //  val testConfigInfo = ConfigInfo(ObsID(testObsId))
 
   /**
-    * Tests for ValueData
-    */
+   * Tests for ValueData
+   */
   describe("Basic key value tests") {
     import Configurations.ConfigKey._
     import StandardKeys._
