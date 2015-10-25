@@ -90,7 +90,7 @@ lazy val pkg = project
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
-  ) configs MultiJvm
+  )
 
 
 // Event Service
@@ -100,6 +100,15 @@ lazy val event = project
     compile(akkaActor, hornetqServer, hornetqNative, ficus) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(util, log)
+
+// Time Service support
+lazy val ts = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(log)
+
 
 // -- Apps --
 
