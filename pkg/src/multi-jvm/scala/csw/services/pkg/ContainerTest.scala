@@ -70,6 +70,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             Await.result(LocationService.resolve(serviceRefs), timeout.duration)
 
             assembly1 ! TestConfig.testConfigArg
+            expectMsgType[CommandStatus.Accepted]
             expectMsgType[CommandStatus.Completed]
           }
           println("\nContainer1 tests passed\n")

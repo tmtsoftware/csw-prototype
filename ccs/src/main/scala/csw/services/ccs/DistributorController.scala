@@ -83,12 +83,12 @@ protected case class DistributorController(serviceRefs: Set[ServiceRef], timeout
       case Success(commandStatusList) ⇒
         if (commandStatusList.exists(_.isFailed)) {
           val msg = commandStatusList.filter(_.isFailed).map(_.message).mkString(", ")
-          replyTo ! CommandStatus.Error(RunId(configArg.info.runId), msg)
+          replyTo ! CommandStatus.Error(configArg.info.runId, msg)
         } else {
-          replyTo ! CommandStatus.Completed(RunId(configArg.info.runId))
+          replyTo ! CommandStatus.Completed(configArg.info.runId)
         }
       case Failure(ex) ⇒
-        replyTo ! CommandStatus.Error(RunId(configArg.info.runId), ex.getMessage)
+        replyTo ! CommandStatus.Error(configArg.info.runId, ex.getMessage)
     }
   }
 }

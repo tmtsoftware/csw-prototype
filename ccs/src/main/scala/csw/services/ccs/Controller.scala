@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import akka.actor.{ ActorLogging, Actor }
+import akka.actor.{ ActorRef, ActorLogging, Actor }
 import csw.services.loc.LocationService.{ ResolvedService, Disconnected, ServicesReady }
 import csw.services.loc.ServiceRef
 import csw.util.cfg.Configurations._
@@ -123,17 +123,17 @@ trait HcdController extends Actor with ActorLogging {
   protected def additionalReceive: Receive = Actor.emptyBehavior
 }
 
-/**
- * Assembly controller
- */
-object AssemblyController {
-
-  /**
-   * Base trait of all received messages
-   */
-  sealed trait AssemblyControllerMessage
-
-}
+///**
+// * Assembly controller
+// */
+//object AssemblyController {
+//
+//  /**
+//   * Base trait of all received messages
+//   */
+//  sealed trait AssemblyControllerMessage
+//
+//}
 
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
@@ -142,20 +142,28 @@ trait AssemblyController extends Actor with ActorLogging {
 
   override def receive = waitingForServices
 
+  /**
+   * Receive state while waiting for required services
+   */
   def waitingForServices: Receive = additionalReceive orElse {
     case config: SetupConfigArg ⇒ log.warning(s"Ignoring config since services not connected: $config")
 
-    case ServicesReady(map)     ⇒ context.become(connected(map))
+    case ServicesReady(map) ⇒
+      connected(map)
+      context.become(ready(map))
 
-    case Disconnected           ⇒
+    case Disconnected ⇒
 
-    case x                      ⇒ log.warning(s"Received unexpected message: $x")
+    case x            ⇒ log.warning(s"Received unexpected message: $x")
   }
 
-  def connected(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
-    case config: SetupConfigArg ⇒ process(services, config)
+  /**
+   * Receive state while required services are available
+   */
+  def ready(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
+    case config: SetupConfigArg ⇒ process(services, config, sender())
 
-    case ServicesReady(map)     ⇒ context.become(connected(map))
+    case ServicesReady(map)     ⇒ context.become(ready(map))
 
     case Disconnected           ⇒ context.become(waitingForServices)
 
@@ -163,16 +171,31 @@ trait AssemblyController extends Actor with ActorLogging {
   }
 
   /**
-   * Called to process the config and reply to the sender with the command status
+   * Called to process the config and reply to the given actor with the command status.
+   * The replyTo should receive a CommandStatus.Accepted message, once the config has been validated,
+   * and then a CommandStatus.Complete (or Error, Canceled, Aborted) when complete.
+   *
    * @param services contains information about any required services
    * @param configArg contains a list of configurations
+   * @param replyTo the actor that should receive command status messages for the configArg.
    */
-  protected def process(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg): Unit
+  protected def process(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg, replyTo: ActorRef): Unit
 
   /**
    * Derived classes and traits can extend this to accept additional messages
    */
   protected def additionalReceive: Receive
+
+  /**
+   * Derived classes and traits can extend this to be notified when required services are ready
+   * @param services maps serviceRef to information that includes the host, port and actorRef
+   */
+  protected def connected(services: Map[ServiceRef, ResolvedService]): Unit = {}
+
+  /**
+   * Derived classes and traits can extend this to be notified when required services are disconnected
+   */
+  protected def disconnected(): Unit = {}
 
 }
 
