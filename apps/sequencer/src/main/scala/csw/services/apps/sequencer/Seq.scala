@@ -5,7 +5,7 @@ import akka.util.Timeout
 import csw.services.ccs.{ AssemblyClient, BlockingAssemblyClient }
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.{ ServiceRef, ServiceId, LocationService, ServiceType }
-import csw.services.pkg.{ LifecycleManager, Container }
+import csw.services.pkg.{ Supervisor, Container }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -50,9 +50,9 @@ object Seq {
     def stop(): Unit = actorRef ! Container.Stop
     def halt(): Unit = actorRef ! Container.Halt
     def restart(): Unit = actorRef ! Container.Restart
-    def initialize(): Unit = actorRef ! LifecycleManager.Initialize
-    def Startup(): Unit = actorRef ! LifecycleManager.Startup
-    def shutdown(): Unit = actorRef ! LifecycleManager.Shutdown
-    def uninitialize(): Unit = actorRef ! LifecycleManager.Uninitialize
+    def initialize(): Unit = actorRef ! Supervisor.Initialize
+    def Startup(): Unit = actorRef ! Supervisor.Startup
+    def shutdown(): Unit = actorRef ! Supervisor.Shutdown
+    def uninitialize(): Unit = actorRef ! Supervisor.Uninitialize
   }
 }

@@ -4,16 +4,15 @@ import java.time.Duration
 import java.time._
 
 import akka.actor._
-import akka.testkit.{TestKit, ImplicitSender}
+import akka.testkit.{ TestKit, ImplicitSender }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
-
+import org.scalatest.{ BeforeAndAfterAll, FunSuiteLike }
 
 /**
-  * Created by gillies on 10/23/15.
-  */
+ * Created by gillies on 10/23/15.
+ */
 class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike
-  with LazyLogging with BeforeAndAfterAll {
+    with LazyLogging with BeforeAndAfterAll {
 
   test("Basic Java Time Tests") {
     import TimeService._
@@ -29,12 +28,12 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
 
     assert(nyNow.isAfter(hwNow))
     // Try to determine that we have Hawaii time
-    assert(hwNow.equals(now) == false)  // Not the same, good
+    assert(hwNow.equals(now) == false) // Not the same, good
     val diffHwNy = Duration.between(nyNow, hwNow) // Difference should be 6 hrs
     assert(Math.abs(diffHwNy.toHours) == hoursFromNyToHI)
 
     val utcNow = UTCTimeNow
-    val gpsNow:LocalTime = GPSTimeNow
+    val gpsNow: LocalTime = GPSTimeNow
     val taiNow = TAITimeNow
 
     assert(gpsNow.isAfter(utcNow))
@@ -78,21 +77,21 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
     var count = 0;
 
     def receive: Receive = {
-      case "once" => {
+      case "once" ⇒ {
         log.info("Received once start")
         val c = scheduleOnce(localTimeNow.plusSeconds(5), context.self, "once-done")
       }
-      case "five" => {
+      case "five" ⇒ {
         log.info("Received multi start")
         val c = schedule(localTimeNow.plusSeconds(1), java.time.Duration.ofSeconds(1), context.self, "count")
-        caller ! c  //Return the cancellable
+        caller ! c //Return the cancellable
       }
-      case "count" => {
+      case "count" ⇒ {
         count = count + 1
         log.info(s"Count: $count")
         if (count >= 5) caller ! count
       }
-      case "once-done" => {
+      case "once-done" ⇒ {
         log.info("Received Done")
         caller ! "done"
       }

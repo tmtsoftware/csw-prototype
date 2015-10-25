@@ -2,7 +2,7 @@ package csw.services.pkg
 
 import akka.actor._
 import csw.services.loc.ServiceId
-import LifecycleManager._
+import Supervisor._
 
 /**
  * Represents a Component, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).
@@ -18,10 +18,10 @@ object Component {
    * @param prefix the configuration prefix (part of configs that component should receive)
    * @param services a list of service ids for the services the component depends on
    * @param system the component's private actor system
-   * @param lifecycleManager the component's lifecycle manager
+   * @param supervisor the component's lifecycle manager
    */
   case class ComponentInfo(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId],
-                           system: ActorSystem, lifecycleManager: ActorRef)
+                           system: ActorSystem, supervisor: ActorRef)
 
   /**
    * Creates a component actor with a new ActorSystem and LifecycleManager
@@ -35,9 +35,9 @@ object Component {
   def create(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): ComponentInfo = {
     val name = serviceId.name
     val system = ActorSystem(s"$name-system")
-    val lifecycleManager = system.actorOf(LifecycleManager.props(props, serviceId, prefix, services), s"$name-lifecycle-manager")
-    lifecycleManager ! Startup
-    ComponentInfo(props, serviceId, prefix, services, system, lifecycleManager)
+    val supervisor = system.actorOf(Supervisor.props(props, serviceId, prefix, services), s"$name-lifecycle-manager")
+    supervisor ! Startup
+    ComponentInfo(props, serviceId, prefix, services, system, supervisor)
   }
 }
 

@@ -1,22 +1,21 @@
 package csw.services.kvs
 
-import akka.actor.ActorSystem
+import akka.actor.ActorRefFactory
 import csw.services.kvs.KeyValueStore.KvsFormatter
 
 import scala.concurrent.Await
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.Duration
 
 /**
  * A wrapper API for a KVS that waits for operations to complete before returing.
  *
  * @param timeout the max amount of time to wait for an operation to complete
+ * @param _system Akka env required by RedisClient
  * @tparam T the type (or base type) of objects to store
  */
-case class BlockingKeyValueStore[T: KvsFormatter](timeout: Duration)(implicit system: ActorSystem) {
+case class BlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: KvsSettings)(implicit _system: ActorRefFactory) {
 
-  import KeyValueStore._
-
-  val kvs = KeyValueStore[T]
+  val kvs = KeyValueStore[T](settings)
 
   /**
    * Sets (and publishes) the value for the given key

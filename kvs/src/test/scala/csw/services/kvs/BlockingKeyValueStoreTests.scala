@@ -19,14 +19,15 @@ object BlockingKeyValueStoreTests {
 }
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
-@DoNotDiscover
+//@DoNotDiscover
 class BlockingKeyValueStoreTests
     extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with Implicits {
 
   import BlockingKeyValueStoreTests._
 
-  val kvs = BlockingKeyValueStore[SetupConfig](5.seconds)
+  val settings = KvsSettings(system)
+  val kvs = BlockingKeyValueStore[SetupConfig](5.seconds, settings)
 
   test("Test set and get") {
     val config1 = SetupConfig("tcs.test")

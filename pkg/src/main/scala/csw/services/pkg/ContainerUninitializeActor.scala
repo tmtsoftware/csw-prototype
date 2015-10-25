@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.{ ActorLogging, Actor, Props }
-import LifecycleManager._
+import Supervisor._
 
 // Used to uninitialize components and then wait for confirmation before exiting or restarting
 private[pkg] object ContainerUninitializeActor {
@@ -15,8 +15,8 @@ private[pkg] class ContainerUninitializeActor(components: Map[String, Component.
   // Subscribe to Loaded lifecycle state messages from all components
   components.foreach {
     case (name, info) ⇒
-      info.lifecycleManager ! LifecycleManager.SubscribeToLifecycleStates()
-      info.lifecycleManager ! LifecycleManager.Uninitialize
+      info.supervisor ! Supervisor.SubscribeToLifecycleStates()
+      info.supervisor ! Supervisor.Uninitialize
   }
 
   context.become(receiveState(components.keys.toList))

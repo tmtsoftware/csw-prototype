@@ -2,9 +2,9 @@ package csw.services.pkg
 
 import akka.actor.{ActorLogging, Actor, Props}
 import csw.services.ccs.PeriodicHcdController
-import csw.services.kvs.KeyValueStore
+import csw.services.kvs.{DemandKvs, KvsSettings, KeyValueStore}
 import csw.services.kvs.Implicits._
-import csw.util.cfg.Configurations.StateVariable.{CurrentState, DemandState}
+import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.duration._
 
@@ -12,38 +12,40 @@ import scala.concurrent.duration._
 object TestHcd {
 
   // Message sent to self to simulate work done
-  case class WorkDone(config: DemandState)
+  case class WorkDone(config: SetupConfig)
 
 }
 
 case class TestHcd(name: String) extends Hcd with PeriodicHcdController with LifecycleHandler {
 
-  override def rate: FiniteDuration = 1.second
-
   override def process(): Unit = {
     nextConfig.foreach { config =>
       // Simulate work being done
-      context.actorOf(TestWorker.props(DemandState(config.prefix, config.data)))
+      context.actorOf(TestWorker.props(config))
     }
   }
 }
 
 // -- Test worker actor that simulates doing some work --
 object TestWorker {
-  def props(demand: DemandState): Props = Props(classOf[TestWorker], demand)
+  def props(demand: SetupConfig): Props = Props(classOf[TestWorker], demand)
 
   // Message sent to self to simulate work done
-  case class WorkDone(config: DemandState)
+  case class WorkDone(config: SetupConfig)
 
 }
 
-class TestWorker(demand: DemandState) extends Actor with ActorLogging {
+class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
 
   import TestWorker._
   import context.dispatcher
 
-  implicit val sys = context.system
-  val kvs = KeyValueStore[CurrentState]
+  val settings = KvsSettings(context.system)
+  val kvs = KeyValueStore[SetupConfig](settings)
+  val demandKvs = DemandKvs(kvs)
+
+  // Sets the demand state variable
+  demandKvs.setDemand(demand)
 
   // Simulate doing work
   log.info(s"Start processing $demand")
@@ -52,9 +54,8 @@ class TestWorker(demand: DemandState) extends Actor with ActorLogging {
   def receive: Receive = {
     case WorkDone(config) =>
       // Simulate getting the current value from the device and publishing it to the kvs
-      val currentState = CurrentState(config.prefix, config.data)
-      log.info(s"Publishing $currentState")
-      kvs.set(currentState.extKey, currentState)
+      log.info(s"Publishing $config")
+      kvs.set(config.prefix, config)
   }
 }
 

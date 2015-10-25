@@ -5,11 +5,11 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.Disconnected
 import csw.services.loc.ServiceType.HCD
 import csw.services.loc.{ServiceRef, ServiceId, LocationService}
-import csw.services.pkg.LifecycleManager.LifecycleStateChanged
+import csw.services.pkg.Supervisor.LifecycleStateChanged
 import csw.shared.cmd.CommandStatus
 import csw.util.cfg.TestConfig
 
@@ -57,7 +57,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           val map = expectMsgType[Container.Components].map
           assert(map.size == 1)
           for((name, assembly1) <- map) {
-            assembly1 ! LifecycleManager.SubscribeToLifecycleStates(onlyRunning = true)
+            assembly1 ! Supervisor.SubscribeToLifecycleStates(onlyRunning = true)
             val stateChange = expectMsgType[LifecycleStateChanged]
             assert(stateChange.state.isRunning)
 
@@ -69,13 +69,13 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             implicit val timeout: Timeout = 20.seconds
             Await.result(LocationService.resolve(serviceRefs), timeout.duration)
 
-            assembly1 ! TestConfig.testConfigArg
+            assembly1 ! Submit(TestConfig.testConfigArg)
             expectMsgType[CommandStatus.Accepted]
             expectMsgType[CommandStatus.Completed]
           }
           println("\nContainer1 tests passed\n")
           enterBarrier("done")
-          container ! LifecycleManager.Uninitialize
+          container ! Supervisor.Uninitialize
         }
       }
 
@@ -85,7 +85,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         val map = expectMsgType[Container.Components].map
         assert(map.size == 2)
         for ((name, hcd) <- map) {
-          hcd ! LifecycleManager.SubscribeToLifecycleStates(onlyRunning = true)
+          hcd ! Supervisor.SubscribeToLifecycleStates(onlyRunning = true)
           val stateChange = expectMsgType[LifecycleStateChanged]
           assert(stateChange.state.isRunning)
         }

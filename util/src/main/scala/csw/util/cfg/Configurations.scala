@@ -139,18 +139,12 @@ object Configurations {
 
   // --- State Variables ---
 
-  /**
-   * Base trait for state variables
-   */
-  sealed trait StateVariable
-
   object StateVariable {
-
     /**
      * Type of a function that returns true if two state variables (demand and current)
      * match (or are close enough, which is implementation dependent)
      */
-    type Matcher = (DemandState, CurrentState) ⇒ Boolean
+    type Matcher = (SetupConfig, SetupConfig) ⇒ Boolean
 
     /**
      * The default matcher for state variables tests for an exact match
@@ -158,48 +152,8 @@ object Configurations {
      * @param current the current state
      * @return true if the demand and current states match (in this case, are equal)
      */
-    def defaultMatcher(demand: DemandState, current: CurrentState): Boolean =
+    def defaultMatcher(demand: SetupConfig, current: SetupConfig): Boolean =
       demand.prefix == current.prefix && demand.data == current.data
-
-    case class DemandState(configKey: ConfigKey, data: ConfigData = ConfigData())
-        extends ConfigType[DemandState] with StateVariable {
-
-      override protected def create(data: ConfigData) = DemandState(configKey, data)
-
-      override def toString = doToString("demand")
-
-      def extKey = DemandState.makeExtKey(prefix)
-    }
-
-    object DemandState {
-      /**
-       * Returns the key used to store the demand state for the given prefix
-       */
-      def makeExtKey(prefix: String): String = s"demand:$prefix"
-    }
-
-    case class CurrentState(configKey: ConfigKey, data: ConfigData = ConfigData())
-        extends ConfigType[CurrentState] with StateVariable {
-
-      override protected def create(data: ConfigData) = CurrentState(configKey, data)
-
-      override def toString = doToString("current")
-
-      def extKey = CurrentState.makeExtKey(prefix)
-    }
-
-    object CurrentState {
-      /**
-       * Returns the key used to store the current state for the given prefix
-       */
-      def makeExtKey(prefix: String): String = s"current:$prefix"
-
-      /**
-       * Returns the key used to store the current state for the given demand state
-       */
-      def makeExtKey(demand: DemandState): String = s"current:${demand.prefix}"
-    }
-
   }
 
   /**

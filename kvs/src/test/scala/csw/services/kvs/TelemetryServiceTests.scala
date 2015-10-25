@@ -19,14 +19,15 @@ object TelemetryServiceTests {
 }
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
-@DoNotDiscover
+//@DoNotDiscover
 class TelemetryServiceTests
     extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with Implicits {
 
   import TelemetryServiceTests._
 
-  val kvs = TelemetryService(5.seconds)
+  val settings = KvsSettings(system)
+  val kvs = TelemetryService(5.seconds, settings)
 
   test("Test Set and Get") {
     val config1 = SetupConfig("tcs.test")

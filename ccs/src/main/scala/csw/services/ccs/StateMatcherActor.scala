@@ -4,12 +4,12 @@ import akka.actor.{ Actor, Props, ActorRef }
 import akka.util.Timeout
 import csw.services.kvs.Subscriber
 import csw.shared.cmd.{ RunId, CommandStatus }
-import csw.util.cfg.Configurations.StateVariable
-import csw.util.cfg.Configurations.StateVariable.{ Matcher, CurrentState, DemandState }
+import csw.util.cfg.Configurations.{ SetupConfig, StateVariable }
+import csw.util.cfg.Configurations.StateVariable.Matcher
 import scala.concurrent.duration._
 
 // Needed for Subscriber below
-import csw.services.kvs.Implicits.currentStateKvsFormatter
+import csw.services.kvs.Implicits.setupConfigKvsFormatter
 
 object StateMatcherActor {
 
@@ -22,7 +22,7 @@ object StateMatcherActor {
    * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
    * @param matcher the function used to compare the demand and current states
    */
-  def props(demands: List[DemandState], replyTo: ActorRef, runId: RunId = RunId(),
+  def props(demands: List[SetupConfig], replyTo: ActorRef, runId: RunId = RunId(),
             timeout: Timeout = Timeout(10.seconds),
             matcher: Matcher = StateVariable.defaultMatcher): Props =
     Props(classOf[StateMatcherActor], demands, replyTo, runId, timeout, matcher)
@@ -35,13 +35,13 @@ object StateMatcherActor {
  *
  * See props for a description of the arguments.
  */
-class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, runId: RunId,
+class StateMatcherActor(demands: List[SetupConfig], replyTo: ActorRef, runId: RunId,
                         timeout: Timeout, matcher: Matcher)
-    extends Subscriber[CurrentState] {
+    extends Subscriber[SetupConfig] {
 
   import context.dispatcher
-  context.become(waiting(Set[CurrentState]()))
-  val keys = demands.map(CurrentState.makeExtKey)
+  context.become(waiting(Set[SetupConfig]()))
+  val keys = demands.map(_.prefix)
   log.info(s"Subscribing to ${keys.mkString(", ")}")
   subscribe(keys: _*)
   val timer = context.system.scheduler.scheduleOnce(timeout.duration, self, timeout)
@@ -50,8 +50,8 @@ class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, runId: Ru
 
   // Waiting for all variables to match, which is the case when the results set contains
   // a matching current state for each demand state
-  def waiting(results: Set[CurrentState]): Receive = {
-    case current: CurrentState ⇒
+  def waiting(results: Set[SetupConfig]): Receive = {
+    case current: SetupConfig ⇒
       log.info(s"received current state: $current")
       demands.find(_.prefix == current.prefix).foreach { demand ⇒
         if (matcher(demand, current)) {

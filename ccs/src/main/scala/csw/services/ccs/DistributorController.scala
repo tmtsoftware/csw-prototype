@@ -6,7 +6,7 @@ import akka.pattern.ask
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ Disconnected, ServicesReady, ResolvedService }
 import csw.services.loc.{ LocationService, ServiceRef }
-import csw.shared.cmd.{ RunId, CommandStatus }
+import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfigArg
 import scala.concurrent.Future
 import scala.concurrent.duration._

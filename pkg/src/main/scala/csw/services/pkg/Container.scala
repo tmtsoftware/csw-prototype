@@ -1,7 +1,10 @@
 package csw.services.pkg
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor._
 import com.typesafe.config.Config
+import csw.services.ccs.PeriodicHcdController
 import csw.services.loc.{ LocationService, ServiceType, ServiceId }
 
 import scala.collection.JavaConversions._
@@ -112,12 +115,12 @@ object Container {
 class Container(config: Config) extends Actor with ActorLogging {
 
   import csw.services.pkg.Container._
-  import csw.services.pkg.LifecycleManager._
+  import csw.services.pkg.Supervisor._
+
+  registerWithLocationService()
 
   // Maps component name to the info returned when creating it
   private val components = parseConfig()
-
-  registerWithLocationService()
 
   // Receive messages
   override def receive: Receive = {
@@ -151,7 +154,7 @@ class Container(config: Config) extends Actor with ActorLogging {
         None
       case None ⇒
         val componentInfo = Component.create(props, serviceId, prefix, services)
-        context.watch(componentInfo.lifecycleManager)
+        context.watch(componentInfo.supervisor)
         Some(componentInfo)
     }
   }
@@ -176,10 +179,7 @@ class Container(config: Config) extends Actor with ActorLogging {
   // Parse the "components" section of the config file
   private def parseComponentConfig(name: String, conf: Config): Option[Component.ComponentInfo] = {
     val className = conf.getString("class")
-    val args =
-      if (conf.hasPath("args"))
-        conf.getList("args").toList.map(_.unwrapped().toString)
-      else List()
+    val args = if (conf.hasPath("args")) conf.getList("args").toList.map(_.unwrapped().toString) else List()
     log.info(s"Create component with class $className and args $args")
     val props = Props(Class.forName(className), args: _*)
     val serviceType = ServiceType(conf.getString("type"))
@@ -190,7 +190,21 @@ class Container(config: Config) extends Actor with ActorLogging {
       val serviceId = ServiceId(name, serviceType)
       val prefix = if (conf.hasPath("prefix")) conf.getString("prefix") else ""
       val services = if (conf.hasPath("services")) parseServices(conf.getConfig("services")) else Nil
-      createComponent(props, serviceId, prefix, services, Map.empty)
+      val infoOpt = createComponent(props, serviceId, prefix, services, Map.empty)
+      checkForRate(conf, infoOpt)
+      infoOpt
+    }
+  }
+
+  // If rate is specified in the config, assume it is a periodic controller and send a message so it knows the rate
+  private def checkForRate(conf: Config, infoOpt: Option[Component.ComponentInfo]): Unit = {
+    import scala.concurrent.duration._
+    val rateOpt = if (conf.hasPath("rate")) Some(conf.getDuration("rate", TimeUnit.MILLISECONDS)) else None
+    for {
+      info ← infoOpt
+      rate ← rateOpt
+    } yield {
+      info.supervisor ! PeriodicHcdController.Process(FiniteDuration(rate, TimeUnit.MILLISECONDS))
     }
   }
 
@@ -202,11 +216,11 @@ class Container(config: Config) extends Actor with ActorLogging {
   // Sends the given lifecycle command to all components
   private def allComponents(cmd: LifecycleCommand): Unit =
     for ((name, info) ← components) {
-      info.lifecycleManager ! cmd
+      info.supervisor ! cmd
     }
 
   private def getComponents: Components =
-    Components(components.mapValues(_.lifecycleManager))
+    Components(components.mapValues(_.supervisor))
 
   // Tell all components to uninitialize
   private def stop(): Unit = {

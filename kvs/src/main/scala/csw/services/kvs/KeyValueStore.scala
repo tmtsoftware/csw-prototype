@@ -1,9 +1,8 @@
 package csw.services.kvs
 
-import akka.actor.ActorSystem
+import akka.actor.ActorRefFactory
 import redis.ByteStringFormatter
 
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Future
 
 object KeyValueStore {
@@ -18,17 +17,18 @@ object KeyValueStore {
 
   /**
    * Returns a concrete implementation of the KeyValueStore trait (based on Redis)
+   * @param settings contains the host and port settings from reference.conf, or application.conf
+   * @param _system Akka env required for RedisClient
    * @tparam T the type of values being stored
    */
-  def apply[T: KvsFormatter](implicit system: ActorSystem): KeyValueStore[T] = KeyValueStoreImpl[T]
+  def apply[T: KvsFormatter](settings: KvsSettings)(implicit _system: ActorRefFactory): KeyValueStore[T] =
+    KeyValueStoreImpl[T](settings.redisHostname, settings.redisPort)
 }
 
 /**
  * The interface of a key value store.
  */
 trait KeyValueStore[T] {
-
-  import KeyValueStore._
 
   /**
    * Sets (and publishes) the value for the given key

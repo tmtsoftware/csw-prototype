@@ -1,23 +1,24 @@
 package csw.services.pkg
 
 import akka.actor._
+import csw.services.ccs.PeriodicHcdController
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ ResolvedService, ServicesReady }
-import csw.services.loc.{ ServiceRef, LocationService, ServiceId }
+import csw.services.loc.{ ServiceType, ServiceRef, LocationService, ServiceId }
 import csw.shared.cmd.{ RunId, CommandStatus }
 import csw.util.cfg.Configurations.ControlConfigArg
 
 /**
- * The Lifecycle Manager is an actor that deals with component lifecycle messages
- * so components don't have to. There is one Lifecycle Manager per component.
+ * The Supervisor is an actor that supervises the component actors and deals with
+ * component lifecycle messages so components don't have to. There is one Supervisor per component.
  * It registers with the location service and is responsible for starting and stopping the component
  * as well as managing its state.
- * All component messages go through the Lifecycle Manager, so it can reject any
+ * All component messages go through the Supervisor, so it can reject any
  * messages that are not allowed in a given lifecycle.
  *
  * See the TMT document "OSW TN012 - COMPONENT LIFECYCLE DESIGN" for a description of CSW lifecycles.
  */
-object LifecycleManager {
+object Supervisor {
 
   /**
    * Commands sent to components to change the lifecycle
@@ -87,25 +88,25 @@ object LifecycleManager {
   case class LifecycleStateChanged(state: LifecycleState, error: Option[LifecycleError])
 
   /**
-   * Used to create the LifecycleManager actor
+   * Used to create the Supervisor actor
    * @param componentProps used to create the component
    * @param serviceId service used to register the component with the location service
    * @param prefix the configuration prefix (part of configs that component should receive)
    * @param services a list of service ids for the services the component depends on
-   * @return an object to be used to create the LifecycleManager actor
+   * @return an object to be used to create the Supervisor actor
    */
   def props(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): Props =
-    Props(classOf[LifecycleManager], componentProps, serviceId, prefix, services)
+    Props(classOf[Supervisor], componentProps, serviceId, prefix, services)
 }
 
 /**
- * A lifecycle manager actor that manages the component actor given by the arguments
+ * A supervisor actor that manages the component actor given by the arguments
  * (see props() for argument descriptions).
  */
-case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId])
+case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId])
     extends Actor with ActorLogging {
 
-  import LifecycleManager._
+  import Supervisor._
 
   // Used to notify subscribers of a change in the lifecycle
   var lifecycleStateListeners = Map[ActorRef, Boolean]()
@@ -119,6 +120,11 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
   override def receive: Receive = {
     case Terminated(actorRef) ⇒
       terminated(actorRef)
+
+    // Forward periodic Process messages in any case
+    // (XXX What if the HCD has messages in the queue and leaves the running state? Could also reschedule? Or let HCD decide? )
+    case process @ PeriodicHcdController.Process(rate) ⇒
+      component ! process
   }
 
   // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
@@ -300,15 +306,17 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
   // Once all the services are available, it sends a ServicesReady message to the component.
   // If any service terminates, a Disconnected message is sent to this actor.
   private def requestServices(): Unit = {
-    if (serviceRefs.nonEmpty) {
-      // Services required: start a local location service actor to monitor them
-      log.debug(s" requestServices $services")
-      val actorName = s"$name-loc-client"
-      if (context.child(actorName).isEmpty)
-        context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
-    } else {
-      // No services required: tell the component
-      component ! ServicesReady(Map[ServiceRef, ResolvedService]())
+    if (serviceId.serviceType != ServiceType.HCD) { // HCDs don't need services(?) (Who needs them besides assemblies?)
+      if (serviceRefs.nonEmpty) {
+        // Services required: start a local location service actor to monitor them
+        log.debug(s" requestServices $services")
+        val actorName = s"$name-loc-client"
+        if (context.child(actorName).isEmpty)
+          context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
+      } else {
+        // No services required: tell the component
+        component ! ServicesReady(Map[ServiceRef, ResolvedService]())
+      }
     }
   }
 
