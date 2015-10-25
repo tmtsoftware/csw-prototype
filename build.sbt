@@ -90,7 +90,7 @@ lazy val pkg = project
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
-  )
+  ) configs MultiJvm
 
 
 // Event Service
@@ -107,7 +107,7 @@ lazy val ts = project
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(log)
+  ) dependsOn log
 
 
 // -- Apps --

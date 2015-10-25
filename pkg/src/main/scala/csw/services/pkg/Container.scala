@@ -112,7 +112,7 @@ object Container {
 class Container(config: Config) extends Actor with ActorLogging {
 
   import csw.services.pkg.Container._
-  import csw.services.pkg.LifecycleManager._
+  import csw.services.pkg.Supervisor._
 
   // Maps component name to the info returned when creating it
   private val components = parseConfig()

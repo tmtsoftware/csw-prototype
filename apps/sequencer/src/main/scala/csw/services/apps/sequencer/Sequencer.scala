@@ -2,7 +2,6 @@ package csw.services.apps.sequencer
 
 import scala.tools.nsc._
 import scala.tools.nsc.interpreter._
-import akka.actor.ActorSystem
 
 /**
  * Sequencer REPL shell.

@@ -3,18 +3,28 @@ package csw.services.pkg
 import akka.actor.{ ActorLogging, Actor }
 
 import scala.concurrent.Future
-import LifecycleManager._
+import Supervisor._
+
+object LifecycleHandler {
+
+  /**
+   * Return type of LifecycleHandler methods that component actors can implement
+   */
+  sealed trait HandlerResponse
+
+  case object Success extends HandlerResponse
+
+  case class Failure(reason: String) extends HandlerResponse
+
+}
 
 /**
  * Containers and Components can override these to handle lifecycle changes.
- * Add "orElse receiveLifecycleCommands" to the receive method to use the
- * methods here. The handler methods all return either the new state, if successful,
- * or an error status, on failure, which is sent to the parent actor (the lifecycle manager).
- * If a future fails with an exception, a failed message is automatically sent.
  */
 trait LifecycleHandler {
   this: Actor with ActorLogging ⇒
 
+  import LifecycleHandler._
   import context.dispatcher
 
   /**
@@ -29,37 +39,53 @@ trait LifecycleHandler {
     case Initialize ⇒
       for (
         result ← Future(initialize()) recover {
-          case ex ⇒ Left(InitializeFailed(name, ex.getMessage))
+          case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
-        context.parent ! result.merge
+        val msg = result match {
+          case Success         ⇒ Initialized(name)
+          case Failure(reason) ⇒ InitializeFailed(name, reason)
+        }
+        context.parent ! msg
       }
 
     case Startup ⇒
       for (
         result ← Future(startup()) recover {
-          case ex ⇒ Left(StartupFailed(name, ex.getMessage))
+          case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
-        context.parent ! result.merge
+        val msg = result match {
+          case Success         ⇒ Running(name)
+          case Failure(reason) ⇒ StartupFailed(name, reason)
+        }
+        context.parent ! msg
       }
 
     case Shutdown ⇒
       for (
         result ← Future(shutdown()) recover {
-          case ex ⇒ Left(ShutdownFailed(name, ex.getMessage))
+          case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
-        context.parent ! result.merge
+        val msg = result match {
+          case Success         ⇒ Initialized(name)
+          case Failure(reason) ⇒ ShutdownFailed(name, reason)
+        }
+        context.parent ! msg
       }
 
     case Uninitialize ⇒
       for (
         result ← Future(uninitialize()) recover {
-          case ex ⇒ Left(UninitializeFailed(name, ex.getMessage))
+          case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
-        context.parent ! result.merge
+        val msg = result match {
+          case Success         ⇒ Loaded(name)
+          case Failure(reason) ⇒ UninitializeFailed(name, reason)
+        }
+        context.parent ! msg
       }
   }
 
@@ -67,36 +93,36 @@ trait LifecycleHandler {
    * Components can override this method to run code when initializing.
    * @return either the new lifecycle state, or the lifecycle error
    */
-  def initialize(): Either[InitializeFailed, Initialized] = {
+  def initialize(): HandlerResponse = {
     log.info(s"initialize $name")
-    Right(Initialized(name))
+    Success
   }
 
   /**
    * Components can override this method to run code when starting up.
    * @return either the new lifecycle state, or the lifecycle error
    */
-  def startup(): Either[StartupFailed, Running] = {
+  def startup(): HandlerResponse = {
     log.info(s"startup $name")
-    Right(Running(name))
+    Success
   }
 
   /**
    * Components can override this method to run code when shutting down.
    * @return either the new lifecycle state, or the lifecycle error
    */
-  def shutdown(): Either[ShutdownFailed, Initialized] = {
+  def shutdown(): HandlerResponse = {
     log.info(s"shutdown $name")
-    Right(Initialized(name))
+    Success
   }
 
   /**
    * Components can override this method to run code when uninitializing.
    * @return either the new lifecycle state, or the lifecycle error
    */
-  def uninitialize(): Either[UninitializeFailed, Loaded] = {
+  def uninitialize(): HandlerResponse = {
     log.info(s"uninitialize $name")
-    Right(Loaded(name))
+    Success
   }
 }
 
