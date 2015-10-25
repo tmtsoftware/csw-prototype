@@ -3,10 +3,10 @@ package csw.services.ccs
 import akka.actor._
 import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.kvs.{ KeyValueStore, Implicits }
+import csw.services.ccs.HcdController.Submit
+import csw.services.kvs.{ DemandKvs, KvsSettings, KeyValueStore, Implicits }
 import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState }
 import csw.util.cfg.StandardKeys.position
 import org.scalatest.{ DoNotDiscover, FunSuiteLike }
 
@@ -37,7 +37,7 @@ object HcdControllerTests extends Implicits {
       // if there is more than one in the queue. (nextConfig is an Option, so this
       // only takes one config from the queue, if there is one there).
       nextConfig.foreach { config ⇒
-        worker ! DemandState(config.prefix, config.data)
+        worker ! config
       }
     }
   }
@@ -54,7 +54,7 @@ object HcdControllerTests extends Implicits {
     val worker = context.actorOf(TestWorker.props())
 
     override protected def process(config: SetupConfig): Unit = {
-      worker ! DemandState(config.prefix, config.data)
+      worker ! config
     }
   }
 
@@ -63,7 +63,7 @@ object HcdControllerTests extends Implicits {
     def props(): Props = Props(classOf[TestWorker])
 
     // Message sent to self to simulate work done
-    case class WorkDone(config: DemandState)
+    case class WorkDone(config: SetupConfig)
 
   }
 
@@ -72,15 +72,18 @@ object HcdControllerTests extends Implicits {
     import TestWorker._
     import context.dispatcher
 
-    implicit val sys = context.system
-    val kvs = KeyValueStore[CurrentState]
+    val settings = KvsSettings(context.system)
+    val kvs = KeyValueStore[SetupConfig](settings)
+    val demandKvs = DemandKvs(kvs)
 
     // Simulate getting the initial state from the device and publishing to the kvs
-    val initialState = CurrentState(testPrefix1).set(position, "None")
-    kvs.set(initialState.extKey, initialState)
+    val initialState = SetupConfig(testPrefix1).set(position, "None")
+    kvs.set(testPrefix1, initialState)
 
     def receive: Receive = {
-      case config: DemandState ⇒
+      case config: SetupConfig ⇒
+        // Update the demand state variable
+        demandKvs.setDemand(config)
         // Simulate doing work
         log.info(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
@@ -88,9 +91,8 @@ object HcdControllerTests extends Implicits {
       case WorkDone(config) ⇒
         log.info(s"Done processing $config")
         // Simulate getting the current value from the device and publishing it to the kvs
-        val currentState = CurrentState(config.prefix, config.data)
-        log.info(s"Publishing $currentState")
-        kvs.set(currentState.extKey, currentState)
+        log.info(s"Publishing $config")
+        kvs.set(config.prefix, config)
 
       case x ⇒ log.error(s"Unexpected message $x")
     }
@@ -103,7 +105,7 @@ object HcdControllerTests extends Implicits {
 // the demand state, the matcher actor replies with a message (containing the current state).
 
 // Test requires that Redis is running externally
-@DoNotDiscover
+//@DoNotDiscover
 class HcdControllerTests extends TestKit(ActorSystem("test"))
     with ImplicitSender with FunSuiteLike with LazyLogging {
 
@@ -114,9 +116,9 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
 
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix1).set(position, "IR2")
-    hcdController ! config
-    val demand = DemandState(config.prefix, config.data)
-    system.actorOf(StateMatcherActor.props(List(demand), self))
+    hcdController ! Submit(config)
+    //    val demand = DemandState(config.prefix, config.data)
+    system.actorOf(StateMatcherActor.props(List(config), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed]
       logger.info(s"Done (1). Received reply from matcher with current state: $status")
@@ -128,9 +130,9 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
 
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix2).set(position, "IR3")
-    hcdController ! config
-    val demand = DemandState(config.prefix, config.data)
-    system.actorOf(StateMatcherActor.props(List(demand), self))
+    hcdController ! Submit(config)
+    //    val demand = DemandState(config.prefix, config.data)
+    system.actorOf(StateMatcherActor.props(List(config), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed]
       logger.info(s"Done (2). Received reply from matcher with current state: $status")

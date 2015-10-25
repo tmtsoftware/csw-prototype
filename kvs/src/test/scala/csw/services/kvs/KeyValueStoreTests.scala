@@ -21,15 +21,16 @@ object KeyValueStoreTests {
 }
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
-@DoNotDiscover
+//@DoNotDiscover
 class KeyValueStoreTests
     extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll with Implicits {
 
   import KeyValueStoreTests._
-
   implicit val execContext = system.dispatcher
-  val kvs = KeyValueStore[SetupConfig]
+
+  val settings = KvsSettings(system)
+  val kvs = KeyValueStore[SetupConfig](settings)
 
   test("Test Set and Get") {
     val prefix1 = "tcs.test1"

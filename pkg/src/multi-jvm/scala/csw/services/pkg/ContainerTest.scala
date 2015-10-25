@@ -5,8 +5,8 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.Disconnected
 import csw.services.loc.ServiceType.HCD
 import csw.services.loc.{ServiceRef, ServiceId, LocationService}
 import csw.services.pkg.LifecycleManager.LifecycleStateChanged
@@ -69,7 +69,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             implicit val timeout: Timeout = 20.seconds
             Await.result(LocationService.resolve(serviceRefs), timeout.duration)
 
-            assembly1 ! TestConfig.testConfigArg
+            assembly1 ! Submit(TestConfig.testConfigArg)
             expectMsgType[CommandStatus.Accepted]
             expectMsgType[CommandStatus.Completed]
           }

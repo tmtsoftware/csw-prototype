@@ -1,6 +1,6 @@
 package csw.services.kvs
 
-import akka.actor.ActorSystem
+import akka.actor.ActorRefFactory
 import redis.RedisClient
 import scala.concurrent.Future
 import csw.services.kvs.KeyValueStore._
@@ -9,13 +9,16 @@ import csw.services.kvs.KeyValueStore._
  * An implementation of the KeyValueStore trait based on Redis.
  * The host and port can be configured in resources/reference.conf.
  *
- * @param system the Akka actor system, needed to access the settings and RedisClient
+ * @tparam T the type of items being stored
+ * @param host the Redis server host
+ * @param port the Redis server port
+ * @param _system Akka env required by RedisClient
  */
-case class KeyValueStoreImpl[T: KvsFormatter](implicit system: ActorSystem) extends KeyValueStore[T] {
+case class KeyValueStoreImpl[T: KvsFormatter](host: String = "127.0.0.1", port: Int = 6379)(implicit _system: ActorRefFactory) extends KeyValueStore[T] {
 
-  protected val settings = KvsSettings(system)
-  protected val redis = RedisClient(settings.redisHostname, settings.redisPort)
-  implicit val execContext = system.dispatcher
+  //  protected val settings = KvsSettings(system)
+  protected val redis = RedisClient(host, port)
+  implicit val execContext = _system.dispatcher
 
   override def set(key: String, value: T, history: Int): Future[Unit] = publish(key, value, history).map(_ ⇒ ())
 

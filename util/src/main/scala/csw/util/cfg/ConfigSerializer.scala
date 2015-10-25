@@ -2,7 +2,6 @@ package csw.util.cfg
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
 
-import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState }
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Events._
 
@@ -121,18 +120,6 @@ object ConfigSerializer {
     def write(in: EventServiceEvent): Array[Byte] = writeObj(in)
 
     def read(bytes: Array[Byte]): EventServiceEvent = readObj[EventServiceEvent](bytes)
-  }
-
-  implicit object DemandStateSerializer extends ConfigSerializer[DemandState] {
-    def write(in: DemandState): Array[Byte] = writeObj(in)
-
-    def read(bytes: Array[Byte]): DemandState = readObj[DemandState](bytes)
-  }
-
-  implicit object CurrentStateSerializer extends ConfigSerializer[CurrentState] {
-    def write(in: CurrentState): Array[Byte] = writeObj(in)
-
-    def read(bytes: Array[Byte]): CurrentState = readObj[CurrentState](bytes)
   }
 }
 

@@ -32,7 +32,7 @@ sealed trait CommandStatus {
   def isFailed: Boolean = !isSuccess
 
   /**
-    * True if execution of the command has completed
+    * True if execution of the command has stopped (because completed, canceled, aborted, error, etc.)
     */
   def isDone: Boolean = true
 }
@@ -55,6 +55,11 @@ object CommandStatus {
   case class Accepted(runId: RunId) extends CommandStatus {
     override def isDone: Boolean = false
   }
+
+  /**
+    * The command has been rejected because the assembly is busy (XXX is this needed?)
+    */
+  case class Busy(runId: RunId) extends CommandStatus
 
   /**
     * The command failed with the given message

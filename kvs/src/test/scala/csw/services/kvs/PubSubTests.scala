@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
-@DoNotDiscover
+//@DoNotDiscover
 class PubSubTests extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
@@ -41,8 +41,8 @@ object PubSubTests {
 
   // A test class that publishes configs
   case class TestPublisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging {
-    implicit val sys = context.system
-    val kvs = KeyValueStore[SetupConfig]
+    val settings = KvsSettings(context.system)
+    val kvs = KeyValueStore[SetupConfig](settings)
     val prefix = "tcs.mobie.red.dat.exposureInfo"
     val expTime = 1
     var nextId = 0

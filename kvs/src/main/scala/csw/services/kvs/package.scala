@@ -1,6 +1,6 @@
 package csw.services
 
-import akka.actor.ActorSystem
+import akka.actor.ActorRefFactory
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.duration.Duration
@@ -10,7 +10,7 @@ package object kvs {
   type TelemetryService = BlockingKeyValueStore[SetupConfig]
 
   object TelemetryService {
-    def apply(timeout: Duration)(implicit system: ActorSystem): TelemetryService = new TelemetryService(timeout)
+    def apply(timeout: Duration, settings: KvsSettings)(implicit _system: ActorRefFactory): TelemetryService = new TelemetryService(timeout, settings)
   }
 }
 
