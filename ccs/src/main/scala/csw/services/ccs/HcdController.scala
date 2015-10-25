@@ -16,7 +16,7 @@ object HcdController {
   type HcdQueueType = Queue[SetupConfig]
 
   /**
-   * Base trait of all received messages
+   * Base trait of received messages
    */
   sealed trait HcdControllerMessage
 
@@ -24,12 +24,7 @@ object HcdController {
    * Message to submit a configuration to the HCD
    * @param config describes the setup parameters to which the HCD should be configured
    */
-  case class Submit(config: SetupConfig)
-
-  /**
-   * Tells the controller to check its inputs and update its outputs
-   */
-  case object Process extends HcdControllerMessage
+  case class Submit(config: SetupConfig) extends HcdControllerMessage
 }
 
 /**

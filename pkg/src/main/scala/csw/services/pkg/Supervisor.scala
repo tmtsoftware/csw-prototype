@@ -1,9 +1,10 @@
 package csw.services.pkg
 
 import akka.actor._
+import csw.services.ccs.PeriodicHcdController
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ ResolvedService, ServicesReady }
-import csw.services.loc.{ ServiceRef, LocationService, ServiceId }
+import csw.services.loc.{ ServiceType, ServiceRef, LocationService, ServiceId }
 import csw.shared.cmd.{ RunId, CommandStatus }
 import csw.util.cfg.Configurations.ControlConfigArg
 
@@ -119,6 +120,11 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   override def receive: Receive = {
     case Terminated(actorRef) ⇒
       terminated(actorRef)
+
+    // Forward periodic Process messages in any case
+    // (XXX What if the HCD has messages in the queue and leaves the running state? Could also reschedule? Or let HCD decide? )
+    case process @ PeriodicHcdController.Process(rate) ⇒
+      component ! process
   }
 
   // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
@@ -300,15 +306,17 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   // Once all the services are available, it sends a ServicesReady message to the component.
   // If any service terminates, a Disconnected message is sent to this actor.
   private def requestServices(): Unit = {
-    if (serviceRefs.nonEmpty) {
-      // Services required: start a local location service actor to monitor them
-      log.debug(s" requestServices $services")
-      val actorName = s"$name-loc-client"
-      if (context.child(actorName).isEmpty)
-        context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
-    } else {
-      // No services required: tell the component
-      component ! ServicesReady(Map[ServiceRef, ResolvedService]())
+    if (serviceId.serviceType != ServiceType.HCD) { // HCDs don't need services(?) (Who needs them besides assemblies?)
+      if (serviceRefs.nonEmpty) {
+        // Services required: start a local location service actor to monitor them
+        log.debug(s" requestServices $services")
+        val actorName = s"$name-loc-client"
+        if (context.child(actorName).isEmpty)
+          context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
+      } else {
+        // No services required: tell the component
+        component ! ServicesReady(Map[ServiceRef, ResolvedService]())
+      }
     }
   }
 

@@ -4,7 +4,21 @@ import akka.actor.{ ActorLogging, Actor }
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.collection.immutable.Queue
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.FiniteDuration
+
+object PeriodicHcdController {
+
+  /**
+   * Base trait of received messages
+   */
+  sealed trait PeriodicHcdControllerMessage
+
+  /**
+   * Tells the controller to check its inputs and update its outputs
+   * @param interval the amount of time until the next update
+   */
+  case class Process(interval: FiniteDuration) extends PeriodicHcdControllerMessage
+}
 
 /**
  * Base trait for an HCD controller actor that checks its queue for inputs and updates its
@@ -13,6 +27,7 @@ import scala.concurrent.duration.{ Duration, FiniteDuration }
 trait PeriodicHcdController extends Actor with ActorLogging {
 
   import HcdController._
+  import PeriodicHcdController._
   import context.dispatcher
 
   /**
@@ -25,8 +40,12 @@ trait PeriodicHcdController extends Actor with ActorLogging {
    * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
    */
   def receive: Receive = additionalReceive orElse {
-    case Process ⇒
-      process()
+    case msg @ Process(interval) ⇒
+      try process() catch {
+        case ex: Exception ⇒ log.error(s"Failed to process message", ex)
+      }
+      // Schedule the next update
+      context.system.scheduler.scheduleOnce(interval, self, msg)
 
     case Submit(config) ⇒ queue = queue.enqueue(config)
 
@@ -52,19 +71,11 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   }
 
   /**
-   * The controller update rate: The controller inputs and outputs are processed at this rate
-   */
-  def rate: FiniteDuration
-
-  /**
    * Periodic method to be implemented by the HCD or assembly.
    * This method can use the nextConfig method to pop the next config from the queue
    * and the key/value store API (kvs) to set the demand and current values.
    */
   protected def process(): Unit
-
-  // Sends the Update message at the specified rate
-  context.system.scheduler.schedule(Duration.Zero, rate, self, Process)
 
   /**
    * Derived classes and traits can extend this to accept additional messages

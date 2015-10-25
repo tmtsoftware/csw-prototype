@@ -18,8 +18,6 @@ object TestHcd {
 
 case class TestHcd(name: String) extends Hcd with PeriodicHcdController with LifecycleHandler {
 
-  override def rate: FiniteDuration = 1.second
-
   override def process(): Unit = {
     nextConfig.foreach { config =>
       // Simulate work being done

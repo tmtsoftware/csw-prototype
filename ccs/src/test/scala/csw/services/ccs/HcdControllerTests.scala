@@ -4,6 +4,7 @@ import akka.actor._
 import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
+import csw.services.ccs.PeriodicHcdController.Process
 import csw.services.kvs.{ DemandKvs, KvsSettings, KeyValueStore, Implicits }
 import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfig
@@ -27,8 +28,6 @@ object HcdControllerTests extends Implicits {
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
     val worker = context.actorOf(TestWorker.props())
-
-    override def rate: FiniteDuration = 1.second
 
     override def additionalReceive: Receive = Actor.emptyBehavior
 
@@ -113,6 +112,7 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
 
   test("Test periodic HCD controller") {
     val hcdController = system.actorOf(TestPeriodicHcdController.props())
+    hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
 
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix1).set(position, "IR2")

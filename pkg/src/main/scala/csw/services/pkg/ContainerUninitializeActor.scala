@@ -15,8 +15,8 @@ private[pkg] class ContainerUninitializeActor(components: Map[String, Component.
   // Subscribe to Loaded lifecycle state messages from all components
   components.foreach {
     case (name, info) ⇒
-      info.lifecycleManager ! Supervisor.SubscribeToLifecycleStates()
-      info.lifecycleManager ! Supervisor.Uninitialize
+      info.supervisor ! Supervisor.SubscribeToLifecycleStates()
+      info.supervisor ! Supervisor.Uninitialize
   }
 
   context.become(receiveState(components.keys.toList))

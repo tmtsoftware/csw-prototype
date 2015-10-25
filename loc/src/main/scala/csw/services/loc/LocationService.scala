@@ -229,7 +229,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
 
   private def resolveService(info: ServiceInfo): Unit = {
     try {
-      log.info(s"XXX resolveService $info")
+      log.debug(s"resolveService $info")
       val serviceRef = ServiceRef(info.getName)
       if (serviceRefs.contains(serviceRef)) {
         // Gets the URI, adding the akka system as user if needed
