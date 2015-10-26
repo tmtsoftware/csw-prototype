@@ -17,9 +17,9 @@ import akka.pattern.ask
  */
 case class AssemblyClient(assemblyController: ActorRef)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
-  def submit(config: SetupConfigArg, oneway: Boolean = false): Future[CommandStatus] = {
+  def submit(config: SetupConfigArg): Future[CommandStatus] = {
     val wrapper = context.actorOf(AssemblyWrapper.props(assemblyController))
-    (wrapper ? Submit(config, oneway)).mapTo[CommandStatus]
+    (wrapper ? Submit(config)).mapTo[CommandStatus]
   }
 }
 

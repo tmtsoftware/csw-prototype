@@ -67,7 +67,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
               ServiceRef(ServiceId("HCD-2A", HCD), AkkaType),
               ServiceRef(ServiceId("HCD-2B", HCD), AkkaType)
             )
-            implicit val timeout: Timeout = 20.seconds
+            implicit val timeout: Timeout = 60.seconds
             Await.result(LocationService.resolve(serviceRefs), timeout.duration)
 
             // Use actot API

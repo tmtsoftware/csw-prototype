@@ -16,7 +16,6 @@ import csw.services.kvs.KeyValueStore._
  */
 case class KeyValueStoreImpl[T: KvsFormatter](host: String = "127.0.0.1", port: Int = 6379)(implicit _system: ActorRefFactory) extends KeyValueStore[T] {
 
-  //  protected val settings = KvsSettings(system)
   protected val redis = RedisClient(host, port)
   implicit val execContext = _system.dispatcher
 

@@ -7,6 +7,7 @@ import csw.services.kvs.Implicits._
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 // A test HCD
 object TestHcd {
@@ -55,7 +56,14 @@ class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
     case WorkDone(config) =>
       // Simulate getting the current value from the device and publishing it to the kvs
       log.info(s"Publishing $config")
-      kvs.set(config.prefix, config)
+      kvs.set(config.prefix, config).onComplete {
+        case Success(()) =>
+          log.debug(s"Set value for ${config.prefix}")
+          context.stop(self)
+        case Failure(ex) =>
+          log.error(s"Failed to set value for ${config.prefix}", ex)
+          context.stop(self)
+      }
   }
 }
 
