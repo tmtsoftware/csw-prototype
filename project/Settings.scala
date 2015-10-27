@@ -19,7 +19,7 @@ object Settings {
     crossPaths := true,
     parallelExecution in Test := false,
     fork := true,
-//    autoAPIMappings := true,
+    autoAPIMappings := true,
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     //    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",

@@ -7,7 +7,7 @@ import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.{ ObserveConfigArg, SetupConfigArg, ControlConfigArg }
 
 /**
- * Assembly controller
+ * Defines the Assembly controller actor messages
  */
 object AssemblyController {
 
@@ -71,7 +71,7 @@ trait AssemblyController extends Actor with ActorLogging {
   /**
    * Receive state while waiting for required services
    */
-  def waitingForServices: Receive = additionalReceive orElse {
+  private def waitingForServices: Receive = additionalReceive orElse {
 
     case Submit(config) ⇒
       notReady(config)
@@ -88,7 +88,7 @@ trait AssemblyController extends Actor with ActorLogging {
   /**
    * Receive state while required services are available
    */
-  def ready(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
+  private def ready(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
     case Submit(config)     ⇒ submit(services, config, oneway = false, sender())
     case OneWay(config)     ⇒ submit(services, config, oneway = true, sender())
 
