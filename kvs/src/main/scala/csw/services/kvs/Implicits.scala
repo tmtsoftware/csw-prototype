@@ -2,6 +2,7 @@ package csw.services.kvs
 
 import akka.util.ByteString
 import csw.services.kvs.KeyValueStore.KvsFormatter
+import csw.util.cfg.Configurations.StateVariable.{ DemandState, CurrentState }
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Events._
 import redis.ByteStringDeserializerDefault
@@ -57,6 +58,42 @@ trait Implicits extends ByteStringDeserializerDefault {
       val ar = Array.ofDim[Byte](bs.length)
       bs.asByteBuffer.get(ar)
       read[SetupConfig](ar)
+    }
+  }
+
+  implicit val currentStateKvsFormatter = new KvsFormatter[CurrentState] {
+    def serialize(e: CurrentState): ByteString = {
+      ByteString(write(e))
+    }
+
+    def deserialize(bs: ByteString): CurrentState = {
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      read[CurrentState](ar)
+    }
+  }
+
+  implicit val demandStateKvsFormatter = new KvsFormatter[DemandState] {
+    def serialize(e: DemandState): ByteString = {
+      ByteString(write(e))
+    }
+
+    def deserialize(bs: ByteString): DemandState = {
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      read[DemandState](ar)
+    }
+  }
+
+  implicit val stateVariableKvsFormatter = new KvsFormatter[StateVariable] {
+    def serialize(e: StateVariable): ByteString = {
+      ByteString(write(e))
+    }
+
+    def deserialize(bs: ByteString): StateVariable = {
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      read[StateVariable](ar)
     }
   }
 

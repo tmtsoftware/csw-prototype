@@ -5,6 +5,7 @@ import csw.services.ccs.{HcdController, StateMatcherActor, AssemblyController}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
 import csw.services.loc.ServiceRef
+import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 import csw.util.cfg.TestConfig
 
@@ -52,7 +53,7 @@ case class TestAssembly(name: String) extends Assembly with AssemblyController w
         actorRef ← service.actorRefOpt
       } yield {
         actorRef ! HcdController.Submit(config)
-        config
+        DemandState(config)
       }
       replyTo.foreach { actorRef =>
         // Wait for the demand states to match the current states, then reply to the sender with the command status

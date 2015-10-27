@@ -1,0 +1,3 @@
+== CCS - Command and Control Service ==
+
+This is the root doc.

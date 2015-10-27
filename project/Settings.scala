@@ -19,6 +19,7 @@ object Settings {
     crossPaths := true,
     parallelExecution in Test := false,
     fork := true,
+//    autoAPIMappings := true,
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     //    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
@@ -37,7 +38,8 @@ object Settings {
   lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(
     // compile options
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
-    javacOptions  ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation")
+    scalacOptions in(Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
+    javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation")
   )
 
   // For standalone applications
