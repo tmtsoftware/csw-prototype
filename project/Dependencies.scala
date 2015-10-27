@@ -11,7 +11,7 @@ object Dependencies {
   val akkaStreamsVersion = "1.0"
 //  val sprayVersion = "1.3.3"
   val hornetqVersion = "2.4.7.Final"
-  //  val hornetqVersion = "2.5.0-SNAPSHOT"
+//  val hornetqVersion = "2.5.0.Beta1"
 
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
