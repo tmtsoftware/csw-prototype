@@ -2,11 +2,12 @@ package csw.services.pkg
 
 import akka.actor.{ActorLogging, Actor, Props}
 import csw.services.ccs.PeriodicHcdController
-import csw.services.kvs.{DemandKvs, KvsSettings, KeyValueStore}
+import csw.services.kvs.{StateVariableStore, KvsSettings}
 import csw.services.kvs.Implicits._
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 // A test HCD
 object TestHcd {
@@ -41,11 +42,10 @@ class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
   import context.dispatcher
 
   val settings = KvsSettings(context.system)
-  val kvs = KeyValueStore[SetupConfig](settings)
-  val demandKvs = DemandKvs(kvs)
+  val svs = StateVariableStore(settings)
 
   // Sets the demand state variable
-  demandKvs.setDemand(demand)
+  svs.setDemand(demand)
 
   // Simulate doing work
   log.info(s"Start processing $demand")
@@ -55,7 +55,14 @@ class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
     case WorkDone(config) =>
       // Simulate getting the current value from the device and publishing it to the kvs
       log.info(s"Publishing $config")
-      kvs.set(config.prefix, config)
+      svs.set(config).onComplete {
+        case Success(()) =>
+          log.debug(s"Set value for ${config.prefix}")
+          context.stop(self)
+        case Failure(ex) =>
+          log.error(s"Failed to set value for ${config.prefix}", ex)
+          context.stop(self)
+      }
   }
 }
 

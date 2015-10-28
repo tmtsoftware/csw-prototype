@@ -7,7 +7,7 @@ import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.{ ObserveConfigArg, SetupConfigArg, ControlConfigArg }
 
 /**
- * Assembly controller
+ * Defines the Assembly controller actor messages
  */
 object AssemblyController {
 
@@ -17,17 +17,25 @@ object AssemblyController {
   sealed trait AssemblyControllerMessage
 
   /**
-   * Message to submit a config to the assembly (a setup or observe config arg)
-   * The sender should receive CommandStatus messages (Accepted, Completed, etc.)
-   * If oneway is true, no message needs to be sent on completion, otherwise a
-   * final CommandStatus.Completed message should be sent when the command completes.
-   * In any case, an Accepted message (or Error, if not accepted) should be sent to
-   * the sender.
+   * Message to submit a configuration to the assembly.
+   * The sender will receive CommandStatus messages.
+   * If the config is valid, a Accepted message is sent, otherwise an Error.
+   * When the work for the config has been completed, a Completed message is sent
+   * (or an Error message, if an error occurred).
    *
    * @param config the configuration to execute
-   * @param oneway if true, the sender does not need to be notified when the command completes
    */
-  case class Submit(config: ControlConfigArg, oneway: Boolean = false) extends AssemblyControllerMessage
+  case class Submit(config: ControlConfigArg) extends AssemblyControllerMessage
+
+  /**
+   * Message to submit a oneway config to the assembly.
+   * In this case, the sender will receive only an Accepted (or Error) message,
+   * indicating that config is valid (or invalid).
+   * There will be no messages on completion.
+   *
+   * @param config the configuration to execute
+   */
+  case class OneWay(config: ControlConfigArg) extends AssemblyControllerMessage
 
   /**
    * Return value for validate method
@@ -63,9 +71,9 @@ trait AssemblyController extends Actor with ActorLogging {
   /**
    * Receive state while waiting for required services
    */
-  def waitingForServices: Receive = additionalReceive orElse {
+  private def waitingForServices: Receive = additionalReceive orElse {
 
-    case Submit(config, _) ⇒
+    case Submit(config) ⇒
       notReady(config)
 
     case ServicesReady(map) ⇒
@@ -80,14 +88,15 @@ trait AssemblyController extends Actor with ActorLogging {
   /**
    * Receive state while required services are available
    */
-  def ready(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
-    case Submit(config, oneway) ⇒ submit(services, config, oneway, sender())
+  private def ready(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
+    case Submit(config)     ⇒ submit(services, config, oneway = false, sender())
+    case OneWay(config)     ⇒ submit(services, config, oneway = true, sender())
 
-    case ServicesReady(map)     ⇒ context.become(ready(map))
+    case ServicesReady(map) ⇒ context.become(ready(map))
 
-    case Disconnected           ⇒ context.become(waitingForServices)
+    case Disconnected       ⇒ context.become(waitingForServices)
 
-    case x                      ⇒ log.warning(s"Received unexpected message: $x")
+    case x                  ⇒ log.warning(s"Received unexpected message: $x")
   }
 
   /**
@@ -99,16 +108,17 @@ trait AssemblyController extends Actor with ActorLogging {
    */
   private def submit(services: Map[ServiceRef, ResolvedService],
                      config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
-    validate(config) match {
+
+    val statusReplyTo = if (oneway) None else Some(replyTo)
+    val valid = config match {
+      case sc: SetupConfigArg ⇒
+        setup(services, sc, statusReplyTo)
+      case ob: ObserveConfigArg ⇒
+        observe(services, ob, statusReplyTo)
+    }
+    valid match {
       case Valid ⇒
         replyTo ! CommandStatus.Accepted(config.info.runId)
-        val statusReplyTo = if (oneway) None else Some(replyTo)
-        config match {
-          case sc: SetupConfigArg ⇒
-            setup(services, sc, statusReplyTo)
-          case ob: ObserveConfigArg ⇒
-            observe(services, ob, statusReplyTo)
-        }
       case Invalid(reason) ⇒
         replyTo ! CommandStatus.Error(config.info.runId, reason)
     }
@@ -126,19 +136,15 @@ trait AssemblyController extends Actor with ActorLogging {
   }
 
   /**
-   * Implementing classes decide if a config can be accepted
-   */
-  protected def validate(config: ControlConfigArg): Validation
-
-  /**
    * Called to process the setup config and reply to the given actor with the command status.
    *
    * @param services contains information about any required services
    * @param configArg contains a list of setup configurations
    * @param replyTo if defined, the actor that should receive the final command status.
+   * @return a validation object that indicates if the received config is valid
    */
   protected def setup(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg,
-                      replyTo: Option[ActorRef]): Unit
+                      replyTo: Option[ActorRef]): Validation
 
   /**
    * Called to process the observe config and reply to the given actor with the command status.
@@ -146,9 +152,10 @@ trait AssemblyController extends Actor with ActorLogging {
    * @param services contains information about any required services
    * @param configArg contains a list of observe configurations
    * @param replyTo if defined, the actor that should receive the final command status.
+   * @return a validation object that indicates if the received config is valid
    */
   protected def observe(services: Map[ServiceRef, ResolvedService], configArg: ObserveConfigArg,
-                        replyTo: Option[ActorRef]): Unit = {}
+                        replyTo: Option[ActorRef]): Validation = Valid
 
   /**
    * Derived classes and traits can extend this to accept additional messages

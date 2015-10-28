@@ -142,3 +142,14 @@ lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
     compile(akkaActor, akkaRemote, akkaStream, scopt) ++
       test(scalaTest, specs2, akkaTestKit)
   ) dependsOn cs
+
+
+//// Need a root project for unidoc plugin, so we can merge the scaladocs
+//val csw = (project in file(".")).
+//  settings(defaultSettings: _*).
+//  settings(unidocSettings: _*).
+//  settings(
+//    name := "CSW - TMT Common Software"
+//  ).
+//  aggregate(sharedJvm, sharedJs, util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
+//    containerCmd, sequencer, configServiceAnnex, csClient)

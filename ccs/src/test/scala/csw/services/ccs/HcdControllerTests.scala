@@ -5,7 +5,7 @@ import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdController.Process
-import csw.services.kvs.{ DemandKvs, KvsSettings, KeyValueStore, Implicits }
+import csw.services.kvs._
 import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.StandardKeys.position
@@ -72,17 +72,16 @@ object HcdControllerTests extends Implicits {
     import context.dispatcher
 
     val settings = KvsSettings(context.system)
-    val kvs = KeyValueStore[SetupConfig](settings)
-    val demandKvs = DemandKvs(kvs)
+    val svs = StateVariableStore(settings)
 
     // Simulate getting the initial state from the device and publishing to the kvs
     val initialState = SetupConfig(testPrefix1).set(position, "None")
-    kvs.set(testPrefix1, initialState)
+    svs.set(initialState)
 
     def receive: Receive = {
       case config: SetupConfig ⇒
         // Update the demand state variable
-        demandKvs.setDemand(config)
+        svs.setDemand(config)
         // Simulate doing work
         log.info(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
@@ -91,7 +90,7 @@ object HcdControllerTests extends Implicits {
         log.info(s"Done processing $config")
         // Simulate getting the current value from the device and publishing it to the kvs
         log.info(s"Publishing $config")
-        kvs.set(config.prefix, config)
+        svs.set(config)
 
       case x ⇒ log.error(s"Unexpected message $x")
     }

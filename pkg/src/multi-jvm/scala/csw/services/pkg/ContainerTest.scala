@@ -5,6 +5,7 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import csw.services.ccs.AssemblyClient
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.ServiceType.HCD
@@ -66,12 +67,17 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
               ServiceRef(ServiceId("HCD-2A", HCD), AkkaType),
               ServiceRef(ServiceId("HCD-2B", HCD), AkkaType)
             )
-            implicit val timeout: Timeout = 20.seconds
+            implicit val timeout: Timeout = 60.seconds
             Await.result(LocationService.resolve(serviceRefs), timeout.duration)
 
+            // Use actot API
             assembly1 ! Submit(TestConfig.testConfigArg)
             expectMsgType[CommandStatus.Accepted]
             expectMsgType[CommandStatus.Completed]
+
+            // Use client wrapper
+            val client = AssemblyClient(assembly1)
+            assert(Await.result(client.submit(TestConfig.testConfigArg), timeout.duration).isSuccess)
           }
           println("\nContainer1 tests passed\n")
           enterBarrier("done")
