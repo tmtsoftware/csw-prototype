@@ -1,31 +1,33 @@
 package csw.services.event
 
 import csw.util.cfg.ConfigSerializer._
-import org.hornetq.api.core.TransportConfiguration
-import org.hornetq.api.core.client.{ HornetQClient, ClientSession, ClientSessionFactory, ServerLocator }
-import org.hornetq.core.remoting.impl.invm.{ InVMConnectorFactory, InVMAcceptorFactory }
-import org.hornetq.core.remoting.impl.netty.{ NettyAcceptorFactory, NettyConnectorFactory }
+import org.hornetq.api.core.{Message, TransportConfiguration}
+import org.hornetq.api.core.client._
+import org.hornetq.core.remoting.impl.invm.{InVMConnectorFactory, InVMAcceptorFactory}
+import org.hornetq.core.remoting.impl.netty.{NettyAcceptorFactory, NettyConnectorFactory}
+import org.hornetq.core.settings.impl.AddressFullMessagePolicy
 import scala.collection.JavaConverters._
+import scala.concurrent.{Future, Promise}
 
 /**
- * An event service based on HornetQ
- * (XXX TODO: Change implementation, since HornetQ no longer supported)
- */
+  * An event service based on HornetQ
+  * (XXX TODO: Change implementation, since HornetQ no longer supported)
+  */
 object EventService {
 
   /**
-   * Describes an event service connection
-   * @param serverLocator locates a server
-   * @param sf entry point to create and configure HornetQ resources to produce and consume messages
-   * @param session single-thread object required for producing and consuming messages
-   */
+    * Describes an event service connection
+    * @param serverLocator locates a server
+    * @param sf entry point to create and configure HornetQ resources to produce and consume messages
+    * @param session single-thread object required for producing and consuming messages
+    */
   case class EventServiceInfo(serverLocator: ServerLocator,
                               sf: ClientSessionFactory,
                               session: ClientSession) {
 
     /**
-     * Closes the hornetq connection and session
-     */
+      * Closes the hornetq connection and session
+      */
     def close(): Unit = {
       session.close()
       sf.close()
@@ -34,20 +36,20 @@ object EventService {
   }
 
   /**
-   * Connects to a HornetQ server using the given settings.
-   */
-  private[event] def connectToHornetQ(settings: EventServiceSettings): EventServiceInfo =
+    * Connects to a HornetQ server using the given settings.
+    */
+  private[event] def connectToServer(settings: EventServiceSettings): EventServiceInfo =
     connectToHornetQ(settings.eventServiceHostname.getOrElse("127.0.0.1"),
       settings.eventServicePort.getOrElse(5445),
       settings.useEmbeddedHornetq)
 
   /**
-   * Connects to a HornetQ server.
-   * If useEmbeddedHornetq is set to true in the settings (reference.conf), connect to
-   * an embedded (in this jvm) server, otherwise use the host and port settings to connect to
-   * an external Hornetq server.
-   */
-  private[event] def connectToHornetQ(host: String = "127.0.0.1", port: Int = 5445, useEmbedded: Boolean = true): EventServiceInfo = {
+    * Connects to a HornetQ server.
+    * If useEmbeddedHornetq is set to true in the settings (reference.conf), connect to
+    * an embedded (in this jvm) server, otherwise use the host and port settings to connect to
+    * an external Hornetq server.
+    */
+  private[event] def connectToHornetQ(host: String, port: Int, useEmbedded: Boolean): EventServiceInfo = {
     val serverLocator = if (useEmbedded) {
       HornetQClient.createServerLocatorWithoutHA(
         new TransportConfiguration(classOf[InVMConnectorFactory].getName))
@@ -59,8 +61,8 @@ object EventService {
     }
 
     // Prevents blocking when queue is full, but requires consumers to consume quickly
-    serverLocator.setProducerWindowSize(-1)
-    serverLocator.setConsumerWindowSize(-1)
+    //    serverLocator.setProducerWindowSize(-1)
+    //    serverLocator.setConsumerWindowSize(-1)
 
     val sf = serverLocator.createSessionFactory
     val session = sf.createSession
@@ -69,9 +71,9 @@ object EventService {
   }
 
   /**
-   * Starts an embedded Hornetq server
-   * See http://docs.jboss.org/hornetq/2.4.0.beta1/docs/user-manual/html_single/#d0e13503
-   */
+    * Starts an embedded Hornetq server
+    * See http://docs.jboss.org/hornetq/2.4.0.beta1/docs/user-manual/html_single/#d0e13503
+    */
   def startEmbeddedHornetQ(): Unit = {
     import org.hornetq.core.config.impl.ConfigurationImpl
     import org.hornetq.core.server.embedded.EmbeddedHornetQ
@@ -79,6 +81,13 @@ object EventService {
     val config = new ConfigurationImpl()
     config.setPersistenceEnabled(false)
     config.setSecurityEnabled(false)
+
+    // Use paging to avoid out of memory errors in Hornetq (configure this?)
+    val addressSettings = config.getAddressesSettings.get("#")
+    addressSettings.setMaxSizeBytes(104857600)
+    addressSettings.setPageSizeBytes(10485760)
+    addressSettings.setAddressFullMessagePolicy(AddressFullMessagePolicy.PAGE)
+
     val transports = new java.util.HashSet[TransportConfiguration]()
     transports.add(new TransportConfiguration(classOf[NettyAcceptorFactory].getName))
     transports.add(new TransportConfiguration(classOf[InVMAcceptorFactory].getName))
@@ -89,43 +98,46 @@ object EventService {
   }
 
   /**
-   * Initialize from the settings in resources.conf or application.conf
-   */
-  def apply(settings: EventServiceSettings): EventService =
-    EventService(settings.eventServiceHostname.getOrElse("127.0.0.1"),
+    * Initialize from the settings in resources.conf or application.conf
+    * @param prefix the prefix for the events that will be published
+    * @param settings the settings for connexting to the server
+    */
+  def apply(prefix: String, settings: EventServiceSettings): EventService =
+    EventService(prefix, settings.eventServiceHostname.getOrElse("127.0.0.1"),
       settings.eventServicePort.getOrElse(5445),
       settings.useEmbeddedHornetq)
 }
 
 /**
- * Represents connection to the event service server (currently Hornetq)
- *
- * @param host the server host (default: localhost: 127.0.0.1)
- * @param port the server port (default: 5445)
- * @param useEmbedded if true (default) start the server, otherwise look for one already running
- */
-case class EventService(host: String = "127.0.0.1", port: Int = 5445, useEmbedded: Boolean = false) {
+  * Represents connection to the event service server (currently Hornetq)
+  *
+  * @param prefix the prefix for the events that will be published
+  * @param host the server host (default: localhost: 127.0.0.1)
+  * @param port the server port (default: 5445)
+  * @param useEmbedded if true (default) start the server, otherwise look for one already running
+  */
+case class EventService(prefix: String, host: String = "127.0.0.1", port: Int = 5445, useEmbedded: Boolean = false) {
 
   import EventService._
 
   protected val hq = connectToHornetQ(host, port, useEmbedded)
-  protected val producer = hq.session.createProducer()
+  protected val producer = hq.session.createProducer(prefix)
 
   /**
-   * Publishes the given event (channel is the event prefix).
-   * @param event the event to publish
-   */
+    * Publishes the given event (channel is the event prefix).
+    * @param event the event to publish
+    */
   def publish(event: Event): Unit = {
     val message = hq.session.createMessage(false)
     val buf = message.getBodyBuffer
     buf.clear()
     buf.writeBytes(write(event))
     message.setExpiration(System.currentTimeMillis() + 1000) // expire after 1 second
-    producer.send(event.prefix, message)
+    producer.send(message)
   }
 
   /**
-   * Closes the connection to the Hornetq server
-   */
+    * Closes the connection to the Hornetq server
+    */
   def close(): Unit = hq.close()
 }

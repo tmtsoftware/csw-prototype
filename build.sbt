@@ -97,7 +97,7 @@ lazy val pkg = project
 lazy val event = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, hornetqServer, hornetqNative, ficus) ++
+    compile(akkaActor, akkaRemote, hornetqServer, hornetqNative, ficus) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(util, log)
 

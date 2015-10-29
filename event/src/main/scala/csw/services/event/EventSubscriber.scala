@@ -13,7 +13,7 @@ trait EventSubscriber extends Actor with ActorLogging {
 
   // Get the connection to Hornetq
   private val settings = EventServiceSettings(context.system)
-  private val hq = EventService.connectToHornetQ(settings)
+  private val hq = EventService.connectToServer(settings)
 
   // Unique id for this subscriber
   private val subscriberId = UUID.randomUUID().toString
