@@ -8,8 +8,9 @@ import csw.util.cfg.Events.ObserveEvent
 import csw.util.cfg.Key
 import csw.util.cfg.StandardKeys._
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 /**
   * Defines some static items used in the tests
@@ -34,7 +35,7 @@ object EventPubSubTest {
 
   case object SubscriberAck
 
-  val eventsToPublish = 1000
+  val eventsToPublish = 100
   val totalEventsToPublish = 100000
 }
 
@@ -63,8 +64,6 @@ class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender w
 // A test class that subscribes to events
 class Subscriber extends Actor with ActorLogging with EventSubscriber {
 
-  import context.dispatcher
-
   implicit val execContext: ExecutionContext = context.dispatcher
   implicit val actorSytem = context.system
   var count = 0
@@ -73,7 +72,9 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
   subscribe(prefix)
 
   override def receive: Receive = {
-    case PublisherInfo(actorRef) => context.become(working(actorRef))
+    case PublisherInfo(actorRef) =>
+      log.info("Subscriber starting")
+      context.become(working(actorRef))
   }
 
   def working(publisher: ActorRef): Receive = {
@@ -86,10 +87,12 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
         log.info(s"Received $count events in $t seconds (${count * 1.0 / t} per second)")
         count = 0
         startTime = 0L
-      }
-      if (num == 0) {
         publisher ! SubscriberAck
       }
+
+    case x => log.warning(s"Unknown $x")
+
+
   }
 }
 
@@ -110,10 +113,13 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
   }
 
   def publish(): Unit = {
-    for (num <- eventsToPublish - 1 to 0 by -1) yield {
+    val startTime = System.currentTimeMillis()
+    for(num <- eventsToPublish-1 to 0 by -1) {
       eventService.publish(nextEvent(num))
     }
     count += eventsToPublish
+    val t = (System.currentTimeMillis() - startTime) / 1000.0
+    log.info(s"Published $eventsToPublish events in $t seconds (${eventsToPublish * 1.0 / t} per second)")
   }
 
   subscriber ! PublisherInfo(self)
@@ -122,6 +128,8 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
     case Publish =>
       context.become(publishing(sender()))
       publish()
+
+    case x => log.warning(s"Unknown $x")
   }
 
   def publishing(testActor: ActorRef): Receive = {
@@ -136,6 +144,8 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
         eventService.close()
         testActor ! Done
       }
+
+    case x => log.warning(s"Unknown $x")
   }
 }
 

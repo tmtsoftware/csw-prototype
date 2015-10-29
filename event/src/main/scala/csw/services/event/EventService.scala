@@ -130,7 +130,7 @@ case class EventService(prefix: String, host: String = "127.0.0.1", port: Int = 
     val buf = message.getBodyBuffer
     buf.clear()
     buf.writeBytes(write(event))
-    message.setExpiration(System.currentTimeMillis() + 1000) // expire after 1 second
+    message.setExpiration(System.currentTimeMillis() + 1000)
     producer.send(message)
   }
 
