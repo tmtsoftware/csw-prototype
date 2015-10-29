@@ -83,10 +83,10 @@ object EventService {
     config.setSecurityEnabled(false)
 
     // Use paging to avoid out of memory errors in Hornetq (configure this?)
-    val addressSettings = config.getAddressesSettings.get("#")
-    addressSettings.setMaxSizeBytes(104857600)
-    addressSettings.setPageSizeBytes(10485760)
-    addressSettings.setAddressFullMessagePolicy(AddressFullMessagePolicy.PAGE)
+//    val addressSettings = config.getAddressesSettings.get("#")
+//    addressSettings.setMaxSizeBytes(104857600)
+//    addressSettings.setPageSizeBytes(10485760)
+//    addressSettings.setAddressFullMessagePolicy(AddressFullMessagePolicy.PAGE)
 
     val transports = new java.util.HashSet[TransportConfiguration]()
     transports.add(new TransportConfiguration(classOf[NettyAcceptorFactory].getName))

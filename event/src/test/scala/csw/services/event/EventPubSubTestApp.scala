@@ -91,8 +91,8 @@ class Publisher(eventsToPublish: Int, subscriber: ActorRef) extends Actor with A
     log.info(s"Publishing $eventsToPublish events")
     for (num <- eventsToPublish-1 to 0 by -1) yield {
       eventService.publish(nextEvent(num))
-      //    Thread.sleep(1) // sleep 1 ms
-      Thread.`yield`()
+          Thread.sleep(1) // sleep 1 ms
+//      Thread.`yield`()
     }
   }
 
