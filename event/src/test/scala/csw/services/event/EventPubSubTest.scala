@@ -1,34 +1,19 @@
 package csw.services.event
 
 import akka.actor._
+import akka.testkit.{ImplicitSender, TestKit}
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.event.EventPubSubTest._
 import csw.util.cfg.Events.ObserveEvent
 import csw.util.cfg.Key
 import csw.util.cfg.StandardKeys._
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 /**
-  * Starts an embedded Hornetq server
+  * Defines some static items used in the tests
   */
-object EventPubSubTestApp extends App {
-  val system = ActorSystem("EventPubSubTest")
-  val settings = EventServiceSettings(system)
-  if (settings.useEmbeddedHornetq) {
-    // Start an embedded HornetQ server, so no need to have it running externally!
-    EventService.startEmbeddedHornetQ()
-  }
-
-  val subscriber = system.actorOf(Props(classOf[Subscriber]), "Subscriber")
-
-  // optional command line arg is number of events to publish
-  val eventsToPublish = if (args.length == 1) args(0).toInt else 100
-
-  system.actorOf(Props(classOf[Publisher], eventsToPublish, subscriber), "Publisher")
-}
-
-/**
- * Defines some static items used in the tests
- */
 object EventPubSubTest {
   // Define a key for an event id
   val eventNum = Key.create[Int]("eventNum")
@@ -41,13 +26,45 @@ object EventPubSubTest {
 
   val prefix = "tcs.mobie.red.dat.exposureInfo"
 
+  case object Publish
+
+  case object Done
+
   case class PublisherInfo(actorRef: ActorRef)
+
   case object SubscriberAck
+
+  val eventsToPublish = 1000
+  val totalEventsToPublish = 100000
+}
+
+/**
+  * Starts an embedded Hornetq server
+  */
+class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
+  val settings = EventServiceSettings(system)
+  if (settings.useEmbeddedHornetq) {
+    // Start an embedded HornetQ server, so no need to have it running externally!
+    EventService.startEmbeddedHornetQ()
+  }
+
+  val subscriber = system.actorOf(Props(classOf[Subscriber]), "Subscriber")
+
+
+  val publisher = system.actorOf(Props(classOf[Publisher], subscriber), "Publisher")
+  publisher ! Publish
+
+  test("Wait for end of test") {
+    expectMsgType[Done.type](10.minutes)
+    system.terminate()
+  }
 }
 
 // A test class that subscribes to events
 class Subscriber extends Actor with ActorLogging with EventSubscriber {
+
   import context.dispatcher
+
   implicit val execContext: ExecutionContext = context.dispatcher
   implicit val actorSytem = context.system
   var count = 0
@@ -64,9 +81,11 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
       if (startTime == 0L) startTime = System.currentTimeMillis()
       count = count + 1
       val num = event.get(eventNum).get
-      if (count % 1000 == 0 || num == 0) {
-        val t = (System.currentTimeMillis() - startTime)/1000.0
+      if (count % eventsToPublish == 0) {
+        val t = (System.currentTimeMillis() - startTime) / 1000.0
         log.info(s"Received $count events in $t seconds (${count * 1.0 / t} per second)")
+        count = 0
+        startTime = 0L
       }
       if (num == 0) {
         publisher ! SubscriberAck
@@ -74,10 +93,13 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
   }
 }
 
-class Publisher(eventsToPublish: Int, subscriber: ActorRef) extends Actor with ActorLogging {
+class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
+
   import context.dispatcher
+
   val settings = EventServiceSettings(context.system)
   val eventService = EventService(prefix, settings)
+  var count = 0
 
   // Returns the next event to publish
   def nextEvent(num: Int): Event = {
@@ -88,18 +110,33 @@ class Publisher(eventsToPublish: Int, subscriber: ActorRef) extends Actor with A
   }
 
   def publish(): Unit = {
-    log.info(s"Publishing $eventsToPublish events")
-    for (num <- eventsToPublish-1 to 0 by -1) yield {
+    for (num <- eventsToPublish - 1 to 0 by -1) yield {
       eventService.publish(nextEvent(num))
-          Thread.sleep(1) // sleep 1 ms
-//      Thread.`yield`()
     }
+    count += eventsToPublish
   }
 
   subscriber ! PublisherInfo(self)
-  publish()
 
   def receive: Receive = {
-    case SubscriberAck => publish()
+    case Publish =>
+      context.become(publishing(sender()))
+      publish()
+  }
+
+  def publishing(testActor: ActorRef): Receive = {
+    case Publish =>
+      publish()
+
+    case SubscriberAck =>
+      if (count < totalEventsToPublish) {
+        // Wait for messages to expire, to avoid running out of memory
+        context.system.scheduler.scheduleOnce(1.second, self, Publish)
+      } else {
+        eventService.close()
+        testActor ! Done
+      }
   }
 }
+
+
