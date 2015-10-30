@@ -1,20 +1,20 @@
 package csw.services.event
 
 import akka.actor._
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.event.EventPubSubTest._
 import csw.util.cfg.Events.ObserveEvent
 import csw.util.cfg.Key
 import csw.util.cfg.StandardKeys._
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
-import scala.concurrent.{Future, ExecutionContext}
+import org.scalatest.{ BeforeAndAfterAll, FunSuiteLike }
+import scala.concurrent.{ Future, ExecutionContext }
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
-  * Defines some static items used in the tests
-  */
+ * Defines some static items used in the tests
+ */
 object EventPubSubTest {
   // Define a key for an event id
   val eventNum = Key.create[Int]("eventNum")
@@ -40,8 +40,8 @@ object EventPubSubTest {
 }
 
 /**
-  * Starts an embedded Hornetq server
-  */
+ * Starts an embedded Hornetq server
+ */
 class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   val settings = EventServiceSettings(system)
   if (settings.useEmbeddedHornetq) {
@@ -50,7 +50,6 @@ class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender w
   }
 
   val subscriber = system.actorOf(Props(classOf[Subscriber]), "Subscriber")
-
 
   val publisher = system.actorOf(Props(classOf[Publisher], subscriber), "Publisher")
   publisher ! Publish
@@ -72,7 +71,7 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
   subscribe(prefix)
 
   override def receive: Receive = {
-    case PublisherInfo(actorRef) =>
+    case PublisherInfo(actorRef) ⇒
       log.info("Subscriber starting")
       context.become(working(actorRef))
   }
@@ -90,8 +89,7 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
         publisher ! SubscriberAck
       }
 
-    case x => log.warning(s"Unknown $x")
-
+    case x ⇒ log.warning(s"Unknown $x")
 
   }
 }
@@ -114,7 +112,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
 
   def publish(): Unit = {
     val startTime = System.currentTimeMillis()
-    for(num <- eventsToPublish-1 to 0 by -1) {
+    for (num ← eventsToPublish - 1 to 0 by -1) {
       eventService.publish(nextEvent(num))
     }
     count += eventsToPublish
@@ -125,18 +123,18 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
   subscriber ! PublisherInfo(self)
 
   def receive: Receive = {
-    case Publish =>
+    case Publish ⇒
       context.become(publishing(sender()))
       publish()
 
-    case x => log.warning(s"Unknown $x")
+    case x ⇒ log.warning(s"Unknown $x")
   }
 
   def publishing(testActor: ActorRef): Receive = {
-    case Publish =>
+    case Publish ⇒
       publish()
 
-    case SubscriberAck =>
+    case SubscriberAck ⇒
       if (count < totalEventsToPublish) {
         // Wait for messages to expire, to avoid running out of memory
         context.system.scheduler.scheduleOnce(1.second, self, Publish)
@@ -145,8 +143,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
         testActor ! Done
       }
 
-    case x => log.warning(s"Unknown $x")
+    case x ⇒ log.warning(s"Unknown $x")
   }
 }
-
 

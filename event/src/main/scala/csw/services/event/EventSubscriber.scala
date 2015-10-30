@@ -28,6 +28,7 @@ trait EventSubscriber extends Actor with ActorLogging {
   private val handler = new MessageHandler() {
     override def onMessage(message: ClientMessage): Unit = {
       worker ! message
+      message.acknowledge()
     }
   }
 
