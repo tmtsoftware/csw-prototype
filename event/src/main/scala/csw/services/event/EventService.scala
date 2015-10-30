@@ -6,6 +6,7 @@ import org.hornetq.api.core.client._
 import org.hornetq.core.remoting.impl.invm.{ InVMConnectorFactory, InVMAcceptorFactory }
 import org.hornetq.core.remoting.impl.netty.{ NettyAcceptorFactory, NettyConnectorFactory }
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 
 /**
  * An event service based on HornetQ
@@ -125,12 +126,12 @@ case class EventService(prefix: String, host: String = "127.0.0.1", port: Int = 
    * Publishes the given event (channel is the event prefix).
    * @param event the event to publish
    */
-  def publish(event: Event): Unit = {
+  def publish(event: Event, expire: FiniteDuration = 1.second): Unit = {
     val message = hq.session.createMessage(false)
     val buf = message.getBodyBuffer
     buf.clear()
     buf.writeBytes(write(event))
-    message.setExpiration(System.currentTimeMillis() + 1000)
+    message.setExpiration(System.currentTimeMillis() + expire.toMillis)
     producer.send(message)
   }
 
