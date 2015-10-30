@@ -7,7 +7,7 @@ import java.util.UUID
 
 /**
  * Adds the ability to subscribe to events.
- * The subscribed actor wil receive Event messages for the given channel.
+ * The subscribed actor wil receive Event messages for the given prefix.
  */
 trait EventSubscriber extends Actor with ActorLogging {
 
@@ -61,11 +61,11 @@ trait EventSubscriber extends Actor with ActorLogging {
   /**
    * Unsubscribes this actor from events from the given channel.
    *
-   * @param channels the top channels for the events you want to unsubscribe from.
+   * @param prefix the top channels for the events you want to unsubscribe from.
    */
-  def unsubscribe(channels: String*): Unit = {
+  def unsubscribe(prefix: String*): Unit = {
     for {
-      channel ← channels
+      channel ← prefix
       info ← map.get(channel)
     } {
       map -= channel
