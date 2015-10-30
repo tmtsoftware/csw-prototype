@@ -46,3 +46,6 @@ You can run the test with:
   sbt "project event" test
 
 If errors occur, try increasing the `delay` setting.
+
+Note: In some cases it might help to remove the contents of the hornetq-2.4.0.Final/data directory
+between tests.
