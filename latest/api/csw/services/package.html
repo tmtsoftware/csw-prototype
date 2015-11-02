@@ -1,0 +1,319 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>services - csw.services</title>
+          <meta name="description" content="services - csw.services" />
+          <meta name="keywords" content="services csw.services" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'csw.services.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../lib/package_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="csw">csw</a></p>
+        <h1>services</h1><span class="permalink">
+      <a href="../../index.html#csw.services.package" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">services</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.services.apps" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="apps"></a>
+      <a id="apps:apps"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="apps/package.html"><span class="name">apps</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@apps" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.ccs" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ccs"></a>
+      <a id="ccs:ccs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="ccs/package.html"><span class="name">ccs</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@ccs" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This package defines actors and actor traits for use by Assembly and HCD implementations.</p><div class="fullcomment"><div class="comment cmt"><p>This package defines actors and actor traits for use by Assembly and HCD implementations.
+The API to an actor consists of the message it receives (normally defined in the companion object)
+and the replies it sends. These are documented in the individual actor classes.</p><p>This is an <a href="http://akka.io/" target="_blank">Akka actor</a> based project.
+The main actors (or actor traits) here are:</p><p>- <b>AssemblyController</b> - trait for an actor that accepts configurations for an Assembly and communicates with
+one or more HCDs or other assemblies before replying with a command status</p><p>- <b>HcdController</b> - trait for an actor that accepts configurations (from an Assembly) for an HCD.
+The HCD controller sets a state variable, which is used by the assembly to determine when a command has completed.</p><p>- <b>PeriodicHcdController</b> - like HcdController, but has a Queue of configurations that it checks at a specified rate.
+This controller wakes up regularly, checks the incoming queue and updates its state variable with the current
+state of the HCD.</p><p>- <b>StateMatcherActor</b> - an actor used to match demand and current state and then notify a given actor</p><h5> Example </h5><p>Here is an example periodic controller. It delegates tasks to a worker actor.
+The <code>additionalReceive</code> method could be used to receive custom actor messages.
+The <code>process</code> method, called periodically, at a configured rate, is supposed
+to process any incoming configs in its queue (which it gets with the <code>nextConfig</code> method),
+and then update its state variables (done by the worker):</p><pre><span class="kw">class</span> TestPeriodicHcdController <span class="kw">extends</span> PeriodicHcdController {
+
+  <span class="cmt">// Use single worker actor to do work in the background</span>
+  <span class="cmt">// (could also use a worker per job/message if needed)</span>
+  <span class="kw">val</span> worker = context.actorOf(TestWorker.props())
+
+  <span class="kw">override</span> <span class="kw">def</span> additionalReceive: Receive = Actor.emptyBehavior
+
+  <span class="kw">override</span> <span class="kw">protected</span> <span class="kw">def</span> process(): <span class="std">Unit</span> = {
+    <span class="cmt">// Note: There could be some logic here to decide when to take the next config,</span>
+    <span class="cmt">// if there is more than one in the queue. (nextConfig is an Option, so this</span>
+    <span class="cmt">// only takes one config from the queue, if there is one there).</span>
+    nextConfig.foreach { config ⇒
+      worker ! config
+    }
+  }
+}</pre><p>Here is the test worker actor. In this case it simulates doing some work
+and then updates a state variable with the current settings.</p><pre><span class="kw">class</span> TestWorker <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging {
+
+  <span class="kw">import</span> TestWorker._
+  <span class="kw">import</span> context.dispatcher
+
+  <span class="kw">val</span> settings = KvsSettings(context.system)
+  <span class="kw">val</span> svs = StateVariableStore(settings)
+
+  <span class="cmt">// Simulate getting the initial state from the device and publishing to the kvs</span>
+  <span class="kw">val</span> initialState = SetupConfig(testPrefix1).set(position, <span class="lit">"None"</span>)
+  svs.set(initialState)
+
+  <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> config: SetupConfig ⇒
+      <span class="cmt">// Update the demand state variable</span>
+      svs.setDemand(config)
+      <span class="cmt">// Simulate doing work</span>
+      log.info(s<span class="lit">"Start processing $config"</span>)
+      context.system.scheduler.scheduleOnce(<span class="num">2.</span>seconds, self, WorkDone(config))
+
+    <span class="kw">case</span> WorkDone(config) ⇒
+      log.info(s<span class="lit">"Done processing $config"</span>)
+      <span class="cmt">// Simulate getting the current value from the device and publishing it to the kvs</span>
+      log.info(s<span class="lit">"Publishing $config"</span>)
+      svs.set(config)
+
+    <span class="kw">case</span> x ⇒ log.error(s<span class="lit">"Unexpected message $x"</span>)
+  }
+}</pre></div></div>
+    </li><li name="csw.services.cs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cs"></a>
+      <a id="cs:cs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="cs/package.html"><span class="name">cs</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@cs" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.event" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="event"></a>
+      <a id="event:event"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="event/package.html"><span class="name">event</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@event" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The EventService class provides the method <i>publish(event)</i> to publish an object of type <i>Event</i>
+(a type alias for <i>EventServiceEvent</i>).</p><div class="fullcomment"><div class="comment cmt"><h4> Event Publisher </h4><p>The EventService class provides the method <i>publish(event)</i> to publish an object of type <i>Event</i>
+(a type alias for <i>EventServiceEvent</i>).</p><p>Example:</p><pre><span class="kw">val</span> settings = EventServiceSettings(context.system)
+<span class="kw">val</span> eventService = EventService(prefix, settings)
+<span class="kw">val</span> event = ObserveEvent(prefix)
+  .set(eventNum, num)
+  .set(exposureTime, <span class="num">1.0</span>)
+  .set(imageData, testImageData)
+eventService.publish(event)</pre><h4> Event Subscriber </h4><p>The EventSubscriber trait adds the method <i>subscribe(prefix)</i>. After calling this method, the actor
+will receive all Event messages published for the prefix. You can use wildcards in the prefix string.
+For example <i>tmt.mobie.red.dat.*</i> or <i>tmt.mobie.red.dat.#</i>, where <i>*</i> matches a single word and <i>#</i> matches
+multiple words separated by dots. Subscribers should be careful not to block when receiving messages,
+so that the actor queue does not fill up too much.</p><p>Example:</p><pre><span class="kw">class</span> Subscriber <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging <span class="kw">with</span> EventSubscriber {
+  subscribe(prefix)
+
+  <span class="kw">override</span> <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> event: ObserveEvent ⇒  log.info(s<span class="lit">"Received event: $event"</span>)
+  }
+}</pre></div></div>
+    </li><li name="csw.services.kvs" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="kvs"></a>
+      <a id="kvs:kvs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="kvs/package.html"><span class="name">kvs</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@kvs" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> stores values of a given type (T) under string keys.</p><div class="fullcomment"><div class="comment cmt"><p>A <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> stores values of a given type (T) under string keys.
+The type T needs to have an implicit conversion to the <a href="kvs/KeyValueStore$$KvsFormatter.html" class="extype" name="csw.services.kvs.KeyValueStore.KvsFormatter">csw.services.kvs.KeyValueStore.KvsFormatter</a> trait,
+so that the values can be serialized and set to the Redis server.</p><p>The <a href="kvs/Implicits.html" class="extype" name="csw.services.kvs.Implicits">csw.services.kvs.Implicits</a> trait and object provide a number of commonly used
+implicit definitions that include the config classes from the util project.</p><p>The <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> return values use futures, to avoid blocking on network access.
+For convenience, there is also a <a href="kvs/BlockingKeyValueStore.html" class="extype" name="csw.services.kvs.BlockingKeyValueStore">csw.services.kvs.BlockingKeyValueStore</a> wrapper that waits for
+completion before returning.
+</p></div></div>
+    </li><li name="csw.services.loc" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="loc"></a>
+      <a id="loc:loc"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="loc/package.html"><span class="name">loc</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@loc" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="pkg"></a>
+      <a id="pkg:pkg"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="pkg/package.html"><span class="name">pkg</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@pkg" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This project deals with the packaging of components, such as HCDs and Assemblies.</p><div class="fullcomment"><div class="comment cmt"><p>This project deals with the packaging of components, such as HCDs and Assemblies.</p><p>Components live in a <a href="pkg/Container.html" class="extype" name="csw.services.pkg.Container">csw.services.pkg.Container</a> and are controlled by a <a href="pkg/Supervisor.html" class="extype" name="csw.services.pkg.Supervisor">csw.services.pkg.Supervisor</a>.
+Conponents can implement the <a href="pkg/LifecycleHandler.html" class="extype" name="csw.services.pkg.LifecycleHandler">csw.services.pkg.LifecycleHandler</a> trait to be notified about
+lifecycle changes, such as when the component is initialized, started and stopped.</p><p>A demo/test can be found in the multi-jvm directory and run with:</p><pre>sbt <span class="lit">"project pkg"</span> multi-jvm:test</pre></div></div>
+    </li><li name="csw.services.ts" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ts"></a>
+      <a id="ts:ts"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="ts/package.html"><span class="name">ts</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@ts" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

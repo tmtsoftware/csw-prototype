@@ -1,0 +1,324 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>pkg - csw.services.pkg</title>
+          <meta name="description" content="pkg - csw.services.pkg" />
+          <meta name="keywords" content="pkg csw.services.pkg" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'csw.services.pkg.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="csw">csw</a>.<a href="../package.html" class="extype" name="csw.services">services</a></p>
+        <h1>pkg</h1><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">pkg</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This project deals with the packaging of components, such as HCDs and Assemblies.</p><p>Components live in a <a href="Container.html" class="extype" name="csw.services.pkg.Container">csw.services.pkg.Container</a> and are controlled by a <a href="Supervisor.html" class="extype" name="csw.services.pkg.Supervisor">csw.services.pkg.Supervisor</a>.
+Conponents can implement the <a href="LifecycleHandler.html" class="extype" name="csw.services.pkg.LifecycleHandler">csw.services.pkg.LifecycleHandler</a> trait to be notified about
+lifecycle changes, such as when the component is initialized, started and stopped.</p><p>A demo/test can be found in the multi-jvm directory and run with:</p><pre>sbt <span class="lit">"project pkg"</span> multi-jvm:test</pre></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="csw.services.pkg"><span>pkg</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="csw.services.pkg.Assembly" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="AssemblyextendsComponent"></a>
+      <a id="Assembly:Assembly"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Assembly.html"><span class="name">Assembly</span></a><span class="result"> extends <a href="Component.html" class="extype" name="csw.services.pkg.Component">Component</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@AssemblyextendsComponent" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An assembly is a component and may optionally also extend CommandServiceActor (or AssemblyCommandServiceActor)
+</p>
+    </li><li name="csw.services.pkg.Component" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ComponentextendsAnyRef"></a>
+      <a id="Component:Component"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Component.html"><span class="name">Component</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@ComponentextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Marker trait for a component (HCD, Assembly, etc.)
+</p>
+    </li><li name="csw.services.pkg.Container" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ContainerextendsActorwithActorLogging"></a>
+      <a id="Container:Container"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Container.html"><span class="name">Container</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@ContainerextendsActorwithActorLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Implements the container actor based on the contents of the given config.</p>
+    </li><li name="csw.services.pkg.Hcd" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="HcdextendsComponent"></a>
+      <a id="Hcd:Hcd"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Hcd.html"><span class="name">Hcd</span></a><span class="result"> extends <a href="Component.html" class="extype" name="csw.services.pkg.Component">Component</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@HcdextendsComponent" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An HCD is a component and may optionally also extend CommandServiceActor
+</p>
+    </li><li name="csw.services.pkg.LifecycleHandler" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LifecycleHandlerextendsAnyRef"></a>
+      <a id="LifecycleHandler:LifecycleHandler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LifecycleHandler.html"><span class="name">LifecycleHandler</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@LifecycleHandlerextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Containers and Components can override these to handle lifecycle changes.</p>
+    </li><li name="csw.services.pkg.Supervisor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SupervisorextendsActorwithActorLoggingwithProductwithSerializable"></a>
+      <a id="Supervisor:Supervisor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor.html"><span class="name">Supervisor</span></a><span class="params">(<span name="componentProps">componentProps: <span class="extype" name="akka.actor.Props">Props</span></span>, <span name="serviceId">serviceId: <a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a></span>, <span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="services">services: <a href="../../../scala/package.html#List[+A]=List[A]" class="extmbr" name="scala.List">List</a>[<a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a>]</span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@SupervisorextendsActorwithActorLoggingwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A supervisor actor that manages the component actor given by the arguments
+(see props() for argument descriptions).</p>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.services.pkg.Component" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Component"></a>
+      <a id="Component:Component"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Component$.html"><span class="name">Component</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@Component" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents a Component, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).</p><div class="fullcomment"><div class="comment cmt"><p>Represents a Component, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).</p><p>Each component has its own ActorSystem, LifecycleManager and name.
+</p></div></div>
+    </li><li name="csw.services.pkg.Container" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Container"></a>
+      <a id="Container:Container"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Container$.html"><span class="name">Container</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@Container" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">From OSW TN009 - &quot;TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT&quot;:</p><div class="fullcomment"><div class="comment cmt"><p>From OSW TN009 - &quot;TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT&quot;:</p><p>A container is a software environment for deploying software components.
+A single container can host several components. The container manages lifecycle activities like starting,
+stopping and initialization of components. It also provides software interfaces for the services a component
+can use to access lower-level functionality needed for the component’s operation.</p><p>A single computer can host 0 to N containers (one per JVM).
+A container can include zero or more components (HCDs, assemblies, sequence components).</p><p>The Akka interface consists of messages that can be sent to the container.
+These messages will be needed for automated startup and shutdown.
+Supporting these messages requires one or more Akka actors that can instantiate and delete OMOA components.
+The componentState message will allow us to take each component through a lifecycle similar to what is shown in
+Figure 5 from AP03.</p><p>The Container then keeps a collection of Components. If the Component includes the CommandService (some may not),
+then it will be visible externally for commands.</p><p>See also &quot;OSW TN012 Component Lifecycle Design&quot;.
+</p></div></div>
+    </li><li name="csw.services.pkg.LifecycleHandler" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LifecycleHandler"></a>
+      <a id="LifecycleHandler:LifecycleHandler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="LifecycleHandler$.html"><span class="name">LifecycleHandler</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@LifecycleHandler" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Supervisor"></a>
+      <a id="Supervisor:Supervisor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$.html"><span class="name">Supervisor</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.package@Supervisor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The Supervisor is an actor that supervises the component actors and deals with
+component lifecycle messages so components don't have to.</p><div class="fullcomment"><div class="comment cmt"><p>The Supervisor is an actor that supervises the component actors and deals with
+component lifecycle messages so components don't have to. There is one Supervisor per component.
+It registers with the location service and is responsible for starting and stopping the component
+as well as managing its state.
+All component messages go through the Supervisor, so it can reject any
+messages that are not allowed in a given lifecycle.</p><p>See the TMT document &quot;OSW TN012 - COMPONENT LIFECYCLE DESIGN&quot; for a description of CSW lifecycles.
+</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

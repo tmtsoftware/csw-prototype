@@ -1,0 +1,420 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>cfg - csw.util.cfg</title>
+          <meta name="description" content="cfg - csw.util.cfg" />
+          <meta name="keywords" content="cfg csw.util.cfg" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'csw.util.cfg.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="csw">csw</a>.<a href="../package.html" class="extype" name="csw.util">util</a></p>
+        <h1>cfg</h1><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cfg</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="csw.util.cfg.ConfigData" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigDataextendsSerializablewithProduct"></a>
+      <a id="ConfigData:ConfigData"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigData.html"><span class="name">ConfigData</span></a><span class="params">(<span name="data">data: <span class="extype" name="scala.Predef.Map">Map</span>[<a href="Key.html" class="extype" name="csw.util.cfg.Key">Key</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>] = <span class="symbol">Map.empty</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@ConfigDataextendsSerializablewithProduct" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Contains a map of typed keys and values
+</p>
+    </li><li name="csw.util.cfg.Key" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="KeyextendsSerializablewithProduct"></a>
+      <a id="Key:Key"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Key.html"><span class="name">Key</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@KeyextendsSerializablewithProduct" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The shared class for storing telemetry and configuration data.</p><div class="fullcomment"><div class="comment cmt"><p>The shared class for storing telemetry and configuration data.</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>the name of the key</p></dd></dl></div>
+    </li><li name="csw.util.cfg.ObsID2" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ObsID2extendsProductwithSerializable"></a>
+      <a id="ObsID2:ObsID2"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ObsID2.html"><span class="name">ObsID2</span></a><span class="params">(<span name="year">year: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="sem">sem: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="kind">kind: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="prog">prog: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="obs">obs: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="file">file: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@ObsID2extendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.ObsId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ObsIdextendsProductwithSerializable"></a>
+      <a id="ObsId:ObsId"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ObsId.html"><span class="name">ObsId</span></a><span class="params">(<span name="obsId">obsId: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@ObsIdextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.ProgramKind" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ProgramKindextendsAnyRef"></a>
+      <a id="ProgramKind:ProgramKind"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ProgramKind.html"><span class="name">ProgramKind</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@ProgramKindextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Supports ObsID of the form 2022A|B-Q|C-ProgNum-ObsNum-FileNum
+                           YYYY(A|B)-(Q|C)-PXXX-OXXX-FXXXX
+                           0123 4   5 6   7890123456789
+                                             1111111111
+</p>
+    </li><li name="csw.util.cfg.RunId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RunIdextendsProductwithSerializable"></a>
+      <a id="RunId:RunId"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="RunId.html"><span class="name">RunId</span></a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@RunIdextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.Subsystem" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="SubsystemextendsOrdered[csw.util.cfg.Subsystem]withSerializable"></a>
+      <a id="Subsystem:Subsystem"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Subsystem.html"><span class="name">Subsystem</span></a><span class="result"> extends <a href="../../../scala/package.html#Ordered[T]=scala.math.Ordered[T]" class="extmbr" name="scala.Ordered">Ordered</a>[<a href="Subsystem.html" class="extype" name="csw.util.cfg.Subsystem">Subsystem</a>] with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@SubsystemextendsOrdered[csw.util.cfg.Subsystem]withSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Represents a TMT subsystem
+</p>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.util.cfg.Classical" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Classical"></a>
+      <a id="Classical:Classical"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Classical$.html"><span class="name">Classical</span></a><span class="result"> extends <a href="ProgramKind.html" class="extype" name="csw.util.cfg.ProgramKind">ProgramKind</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@Classical" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.ConfigSerializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigSerializer"></a>
+      <a id="ConfigSerializer:ConfigSerializer"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigSerializer$.html"><span class="name">ConfigSerializer</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@ConfigSerializer" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.Configurations" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Configurations"></a>
+      <a id="Configurations:Configurations"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Configurations$.html"><span class="name">Configurations</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@Configurations" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.Events" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Events"></a>
+      <a id="Events:Events"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Events$.html"><span class="name">Events</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@Events" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Defines events used by the event and telemetry services
+</p>
+    </li><li name="csw.util.cfg.Key" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Key"></a>
+      <a id="Key:Key"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Key$.html"><span class="name">Key</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@Key" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.ObsID2" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ObsID2"></a>
+      <a id="ObsID2:ObsID2"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ObsID2$.html"><span class="name">ObsID2</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@ObsID2" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.PreProgrammedQueue" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="PreProgrammedQueue"></a>
+      <a id="PreProgrammedQueue:PreProgrammedQueue"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="PreProgrammedQueue$.html"><span class="name">PreProgrammedQueue</span></a><span class="result"> extends <a href="ProgramKind.html" class="extype" name="csw.util.cfg.ProgramKind">ProgramKind</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@PreProgrammedQueue" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.RunId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RunId"></a>
+      <a id="RunId:RunId"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="RunId$.html"><span class="name">RunId</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@RunId" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Implementation of unique id for each running command (returned from a queue submit).</p>
+    </li><li name="csw.util.cfg.StandardKeys" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="StandardKeys"></a>
+      <a id="StandardKeys:StandardKeys"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="StandardKeys$.html"><span class="name">StandardKeys</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@StandardKeys" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.util.cfg.Subsystem" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Subsystem"></a>
+      <a id="Subsystem:Subsystem"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Subsystem$.html"><span class="name">Subsystem</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@Subsystem" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Defines constants for the available subsystems
+</p>
+    </li><li name="csw.util.cfg.UnitsOfMeasure" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UnitsOfMeasure"></a>
+      <a id="UnitsOfMeasure:UnitsOfMeasure"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="UnitsOfMeasure$.html"><span class="name">UnitsOfMeasure</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.util.cfg.package@UnitsOfMeasure" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This Units stuff is just for play
+although something should be developed or borrowed
+for use.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
