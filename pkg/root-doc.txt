@@ -1,0 +1,6 @@
+== Packaging ==
+
+This project deals with the packaging of components, such as HCDs and Assemblies.
+
+Components live in a [[Container]]
+

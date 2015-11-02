@@ -2,8 +2,6 @@ package csw.util.cfg
 
 import java.util.UUID
 
-import csw.shared.cmd.RunId
-
 import scala.compat.Platform
 import scala.language.implicitConversions
 

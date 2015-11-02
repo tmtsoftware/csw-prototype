@@ -1,12 +1,12 @@
 package csw.services.pkg
 
 import akka.actor._
-import csw.services.ccs.PeriodicHcdController
+import csw.services.ccs.{ CommandStatus, PeriodicHcdController }
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ ResolvedService, ServicesReady }
 import csw.services.loc.{ ServiceType, ServiceRef, LocationService, ServiceId }
-import csw.shared.cmd.{ RunId, CommandStatus }
 import csw.util.cfg.Configurations.ControlConfigArg
+import csw.util.cfg.RunId
 
 /**
  * The Supervisor is an actor that supervises the component actors and deals with

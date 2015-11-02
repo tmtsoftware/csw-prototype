@@ -1,5 +1,6 @@
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
+import com.typesafe.sbt.SbtSite.site
 import sbt.Keys._
 import sbt._
 import com.typesafe.sbt.packager.Keys._
@@ -16,26 +17,18 @@ def runtime(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "runtime")
 def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 
 
-// Contains classes that are shared between the scala and scala.js code
-lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
-  .settings(defaultSettings: _*)
-  .settings(fork := false)
-
-lazy val sharedJvm = shared.jvm
-lazy val sharedJs = shared.js
-
 // Utility classes
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-      test(scalaTest)
-  ).dependsOn(sharedJvm)
+    test(scalaTest)
+  )
 
 // Supporting classes
 lazy val support = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-      test(scalaTest)
+    test(scalaTest)
   )
 
 // Logging support, Log service (only includes config files so far)
@@ -68,7 +61,7 @@ lazy val ccs = project
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaSse) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(sharedJvm, log, loc, kvs, util % "compile->compile;test->test")
+  ) dependsOn(log, loc, kvs, util % "compile->compile;test->test")
 
 // Config Service
 lazy val cs = project
@@ -144,12 +137,14 @@ lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
   ) dependsOn cs
 
 
-//// Need a root project for unidoc plugin, so we can merge the scaladocs
-//val csw = (project in file(".")).
-//  settings(defaultSettings: _*).
-//  settings(unidocSettings: _*).
-//  settings(
-//    name := "CSW - TMT Common Software"
-//  ).
-//  aggregate(sharedJvm, sharedJs, util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
-//    containerCmd, sequencer, configServiceAnnex, csClient)
+// Need a root project for unidoc plugin, so we can merge the scaladocs
+val csw = (project in file(".")).
+  settings(defaultSettings: _*).
+  settings(siteSettings: _*).
+  settings(unidocSettings: _*).
+  settings(
+    name := "CSW - TMT Common Software",
+    site.addMappingsToSiteDir(mappings in(ScalaUnidoc, packageDoc), "latest/api")
+  ).
+  aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
+    containerCmd, sequencer, configServiceAnnex, csClient)

@@ -1,0 +1,3 @@
+== Logging Support ==
+
+This project doesn't have any sources, only logging config files for Logback and Logstash.

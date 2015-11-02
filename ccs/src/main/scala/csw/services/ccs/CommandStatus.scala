@@ -1,5 +1,6 @@
-package csw.shared.cmd
+package csw.services.ccs
 
+import csw.util.cfg.RunId
 
 /**
  * The status of a running command
@@ -32,8 +33,8 @@ sealed trait CommandStatus {
   def isFailed: Boolean = !isSuccess
 
   /**
-    * True if execution of the command has stopped (because completed, canceled, aborted, error, etc.)
-    */
+   * True if execution of the command has stopped (because completed, canceled, aborted, error, etc.)
+   */
   def isDone: Boolean = true
 }
 
@@ -43,36 +44,36 @@ sealed trait CommandStatus {
 object CommandStatus {
 
   /**
-    * The command has completed successfully
-    */
+   * The command has completed successfully
+   */
   case class Completed(runId: RunId) extends CommandStatus {
     override def isSuccess: Boolean = true
   }
 
   /**
-    * The command has been accepted (checked requirements, etc.)
-    */
+   * The command has been accepted (checked requirements, etc.)
+   */
   case class Accepted(runId: RunId) extends CommandStatus {
     override def isDone: Boolean = false
   }
 
   /**
-    * The command has been rejected because the assembly is busy (XXX is this needed?)
-    */
+   * The command has been rejected because the assembly is busy (XXX is this needed?)
+   */
   case class Busy(runId: RunId) extends CommandStatus
 
   /**
-    * The command failed with the given message
-    */
+   * The command failed with the given message
+   */
   case class Error(runId: RunId, override val message: String) extends CommandStatus
 
   /**
-    * The command was aborted
-    */
+   * The command was aborted
+   */
   case class Aborted(runId: RunId) extends CommandStatus
 
   /**
-    * The command was canceled
-    */
+   * The command was canceled
+   */
   case class Canceled(runId: RunId) extends CommandStatus
 }

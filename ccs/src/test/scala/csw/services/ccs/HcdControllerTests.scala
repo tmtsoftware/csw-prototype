@@ -3,17 +3,18 @@ package csw.services.ccs
 import akka.actor._
 import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.ccs.CommandStatus
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdController.Process
 import csw.services.kvs._
-import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.StandardKeys.position
 import org.scalatest.{ DoNotDiscover, FunSuiteLike }
 
 import scala.concurrent.duration._
+import Implicits._
 
-object HcdControllerTests extends Implicits {
+object HcdControllerTests {
 
   val testPrefix1 = "wfos.blue.filter"
   val testPrefix2 = "wfos.red.filter"

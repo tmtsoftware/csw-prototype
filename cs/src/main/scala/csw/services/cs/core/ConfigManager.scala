@@ -154,6 +154,7 @@ case class GitConfigId(id: String) extends ConfigId
 
 /**
  * This trait represents the contents of the files being managed.
+ * It is based on Akka streams.
  */
 trait ConfigData {
   /**
@@ -214,13 +215,30 @@ trait ConfigData {
   }
 }
 
+/**
+ * Provides various alternatives for constructing the data to be stored in the config service.
+ */
 object ConfigData {
+  /**
+   * The data is contained in the string
+   */
   def apply(str: String): ConfigData = ConfigString(str)
 
+  /**
+   * Takes the data from the byte array
+   */
   def apply(bytes: Array[Byte]): ConfigData = ConfigBytes(bytes)
 
+  /**
+   * Initialize with the contents of the given file.
+   * @param file the data source
+   * @param chunkSize the block or chunk size to use when streaming the data
+   */
   def apply(file: File, chunkSize: Int = 4096): ConfigData = ConfigFile(file, chunkSize)
 
+  /**
+   * The data source can be any byte string
+   */
   def apply(source: Source[ByteString, Any]): ConfigData = ConfigSource(source)
 }
 

@@ -3,7 +3,6 @@ package csw.services.ccs
 import akka.actor.{ ActorRefFactory, Props, Actor, ActorRef }
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
-import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.SetupConfigArg
 
 import scala.concurrent.{ Await, Future }

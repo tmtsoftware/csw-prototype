@@ -3,7 +3,6 @@ package csw.services.ccs
 import akka.actor.{ ActorRef, ActorLogging, Actor }
 import csw.services.loc.LocationService.{ ResolvedService, Disconnected, ServicesReady }
 import csw.services.loc.ServiceRef
-import csw.shared.cmd.CommandStatus
 import csw.util.cfg.Configurations.{ ObserveConfigArg, SetupConfigArg, ControlConfigArg }
 
 /**

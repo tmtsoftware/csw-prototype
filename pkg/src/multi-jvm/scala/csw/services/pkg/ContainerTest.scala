@@ -5,13 +5,12 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import csw.services.ccs.AssemblyClient
+import csw.services.ccs.{CommandStatus, AssemblyClient}
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.ServiceType.HCD
 import csw.services.loc.{ServiceRef, ServiceId, LocationService}
 import csw.services.pkg.Supervisor.LifecycleStateChanged
-import csw.shared.cmd.CommandStatus
 import csw.util.cfg.TestConfig
 
 import scala.concurrent.Await

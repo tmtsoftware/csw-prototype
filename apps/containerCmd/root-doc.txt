@@ -1,0 +1,4 @@
+== Container Command ==
+
+This project adds support for building a command line application that takes a config file
+and then starts a container with the given HCDs or assemblies.

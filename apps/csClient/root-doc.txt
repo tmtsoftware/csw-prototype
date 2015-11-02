@@ -1,0 +1,3 @@
+== Config Service Client ==
+
+The ''csclient'' command is a command line client to the config service.

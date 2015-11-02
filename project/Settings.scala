@@ -6,6 +6,13 @@ import play.twirl.sbt.Import.TwirlKeys
 import sbt.Keys._
 import sbt._
 
+
+import com.typesafe.sbt.SbtSite.site
+import com.typesafe.sbt.SbtSite.SiteKeys._
+import com.typesafe.sbt.SbtGhPages.ghpages
+import com.typesafe.sbt.SbtGit.git
+
+
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
   val Version = "0.1-SNAPSHOT"
@@ -64,6 +71,10 @@ object Settings {
 
   lazy val twirlSettings = Seq(
     TwirlKeys.templateImports += "csw.services.cmd_old.akka.CommandServiceActor.CommandServiceStatus"
+  )
+
+  lazy val siteSettings = site.settings ++ ghpages.settings ++ site.includeScaladoc() ++ Seq(
+    git.remoteRepo := "https://github.com/tmtsoftware/csw.git"
   )
 
   import scalariform.formatter.preferences._
