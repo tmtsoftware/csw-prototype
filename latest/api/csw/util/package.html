@@ -92,8 +92,21 @@ and the key's values must be of that type.</p><p>Configurations and events are b
 information included, such as ids or timestamps.</p><p>The key/value store and event service make use of these classes, which need to be
 serialized and deserialized for external storage (in Redis or Hornetq, for example).
 The <a href="cfg/ConfigSerializer$$ConfigSerializer.html" class="extype" name="csw.util.cfg.ConfigSerializer.ConfigSerializer">csw.util.cfg.ConfigSerializer.ConfigSerializer</a> class provides support for this
-(based on java serialization).
-</p></div></div>
+(based on java serialization).</p><p>Example:</p><pre><span class="cmt">// Define a key for an event number (Just for testing)</span>
+<span class="kw">val</span> eventNum = Key.create[<span class="std">Int</span>](<span class="lit">"eventNum"</span>)
+
+<span class="cmt">// Define a key for some image data</span>
+<span class="kw">val</span> imageData = Key.create[<span class="std">Array</span>[<span class="std">Short</span>]](<span class="lit">"imageData"</span>)
+
+<span class="cmt">// Dummy image data</span>
+<span class="kw">val</span> testImageData = <span class="std">Array</span>.ofDim[<span class="std">Short</span>](<span class="num">10000</span>)
+<span class="cmt">// ...</span>
+<span class="kw">val</span> prefix = <span class="lit">"tcs.mobie.red.dat.exposureInfo"</span>
+
+<span class="kw">val</span> event = ObserveEvent(prefix)
+.set(eventNum, num)
+.set(exposureTime, <span class="num">1.0</span>)
+.set(imageData, testImageData)</pre></div></div>
     </li></ol>
             </div>
 
