@@ -4,6 +4,7 @@ import com.typesafe.sbt.SbtSite.site
 import sbt.Keys._
 import sbt._
 import com.typesafe.sbt.packager.Keys._
+import com.typesafe.sbt.site.PreprocessSupport._
 
 import Dependencies._
 import Settings._
@@ -144,7 +145,11 @@ val csw = (project in file(".")).
   settings(unidocSettings: _*).
   settings(
     name := "CSW - TMT Common Software",
-    site.addMappingsToSiteDir(mappings in(ScalaUnidoc, packageDoc), "latest/api")
+    site.addMappingsToSiteDir(mappings in(ScalaUnidoc, packageDoc), "latest/api"),
+    preprocessVars := Map(
+      "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
+      "DOCROOT" -> "latest/api/index.html"
+    )
   ).
   aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
     containerCmd, sequencer, configServiceAnnex, csClient)

@@ -11,8 +11,8 @@ Build Instructions
 To build, run 'sbt' in the top level directory and type one of the following commands:
 
 * compile - compiles the sources
-* test - run the tests
-* multi-jvm:test - run tests that use multiple JVMs
+* test - run the tests (Note that not all tests run automatically, due to dependencies on external servers)
+* multi-jvm:test - run tests that use multiple JVMs (Switch to project first for best results)
 * stage - create the standalone apps and test apps (installed in */target/universal/stage/bin)
 * publish-local - publish artifacts to the local ivy repository (~/.ivy2)
 
@@ -43,16 +43,14 @@ Projects and Directories
 ------------------------
 
 * [apps](apps) - contains some standalone applications
-* [shared](shared) - shared Scala/Scala.js project, for data transfer objects between client and server
-* [cmd](cmd) - the Command Service (for sending commands to HCDs and Assemblies)
+* [ccs](ccs) - the Command and Control Service (for sending configurations to HCDs and Assemblies)
 * [cs](cs) - the Configuration Service (manages configuration files in Git repos)
-* [doc](doc) - for documentation
 * [event](event) - the Event Service, based on HornetQ
 * [kvs](kvs) - provides key/value store and publish/subscribe features based on Redis
-* [loc](loc) - the Location Service (a single actor that that supports registering and finding HCDs and assemblies)
+* [loc](loc) - the Location Service (based on Multicast DNS, supports registering and finding Akka and http based services)
 * [log](log) - contains logging related code
-* [pkg](pkg) - a packaging layer over the command service that provides HCD and Assembly classes
-* [util](util) - for reusable utility code
+* [pkg](pkg) - a packaging layer over the command service that provides Container, Supervisor, HCD and Assembly classes
+* [util](util) - for reusable utility code, including configuration and event classes
 
 Applications
 -----------
@@ -60,7 +58,6 @@ Applications
 The following standalone applications are installed here:
 
 * [cs](cs) - the config service
-* [loc](loc) - the location service
 
 The following applications are defined under ../apps:
 
@@ -68,5 +65,17 @@ The following applications are defined under ../apps:
 * [containerCmd](containerCmd) - used to start containers of HCDs or assemblies, based on a given config file (This is not an application, but us used to simplify creating such applications)
 * [sequencer](sequencer) - implements the command line sequencer application, which is a Scala REPL shell
 * [csClient](csClient) - a command line client to the config service (used in some test scripts)
+
+
+Publishing the API Documentation
+--------------------------------
+
+This project uses [GitHub Pages](https://pages.github.com/) for publishing the API documentation.
+Sbt plugins are used to generate the scaladoc and publish it.
+The most useful sbt task is *ghpages-push-site*, which generates the API docs and publishes them on GitHub.
+
+The main page for the site is `src/site-preprocess/index.html`. That page contains pointers to the 
+API docs and the GitHub sources. Note that the links to the sources are always based on the branch
+you are working in.
 
 

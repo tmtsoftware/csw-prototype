@@ -6,12 +6,12 @@ import play.twirl.sbt.Import.TwirlKeys
 import sbt.Keys._
 import sbt._
 
-
 import com.typesafe.sbt.SbtSite.site
 import com.typesafe.sbt.SbtSite.SiteKeys._
 import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
-
+import sbtunidoc.Plugin.UnidocKeys
+import UnidocKeys._
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
@@ -43,9 +43,9 @@ object Settings {
   )
 
   lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(
-    // compile options
+    // compile options ScalaUnidoc, unidoc
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
-    scalacOptions in(Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
+    scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
     javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
     javaOptions in Test += "-Xmx2048m"
   )
@@ -73,7 +73,8 @@ object Settings {
     TwirlKeys.templateImports += "csw.services.cmd_old.akka.CommandServiceActor.CommandServiceStatus"
   )
 
-  lazy val siteSettings = site.settings ++ ghpages.settings ++ site.includeScaladoc() ++ Seq(
+  lazy val siteSettings = site.settings ++ ghpages.settings ++ site.includeScaladoc() ++
+    site.preprocessSite() ++ Seq(
     git.remoteRepo := "https://github.com/tmtsoftware/csw.git"
   )
 
