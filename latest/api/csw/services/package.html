@@ -106,11 +106,11 @@
       <p class="shortcomment cmt">This package defines actors and actor traits for use by Assembly and HCD implementations.</p><div class="fullcomment"><div class="comment cmt"><p>This package defines actors and actor traits for use by Assembly and HCD implementations.
 The API to an actor consists of the message it receives (normally defined in the companion object)
 and the replies it sends. These are documented in the individual actor classes.</p><p>This is an <a href="http://akka.io/" target="_blank">Akka actor</a> based project.
-The main actors (or actor traits) here are:</p><p>- <b>AssemblyController</b> - trait for an actor that accepts configurations for an Assembly and communicates with
-one or more HCDs or other assemblies before replying with a command status</p><p>- <b>HcdController</b> - trait for an actor that accepts configurations (from an Assembly) for an HCD.
-The HCD controller sets a state variable, which is used by the assembly to determine when a command has completed.</p><p>- <b>PeriodicHcdController</b> - like HcdController, but has a Queue of configurations that it checks at a specified rate.
+The main actors (or actor traits) here are:</p><p>- <b><a href="ccs/AssemblyController.html" class="extype" name="csw.services.ccs.AssemblyController">csw.services.ccs.AssemblyController</a></b> - trait for an actor that accepts configurations for an Assembly and communicates with
+one or more HCDs or other assemblies before replying with a command status</p><p>- <b><a href="ccs/HcdController.html" class="extype" name="csw.services.ccs.HcdController">HcdController</a></b> - trait for an actor that accepts configurations (from an Assembly) for an HCD.
+The HCD controller sets a state variable, which is used by the assembly to determine when a command has completed.</p><p>- <b><a href="ccs/PeriodicHcdController.html" class="extype" name="csw.services.ccs.PeriodicHcdController">PeriodicHcdController</a></b> - like HcdController, but has a Queue of configurations that it checks at a specified rate.
 This controller wakes up regularly, checks the incoming queue and updates its state variable with the current
-state of the HCD.</p><p>- <b>StateMatcherActor</b> - an actor used to match demand and current state and then notify a given actor</p><h5> Example </h5><p>Here is an example periodic controller. It delegates tasks to a worker actor.
+state of the HCD.</p><p>- <b><a href="ccs/StateMatcherActor.html" class="extype" name="csw.services.ccs.StateMatcherActor">StateMatcherActor</a></b> - an actor used to match demand and current state and then notify a given actor</p><h5> Example </h5><p>Here is an example periodic controller. It delegates tasks to a worker actor.
 The <code>additionalReceive</code> method could be used to receive custom actor messages.
 The <code>process</code> method, called periodically, at a configured rate, is supposed
 to process any incoming configs in its queue (which it gets with the <code>nextConfig</code> method),
