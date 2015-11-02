@@ -74,7 +74,7 @@ Publishing the API Documentation
 
 This project uses [GitHub Pages](https://pages.github.com/) for publishing the API documentation.
 Sbt plugins are used to generate the scaladoc and publish it.
-The most useful sbt task is *ghpages-push-site*, which generates the API docs and publishes them on GitHub.
+The most useful sbt tasks are *make-site* and *ghpages-push-site*, which generate the API docs and publish them on GitHub.
 
 The main page for the site is `src/site-preprocess/index.html`. That page contains pointers to the 
 API docs and the GitHub sources. Note that the links to the sources are always based on the branch
