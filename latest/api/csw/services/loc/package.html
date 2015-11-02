@@ -47,13 +47,62 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"></div>
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><h4> Location Service </h4><p>The Location Service implemented in this project is based on Multicast DNS.
+The necessary support for this should already be available on Mac and Linux machines.
+The Location Service helps you to find out the hostname and port number for a service,
+as well as other information for determining the correct URI to use, such as the path,
+the actor system name and the config prefix.</p><p>Two types of services are currently supported: Akka/actor based and HTTP based services.
+To register an Akka actor based service, you can use code like this:</p><pre>LocationService.registerAkkaService(serviceId, self, <span class="lit">"test.akka.prefix"</span>)</pre><p>Where self is a reference to the services own actorRef and the prefix argument indicates the
+part of a configuration the actor is interested in receiving.</p><p>To register an HTTP based service, you can make a call like this:</p><pre>LocationService.registerHttpService(serviceId, port)</pre><p>Here you specify the port and the DNS name for the local host is automatically determined.</p><h5> Using the Location Service </h5><p>The Location Service actor can be used in an actor based application to be notified whenever
+a set of required services is available or not. In the following example, <code>TestServiceClient</code>
+depends on <code>TestAkkaService</code> and <code>TestHttpService</code> and will receive a <code>ServicesReady</code> message
+with the contact information (URI, actorRef, prefix, ...) when they are both available.
+If any of the required services goes down, a Disconnected message is sent.</p><pre><span class="kw">class</span> TestServiceClient <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging {
+  <span class="kw">val</span> serviceRefs = <span class="std">Set</span>(TestAkkaService.serviceRef, TestHttpService.serviceRef)
+  context.actorOf(LocationService.props(serviceRefs))
+
+  <span class="kw">override</span> <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> ServicesReady(services) <span class="kw">=&gt;</span>
+      log.info(s<span class="lit">"Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString("</span>, <span class="lit">")}"</span>)
+
+    <span class="kw">case</span> Disconnected(serviceRef) <span class="kw">=&gt;</span>
+      log.info(s<span class="lit">"Disconnected service: ${serviceRef.serviceId.name}"</span>)
+
+    <span class="kw">case</span> x <span class="kw">=&gt;</span>
+      log.error(s<span class="lit">"Received unexpected message $x"</span>)
+  }
+}</pre><h5> Command Line Tools </h5><p>On a Mac, you can use the dns-sd command to view information about registered services.
+For example:</p><pre>dns-sd -B _csw._tcp</pre><p>will continuously display CSW services added or removed, while:</p><pre>dns-sd -L TestAkkaService-assembly-akka _csw._tcp</pre><p>will list information about the application with the DNS name <code>TestAkkaService-assembly-akka</code> (not case sensitive).</p><p><code>_csw._tcp</code> is the mDNS type used for all CSW services. The default domain is <code>local.</code>.</p><p>The CSW/mDNS application names here are in the format: <i>name-serviceType-accessType</i>,
+where <i>serviceType</i> is assembly, hcd, etc. and <i>accessType</i> is <code>http</code> or <code>akka</code>.
+</p></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
         
 
       <div id="mbrsel">
         <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
-        
-        
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="csw.services.loc"><span>loc</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+          </div>
         <div id="visbl">
             <span class="filtertype">Visibility</span>
             <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
@@ -295,7 +344,11 @@ gets a result.
         </div>
 
         <div id="inheritedMembers">
-        
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
         
         </div>
 

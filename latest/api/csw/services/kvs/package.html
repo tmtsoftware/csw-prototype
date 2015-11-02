@@ -47,10 +47,12 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A <a href="KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> stores values of a given type (T) under string keys.
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><h4> Key/Value Store and Publish/Subscribe </h4><p>This module provides key/value store and publish/subscribe features based on <a href="http://redis.io/" target="_blank">Redis</a>.
+An Event object can be set or published on a channel and subscribers
+receive the events. The last <i>n</i> events are saved for reference (where n is an optional argument).</p><p>Note that the tests assume the redis server is running.</p><p>A <a href="KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> stores values of a given type (T) under string keys.
 The type T needs to have an implicit conversion to the <a href="KeyValueStore$$KvsFormatter.html" class="extype" name="csw.services.kvs.KeyValueStore.KvsFormatter">csw.services.kvs.KeyValueStore.KvsFormatter</a> trait,
-so that the values can be serialized and set to the Redis server.</p><p>The <a href="Implicits.html" class="extype" name="csw.services.kvs.Implicits">csw.services.kvs.Implicits</a> trait and object provide a number of commonly used
-implicit definitions that include the config classes from the util project.</p><p>The <a href="KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> return values use futures, to avoid blocking on network access.
+so that the values can be serialized and set to the Redis server and later deserialized.</p><p>The <a href="Implicits.html" class="extype" name="csw.services.kvs.Implicits">csw.services.kvs.Implicits</a> trait and object provide a number of commonly used
+implicit definitions that include the configuration classes from the util project.</p><p>The <a href="KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> return values as futures, to avoid blocking on network access.
 For convenience, there is also a <a href="BlockingKeyValueStore.html" class="extype" name="csw.services.kvs.BlockingKeyValueStore">csw.services.kvs.BlockingKeyValueStore</a> wrapper that waits for
 completion before returning.
 </p></div><div class="toggleContainer block">

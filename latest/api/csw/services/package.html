@@ -160,7 +160,7 @@ and then updates a state variable with the current settings.</p><pre><span class
     <span class="kw">case</span> x ⇒ log.error(s<span class="lit">"Unexpected message $x"</span>)
   }
 }</pre></div></div>
-    </li><li name="csw.services.cs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="csw.services.cs" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="cs"></a>
       <a id="cs:cs"></a>
       <h4 class="signature">
@@ -176,7 +176,74 @@ and then updates a state variable with the current settings.</p><pre><span class
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">This project implements the Configuration Service, which is used to manage configuration
+files by storing them in a Git repository.</p><div class="fullcomment"><div class="comment cmt"><h4> Configuration Service </h4><p>This project implements the Configuration Service, which is used to manage configuration
+files by storing them in a Git repository.</p><h5> Config Service API </h5><p>The config service can be accessed by sending messages to the config service actor,
+however the ConfigServiceClient wrapper class implements the ConfigManager trait
+and provides a somewhat simpler API.</p><h5> Config Service Application </h5><p>Before starting the config service, the <i>location service</i>
+and the the <i>config service annex server</i>
+should both be running.
+You can start the config service with the <code>cs</code> command (found under target/universal/stage/bin).
+The default config service name and the location of the local and main Git repositories is defined in resources/reference.conf.
+Alternatively you can specify a different config file on the command line in the same format.
+You can also override the values with system properties. For example:</p><pre>cs -Dcsw.services.cs.name=MyConfigServiceName
+   -Dcsw.services.cs.main-repository=http:<span class="cmt">//myHost/MyMainRepo/</span>
+   -Dcsw.services.cs.local-repository=/myPath/MyLocalRepo</pre><p>Note that multiple config service instances may be running in the network, but the names an host:port combinations should
+each be unique. Only a single config service instance should access a given local repository.</p><h5> Config Service Http Server </h5><p>The config service application (cs) also starts an http server
+(optionally, if csw.services.cs.http.host is defined in the config file).
+The HTTP/REST interface to the command service follows the scala and java APIs.</p><p>The <code>create</code> and <code>update</code> methods expect the file data to be posted.
+The <code>path</code> query argument is always required. All other query arguments are optional.
+The <code>id</code> argument (a <code>ConfigId</code>) must be taken from the JSON result of <code>create</code>, <code>update</code>, <code>list</code>, or <code>history</code>.</p><p>The format of the JSON returned from <code>create</code> and <code>update</code> is:
+<code>{&quot;ConfigId&quot;:&quot;da807342bcc21766316c3a91a01f4a513a1adbb3&quot;}</code>. The <code>id</code> query argument passed to the other methods is
+ the value at right.</p><h5> Example or using curl to access the Config Service Http Server </h5><p>Assuming that the config service http server is running on localhost on port 8541 (see config file, default: reference.conf):</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/create?path=some/test1/TestConfig1&comment=comment+here' --data-binary @TestConfig1</span></pre><p>   Creates a new file in the config service named some/test1/TestConfig1 using the data in the local file TestConfig1.</p><pre>curl 'http:<span class="cmt">//localhost:8541/get?path=some/test1/TestConfig1' > TestConfig1a</span></pre><p>   Gets the contents of some/test1/TestConfig1 from the service and store in a local file.</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1</span></pre><p>   Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.</p><pre>curl -s 'http:<span class="cmt">//localhost:8541/history?path=some/test1/TestConfig1'</span></pre><p>   Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:</p><pre>[
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"update 2 comment"</span>,
+      <span class="lit">"time"</span> : <span class="num">1421010506000</span>,
+      <span class="lit">"id"</span> : <span class="lit">"3007e3369de4c05d4fb85d515df0be417243ecca"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"update 1 comment"</span>,
+      <span class="lit">"time"</span> : <span class="num">1421010505000</span>,
+      <span class="lit">"id"</span> : <span class="lit">"0fff71d0f3f4f88aa5986aa02c32d3c495c1c652"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"create comment"</span>,
+      <span class="lit">"time"</span> : <span class="num">1421010505000</span>,
+      <span class="lit">"id"</span> : <span class="lit">"f6e5266afc159f5d870ea1ac48c048ffa3913434"</span>
+   }
+]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/list'</span></pre><p>   Returns JSON listing the files in the config service repository.</p><pre>[
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"create comment"</span>,
+      <span class="lit">"id"</span> : <span class="lit">"f6e5266afc159f5d870ea1ac48c048ffa3913434"</span>,
+      <span class="lit">"path"</span> : <span class="lit">"some/test2/TestConfig2"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"update 2 comment"</span>,
+      <span class="lit">"id"</span> : <span class="lit">"3007e3369de4c05d4fb85d515df0be417243ecca"</span>,
+      <span class="lit">"path"</span> : <span class="lit">"some/test1/TestConfig1"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">""</span>,
+      <span class="lit">"id"</span> : <span class="lit">"77c35d529c1e46113bd2f68b6f0550e81d8dbfec"</span>,
+      <span class="lit">"path"</span> : <span class="lit">"README"</span>
+   }
+]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/getDefault?path=some/test1/TestConfig1</span></pre><p>   Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'</span></pre><p>   Sets the default version of the file to the one with the given id (an id returned by the history command).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/resetDefault?path=some/test1/TestConfig1'</span></pre><p>   Resets the default version of the file to be the latest version.</p><h5> Main Packages </h5><ul><li>core - the core implementation of the API based on JGit</li><li>akka - (based on core) the Akka actor interface as well as the http server and client interfaces.</li></ul><p>Large/binary files can slow down the Git repository, so these are stored separately using
+the the ConfigServiceAnnex http file server.</p><p>When you first create a config file, you can choose to store it in the normal way (in the Git repository)
+or as a *large/binary* file, in which case only *$file.sha1* is checked in, containing the SHA-1 hash of the
+file's contents. The actual binary file is then stored on the annex server in a file name based on the SHA-1 hash.</p><p>The config service also supports the concept of *default versions* of files. In this case a file named
+  *$file.default* is checked in to Git behind the scenes and contains the id of the default version of the file.
+If there is no default, this file is not present and the latest version is always considered the default.</p><p>The config service can be started as a standalone application. *sbt stage* installs the command under
+target/universal/stage/bin.
+The standalone configs service registers itself with the location service so that it
+can be found by other applications.</p><p>The contents of the files are exchanged using [Akka reactive streams](http://www.typesafe.com/activator/template/akka-stream-scala).</p><h5> No concurrent access to local Git repository </h5><p>Note that each instance of the config service should manage its own local Git repository.
+All of the local repositories may reference a common central repository, however it is probably not
+safe to allow concurrent access to the local Git repository, which reads and writes files
+in the Git working directory.</p><p>Having copies of the files in the Git working directory has the advantage of being a kind of *cache*,
+so that the files do not have to be pulled from the server each time they are needed.
+However care needs to be taken not to allow different threads to potentially read and write the
+same files at once.</p><h5> Running the tests </h5><p>To run the unit tests, use <code>sbt test</code>.
+To run the multi-jvm tests, use <code>sbt multi-jvm:test</code>.
+</p></div></div>
     </li><li name="csw.services.event" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="event"></a>
       <a id="event:event"></a>
@@ -228,14 +295,16 @@ so that the actor queue does not fill up too much.</p><p>Example:</p><pre><span 
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">A <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> stores values of a given type (T) under string keys.</p><div class="fullcomment"><div class="comment cmt"><p>A <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> stores values of a given type (T) under string keys.
+      <p class="shortcomment cmt">This module provides key/value store and publish/subscribe features based on <a href="http://redis.io/" target="_blank">Redis</a>.</p><div class="fullcomment"><div class="comment cmt"><h4> Key/Value Store and Publish/Subscribe </h4><p>This module provides key/value store and publish/subscribe features based on <a href="http://redis.io/" target="_blank">Redis</a>.
+An Event object can be set or published on a channel and subscribers
+receive the events. The last <i>n</i> events are saved for reference (where n is an optional argument).</p><p>Note that the tests assume the redis server is running.</p><p>A <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> stores values of a given type (T) under string keys.
 The type T needs to have an implicit conversion to the <a href="kvs/KeyValueStore$$KvsFormatter.html" class="extype" name="csw.services.kvs.KeyValueStore.KvsFormatter">csw.services.kvs.KeyValueStore.KvsFormatter</a> trait,
-so that the values can be serialized and set to the Redis server.</p><p>The <a href="kvs/Implicits.html" class="extype" name="csw.services.kvs.Implicits">csw.services.kvs.Implicits</a> trait and object provide a number of commonly used
-implicit definitions that include the config classes from the util project.</p><p>The <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> return values use futures, to avoid blocking on network access.
+so that the values can be serialized and set to the Redis server and later deserialized.</p><p>The <a href="kvs/Implicits.html" class="extype" name="csw.services.kvs.Implicits">csw.services.kvs.Implicits</a> trait and object provide a number of commonly used
+implicit definitions that include the configuration classes from the util project.</p><p>The <a href="kvs/KeyValueStore.html" class="extype" name="csw.services.kvs.KeyValueStore">csw.services.kvs.KeyValueStore</a> return values as futures, to avoid blocking on network access.
 For convenience, there is also a <a href="kvs/BlockingKeyValueStore.html" class="extype" name="csw.services.kvs.BlockingKeyValueStore">csw.services.kvs.BlockingKeyValueStore</a> wrapper that waits for
 completion before returning.
 </p></div></div>
-    </li><li name="csw.services.loc" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+    </li><li name="csw.services.loc" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="loc"></a>
       <a id="loc:loc"></a>
       <h4 class="signature">
@@ -251,7 +320,34 @@ completion before returning.
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">The Location Service implemented in this project is based on Multicast DNS.</p><div class="fullcomment"><div class="comment cmt"><h4> Location Service </h4><p>The Location Service implemented in this project is based on Multicast DNS.
+The necessary support for this should already be available on Mac and Linux machines.
+The Location Service helps you to find out the hostname and port number for a service,
+as well as other information for determining the correct URI to use, such as the path,
+the actor system name and the config prefix.</p><p>Two types of services are currently supported: Akka/actor based and HTTP based services.
+To register an Akka actor based service, you can use code like this:</p><pre>LocationService.registerAkkaService(serviceId, self, <span class="lit">"test.akka.prefix"</span>)</pre><p>Where self is a reference to the services own actorRef and the prefix argument indicates the
+part of a configuration the actor is interested in receiving.</p><p>To register an HTTP based service, you can make a call like this:</p><pre>LocationService.registerHttpService(serviceId, port)</pre><p>Here you specify the port and the DNS name for the local host is automatically determined.</p><h5> Using the Location Service </h5><p>The Location Service actor can be used in an actor based application to be notified whenever
+a set of required services is available or not. In the following example, <code>TestServiceClient</code>
+depends on <code>TestAkkaService</code> and <code>TestHttpService</code> and will receive a <code>ServicesReady</code> message
+with the contact information (URI, actorRef, prefix, ...) when they are both available.
+If any of the required services goes down, a Disconnected message is sent.</p><pre><span class="kw">class</span> TestServiceClient <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging {
+  <span class="kw">val</span> serviceRefs = <span class="std">Set</span>(TestAkkaService.serviceRef, TestHttpService.serviceRef)
+  context.actorOf(LocationService.props(serviceRefs))
+
+  <span class="kw">override</span> <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> ServicesReady(services) <span class="kw">=&gt;</span>
+      log.info(s<span class="lit">"Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString("</span>, <span class="lit">")}"</span>)
+
+    <span class="kw">case</span> Disconnected(serviceRef) <span class="kw">=&gt;</span>
+      log.info(s<span class="lit">"Disconnected service: ${serviceRef.serviceId.name}"</span>)
+
+    <span class="kw">case</span> x <span class="kw">=&gt;</span>
+      log.error(s<span class="lit">"Received unexpected message $x"</span>)
+  }
+}</pre><h5> Command Line Tools </h5><p>On a Mac, you can use the dns-sd command to view information about registered services.
+For example:</p><pre>dns-sd -B _csw._tcp</pre><p>will continuously display CSW services added or removed, while:</p><pre>dns-sd -L TestAkkaService-assembly-akka _csw._tcp</pre><p>will list information about the application with the DNS name <code>TestAkkaService-assembly-akka</code> (not case sensitive).</p><p><code>_csw._tcp</code> is the mDNS type used for all CSW services. The default domain is <code>local.</code>.</p><p>The CSW/mDNS application names here are in the format: <i>name-serviceType-accessType</i>,
+where <i>serviceType</i> is assembly, hcd, etc. and <i>accessType</i> is <code>http</code> or <code>akka</code>.
+</p></div></div>
     </li><li name="csw.services.pkg" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="pkg"></a>
       <a id="pkg:pkg"></a>
@@ -268,9 +364,58 @@ completion before returning.
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">This project deals with the packaging of components, such as HCDs and Assemblies.</p><div class="fullcomment"><div class="comment cmt"><p>This project deals with the packaging of components, such as HCDs and Assemblies.</p><p>Components live in a <a href="pkg/Container.html" class="extype" name="csw.services.pkg.Container">csw.services.pkg.Container</a> and are controlled by a <a href="pkg/Supervisor.html" class="extype" name="csw.services.pkg.Supervisor">csw.services.pkg.Supervisor</a>.
-Conponents can implement the <a href="pkg/LifecycleHandler.html" class="extype" name="csw.services.pkg.LifecycleHandler">csw.services.pkg.LifecycleHandler</a> trait to be notified about
-lifecycle changes, such as when the component is initialized, started and stopped.</p><p>A demo/test can be found in the multi-jvm directory and run with:</p><pre>sbt <span class="lit">"project pkg"</span> multi-jvm:test</pre></div></div>
+      <p class="shortcomment cmt">This project deals with the packaging of components, such as HCDs and Assemblies.</p><div class="fullcomment"><div class="comment cmt"><p>This project deals with the packaging of components, such as HCDs and Assemblies.</p><p>Components are usually created by a <a href="pkg/Container.html" class="extype" name="csw.services.pkg.Container">csw.services.pkg.Container</a> from a configuration file
+and are then controlled by a <a href="pkg/Supervisor.html" class="extype" name="csw.services.pkg.Supervisor">csw.services.pkg.Supervisor</a> actor that intercepts <i>lifecycle</i> messages
+to determine the state of the component (Components that are not in the <i>Running</i> state, do not
+receive commands, for example).</p><p>Conponents can implement the <a href="pkg/LifecycleHandler.html" class="extype" name="csw.services.pkg.LifecycleHandler">csw.services.pkg.LifecycleHandler</a> trait to be notified about
+lifecycle changes, such as when the component is initialized, started and stopped.</p><p>A demo/test can be found in the multi-jvm directory and run with:</p><pre>sbt <span class="lit">"project pkg"</span> multi-jvm:test</pre><h5> Container Config Files </h5><p>Here is an example of a config file for creating a container with the name <i>Container-1</i> that
+contains one assembly (named <i>Assembly-1</i>) and depends on the services of two HCDs (<i>HCD-2A</i> and <i>HCD-2B</i>).
+The assembly is implemented by the given class (<code>csw.services.pkg.TestAssembly</code>).
+A <code>Supervisor</code> actor will be created to manage the assembly, which includes registering it with the
+location service, using the given name and prefix. The prefix can be used by a *distributor* type
+actor that receives a large configuration and sends different parts of it to different assemblies,
+based on the prefix.</p><pre>container {
+  name = Container-<span class="num">1</span>
+  components {
+    Assembly-<span class="num">1</span> {
+      <span class="kw">type</span> = Assembly
+      <span class="kw">class</span> = csw.services.pkg.TestAssembly
+      prefix = tcs.base.assembly1
+      args = [Assembly-<span class="num">1</span>]
+      services {
+        <span class="cmt">// Services required by this component</span>
+        <span class="cmt">// Name: ServiceType</span>
+        HCD-<span class="num">2</span>A: HCD
+        HCD-<span class="num">2</span>B: HCD
+      }
+    }
+  }
+}</pre><p>Below is an example config file for the container with the HCDs referenced in the above example.
+In this case, <code>HCD-2A</code> and <code>HCD-2B</code> are both implemented by the <code>csw.services.pkg.TestHcd</code> class.
+These are periodic HCDs that will have their <code>process</code> methods called at the given rate
+(Each time process() is called, the HCDs check their input queues for configurations and update
+their *state variables* with the current states).</p><pre>container {
+  name = <span class="lit">"Container-2"</span>
+  components {
+    HCD-<span class="num">2</span>A {
+      <span class="kw">type</span> = HCD
+      <span class="kw">class</span> = csw.services.pkg.TestHcd
+      prefix = tcs.base.pos
+      rate = <span class="num">1</span> second
+      args = [HCD-<span class="num">2</span>A]
+    }
+    HCD-<span class="num">2</span>B {
+      <span class="kw">type</span> = HCD
+      <span class="kw">class</span> = csw.services.pkg.TestHcd
+      prefix = tcs.ao.pos.one
+      rate = <span class="num">1</span> second
+      args = [HCD-<span class="num">2</span>B]
+    }
+  }
+}</pre><p>HCDs do not reply when they receive a configuration. The only way to know if an HCD has completed
+its work is to check the value of its *state variable* in the key/value store.
+For this you can use the *StateMatcherActor* from the ccs project.
+</p></div></div>
     </li><li name="csw.services.ts" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ts"></a>
       <a id="ts:ts"></a>

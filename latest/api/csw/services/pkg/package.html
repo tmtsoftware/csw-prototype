@@ -47,9 +47,58 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This project deals with the packaging of components, such as HCDs and Assemblies.</p><p>Components live in a <a href="Container.html" class="extype" name="csw.services.pkg.Container">csw.services.pkg.Container</a> and are controlled by a <a href="Supervisor.html" class="extype" name="csw.services.pkg.Supervisor">csw.services.pkg.Supervisor</a>.
-Conponents can implement the <a href="LifecycleHandler.html" class="extype" name="csw.services.pkg.LifecycleHandler">csw.services.pkg.LifecycleHandler</a> trait to be notified about
-lifecycle changes, such as when the component is initialized, started and stopped.</p><p>A demo/test can be found in the multi-jvm directory and run with:</p><pre>sbt <span class="lit">"project pkg"</span> multi-jvm:test</pre></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This project deals with the packaging of components, such as HCDs and Assemblies.</p><p>Components are usually created by a <a href="Container.html" class="extype" name="csw.services.pkg.Container">csw.services.pkg.Container</a> from a configuration file
+and are then controlled by a <a href="Supervisor.html" class="extype" name="csw.services.pkg.Supervisor">csw.services.pkg.Supervisor</a> actor that intercepts <i>lifecycle</i> messages
+to determine the state of the component (Components that are not in the <i>Running</i> state, do not
+receive commands, for example).</p><p>Conponents can implement the <a href="LifecycleHandler.html" class="extype" name="csw.services.pkg.LifecycleHandler">csw.services.pkg.LifecycleHandler</a> trait to be notified about
+lifecycle changes, such as when the component is initialized, started and stopped.</p><p>A demo/test can be found in the multi-jvm directory and run with:</p><pre>sbt <span class="lit">"project pkg"</span> multi-jvm:test</pre><h5> Container Config Files </h5><p>Here is an example of a config file for creating a container with the name <i>Container-1</i> that
+contains one assembly (named <i>Assembly-1</i>) and depends on the services of two HCDs (<i>HCD-2A</i> and <i>HCD-2B</i>).
+The assembly is implemented by the given class (<code>csw.services.pkg.TestAssembly</code>).
+A <code>Supervisor</code> actor will be created to manage the assembly, which includes registering it with the
+location service, using the given name and prefix. The prefix can be used by a *distributor* type
+actor that receives a large configuration and sends different parts of it to different assemblies,
+based on the prefix.</p><pre>container {
+  name = Container-<span class="num">1</span>
+  components {
+    Assembly-<span class="num">1</span> {
+      <span class="kw">type</span> = Assembly
+      <span class="kw">class</span> = csw.services.pkg.TestAssembly
+      prefix = tcs.base.assembly1
+      args = [Assembly-<span class="num">1</span>]
+      services {
+        <span class="cmt">// Services required by this component</span>
+        <span class="cmt">// Name: ServiceType</span>
+        HCD-<span class="num">2</span>A: HCD
+        HCD-<span class="num">2</span>B: HCD
+      }
+    }
+  }
+}</pre><p>Below is an example config file for the container with the HCDs referenced in the above example.
+In this case, <code>HCD-2A</code> and <code>HCD-2B</code> are both implemented by the <code>csw.services.pkg.TestHcd</code> class.
+These are periodic HCDs that will have their <code>process</code> methods called at the given rate
+(Each time process() is called, the HCDs check their input queues for configurations and update
+their *state variables* with the current states).</p><pre>container {
+  name = <span class="lit">"Container-2"</span>
+  components {
+    HCD-<span class="num">2</span>A {
+      <span class="kw">type</span> = HCD
+      <span class="kw">class</span> = csw.services.pkg.TestHcd
+      prefix = tcs.base.pos
+      rate = <span class="num">1</span> second
+      args = [HCD-<span class="num">2</span>A]
+    }
+    HCD-<span class="num">2</span>B {
+      <span class="kw">type</span> = HCD
+      <span class="kw">class</span> = csw.services.pkg.TestHcd
+      prefix = tcs.ao.pos.one
+      rate = <span class="num">1</span> second
+      args = [HCD-<span class="num">2</span>B]
+    }
+  }
+}</pre><p>HCDs do not reply when they receive a configuration. The only way to know if an HCD has completed
+its work is to check the value of its *state variable* in the key/value store.
+For this you can use the *StateMatcherActor* from the ccs project.
+</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
           <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
