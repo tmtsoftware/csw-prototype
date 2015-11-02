@@ -1,7 +1,7 @@
 package csw.util
 
 /**
- * This package contains classes and traits used for *configurations* and *events*.
+ * This package contains classes and traits used for ''configurations'' and ''events''.
  * These are all based on type-safe keys and values. Each key has a type member
  * and the key's values must be of that type.
  *
