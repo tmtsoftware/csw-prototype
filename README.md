@@ -5,6 +5,8 @@ Common Software is the package of services and infrastructure software that inte
 
 http://www.tmt.org
 
+The API docs can be found at http://tmtsoftware.github.io/csw/.
+
 Build Instructions
 ------------------
 
