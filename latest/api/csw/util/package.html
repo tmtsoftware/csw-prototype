@@ -70,7 +70,7 @@
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="csw.util.cfg" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="csw.util.cfg" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="cfg"></a>
       <a id="cfg:cfg"></a>
       <h4 class="signature">
@@ -86,7 +86,14 @@
         <img src="../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">This package contains classes and traits used for *configurations* and *events*.</p><div class="fullcomment"><div class="comment cmt"><p>This package contains classes and traits used for *configurations* and *events*.
+These are all based on type-safe keys and values. Each key has a type member
+and the key's values must be of that type.</p><p>Configurations and events are based on maps of keys and values, with some additional
+information included, such as ids or timestamps.</p><p>The key/value store and event service make use of these classes, which need to be
+serialized and deserialized for external storage (in Redis or Hornetq, for example).
+The <a href="cfg/ConfigSerializer$$ConfigSerializer.html" class="extype" name="csw.util.cfg.ConfigSerializer.ConfigSerializer">csw.util.cfg.ConfigSerializer.ConfigSerializer</a> class provides support for this
+(based on java serialization).
+</p></div></div>
     </li></ol>
             </div>
 
