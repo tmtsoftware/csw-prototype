@@ -8,6 +8,8 @@ import csw.services.loc.{ ServiceType, ServiceRef, LocationService, ServiceId }
 import csw.util.cfg.Configurations.ControlConfigArg
 import csw.util.cfg.RunId
 
+import scala.util.{ Failure, Success }
+
 /**
  * The Supervisor is an actor that supervises the component actors and deals with
  * component lifecycle messages so components don't have to. There is one Supervisor per component.
@@ -88,6 +90,11 @@ object Supervisor {
   case class LifecycleStateChanged(state: LifecycleState, error: Option[LifecycleError])
 
   /**
+   * When this message is received, the component is unregistered from the location service
+   */
+  case object UnregisterWithLocationService
+
+  /**
    * Used to create the Supervisor actor
    * @param componentProps used to create the component
    * @param serviceId service used to register the component with the location service
@@ -111,6 +118,9 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   // Used to notify subscribers of a change in the lifecycle
   var lifecycleStateListeners = Map[ActorRef, Boolean]()
 
+  // Result of last location service registration, can be used to unregister (by calling close())
+  var registration: Option[LocationService.Registration] = None
+
   val name = serviceId.name
   val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
   val component = startComponent()
@@ -125,6 +135,9 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
     // (XXX What if the HCD has messages in the queue and leaves the running state? Could also reschedule? Or let HCD decide? )
     case process @ PeriodicHcdController.Process(rate) ⇒
       component ! process
+
+    case UnregisterWithLocationService ⇒
+      registration.foreach(_.close())
   }
 
   // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
@@ -295,10 +308,21 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
     actorRef
   }
 
-  // Starts an actor to manage registering this actor with the location service
-  // (as a proxy for the component)
+  // Registers this actor with the location service.
+  // The value returned from registerAkkaService can be used to call a close()
+  // method that unregisters the component again. This also ends the jmdns thread
+  // that renews the lease on the DNS registration.
+  // If this method is called multiple times, the previous registration is closed,
+  // so that there are no hanging jmdns threads from previous registrations.
   private def registerWithLocationService(): Unit = {
-    LocationService.registerAkkaService(serviceId, self, prefix)(context.system)
+    import context.dispatcher
+    LocationService.registerAkkaService(serviceId, self, prefix)(context.system).onComplete {
+      case Success(reg) ⇒
+        registration.foreach(_.close())
+        registration = Some(reg)
+      case Failure(ex) ⇒
+        log.error(s"Location Service registration failed", ex)
+    }
   }
 
   // If not already started, start an actor to manage getting the services the
