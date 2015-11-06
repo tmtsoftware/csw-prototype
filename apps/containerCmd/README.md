@@ -121,7 +121,7 @@ Here is an example property file for use with the sbt launcher:
 [app]
   org: org.tmt
   name: containerx
-  version: 0.1-SNAPSHOT
+  version: 0.2-SNAPSHOT
   class: csw.services.apps.containerCmd.SbtContainerLauncher
   cross-versioned: binary
 [repositories]
@@ -140,7 +140,7 @@ If you don't already have an sbt project available with the necessary dependenci
 build.sbt file, like the following:
 
 ```
-val Version = "0.1-SNAPSHOT"
+val Version = "0.2-SNAPSHOT"
 
 lazy val settings = Seq(
   organization := "org.tmt",

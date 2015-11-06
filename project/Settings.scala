@@ -15,7 +15,7 @@ import UnidocKeys._
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
-  val Version = "0.1-SNAPSHOT"
+  val Version = "0.2-SNAPSHOT"
 
   val buildSettings = Seq(
     organization := "org.tmt",

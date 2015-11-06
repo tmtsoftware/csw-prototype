@@ -13,7 +13,7 @@
     <logger name="org.hornetq" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="javax.jmdns" level="ERROR"/>
-
+    <logger name="com.google.inject" level="ERROR"/>
 
     <if condition='isDefined("application-name")'>
         <then>
