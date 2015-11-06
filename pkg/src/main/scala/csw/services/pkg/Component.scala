@@ -35,7 +35,7 @@ object Component {
   def create(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): ComponentInfo = {
     val name = serviceId.name
     val system = ActorSystem(s"$name-system")
-    val supervisor = system.actorOf(Supervisor.props(props, serviceId, prefix, services), s"$name-lifecycle-manager")
+    val supervisor = system.actorOf(Supervisor.props(props, serviceId, prefix, services), s"$name-supervisor")
     supervisor ! Startup
     ComponentInfo(props, serviceId, prefix, services, system, supervisor)
   }

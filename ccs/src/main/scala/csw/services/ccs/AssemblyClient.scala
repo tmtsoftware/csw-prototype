@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import akka.actor.{ ActorRefFactory, Props, Actor, ActorRef }
+import akka.actor._
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
 import csw.util.cfg.Configurations.SetupConfigArg
@@ -37,20 +37,20 @@ case class BlockingAssemblyClient(client: AssemblyClient)(implicit val timeout: 
 /**
  * A simple wrapper to get a single response from an assembly for a single submit
  * @param assembly the target assembly actor
+ * @param submit the config to submit to the assembly
+ * @param replyTo the actor that should receive the final command status
  */
-case class AssemblyWrapper(assembly: ActorRef) extends Actor {
-  override def receive: Receive = {
-    case s: Submit ⇒
-      assembly ! s
-      context.become(waitingForComplete(sender()))
-  }
+case class AssemblyWrapper(assembly: ActorRef, submit: Submit, replyTo: ActorRef) extends Actor with ActorLogging {
+  assembly ! submit
 
-  def waitingForComplete(replyTo: ActorRef): Receive = {
+  override def receive: Receive = {
     case s: CommandStatus ⇒
       if (s.isDone) {
         replyTo ! s
         context.stop(self)
       }
+
+    case x ⇒ log.error(s"Received unexpected message: $x")
   }
 }
 

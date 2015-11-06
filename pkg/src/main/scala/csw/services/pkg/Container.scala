@@ -1,10 +1,7 @@
 package csw.services.pkg
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor._
 import com.typesafe.config.Config
-import csw.services.ccs.PeriodicHcdController
 import csw.services.loc.{ LocationService, ServiceType, ServiceId }
 
 import scala.collection.JavaConversions._
@@ -179,9 +176,8 @@ class Container(config: Config) extends Actor with ActorLogging {
   // Parse the "components" section of the config file
   private def parseComponentConfig(name: String, conf: Config): Option[Component.ComponentInfo] = {
     val className = conf.getString("class")
-    val args = if (conf.hasPath("args")) conf.getList("args").toList.map(_.unwrapped().toString) else List()
-    log.info(s"Create component with class $className and args $args")
-    val props = Props(Class.forName(className), args: _*)
+    log.info(s"Create component $name with class $className and config $conf")
+    val props = Props(Class.forName(className), name, conf)
     val serviceType = ServiceType(conf.getString("type"))
     if (serviceType == ServiceType.Unknown) {
       log.error(s"Unknown service type: ${conf.getString("type")}")
@@ -190,21 +186,7 @@ class Container(config: Config) extends Actor with ActorLogging {
       val serviceId = ServiceId(name, serviceType)
       val prefix = if (conf.hasPath("prefix")) conf.getString("prefix") else ""
       val services = if (conf.hasPath("services")) parseServices(conf.getConfig("services")) else Nil
-      val infoOpt = createComponent(props, serviceId, prefix, services, Map.empty)
-      checkForRate(conf, infoOpt)
-      infoOpt
-    }
-  }
-
-  // If rate is specified in the config, assume it is a periodic controller and send a message so it knows the rate
-  private def checkForRate(conf: Config, infoOpt: Option[Component.ComponentInfo]): Unit = {
-    import scala.concurrent.duration._
-    val rateOpt = if (conf.hasPath("rate")) Some(conf.getDuration("rate", TimeUnit.MILLISECONDS)) else None
-    for {
-      info ← infoOpt
-      rate ← rateOpt
-    } yield {
-      info.supervisor ! PeriodicHcdController.Process(FiniteDuration(rate, TimeUnit.MILLISECONDS))
+      createComponent(props, serviceId, prefix, services, Map.empty)
     }
   }
 

@@ -2,6 +2,9 @@ package csw.util.cfg
 
 import csw.util.cfg.UnitsOfMeasure.Units
 
+/**
+ * Defines some standard keys for use in configurations
+ */
 object StandardKeys {
 
   protected[StandardKeys] sealed abstract class ExposureClass(val description: String) extends Serializable {
@@ -56,4 +59,14 @@ object StandardKeys {
   val exposureType = Key.create[ExposureType]("exposureType")
   val exposureClass = Key.create[ExposureClass]("exposureClass")
   val repeats = Key.create[Int]("repeats")
+
+  // TODO: Need central place to find keys and prefixes, create SeupConfigs
+
+  // Filter (TODO: Use enum of filter values instead of String?)
+  val filter = Key.create[String]("filter")
+  val filterPrefix = "tcs.mobie.blue.filter"
+
+  // Filter (TODO: Use enum of filter values instead of String?)
+  val disperser = Key.create[String]("disperser")
+  val disperserPrefix = "tcs.mobie.blue.disperser"
 }

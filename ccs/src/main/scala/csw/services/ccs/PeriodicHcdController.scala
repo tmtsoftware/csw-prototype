@@ -1,10 +1,13 @@
 package csw.services.ccs
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{ ActorLogging, Actor }
+import com.typesafe.config.Config
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.collection.immutable.Queue
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 object PeriodicHcdController {
 
@@ -68,6 +71,25 @@ trait PeriodicHcdController extends Actor with ActorLogging {
    */
   protected def peekConfig: Option[SetupConfig] = {
     queue.headOption
+  }
+
+  /**
+   * Event periodic HCD should call this method once to start processing.
+   *
+   * If the "rate" key is specified in the config, use it, otherwise the default rate to
+   * send a message to self to start the periodic processing.
+   * Each time the Process message is received, a timer should be started again
+   * for the given duration (A repeating timer would risk continuing after an actor crashes).
+   *
+   * @param conf the component's config file
+   * @param defaultRate the default duration to use if not defined in the config
+   */
+  protected def startProcessing(conf: Config, defaultRate: FiniteDuration = 1.second): Unit = {
+    import scala.concurrent.duration._
+    val rate = if (conf.hasPath("rate"))
+      FiniteDuration(conf.getDuration("rate", TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
+    else defaultRate
+    self ! PeriodicHcdController.Process(rate)
   }
 
   /**

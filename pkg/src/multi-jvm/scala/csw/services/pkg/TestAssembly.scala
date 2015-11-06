@@ -1,6 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
+import com.typesafe.config.{ConfigFactory, Config}
 import csw.services.ccs.{HcdController, StateMatcherActor, AssemblyController}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
@@ -9,8 +10,13 @@ import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 import csw.util.cfg.TestConfig
 
-// A test assembly that just forwards configs to HCDs based on prefix
-case class TestAssembly(name: String) extends Assembly with AssemblyController with LifecycleHandler {
+/**
+  * A test assembly that just forwards configs to HCDs based on prefix
+  * @param name the name of the asembly
+  * @param config config file with settings for the assembly
+  */
+case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
+  extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
 

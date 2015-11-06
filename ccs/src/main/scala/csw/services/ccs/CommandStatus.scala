@@ -28,7 +28,7 @@ sealed trait CommandStatus {
   def isSuccess: Boolean = false
 
   /**
-   * True if not the Completed status
+   * True if not the Completed or Accepted status
    */
   def isFailed: Boolean = !isSuccess
 
@@ -54,6 +54,7 @@ object CommandStatus {
    * The command has been accepted (checked requirements, etc.)
    */
   case class Accepted(runId: RunId) extends CommandStatus {
+    override def isSuccess: Boolean = true
     override def isDone: Boolean = false
   }
 

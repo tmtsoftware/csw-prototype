@@ -282,6 +282,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
     if (actorRefOpt.isDefined) {
       resolved += rs.serviceRef -> rs.copy(actorRefOpt = actorRefOpt)
       context.watch(actorRefOpt.get)
+      log.info(s"Resolved actor $actorRefOpt")
       checkResolved()
     } else {
       log.warning(s"Could not identify actor for ${rs.serviceRef} ${rs.uri}")

@@ -1,6 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.{ActorLogging, Actor, Props}
+import com.typesafe.config.{ConfigFactory, Config}
 import csw.services.ccs.PeriodicHcdController
 import csw.services.kvs.{StateVariableStore, KvsSettings}
 import csw.services.kvs.Implicits._
@@ -17,7 +18,17 @@ object TestHcd {
 
 }
 
-case class TestHcd(name: String) extends Hcd with PeriodicHcdController with LifecycleHandler {
+/**
+  * Test HCD
+  * @param name the name of the HCD
+  * @param config config file with settings for the HCD
+  */
+case class TestHcd(name: String, config: Config = ConfigFactory.empty())
+  extends Hcd with PeriodicHcdController with LifecycleHandler {
+
+  // Reads the "rate" from the config file and starts the periodic processing
+  // (process() method will be called at the given rate)
+  startProcessing(config)
 
   override def process(): Unit = {
     nextConfig.foreach { config =>
