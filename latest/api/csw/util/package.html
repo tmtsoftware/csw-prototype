@@ -1,0 +1,138 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>util - csw.util</title>
+          <meta name="description" content="util - csw.util" />
+          <meta name="keywords" content="util csw.util" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'csw.util.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../lib/package_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="csw">csw</a></p>
+        <h1>util</h1><span class="permalink">
+      <a href="../../index.html#csw.util.package" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">util</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.util.cfg" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cfg"></a>
+      <a id="cfg:cfg"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="cfg/package.html"><span class="name">cfg</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.util.package@cfg" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This package contains classes and traits used for <i>configurations</i> and <i>events</i>.</p><div class="fullcomment"><div class="comment cmt"><p>This package contains classes and traits used for <i>configurations</i> and <i>events</i>.
+These are all based on type-safe keys and values. Each key has a type member
+and the key's values must be of that type.</p><p>Configurations and events are based on maps of keys and values, with some additional
+information included, such as ids or timestamps.</p><p>The key/value store and event service make use of these classes, which need to be
+serialized and deserialized for external storage (in Redis or Hornetq, for example).
+The <a href="cfg/ConfigSerializer$$ConfigSerializer.html" class="extype" name="csw.util.cfg.ConfigSerializer.ConfigSerializer">csw.util.cfg.ConfigSerializer.ConfigSerializer</a> class provides support for this
+(based on java serialization).</p><p>Example:</p><pre><span class="cmt">// Define a key for an event number (Just for testing)</span>
+<span class="kw">val</span> eventNum = Key.create[<span class="std">Int</span>](<span class="lit">"eventNum"</span>)
+
+<span class="cmt">// Define a key for some image data</span>
+<span class="kw">val</span> imageData = Key.create[<span class="std">Array</span>[<span class="std">Short</span>]](<span class="lit">"imageData"</span>)
+
+<span class="cmt">// Dummy image data</span>
+<span class="kw">val</span> testImageData = <span class="std">Array</span>.ofDim[<span class="std">Short</span>](<span class="num">10000</span>)
+<span class="cmt">// ...</span>
+<span class="kw">val</span> prefix = <span class="lit">"tcs.mobie.red.dat.exposureInfo"</span>
+
+<span class="kw">val</span> event = ObserveEvent(prefix)
+.set(eventNum, num)
+.set(exposureTime, <span class="num">1.0</span>)
+.set(imageData, testImageData)</pre></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
