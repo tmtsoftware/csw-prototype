@@ -82,6 +82,8 @@ object LocationService {
   private def getRegistry: JmDNS = {
     val addr = InetAddress.getLocalHost
     val hostname = InetAddress.getByName(addr.getHostName).toString
+    println("Register: " + hostname)
+
     val registry = JmDNS.create(addr, hostname)
     sys.addShutdownHook(registry.close())
     registry
@@ -197,7 +199,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   }
 
   override def serviceAdded(event: ServiceEvent): Unit = {
-    //    log.info(s"service added: ${event.getName} ${event.getInfo}")
+    log.info(s"service added: ${event.getName} ${event.getInfo}")
   }
 
   override def serviceResolved(event: ServiceEvent): Unit = {

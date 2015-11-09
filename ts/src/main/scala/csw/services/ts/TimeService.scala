@@ -97,8 +97,9 @@ object TimeService {
     // This converts java.time data into Akka FiniteDuration
     // Assumes startTime is in the future
     private def toStartDuration(startTime: LocalTime): FiniteDuration = {
+      val now = LocalTime.now.toNanoOfDay
       val t1 = startTime.toNanoOfDay
-      val futureTimeNano = t1 - LocalTime.now.toNanoOfDay
+      val futureTimeNano = t1 - now
       if (futureTimeNano < 0) {
         log.error(s"Requested schedule start time in not in the future: $futureTimeNano")
       }
