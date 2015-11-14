@@ -14,6 +14,7 @@
     <logger name="io.netty" level="ERROR"/>
     <logger name="javax.jmdns" level="ERROR"/>
     <logger name="com.google.inject" level="ERROR"/>
+    <logger name="com.digitalpetri.opcua" level="ERROR"/>
 
     <if condition='isDefined("application-name")'>
         <then>

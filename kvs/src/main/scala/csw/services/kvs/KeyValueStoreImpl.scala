@@ -86,5 +86,6 @@ case class KeyValueStoreImpl[T: KvsFormatter](host: String = "127.0.0.1", port: 
     result
   }
 
+  def disconnect(): Unit = redis.quit()
 }
 

@@ -2,6 +2,7 @@ package csw.services
 
 import akka.actor.ActorRefFactory
 import csw.util.cfg.Configurations.SetupConfig
+import csw.util.cfg.Events.StatusEvent
 
 import scala.concurrent.duration.Duration
 
@@ -26,14 +27,5 @@ import scala.concurrent.duration.Duration
  * completion before returning.
  */
 package object kvs {
-
-  import Implicits.setupConfigKvsFormatter
-
-  type TelemetryService = BlockingKeyValueStore[SetupConfig]
-
-  object TelemetryService {
-    def apply(timeout: Duration, settings: KvsSettings)(implicit _system: ActorRefFactory): TelemetryService = new TelemetryService(timeout, settings)
-  }
-
 }
 
