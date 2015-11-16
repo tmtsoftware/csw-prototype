@@ -1,9 +1,13 @@
 package csw.services.ccs
 
 import akka.actor.{ ActorRef, ActorLogging, Actor }
+import akka.util.Timeout
 import csw.services.loc.LocationService.{ ResolvedService, Disconnected, ServicesReady }
 import csw.services.loc.ServiceRef
-import csw.util.cfg.Configurations.{ ObserveConfigArg, SetupConfigArg, ControlConfigArg }
+import csw.util.cfg.Configurations.StateVariable._
+import csw.util.cfg.Configurations.{ StateVariable, ObserveConfigArg, SetupConfigArg, ControlConfigArg }
+import csw.util.cfg.RunId
+import scala.concurrent.duration._
 
 /**
  * Defines the Assembly controller actor messages
@@ -64,6 +68,9 @@ object AssemblyController {
 trait AssemblyController extends Actor with ActorLogging {
 
   import AssemblyController._
+
+  // Optional actor waiting for current state variables to match demand states
+  private var stateMatcherActor: Option[ActorRef] = None
 
   override def receive = waitingForServices
 
@@ -171,5 +178,28 @@ trait AssemblyController extends Actor with ActorLogging {
    * Derived classes and traits can extend this to be notified when required services are disconnected
    */
   protected def disconnected(): Unit = {}
+
+  /**
+   * Convenience method that can be used to monitor a set of state variables and reply to
+   * the given actor when they all match the demand states, or reply with an error if
+   * there is a timeout.
+   *
+   * @param demandStates list of state variables to be matched (wait until current state matches demand)
+   * @param replyTo actor to receive CommandStatus.Completed or CommandStatus.Error("timeout...") message
+   * @param runId runId to include in the command status message sent to the replyTo actor
+   * @param timeout amount of time to wait for states to match (default: 60 sec)
+   * @param matcher matcher to use (default: equality)
+   */
+  protected def matchDemandStates(demandStates: Seq[DemandState], replyTo: Option[ActorRef], runId: RunId,
+                                  timeout: Timeout = Timeout(60.seconds),
+                                  matcher: Matcher = StateVariable.defaultMatcher): Unit = {
+    // Cancel any previous state matching, so that no timeout errors are sent to the replyTo actor
+    stateMatcherActor.foreach(context.system.stop)
+    replyTo.foreach { actorRef ⇒
+      // Wait for the demand states to match the current states, then reply to the sender with the command status
+      val props = StateMatcherActor.props(demandStates.toList, actorRef, runId, timeout, matcher)
+      stateMatcherActor = Some(context.actorOf(props))
+    }
+  }
 
 }
