@@ -1,10 +1,11 @@
 package csw.services.kvs
 
 import akka.actor.ActorRefFactory
+import akka.util.Timeout
 import csw.util.cfg.Events.StatusEvent
 import Implicits._
 
-import scala.concurrent.Future
+import scala.concurrent.{ Await, Future }
 
 object TelemetryService {
   def telemetryPrefix(prefix: String): String = s"telem:$prefix"
@@ -74,5 +75,48 @@ abstract class TelemetrySubscriber extends Subscriber[StatusEvent] {
   override def unsubscribe(keys: String*): Unit = {
     super.unsubscribe(keys.map(telemetryPrefix): _*)
   }
+}
+
+/**
+ * Provides a blocking, synchronous API to the telemetry service.
+ * @param ts a reference to the telemetry service to use
+ * @param timeout max amount of time to wait for a result before timing out
+ * @param context environment needed for futures
+ */
+case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: Timeout, context: ActorRefFactory) {
+  import context.dispatcher
+
+  /**
+   * Sets the value for the status event (key is based on the event's prefix)
+   *
+   * @param status the value to store
+   * @param history optional number of previous values to store
+   */
+  def set(status: StatusEvent, history: Int = 0): Unit =
+    Await.result(ts.set(status, history), timeout.duration)
+
+  /**
+   * Gets the value for the given status event prefix
+   *
+   * @param prefix the prefix (key) for the event to get
+   * @return the status event, if found
+   */
+  def get(prefix: String): Option[StatusEvent] =
+    Await.result(ts.get(prefix), timeout.duration)
+
+  /**
+   * Gets a list of the n most recent status event values for the given prefix
+   * @param prefix the status event's prefix
+   * @param n the max number of values to get
+   * @return sequence of status events, ordered by most recent
+   */
+  def getHistory(prefix: String, n: Int): Seq[StatusEvent] =
+    Await.result(ts.getHistory(prefix, n), timeout.duration)
+
+  /**
+   * Deletes the given  status event from the store
+   */
+  def delete(prefix: String): Unit =
+    Await.result(ts.delete(prefix), timeout.duration)
 }
 

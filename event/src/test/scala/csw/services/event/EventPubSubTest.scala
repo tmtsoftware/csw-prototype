@@ -15,7 +15,6 @@ import scala.concurrent.duration._
 /**
  * Defines some static items used in the tests
  */
-//@DoNotDiscover
 object EventPubSubTest {
 
   // --- configure this ---
@@ -57,6 +56,7 @@ object EventPubSubTest {
 /**
  * Starts an embedded Hornetq server
  */
+@DoNotDiscover
 class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   val settings = EventServiceSettings(system)
   if (settings.useEmbeddedHornetq) {
