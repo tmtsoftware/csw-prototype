@@ -194,7 +194,7 @@ trait AssemblyController extends Actor with ActorLogging {
                                   timeout: Timeout = Timeout(60.seconds),
                                   matcher: Matcher = StateVariable.defaultMatcher): Unit = {
     // Cancel any previous state matching, so that no timeout errors are sent to the replyTo actor
-    stateMatcherActor.foreach(context.system.stop)
+    stateMatcherActor.foreach(context.stop)
     replyTo.foreach { actorRef ⇒
       // Wait for the demand states to match the current states, then reply to the sender with the command status
       val props = StateMatcherActor.props(demandStates.toList, actorRef, runId, timeout, matcher)
