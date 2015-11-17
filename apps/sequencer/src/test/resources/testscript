@@ -1,5 +1,9 @@
 // Test input for sequencer (assumes location service and test assembly and HCDs running)
 
 val a1 = resolveAssembly("Assembly-1")
-val conf = Configuration().withValue("config.tmt.mobie.blue.filter.value", "blue")
-val s = a1.submit(conf)
+val config = SetupConfig(filterPrefix).set(filter, "Y_G0323")
+val obsId = "obs001" // should be actual obsId
+val configArg = SetupConfigArg(obsId, config)
+val s = a1.submit(configArg)
+val configArg2 = a1.configGet(configArg)
+

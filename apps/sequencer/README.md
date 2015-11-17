@@ -87,6 +87,9 @@ the contents of the Seq object.
 
     // Shutdown the container
     seq> c2.halt
+    
+    // You can also execute scripts from the command line like this:
+    :load ../../../../src/test/resources/testscript
 
 
 Ending the session
