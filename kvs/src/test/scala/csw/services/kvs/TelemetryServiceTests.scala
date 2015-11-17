@@ -2,11 +2,12 @@ package csw.services.kvs
 
 import akka.testkit.{ ImplicitSender, TestKit }
 import akka.actor.ActorSystem
-import csw.util.cfg.Configurations.SetupConfig
+import csw.util.cfg.Events.StatusEvent
 import csw.util.cfg.Key
 import csw.util.cfg.StandardKeys._
 import org.scalatest.{ DoNotDiscover, FunSuiteLike }
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object TelemetryServiceTests {
@@ -25,65 +26,63 @@ class TelemetryServiceTests
     with ImplicitSender with FunSuiteLike with LazyLogging with Implicits {
 
   import TelemetryServiceTests._
+  import system.dispatcher
 
   val settings = KvsSettings(system)
-  val kvs = TelemetryService(5.seconds, settings)
+  val telemetryService = TelemetryService(settings)
+
 
   test("Test Set and Get") {
-    val config1 = SetupConfig("tcs.test")
+    val prefix = "tcs.test"
+    val event1 = StatusEvent(prefix)
       .set(infoValue, 1)
       .set(infoStr, "info 1")
 
-    val config2 = SetupConfig("tcs.test")
+    val event2 = StatusEvent(prefix)
       .set(infoValue, 2)
       .set(infoStr, "info 2")
 
-    kvs.set("test1", config1)
-
-    val val1 = kvs.get("test1").get
-    assert(val1.prefix == "tcs.test")
-    assert(val1.get(infoValue).contains(1))
-    assert(val1.get(infoStr).contains("info 1"))
-
-    kvs.set("test2", config2)
-
-    val val2 = kvs.get("test2")
-    assert(val2.exists(_.get(infoValue).contains(2)))
-    assert(val2.exists(_.get(infoStr).contains("info 2")))
-
-    assert(kvs.delete("test1", "test2") == 2)
-
-    assert(kvs.get("test1").isEmpty)
-    assert(kvs.get("test2").isEmpty)
-
-    assert(kvs.delete("test1", "test2") == 0)
-
-    assert(kvs.hmset("testx", config1.getStringMap))
-    assert(kvs.hmget("testx", infoValue.name).contains("1"))
-    assert(kvs.hmget("testx", infoStr.name).contains("info 1"))
+    for {
+      res1 <- telemetryService.set(event1)
+      val1 <- telemetryService.get(prefix)
+      res2 <- telemetryService.set(event2)
+      val2 <- telemetryService.get(prefix)
+      _ ← telemetryService.delete(prefix)
+      res3 ← telemetryService.get(prefix)
+      res4 ← telemetryService.delete(prefix)
+    } yield {
+      assert(val1.exists(_.prefix == prefix))
+      assert(val1.exists(_.get(infoValue).contains(1)))
+      assert(val1.exists(_.get(infoStr).contains("info 1")))
+      assert(val2.exists(_.get(infoValue).contains(2)))
+      assert(val2.exists(_.get(infoStr).contains("info 2")))
+      assert(res3.isEmpty)
+    }
   }
 
-  test("Test lset, lget and getHistory") {
-    val config = SetupConfig("tcs.testPrefix").set(exposureTime, 2)
-    val key = "test"
+  test("Test set, get and getHistory") {
+    val prefix = "tcs.test2"
+    val event = StatusEvent(prefix).set(exposureTime, 2)
     val n = 3
 
-    kvs.set(key, config.set(exposureTime, 3), n)
-    kvs.set(key, config.set(exposureTime, 4), n)
-    kvs.set(key, config.set(exposureTime, 5), n)
-    kvs.set(key, config.set(exposureTime, 6), n)
-    kvs.set(key, config.set(exposureTime, 7), n)
-    val v = kvs.get(key)
-    val h = kvs.getHistory(key, n + 1)
-    kvs.delete(key)
-
-    assert(v.isDefined)
-    assert(v.get.get(exposureTime).get == 7.0)
-    assert(h.size == n + 1)
-
-    for (i ← 0 to n) {
-      logger.info(s"History: $i: ${h(i)}")
+    val f = for {
+      _ ← telemetryService.set(event.set(exposureTime, 3), n)
+      _ ← telemetryService.set(event.set(exposureTime, 4), n)
+      _ ← telemetryService.set(event.set(exposureTime, 5), n)
+      _ ← telemetryService.set(event.set(exposureTime, 6), n)
+      _ ← telemetryService.set(event.set(exposureTime, 7), n)
+      v ← telemetryService.get(prefix)
+      h ← telemetryService.getHistory(prefix, n + 1)
+      _ ← telemetryService.delete(prefix)
+    } yield {
+      assert(v.isDefined)
+      assert(v.get.get(exposureTime).get == 7.0)
+      assert(h.size == n + 1)
+      for (i ← 0 to n) {
+        logger.info(s"History: $i: ${h(i)}")
+      }
     }
+    Await.result(f, 5.seconds)
   }
 }
 

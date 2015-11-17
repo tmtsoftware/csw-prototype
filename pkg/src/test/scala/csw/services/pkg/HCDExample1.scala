@@ -1,16 +1,16 @@
 package csw.services.pkg
 
-import akka.actor.{ActorRef, ActorLogging, Props}
+import akka.actor.{ ActorRef, ActorLogging, Props }
 import csw.services.ccs.PeriodicHcdController
 import csw.services.ccs.PeriodicHcdController.Process
-import csw.services.loc.{ServiceType, ServiceId}
+import csw.services.loc.{ ServiceType, ServiceId }
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import scala.concurrent.duration._
 
 /**
-  * Test demonstrating working with the HCD APIs
-  */
+ * Test demonstrating working with the HCD APIs
+ */
 object HCDExample1 {
 
   object DaemonHCD {
@@ -21,7 +21,7 @@ object HCDExample1 {
     import TimeService._
 
     override def additionalReceive: Receive = {
-      case "end" =>
+      case "end" ⇒
         log.info("Ending")
         // Need to unregister with the location service (Otherwise application won't exit)
         context.parent ! Supervisor.UnregisterWithLocationService
@@ -31,7 +31,7 @@ object HCDExample1 {
     val killer = scheduleOnce(localTimeNow.plusSeconds(10), self, "end")
 
     override def process(): Unit = {
-      nextConfig.foreach { config =>
+      nextConfig.foreach { config ⇒
         log.info(s"received: $config")
 
       }
@@ -41,9 +41,9 @@ object HCDExample1 {
 }
 
 /**
-  * Starts Hcd2 as a standalone application.
-  * Args: name, configPath
-  */
+ * Starts Hcd2 as a standalone application.
+ * Args: name, configPath
+ */
 object HCDExample1App extends App {
   // if (args.length != 2) {
   //    println("Expected two args: the HCD name and the config path")
@@ -60,11 +60,7 @@ object HCDExample1App extends App {
   //val regInfo = RegInfo(serviceId, Some(configPath), httpUri)
   val services = Nil
   val compInfo = Component.create(props, serviceId, prefix, services)
-  val svisor:ActorRef = compInfo.supervisor
+  val svisor: ActorRef = compInfo.supervisor
   svisor.tell(Process(1.second), null)
 }
-
-
-
-
 

@@ -1,26 +1,24 @@
 package csw.services.event
 
 import akka.actor._
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ ImplicitSender, TestKit }
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.event.EventPubSubTest._
 import csw.util.cfg.Events.ObserveEvent
 import csw.util.cfg.Key
 import csw.util.cfg.StandardKeys._
-import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
-  * Defines some static items used in the tests
-  */
+ * Defines some static items used in the tests
+ */
 //@DoNotDiscover
 object EventPubSubTest {
 
-
   // --- configure this ---
-
 
   // delay between subscriber acknowledgement and the publishing of the next event
   // (Note that the timer resolution is not very accurate, so there is a big difference
@@ -33,9 +31,7 @@ object EventPubSubTest {
   // total number of events to publish
   val totalEventsToPublish = 100000
 
-
   // ---
-
 
   // Define a key for an event id
   val eventNum = Key.create[Int]("eventNum")
@@ -59,8 +55,8 @@ object EventPubSubTest {
 }
 
 /**
-  * Starts an embedded Hornetq server
-  */
+ * Starts an embedded Hornetq server
+ */
 class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   val settings = EventServiceSettings(system)
   if (settings.useEmbeddedHornetq) {
@@ -116,7 +112,7 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
         timer = context.system.scheduler.scheduleOnce(6.seconds, self, Timeout.zero)
       }
 
-    case t: Timeout =>
+    case t: Timeout ⇒
       log.error("Publisher seems to be blocked!")
       context.system.terminate()
       System.exit(1)
@@ -166,7 +162,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
 
     case SubscriberAck ⇒
       if (count < totalEventsToPublish) {
-//        context.system.scheduler.scheduleOnce(delay, self, Publish)
+        //        context.system.scheduler.scheduleOnce(delay, self, Publish)
         Thread.sleep(0L, delay.toNanos.toInt)
         self ! Publish
       } else {
@@ -174,7 +170,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
         testActor ! Done
       }
 
-    case t: Timeout =>
+    case t: Timeout ⇒
       log.error("Subscriber did not reply!")
       context.system.terminate()
       System.exit(1)
