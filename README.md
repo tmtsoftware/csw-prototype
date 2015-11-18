@@ -11,7 +11,7 @@ Version History
 ---------------
 
 | Tag | API | Binary |
-|-----|-----|
+|-----|-----|--------|
 | CSW-0.2-PDR | [API Docs](https://cdn.rawgit.com/tmtsoftware/csw/CSW-API-0.2-PDR/index.html) | [Download](https://github.com/tmtsoftware/csw/releases/tag/v0.2-PDR) |
 
 
