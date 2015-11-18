@@ -5,7 +5,14 @@ Common Software is the package of services and infrastructure software that inte
 
 http://www.tmt.org
 
-The API docs can be found at http://tmtsoftware.github.io/csw/.
+The latest API docs can always be found at http://tmtsoftware.github.io/csw/.
+
+Version History
+---------------
+
+|---|---|
+| CSW-API-0.2-PDR | [API Docs](https://cdn.rawgit.com/tmtsoftware/csw/CSW-API-0.2-PDR/index.html) |
+
 
 Build Instructions
 ------------------
