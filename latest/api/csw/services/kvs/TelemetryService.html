@@ -1,9 +1,9 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>AssemblyWrapper - csw.services.ccs.AssemblyWrapper</title>
-          <meta name="description" content="AssemblyWrapper - csw.services.ccs.AssemblyWrapper" />
-          <meta name="keywords" content="AssemblyWrapper csw.services.ccs.AssemblyWrapper" />
+          <title>TelemetryService - csw.services.kvs.TelemetryService</title>
+          <meta name="description" content="TelemetryService - csw.services.kvs.TelemetryService" />
+          <meta name="keywords" content="TelemetryService csw.services.kvs.TelemetryService" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -16,7 +16,7 @@
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
-            var hash = 'csw.services.ccs.AssemblyWrapper$';
+            var hash = 'csw.services.kvs.TelemetryService';
             var anchor = window.location.hash;
             var anchor_opt = '';
             if (anchor.length >= 1)
@@ -26,16 +26,16 @@
    	  </script>
     
         </head>
-        <body class="value">
+        <body class="type">
       <div id="definition">
-        <a href="AssemblyWrapper.html" title="See companion class"><img alt="Object/Class" src="../../../lib/object_to_class_big.png" /></a>
-        <p id="owner"><a href="../../package.html" class="extype" name="csw">csw</a>.<a href="../package.html" class="extype" name="csw.services">services</a>.<a href="package.html" class="extype" name="csw.services.ccs">ccs</a></p>
-        <h1><a href="AssemblyWrapper.html" title="See companion class">AssemblyWrapper</a></h1><h3><span class="morelinks"><div>
+        <a href="TelemetryService$.html" title="See companion object"><img alt="Class/Object" src="../../../lib/class_to_object_big.png" /></a>
+        <p id="owner"><a href="../../package.html" class="extype" name="csw">csw</a>.<a href="../package.html" class="extype" name="csw.services">services</a>.<a href="package.html" class="extype" name="csw.services.kvs">kvs</a></p>
+        <h1><a href="TelemetryService$.html" title="See companion object">TelemetryService</a></h1><h3><span class="morelinks"><div>
             Related Docs:
-            <a href="AssemblyWrapper.html" title="See companion class">class AssemblyWrapper</a>
-            | <a href="package.html" class="extype" name="csw.services.ccs">package ccs</a>
+            <a href="TelemetryService$.html" title="See companion object">object TelemetryService</a>
+            | <a href="package.html" class="extype" name="csw.services.kvs">package kvs</a>
           </div></span></h3><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -44,16 +44,17 @@
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">object</span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">AssemblyWrapper</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <span class="name">TelemetryService</span><span class="params">(<span name="settings">settings: <a href="KvsSettings.html" class="extype" name="csw.services.kvs.KvsSettings">KvsSettings</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="_system">_system: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A class for publishing, getting and subscribing to telemetry.
+</p></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>settings from reference.conf or application.conf with the Redis server host/port information</p></dd><dt class="param">_system</dt><dd class="cmt"><p>Akka environment needed by the implementation</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Equals" class="extype" target="_top">Equals</a>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -71,7 +72,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="csw.services.ccs.AssemblyWrapper"><span>AssemblyWrapper</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="csw.services.kvs.TelemetryService"><span>TelemetryService</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -88,7 +89,27 @@
 
       <div id="template">
         <div id="allMembers">
-        
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="csw.services.kvs.TelemetryService#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&lt;init&gt;(settings:csw.services.kvs.KvsSettings)(implicit_system:akka.actor.ActorRefFactory):csw.services.kvs.TelemetryService"></a>
+      <a id="&lt;init&gt;:TelemetryService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TelemetryService</span><span class="params">(<span name="settings">settings: <a href="KvsSettings.html" class="extype" name="csw.services.kvs.KvsSettings">KvsSettings</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="_system">_system: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@&lt;init&gt;(settings:csw.services.kvs.KvsSettings)(implicit_system:akka.actor.ActorRefFactory):csw.services.kvs.TelemetryService" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>settings from reference.conf or application.conf with the Redis server host/port information</p></dd><dt class="param">_system</dt><dd class="cmt"><p>Akka environment needed by the implementation</p></dd></dl></div>
+    </li></ol>
+            </div>
 
         
 
@@ -108,7 +129,7 @@
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@!=(x$1:Any):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -125,7 +146,7 @@
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@##():Int" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@##():Int" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -142,7 +163,7 @@
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@==(x$1:Any):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@==(x$1:Any):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -159,7 +180,7 @@
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@asInstanceOf[T0]:T0" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -176,7 +197,7 @@
         <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@clone():Object" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@clone():Object" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -187,6 +208,23 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="csw.services.kvs.TelemetryService#delete" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="delete(prefix:String):scala.concurrent.Future[Unit]"></a>
+      <a id="delete(String):Future[Unit]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">delete</span><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.concurrent.Future" class="extype" target="_top">Future</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@delete(prefix:String):scala.concurrent.Future[Unit]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Deletes the given  status event from the store</p><div class="fullcomment"><div class="comment cmt"><p>Deletes the given  status event from the store</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a future indicating if/when the operation has completed</p></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -199,28 +237,11 @@
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a>
-      <a id="equals(Any):Boolean"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -233,7 +254,7 @@
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@finalize():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@finalize():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -244,6 +265,25 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="csw.services.kvs.TelemetryService#get" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="get(prefix:String):scala.concurrent.Future[Option[csw.util.cfg.Events.StatusEvent]]"></a>
+      <a id="get(String):Future[Option[StatusEvent]]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">get</span><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.concurrent.Future" class="extype" target="_top">Future</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="../../util/cfg/Events$$StatusEvent.html" class="extype" name="csw.util.cfg.Events.StatusEvent">StatusEvent</a>]]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@get(prefix:String):scala.concurrent.Future[Option[csw.util.cfg.Events.StatusEvent]]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Gets the value for the given status event prefix
+</p><div class="fullcomment"><div class="comment cmt"><p>Gets the value for the given status event prefix
+</p></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>the prefix (key) for the event to get</p></dd><dt>returns</dt><dd class="cmt"><p>the status event, if (and when) found</p></dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -256,28 +296,28 @@
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@getClass():Class[_]" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@getClass():Class[_]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hashCode():Int"></a>
-      <a id="hashCode():Int"></a>
+    </li><li name="csw.services.kvs.TelemetryService#getHistory" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getHistory(prefix:String,n:Int):scala.concurrent.Future[Seq[csw.util.cfg.Events.StatusEvent]]"></a>
+      <a id="getHistory(String,Int):Future[Seq[StatusEvent]]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">getHistory</span><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="n">n: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.concurrent.Future" class="extype" target="_top">Future</a>[<a href="../../../scala/package.html#Seq[+A]=Seq[A]" class="extmbr" name="scala.Seq">Seq</a>[<a href="../../util/cfg/Events$$StatusEvent.html" class="extype" name="csw.util.cfg.Events.StatusEvent">StatusEvent</a>]]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@hashCode():Int" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@getHistory(prefix:String,n:Int):scala.concurrent.Future[Seq[csw.util.cfg.Events.StatusEvent]]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+      <p class="shortcomment cmt">Gets a list of the n most recent status event values for the given prefix</p><div class="fullcomment"><div class="comment cmt"><p>Gets a list of the n most recent status event values for the given prefix</p></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>the status event's prefix</p></dd><dt class="param">n</dt><dd class="cmt"><p>the max number of values to get</p></dd><dt>returns</dt><dd class="cmt"><p>future sequence of status events, ordered by most recent</p></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -290,7 +330,7 @@
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -307,7 +347,7 @@
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -324,7 +364,7 @@
         <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@notify():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@notify():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -341,28 +381,47 @@
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@notifyAll():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@notifyAll():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="csw.services.ccs.AssemblyWrapper#props" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="props(assembly:akka.actor.ActorRef):akka.actor.Props"></a>
-      <a id="props(ActorRef):Props"></a>
+    </li><li name="csw.services.kvs.TelemetryService#set" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="set(status:csw.util.cfg.Events.StatusEvent,history:Int):scala.concurrent.Future[Unit]"></a>
+      <a id="set(StatusEvent,Int):Future[Unit]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">props</span><span class="params">(<span name="assembly">assembly: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span><span class="result">: <span class="extype" name="akka.actor.Props">Props</span></span>
+        <span class="name">set</span><span class="params">(<span name="status">status: <a href="../../util/cfg/Events$$StatusEvent.html" class="extype" name="csw.util.cfg.Events.StatusEvent">StatusEvent</a></span>, <span name="history">history: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a> = <span class="symbol">0</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.concurrent.Future" class="extype" target="_top">Future</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@props(assembly:akka.actor.ActorRef):akka.actor.Props" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@set(status:csw.util.cfg.Events.StatusEvent,history:Int):scala.concurrent.Future[Unit]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">Sets the value for the status event (key is based on the event's prefix)
+</p><div class="fullcomment"><div class="comment cmt"><p>Sets the value for the status event (key is based on the event's prefix)
+</p></div><dl class="paramcmts block"><dt class="param">status</dt><dd class="cmt"><p>the value to store</p></dd><dt class="param">history</dt><dd class="cmt"><p>optional number of previous values to store</p></dd><dt>returns</dt><dd class="cmt"><p>a future indicating if/when the operation has completed</p></dd></dl></div>
+    </li><li name="csw.services.kvs.TelemetryService#settings" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="settings:csw.services.kvs.KvsSettings"></a>
+      <a id="settings:KvsSettings"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">settings</span><span class="result">: <a href="KvsSettings.html" class="extype" name="csw.services.kvs.KvsSettings">KvsSettings</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@settings:csw.services.kvs.KvsSettings" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">settings from reference.conf or application.conf with the Redis server host/port information</p>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -375,28 +434,11 @@
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="toString():String"></a>
-      <a id="toString():String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@toString():String" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -409,7 +451,7 @@
         <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@wait():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@wait():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -432,7 +474,7 @@
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -455,7 +497,7 @@
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper$@wait(x$1:Long):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetryService@wait(x$1:Long):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -479,6 +521,10 @@
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="scala.Product">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Equals" class="extype" target="_top">Equals</a></h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">

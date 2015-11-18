@@ -1,9 +1,9 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>AssemblyWrapper - csw.services.ccs.AssemblyWrapper</title>
-          <meta name="description" content="AssemblyWrapper - csw.services.ccs.AssemblyWrapper" />
-          <meta name="keywords" content="AssemblyWrapper csw.services.ccs.AssemblyWrapper" />
+          <title>TelemetrySubscriber - csw.services.kvs.TelemetrySubscriber</title>
+          <meta name="description" content="TelemetrySubscriber - csw.services.kvs.TelemetrySubscriber" />
+          <meta name="keywords" content="TelemetrySubscriber csw.services.kvs.TelemetrySubscriber" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -16,7 +16,7 @@
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
-            var hash = 'csw.services.ccs.AssemblyWrapper';
+            var hash = 'csw.services.kvs.TelemetrySubscriber';
             var anchor = window.location.hash;
             var anchor_opt = '';
             if (anchor.length >= 1)
@@ -28,14 +28,12 @@
         </head>
         <body class="type">
       <div id="definition">
-        <a href="AssemblyWrapper$.html" title="See companion object"><img alt="Class/Object" src="../../../lib/class_to_object_big.png" /></a>
-        <p id="owner"><a href="../../package.html" class="extype" name="csw">csw</a>.<a href="../package.html" class="extype" name="csw.services">services</a>.<a href="package.html" class="extype" name="csw.services.ccs">ccs</a></p>
-        <h1><a href="AssemblyWrapper$.html" title="See companion object">AssemblyWrapper</a></h1><h3><span class="morelinks"><div>
-            Related Docs:
-            <a href="AssemblyWrapper$.html" title="See companion object">object AssemblyWrapper</a>
-            | <a href="package.html" class="extype" name="csw.services.ccs">package ccs</a>
+        <img alt="Class" src="../../../lib/class_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="csw">csw</a>.<a href="../package.html" class="extype" name="csw.services">services</a>.<a href="package.html" class="extype" name="csw.services.kvs">kvs</a></p>
+        <h1>TelemetrySubscriber</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="csw.services.kvs">package kvs</a>
           </div></span></h3><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -43,17 +41,20 @@
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
+        <span class="modifier">abstract </span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">AssemblyWrapper</span><span class="params">(<span name="assembly">assembly: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <span class="name">TelemetrySubscriber</span><span class="result"> extends <a href="Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a>[<a href="../../util/cfg/Events$$StatusEvent.html" class="extype" name="csw.util.cfg.Events.StatusEvent">StatusEvent</a>]</span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A simple wrapper to get a single response from an assembly for a single submit</p></div><dl class="paramcmts block"><dt class="param">assembly</dt><dd class="cmt"><p>the target assembly actor</p></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Base type of a subscriber actor to telemetry (status events)
+The subscribed actor will receive messages of type StatusEvent for the given keys.
+Note that the keys are automatically prefixed with telem:.
+</p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Equals" class="extype" target="_top">Equals</a>, <span class="extype" name="akka.actor.Actor">Actor</span>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a>[<a href="../../util/cfg/Events$$StatusEvent.html" class="extype" name="csw.util.cfg.Events.StatusEvent">StatusEvent</a>], <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span>, <span class="extype" name="akka.actor.Actor">Actor</span>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -71,7 +72,7 @@
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="csw.services.ccs.AssemblyWrapper"><span>AssemblyWrapper</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="akka.actor.Actor"><span>Actor</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="csw.services.kvs.TelemetrySubscriber"><span>TelemetrySubscriber</span></li><li class="in" name="csw.services.kvs.Subscriber"><span>Subscriber</span></li><li class="in" name="akka.actor.ActorLogging"><span>ActorLogging</span></li><li class="in" name="akka.actor.Actor"><span>Actor</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
@@ -90,23 +91,23 @@
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="csw.services.ccs.AssemblyWrapper#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(assembly:akka.actor.ActorRef):csw.services.ccs.AssemblyWrapper"></a>
-      <a id="&lt;init&gt;:AssemblyWrapper"></a>
+              <ol><li name="csw.services.kvs.TelemetrySubscriber#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;():csw.services.kvs.TelemetrySubscriber"></a>
+      <a id="&lt;init&gt;:TelemetrySubscriber"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">AssemblyWrapper</span><span class="params">(<span name="assembly">assembly: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span>
+        <span class="name">TelemetrySubscriber</span><span class="params">()</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@&lt;init&gt;(assembly:akka.actor.ActorRef):csw.services.ccs.AssemblyWrapper" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@&lt;init&gt;():csw.services.kvs.TelemetrySubscriber" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">assembly</dt><dd class="cmt"><p>the target assembly actor</p></dd></dl></div>
+      
     </li></ol>
             </div>
 
@@ -124,7 +125,7 @@
         <span class="name">Receive</span><span class="result"> = <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@Receive=akka.actor.Actor.Receive" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@Receive=akka.actor.Actor.Receive" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -132,10 +133,30 @@
     </li></ol>
             </div>
 
-        
+        <div id="values" class="values members">
+              <h3>Abstract Value Members</h3>
+              <ol><li name="akka.actor.Actor#receive" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="receive:akka.actor.Actor.Receive"></a>
+      <a id="receive:akka.actor.Actor.Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">receive</span><span class="result">: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@receive:akka.actor.Actor.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
+    </li></ol>
+            </div>
 
         <div id="values" class="values members">
-              <h3>Value Members</h3>
+              <h3>Concrete Value Members</h3>
               <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a>
       <a id="!=(Any):Boolean"></a>
@@ -148,7 +169,7 @@
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@!=(x$1:Any):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -165,7 +186,7 @@
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@##():Int" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@##():Int" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -182,7 +203,7 @@
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@==(x$1:Any):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@==(x$1:Any):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -199,7 +220,7 @@
         <span class="name">aroundPostRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@aroundPostRestart(reason:Throwable):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@aroundPostRestart(reason:Throwable):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -216,7 +237,7 @@
         <span class="name">aroundPostStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@aroundPostStop():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@aroundPostStop():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -233,7 +254,7 @@
         <span class="name">aroundPreRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@aroundPreRestart(reason:Throwable,message:Option[Any]):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@aroundPreRestart(reason:Throwable,message:Option[Any]):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -250,7 +271,7 @@
         <span class="name">aroundPreStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@aroundPreStart():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@aroundPreStart():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -267,7 +288,7 @@
         <span class="name">aroundReceive</span><span class="params">(<span name="receive">receive: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@aroundReceive(receive:akka.actor.Actor.Receive,msg:Any):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@aroundReceive(receive:akka.actor.Actor.Receive,msg:Any):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -284,28 +305,11 @@
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@asInstanceOf[T0]:T0" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="csw.services.ccs.AssemblyWrapper#assembly" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="assembly:akka.actor.ActorRef"></a>
-      <a id="assembly:ActorRef"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">assembly</span><span class="result">: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@assembly:akka.actor.ActorRef" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">the target assembly actor</p>
     </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a>
       <a id="clone():AnyRef"></a>
@@ -318,7 +322,7 @@
         <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@clone():Object" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@clone():Object" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -341,7 +345,7 @@
         <span class="name">context</span><span class="result">: <span class="extype" name="akka.actor.ActorContext">ActorContext</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@context:akka.actor.ActorContext" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@context:akka.actor.ActorContext" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -358,11 +362,28 @@
         <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -375,7 +396,7 @@
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@finalize():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@finalize():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -398,7 +419,24 @@
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@getClass():Class[_]" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@hashCode():Int" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -415,11 +453,28 @@
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="akka.actor.ActorLogging#log" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="log:akka.event.LoggingAdapter"></a>
+      <a id="log:LoggingAdapter"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">log</span><span class="result">: <span class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@log:akka.event.LoggingAdapter" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ActorLogging</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -432,7 +487,7 @@
         <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -449,7 +504,7 @@
         <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@notify():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@notify():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -466,7 +521,7 @@
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@notifyAll():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@notifyAll():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -483,7 +538,7 @@
         <span class="name">postRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@postRestart(reason:Throwable):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@postRestart(reason:Throwable):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -506,7 +561,7 @@
         <span class="name">postStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@postStop():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@postStop():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -529,7 +584,7 @@
         <span class="name">preRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@preRestart(reason:Throwable,message:Option[Any]):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@preRestart(reason:Throwable,message:Option[Any]):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -552,7 +607,7 @@
         <span class="name">preStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@preStart():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@preStart():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -563,23 +618,23 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="csw.services.ccs.AssemblyWrapper#receive" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="receive:AssemblyWrapper.this.Receive"></a>
-      <a id="receive:Receive"></a>
+    </li><li name="csw.services.kvs.Subscriber#redis" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="redis:akka.actor.ActorRef"></a>
+      <a id="redis:ActorRef"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">def</span>
+        <span class="kind">lazy val</span>
       </span>
       <span class="symbol">
-        <span class="name">receive</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.ccs.AssemblyWrapper.Receive">Receive</a></span>
+        <span class="name">redis</span><span class="result">: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@receive:AssemblyWrapper.this.Receive" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@redis:akka.actor.ActorRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="csw.services.ccs.AssemblyWrapper">AssemblyWrapper</a> → Actor</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a></dd></dl></div>
     </li><li name="akka.actor.Actor#self" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="self:akka.actor.ActorRef"></a>
       <a id="self:ActorRef"></a>
@@ -592,7 +647,7 @@
         <span class="name">self</span><span class="result">: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@self:akka.actor.ActorRef" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@self:akka.actor.ActorRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -609,11 +664,30 @@
         <span class="name">sender</span><span class="params">()</span><span class="result">: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@sender():akka.actor.ActorRef" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@sender():akka.actor.ActorRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
+    </li><li name="csw.services.kvs.TelemetrySubscriber#subscribe" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="subscribe(keys:String*):Unit"></a>
+      <a id="subscribe(String*):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">subscribe</span><span class="params">(<span name="keys">keys: <span class="extype" name="scala.Predef.String">String</span>*</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@subscribe(keys:String*):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Subscribes this actor to values with the given keys.</p><div class="fullcomment"><div class="comment cmt"><p>Subscribes this actor to values with the given keys.
+Each key may be followed by a '*' wildcard to subscribe to all matching events.
+</p></div><dl class="paramcmts block"><dt class="param">keys</dt><dd class="cmt"><p>the top level keys for the events you want to subscribe to.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="csw.services.kvs.TelemetrySubscriber">TelemetrySubscriber</a> → <a href="Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a></dd></dl></div>
     </li><li name="akka.actor.Actor#supervisorStrategy" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="supervisorStrategy:akka.actor.SupervisorStrategy"></a>
       <a id="supervisorStrategy:SupervisorStrategy"></a>
@@ -626,7 +700,7 @@
         <span class="name">supervisorStrategy</span><span class="result">: <span class="extype" name="akka.actor.SupervisorStrategy">SupervisorStrategy</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@supervisorStrategy:akka.actor.SupervisorStrategy" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@supervisorStrategy:akka.actor.SupervisorStrategy" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -643,11 +717,28 @@
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="akka.actor.Actor#unhandled" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="unhandled(message:Any):Unit"></a>
       <a id="unhandled(Any):Unit"></a>
@@ -660,11 +751,30 @@
         <span class="name">unhandled</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@unhandled(message:Any):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@unhandled(message:Any):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
+    </li><li name="csw.services.kvs.TelemetrySubscriber#unsubscribe" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="unsubscribe(keys:String*):Unit"></a>
+      <a id="unsubscribe(String*):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">unsubscribe</span><span class="params">(<span name="keys">keys: <span class="extype" name="scala.Predef.String">String</span>*</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@unsubscribe(keys:String*):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Unsubscribes this actor from values with the given keys.</p><div class="fullcomment"><div class="comment cmt"><p>Unsubscribes this actor from values with the given keys.
+Each key may be followed by a '*' wildcard to unsubscribe to all matching values.
+</p></div><dl class="paramcmts block"><dt class="param">keys</dt><dd class="cmt"><p>the top level keys for the events you want to unsubscribe from.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="csw.services.kvs.TelemetrySubscriber">TelemetrySubscriber</a> → <a href="Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <a id="wait():Unit"></a>
@@ -677,7 +787,7 @@
         <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@wait():Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@wait():Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -700,7 +810,7 @@
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -723,7 +833,7 @@
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@wait(x$1:Long):Unit" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.TelemetrySubscriber@wait(x$1:Long):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -734,23 +844,6 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="csw.services.ccs.AssemblyWrapper#waitingForComplete" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="waitingForComplete(replyTo:akka.actor.ActorRef):AssemblyWrapper.this.Receive"></a>
-      <a id="waitingForComplete(ActorRef):Receive"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">waitingForComplete</span><span class="params">(<span name="replyTo">replyTo: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.ccs.AssemblyWrapper.Receive">Receive</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.AssemblyWrapper@waitingForComplete(replyTo:akka.actor.ActorRef):AssemblyWrapper.this.Receive" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
     </li></ol>
             </div>
 
@@ -760,14 +853,10 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></h3>
-            </div><div class="parent" name="java.io.Serializable">
-              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
-            </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a></h3>
-            </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Equals" class="extype" target="_top">Equals</a></h3>
+        <div class="parent" name="csw.services.kvs.Subscriber">
+              <h3>Inherited from <a href="Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a>[<a href="../../util/cfg/Events$$StatusEvent.html" class="extype" name="csw.util.cfg.Events.StatusEvent">StatusEvent</a>]</h3>
+            </div><div class="parent" name="akka.actor.ActorLogging">
+              <h3>Inherited from <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></h3>
             </div><div class="parent" name="akka.actor.Actor">
               <h3>Inherited from <span class="extype" name="akka.actor.Actor">Actor</span></h3>
             </div><div class="parent" name="scala.AnyRef">

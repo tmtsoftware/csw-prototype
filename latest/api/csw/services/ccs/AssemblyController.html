@@ -511,6 +511,28 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ActorLogging</dd></dl></div>
+    </li><li name="csw.services.ccs.AssemblyController#matchDemandStates" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="matchDemandStates(demandStates:Seq[csw.util.cfg.Configurations.StateVariable.DemandState],replyTo:Option[akka.actor.ActorRef],runId:csw.util.cfg.RunId,timeout:akka.util.Timeout,matcher:csw.util.cfg.Configurations.StateVariable.Matcher):Unit"></a>
+      <a id="matchDemandStates(Seq[DemandState],Option[ActorRef],RunId,Timeout,Matcher):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">matchDemandStates</span><span class="params">(<span name="demandStates">demandStates: <a href="../../../scala/package.html#Seq[+A]=Seq[A]" class="extmbr" name="scala.Seq">Seq</a>[<a href="../../util/cfg/Configurations$$StateVariable$$DemandState.html" class="extype" name="csw.util.cfg.Configurations.StateVariable.DemandState">DemandState</a>]</span>, <span name="replyTo">replyTo: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="akka.actor.ActorRef">ActorRef</span>]</span>, <span name="runId">runId: <a href="../../util/cfg/RunId.html" class="extype" name="csw.util.cfg.RunId">RunId</a></span>, <span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span> = <span class="symbol"><span class="name"><a href="../../../scala/package.html">Timeout(60.seconds)</a></span></span></span>, <span name="matcher">matcher: <a href="../../util/cfg/Configurations$$StateVariable$.html#Matcher=(csw.util.cfg.Configurations.StateVariable.DemandState,csw.util.cfg.Configurations.StateVariable.CurrentState)=&gt;Boolean" class="extmbr" name="csw.util.cfg.Configurations.StateVariable.Matcher">Matcher</a> = <span class="symbol"><span class="name"><a href="../../package.html">StateVariable.defaultMatcher</a></span></span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.AssemblyController@matchDemandStates(demandStates:Seq[csw.util.cfg.Configurations.StateVariable.DemandState],replyTo:Option[akka.actor.ActorRef],runId:csw.util.cfg.RunId,timeout:akka.util.Timeout,matcher:csw.util.cfg.Configurations.StateVariable.Matcher):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Convenience method that can be used to monitor a set of state variables and reply to
+the given actor when they all match the demand states, or reply with an error if
+there is a timeout.</p><div class="fullcomment"><div class="comment cmt"><p>Convenience method that can be used to monitor a set of state variables and reply to
+the given actor when they all match the demand states, or reply with an error if
+there is a timeout.
+</p></div><dl class="paramcmts block"><dt class="param">demandStates</dt><dd class="cmt"><p>list of state variables to be matched (wait until current state matches demand)</p></dd><dt class="param">replyTo</dt><dd class="cmt"><p>actor to receive CommandStatus.Completed or CommandStatus.Error(&quot;timeout...&quot;) message</p></dd><dt class="param">runId</dt><dd class="cmt"><p>runId to include in the command status message sent to the replyTo actor</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>amount of time to wait for states to match (default: 60 sec)</p></dd><dt class="param">matcher</dt><dd class="cmt"><p>matcher to use (default: equality)</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>

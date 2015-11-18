@@ -712,6 +712,27 @@ For example: def receive: Receive = receiveCommands orElse receiveLifecycleComma
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
+    </li><li name="csw.services.ccs.PeriodicHcdController#startProcessing" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="startProcessing(conf:com.typesafe.config.Config,defaultRate:scala.concurrent.duration.FiniteDuration):Unit"></a>
+      <a id="startProcessing(Config,FiniteDuration):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">startProcessing</span><span class="params">(<span name="conf">conf: <span class="extype" name="com.typesafe.config.Config">Config</span></span>, <span name="defaultRate">defaultRate: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.concurrent.duration.FiniteDuration" class="extype" target="_top">FiniteDuration</a> = <span class="symbol"><span class="name"><a href="../../../scala/package.html">1.second</a></span></span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.PeriodicHcdController@startProcessing(conf:com.typesafe.config.Config,defaultRate:scala.concurrent.duration.FiniteDuration):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Event periodic HCD should call this method once to start processing.</p><div class="fullcomment"><div class="comment cmt"><p>Event periodic HCD should call this method once to start processing.</p><p>If the &quot;rate&quot; key is specified in the config, use it, otherwise the default rate to
+send a message to self to start the periodic processing.
+Each time the Process message is received, a timer should be started again
+for the given duration (A repeating timer would risk continuing after an actor crashes).
+</p></div><dl class="paramcmts block"><dt class="param">conf</dt><dd class="cmt"><p>the component's config file</p></dd><dt class="param">defaultRate</dt><dd class="cmt"><p>the default duration to use if not defined in the config</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li><li name="akka.actor.Actor#supervisorStrategy" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="supervisorStrategy:akka.actor.SupervisorStrategy"></a>
       <a id="supervisorStrategy:SupervisorStrategy"></a>

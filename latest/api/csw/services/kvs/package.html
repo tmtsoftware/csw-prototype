@@ -114,6 +114,23 @@ completion before returning.
     </span>
       <p class="shortcomment cmt">A wrapper API for a KVS that waits for operations to complete before returing.</p><div class="fullcomment"><div class="comment cmt"><p>A wrapper API for a KVS that waits for operations to complete before returing.
 </p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>the type (or base type) of objects to store</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>the max amount of time to wait for an operation to complete</p></dd><dt class="param">_system</dt><dd class="cmt"><p>Akka env required by RedisClient</p></dd></dl></div>
+    </li><li name="csw.services.kvs.BlockingTelemetryService" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="BlockingTelemetryServiceextendsProductwithSerializable"></a>
+      <a id="BlockingTelemetryService:BlockingTelemetryService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="BlockingTelemetryService.html"><span class="name">BlockingTelemetryService</span></a><span class="params">(<span name="ts">ts: <a href="TelemetryService.html" class="extype" name="csw.services.kvs.TelemetryService">TelemetryService</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>, <span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.package@BlockingTelemetryServiceextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Provides a blocking, synchronous API to the telemetry service.</p><div class="fullcomment"><div class="comment cmt"><p>Provides a blocking, synchronous API to the telemetry service.</p></div><dl class="paramcmts block"><dt class="param">ts</dt><dd class="cmt"><p>a reference to the telemetry service to use</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>max amount of time to wait for a result before timing out</p></dd><dt class="param">context</dt><dd class="cmt"><p>environment needed for futures</p></dd></dl></div>
     </li><li name="csw.services.kvs.Implicits" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="ImplicitsextendsByteStringDeserializerDefault"></a>
       <a id="Implicits:Implicits"></a>
@@ -224,25 +241,47 @@ while a current state variable is stored under it's own prefix.
       </a>
     </span>
       <p class="shortcomment cmt">Adds the ability to subscribe to objects of type T.</p><div class="fullcomment"><div class="comment cmt"><p>Adds the ability to subscribe to objects of type T.
-The subscribed actor wil receive messages of type T for the given keys.
+The subscribed actor will receive messages of type T for the given keys.
 </p></div></div>
-    </li><li name="csw.services.kvs.TelemetryService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="TelemetryService=csw.services.kvs.BlockingKeyValueStore[csw.util.cfg.Configurations.SetupConfig]"></a>
+    </li><li name="csw.services.kvs.TelemetryService" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="TelemetryServiceextendsProductwithSerializable"></a>
       <a id="TelemetryService:TelemetryService"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">type</span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">TelemetryService</span><span class="result"> = <a href="BlockingKeyValueStore.html" class="extype" name="csw.services.kvs.BlockingKeyValueStore">BlockingKeyValueStore</a>[<a href="../../util/cfg/Configurations$$SetupConfig.html" class="extype" name="csw.util.cfg.Configurations.SetupConfig">SetupConfig</a>]</span>
+        <a href="TelemetryService.html"><span class="name">TelemetryService</span></a><span class="params">(<span name="settings">settings: <a href="KvsSettings.html" class="extype" name="csw.services.kvs.KvsSettings">KvsSettings</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="_system">_system: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.kvs.package@TelemetryService=csw.services.kvs.BlockingKeyValueStore[csw.util.cfg.Configurations.SetupConfig]" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.kvs.package@TelemetryServiceextendsProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
+      <p class="shortcomment cmt">A class for publishing, getting and subscribing to telemetry.</p><div class="fullcomment"><div class="comment cmt"><p>A class for publishing, getting and subscribing to telemetry.
+</p></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>settings from reference.conf or application.conf with the Redis server host/port information</p></dd><dt class="param">_system</dt><dd class="cmt"><p>Akka environment needed by the implementation</p></dd></dl></div>
+    </li><li name="csw.services.kvs.TelemetrySubscriber" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="TelemetrySubscriberextendsSubscriber[csw.util.cfg.Events.StatusEvent]"></a>
+      <a id="TelemetrySubscriber:TelemetrySubscriber"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="TelemetrySubscriber.html"><span class="name">TelemetrySubscriber</span></a><span class="result"> extends <a href="Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a>[<a href="../../util/cfg/Events$$StatusEvent.html" class="extype" name="csw.util.cfg.Events.StatusEvent">StatusEvent</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.kvs.package@TelemetrySubscriberextendsSubscriber[csw.util.cfg.Events.StatusEvent]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Base type of a subscriber actor to telemetry (status events)
+The subscribed actor will receive messages of type StatusEvent for the given keys.</p><div class="fullcomment"><div class="comment cmt"><p>Base type of a subscriber actor to telemetry (status events)
+The subscribed actor will receive messages of type StatusEvent for the given keys.
+Note that the keys are automatically prefixed with telem:.
+</p></div></div>
     </li></ol>
             </div>
 
@@ -327,7 +366,7 @@ The subscribed actor wil receive messages of type T for the given keys.
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="package$$TelemetryService$.html"><span class="name">TelemetryService</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="TelemetryService$.html"><span class="name">TelemetryService</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.kvs.package@TelemetryService" title="Permalink" target="_top">
