@@ -10,7 +10,8 @@ The latest API docs can always be found at http://tmtsoftware.github.io/csw/.
 Version History
 ---------------
 
-|---|---|
+| Tag | API |
+|-----|-----|
 | CSW-API-0.2-PDR | [API Docs](https://cdn.rawgit.com/tmtsoftware/csw/CSW-API-0.2-PDR/index.html) |
 
 
