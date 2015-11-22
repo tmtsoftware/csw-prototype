@@ -40,6 +40,7 @@ object Supervisor2 {
   case object EndProcessing
 
   def endProcessing(supervisor: ActorRef): Unit = {
+    Thread.sleep(100)
     supervisor ! EndProcessing
   }
 

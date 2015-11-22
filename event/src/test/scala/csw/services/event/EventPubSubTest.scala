@@ -57,10 +57,7 @@ object EventPubSubTest {
 /**
  * Starts an embedded Hornetq server
  */
-<<<<<<< HEAD
-=======
-@DoNotDiscover
->>>>>>> master
+//@DoNotDiscover
 class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   val settings = EventServiceSettings(system)
   if (settings.useEmbeddedHornetq) {
