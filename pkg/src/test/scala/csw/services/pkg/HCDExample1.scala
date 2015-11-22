@@ -16,8 +16,8 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 /**
-  * Test demonstrating working with the HCD APIs
-  */
+ * Test demonstrating working with the HCD APIs
+ */
 object HCDExample1 {
 
   case class HCDDaemon(name: String, info: HcdInfo) extends Hcd2 with PeriodicHcdController2 with TimeServiceScheduler {
@@ -148,9 +148,9 @@ class TelPosSubscriber(name: String, prefix: String) extends Actor with ActorLog
   }
 }
 /**
-  * Starts Hcd2 as a standalone application.
-  * Args: name, configPath
-  */
+ * Starts Hcd2 as a standalone application.
+ * Args: name, configPath
+ */
 object HCDExample1App extends App {
   // if (args.length != 2) {
   //    println("Expected two args: the HCD name and the config path")
@@ -172,4 +172,3 @@ object HCDExample1App extends App {
   val result = Hcd2.create(className, serviceId, prefix, RegisterOnly, 1.second)
 
 }
-

@@ -2,4 +2,4 @@ target
 *.class
 *.jar
 .idea*
-.DS_STORE
+.DS_Store

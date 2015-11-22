@@ -77,4 +77,8 @@ trait KeyValueStore[T] {
    */
   def hmget(key: String, field: String): Future[Option[String]]
 
+  /**
+   * Disconnects from the key/value store server
+   */
+  def disconnect(): Unit
 }

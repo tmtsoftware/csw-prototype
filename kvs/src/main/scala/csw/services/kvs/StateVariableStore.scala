@@ -101,4 +101,9 @@ case class StateVariableStore(settings: KvsSettings)(implicit _system: ActorRefF
    */
   def delete(prefix: String): Future[Unit] = kvs.delete(prefix).map(_ ⇒ ())
 
+  /**
+   * Disconnects from the key/value store server
+   */
+  def disconnect(): Unit = kvs.disconnect()
+
 }

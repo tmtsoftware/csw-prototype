@@ -2,7 +2,6 @@ import com.typesafe.sbt.SbtNativePackager._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import com.typesafe.sbt.packager.Keys._
-import play.twirl.sbt.Import.TwirlKeys
 import sbt.Keys._
 import sbt._
 
@@ -67,10 +66,6 @@ object Settings {
   lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(
     ScalariformKeys.preferences in Compile := formattingPreferences,
     ScalariformKeys.preferences in Test := formattingPreferences
-  )
-
-  lazy val twirlSettings = Seq(
-    TwirlKeys.templateImports += "csw.services.cmd_old.akka.CommandServiceActor.CommandServiceStatus"
   )
 
   lazy val siteSettings = site.settings ++ ghpages.settings ++ site.includeScaladoc() ++

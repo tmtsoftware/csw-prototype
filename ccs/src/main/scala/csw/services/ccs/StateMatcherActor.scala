@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{ Actor, Props, ActorRef }
 import akka.util.Timeout
-import csw.services.kvs.Subscriber
+import csw.services.kvs.{ KvsSettings, StateVariableStore, Subscriber }
 import csw.util.cfg.Configurations.StateVariable
 import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState, Matcher }
 import csw.util.cfg.RunId
@@ -22,7 +22,7 @@ object StateMatcherActor {
    * @param matcher the function used to compare the demand and current states
    */
   def props(demands: List[DemandState], replyTo: ActorRef, runId: RunId = RunId(),
-            timeout: Timeout = Timeout(10.seconds),
+            timeout: Timeout = Timeout(60.seconds),
             matcher: Matcher = StateVariable.defaultMatcher): Props =
     Props(classOf[StateMatcherActor], demands, replyTo, runId, timeout, matcher)
 }
@@ -43,6 +43,17 @@ class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, runId: Ru
   val keys = demands.map(_.prefix)
   log.info(s"Subscribing to ${keys.mkString(", ")}")
   subscribe(keys: _*)
+
+  // Subscribe only sends us a message if the value changes. We also need to
+  // check if the value already matches the demand.
+  val svs = StateVariableStore(KvsSettings(context.system))
+  keys.foreach { k ⇒
+    svs.get(k).onSuccess {
+      case Some(v) ⇒ self ! v
+      case None    ⇒
+    }
+  }
+
   val timer = context.system.scheduler.scheduleOnce(timeout.duration, self, timeout)
 
   override def receive: Receive = Actor.emptyBehavior
@@ -58,6 +69,7 @@ class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, runId: Ru
           if (set.size == demands.size) {
             timer.cancel()
             replyTo ! CommandStatus.Completed(runId)
+            svs.disconnect()
             context.stop(self)
           } else context.become(waiting(set))
         }
@@ -66,6 +78,7 @@ class StateMatcherActor(demands: List[DemandState], replyTo: ActorRef, runId: Ru
     case `timeout` ⇒
       log.info(s"received timeout")
       replyTo ! CommandStatus.Error(runId, "Command timed out")
+      svs.disconnect()
       context.stop(self)
 
     case x ⇒ log.error(s"Unexpected message $x")
