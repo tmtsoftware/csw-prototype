@@ -3,9 +3,8 @@ package csw.services.pkg
 import akka.actor._
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.{ResolvedService, ServicesReady}
-import csw.services.loc.{LocationService, ServiceId, ServiceRef, ServiceType}
-import csw.services.pkg.LifecycleManager.UnregisterWithLocationService
-import csw.services.pkg.LocationManager.{RequestServices, Register}
+import csw.services.loc.{LocationService, ServiceId, ServiceRef}
+
 
 import scala.util.{Failure, Success}
 
@@ -25,7 +24,7 @@ object LocationManager {
 //    * @param serviceId service used to register the component with the location service
     * @return an object to be managed by Supervisor
     */
-  def props(name: String): Props = Props(classOf[LocationManager], s"${name}-LocationManager")
+  def props(name: String): Props = Props(classOf[LocationManager], s"$name-LocationManager")
 }
 
 /**
@@ -33,6 +32,7 @@ object LocationManager {
   * (see props() for argument descriptions).
   */
 case class LocationManager(name: String) extends Actor with ActorLogging {
+  import LocationManager._
 
   // Result of last location service registration, can be used to unregister (by calling close())
   var registration: Option[LocationService.Registration] = None
@@ -42,13 +42,12 @@ case class LocationManager(name: String) extends Actor with ActorLogging {
   override def receive: Receive = {
     case Register(serviceId, prefix) => registerWithLocationService(serviceId, prefix)
 
-    case RequestServices(services) => {
+    case RequestServices(services) =>
       val component:ActorRef = sender()
       requestServices(services, component)
-    }
 
     case UnregisterWithLocationService =>
-      log.info("Unregister: " + registration)
+      //registration.foreach(x => log.info(s"unreg: $x"))
       registration.foreach(_.close())
 
     case Terminated(actorRef) ⇒
@@ -77,7 +76,7 @@ case class LocationManager(name: String) extends Actor with ActorLogging {
         registration.foreach(_.close())
         registration = Some(reg)
       case Failure(ex) ⇒
-        log.error(s"${name}: registration failed", ex)
+        log.error(s"$name: registration failed", ex)
     }
   }
 

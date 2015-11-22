@@ -1,0 +1,124 @@
+@startuml
+class ConfigKey {
+prefix
+subsystem
+}
+class ConfigData {
+Map[Key,Any]
+}
+
+interface SequenceConfig
+interface ControlConfig
+interface ObserveConfig
+interface StateVariable
+ConfigType <|-- SetupConfig
+ConfigType o-- ConfigData
+ConfigType o-- ConfigKey
+
+
+
+ConfigType <|-- ObserveConfig
+ConfigType <|-- WaitConfig
+ObserveConfig <|-- ControlConfig
+ObserveConfig <|-- SequenceConfig
+SetupConfig <|-- ControlConfig
+SetupConfig <|-- SequenceConfig
+WaitConfig <|-- SequenceConfig
+ConfigType <|-- DemandState
+DemandState <|-- StateVariable
+ConfigType <|-- CurrentState
+CurrentState <|-- StateVariable
+ConfigType <|-- EventType
+EventType <|-- StatusEvent
+StatusEvent o-- EventInfo
+EventType <|-- ObserveEvent
+ObserveEvent o-- EventInfo
+EventType <|-- SystemEvent
+SystemEvent o-- EventInfo
+@enduml
+
+@startuml
+interface ConfigArg
+interface ControlConfigArg
+interface SequenceConfigArg
+ConfigArg <|-- SequenceConfigArg
+ConfigArg <|-- ControlConfigArg
+SetupConfigArg <|-- SequenceConfigArg
+SetupConfigArg <|-- ControlConfigArg
+SetupConfigArg o-- "1" ConfigInfo
+SetupConfigArg "1" o-- "*" SetupConfig : contains
+
+ObserveConfigArg <|-- SequenceConfigArg
+ObserveConfigArg <|-- ControlConfigArg
+ObserveConfigArg o-- "1" ConfigInfo
+ObserveConfigArg "1" o-- "*" ObserveConfig : contains
+
+WaitConfigArg <|-- SequenceConfigArg
+WaitConfigArg o-- "1" ConfigInfo
+WaitConfigArg o-- "1" WaitConfig
+
+ConfigArgList "a" o-- "*" ConfigArg
+
+
+@enduml
+
+@startuml
+
+
+
+SetupConfigArg o-- "1" ConfigInfo
+SetupConfigArg "1" o-- "*" SetupConfig : contains
+ConfigArg <|-- SetupConfigArg
+
+
+ObserveConfigArg o-- "1" ConfigInfo
+ObserveConfigArg "1" o-- "*" ObserveConfig : contains
+ConfigArg <|-- ObserveConfigArg
+
+WaitConfigArg o-- "1" ConfigInfo
+WaitConfigArg o-- "1" WaitConfig
+ConfigArg <|-- WaitConfigArg
+
+ConfigArgList "1" o-- "*" ConfigArg
+
+
+@enduml
+@startuml
+
+
+
+SetupConfigArg o-- "1" ConfigInfo
+SetupConfigArg "1" o-- "*" SetupConfig : contains
+
+
+
+ObserveConfigArg o-- "1" ConfigInfo
+ObserveConfigArg "1" o-- "*" ObserveConfig : contains
+
+
+
+@enduml
+
+@startuml
+class ConfigKey {
+prefix
+subsystem
+}
+class ConfigData {
+Map[Key,Any]
+}
+
+ConfigType o-- ConfigData
+ConfigType o-- ConfigKey
+
+
+
+
+ConfigType <|-- EventType
+EventType <|-- StatusEvent
+StatusEvent o-- EventInfo
+EventType <|-- ObserveEvent
+ObserveEvent o-- EventInfo
+EventType <|-- SystemEvent
+SystemEvent o-- EventInfo
+@enduml

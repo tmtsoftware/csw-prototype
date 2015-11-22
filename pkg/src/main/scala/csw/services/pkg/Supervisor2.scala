@@ -4,8 +4,8 @@ import akka.actor._
 import csw.services.ccs.PeriodicHcdController2.Process
 import csw.services.loc.LocationService
 import csw.services.pkg.Component2.{ComponentInfo, RegisterAndTrackServices, RegisterOnly}
-import csw.services.pkg.LifecycleManager.UnregisterWithLocationService
-import csw.services.pkg.LocationManager.Register
+
+
 import csw.services.pkg.Supervisor2.EndProcessing
 
 import scala.concurrent.duration.FiniteDuration
@@ -54,16 +54,19 @@ object Supervisor2 {
   */
 case class Supervisor2(componentProps: Props, componentInfo: ComponentInfo)
   extends Actor with ActorLogging {
+  import LocationManager._
 
   val locationManager = context.system.actorOf(LocationManager.props(componentInfo.name), s"${componentInfo.name}")
 
-
-  componentInfo.locationServiceUsage match {
-    case RegisterOnly | RegisterAndTrackServices =>
-      log.info("registering component")
-      locationManager ! Register(componentInfo.serviceId, componentInfo.prefix)
-    case _ =>
+  override def preStart(): Unit = {
+    componentInfo.locationServiceUsage match {
+      case RegisterOnly | RegisterAndTrackServices =>
+        log.info("registering component")
+        locationManager ! Register(componentInfo.serviceId, componentInfo.prefix)
+      case _ =>
+    }
   }
+
 
   // Result of last location service registration, can be used to unregister (by calling close())
   var registration: Option[LocationService.Registration] = None
@@ -75,10 +78,9 @@ case class Supervisor2(componentProps: Props, componentInfo: ComponentInfo)
 
   def receive: Receive = {
 
-    case EndProcessing ⇒ {
+    case EndProcessing ⇒
       locationManager ! UnregisterWithLocationService
       endComponent()
-    }
 
     case Terminated(actorRef) ⇒ terminated(actorRef)
 
@@ -86,11 +88,6 @@ case class Supervisor2(componentProps: Props, componentInfo: ComponentInfo)
   }
 
 
-  // ---
-
-  private def unexpectedMessage(msg: Any, state: String): Unit = {
-    log.error(s"$name: Unexpected cmessage: $msg in $state state")
-  }
 
   // The default supervision behavior will normally restart the component automatically.
   // The Terminated message should only be received if we manually stop the component, or a

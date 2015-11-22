@@ -80,7 +80,7 @@ lazy val cs = project
 lazy val pkg = project
   .settings(defaultSettings: _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(ccs % "compile->compile;test->test", util % "compile->compile;test->test", log, loc, ts)
+  .dependsOn(ccs % "compile->compile;test->test", util % "compile->compile;test->test", log, loc, ts, event, kvs)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)

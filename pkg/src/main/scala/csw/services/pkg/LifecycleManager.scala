@@ -1,14 +1,12 @@
 package csw.services.pkg
 
 import akka.actor._
-import csw.services.ccs.{ CommandStatus, PeriodicHcdController }
-import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{ ResolvedService, ServicesReady }
-import csw.services.loc.{ ServiceType, ServiceRef, LocationService, ServiceId }
-import csw.util.cfg.Configurations.ControlConfigArg
-import csw.util.cfg.RunId
 
-import scala.util.{ Failure, Success }
+
+
+import csw.services.loc. ServiceId
+//import csw.util.cfg.Configurations.ControlConfigArg
+//import csw.util.cfg.RunId
 
 object LifecycleManager {
 
@@ -82,38 +80,33 @@ object LifecycleManager {
   /**
     * When this message is received, the component is unregistered from the location service
     */
-  case object UnregisterWithLocationService
+  //case object UnregisterWithLocationService
 
   /**
-    * Used to create the Supervisor actor
-    * @param componentProps used to create the component
-    * @param serviceId service used to register the component with the location service
-    * @param prefix the configuration prefix (part of configs that component should receive)
-    * @param services a list of service ids for the services the component depends on
-    * @return an object to be used to create the Supervisor actor
-    */
-  def props(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): Props =
-    Props(classOf[LifecycleManager], componentProps, serviceId, prefix, services)
+    * Used to create the Lifecycle actor
+*/
+  def props(supervisor: ActorRef, serviceId: ServiceId, component: ActorRef): Props =
+    Props(classOf[LifecycleManager], supervisor, serviceId, component)
 }
 
 /**
   * A supervisor actor that manages the component actor given by the arguments
   * (see props() for argument descriptions).
   */
-case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId])
+case class LifecycleManager(supervisor: ActorRef, serviceId: ServiceId, component: ActorRef)
   extends Actor with ActorLogging {
-
-  import Supervisor._
+  import LifecycleManager._
 
   // Used to notify subscribers of a change in the lifecycle
   var lifecycleStateListeners = Map[ActorRef, Boolean]()
 
+
   // Result of last location service registration, can be used to unregister (by calling close())
-  var registration: Option[LocationService.Registration] = None
+//  var registration: Option[LocationService.Registration] = None
 
   val name = serviceId.name
-  val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
-  val component = startComponent()
+  //val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
+
 
   context.become(loaded(Loaded(name)))
 
@@ -121,13 +114,6 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case Terminated(actorRef) ⇒
       terminated(actorRef)
 
-    // Forward periodic Process messages in any case
-    // (XXX What if the HCD has messages in the queue and leaves the running state? Could also reschedule? Or let HCD decide? )
-    case process@PeriodicHcdController.Process(rate) ⇒
-      component ! process
-
-    case UnregisterWithLocationService ⇒
-      registration.foreach(_.close())
   }
 
   // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
@@ -138,13 +124,13 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case Initialize ⇒
       log.debug(s"$name received Initialize")
       component ! Initialize
-      registerWithLocationService()
+      //registerWithLocationService()
       context.become(loaded(Initialized(name)))
 
     case Startup ⇒
       log.debug(s" $name received Startup")
       component ! Initialize
-      registerWithLocationService()
+      //registerWithLocationService()
       context.become(loaded(Running(name)))
 
     case Shutdown ⇒
@@ -175,10 +161,10 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
 
     case SubscribeToLifecycleStates(onlyRunning) ⇒
       subscribeToLifecycleStates(Loaded(name), onlyRunning)
-
+/*
     case configArg: ControlConfigArg ⇒
       cmdStatusError(configArg.info.runId, "loaded", "running")
-
+*/
     case msg ⇒
       unexpectedMessage(msg, "loaded")
   }
@@ -191,7 +177,7 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case Startup ⇒
       log.debug(s" $name received Startup")
       component ! _
-      requestServices()
+      //requestServices()
       context.become(initialized(Running(name)))
 
     case Shutdown ⇒
@@ -223,9 +209,10 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
     case SubscribeToLifecycleStates(onlyRunning) ⇒
       subscribeToLifecycleStates(Initialized(name), onlyRunning)
 
+      /*
     case configArg: ControlConfigArg ⇒
       cmdStatusError(configArg.info.runId, "initialized", "running")
-
+*/
     case msg ⇒
       unexpectedMessage(msg, "initialized")
   }
@@ -290,50 +277,9 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
 
   }
 
-  // Starts the component actor
-  private def startComponent(): ActorRef = {
-    log.info(s"Starting $name")
-    val actorRef = context.actorOf(componentProps, name)
-    context.watch(actorRef)
-    actorRef
-  }
 
-  // Registers this actor with the location service.
-  // The value returned from registerAkkaService can be used to call a close()
-  // method that unregisters the component again. This also ends the jmdns thread
-  // that renews the lease on the DNS registration.
-  // If this method is called multiple times, the previous registration is closed,
-  // so that there are no hanging jmdns threads from previous registrations.
-  private def registerWithLocationService(): Unit = {
-    import context.dispatcher
-    LocationService.registerAkkaService(serviceId, self, prefix)(context.system).onComplete {
-      case Success(reg) ⇒
-        registration.foreach(_.close())
-        registration = Some(reg)
-      case Failure(ex) ⇒
-        log.error(s"Location Service registration failed", ex)
-    }
-  }
 
-  // If not already started, start an actor to manage getting the services the
-  // component depends on.
-  // Once all the services are available, it sends a ServicesReady message to the component.
-  // If any service terminates, a Disconnected message is sent to this actor.
-  private def requestServices(): Unit = {
-    if (serviceId.serviceType != ServiceType.HCD) {
-      // HCDs don't need services(?) (Who needs them besides assemblies?)
-      if (serviceRefs.nonEmpty) {
-        // Services required: start a local location service actor to monitor them
-        log.debug(s" requestServices $services")
-        val actorName = s"$name-loc-client"
-        if (context.child(actorName).isEmpty)
-          context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
-      } else {
-        // No services required: tell the component
-        component ! ServicesReady(Map[ServiceRef, ResolvedService]())
-      }
-    }
-  }
+
 
   // Called when a lifecycle state message is received from the component.
   // If not yet in the target state, sends a command to the component to go
@@ -366,7 +312,8 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
         currentState match {
           case Loaded(_) ⇒ component ! Initialize
           case Initialized(_) ⇒
-            component ! Startup; requestServices()
+            component ! Startup;
+            //requestServices()
           case Running(_) ⇒
         }
     }
@@ -376,12 +323,14 @@ case class LifecycleManager(componentProps: Props, serviceId: ServiceId, prefix:
   // Sends a command status error message indicating that the component is not in the required state or condition.
   // Note that we send it to the component, which forwards it to its commandStatusActor, so it is handled like
   // other status messages.
+  /*
   private def cmdStatusError(runId: RunId, currentCond: String, requiredCond: String): Unit = {
     val msg = s"$name is $currentCond, but not $requiredCond"
     log.warning(msg)
     // XXX FIXME
     sender() ! CommandStatus.Error(runId, msg)
   }
+  */
 
   // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state
   // XXX TODO: Cleanup old subscribers?

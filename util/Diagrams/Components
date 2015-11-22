@@ -1,0 +1,243 @@
+@startuml
+interface Component
+interface ActorLogging
+
+class ComponentInfo {
+serviceId
+prefix
+actorSystem
+supervisor
+}
+
+Component <|-- Assembly
+Component <|-- Hcd
+Actor <|-- Assembly
+Actor <|-- Hcd
+ActorLogging <|-- Assembly
+ActorLogging <|-- Hcd
+
+Actor <|-- Container
+ActorLogging <|-- Container
+
+Container o-- Map
+Map o-- "*" ComponentInfo
+
+Assembly <|-- StandaloneApp
+Hcd <|-- StandaloneApp
+@enduml
+
+
+
+
+
+@startuml
+
+Component <|-- Assembly
+Actor <|-- Assembly
+Assembly <|- Assembly1
+
+AssemblyController <|-- Assembly1
+LifecycleHandler <|-- Assembly1
+@enduml
+
+@startuml
+
+Component <|-- Hcd
+Actor <|-- Hcd
+
+Hcd <|-- MyHcd
+PeriodicHcdController <|-- MyHcd
+LifecycleHandler <|-- MyHcd
+@enduml
+
+
+@startuml
+
+object Supervisor
+object UserTopLevel
+
+Component <|-- Hcd
+Actor <|-- Hcd
+Hcd <|-- UserTopLevel
+Supervisor o-- UserTopLevel
+PeriodicHcdController o-- UserTopLevel
+LifecycleHandler o-- UserTopLevel
+UserTopLevel o-- OtherUserActorsAndClasses
+
+@enduml
+
+@startuml
+
+object Supervisor
+object MyHcd
+
+
+Supervisor o-- MyHcd
+PeriodicHcdController o-- MyHcd
+LifecycleHandler o-- MyHcd
+MyHcd o-- OtherUserActorsAndClasses
+
+@enduml
+
+
+
+@startuml
+
+ContainerOrApp -> Supervisor : Startup
+
+alt successful case
+
+Supervisor -> LifecycleHandler : Initialize
+Supervisor -> LocationService: registerService
+
+LifecycleHandler -> UserTopLevel : initialize
+UserTopLevel -> LifecycleHandler : Success
+LifecycleHandler -> Supervisor : Initialized
+
+
+else failure case
+
+UserTopLevel -> LifecycleHandler : Failure(reason)
+LifecycleHandler -> Supervisor : InitializeFailed(reason)
+
+end
+
+
+Supervisor -> LifecycleHandler : Startup
+note left: rest assumes success
+Supervisor -> LocationService : requestServices
+LifecycleHandler -> UserTopLevel : startup
+UserTopLevel -> LifecycleHandler : Success/Failure
+LifecycleHandler -> Supervisor : Running
+
+@enduml
+
+@startuml
+
+externalActor -> Supervisor : Submit(setupConfigArg)
+Supervisor -> Supervisor : doChecks
+Supervisor ->  AssemblyController : Submit(setupConfigArg)
+
+AssemblyController -> TopLevelActor : setup(setupConfigArg)
+alt successful case
+
+
+TopLevelActor -> AssemblyController : Valid
+AssemblyController -> externalActor : CommandStatus.Accepted
+
+else unsuccessful case
+
+TopLevelActor -> AssemblyController : Invalid(reason)
+AssemblyController -> externalActor : CommandStatus.Error(reason)
+
+end
+
+TopLevelActor -> TopLevelActor : evaluate submit
+
+TopLevelActor -> HCD : Submit(SetupConfig)
+
+create StateMatcher
+
+TopLevelActor -> StateMatcher: match(demands,current, matchCondition)
+activate StateMatcher
+
+alt successful case
+
+StateMatcher -> externalActor : CommandStatus.Completed
+
+else timeout/failure case
+
+StateMatcher -> externalActor : CommandStatus.Error("time out")
+
+deactivate StateMatcher
+
+end
+
+
+@enduml
+
+@startuml
+
+
+Supervisor -> LifecycleHandler : Startup
+
+Supervisor -> LocationService : requestServices
+LifecycleHandler -> UserTopLevel : startup
+UserTopLevel -> LifecycleHandler : Success/Failure
+LifecycleHandler -> Supervisor : Running
+
+...Some time later...
+
+LocationService -> AssemblyController: ServicesReady(references)
+note right
+This is where the
+LocationService notifies
+that services are
+connected.
+end note
+
+AssemblyController -> UserTopLevel : connected(references)
+
+...Some time later...
+
+LocationService -> AssemblyController: Disconnected
+AssemblyController -> UserTopLevel : disconnected
+
+...Some time later...
+
+LocationService -> AssemblyController: ServicesReady(references)
+AssemblyController -> UserTopLevel : connected(references)
+@enduml
+
+@startuml
+
+autonumber
+
+MyAssembly -> Supervisor : Submit(setupConfig)
+
+Supervisor ->  PeriodicHcdController : Submit(setupConfig)
+PeriodicHcdController -> PeriodicHcdController: EnQueue(setupConfig)
+
+...One Period Later...
+
+PeriodicHcdController -> MyHcd : process
+
+MyHcd -> MyHcd : nextConfig:SetupConfig
+MyHcd -> MyHcd : evaluate config
+
+MyHcd -> ProtocolActor : writePlantValues
+ProtocolActor -> Motion: write
+MyHcd -> UpdateActor : update
+
+
+
+...Some Other HCD Actors...
+
+UpdateActor -> ProtocolActor : readPlantValues
+ProtocolActor -> Motion : read
+UpdateActor <-- ProtocolActor : values
+
+
+
+UpdateActor -> StateVariableStore: publish(stateVariables)
+
+
+@enduml
+
+@startuml
+
+object Supervisor
+object MyHcd
+
+
+Supervisor o-- MyHcd
+PeriodicHcdController o-- MyHcd
+LifecycleHandler o-- MyHcd
+
+Actor <|-- UpdateActor
+
+Actor <|-- ProtocolActor
+
+
+
+@enduml

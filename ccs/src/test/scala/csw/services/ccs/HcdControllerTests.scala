@@ -3,7 +3,6 @@ package csw.services.ccs
 import akka.actor._
 import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.ccs.CommandStatus
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdController.Process
 import csw.services.kvs._

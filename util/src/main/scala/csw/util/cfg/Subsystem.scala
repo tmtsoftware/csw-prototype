@@ -55,7 +55,7 @@ object Subsystem {
   val subsystems: Set[Subsystem] = Set(AOESW, APS, CIS, CSW, DMS, DPS, ENC, ESEN, ESW,
     GMS, IRIS, IRMS, LGSF, M1CS, M2CS, M3CS, MCS,
     NFIRAOS, NSCU, OSS, PFCS, PSFR, RPG, SCMS,
-    SOSS, STR, SUM, TCS, TINC, WFOS)
+    SOSS, STR, SUM, TCS, TINC, WFOS, TEST)
 
   def lookup(in: String): Option[Subsystem] = subsystems.find(sub ⇒ sub.prefix.equalsIgnoreCase(in))
 }
