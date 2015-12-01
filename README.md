@@ -48,6 +48,14 @@ Install script
 The script ./install.sh creates an install directory (../install) containing scripts and all of the required dependencies
 for starting the CSW applications.
 
+Runtime Dependencies
+--------------------
+
+The kvs project assumes that redis-server is running (http://redis.io/).
+
+The event service can be configured to use an embedded server, but by default
+depends on an external Hornetq server running (http://hornetq.jboss.org/).
+
 
 Projects and Directories
 ------------------------

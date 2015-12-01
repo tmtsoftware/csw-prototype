@@ -8,7 +8,6 @@ import csw.services.loc.LocationService.ResolvedService
 import csw.services.loc.ServiceRef
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
-import csw.util.cfg.TestConfig
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix

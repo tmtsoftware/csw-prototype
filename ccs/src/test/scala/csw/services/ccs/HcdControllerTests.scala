@@ -112,7 +112,7 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
 
   test("Test periodic HCD controller") {
     val hcdController = system.actorOf(TestPeriodicHcdController.props())
-    hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
+    hcdController ! Process(1.second)
 
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix1).set(position, "IR2")

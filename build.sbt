@@ -62,13 +62,12 @@ lazy val ccs = project
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaSse) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(log, loc, kvs, util % "compile->compile;test->test")
+  ) dependsOn(log, loc, kvs, util)
 
 // Config Service
 lazy val cs = project
   .settings(defaultSettings: _*)
-  .settings(packageSettings("CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
-  .settings(bashScriptExtraDefines ++= Seq("addJava -Dapplication-name=configService"))
+  .settings(packageSettings("configService", "CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
   .dependsOn(log, loc, util, configServiceAnnex)
   .settings(libraryDependencies ++=
@@ -80,7 +79,7 @@ lazy val cs = project
 lazy val pkg = project
   .settings(defaultSettings: _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(ccs % "compile->compile;test->test", util % "compile->compile;test->test", log, loc, ts)
+  .dependsOn(log, loc, ccs, util, ts % "test", event % "test", kvs % "test")
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
@@ -116,14 +115,14 @@ lazy val containerCmd = Project(id = "containerCmd", base = file("apps/container
 
 // Build the sequencer command line application
 lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
-  .settings(packageSettings("CSW Sequencer", "Scala REPL for running sequences"): _*)
+  .settings(packageSettings("sequencer", "CSW Sequencer", "Scala REPL for running sequences"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline)
   ) dependsOn(pkg, ccs, loc, log)
 
 // Build the config service annex application
 lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("apps/configServiceAnnex"))
-  .settings(packageSettings("CSW Config Service Annex", "Store/retrieve large files for Config Service"): _*)
+  .settings(packageSettings("configServiceAnnex", "CSW Config Service Annex", "Store/retrieve large files for Config Service"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaTest, specs2, akkaTestKit)
@@ -131,7 +130,7 @@ lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("ap
 
 // Build the config service annex application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
-  .settings(packageSettings("CSW Config Service Client", "Command line client for Config Service"): _*)
+  .settings(packageSettings("csClient", "CSW Config Service Client", "Command line client for Config Service"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaStream, scopt) ++
       test(scalaTest, specs2, akkaTestKit)

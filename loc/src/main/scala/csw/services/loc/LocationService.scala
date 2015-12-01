@@ -244,7 +244,8 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
         }
         val prefix = info.getPropertyString(PREFIX_KEY)
         val uriList = info.getURLs(serviceRef.accessType.name).toList.flatMap(getUri)
-        val uri = uriList.head
+        uriList.foreach(uri ⇒ log.info(s"XXX LOC URI = $uri"))
+        val uri = uriList.head // XXX Problem when host has multiple IP addresses
         val rs = ResolvedService(serviceRef, uri, prefix)
         if (serviceRef.accessType == AkkaType) identify(rs)
         resolved += serviceRef -> rs

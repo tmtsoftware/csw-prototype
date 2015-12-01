@@ -50,7 +50,7 @@ object Settings {
   )
 
   // For standalone applications
-  def packageSettings(summary: String, desc: String) = defaultSettings ++
+  def packageSettings(name: String, summary: String, desc: String) = defaultSettings ++
     packagerSettings ++ packageArchetype.java_application ++ Seq(
     version in Rpm := Version,
     rpmRelease := "0",
@@ -60,7 +60,8 @@ object Settings {
     rpmGroup := Some("CSW"),
     packageSummary := summary,
     packageDescription := desc,
-    bashScriptExtraDefines ++= Seq(s"addJava -DCSW_VERSION=$Version")
+    bashScriptExtraDefines ++= Seq(s"addJava -DCSW_VERSION=$Version"),
+    bashScriptExtraDefines ++= Seq(s"addJava -Dapplication-name=$name")
   )
 
   lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(

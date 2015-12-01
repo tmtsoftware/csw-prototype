@@ -11,7 +11,6 @@ import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.ServiceType.HCD
 import csw.services.loc.{ServiceRef, ServiceId, LocationService}
 import csw.services.pkg.Supervisor.LifecycleStateChanged
-import csw.util.cfg.TestConfig
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

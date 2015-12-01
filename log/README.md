@@ -27,11 +27,11 @@ On the central log server machine, run:
 
 * elasticsearch --cluster.name=logstash
 * redis-server
-* logstash agent --verbose -f logstashCentral.conf
+* logstash agent -f logstashCentral.conf
 * logstash web
 
 On the client machines, run:
 
-* logstash agent --verbose -f logstashShipper.conf
+* logstash agent -f logstashShipper.conf
 
 Then go to http://localhost:9292/ to view the Kibana web UI (replace localhost with the name of the central log host).
