@@ -36,6 +36,7 @@ object Settings {
     //    resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/",
     resolvers += "rediscala" at "http://dl.bintray.com/etaty/maven",
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
+    resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
     // local maven repo
     //    resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
     resolvers += sbtResolver.value
