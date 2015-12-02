@@ -125,6 +125,7 @@ case class EventService(prefix: String, host: String = "127.0.0.1", port: Int = 
   /**
    * Publishes the given event (channel is the event prefix).
    * @param event the event to publish
+   * @param expire ime ti live for event
    */
   def publish(event: Event, expire: FiniteDuration = 1.second): Unit = {
     val message = hq.session.createMessage(false)

@@ -1,0 +1,10 @@
+// test env for assembly1 for sequencer
+
+import examples.HCDExample._
+
+val obsId = "obs001"
+val a1 = resolveAssembly("assembly1")
+
+def setRate(rate: Int): Unit = {
+    a1.submit(SetupConfigArg(obsId, SetupConfig(prefix).set(rateKey, rate)))
+}

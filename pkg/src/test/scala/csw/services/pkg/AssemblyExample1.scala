@@ -17,6 +17,10 @@ import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
   */
 object AssemblyExample1 {
 
+  object Assembly1 {
+    def props(name: String, prefix: String): Props = Props(classOf[Assembly1], name, prefix)
+  }
+
   case class Assembly1(name: String, prefix: String) extends Assembly with AssemblyController with LifecycleHandler
     with TimeServiceScheduler {
     import AssemblyController._
@@ -92,17 +96,12 @@ object AssemblyExample1 {
   * Args: name, configPath
   */
 object Assembly1ExampleApp extends App {
-
-  println("Starting! Assemb1")
+  println("Starting! assembly1")
   val name = "assembly1"
   val prefix = "tcs.pos.assem"
   val serviceId = ServiceId(name, ServiceType.Assembly)
-
   val targetServiceId = ServiceId("example1", ServiceType.HCD)
-
-  val props = Props(classOf[Assembly1], name, prefix)
-  //val cname = classOf[HCDDaemon].getName
-  //println("Name: " + cname)
+  val props = Assembly1.props(name, prefix)
 
   val compInfo: ComponentInfo = Component.create(props, serviceId, prefix, List(targetServiceId))
 }

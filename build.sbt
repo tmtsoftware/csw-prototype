@@ -118,7 +118,7 @@ lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
   .settings(packageSettings("sequencer", "CSW Sequencer", "Scala REPL for running sequences"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline)
-  ) dependsOn(pkg, ccs, loc, log)
+  ) dependsOn(pkg, ccs, loc, log, hcdExample)
 
 // Build the config service annex application
 lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("apps/configServiceAnnex"))
@@ -136,6 +136,16 @@ lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
       test(scalaTest, specs2, akkaTestKit)
   ) dependsOn cs
 
+// HCD Example project
+lazy val hcdExample = Project(id = "hcdExample", base = file("examples/hcdExample"))
+  .settings(packageSettings("hcdExample", "HCD Example", "Simple HCD example application"): _*)
+  .dependsOn(pkg, ts, event)
+
+// Assembly Example project
+lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples/assemblyExample"))
+  .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
+  .dependsOn(pkg, ts, hcdExample)
+
 
 // Need a root project for unidoc plugin, so we can merge the scaladocs
 val csw = (project in file(".")).
@@ -151,4 +161,4 @@ val csw = (project in file(".")).
     )
   ).
   aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
-    containerCmd, sequencer, configServiceAnnex, csClient)
+    containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample)

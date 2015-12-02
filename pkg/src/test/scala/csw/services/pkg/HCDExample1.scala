@@ -42,22 +42,14 @@ object HCDExample1 {
 
 /**
  * Starts Hcd2 as a standalone application.
- * Args: name, configPath
  */
 object HCDExample1App extends App {
-  // if (args.length != 2) {
-  //    println("Expected two args: the HCD name and the config path")
-  //    System.exit(1)
-  //  }
-  //val name = args(0)
-  //val configPath = args(1)
   println("Starting!")
   val name = "example1"
   val prefix = "ex1"
   val props = HCDExample1.DaemonHCD.props()
   val serviceId = ServiceId(name, ServiceType.HCD)
   val httpUri = None
-  //val regInfo = RegInfo(serviceId, Some(configPath), httpUri)
   val services = Nil
   val compInfo = Component.create(props, serviceId, prefix, services)
   val svisor: ActorRef = compInfo.supervisor
