@@ -4,7 +4,15 @@ import examples.HCDExample._
 
 val obsId = "obs001"
 val a1 = resolveAssembly("assembly1")
+val h1 = resolveHcd("example1")
 
+// Sets the rate by sending a message to assembly1
 def setRate(rate: Int): Unit = {
     a1.submit(SetupConfigArg(obsId, SetupConfig(prefix).set(rateKey, rate)))
 }
+
+// Sets the rate by sending a message to HCD "example1"
+def setHcdRate(rate: Int): Unit = {
+    h1.submit(SetupConfig(prefix).set(rateKey, rate))
+}
+

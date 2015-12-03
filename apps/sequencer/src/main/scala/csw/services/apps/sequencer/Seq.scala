@@ -2,10 +2,12 @@ package csw.services.apps.sequencer
 
 import akka.actor.{ ActorRef, ActorSystem }
 import akka.util.Timeout
+import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.{ AssemblyClient, BlockingAssemblyClient }
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.{ ServiceRef, ServiceId, LocationService, ServiceType }
 import csw.services.pkg.{ Supervisor, Container }
+import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -22,6 +24,18 @@ object Seq {
     val info = Await.result(LocationService.resolve(Set(serviceRef)), timeout.duration)
     val actorRef = info.services(serviceRef).actorRefOpt.get
     BlockingAssemblyClient(AssemblyClient(actorRef))
+  }
+
+  /**
+   * Returns a client object to use to access the given HCD
+   * @param name the name of the HCD
+   * @return the client object
+   */
+  def resolveHcd(name: String): HcdClient = {
+    val serviceRef = ServiceRef(ServiceId(name, ServiceType.HCD), AkkaType)
+    val info = Await.result(LocationService.resolve(Set(serviceRef)), timeout.duration)
+    val actorRef = info.services(serviceRef).actorRefOpt.get
+    HcdClient(actorRef)
   }
 
   /**
@@ -55,4 +69,15 @@ object Seq {
     def shutdown(): Unit = actorRef ! Supervisor.Shutdown
     def uninitialize(): Unit = actorRef ! Supervisor.Uninitialize
   }
+
+  /**
+   * Returns a client object for working with the given HCD actor
+   * @param actorRef the HCD actor
+   */
+  case class HcdClient(actorRef: ActorRef) {
+    def submit(config: SetupConfig): Unit = {
+      actorRef ! Submit(config)
+    }
+  }
+
 }
