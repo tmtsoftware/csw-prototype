@@ -9,17 +9,17 @@ This directory contains some example code:
 
 The conf directory contains some logstash config files to demonstrate logging to LogStash, ElasticSearch and Kibana.
 
-Configuring Logging
--------------------
+Running the HCD and Assembly
+----------------------------
 
-Applications that wish to log should add the csw log project as a dependency, so that the logback.xml config file
-will be found. This configures logging to go to the console and, if the system property "application-name" is
-defined, to ${application-name}.log in the directory the application was started in.
+The csw/install.sh script installs the `assemblyexample` and `hcdexample` commands in ../install/bin.
+These can be used to start the assembly and HCD. They use the location service API (based on Mulicast-DNS)
+to connect.
 
 Running Logstash, Elasticsearch and the Kibana Web UI
 -----------------------------------------------------
 
-Template config files for running Logstash on client and server machines are provided
+Template config files for running Logstash on client and server machines are provided in the conf directory
 (and need to be edited for the local environment, to correct the path names to the log files).
 This is the basic setup, as described in "The Logstash Book":
 
@@ -35,7 +35,9 @@ On the client machines, edit logstashShipper.conf to reference the server and th
 
 * logstash agent -f logstashShipper.conf
 
-Then go to http://localhost:9292/ to view the Kibana web UI (replace localhost with the name of the central log host).
+Then go to http://localhost:9292/ to view the [Kibana](https://www.elastic.co/products/kibana) web UI (replace localhost with the name of the central log host).
+
+For this demo you can select the az and el fields, which are extracted
 
 The following diagram shows the relationships of the various applications in this demo:
 
