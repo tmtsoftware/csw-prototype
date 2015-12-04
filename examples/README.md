@@ -1,24 +1,26 @@
-Log Service
+Examples
 ===========
 
-The Log Service currently consists only of config files and optional, external applications
-(Logstash, Elasticsearch, Kibana) to view and process the log information.
+This directory contains some example code:
 
-The standard logging framework used here is `slf4j` and `logback`. For packages that require `log4j`
-(like OPC UA), there is a bridge: `log4j-over-slf4j` that can be used instead of the log4j dependency.
+* assemblyExample - an example assembly that sends messages to the example HCD
+ 
+* hcdExample - an example HCD that generates position events along with an event subscriber that logs them (for testing)
+
+The conf directory contains some logstash config files to demonstrate logging to LogStash, ElasticSearch and Kibana.
 
 Configuring Logging
 -------------------
 
-Applications that wish to log can add this project as a dependency, so that the logback.xml config file
+Applications that wish to log should add the csw log project as a dependency, so that the logback.xml config file
 will be found. This configures logging to go to the console and, if the system property "application-name" is
-defined, to ${application-name}.log in the current directory.
+defined, to ${application-name}.log in the directory the application was started in.
 
 Running Logstash, Elasticsearch and the Kibana Web UI
 -----------------------------------------------------
 
 Template config files for running Logstash on client and server machines are provided
-(and need to be edited for the local environment).
+(and need to be edited for the local environment, to correct the path names to the log files).
 This is the basic setup, as described in "The Logstash Book":
 
 ![Logstash setup](http://michael.bouvy.net/blog/wp-content/uploads/2013/11/logstach-archi1.png)
@@ -35,6 +37,6 @@ On the client machines, edit logstashShipper.conf to reference the server and th
 
 Then go to http://localhost:9292/ to view the Kibana web UI (replace localhost with the name of the central log host).
 
-The following diagram, taken from the ../examples directory, shows the relationships of the various applications:
+The following diagram shows the relationships of the various applications in this demo:
 
-![Log diagram](../examples/doc/logging.jpg)
+![Log diagram](doc/logging.jpg)

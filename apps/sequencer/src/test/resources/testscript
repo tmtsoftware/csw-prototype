@@ -1,4 +1,5 @@
-// Test input for sequencer (assumes location service and test assembly and HCDs running)
+// Test input for sequencer for csw-pkg-demo project
+// (assumes location service and test assembly and HCDs running)
 
 val a1 = resolveAssembly("Assembly-1")
 val config = SetupConfig(filterPrefix).set(filter, "Y_G0323")

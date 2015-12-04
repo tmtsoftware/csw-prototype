@@ -88,7 +88,7 @@ protected class PosGenerator(name: String, prefix: String) extends Actor with Ac
   val rand = Random
   val eventService = EventService(prefix, EventServiceSettings(context.system))
 
-  // Create a subscriber to positions
+  // Create a subscriber to positions (just for test)
   context.actorOf(Props(classOf[EventPosSubscriber], "ev subscriber", prefix))
 
   var timer = setTimer(1000)
