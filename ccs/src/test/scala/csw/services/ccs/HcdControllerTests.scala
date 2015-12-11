@@ -3,7 +3,6 @@ package csw.services.ccs
 import akka.actor._
 import akka.testkit.{ ImplicitSender, TestKit }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.ccs.CommandStatus
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdController.Process
 import csw.services.kvs._
@@ -56,6 +55,8 @@ object HcdControllerTests {
     override protected def process(config: SetupConfig): Unit = {
       worker ! config
     }
+
+    override protected def additionalReceive: Receive = Actor.emptyBehavior
   }
 
   // -- Test worker actor that simulates doing some work --

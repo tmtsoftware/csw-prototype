@@ -53,6 +53,6 @@ trait HcdController extends Actor with ActorLogging {
   /**
    * Derived classes and traits can extend this to accept additional messages
    */
-  protected def additionalReceive: Receive = Actor.emptyBehavior
+  protected def additionalReceive: Receive
 }
 
