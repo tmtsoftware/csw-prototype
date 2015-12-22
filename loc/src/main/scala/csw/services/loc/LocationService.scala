@@ -80,9 +80,11 @@ object LocationService {
 
   // Get JmDNS instance
   private def getRegistry: JmDNS = {
-    val addr = InetAddress.getLocalHost
-    val hostname = InetAddress.getByName(addr.getHostName).toString
-    val registry = JmDNS.create(addr, hostname)
+//    val addr = InetAddress.getLocalHost
+//    val hostname = InetAddress.getByName(addr.getHostName).toString
+//    val registry = JmDNS.create(addr, hostname)
+    val registry = JmDNS.create()
+    logger.info(s"XXX Using host = ${registry.getHostName} (${registry.getInterface})")
     sys.addShutdownHook(registry.close())
     registry
   }
