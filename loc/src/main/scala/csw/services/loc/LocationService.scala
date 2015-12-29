@@ -224,7 +224,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
     Some(Uri(uriStr).withUserInfo(userInfo).withScheme("akka.tcp"))
   } catch {
     case e: Exception ⇒
-      // dome issue with ipv6 addresses?
+      // some issue with ipv6 addresses?
       //      log.error(s"Couldn't make URI from $uriStr and userInfo $userInfo", e)
       None
   }
