@@ -1,7 +1,7 @@
 package csw.services.loc
 
 import java.net.InetAddress
-import javax.jmdns.{ ServiceEvent, ServiceListener, ServiceInfo, JmDNS }
+import javax.jmdns.{ServiceEvent, ServiceListener, ServiceInfo, JmDNS}
 import akka.actor._
 import akka.http.scaladsl.model.Uri
 import akka.util.Timeout
@@ -10,13 +10,13 @@ import csw.services.loc.AccessType.AkkaType
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import LocationService._
 
 /**
- * Location Service based on Multicast DNS (AppleTalk, Bonjour).
- * Note: On a mac, you can use the command line tool dns-sd to browser the registered services.
- */
+  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
+  * Note: On a mac, you can use the command line tool dns-sd to browser the registered services.
+  */
 object LocationService {
 
   private val logger = Logger(LoggerFactory.getLogger("LocationService"))
@@ -36,20 +36,21 @@ object LocationService {
   private val PREFIX_KEY = "prefix"
 
   /**
-   * Used to create the actor
-   * @param serviceRefs list of services to look for
-   * @param replyTo optional actorRef to reply to (default: parent of this actor)
-   */
+    * Used to create the actor
+    *
+    * @param serviceRefs list of services to look for
+    * @param replyTo     optional actorRef to reply to (default: parent of this actor)
+    */
   def props(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRef] = None): Props =
     Props(classOf[LocationService], serviceRefs, replyTo)
 
   /**
-   * Returned from register calls so that client can close the connection and deregister the service
-   */
+    * Returned from register calls so that client can close the connection and deregister the service
+    */
   trait Registration {
     /**
-     * Closes the connection and unregisters services registered with this instance
-     */
+      * Closes the connection and unregisters services registered with this instance
+      */
     def close(): Unit
   }
 
@@ -58,32 +59,38 @@ object LocationService {
   }
 
   /**
-   * Holds information for a resolved service
-   * @param serviceRef describes the service
-   * @param uri the URI for the service
-   * @param actorRefOpt set if this is an Akka/actor based service
-   * @param prefix for actor based services, indicates the part of a configuration it is interested in, otherwise empty string
-   */
+    * Holds information for a resolved service
+    *
+    * @param serviceRef  describes the service
+    * @param uri         the URI for the service
+    * @param actorRefOpt set if this is an Akka/actor based service
+    * @param prefix      for actor based services, indicates the part of a configuration it is interested in, otherwise empty string
+    */
   case class ResolvedService(serviceRef: ServiceRef, uri: Uri, prefix: String = "", actorRefOpt: Option[ActorRef] = None)
 
   /**
-   * Message sent to the parent actor whenever all the requested services become available
-   * @param services maps requested services to the resolved information
-   */
+    * Message sent to the parent actor whenever all the requested services become available
+    *
+    * @param services maps requested services to the resolved information
+    */
   case class ServicesReady(services: Map[ServiceRef, ResolvedService])
 
   /**
-   * Message sent when one of the requested services disconnects
-   * @param serviceRef describes the disconnected service
-   */
+    * Message sent when one of the requested services disconnects
+    *
+    * @param serviceRef describes the disconnected service
+    */
   case class Disconnected(serviceRef: ServiceRef)
 
   // Get JmDNS instance
   private def getRegistry: JmDNS = {
-//    val addr = InetAddress.getLocalHost
-//    val hostname = InetAddress.getByName(addr.getHostName).toString
-//    val registry = JmDNS.create(addr, hostname)
-    val registry = JmDNS.create()
+    val hostname = Option(System.getProperty("akka.remote.netty.tcp.hostname"))
+    val registry = if (hostname.isDefined) {
+      val addr = InetAddress.getByName(hostname.get)
+      JmDNS.create(addr, hostname.get)
+    } else {
+      JmDNS.create()
+    }
     logger.info(s"Using host = ${registry.getHostName} (${registry.getInterface})")
     sys.addShutdownHook(registry.close())
     registry
@@ -96,14 +103,14 @@ object LocationService {
   // See http://www.infoq.com/articles/rest-discovery-dns.
 
   /**
-   * Registers the given service for the local host and the given port
-   * (The full name of the local host will be used)
-   *
-   * @param serviceId describes the service
-   * @param port the port the service is running on
-   * @param path the path part of the URI (default: empty)
-   * @return an object that can be used to close the connection and unregister the service
-   */
+    * Registers the given service for the local host and the given port
+    * (The full name of the local host will be used)
+    *
+    * @param serviceId describes the service
+    * @param port      the port the service is running on
+    * @param path      the path part of the URI (default: empty)
+    * @return an object that can be used to close the connection and unregister the service
+    */
   def registerHttpService(serviceId: ServiceId, port: Int, path: String = "")(implicit ec: ExecutionContext): Future[Registration] = {
     val serviceRef = ServiceRef(serviceId, AccessType.HttpType)
     Future {
@@ -118,13 +125,13 @@ object LocationService {
   }
 
   /**
-   * Registers the given service for the local host and the given port
-   * (The full name of the local host will be used)
-   *
-   * @param serviceId describes the service
-   * @param actorRef the actor reference for the actor being registered
-   * @param prefix indicates the part of a command service config that this service is interested in
-   */
+    * Registers the given service for the local host and the given port
+    * (The full name of the local host will be used)
+    *
+    * @param serviceId describes the service
+    * @param actorRef  the actor reference for the actor being registered
+    * @param prefix    indicates the part of a command service config that this service is interested in
+    */
   def registerAkkaService(serviceId: ServiceId, actorRef: ActorRef, prefix: String = "")(implicit system: ActorSystem): Future[Registration] = {
     import system.dispatcher
     val serviceRef = ServiceRef(serviceId, AccessType.AkkaType)
@@ -154,12 +161,12 @@ object LocationService {
     Uri(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
   /**
-   * Convenience method that gets the location service information for a given set of services.
-   *
-   * @param serviceRefs set of requested services
-   * @param system the caller's actor system
-   * @return a future ServicesReady object describing the services found
-   */
+    * Convenience method that gets the location service information for a given set of services.
+    *
+    * @param serviceRefs set of requested services
+    * @param system      the caller's actor system
+    * @return a future ServicesReady object describing the services found
+    */
   def resolve(serviceRefs: Set[ServiceRef])(implicit system: ActorSystem, timeout: Timeout): Future[ServicesReady] = {
     import akka.pattern.ask
     import system.dispatcher
@@ -173,15 +180,15 @@ object LocationService {
 }
 
 /**
- * An actor that notifies the replyTo actor when all the requested services are available.
- * If all services are available, a ServicesReady message is sent. If any of the requested
- * services stops being available, a Disconnected messages is sent.
- *
- * @param serviceRefs set of requested services
- * @param replyTo optional actorRef to reply to (default: parent of this actor)
- */
+  * An actor that notifies the replyTo actor when all the requested services are available.
+  * If all services are available, a ServicesReady message is sent. If any of the requested
+  * services stops being available, a Disconnected messages is sent.
+  *
+  * @param serviceRefs set of requested services
+  * @param replyTo     optional actorRef to reply to (default: parent of this actor)
+  */
 case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRef] = None)
-    extends Actor with ActorLogging with ServiceListener {
+  extends Actor with ActorLogging with ServiceListener {
 
   // Set of resolved services
   var resolved = Map.empty[ServiceRef, ResolvedService]
@@ -239,10 +246,11 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
         // Gets the URI, adding the akka system as user if needed
         def getUri(uriStr: String): Option[Uri] = {
           // XXX ignore ipv6 URLs for now
-          if (uriStr.count(_ == ':') > 2) None else {
+          if (uriStr.count(_ == ':') > 2) None
+          else {
             serviceRef.accessType match {
               case AkkaType ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
-              case _        ⇒ Some(Uri(uriStr))
+              case _ ⇒ Some(Uri(uriStr))
             }
           }
         }
@@ -300,7 +308,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
     case ActorIdentity(id, actorRefOpt) ⇒
       id match {
         case rs: ResolvedService ⇒ actorIdentified(actorRefOpt, rs)
-        case _                   ⇒ log.warning(s"Received unexpected ActorIdentity id: $id")
+        case _ ⇒ log.warning(s"Received unexpected ActorIdentity id: $id")
       }
 
     case Terminated(actorRef) ⇒
@@ -314,16 +322,18 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
 }
 
 /**
- * A class that can be started from non-actor code that runs a location service actor until it
- * gets a result.
- */
+  * A class that can be started from non-actor code that runs a location service actor until it
+  * gets a result.
+  */
 protected object LocationServiceWorker {
+
   case class Request(serviceRefs: Set[ServiceRef])
 
   def props(): Props = Props(classOf[LocationServiceWorker])
 }
 
 protected class LocationServiceWorker extends Actor with ActorLogging {
+
   import LocationServiceWorker._
 
   override def receive: Receive = {
