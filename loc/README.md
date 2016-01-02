@@ -53,9 +53,10 @@ class TestServiceClient extends Actor with ActorLogging {
 Connection Issues
 -----------------
 
-Note: Applications providing services need to have these VM options defined when running:
+Note: Applications using the location service may need to have these VM options defined when running,
+especially when running in a virtual machine (Vmware):
 
-* -Djava.net.preferIPv4Stack=true (due to problems handling ipv6 addresses)
+* -Djava.net.preferIPv4Stack=true (due to problems handling ipv6 addresses in some cases)
 
 * -Dakka.remote.netty.tcp.hostname=XXX.XXX.XXX.XX (To make sure the correct IP addresses is used, in case there are multiple interfaces)
 
