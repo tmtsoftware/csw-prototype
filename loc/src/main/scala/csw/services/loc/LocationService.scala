@@ -35,6 +35,9 @@ object LocationService {
   // Indicates the part of a command service config that this service is interested in
   private val PREFIX_KEY = "prefix"
 
+  // XXX Setting this avoids problems with ipv6 addresses
+  System.setProperty("java.net.preferIPv4Stack", "true")
+
   /**
    * Used to create the actor
    * @param serviceRefs list of services to look for
@@ -84,7 +87,7 @@ object LocationService {
 //    val hostname = InetAddress.getByName(addr.getHostName).toString
 //    val registry = JmDNS.create(addr, hostname)
     val registry = JmDNS.create()
-    logger.info(s"XXX Using host = ${registry.getHostName} (${registry.getInterface})")
+    logger.info(s"Using host = ${registry.getHostName} (${registry.getInterface})")
     sys.addShutdownHook(registry.close())
     registry
   }
@@ -137,7 +140,7 @@ object LocationService {
         PREFIX_KEY -> prefix)
       val service = ServiceInfo.create(dnsType, serviceRef.toString, uri.authority.port, 0, 0, values.asJava)
       registry.registerService(service)
-      logger.info(s"Registered $serviceRef at $uri")
+      logger.info(s"Registered $serviceRef at ${service.getInet4Addresses.toList}")
       RegisterResult(registry)
     }
   }
@@ -188,9 +191,11 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
 
   val registry = getRegistry
 
+  // Check if location is already known
   val serviceInfo = registry.list(dnsType).toList
   for (info ← serviceInfo) resolveService(info)
 
+  // Listen for future changes
   registry.addServiceListener(dnsType, this)
 
   override def postStop(): Unit = {
@@ -199,7 +204,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   }
 
   override def serviceAdded(event: ServiceEvent): Unit = {
-    //    log.info(s"service added: ${event.getName} ${event.getInfo}")
+    log.info(s"service added: ${event.getName} ${event.getInfo}")
   }
 
   override def serviceResolved(event: ServiceEvent): Unit = {
@@ -231,7 +236,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
 
   private def resolveService(info: ServiceInfo): Unit = {
     try {
-      log.debug(s"resolveService $info")
+      log.info(s"resolveService $info")
       val serviceRef = ServiceRef(info.getName)
       if (serviceRefs.contains(serviceRef)) {
         // Gets the URI, adding the akka system as user if needed
@@ -246,7 +251,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
         }
         val prefix = info.getPropertyString(PREFIX_KEY)
         val uriList = info.getURLs(serviceRef.accessType.name).toList.flatMap(getUri)
-        uriList.foreach(uri ⇒ log.info(s"XXX LOC URI = $uri"))
+        uriList.foreach(uri ⇒ log.debug(s"LOC URI = $uri"))
         val uri = uriList.head // XXX Problem when host has multiple IP addresses
         val rs = ResolvedService(serviceRef, uri, prefix)
         if (serviceRef.accessType == AkkaType) identify(rs)

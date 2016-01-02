@@ -19,7 +19,7 @@ class TestServiceClient extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case ServicesReady(services) ⇒
-      log.info(s"Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString(", ")}")
+      log.info(s"Test Passed: Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString(", ")}")
     case Disconnected(serviceRef) ⇒
       log.info(s"Disconnected service: ${serviceRef.serviceId.name}")
     case x ⇒
