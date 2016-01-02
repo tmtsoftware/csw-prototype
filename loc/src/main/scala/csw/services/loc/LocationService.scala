@@ -35,9 +35,6 @@ object LocationService {
   // Indicates the part of a command service config that this service is interested in
   private val PREFIX_KEY = "prefix"
 
-  // XXX Setting this avoids problems with ipv6 addresses
-  System.setProperty("java.net.preferIPv4Stack", "true")
-
   /**
    * Used to create the actor
    * @param serviceRefs list of services to look for
