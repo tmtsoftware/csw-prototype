@@ -53,13 +53,22 @@ class TestServiceClient extends Actor with ActorLogging {
 Connection Issues
 -----------------
 
+The location service is based on Multicast DNS (mDNS). The server process is running by default on
+Mac OS X and CentOS. Make sure the firewall is either disabled or allows port 5353/UDP.
+
 Note: Applications using the location service may need to have these VM options defined when running,
 especially when running in a virtual machine (Vmware):
 
 * -Djava.net.preferIPv4Stack=true (due to problems handling ipv6 addresses in some cases)
 
-* -Dakka.remote.netty.tcp.hostname=XXX.XXX.XXX.XX (To make sure the correct IP addresses is used, in case there are multiple interfaces)
+* -Dakka.remote.netty.tcp.hostname=XXX.XXX.XXX.XX (To make sure Akka uses the correct IP address, in case there are multiple interfaces)
 
+If you run into trouble running a test, such as the location service test, you could try adding the above -D options
+in Idea or Eclipse, or from the command line:
+
+  sbt 'project loc' '; set javaOptions += "-Dakka.remote.netty.tcp.hostname=192.168.178.31" ; test'
+
+(Replacing 192.168.178.31 with your primary IP address).
 
 Command Line Tools
 ------------------
