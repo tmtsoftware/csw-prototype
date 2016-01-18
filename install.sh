@@ -3,12 +3,17 @@
 # Creates a single install directory from all the csw stage directories.
 
 dir=../install
+stage=target/universal/stage
 
 test -d $dir || mkdir -p $dir/bin $dir/lib $dir/conf
 sbt publish-local stage
-for i in bin lib ; do cp -f */target/universal/stage/$i/* $dir/$i/; done
-for i in bin lib ; do cp -f apps/*/target/universal/stage/$i/* $dir/$i/; done
-for i in bin lib ; do cp -f examples/*/target/universal/stage/$i/* $dir/$i/; done
+
+for i in bin lib ; do
+    for j in */target/universal/stage/$i/* apps/*/target/universal/stage/$i/* examples/*/target/universal/stage/$i/* ; do
+        cp -f $j $dir/$i
+    done
+done
+
 rm -f $dir/bin/*.log.* $dir/bin/*.bat
 
 # create the scalas script, for scala scriping (see http://www.scala-sbt.org/release/docs/Scripts.html)
