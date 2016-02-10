@@ -1,6 +1,7 @@
 package csw.services.loc
 
-import java.net.{URI, InetAddress}
+import java.net.{Inet6Address, NetworkInterface, URI, InetAddress}
+import java.util.Collections
 import javax.jmdns._
 import akka.actor._
 import akka.util.Timeout
@@ -22,25 +23,42 @@ object LocationService {
 
   /**
     * Sets the "akka.remote.netty.tcp.hostname" system property, so that any akka actors
-    * created will use the correct IP address. THis method should be called before creating any actors
+    * created will use the correct IP address. This method should be called before creating any actors
     * that depend on the location service.
     *
     * @param hostname if not empty, use this as the hostname, otherwise attempt to guess the main IP address
     */
   def initAkkaRemoteHostname(hostname: String = ""): Unit = {
-    // Get this host's IP address
+    case class Addr(index: Int, addr: InetAddress)
+    def defaultAddr = Addr(0, InetAddress.getLocalHost)
+    def filter(a: Addr): Boolean = {
+      !a.addr.isLoopbackAddress && !a.addr.isInstanceOf[Inet6Address]
+    }
+    // Get this host's IP address.
+    // Note: The trick to getting the right one seems to be in sorting by network interface index
+    // and then ignoring the loopback address.
+    // I'm assuming that the addresses are sorted by priority, although this is not documented anywhere.
     def getIpAddress: String = {
-      val addr = InetAddress.getLocalHost
-      val a = if (addr.isLoopbackAddress) NetworkTopologyDiscovery.Factory.getInstance.getInetAddresses.headOption else Some(addr)
-      a.getOrElse(addr).getHostAddress
+      import scala.collection.JavaConversions._
+      val addresses = for {
+        i <- NetworkInterface.getNetworkInterfaces
+        a ← i.getInetAddresses
+      } yield {
+        logger.debug(s"Found interface ${i.getIndex}: ${i.getName} with address ${a.getHostAddress}")
+        Addr(i.getIndex, a)
+      }
+      addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
     }
 
-    val host = if (hostname.nonEmpty) hostname else getIpAddress
-    System.setProperty("akka.remote.netty.tcp.hostname", host)
-    logger.info(s"Using IP address $host")
-    // XXX FIXME: This should work, but as of akka-2.4 this seems to be broken
-    if (host.count(_ == ':') > 1)
-      logger.error(s"Error: Using ipv6 addresses is not yet supported: Please add -Djava.net.preferIPv4Stack=true to runtime vm options")
+    val key = "akka.remote.netty.tcp.hostname"
+    if (System.getProperty(key) == null) {
+      val host = if (hostname.nonEmpty) hostname else getIpAddress
+      System.setProperty(key, host)
+      logger.info(s"Setting $key to $host")
+      // XXX FIXME: ipv6 addresses should work, but as of akka-2.4 this seems to be broken
+      if (host.count(_ == ':') > 1)
+        logger.error(s"Error: Using ipv6 addresses is not yet supported: Please add -Djava.net.preferIPv4Stack=true to runtime vm options")
+    }
   }
 
   // Multicast DNS service type
