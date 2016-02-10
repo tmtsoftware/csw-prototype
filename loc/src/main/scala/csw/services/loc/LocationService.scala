@@ -1,10 +1,8 @@
 package csw.services.loc
 
-import java.net.InetAddress
-import javax.jmdns.impl.HostInfo
+import java.net.{URI, InetAddress}
 import javax.jmdns._
 import akka.actor._
-import akka.http.scaladsl.model.Uri
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.AccessType.AkkaType
@@ -40,6 +38,9 @@ object LocationService {
     val host = if (hostname.nonEmpty) hostname else getIpAddress
     System.setProperty("akka.remote.netty.tcp.hostname", host)
     logger.info(s"Using IP address $host")
+    // XXX FIXME: This should work, but as of akka-2.4 this seems to be broken
+    if (host.count(_ == ':') > 1)
+      logger.error(s"Error: Using ipv6 addresses is not yet supported: Please add -Djava.net.preferIPv4Stack=true to runtime vm options")
   }
 
   // Multicast DNS service type
@@ -87,7 +88,7 @@ object LocationService {
    * @param actorRefOpt set if this is an Akka/actor based service
    * @param prefix      for actor based services, indicates the part of a configuration it is interested in, otherwise empty string
    */
-  case class ResolvedService(serviceRef: ServiceRef, uri: Uri, prefix: String = "", actorRefOpt: Option[ActorRef] = None)
+  case class ResolvedService(serviceRef: ServiceRef, uri: URI, prefix: String = "", actorRefOpt: Option[ActorRef] = None)
 
   /**
    * Message sent to the parent actor whenever all the requested services become available
@@ -161,10 +162,10 @@ object LocationService {
       val uri = getActorUri(actorRef, system)
       logger.info(s"XXX registering with akka uri: $uri")
       val values = Map(
-        PATH_KEY -> uri.path.toString(),
-        SYSTEM_KEY -> uri.authority.userinfo,
+        PATH_KEY -> uri.getPath,
+        SYSTEM_KEY -> uri.getUserInfo,
         PREFIX_KEY -> prefix)
-      val service = ServiceInfo.create(dnsType, serviceRef.toString, uri.authority.port, 0, 0, values.asJava)
+      val service = ServiceInfo.create(dnsType, serviceRef.toString, uri.getPort, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered $serviceRef at ${service.getInet4Addresses.toList}")
       RegisterResult(registry)
@@ -179,8 +180,8 @@ object LocationService {
   private object RemoteAddressExtension extends ExtensionKey[RemoteAddressExtensionImpl]
 
   // Gets the full URI for the actor
-  private def getActorUri(actorRef: ActorRef, system: ActorSystem): Uri =
-    Uri(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
+  private def getActorUri(actorRef: ActorRef, system: ActorSystem): URI =
+    new URI(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
   /**
    * Convenience method that gets the location service information for a given set of services.
@@ -251,12 +252,19 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
     }
   }
 
-  private def getAkkaUri(uriStr: String, userInfo: String): Option[Uri] = try {
-    Some(Uri(uriStr).withUserInfo(userInfo).withScheme("akka.tcp"))
+  /*
+      public URI(String scheme,
+               String userInfo, String host, int port,
+               String path, String query, String fragment)
+
+   */
+  private def getAkkaUri(uriStr: String, userInfo: String): Option[URI] = try {
+    val uri = new URI(uriStr)
+    Some(new URI("akka.tcp", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))
   } catch {
     case e: Exception ⇒
       // some issue with ipv6 addresses?
-      //      log.error(s"Couldn't make URI from $uriStr and userInfo $userInfo", e)
+      log.error(s"Couldn't make URI from $uriStr and userInfo $userInfo", e)
       None
   }
 
@@ -267,16 +275,10 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
       if (serviceRefs.contains(serviceRef)) {
 
         // Gets the URI, adding the akka system as user if needed
-        def getUri(uriStr: String): Option[Uri] = {
-          // XXX FIXME: ignore ipv6 URLs for now
-          if (uriStr.count(_ == ':') > 2) {
-            log.warning(s"location service: ignoring ipv8 URI: $uriStr")
-            None
-          } else {
-            serviceRef.accessType match {
-              case AkkaType ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
-              case _        ⇒ Some(Uri(uriStr))
-            }
+        def getUri(uriStr: String): Option[URI] = {
+          serviceRef.accessType match {
+            case AkkaType ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
+            case _ ⇒ Some(new URI(uriStr))
           }
         }
 
@@ -314,7 +316,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   // Sends an Identify message to the URI for the actor, which should result in an
   // ActorIdentity reply containing the actorRef.
   private def identify(rs: ResolvedService): Unit = {
-    val actorPath = ActorPath.fromString(rs.uri.toString())
+    val actorPath = ActorPath.fromString(rs.uri.toString)
     log.info(s"Attempting to identify actor ${rs.uri}")
     context.actorSelection(actorPath) ! Identify(rs)
   }

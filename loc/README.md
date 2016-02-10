@@ -1,6 +1,8 @@
 Location Service
 =====================
 
+(__Note: ipv6 is not currently supported: Please add -Djava.net.preferIPv4Stack=true to vm options at runtime!__)
+
 The Location Service implemented in this project is based on Multicast DNS.
 The necessary support for this should already be available on Mac and Linux machines.
 The Location Service helps you to find out the hostname and port number for a service,
@@ -59,9 +61,12 @@ Mac OS X and CentOS. Make sure the firewall is either disabled or allows port 53
 Note: Applications using the location service may need to have these VM options defined when running,
 especially when running in a virtual machine (Vmware):
 
-* -Djava.net.preferIPv4Stack=true (due to problems handling ipv6 addresses in some cases)
+* -Djava.net.preferIPv4Stack=true (due to problems in Akka-2.4 classes handling ipv6 addresses in some cases)
 
 * -Dakka.remote.netty.tcp.hostname=XXX.XXX.XXX.XX (To make sure Akka uses the correct IP address, in case there are multiple interfaces)
+
+You can avoid having to specify the IP address by calling `LocationService.initAkkaRemoteHostname()` once before creating any akka based services.
+It tries to choose the correct IP address and ignore the obviously wrong ones and sets the akka.remote.netty.tcp.hostname system property.
 
 If you run into trouble running a test, such as the location service test, you could try adding the above -D options
 in Idea or Eclipse, or from the command line:
