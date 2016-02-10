@@ -1,7 +1,8 @@
 package csw.services.loc
 
 import java.net.InetAddress
-import javax.jmdns.{ ServiceEvent, ServiceListener, ServiceInfo, JmDNS }
+import javax.jmdns.impl.HostInfo
+import javax.jmdns._
 import akka.actor._
 import akka.http.scaladsl.model.Uri
 import akka.util.Timeout
@@ -20,6 +21,26 @@ import LocationService._
 object LocationService {
 
   private val logger = Logger(LoggerFactory.getLogger("LocationService"))
+
+  /**
+    * Sets the "akka.remote.netty.tcp.hostname" system property, so that any akka actors
+    * created will use the correct IP address. THis method should be called before creating any actors
+    * that depend on the location service.
+    *
+    * @param hostname if not empty, use this as the hostname, otherwise attempt to guess the main IP address
+    */
+  def initAkkaRemoteHostname(hostname: String = ""): Unit = {
+    // Get this host's IP address
+    def getIpAddress: String = {
+      val addr = InetAddress.getLocalHost
+      val a = if (addr.isLoopbackAddress) NetworkTopologyDiscovery.Factory.getInstance.getInetAddresses.headOption else Some(addr)
+      a.getOrElse(addr).getHostAddress
+    }
+
+    val host = if (hostname.nonEmpty) hostname else getIpAddress
+    System.setProperty("akka.remote.netty.tcp.hostname", host)
+    logger.info(s"Using IP address $host")
+  }
 
   // Multicast DNS service type
   private val dnsType = "_csw._tcp.local."
@@ -138,6 +159,7 @@ object LocationService {
     Future {
       val registry = getRegistry
       val uri = getActorUri(actorRef, system)
+      logger.info(s"XXX registering with akka uri: $uri")
       val values = Map(
         PATH_KEY -> uri.path.toString(),
         SYSTEM_KEY -> uri.authority.userinfo,
@@ -190,7 +212,7 @@ object LocationService {
 case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRef] = None)
     extends Actor with ActorLogging with ServiceListener {
 
-  // Set of resolved services
+  // Set of resolved services (Needs to be a var, since the ServiceListener callbacks prevent using akka state)
   var resolved = Map.empty[ServiceRef, ResolvedService]
 
   val registry = getRegistry
@@ -246,7 +268,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
 
         // Gets the URI, adding the akka system as user if needed
         def getUri(uriStr: String): Option[Uri] = {
-          // XXX ignore ipv6 URLs for now
+          // XXX FIXME: ignore ipv6 URLs for now
           if (uriStr.count(_ == ':') > 2) {
             log.warning(s"location service: ignoring ipv8 URI: $uriStr")
             None
@@ -259,15 +281,16 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
         }
 
         val prefix = info.getPropertyString(PREFIX_KEY)
-        val uriList = info.getURLs(serviceRef.accessType.name).toList.flatMap(getUri)
-        uriList.foreach(uri ⇒ log.info(s"location service: URI = $uri"))
-        // XXX Problem when host has multiple IP addresses
-        uriList.headOption.foreach {
+        info.getURLs(serviceRef.accessType.name).toList.flatMap(getUri).foreach {
           uri ⇒
+            log.info(s"location service: resolve URI = $uri")
             val rs = ResolvedService(serviceRef, uri, prefix)
-            if (serviceRef.accessType == AkkaType) identify(rs)
-            resolved += serviceRef -> rs
-            checkResolved()
+            if (serviceRef.accessType == AkkaType) {
+              identify(rs)
+            } else {
+              resolved += serviceRef -> rs
+              checkResolved()
+            }
         }
       }
     } catch {
