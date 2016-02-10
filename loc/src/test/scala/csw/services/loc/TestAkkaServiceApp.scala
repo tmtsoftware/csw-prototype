@@ -4,7 +4,7 @@ import akka.actor._
 import csw.services.loc.AccessType.AkkaType
 
 object TestAkkaServiceApp extends App {
-  LocationService.initAkkaRemoteHostname()
+  LocationService.initInterface()
   implicit lazy val system = ActorSystem("TestAkkaServiceApp")
   implicit val dispatcher = system.dispatcher
   sys.addShutdownHook(system.terminate())

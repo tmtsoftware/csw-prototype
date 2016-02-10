@@ -22,13 +22,13 @@ object LocationService {
   private val logger = Logger(LoggerFactory.getLogger("LocationService"))
 
   /**
-    * Sets the "akka.remote.netty.tcp.hostname" system property, so that any akka actors
-    * created will use the correct IP address. This method should be called before creating any actors
-    * that depend on the location service.
+    * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
+    * set, so that any services or akka actors created will use and publish the correct IP address.
+    * This method should be called before creating any actors or web services that depend on the location service.
     *
-    * @param hostname if not empty, use this as the hostname, otherwise attempt to guess the main IP address
+    * @param hostname if not empty, use this as the hostname or IP address, otherwise attempt to guess the main IP address
     */
-  def initAkkaRemoteHostname(hostname: String = ""): Unit = {
+  def initInterface(hostname: String = ""): Unit = {
     case class Addr(index: Int, addr: InetAddress)
     def defaultAddr = Addr(0, InetAddress.getLocalHost)
     def filter(a: Addr): Boolean = {
@@ -50,14 +50,21 @@ object LocationService {
       addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
     }
 
-    val key = "akka.remote.netty.tcp.hostname"
-    if (System.getProperty(key) == null) {
+    val akkaKey = "akka.remote.netty.tcp.hostname"
+    val mdnsKey = "net.mdns.interface"
+    if (System.getProperty(akkaKey) == null || System.getProperty(mdnsKey) == null) {
       val host = if (hostname.nonEmpty) hostname else getIpAddress
-      System.setProperty(key, host)
-      logger.info(s"Setting $key to $host")
+      if (System.getProperty(akkaKey) == null) {
+        logger.info(s"Setting $akkaKey to $host")
+        System.setProperty(akkaKey, host)
+      }
+      if (System.getProperty(mdnsKey) == null) {
+        logger.info(s"Setting $mdnsKey to $host")
+        System.setProperty(mdnsKey, host)
+      }
       // XXX FIXME: ipv6 addresses should work, but as of akka-2.4 this seems to be broken
       if (host.count(_ == ':') > 1)
-        logger.error(s"Error: Using ipv6 addresses is not yet supported: Please add -Djava.net.preferIPv4Stack=true to runtime vm options")
+        logger.error(s"Warning: Using ipv6 addresses is not yet supported: Please add -Djava.net.preferIPv4Stack=true to runtime vm options")
     }
   }
 

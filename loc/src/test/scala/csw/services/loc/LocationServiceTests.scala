@@ -13,7 +13,7 @@ import scala.util.{Success, Failure}
 
 
 object LocationServiceTests {
-  LocationService.initAkkaRemoteHostname()
+  LocationService.initInterface()
 
   val system = ActorSystem("Test")
 }
