@@ -1,13 +1,29 @@
 Location Service
 =====================
 
-(__Note: ipv6 is not currently supported: Please add -Djava.net.preferIPv4Stack=true to vm options at runtime!__)
-
 The Location Service implemented in this project is based on Multicast DNS.
 The necessary support for this should already be available on Mac and Linux machines.
 The Location Service helps you to find out the hostname and port number for a service,
 as well as other information for determining the correct URI to use, such as the path,
 the actor system name and the config prefix.
+
+Important
+---------
+
+Before starting any services that use the location service, this method should be called once:
+
+    LocationService.initInterface()
+
+This determines the primary IP address of the local host and sets some system variables that 
+control which IP address is used. If you forget to call this method, there is a chance that 
+the wrong IP address will be advertized (there is often more than one). 
+
+If you want to specify the IP address yourself, you can also call it like this:
+
+    LocationService.initInterface(hostnameOrIpAddress)
+
+Service Types
+-------------
 
 Two types of services are currently supported: Akka/actor based and HTTP based services.
 To register an Akka actor based service, you can use code like this:
@@ -58,22 +74,16 @@ Connection Issues
 The location service is based on Multicast DNS (mDNS). The server process is running by default on
 Mac OS X and CentOS. Make sure the firewall is either disabled or allows port 5353/UDP.
 
-Note: Applications using the location service may need to have these VM options defined when running,
-especially when running in a virtual machine (Vmware):
+Applications using the location service may, but should not need to, define these VM options when running:
 
-* -Djava.net.preferIPv4Stack=true (due to problems in Akka-2.4 classes handling ipv6 addresses in some cases)
+* -Djava.net.preferIPv4Stack=true (due to problems handling ipv6 addresses in some library classes)
+  
+This should not be needed if you called `LocationService.initInterface()`, since it ignores ipv6 addresses.
 
 * -Dakka.remote.netty.tcp.hostname=XXX.XXX.XXX.XX (To make sure Akka uses the correct IP address, in case there are multiple interfaces)
 
-You can avoid having to specify the IP address by calling `LocationService.initAkkaRemoteHostname()` once before creating any akka based services.
-It tries to choose the correct IP address and ignore the obviously wrong ones and sets the akka.remote.netty.tcp.hostname system property.
+This could be used to override the default IP address used to advertize the services.
 
-If you run into trouble running a test, such as the location service test, you could try adding the above -D options
-in Idea or Eclipse, or from the command line:
-
-  sbt 'project loc' '; set javaOptions += "-Dakka.remote.netty.tcp.hostname=192.168.178.31" ; test'
-
-(Replacing 192.168.178.31 with your primary IP address).
 
 Command Line Tools
 ------------------
