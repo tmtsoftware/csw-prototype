@@ -1,6 +1,6 @@
 package csw.services.loc
 
-import java.net.{Inet6Address, NetworkInterface, URI, InetAddress}
+import java.net.{ Inet6Address, NetworkInterface, URI, InetAddress }
 import javax.jmdns._
 import akka.actor._
 import akka.util.Timeout
@@ -21,12 +21,12 @@ object LocationService {
   private val logger = Logger(LoggerFactory.getLogger("LocationService"))
 
   /**
-    * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
-    * set, so that any services or akka actors created will use and publish the correct IP address.
-    * This method should be called before creating any actors or web services that depend on the location service.
-    *
-    * @param hostname if not empty, use this as the hostname or IP address, otherwise attempt to guess the main IP address
-    */
+   * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
+   * set, so that any services or akka actors created will use and publish the correct IP address.
+   * This method should be called before creating any actors or web services that depend on the location service.
+   *
+   * @param hostname if not empty, use this as the hostname or IP address, otherwise attempt to guess the main IP address
+   */
   def initInterface(hostname: String = ""): Unit = {
     case class Addr(index: Int, addr: InetAddress)
     def defaultAddr = Addr(0, InetAddress.getLocalHost)
@@ -42,7 +42,7 @@ object LocationService {
     def getIpAddress: String = {
       import scala.collection.JavaConversions._
       val addresses = for {
-        i <- NetworkInterface.getNetworkInterfaces
+        i ← NetworkInterface.getNetworkInterfaces
         a ← i.getInetAddresses
       } yield Addr(i.getIndex, a)
       addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
@@ -298,7 +298,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
         def getUri(uriStr: String): Option[URI] = {
           serviceRef.accessType match {
             case AkkaType ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
-            case _ ⇒ Some(new URI(uriStr))
+            case _        ⇒ Some(new URI(uriStr))
           }
         }
 

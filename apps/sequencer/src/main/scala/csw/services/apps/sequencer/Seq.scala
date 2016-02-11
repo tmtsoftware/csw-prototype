@@ -16,6 +16,7 @@ import scala.concurrent.duration._
  * Defines utility method and shortcuts for use in the sequencer shell
  */
 object Seq {
+  LocationService.initInterface()
   implicit val system = ActorSystem("Sequencer")
   implicit val timeout: Timeout = 60.seconds
 

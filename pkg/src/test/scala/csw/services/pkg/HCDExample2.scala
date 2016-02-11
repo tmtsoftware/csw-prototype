@@ -1,9 +1,9 @@
 package csw.services.pkg
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{ Actor, ActorLogging, Props }
 import csw.services.ccs.PeriodicHcdController
 import csw.services.kvs._
-import csw.services.loc.{ServiceId, ServiceType}
+import csw.services.loc.{ ServiceId, ServiceType }
 import csw.services.pkg.Component.ComponentInfo
 import csw.services.pkg.HCDExample2.HCDDaemon
 import csw.services.ts.TimeService
@@ -32,7 +32,7 @@ object HCDExample2 {
 
     val posEventGenerator = context.actorOf(Props(classOf[PosGenerator], "Position Generator", prefix))
 
-    val killer = scheduleOnce(localTimeNow.plusSeconds(60*60), self, "end")
+    val killer = scheduleOnce(localTimeNow.plusSeconds(60 * 60), self, "end")
 
     def process(): Unit = {
       nextConfig.foreach { config ⇒
@@ -73,12 +73,12 @@ object HCDExample2 {
     // Create the Telemetry Service
     val settings = KvsSettings(context.system)
     val ts = TelemetryService(settings)
-    val tss = for(n <- 0 to 10) yield {
+    val tss = for (n ← 0 to 10) yield {
       context.actorOf(Props(classOf[TelPosSubscriber], s"ev subscriber$n", prefix))
     }
 
     var count = 0
-//    val cancel = schedule(localTimeNow.plusSeconds(1), Duration.ofMillis(2), self, Tick)
+    //    val cancel = schedule(localTimeNow.plusSeconds(1), Duration.ofMillis(2), self, Tick)
     val cancel = schedule(localTimeNow.plusSeconds(1), Duration.ofMillis(1000), self, Tick)
     val rand = Random
 
@@ -89,7 +89,6 @@ object HCDExample2 {
         val se = StatusEvent(prefix).set(azkey, az).set(elkey, el)
         ts.set(se)
         log.info(s"Coords: az: $az, el: $el")
-
 
       case End ⇒
         log.info(s"Ending Daemon")

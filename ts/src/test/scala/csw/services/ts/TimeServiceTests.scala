@@ -26,7 +26,7 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
     val hwNow = hawaiiLocalTimeNow
     val now = localTimeNow
 
-    assert(nyNow.isAfter(hwNow))
+    //    assert(nyNow.isAfter(hwNow))
     // Try to determine that we have Hawaii time
     assert(!hwNow.equals(now)) // Not the same, good
     val diffHwNy = Duration.between(nyNow, hwNow) // Difference should be 6 hrs (XXX or sometimes 5 hrs...)

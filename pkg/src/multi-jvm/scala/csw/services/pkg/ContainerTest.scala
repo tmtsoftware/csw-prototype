@@ -24,6 +24,8 @@ object ContainerConfig extends MultiNodeConfig {
 
   val container2 = role("container2")
 
+  LocationService.initInterface()
+
   // Note: The "multinode.host" system property needs to be set to empty so that the MultiNodeSpec
   // base class below will use the actual host name.
   // (By default it ends up with "localhost", which breaks the test, since the LocationService

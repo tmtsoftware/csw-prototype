@@ -1,6 +1,7 @@
 package csw.services.apps.configServiceAnnex
 
 import com.typesafe.scalalogging.slf4j.Logger
+import csw.services.loc.LocationService
 import org.slf4j.LoggerFactory
 
 /**
@@ -17,5 +18,6 @@ import org.slf4j.LoggerFactory
  */
 object ConfigServiceAnnexServerApp extends App {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServerApp"))
+  LocationService.initInterface()
   ConfigServiceAnnexServer(registerWithLoc = true)
 }
