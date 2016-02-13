@@ -1,7 +1,7 @@
 package csw.services.cs.akka
 
 import akka.remote.testkit.MultiNodeSpecCallbacks
-import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 /**
  * Hooks up MultiNodeSpec with ScalaTest

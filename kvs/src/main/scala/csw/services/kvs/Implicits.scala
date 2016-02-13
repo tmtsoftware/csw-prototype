@@ -2,7 +2,7 @@ package csw.services.kvs
 
 import akka.util.ByteString
 import csw.services.kvs.KeyValueStore.KvsFormatter
-import csw.util.cfg.Configurations.StateVariable.{ DemandState, CurrentState }
+import csw.util.cfg.Configurations.StateVariable.{DemandState, CurrentState}
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Events._
 import redis.ByteStringDeserializerDefault

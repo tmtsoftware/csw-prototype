@@ -2,10 +2,10 @@ package csw.services.cs.akka
 
 import java.io.File
 
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.{ Config, ConfigResolveOptions, ConfigFactory }
+import com.typesafe.config.{Config, ConfigResolveOptions, ConfigFactory}
 import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.core._
 

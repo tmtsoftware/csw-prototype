@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import akka.actor.{ ActorLogging, Actor }
+import akka.actor.{ActorLogging, Actor}
 import csw.util.cfg.Configurations._
 
 import scala.collection.immutable.Queue

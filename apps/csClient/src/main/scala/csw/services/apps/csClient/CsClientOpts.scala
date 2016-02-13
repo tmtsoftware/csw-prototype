@@ -18,9 +18,11 @@ object CsClientOpts {
    * @param oversize set to true to use large/binary file handling
    * @param comment optional create or update comment
    */
-  case class Config(config: Option[File] = None,
-                    subcmd: String = "", path: File = null, inputFile: File = null, outputFile: File = null,
-                    id: Option[String] = None, oversize: Boolean = false, comment: String = "")
+  case class Config(
+    config: Option[File] = None,
+    subcmd: String       = "", path: File = null, inputFile: File = null, outputFile: File = null,
+    id: Option[String] = None, oversize: Boolean = false, comment: String = ""
+  )
 
   private val parser = new scopt.OptionParser[Config]("scopt") {
     head("csclient", System.getProperty("CSW_VERSION"))
@@ -43,7 +45,8 @@ object CsClientOpts {
 
       opt[String]("id") action { (x, c) ⇒
         c.copy(id = Some(x))
-      } text "optional version id of file to get")
+      } text "optional version id of file to get"
+    )
 
     cmd("exists") action { (_, c) ⇒
       c.copy(subcmd = "exists")
@@ -51,7 +54,8 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository")
+      } text "path name in Git repository"
+    )
 
     cmd("create") action { (_, c) ⇒
       c.copy(subcmd = "create")
@@ -71,7 +75,8 @@ object CsClientOpts {
 
       opt[String]('c', "comment") action { (x, c) ⇒
         c.copy(comment = x)
-      } text "optional create comment")
+      } text "optional create comment"
+    )
 
     cmd("update") action { (_, c) ⇒
       c.copy(subcmd = "update")
@@ -87,7 +92,8 @@ object CsClientOpts {
 
       opt[String]('c', "comment") action { (x, c) ⇒
         c.copy(comment = x)
-      } text "optional create comment")
+      } text "optional create comment"
+    )
 
     cmd("createOrUpdate") action { (_, c) ⇒
       c.copy(subcmd = "createOrUpdate")
@@ -107,7 +113,8 @@ object CsClientOpts {
 
       opt[String]('c', "comment") action { (x, c) ⇒
         c.copy(comment = x)
-      } text "optional create comment")
+      } text "optional create comment"
+    )
 
     cmd("list") action { (_, c) ⇒
       c.copy(subcmd = "list")
@@ -119,7 +126,8 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository")
+      } text "path name in Git repository"
+    )
 
     cmd("setDefault") action { (_, c) ⇒
       c.copy(subcmd = "setDefault")
@@ -131,7 +139,8 @@ object CsClientOpts {
 
       opt[String]("id") action { (x, c) ⇒
         c.copy(id = Some(x))
-      } text "optional version id to set as default for file")
+      } text "optional version id to set as default for file"
+    )
 
     cmd("resetDefault") action { (_, c) ⇒
       c.copy(subcmd = "resetDefault")
@@ -139,7 +148,8 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository")
+      } text "path name in Git repository"
+    )
 
     cmd("getDefault") action { (_, c) ⇒
       c.copy(subcmd = "getDefault")
@@ -151,7 +161,8 @@ object CsClientOpts {
 
       opt[File]('o', "out") required () valueName "<outputFile>" action { (x, c) ⇒
         c.copy(outputFile = x)
-      } text "output file")
+      } text "output file"
+    )
 
     checkConfig { c ⇒
       if (c.subcmd.isEmpty) failure("Please specify one (get, create, update, list, history)") else success

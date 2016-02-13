@@ -1,11 +1,11 @@
 package csw.services.kvs
 
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.Key
 import csw.util.cfg.StandardKeys._
-import org.scalatest.{ DoNotDiscover, FunSuiteLike }
+import org.scalatest.{DoNotDiscover, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import scala.concurrent.duration._
 

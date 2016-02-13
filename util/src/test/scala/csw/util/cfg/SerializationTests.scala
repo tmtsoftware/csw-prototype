@@ -1,7 +1,7 @@
 package csw.util.cfg
 
 import csw.util.cfg.Configurations._
-import csw.util.cfg.Events.{ SystemEvent, EventServiceEvent }
+import csw.util.cfg.Events.{SystemEvent, EventServiceEvent}
 import org.scalatest.FunSuite
 
 class SerializationTests extends FunSuite {

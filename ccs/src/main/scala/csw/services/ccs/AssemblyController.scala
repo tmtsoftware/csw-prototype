@@ -1,11 +1,11 @@
 package csw.services.ccs
 
-import akka.actor.{ ActorRef, ActorLogging, Actor }
+import akka.actor.{ActorRef, ActorLogging, Actor}
 import akka.util.Timeout
-import csw.services.loc.LocationService.{ ResolvedService, Disconnected, ServicesReady }
+import csw.services.loc.LocationService.{ResolvedService, Disconnected, ServicesReady}
 import csw.services.loc.ServiceRef
 import csw.util.cfg.Configurations.StateVariable._
-import csw.util.cfg.Configurations.{ StateVariable, ObserveConfigArg, SetupConfigArg, ControlConfigArg }
+import csw.util.cfg.Configurations.{StateVariable, ObserveConfigArg, SetupConfigArg, ControlConfigArg}
 import csw.util.cfg.RunId
 import scala.concurrent.duration._
 
@@ -112,8 +112,10 @@ trait AssemblyController extends Actor with ActorLogging {
    * @param oneway true if no completed response is needed
    * @param replyTo actorRef of the actor that submitted the config
    */
-  private def submit(services: Map[ServiceRef, ResolvedService],
-                     config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
+  private def submit(
+    services: Map[ServiceRef, ResolvedService],
+    config:   ControlConfigArg, oneway: Boolean, replyTo: ActorRef
+  ): Unit = {
 
     val statusReplyTo = if (oneway) None else Some(replyTo)
     val valid = config match {

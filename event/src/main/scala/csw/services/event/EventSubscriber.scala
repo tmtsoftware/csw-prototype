@@ -1,6 +1,6 @@
 package csw.services.event
 
-import akka.actor.{ Props, ActorRef, ActorLogging, Actor }
+import akka.actor.{Props, ActorRef, ActorLogging, Actor}
 import csw.util.cfg.ConfigSerializer
 import org.hornetq.api.core.client._
 import java.util.UUID
@@ -54,7 +54,7 @@ trait EventSubscriber extends Actor with ActorLogging {
    */
   def subscribe(prefix: String*): Unit = {
     for (channel ← prefix) {
-      map += (channel -> SubscriberInfo(channel))
+      map += (channel → SubscriberInfo(channel))
     }
   }
 

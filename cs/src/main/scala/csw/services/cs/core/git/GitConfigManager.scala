@@ -1,6 +1,6 @@
 package csw.services.cs.core.git
 
-import java.io.{ File, FileNotFoundException, IOException }
+import java.io.{File, FileNotFoundException, IOException}
 import java.net.URI
 import java.nio.file.Files
 import java.util.Date
@@ -8,16 +8,16 @@ import java.util.Date
 import akka.actor.ActorRefFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
-import csw.services.cs.core.{ GitConfigId, _ }
+import csw.services.cs.core.{GitConfigId, _}
 import net.codejava.security.HashGeneratorUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib._
-import org.eclipse.jgit.revwalk.{ RevCommit, RevWalk }
+import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.treewalk.TreeWalk
 
 import scala.annotation.tailrec
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 /**
@@ -108,7 +108,8 @@ object GitConfigManager {
       // XXX TODO: return Future[Unit] instead?
       Await.result(
         gm.create(new File("README"), ConfigData("This is the main Config Service Git repository.")),
-        10.seconds)
+        10.seconds
+      )
     } finally {
       deleteDirectoryRecursively(tmpDir)
     }
@@ -370,10 +371,12 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
 
   // Returns a list of all known versions of a given path by recursively walking the Git history tree
   @tailrec
-  private def hist(path: File,
-                   it: java.util.Iterator[RevCommit],
-                   result: List[ConfigFileHistory],
-                   maxResults: Int): List[ConfigFileHistory] = {
+  private def hist(
+    path:       File,
+    it:         java.util.Iterator[RevCommit],
+    result:     List[ConfigFileHistory],
+    maxResults: Int
+  ): List[ConfigFileHistory] = {
     if (it.hasNext && result.size < maxResults) {
       val revCommit = it.next()
       val tree = revCommit.getTree

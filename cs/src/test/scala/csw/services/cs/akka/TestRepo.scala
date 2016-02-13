@@ -2,10 +2,10 @@ package csw.services.cs.akka
 
 import java.io.File
 
-import akka.actor.{ ActorRefFactory, ActorSystem }
+import akka.actor.{ActorRefFactory, ActorSystem}
 import csw.services.cs.JConfigManager
 import csw.services.cs.core.ConfigManager
-import csw.services.cs.core.git.{ GitConfigManager, JGitConfigManager }
+import csw.services.cs.core.git.{GitConfigManager, JGitConfigManager}
 
 /**
  * Utility class to create temporary Git repositories for use in testing.

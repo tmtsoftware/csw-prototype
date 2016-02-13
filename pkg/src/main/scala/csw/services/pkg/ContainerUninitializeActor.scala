@@ -1,6 +1,6 @@
 package csw.services.pkg
 
-import akka.actor.{ ActorLogging, Actor, Props }
+import akka.actor.{ActorLogging, Actor, Props}
 import Supervisor._
 
 // Used to uninitialize components and then wait for confirmation before exiting or restarting

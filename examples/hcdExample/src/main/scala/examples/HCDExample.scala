@@ -1,11 +1,11 @@
 package examples
 
-import akka.actor.{ Cancellable, Actor, ActorLogging, Props }
+import akka.actor.{Cancellable, Actor, ActorLogging, Props}
 import csw.services.ccs.PeriodicHcdController
-import csw.services.event.{ EventSubscriber, EventService, EventServiceSettings }
+import csw.services.event.{EventSubscriber, EventService, EventServiceSettings}
 
-import csw.services.loc.{ ServiceId, ServiceType }
-import csw.services.pkg.{ LifecycleHandler, Hcd, Component }
+import csw.services.loc.{ServiceId, ServiceType}
+import csw.services.pkg.{LifecycleHandler, Hcd, Component}
 import csw.services.pkg.Component.ComponentInfo
 
 import csw.services.ts.TimeService

@@ -1,9 +1,9 @@
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 import com.typesafe.sbt.SbtSite.site
+import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import sbt.Keys._
 import sbt._
-import com.typesafe.sbt.packager.Keys._
 import com.typesafe.sbt.site.PreprocessSupport._
 
 import Dependencies._
@@ -67,6 +67,7 @@ lazy val ccs = project
 // Config Service
 lazy val cs = project
   .settings(defaultSettings: _*)
+  .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("configService", "CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
   .dependsOn(log, loc, util, configServiceAnnex)
@@ -115,6 +116,7 @@ lazy val containerCmd = Project(id = "containerCmd", base = file("apps/container
 
 // Build the sequencer command line application
 lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
+  .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("sequencer", "CSW Sequencer", "Scala REPL for running sequences"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline)
@@ -122,6 +124,7 @@ lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
 
 // Build the config service annex application
 lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("apps/configServiceAnnex"))
+  .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("configServiceAnnex", "CSW Config Service Annex", "Store/retrieve large files for Config Service"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
@@ -130,6 +133,7 @@ lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("ap
 
 // Build the config service annex application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
+  .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("csClient", "CSW Config Service Client", "Command line client for Config Service"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaStream, scopt) ++
@@ -138,11 +142,13 @@ lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
 
 // HCD Example project
 lazy val hcdExample = Project(id = "hcdExample", base = file("examples/hcdExample"))
+  .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("hcdExample", "HCD Example", "Simple HCD example application"): _*)
   .dependsOn(pkg, ts, event)
 
 // Assembly Example project
 lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples/assemblyExample"))
+  .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
   .dependsOn(pkg, ts, hcdExample)
 

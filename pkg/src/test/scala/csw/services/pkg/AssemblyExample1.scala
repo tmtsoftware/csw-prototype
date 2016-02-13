@@ -1,16 +1,16 @@
 package csw.services.pkg
 
-import akka.actor.{ Props, ActorRef }
-import csw.services.ccs.{ StateMatcherActor, HcdController, AssemblyController }
+import akka.actor.{Props, ActorRef}
+import csw.services.ccs.{StateMatcherActor, HcdController, AssemblyController}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
-import csw.services.loc.{ ServiceId, ServiceType, ServiceRef }
+import csw.services.loc.{ServiceId, ServiceType, ServiceRef}
 import csw.services.pkg.AssemblyExample1.Assembly1
 import csw.services.pkg.Component.ComponentInfo
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.cfg.Configurations.StateVariable.DemandState
-import csw.util.cfg.Configurations.{ SetupConfig, SetupConfigArg }
+import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
  * TMT Source Code: 11/26/15.

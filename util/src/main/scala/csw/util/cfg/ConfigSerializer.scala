@@ -1,8 +1,8 @@
 package csw.util.cfg
 
-import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream }
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
-import csw.util.cfg.Configurations.StateVariable.{ DemandState, CurrentState }
+import csw.util.cfg.Configurations.StateVariable.{DemandState, CurrentState}
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Events._
 

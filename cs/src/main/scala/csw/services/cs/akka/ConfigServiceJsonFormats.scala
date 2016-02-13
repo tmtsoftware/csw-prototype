@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Date
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import csw.services.cs.core.{ ConfigFileHistory, ConfigFileInfo, ConfigId }
+import csw.services.cs.core.{ConfigFileHistory, ConfigFileInfo, ConfigId}
 import spray.json._
 
 /**
@@ -36,7 +36,8 @@ trait ConfigServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport
       JsObject(
         ("path", JsString(info.path.toString)),
         ("id", JsString(info.id.id)),
-        ("comment", JsString(info.comment)))
+        ("comment", JsString(info.comment))
+      )
     }
 
     override def read(value: JsValue): ConfigFileInfo =
@@ -55,7 +56,8 @@ trait ConfigServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport
       JsObject(
         ("id", JsString(h.id.id)),
         ("comment", JsString(h.comment)),
-        ("time", JsNumber(h.time.getTime)))
+        ("time", JsNumber(h.time.getTime))
+      )
     }
 
     override def read(value: JsValue): ConfigFileHistory =

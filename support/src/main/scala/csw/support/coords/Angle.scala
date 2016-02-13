@@ -180,7 +180,8 @@ object Angle {
     Angle(
       raHour2.multiply(new BigDecimal(Angle.H2Uas)).longValueExact +
         raMin2.multiply(new BigDecimal(Angle.HMin2Uas)).longValueExact +
-        raSec2.multiply(new BigDecimal(Angle.HSec2Uas)).longValueExact)
+        raSec2.multiply(new BigDecimal(Angle.HSec2Uas)).longValueExact
+    )
   }
 
   /**

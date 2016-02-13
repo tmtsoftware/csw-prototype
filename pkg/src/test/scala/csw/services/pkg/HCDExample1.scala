@@ -1,9 +1,9 @@
 package csw.services.pkg
 
-import akka.actor.{ ActorRef, ActorLogging, Props }
+import akka.actor.{ActorRef, ActorLogging, Props}
 import csw.services.ccs.PeriodicHcdController
 import csw.services.ccs.PeriodicHcdController.Process
-import csw.services.loc.{ ServiceType, ServiceId }
+import csw.services.loc.{ServiceType, ServiceId}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import scala.concurrent.duration._

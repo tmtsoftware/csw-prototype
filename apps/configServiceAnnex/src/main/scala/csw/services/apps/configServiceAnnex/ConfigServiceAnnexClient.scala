@@ -1,6 +1,6 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{ File, FileOutputStream, IOException }
+import java.io.{File, FileOutputStream, IOException}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
@@ -15,8 +15,8 @@ import com.typesafe.scalalogging.slf4j.Logger
 import net.codejava.security.HashGeneratorUtils
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{ Future, Promise }
-import scala.util.{ Try, Failure, Success }
+import scala.concurrent.{Future, Promise}
+import scala.util.{Try, Failure, Success}
 
 /**
  * Provides a client API to the ConfigServiceAnnexServer.
@@ -100,7 +100,7 @@ object ConfigServiceAnnexClient {
 
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
-    val chunks = Source(() ⇒ iterator).map(ChunkStreamPart.apply)
+    val chunks = Source.fromIterator(() ⇒ iterator).map(ChunkStreamPart.apply)
     val entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks)
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(method = POST, uri = s"/$id", entity = entity)
@@ -177,8 +177,10 @@ object ConfigServiceAnnexClient {
     status.future
   }
 
-  private def sendRequest(request: HttpRequest,
-                          connection: Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]])(implicit fm: ActorMaterializer): Future[HttpResponse] = {
+  private def sendRequest(
+    request:    HttpRequest,
+    connection: Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]]
+  )(implicit fm: ActorMaterializer): Future[HttpResponse] = {
     Source.single(request).via(connection).runWith(Sink.head)
   }
 

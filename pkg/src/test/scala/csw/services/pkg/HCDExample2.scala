@@ -1,9 +1,9 @@
 package csw.services.pkg
 
-import akka.actor.{ Actor, ActorLogging, Props }
+import akka.actor.{Actor, ActorLogging, Props}
 import csw.services.ccs.PeriodicHcdController
 import csw.services.kvs._
-import csw.services.loc.{ ServiceId, ServiceType }
+import csw.services.loc.{ServiceId, ServiceType}
 import csw.services.pkg.Component.ComponentInfo
 import csw.services.pkg.HCDExample2.HCDDaemon
 import csw.services.ts.TimeService

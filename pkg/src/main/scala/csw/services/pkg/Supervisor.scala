@@ -1,14 +1,14 @@
 package csw.services.pkg
 
 import akka.actor._
-import csw.services.ccs.{ CommandStatus, PeriodicHcdController }
+import csw.services.ccs.{CommandStatus, PeriodicHcdController}
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{ ResolvedService, ServicesReady }
-import csw.services.loc.{ ServiceType, ServiceRef, LocationService, ServiceId }
+import csw.services.loc.LocationService.{ResolvedService, ServicesReady}
+import csw.services.loc.{ServiceType, ServiceRef, LocationService, ServiceId}
 import csw.util.cfg.Configurations.ControlConfigArg
 import csw.util.cfg.RunId
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /**
  * The Supervisor is an actor that supervises the component actors and deals with
@@ -347,8 +347,10 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   // Called when a lifecycle state message is received from the component.
   // If not yet in the target state, sends a command to the component to go
   // there (without skipping any states).
-  private def updateState(currentState: LifecycleState,
-                          targetState: LifecycleState, nextState: Receive): Unit = {
+  private def updateState(
+    currentState: LifecycleState,
+    targetState:  LifecycleState, nextState: Receive
+  ): Unit = {
 
     log.debug(s" $name update state: current: $currentState, target: $targetState")
 
@@ -395,7 +397,7 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state
   // XXX TODO: Cleanup old subscribers?
   private def subscribeToLifecycleStates(state: LifecycleState, onlyRunning: Boolean): Unit = {
-    lifecycleStateListeners += (sender() -> onlyRunning)
+    lifecycleStateListeners += (sender() → onlyRunning)
     if (!onlyRunning || state.isRunning)
       sender() ! LifecycleStateChanged(state, None)
   }

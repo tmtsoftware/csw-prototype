@@ -1,14 +1,14 @@
 package csw.services.event
 
 import akka.actor._
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.event.EventPubSubTest._
 import csw.util.cfg.Events.ObserveEvent
 import csw.util.cfg.Key
 import csw.util.cfg.StandardKeys._
-import org.scalatest.{ DoNotDiscover, BeforeAndAfterAll, FunSuiteLike }
+import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 

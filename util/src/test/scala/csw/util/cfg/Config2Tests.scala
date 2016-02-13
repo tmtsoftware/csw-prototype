@@ -1,8 +1,8 @@
 package csw.util.cfg
 
 import csw.util.cfg.Configurations._
-import csw.util.cfg.Subsystem.{ AOESW, IRIS, WFOS }
-import csw.util.cfg.UnitsOfMeasure.{ Meters, Seconds }
+import csw.util.cfg.Subsystem.{AOESW, IRIS, WFOS}
+import csw.util.cfg.UnitsOfMeasure.{Meters, Seconds}
 import org.scalatest.FunSpec
 
 /**

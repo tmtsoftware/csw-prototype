@@ -1,6 +1,6 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{ File, RandomAccessFile }
+import java.io.{File, RandomAccessFile}
 import java.nio.file.Files
 
 import com.typesafe.scalalogging.slf4j.LazyLogging

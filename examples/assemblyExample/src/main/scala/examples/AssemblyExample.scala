@@ -1,13 +1,13 @@
 package examples
 
-import akka.actor.{ Props, ActorRef }
-import csw.services.ccs.{ CommandStatus, HcdController, AssemblyController }
+import akka.actor.{Props, ActorRef}
+import csw.services.ccs.{CommandStatus, HcdController, AssemblyController}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
-import csw.services.loc.{ ServiceId, ServiceType, ServiceRef }
-import csw.services.pkg.{ Component, LifecycleHandler, Assembly }
+import csw.services.loc.{ServiceId, ServiceType, ServiceRef}
+import csw.services.pkg.{Component, LifecycleHandler, Assembly}
 import csw.services.pkg.Component.ComponentInfo
-import csw.util.cfg.Configurations.{ SetupConfig, SetupConfigArg }
+import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
  * An example assembly

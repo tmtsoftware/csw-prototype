@@ -90,7 +90,7 @@ object TimeService {
   trait TimeServiceScheduler {
     self: Actor with ActorLogging ⇒
 
-    import scala.concurrent.duration.{ FiniteDuration, NANOSECONDS }
+    import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
     implicit val ec = context.system.dispatcher
 

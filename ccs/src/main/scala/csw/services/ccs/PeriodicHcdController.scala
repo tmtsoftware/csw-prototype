@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ ActorLogging, Actor }
+import akka.actor.{ActorLogging, Actor}
 import com.typesafe.config.Config
 import csw.util.cfg.Configurations.SetupConfig
 

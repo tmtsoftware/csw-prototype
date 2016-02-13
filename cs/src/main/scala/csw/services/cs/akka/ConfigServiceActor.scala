@@ -5,13 +5,13 @@ import java.io.File
 import akka.actor._
 import akka.util.Timeout
 import csw.services.cs.core.git.GitConfigManager
-import csw.services.cs.core.{ ConfigFileHistory, _ }
+import csw.services.cs.core.{ConfigFileHistory, _}
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.{ ServiceRef, LocationService, ServiceType, ServiceId }
+import csw.services.loc.{ServiceRef, LocationService, ServiceType, ServiceId}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * Config service actor.

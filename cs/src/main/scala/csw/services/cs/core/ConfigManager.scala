@@ -1,12 +1,12 @@
 package csw.services.cs.core
 
-import java.io.{ ByteArrayOutputStream, File, FileOutputStream, OutputStream }
-import java.nio.file.{ Files, StandardCopyOption }
+import java.io.{ByteArrayOutputStream, File, FileOutputStream, OutputStream}
+import java.nio.file.{Files, StandardCopyOption}
 import java.util.Date
 
 import akka.actor.ActorRefFactory
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
 
@@ -258,7 +258,7 @@ case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
   override def source: Source[ByteString, Unit] = {
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
-    Source(() ⇒ iterator)
+    Source.fromIterator(() ⇒ iterator)
   }
 }
 

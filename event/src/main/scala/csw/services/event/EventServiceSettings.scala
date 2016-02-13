@@ -1,6 +1,6 @@
 package csw.services.event
 
-import akka.actor.{ ActorSystem, Extension, ExtensionKey }
+import akka.actor.{ActorSystem, Extension, ExtensionKey}
 import net.ceedubs.ficus.Ficus._
 
 object EventServiceSettings extends ExtensionKey[EventServiceSettings]

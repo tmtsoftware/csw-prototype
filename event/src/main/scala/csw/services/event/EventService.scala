@@ -3,8 +3,8 @@ package csw.services.event
 import csw.util.cfg.ConfigSerializer._
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client._
-import org.hornetq.core.remoting.impl.invm.{ InVMConnectorFactory, InVMAcceptorFactory }
-import org.hornetq.core.remoting.impl.netty.{ NettyAcceptorFactory, NettyConnectorFactory }
+import org.hornetq.core.remoting.impl.invm.{InVMConnectorFactory, InVMAcceptorFactory}
+import org.hornetq.core.remoting.impl.netty.{NettyAcceptorFactory, NettyConnectorFactory}
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
@@ -20,9 +20,11 @@ object EventService {
    * @param sf entry point to create and configure HornetQ resources to produce and consume messages
    * @param session single-thread object required for producing and consuming messages
    */
-  case class EventServiceInfo(serverLocator: ServerLocator,
-                              sf: ClientSessionFactory,
-                              session: ClientSession) {
+  case class EventServiceInfo(
+    serverLocator: ServerLocator,
+    sf:            ClientSessionFactory,
+    session:       ClientSession
+  ) {
 
     /**
      * Closes the hornetq connection and session
@@ -38,9 +40,11 @@ object EventService {
    * Connects to a HornetQ server using the given settings.
    */
   private[event] def connectToServer(settings: EventServiceSettings): EventServiceInfo =
-    connectToHornetQ(settings.eventServiceHostname.getOrElse("127.0.0.1"),
+    connectToHornetQ(
+      settings.eventServiceHostname.getOrElse("127.0.0.1"),
       settings.eventServicePort.getOrElse(5445),
-      settings.useEmbeddedHornetq)
+      settings.useEmbeddedHornetq
+    )
 
   /**
    * Connects to a HornetQ server.
@@ -51,12 +55,16 @@ object EventService {
   private[event] def connectToHornetQ(host: String, port: Int, useEmbedded: Boolean): EventServiceInfo = {
     val serverLocator = if (useEmbedded) {
       HornetQClient.createServerLocatorWithoutHA(
-        new TransportConfiguration(classOf[InVMConnectorFactory].getName))
+        new TransportConfiguration(classOf[InVMConnectorFactory].getName)
+      )
     } else {
-      val map = Map("host" -> host, "port" -> port)
+      val map = Map("host" → host, "port" → port)
       HornetQClient.createServerLocatorWithoutHA(
-        new TransportConfiguration(classOf[NettyConnectorFactory].getName,
-          map.asJava.asInstanceOf[java.util.Map[String, Object]]))
+        new TransportConfiguration(
+          classOf[NettyConnectorFactory].getName,
+          map.asJava.asInstanceOf[java.util.Map[String, Object]]
+        )
+      )
     }
 
     // Prevents blocking when queue is full, but requires consumers to consume quickly

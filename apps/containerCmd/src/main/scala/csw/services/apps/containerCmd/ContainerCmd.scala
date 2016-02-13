@@ -4,14 +4,14 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import com.typesafe.config.{ ConfigFactory, ConfigResolveOptions }
+import com.typesafe.config.{ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.cs.akka.{ ConfigServiceSettings, ConfigServiceClient }
+import csw.services.cs.akka.{ConfigServiceSettings, ConfigServiceClient}
 import csw.services.pkg.Container
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.util.{ Success, Failure }
+import scala.util.{Success, Failure}
 
 object ContainerCmd {
 

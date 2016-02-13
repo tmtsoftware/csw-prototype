@@ -3,12 +3,12 @@ package csw.services.apps.csClient
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import csw.services.cs.akka.{ ConfigServiceActor, ConfigServiceClient, ConfigServiceSettings }
-import csw.services.cs.core.{ ConfigData, ConfigId, ConfigManager }
+import csw.services.cs.akka.{ConfigServiceActor, ConfigServiceClient, ConfigServiceSettings}
+import csw.services.cs.core.{ConfigData, ConfigId, ConfigManager}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /**
  * Command line client for the config service.

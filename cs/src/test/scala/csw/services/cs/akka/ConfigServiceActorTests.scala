@@ -2,11 +2,11 @@ package csw.services.cs.akka
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
-import org.scalatest.{ FunSuiteLike, BeforeAndAfterAll }
-import java.io.{ File, IOException }
+import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
+import java.io.{File, IOException}
 import csw.services.cs.core._
 import akka.actor.ActorSystem
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ImplicitSender, TestKit}
 import scala.concurrent.duration._
 import csw.services.cs.core.ConfigData
 import scala.concurrent.Await
@@ -98,8 +98,10 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
 
       // Test using '?' instead of '!'
       implicit val timeout = Timeout(2.seconds)
-      val result = Await.result(configServiceActor ? GetRequest(path2, Some(createId2)),
-        2.seconds).asInstanceOf[GetResult]
+      val result = Await.result(
+        configServiceActor ? GetRequest(path2, Some(createId2)),
+        2.seconds
+      ).asInstanceOf[GetResult]
       checkGetResult(result, path2, contents1)
 
       // test history()
@@ -111,7 +113,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
 
       // Test list()
       configServiceActor ! ListRequest
-      checkListResult(2, Map(path1 -> comment3, path2 -> comment1))
+      checkListResult(2, Map(path1 → comment3, path2 → comment1))
 
       // Test getting history of document that has been deleted
       configServiceActor ! DeleteRequest(path1, "test delete")

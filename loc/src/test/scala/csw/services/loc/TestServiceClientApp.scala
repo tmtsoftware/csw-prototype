@@ -1,7 +1,7 @@
 package csw.services.loc
 
-import akka.actor.{ Props, ActorSystem, ActorLogging, Actor }
-import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
+import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
+import csw.services.loc.LocationService.{Disconnected, ServicesReady}
 
 object TestServiceClientApp extends App {
   LocationService.initInterface()

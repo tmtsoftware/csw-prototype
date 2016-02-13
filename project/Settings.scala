@@ -6,7 +6,6 @@ import sbt.Keys._
 import sbt._
 
 import com.typesafe.sbt.SbtSite.site
-import com.typesafe.sbt.SbtSite.SiteKeys._
 import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
 import sbtunidoc.Plugin.UnidocKeys
@@ -32,12 +31,12 @@ object Settings {
     resolvers += "Spray repo" at "http://repo.spray.io",
     //    resolvers += "Spray nightlies" at "http://nightlies.spray.io",
     resolvers += Resolver.sonatypeRepo("releases"),
+    resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2",
     //    resolvers += Resolver.sonatypeRepo("snapshots"),
     //    resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/",
-    resolvers += "rediscala" at "http://dl.bintray.com/etaty/maven",
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
-    // local maven repo
+      // local maven repo
     //    resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
     resolvers += sbtResolver.value
   )
@@ -52,8 +51,7 @@ object Settings {
   )
 
   // For standalone applications
-  def packageSettings(name: String, summary: String, desc: String) = defaultSettings ++
-    packagerSettings ++ packageArchetype.java_application ++ Seq(
+  def packageSettings(name: String, summary: String, desc: String) = defaultSettings ++ Seq(
     version in Rpm := Version,
     rpmRelease := "0",
     rpmVendor := "TMT Common Software",

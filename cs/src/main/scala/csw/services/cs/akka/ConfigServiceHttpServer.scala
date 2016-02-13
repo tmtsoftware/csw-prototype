@@ -1,17 +1,17 @@
 package csw.services.cs.akka
 
 import java.io.File
-import java.net.{ InetSocketAddress, URI }
+import java.net.{InetSocketAddress, URI}
 
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.cs.core.{ ConfigData, ConfigId }
-import csw.services.loc.{ LocationService, ServiceType, ServiceId }
+import csw.services.cs.core.{ConfigData, ConfigId}
+import csw.services.loc.{LocationService, ServiceType, ServiceId}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
@@ -87,8 +87,8 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   // Gets the file from the config service with the given path and id (optional)
   private def get(uri: Uri): Future[HttpResponse] = {
-    val pathOpt = uri.query.get("path")
-    val idOpt = uri.query.get("id").map(ConfigId(_))
+    val pathOpt = uri.query().get("path")
+    val idOpt = uri.query().get("id").map(ConfigId(_))
     pathOpt match {
       case Some(path) ⇒
         val result = for {
@@ -125,8 +125,8 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   // Gets the file history from the config service
   private def history(uri: Uri): Future[HttpResponse] = {
-    val pathOpt = uri.query.get("path")
-    val maxResults = uri.query.get("maxResults").map(_.toInt).getOrElse(Int.MaxValue)
+    val pathOpt = uri.query().get("path")
+    val maxResults = uri.query().get("maxResults").map(_.toInt).getOrElse(Int.MaxValue)
     pathOpt match {
       case Some(path) ⇒
         val result = for {
@@ -159,9 +159,9 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   // Creates a new file
   private def createOrUpdate(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
     val op = uri.path.toString().substring(1)
-    val pathOpt = uri.query.get("path")
-    val oversize = uri.query.get("oversize").getOrElse("false").equalsIgnoreCase("true")
-    val comment = uri.query.get("comment").getOrElse("")
+    val pathOpt = uri.query().get("path")
+    val oversize = uri.query().get("oversize").getOrElse("false").equalsIgnoreCase("true")
+    val comment = uri.query().get("comment").getOrElse("")
 
     if (op.startsWith("create"))
       logger.info(s"$op $pathOpt oversize=$oversize comment=$comment")
@@ -206,7 +206,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   // Implements Http DELETE: Returns OK if the file could be deleted or did not exist.
   private def httpDelete(uri: Uri): Future[HttpResponse] = {
     val path = new File(uri.path.toString())
-    val comment = uri.query.get("comment").getOrElse("")
+    val comment = uri.query().get("comment").getOrElse("")
     val result = for {
       _ ← client.delete(path, comment)
     } yield HttpResponse(StatusCodes.OK)
@@ -217,7 +217,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   // Gets the default version of the file
   def getDefault(uri: Uri): Future[HttpResponse] = {
-    val pathOpt = uri.query.get("path")
+    val pathOpt = uri.query().get("path")
     pathOpt match {
       case Some(path) ⇒
         val result = for {
@@ -242,8 +242,8 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   // Sets the default version of the file
   def setDefault(uri: Uri): Future[HttpResponse] = {
-    val pathOpt = uri.query.get("path")
-    val idOpt = uri.query.get("id").map(ConfigId(_))
+    val pathOpt = uri.query().get("path")
+    val idOpt = uri.query().get("id").map(ConfigId(_))
     pathOpt match {
       case Some(path) ⇒
         val result = for {
@@ -262,7 +262,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   // Resets the default version of the file to the latest version
   def resetDefault(uri: Uri): Future[HttpResponse] = {
-    val pathOpt = uri.query.get("path")
+    val pathOpt = uri.query().get("path")
     pathOpt match {
       case Some(path) ⇒
         val result = for {

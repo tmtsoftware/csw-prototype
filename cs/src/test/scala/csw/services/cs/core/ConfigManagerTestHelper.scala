@@ -1,6 +1,6 @@
 package csw.services.cs.core
 
-import java.io.{ File, IOException }
+import java.io.{File, IOException}
 
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.Logger
@@ -8,7 +8,7 @@ import org.scalatest.FunSuite
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /**
  * Common test code for classes that implement the ConfigManager trait

@@ -1,6 +1,6 @@
 package csw.services.loc
 
-import java.net.{ Inet6Address, NetworkInterface, URI, InetAddress }
+import java.net.{Inet6Address, NetworkInterface, URI, InetAddress}
 import javax.jmdns._
 import akka.actor._
 import akka.util.Timeout
@@ -9,7 +9,7 @@ import csw.services.loc.AccessType.AkkaType
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import LocationService._
 
 /**
@@ -158,7 +158,8 @@ object LocationService {
     Future {
       val registry = getRegistry
       val values = Map(
-        PATH_KEY -> path)
+        PATH_KEY → path
+      )
       val service = ServiceInfo.create(dnsType, serviceRef.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered $serviceRef")
@@ -182,9 +183,10 @@ object LocationService {
       val uri = getActorUri(actorRef, system)
       logger.info(s"XXX registering with akka uri: $uri")
       val values = Map(
-        PATH_KEY -> uri.getPath,
-        SYSTEM_KEY -> uri.getUserInfo,
-        PREFIX_KEY -> prefix)
+        PATH_KEY → uri.getPath,
+        SYSTEM_KEY → uri.getUserInfo,
+        PREFIX_KEY → prefix
+      )
       val service = ServiceInfo.create(dnsType, serviceRef.toString, uri.getPort, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered $serviceRef at ${service.getInet4Addresses.toList}")
@@ -310,7 +312,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
             if (serviceRef.accessType == AkkaType) {
               identify(rs)
             } else {
-              resolved += serviceRef -> rs
+              resolved += serviceRef → rs
               checkResolved()
             }
         }
@@ -345,7 +347,7 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   // Update the resolved map and check if we have everything that was requested.
   private def actorIdentified(actorRefOpt: Option[ActorRef], rs: ResolvedService): Unit = {
     if (actorRefOpt.isDefined) {
-      resolved += rs.serviceRef -> rs.copy(actorRefOpt = actorRefOpt)
+      resolved += rs.serviceRef → rs.copy(actorRefOpt = actorRefOpt)
       context.watch(actorRefOpt.get)
       log.info(s"Resolved actor $actorRefOpt")
       checkResolved()

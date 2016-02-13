@@ -2,7 +2,7 @@ package csw.services.kvs
 
 import akka.actor.ActorRefFactory
 import csw.util.cfg.Configurations.StateVariable
-import csw.util.cfg.Configurations.StateVariable.{ CurrentState, DemandState }
+import csw.util.cfg.Configurations.StateVariable.{CurrentState, DemandState}
 
 import scala.concurrent.Future
 

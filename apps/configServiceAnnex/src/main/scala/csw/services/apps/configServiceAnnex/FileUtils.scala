@@ -1,9 +1,9 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{ File, IOException }
+import java.io.{File, IOException}
 import java.nio.channels.FileChannel
-import java.nio.file.{ Path, StandardOpenOption }
-import java.nio.{ ByteBuffer, MappedByteBuffer }
+import java.nio.file.{Path, StandardOpenOption}
+import java.nio.{ByteBuffer, MappedByteBuffer}
 
 import akka.util.ByteString
 import net.codejava.security.HashGeneratorUtils

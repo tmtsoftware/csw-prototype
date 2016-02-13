@@ -1,23 +1,23 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{ File, FileOutputStream }
-import java.net.{ InetSocketAddress, URI }
-import java.nio.file.{ Files, Path, Paths }
+import java.io.{File, FileOutputStream}
+import java.net.{InetSocketAddress, URI}
+import java.nio.file.{Files, Path, Paths}
 
 import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.{ LocationService, ServiceType, ServiceId }
+import csw.services.loc.{LocationService, ServiceType, ServiceId}
 import org.slf4j.LoggerFactory
 import akka.actor.ActorSystem
 
-import scala.concurrent.{ Promise, Future }
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{Promise, Future}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -83,7 +83,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val result = Try {
       val mappedByteBuffer = FileUtils.mmap(path)
       val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
-      val chunks = Source(() ⇒ iterator).map(ChunkStreamPart.apply)
+      val chunks = Source.fromIterator(() ⇒ iterator).map(ChunkStreamPart.apply)
       HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
     } recover {
       case NonFatal(cause) ⇒

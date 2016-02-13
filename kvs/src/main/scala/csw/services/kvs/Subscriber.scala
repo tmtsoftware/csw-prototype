@@ -1,12 +1,12 @@
 package csw.services.kvs
 
-import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
+import akka.actor.{ActorRef, Props, ActorLogging, Actor}
 import csw.services.kvs.KeyValueStore.KvsFormatter
-import redis.actors.{ DecodeReplies, RedisWorkerIO }
+import redis.actors.{DecodeReplies, RedisWorkerIO}
 import java.net.InetSocketAddress
 import redis.api.pubsub._
 import akka.util.ByteString
-import redis.protocol.{ MultiBulk, RedisReply }
+import redis.protocol.{MultiBulk, RedisReply}
 
 /**
  * Adds the ability to subscribe to objects of type T.

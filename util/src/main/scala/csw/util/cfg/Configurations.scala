@@ -86,7 +86,7 @@ object Configurations {
      * Derived classes might want to add values to this map for fixed fields.
      */
     def getStringMap: Map[String, String] = data.data.map {
-      case (k, v) ⇒ k.name -> v.toString
+      case (k, v) ⇒ k.name → v.toString
     }
 
     /**
@@ -292,7 +292,7 @@ object Configurations {
  */
 object Events {
 
-  import Configurations.{ ConfigKey, ConfigType }
+  import Configurations.{ConfigKey, ConfigType}
 
   case class EventTime(time: Long) {
     override def toString = time.toString

@@ -1,12 +1,12 @@
 package csw.services.apps.sequencer
 
-import akka.actor.{ ActorRef, ActorSystem }
+import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import csw.services.ccs.HcdController.Submit
-import csw.services.ccs.{ AssemblyClient, BlockingAssemblyClient }
+import csw.services.ccs.{AssemblyClient, BlockingAssemblyClient}
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.{ ServiceRef, ServiceId, LocationService, ServiceType }
-import csw.services.pkg.{ Supervisor, Container }
+import csw.services.loc.{ServiceRef, ServiceId, LocationService, ServiceType}
+import csw.services.pkg.{Supervisor, Container}
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.Await

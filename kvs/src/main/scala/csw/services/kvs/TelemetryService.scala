@@ -5,7 +5,7 @@ import akka.util.Timeout
 import csw.util.cfg.Events.StatusEvent
 import Implicits._
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 
 object TelemetryService {
   def telemetryPrefix(prefix: String): String = s"telem:$prefix"

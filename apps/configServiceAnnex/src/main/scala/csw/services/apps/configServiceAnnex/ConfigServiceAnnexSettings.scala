@@ -2,7 +2,7 @@ package csw.services.apps.configServiceAnnex
 
 import java.io.File
 
-import akka.actor.{ ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider }
+import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.util.Timeout
 import com.typesafe.config.Config
 

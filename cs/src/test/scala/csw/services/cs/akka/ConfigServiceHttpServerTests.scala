@@ -1,17 +1,17 @@
 package csw.services.cs.akka
 
 import akka.actor.ActorSystem
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.core.ConfigManagerTestHelper
 import csw.services.cs.core.git.GitConfigManager
-import org.scalatest.{ BeforeAndAfterAll, FunSuiteLike }
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 
 /**
  * Tests the Config Service Http server

@@ -2,7 +2,7 @@ package csw.services.pkg
 
 import akka.actor._
 import com.typesafe.config.Config
-import csw.services.loc.{ LocationService, ServiceType, ServiceId }
+import csw.services.loc.{LocationService, ServiceType, ServiceId}
 
 import scala.collection.JavaConversions._
 

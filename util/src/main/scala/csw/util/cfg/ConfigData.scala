@@ -37,7 +37,7 @@ case class ConfigData(data: Map[Key, Any] = Map.empty) extends Serializable {
   /**
    * Immutably sets the value for the given key and returns a new instance
    */
-  def set[A](key: Key.Aux[A], value: A): ConfigData = ConfigData(data + (key -> value))
+  def set[A](key: Key.Aux[A], value: A): ConfigData = ConfigData(data + (key → value))
 
   /**
    * Immutably removes the key and its value and returns a new instance

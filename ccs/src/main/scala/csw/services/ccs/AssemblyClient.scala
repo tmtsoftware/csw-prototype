@@ -3,13 +3,13 @@ package csw.services.ccs
 import akka.actor._
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
-import csw.services.kvs.{ StateVariableStore, KvsSettings }
-import csw.util.cfg.Configurations.{ SetupConfigArg, SetupConfig }
+import csw.services.kvs.{StateVariableStore, KvsSettings}
+import csw.util.cfg.Configurations.{SetupConfigArg, SetupConfig}
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import akka.pattern.ask
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /**
  * A client API for assemblies that hides the actor API.

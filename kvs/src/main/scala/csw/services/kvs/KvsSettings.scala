@@ -1,6 +1,6 @@
 package csw.services.kvs
 
-import akka.actor.{ ActorSystem, Extension, ExtensionKey }
+import akka.actor.{ActorSystem, Extension, ExtensionKey}
 
 object KvsSettings extends ExtensionKey[KvsSettings]
 
