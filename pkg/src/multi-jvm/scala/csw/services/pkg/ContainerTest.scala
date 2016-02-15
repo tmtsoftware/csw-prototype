@@ -20,11 +20,10 @@ import scala.concurrent.duration._
  * See http://doc.akka.io/docs/akka/current/dev/multi-node-testing.html#multi-node-testing.
  */
 object ContainerConfig extends MultiNodeConfig {
+
   val container1 = role("container1")
 
   val container2 = role("container2")
-
-  LocationService.initInterface()
 
   // Note: The "multinode.host" system property needs to be set to empty so that the MultiNodeSpec
   // base class below will use the actual host name.
@@ -32,6 +31,7 @@ object ContainerConfig extends MultiNodeConfig {
   // registers the config service with the actual host name.)
   System.setProperty("multinode.host", "")
 }
+
 
 class TestMultiJvmContainer1 extends ContainerSpec
 
@@ -70,7 +70,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             implicit val timeout: Timeout = 60.seconds
             Await.result(LocationService.resolve(serviceRefs), timeout.duration)
 
-            // Use actot API
+            // Use actor API
             assembly1 ! Submit(TestConfig.testConfigArg)
             expectMsgType[CommandStatus.Accepted]
             expectMsgType[CommandStatus.Completed]

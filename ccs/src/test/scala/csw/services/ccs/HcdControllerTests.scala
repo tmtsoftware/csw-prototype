@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdController.Process
 import csw.services.kvs._
+import csw.services.loc.LocationService
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.StandardKeys.position
 import org.scalatest.{DoNotDiscover, FunSuiteLike}
@@ -14,6 +15,9 @@ import scala.concurrent.duration._
 import Implicits._
 
 object HcdControllerTests {
+
+  LocationService.initInterface()
+  val system = ActorSystem("Test")
 
   val testPrefix1 = "wfos.blue.filter"
   val testPrefix2 = "wfos.red.filter"
@@ -106,7 +110,7 @@ object HcdControllerTests {
 
 // Test requires that Redis is running externally
 //@DoNotDiscover
-class HcdControllerTests extends TestKit(ActorSystem("test"))
+class HcdControllerTests extends TestKit(HcdControllerTests.system)
     with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import HcdControllerTests._

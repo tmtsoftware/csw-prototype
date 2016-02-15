@@ -4,6 +4,7 @@ import java.io.{File, RandomAccessFile}
 import java.nio.file.Files
 
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.loc.LocationService
 import net.codejava.security.HashGeneratorUtils
 import org.scalatest.FunSuite
 
@@ -15,6 +16,8 @@ import scala.concurrent.duration._
  * Tests uploading and downloading files
  */
 class ConfigServiceAnnexTests extends FunSuite with LazyLogging {
+
+  LocationService.initInterface()
 
   test("Test config service annex") {
     val server = ConfigServiceAnnexServer()

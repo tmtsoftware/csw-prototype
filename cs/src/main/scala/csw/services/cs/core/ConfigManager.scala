@@ -4,6 +4,7 @@ import java.io.{ByteArrayOutputStream, File, FileOutputStream, OutputStream}
 import java.nio.file.{Files, StandardCopyOption}
 import java.util.Date
 
+import akka.NotUsed
 import akka.actor.ActorRefFactory
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
@@ -69,6 +70,7 @@ trait ConfigManager {
 
   /**
    * Returns true if the given path exists and is being managed
+   *
    * @param path the file path relative to the repository root
    * @return true the file exists
    */
@@ -83,12 +85,14 @@ trait ConfigManager {
 
   /**
    * Returns a list containing all of the known config files
+   *
    * @return a list containing one ConfigFileInfo object for each known config file
    */
   def list(): Future[List[ConfigFileInfo]]
 
   /**
    * Returns a list of all known versions of a given path
+   *
    * @param path the file path relative to the repository root
    * @param maxResults the maximum number of history results to return (default: unlimited)
    * @return a list containing one ConfigFileHistory object for each version of path
@@ -231,6 +235,7 @@ object ConfigData {
 
   /**
    * Initialize with the contents of the given file.
+   *
    * @param file the data source
    * @param chunkSize the block or chunk size to use when streaming the data
    */
@@ -243,19 +248,19 @@ object ConfigData {
 }
 
 case class ConfigString(str: String) extends ConfigData {
-  override def source: Source[ByteString, Unit] = Source(List(ByteString(str.getBytes)))
+  override def source: Source[ByteString, NotUsed] = Source(List(ByteString(str.getBytes)))
 
   override def toString: String = str
 }
 
 case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
-  override def source: Source[ByteString, Unit] = Source(List(ByteString(bytes)))
+  override def source: Source[ByteString, NotUsed] = Source(List(ByteString(bytes)))
 
   override def toString: String = new String(bytes)
 }
 
 case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
-  override def source: Source[ByteString, Unit] = {
+  override def source: Source[ByteString, NotUsed] = {
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
     Source.fromIterator(() ⇒ iterator)

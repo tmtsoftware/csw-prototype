@@ -7,8 +7,8 @@ import sbt.Project.projectToRef
 object Dependencies {
 
   val scalaVersion = "2.11.7"
-  val akkaVersion = "2.4.1"
-  val akkaStreamsVersion = "2.0.3"
+  val akkaVersion = "2.4.2-RC3"
+  val akkaStreamsVersion = "2.4.2-RC3"
   val hornetqVersion = "2.4.7.Final"
 
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
@@ -17,7 +17,7 @@ object Dependencies {
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
   // Akka streams (experimental)
-  val akkaStream = "com.typesafe.akka" %% "akka-stream-experimental" % akkaStreamsVersion
+  val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion
   val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamsVersion
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaStreamsVersion
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamsVersion
@@ -47,7 +47,7 @@ object Dependencies {
   val jmdns = "javax.jmdns" % "jmdns" % "3.4.1"
 
   // Test dependencies
-  val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit-experimental" % akkaStreamsVersion
+  val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion
   val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamsVersion
 
   val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion

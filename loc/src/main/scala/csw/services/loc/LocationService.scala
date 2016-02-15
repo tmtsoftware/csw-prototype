@@ -4,6 +4,7 @@ import java.net.{Inet6Address, NetworkInterface, URI, InetAddress}
 import javax.jmdns._
 import akka.actor._
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.AccessType.AkkaType
 import org.slf4j.LoggerFactory
@@ -22,12 +23,17 @@ object LocationService {
 
   /**
    * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
-   * set, so that any services or akka actors created will use and publish the correct IP address.
+   * set on the command line, so that any services or akka actors created will use and publish the correct IP address.
    * This method should be called before creating any actors or web services that depend on the location service.
+   *
+   * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
+   * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
+   * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
    *
    * @param hostname if not empty, use this as the hostname or IP address, otherwise attempt to guess the main IP address
    */
   def initInterface(hostname: String = ""): Unit = {
+    logger.info(s"XXX called LocationService.initInterface $hostname")
     case class Addr(index: Int, addr: InetAddress)
     def defaultAddr = Addr(0, InetAddress.getLocalHost)
     def filter(a: Addr): Boolean = {
@@ -50,17 +56,17 @@ object LocationService {
 
     val akkaKey = "akka.remote.netty.tcp.hostname"
     val mdnsKey = "net.mdns.interface"
-    if (System.getProperty(akkaKey) == null || System.getProperty(mdnsKey) == null) {
-      val host = if (hostname.nonEmpty) hostname else getIpAddress
-      if (System.getProperty(akkaKey) == null) {
-        logger.info(s"Setting $akkaKey to $host")
-        System.setProperty(akkaKey, host)
-      }
-      if (System.getProperty(mdnsKey) == null) {
-        logger.info(s"Setting $mdnsKey to $host")
-        System.setProperty(mdnsKey, host)
-      }
-    }
+    //    val config = ConfigFactory.load()
+    val mdnsHost = Option(System.getProperty(mdnsKey))
+    mdnsHost.foreach(h ⇒ logger.info(s"Found system property for $mdnsKey: $h"))
+    //    val akkaHost = if (config.hasPath(akkaKey) && config.getString(akkaKey).nonEmpty) Some(config.getString(akkaKey)) else None
+    val akkaHost = Option(System.getProperty(akkaKey))
+    akkaHost.foreach(h ⇒ logger.info(s"Found system property for: $akkaKey: $h"))
+    val host = akkaHost.getOrElse(mdnsHost.getOrElse(getIpAddress))
+    logger.info(s"Using $host as listening IP address")
+    System.setProperty(akkaKey, host)
+    System.setProperty(mdnsKey, host)
+
   }
 
   // Multicast DNS service type

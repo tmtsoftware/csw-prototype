@@ -1,5 +1,6 @@
 package csw.services.pkg
 
+import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
 import org.scalatest.Matchers
 import akka.remote.testkit.MultiNodeSpecCallbacks
