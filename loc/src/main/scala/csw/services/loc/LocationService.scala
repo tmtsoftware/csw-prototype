@@ -4,7 +4,6 @@ import java.net.{Inet6Address, NetworkInterface, URI, InetAddress}
 import javax.jmdns._
 import akka.actor._
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.AccessType.AkkaType
 import org.slf4j.LoggerFactory
@@ -33,7 +32,6 @@ object LocationService {
    * @param hostname if not empty, use this as the hostname or IP address, otherwise attempt to guess the main IP address
    */
   def initInterface(hostname: String = ""): Unit = {
-    logger.info(s"XXX called LocationService.initInterface $hostname")
     case class Addr(index: Int, addr: InetAddress)
     def defaultAddr = Addr(0, InetAddress.getLocalHost)
     def filter(a: Addr): Boolean = {
@@ -66,7 +64,6 @@ object LocationService {
     logger.info(s"Using $host as listening IP address")
     System.setProperty(akkaKey, host)
     System.setProperty(mdnsKey, host)
-
   }
 
   // Multicast DNS service type
