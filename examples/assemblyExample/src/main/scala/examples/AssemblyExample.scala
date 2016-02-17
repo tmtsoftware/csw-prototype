@@ -4,7 +4,7 @@ import akka.actor.{Props, ActorRef}
 import csw.services.ccs.{CommandStatus, HcdController, AssemblyController}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
-import csw.services.loc.{ServiceId, ServiceType, ServiceRef}
+import csw.services.loc.{LocationService, ServiceId, ServiceType, ServiceRef}
 import csw.services.pkg.{Component, LifecycleHandler, Assembly}
 import csw.services.pkg.Component.ComponentInfo
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
@@ -100,6 +100,7 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
 object AssemblyExampleApp extends App {
   import Assembly1._
   println("Starting Assembly1")
+  LocationService.initInterface()
   val serviceId = ServiceId(assemblyName, ServiceType.Assembly)
   val targetServiceId = targetServiceRef.serviceId
   val props = Assembly1.props()

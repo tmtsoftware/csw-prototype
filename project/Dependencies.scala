@@ -1,17 +1,17 @@
-import sbt.Keys._
 import sbt._
-import sbt.Project.projectToRef
 
 // Dependencies
 
 object Dependencies {
 
   val scalaVersion = "2.11.7"
+
   val akkaVersion = "2.4.2-RC3"
   val akkaStreamsVersion = "2.4.2-RC3"
+
   val hornetqVersion = "2.4.7.Final"
 
-  val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
+  val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion // all akka is ApacheV2
   val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
   val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
@@ -21,46 +21,46 @@ object Dependencies {
   val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamsVersion
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaStreamsVersion
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamsVersion
-  val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.5.0"
+  val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.5.0" // ApacheV2
 
-  val jeromq = "org.zeromq" % "jeromq" % "0.3.5"
-  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
-  val logback = "ch.qos.logback" % "logback-classic" % "1.1.1"
-  val janino = "org.codehaus.janino" % "janino" % "2.7.6"
-  val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1"
+  val jeromq = "org.zeromq" % "jeromq" % "0.3.5" // LGPL
+  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" // ApacheV2
+  val logback = "ch.qos.logback" % "logback-classic" % "1.1.1" // EPL v1.0 and the LGPL 2.1
+  val janino = "org.codehaus.janino" % "janino" % "2.7.6" // BSD
+  val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1" // ApacheV2
 
-  val upickle = "com.lihaoyi" %% "upickle" % "0.3.8"
-  val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1"
+  val upickle = "com.lihaoyi" %% "upickle" % "0.3.8" // MIT
+  val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1" // SCALA LICENSE (BSD-like)
 
-  val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r"
+  val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
 
-  val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0"
+  val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0" // ApacheV2
 
-  val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion
+  val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion // ApacheV2
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
-  val ficus = "net.ceedubs" % "ficus_2.11" % "1.1.2"
+  val ficus = "net.ceedubs" % "ficus_2.11" % "1.1.2" // MIT
 
-  val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.6.1"
+  val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.6.1" // New BSD license
 
-  val scopt = "com.github.scopt" %% "scopt" % "3.3.0"
+  val scopt = "com.github.scopt" %% "scopt" % "3.3.0"//  MIT License
 
-  val jmdns = "javax.jmdns" % "jmdns" % "3.4.1"
+  val jmdns = "javax.jmdns" % "jmdns" % "3.4.1" // ApacheV2
 
   // Test dependencies
-  val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion
+  val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion // ApacheV2
   val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamsVersion
 
-  val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
+  val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion // ApacheV2
   val akkaMultiNodeTest = "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6"
-  val junit = "com.novocode" % "junit-interface" % "0.11"
-  val specs2 = "org.specs2" %% "specs2" % "3.7"
+  val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" // ApacheV2
+  val junit = "com.novocode" % "junit-interface" % "0.11" // Two-clause BSD-style license
+  val specs2 = "org.specs2" %% "specs2" % "3.7" // MIT-style
 
   // REPL dependencies
-  val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion
+  val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion // Scala License: BSD 3-Clause
   val scalaCompiler = "org.scala-lang" % "scala-compiler" % scalaVersion
   val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion
-  val jline = "jline" % "jline" % "2.13"
+  val jline = "jline" % "jline" % "2.13" // BSD
 }
 

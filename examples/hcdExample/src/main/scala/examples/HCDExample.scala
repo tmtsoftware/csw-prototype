@@ -4,7 +4,7 @@ import akka.actor.{Cancellable, Actor, ActorLogging, Props}
 import csw.services.ccs.PeriodicHcdController
 import csw.services.event.{EventSubscriber, EventService, EventServiceSettings}
 
-import csw.services.loc.{ServiceId, ServiceType}
+import csw.services.loc.{LocationService, ServiceId, ServiceType}
 import csw.services.pkg.{LifecycleHandler, Hcd, Component}
 import csw.services.pkg.Component.ComponentInfo
 
@@ -143,6 +143,7 @@ class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
  */
 object HCDExample2App extends App {
   println("Starting!")
+  LocationService.initInterface()
   val serviceId = ServiceId(HCDExample.hcdName, ServiceType.HCD)
 
   val compInfo: ComponentInfo = Component.create(HCDExample.props(), serviceId, HCDExample.prefix, Nil)

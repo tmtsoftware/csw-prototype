@@ -1,10 +1,10 @@
 import com.typesafe.sbt.SbtNativePackager._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
 import com.typesafe.sbt.packager.Keys._
 import sbt.Keys._
 import sbt._
-
 import com.typesafe.sbt.SbtSite.site
 import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
@@ -27,25 +27,21 @@ object Settings {
     autoAPIMappings := true,
     resolvers += Resolver.typesafeRepo("releases"),
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
-    //    resolvers += "Akka Snapshots" at "http://repo.typesafe.com/typesafe/akka-snapshots",
     resolvers += "Spray repo" at "http://repo.spray.io",
-    //    resolvers += "Spray nightlies" at "http://nightlies.spray.io",
     resolvers += Resolver.sonatypeRepo("releases"),
     resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2",
-    //    resolvers += Resolver.sonatypeRepo("snapshots"),
-    //    resolvers += "rediscala" at "https://github.com/etaty/rediscala-mvn/raw/master/releases/",
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
-      // local maven repo
-    //    resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
     resolvers += sbtResolver.value
+    // resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
   )
 
   lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(
     // compile options ScalaUnidoc, unidoc
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
-    javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
+    javacOptions in Compile ++= Seq("-source", "1.8"),
+    javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
     javaOptions in Test += "-Xmx2048m",
     javaOptions += "-Djava.net.preferIPv4Stack=true"  // For location service
   )
@@ -56,7 +52,7 @@ object Settings {
     rpmRelease := "0",
     rpmVendor := "TMT Common Software",
     rpmUrl := Some("http://www.tmt.org"),
-    rpmLicense := Some("MIT"),
+    rpmLicense := Some("ApacheV2"),
     rpmGroup := Some("CSW"),
     packageSummary := summary,
     packageDescription := desc,
@@ -73,8 +69,6 @@ object Settings {
     site.preprocessSite() ++ Seq(
     git.remoteRepo := "https://github.com/tmtsoftware/csw.git"
   )
-
-  import scalariform.formatter.preferences._
 
   def formattingPreferences: FormattingPreferences =
     FormattingPreferences()
