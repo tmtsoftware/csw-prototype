@@ -15,7 +15,7 @@ object TestServiceClientApp extends App {
   implicit lazy val system = ActorSystem("TestServiceClientApp")
   implicit val dispatcher = system.dispatcher
   sys.addShutdownHook(system.terminate())
-  system.actorOf(Props(classOf[TestServiceClient]))
+  system.actorOf(TestServiceClient.props(numServices))
 }
 
 object TestServiceClient {
