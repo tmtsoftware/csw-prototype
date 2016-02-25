@@ -22,7 +22,7 @@ def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    test(scalaTest)
+    test(scalaTest, junit)
   )
 
 // Supporting classes

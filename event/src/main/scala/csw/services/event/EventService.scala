@@ -21,9 +21,9 @@ object EventService {
    * @param session single-thread object required for producing and consuming messages
    */
   case class EventServiceInfo(
-    serverLocator: ServerLocator,
-    sf:            ClientSessionFactory,
-    session:       ClientSession
+      serverLocator: ServerLocator,
+      sf:            ClientSessionFactory,
+      session:       ClientSession
   ) {
 
     /**

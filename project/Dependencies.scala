@@ -6,8 +6,8 @@ object Dependencies {
 
   val scalaVersion = "2.11.7"
 
-  val akkaVersion = "2.4.2-RC3"
-  val akkaStreamsVersion = "2.4.2-RC3"
+  val akkaVersion = "2.4.2"
+  val akkaStreamsVersion = "2.4.2"
 
   val hornetqVersion = "2.4.7.Final"
 
@@ -48,7 +48,7 @@ object Dependencies {
 
   // Test dependencies
   val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion // ApacheV2
-  val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamsVersion
+  val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit" % akkaStreamsVersion
 
   val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion // ApacheV2
   val akkaMultiNodeTest = "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion

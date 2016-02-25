@@ -3,7 +3,14 @@ package csw.services.loc
 import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
 import csw.services.loc.LocationService.{Disconnected, ServicesReady}
 
+/**
+ * A location service test client application that attempts to resolve one or more sets of
+ * akka and http services.
+ * If a command line arg is given, it should be the number of (akka, http) pairs of services to start (default: 1 of each).
+ * The client and service applications can be run on the same or different hosts.
+ */
 object TestServiceClientApp extends App {
+  val numServices = args.headOption.map(_.toInt).getOrElse(1)
   LocationService.initInterface()
   implicit lazy val system = ActorSystem("TestServiceClientApp")
   implicit val dispatcher = system.dispatcher
@@ -11,11 +18,15 @@ object TestServiceClientApp extends App {
   system.actorOf(Props(classOf[TestServiceClient]))
 }
 
+object TestServiceClient {
+  def props(numServices: Int): Props = Props(classOf[TestServiceClient], numServices)
+}
+
 /**
  * A test client actor that uses the location service to resolve services
  */
-class TestServiceClient extends Actor with ActorLogging {
-  val serviceRefs = Set(TestAkkaService.serviceRef, TestHttpService.serviceRef)
+class TestServiceClient(numServices: Int) extends Actor with ActorLogging {
+  val serviceRefs = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.serviceRef(i), TestHttpService.serviceRef(i))).toSet
   context.actorOf(LocationService.props(serviceRefs))
 
   override def receive: Receive = {

@@ -3,24 +3,36 @@ package csw.services.loc
 import akka.actor._
 import csw.services.loc.AccessType.AkkaType
 
+/**
+ * Starts one or more akka services in order to test the location service.
+ * If a command line arg is given, it should be the number of services to start (default: 1).
+ * Each service will have a number appended to its name.
+ * You should start the TestServiceClient with the same number, so that it
+ * will try to find all the services.
+ * The client and service applications can be run on the same or different hosts.
+ */
 object TestAkkaServiceApp extends App {
+  val numServices = args.headOption.map(_.toInt).getOrElse(1)
   LocationService.initInterface()
   implicit lazy val system = ActorSystem("TestAkkaServiceApp")
   implicit val dispatcher = system.dispatcher
   sys.addShutdownHook(system.terminate())
-  system.actorOf(Props(classOf[TestAkkaService]))
+  for (i ← 1 to numServices) {
+    system.actorOf(TestAkkaService.props(i))
+  }
 }
 
 object TestAkkaService {
-  val serviceId = ServiceId("TestAkkaService", ServiceType.Assembly)
-  val serviceRef = ServiceRef(serviceId, AkkaType)
+  def props(i: Int): Props = Props(classOf[TestAkkaService], i)
+  def serviceId(i: Int) = ServiceId(s"TestAkkaService-$i", ServiceType.Assembly)
+  def serviceRef(i: Int) = ServiceRef(serviceId(i), AkkaType)
 }
 
 /**
  * A dummy akka test service that registers with the location service
  */
-class TestAkkaService extends Actor with ActorLogging {
-  LocationService.registerAkkaService(TestAkkaService.serviceId, self, "test.akka.prefix")(context.system)
+class TestAkkaService(i: Int) extends Actor with ActorLogging {
+  LocationService.registerAkkaService(TestAkkaService.serviceId(i), self, "test.akka.prefix")(context.system)
   override def receive: Receive = {
     case x ⇒
       log.error(s"Received unexpected message $x")

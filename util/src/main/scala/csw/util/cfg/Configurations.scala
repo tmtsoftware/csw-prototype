@@ -402,6 +402,10 @@ object Events {
     def apply(prefix: String, time: EventTime): ObserveEvent = ObserveEvent(EventInfo(prefix, time))
 
     def apply(prefix: String, time: EventTime, obsId: ObsId): ObserveEvent = ObserveEvent(EventInfo(prefix, time, Some(obsId)))
+
+    // Java friendly alternatives to apply(...), create() is already taken
+    def make(prefix: String, time: EventTime): ObserveEvent = ObserveEvent(prefix, time)
+    def make(prefix: String, time: EventTime, obsId: ObsId): ObserveEvent = ObserveEvent(prefix, time, obsId)
   }
 
   case class SystemEvent(info: EventInfo, data: ConfigData = ConfigData()) extends EventType[SystemEvent] with EventServiceEvent {
