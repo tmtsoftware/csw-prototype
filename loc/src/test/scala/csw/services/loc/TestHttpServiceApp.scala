@@ -18,7 +18,7 @@ object TestHttpServiceApp extends App {
   implicit val dispatcher = system.dispatcher
   sys.addShutdownHook(system.terminate())
   for (i ← 1 to numServices) {
-    system.actorOf(Props(classOf[TestHttpService]))
+    system.actorOf(TestHttpService.props(i))
   }
 }
 
