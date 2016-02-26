@@ -20,6 +20,9 @@ object LocationService {
 
   private val logger = Logger(LoggerFactory.getLogger("LocationService"))
 
+  // Share the JmDNS instance within this jvm for better performance
+  private val registry = getRegistry
+
   /**
    * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
    * set on the command line, so that any services or akka actors created will use and publish the correct IP address.
@@ -94,13 +97,19 @@ object LocationService {
    */
   trait Registration {
     /**
-     * Closes the connection and unregisters services registered with this instance
+     * Unregisters the previously registered service.
+     * Note that all services are automatically unregistered on shutdown.
      */
-    def close(): Unit
+    def unregister(): Unit
+
+    /**
+     * Same as unregister, for backward compatibility
+     */
+    def close(): Unit = unregister()
   }
 
-  private case class RegisterResult(registry: JmDNS) extends Registration {
-    override def close(): Unit = registry.close()
+  private case class RegisterResult(registry: JmDNS, info: ServiceInfo) extends Registration {
+    override def unregister(): Unit = registry.unregisterService(info)
   }
 
   /**
@@ -159,14 +168,13 @@ object LocationService {
   def registerHttpService(serviceId: ServiceId, port: Int, path: String = "")(implicit ec: ExecutionContext): Future[Registration] = {
     val serviceRef = ServiceRef(serviceId, AccessType.HttpType)
     Future {
-      val registry = getRegistry
       val values = Map(
         PATH_KEY → path
       )
       val service = ServiceInfo.create(dnsType, serviceRef.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered $serviceRef")
-      RegisterResult(registry)
+      RegisterResult(registry, service)
     }
   }
 
@@ -182,9 +190,8 @@ object LocationService {
     import system.dispatcher
     val serviceRef = ServiceRef(serviceId, AccessType.AkkaType)
     Future {
-      val registry = getRegistry
       val uri = getActorUri(actorRef, system)
-      logger.info(s"XXX registering with akka uri: $uri")
+      logger.info(s"registering with akka uri: $uri")
       val values = Map(
         PATH_KEY → uri.getPath,
         SYSTEM_KEY → uri.getUserInfo,
@@ -193,7 +200,7 @@ object LocationService {
       val service = ServiceInfo.create(dnsType, serviceRef.toString, uri.getPort, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered $serviceRef at ${service.getInet4Addresses.toList}")
-      RegisterResult(registry)
+      RegisterResult(registry, service)
     }
   }
 
@@ -241,8 +248,6 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   // Set of resolved services (Needs to be a var, since the ServiceListener callbacks prevent using akka state)
   var resolved = Map.empty[ServiceRef, ResolvedService]
 
-  val registry = getRegistry
-
   // Check if location is already known
   val serviceInfo = registry.list(dnsType).toList
   for (info ← serviceInfo) resolveService(info)
@@ -277,12 +282,6 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
     }
   }
 
-  /*
-      public URI(String scheme,
-               String userInfo, String host, int port,
-               String path, String query, String fragment)
-
-   */
   private def getAkkaUri(uriStr: String, userInfo: String): Option[URI] = try {
     val uri = new URI(uriStr)
     Some(new URI("akka.tcp", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))

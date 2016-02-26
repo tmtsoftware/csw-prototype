@@ -160,8 +160,9 @@ class TelemetryServiceTests
 
     // See below for actor class
     val mySubscriber = system.actorOf(MySubscriber.props(prefix1, prefix2))
+
     // This is just to make sure the actor has time to subscribe before we proceed
-    Await.result((mySubscriber ? MySubscriber.GetResults).mapTo[MySubscriber.Results], 5.seconds)
+    Thread.sleep(1000)
 
     bts.set(event1)
     bts.set(event1.set(infoValue, 2))
@@ -199,13 +200,11 @@ class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber
   def receive: Receive = {
     case event: StatusEvent if event.prefix == prefix1 ⇒
       count1 = count1 + 1
-      println(s"$prefix1: ${event.get(infoValue).get}")
       assert(event.get(infoValue).get == count1)
       assert(event.get(infoStr).get == "info 1")
 
     case event: StatusEvent if event.prefix == prefix2 ⇒
       count2 = count2 + 1
-      println(s"$prefix2: ${event.get(infoValue).get}")
       assert(event.get(infoValue).get == count2)
       assert(event.get(infoStr).get == "info 2")
 

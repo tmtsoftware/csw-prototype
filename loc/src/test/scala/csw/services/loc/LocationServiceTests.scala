@@ -20,8 +20,6 @@ object LocationServiceTests {
 class LocationServiceTests extends TestKit(LocationServiceTests.system)
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
-  import system.dispatcher
-
   test("Test location service") {
     val serviceRefs = Set(ServiceRef(ServiceId("TestService", ServiceType.Assembly), AkkaType))
     system.actorOf(LocationService.props(serviceRefs, Some(self)))

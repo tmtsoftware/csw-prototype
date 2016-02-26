@@ -42,6 +42,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
     // (In normal operations, this server would already be running)
     val server = ConfigServiceAnnexServer()
     runTests(Some(server), oversize = true)
+    server.shutdown()
   }
 
   // Runs the tests for the config service, using the given oversize option.

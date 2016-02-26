@@ -137,7 +137,7 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
       component ! process
 
     case UnregisterWithLocationService ⇒
-      registration.foreach(_.close())
+      registration.foreach(_.unregister())
   }
 
   // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---

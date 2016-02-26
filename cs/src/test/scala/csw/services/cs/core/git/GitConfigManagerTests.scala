@@ -23,6 +23,7 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
     // (In normal operations, this server would already be running)
     val server = ConfigServiceAnnexServer()
     runTests(Some(server), oversize = true)
+    server.shutdown()
   }
 
   def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {

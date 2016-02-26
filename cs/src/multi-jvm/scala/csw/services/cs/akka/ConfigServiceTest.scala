@@ -50,9 +50,10 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
 
     "be able to start the config service, annex, and client to manage files" in {
       runOn(configServiceAnnex) {
-        ConfigServiceAnnexServer()
+        val server = ConfigServiceAnnexServer()
         enterBarrier("deployed")
         enterBarrier("done")
+        server.shutdown()
       }
 
       runOn(configService) {
