@@ -39,6 +39,9 @@ case class ConfigData(data: Map[Key, Any] = Map.empty) extends Serializable {
    */
   def set[A](key: Key.Aux[A], value: A): ConfigData = ConfigData(data + (key → value))
 
+  // XXX java API
+  final def jset[A](key: Key, value: Object): ConfigData = ConfigData(data + (key → value))
+
   /**
    * Immutably removes the key and its value and returns a new instance
    */
