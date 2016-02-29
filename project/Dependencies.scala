@@ -33,6 +33,8 @@ object Dependencies {
   val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1" // SCALA LICENSE (BSD-like)
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
+  val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11"
+
 
   val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0" // ApacheV2
 

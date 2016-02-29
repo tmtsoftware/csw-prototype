@@ -72,7 +72,7 @@ lazy val cs = project
   .settings(SbtMultiJvm.multiJvmSettings: _*)
   .dependsOn(log, loc, util, configServiceAnnex)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaHttpSprayJson, jgit, logback, akkaHttp, scopt) ++
+    compile(akkaActor, akkaHttpSprayJson, jgit, svnkit, logback, akkaHttp, scopt) ++
       test(scalaTest, akkaTestKit, junit, akkaMultiNodeTest)
   ) configs MultiJvm
 
