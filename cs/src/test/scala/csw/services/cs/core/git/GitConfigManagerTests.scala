@@ -3,7 +3,7 @@ package csw.services.cs.core.git
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
-import csw.services.cs.akka.TestRepo
+import csw.services.cs.akka.TestGitRepo
 import csw.services.cs.core.ConfigManagerTestHelper
 import org.scalatest.FunSuite
 
@@ -30,7 +30,7 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
     logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
     // create a test repository and use it to create the manager
-    val manager = TestRepo.getConfigManager()
+    val manager = TestGitRepo.getConfigManager()
 
     val result = ConfigManagerTestHelper.runTests(manager, oversize)
 

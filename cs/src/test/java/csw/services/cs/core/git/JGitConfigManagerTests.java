@@ -3,14 +3,12 @@ package csw.services.cs.core.git;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import csw.services.cs.JConfigData;
 import csw.services.cs.JConfigManager;
-import csw.services.cs.akka.TestRepo;
-import csw.services.cs.core.ConfigData;
+import csw.services.cs.akka.TestGitRepo;
 import csw.services.cs.core.ConfigFileHistory;
 import csw.services.cs.core.ConfigFileInfo;
 import csw.services.cs.core.ConfigId;
 import csw.services.cs.core.ConfigString;
 import org.junit.Test;
-import scala.concurrent.Await;
 import scala.concurrent.duration.FiniteDuration;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +45,7 @@ public class JGitConfigManagerTests {
     }
 
     void runTests(ConfigServiceAnnexServer annexServer, Boolean oversize) {
-        JConfigManager manager = TestRepo.getJConfigManager();
+        JConfigManager manager = TestGitRepo.getJConfigManager();
 
         if (manager.exists(path1)) {
             manager.delete(path1, "deleted");

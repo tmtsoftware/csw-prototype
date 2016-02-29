@@ -48,7 +48,7 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
     logger.info(s"--- Testing config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
-    val manager = TestRepo.getConfigManager(settings)
+    val manager = TestGitRepo.getConfigManager(settings)
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager))

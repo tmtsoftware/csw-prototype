@@ -10,7 +10,7 @@ import csw.services.cs.core.git.{GitConfigManager, JGitConfigManager}
 /**
  * Utility class to create temporary Git repositories for use in testing.
  */
-object TestRepo {
+object TestGitRepo {
 
   private def resetRepo(settings: ConfigServiceSettings)(implicit context: ActorRefFactory): Unit = {
     // XXX FIXME TODO: Use generated temp dirs, not settings
