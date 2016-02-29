@@ -9,7 +9,7 @@ import java.util.Date;
 /**
  * Tests using the config based classes from Java (Experimental)
  */
-public class ConfigJavaTests {
+public class ConfigJavaTest {
     @Test
     public void testEvent() throws Exception {
         String prefix = "";

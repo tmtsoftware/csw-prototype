@@ -101,7 +101,7 @@ lazy val ts = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
-      test(scalaTest, akkaTestKit)
+      test(scalaTest, akkaTestKit, junit)
   ) dependsOn log
 
 

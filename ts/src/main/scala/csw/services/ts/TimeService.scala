@@ -138,5 +138,9 @@ object TimeService {
 
   }
 
+  /**
+    * A java friendly version of [[TimeServiceScheduler]]
+    */
+  abstract class JTimeServiceScheduler extends UntypedActor with ActorLogging with TimeService.TimeServiceScheduler
 }
 
