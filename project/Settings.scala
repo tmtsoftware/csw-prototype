@@ -29,7 +29,7 @@ object Settings {
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     resolvers += "Spray repo" at "http://repo.spray.io",
     resolvers += Resolver.sonatypeRepo("releases"),
-    resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2",
+//    resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2",
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
     resolvers += sbtResolver.value
