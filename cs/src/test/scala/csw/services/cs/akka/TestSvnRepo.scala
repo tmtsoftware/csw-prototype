@@ -1,24 +1,28 @@
 package csw.services.cs.akka
 
+import java.io.File
+
 import akka.actor.{ActorRefFactory, ActorSystem}
+import csw.services.cs.JConfigManager
 import csw.services.cs.core.ConfigManager
+import csw.services.cs.core.svn.SvnConfigManager
 
 /**
   * Utility class to create temporary Svn repositories for use in testing.
   */
-class TestSvnRepo {
+object TestSvnRepo {
 
   private def resetRepo(settings: ConfigServiceSettings)(implicit context: ActorRefFactory): Unit = {
 //    // XXX FIXME TODO: Use generated temp dirs, not settings
-//    println(s"Local repo = ${settings.svnLocalRepository}, remote = ${settings.svnMainRepository}")
-//    if (settings.svnMainRepository.getScheme != "file")
-//      throw new RuntimeException(s"Please specify a file URI for csw.services.cs.main-repository for testing")
-//
-//    val svnMainRepo = new File(settings.svnMainRepository.getPath)
-//    // Delete the main and local test repositories (Only use this in test cases!)
-//    SvnConfigManager.deleteDirectoryRecursively(svnMainRepo)
-//    SvnConfigManager.initBareRepo(svnMainRepo)
-//    SvnConfigManager.deleteDirectoryRecursively(settings.svnLocalRepository)
+    println(s"Local repo = ${settings.localRepository}, remote = ${settings.mainRepository}")
+    if (settings.mainRepository.getScheme != "file")
+      throw new RuntimeException(s"Please specify a file URI for csw.services.cs.main-repository for testing")
+
+    val svnMainRepo = new File(settings.mainRepository.getPath)
+    // Delete the main and local test repositories (Only use this in test cases!)
+    SvnConfigManager.deleteDirectoryRecursively(svnMainRepo)
+    SvnConfigManager.initSvnRepo(svnMainRepo)
+    SvnConfigManager.deleteDirectoryRecursively(settings.localRepository)
   }
 
   /**
@@ -28,8 +32,8 @@ class TestSvnRepo {
     * @return a new ConfigManager set to manage the newly created Svn repositories
     */
   def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))(implicit context: ActorRefFactory): ConfigManager = {
-//    resetRepo(settings)
-//    SvnConfigManager(settings.svnLocalRepository, settings.svnMainRepository, settings.name)
+    resetRepo(settings)
+    SvnConfigManager(settings.localRepository, settings.mainRepository, settings.name)
   }
 
 //  /**
@@ -42,6 +46,6 @@ class TestSvnRepo {
 //    implicit val system = ActorSystem()
 //    val settings = ConfigServiceSettings(system)
 //    resetRepo(settings)
-//    JSvnConfigManager(settings.svnLocalRepository, settings.svnMainRepository)
+//    JSvnConfigManager(settings.localRepository, settings.mainRepository)
 //  }
 }

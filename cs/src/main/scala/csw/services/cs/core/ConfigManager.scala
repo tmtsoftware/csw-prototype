@@ -137,8 +137,15 @@ trait ConfigId {
 }
 
 object ConfigId {
-  def apply(id: String): ConfigId = GitConfigId(id)
+  def apply(id: String): ConfigId = ConfigIdImpl(id)
+  def apply(id: Long): ConfigId = ConfigIdImpl(id.toString)
 }
+
+/**
+  * Type of an id returned from ConfigManager create or update methods.
+  */
+case class ConfigIdImpl(id: String) extends ConfigId
+
 
 /**
  * Holds information about a specific version of a config file
@@ -150,11 +157,6 @@ case class ConfigFileHistory(id: ConfigId, comment: String, time: Date)
  */
 case class ConfigFileInfo(path: File, id: ConfigId, comment: String)
 
-/**
- * Type of an id returned from ConfigManager create or update methods.
- * Holds the Git id for the file.
- */
-case class GitConfigId(id: String) extends ConfigId
 
 /**
  * This trait represents the contents of the files being managed.

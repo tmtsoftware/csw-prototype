@@ -24,8 +24,8 @@ object ConfigServiceSettings extends ExtensionId[ConfigServiceSettings] with Ext
 case class ConfigServiceSettings(config: Config) extends Extension {
   val prefix = "csw.services.cs"
   val name = config.getString(s"$prefix.name")
-  val gitMainRepository = new URI(config.getString(s"$prefix.main-repository"))
-  val gitLocalRepository = new File(subst(config.getString(s"$prefix.local-repository")))
+  val mainRepository = new URI(config.getString(s"$prefix.main-repository"))
+  val localRepository = new File(subst(config.getString(s"$prefix.local-repository")))
   val chunkSize = config.getInt(s"$prefix.chunkSize")
   val timeout = Timeout(config.getDuration(s"$prefix.timeout", MILLISECONDS), MILLISECONDS)
 

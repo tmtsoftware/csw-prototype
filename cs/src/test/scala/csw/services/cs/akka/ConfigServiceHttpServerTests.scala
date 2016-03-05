@@ -68,8 +68,8 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
     logger.info(s"--- Verify config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
-    GitConfigManager.deleteDirectoryRecursively(settings.gitLocalRepository)
-    val manager = GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
+    GitConfigManager.deleteDirectoryRecursively(settings.localRepository)
+    val manager = GitConfigManager(settings.localRepository, settings.mainRepository, settings.name)
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager))

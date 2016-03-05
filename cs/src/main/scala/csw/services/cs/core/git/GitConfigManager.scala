@@ -8,7 +8,7 @@ import java.util.Date
 import akka.actor.ActorRefFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
-import csw.services.cs.core.{GitConfigId, _}
+import csw.services.cs.core.{ConfigIdImpl, _}
 import net.codejava.security.HashGeneratorUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib._
@@ -43,7 +43,6 @@ object GitConfigManager {
    * @param gitWorkDir top level directory to use for storing configuration files and the local git repository (under .git)
    * @param remoteRepo the URI of the remote, main repository
    * @param name the name of this service
-   *
    * @return a new GitConfigManager configured to use the given local and remote repositories
    */
   def apply(gitWorkDir: File, remoteRepo: URI, name: String = "Config Service")(implicit context: ActorRefFactory): GitConfigManager = {
@@ -281,7 +280,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
       } else {
         if (id.isDefined) {
           // return the file for the given id
-          val objId = ObjectId.fromString(id.get.asInstanceOf[GitConfigId].id)
+          val objId = ObjectId.fromString(id.get.asInstanceOf[ConfigIdImpl].id)
           Some(ConfigData(git.getRepository.open(objId).getBytes))
         } else {
           // return the latest version of the file from the working dir
@@ -316,7 +315,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
           val path = new File(pathStr)
           val origPath = origFile(path)
           val objectId = treeWalk.getObjectId(0).name
-          val info = new ConfigFileInfo(origPath, GitConfigId(objectId), hist(origPath, 1).head.comment)
+          val info = new ConfigFileInfo(origPath, ConfigIdImpl(objectId), hist(origPath, 1).head.comment)
           list(treeWalk, info :: result)
         }
       } else {
@@ -388,7 +387,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
         // TODO: Should comments be allowed to contain newlines? Might want to use longMessage?
         val comment = revCommit.getShortMessage
         val time = new Date(revCommit.getCommitTime * 1000L)
-        val info = new ConfigFileHistory(GitConfigId(objectId.name), comment, time)
+        val info = new ConfigFileHistory(ConfigIdImpl(objectId.name), comment, time)
         hist(path, it, result :+ info, maxResults)
       }
     } else {
@@ -413,7 +412,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
         // git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfig for now
         git.commit().setOnly(path.getPath).setMessage(comment).call
         git.push.call()
-        GitConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
+        ConfigId(dirCache.getEntry(path.getPath).getObjectId.getName)
       }
     } yield configId
   }

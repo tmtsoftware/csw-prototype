@@ -14,15 +14,15 @@ object TestGitRepo {
 
   private def resetRepo(settings: ConfigServiceSettings)(implicit context: ActorRefFactory): Unit = {
     // XXX FIXME TODO: Use generated temp dirs, not settings
-    println(s"Local repo = ${settings.gitLocalRepository}, remote = ${settings.gitMainRepository}")
-    if (settings.gitMainRepository.getScheme != "file")
+    println(s"Local repo = ${settings.localRepository}, remote = ${settings.mainRepository}")
+    if (settings.mainRepository.getScheme != "file")
       throw new RuntimeException(s"Please specify a file URI for csw.services.cs.main-repository for testing")
 
-    val gitMainRepo = new File(settings.gitMainRepository.getPath)
+    val gitMainRepo = new File(settings.mainRepository.getPath)
     // Delete the main and local test repositories (Only use this in test cases!)
     GitConfigManager.deleteDirectoryRecursively(gitMainRepo)
     GitConfigManager.initBareRepo(gitMainRepo)
-    GitConfigManager.deleteDirectoryRecursively(settings.gitLocalRepository)
+    GitConfigManager.deleteDirectoryRecursively(settings.localRepository)
   }
 
   /**
@@ -33,7 +33,7 @@ object TestGitRepo {
    */
   def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))(implicit context: ActorRefFactory): ConfigManager = {
     resetRepo(settings)
-    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
+    GitConfigManager(settings.localRepository, settings.mainRepository, settings.name)
   }
 
   /**
@@ -46,6 +46,6 @@ object TestGitRepo {
     implicit val system = ActorSystem()
     val settings = ConfigServiceSettings(system)
     resetRepo(settings)
-    JGitConfigManager(settings.gitLocalRepository, settings.gitMainRepository)
+    JGitConfigManager(settings.localRepository, settings.mainRepository)
   }
 }

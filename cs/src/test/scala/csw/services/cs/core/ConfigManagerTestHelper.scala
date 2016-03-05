@@ -82,17 +82,17 @@ object ConfigManagerTestHelper extends FunSuite {
 
       assert(historyList1.size == 3)
       assert(historyList2.size == 1)
-      assert(historyList1(0).comment == comment3)
-      assert(historyList2(0).comment == comment1)
+      assert(historyList1.head.comment == comment3)
+      assert(historyList2.head.comment == comment1)
       assert(historyList1(1).comment == comment2)
       assert(historyList1(2).comment == comment1)
 
-      assert(list.size == 3) // +1 for README file added when creating the bare rep
+      assert(list.size == 3) // +1 for default file
       for (info ← list) {
         info.path match {
           case this.path1 ⇒ assert(info.comment == this.comment3)
           case this.path2 ⇒ assert(info.comment == this.comment1)
-          case x          ⇒ if (x.getName != "README") sys.error("Test failed for " + info)
+          case _          ⇒
         }
       }
 
