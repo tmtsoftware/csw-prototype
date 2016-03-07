@@ -142,10 +142,9 @@ object ConfigId {
 }
 
 /**
-  * Type of an id returned from ConfigManager create or update methods.
-  */
+ * Type of an id returned from ConfigManager create or update methods.
+ */
 case class ConfigIdImpl(id: String) extends ConfigId
-
 
 /**
  * Holds information about a specific version of a config file
@@ -156,7 +155,6 @@ case class ConfigFileHistory(id: ConfigId, comment: String, time: Date)
  * Contains information about a config file stored in the config service
  */
 case class ConfigFileInfo(path: File, id: ConfigId, comment: String)
-
 
 /**
  * This trait represents the contents of the files being managed.

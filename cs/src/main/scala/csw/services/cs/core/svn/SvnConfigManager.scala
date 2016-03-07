@@ -22,8 +22,8 @@ import org.tmatesoft.svn.core.wc.{SVNRevision, SVNClientManager, SVNWCUtil}
 import scala.concurrent.Future
 
 /**
-  * Used to initialize an instance of SvnConfigManager with a given repository directory
-  */
+ * Used to initialize an instance of SvnConfigManager with a given repository directory
+ */
 object SvnConfigManager {
 
   private val tmpDir = System.getProperty("java.io.tmpdir")
@@ -35,15 +35,14 @@ object SvnConfigManager {
   private val sha1Suffix = ".sha1"
 
   /**
-    * Creates and returns a SvnConfigManager instance using the given
-    * URI as the remote, central Svn repository.
-    *
-    * @param svnRepo the URI of the remote svn repository
-    * @param name    the name of this service
-    * @return a new SvnConfigManager configured to use the given remote repository
-    */
-  def apply(svnRepo: URI, name: String = "Config Service")
-           (implicit context: ActorRefFactory): SvnConfigManager = {
+   * Creates and returns a SvnConfigManager instance using the given
+   * URI as the remote, central Svn repository.
+   *
+   * @param svnRepo the URI of the remote svn repository
+   * @param name    the name of this service
+   * @return a new SvnConfigManager configured to use the given remote repository
+   */
+  def apply(svnRepo: URI, name: String = "Config Service")(implicit context: ActorRefFactory): SvnConfigManager = {
 
     //Set up connection protocols support:
     //http:// and https://
@@ -61,9 +60,9 @@ object SvnConfigManager {
   }
 
   /**
-    * FOR TESTING: Deletes the contents of the given directory (recursively).
-    * This is meant for use by tests that need to always start with an empty Svn repository.
-    */
+   * FOR TESTING: Deletes the contents of the given directory (recursively).
+   * This is meant for use by tests that need to always start with an empty Svn repository.
+   */
   def deleteDirectoryRecursively(dir: File): Unit = {
     // just to be safe, don't delete anything that is not in /tmp/
     val p = dir.getPath
@@ -85,10 +84,10 @@ object SvnConfigManager {
   }
 
   /**
-    * Initializes an svn repository in the given dir.
-    *
-    * @param dir directory to contain the new repository
-    */
+   * Initializes an svn repository in the given dir.
+   *
+   * @param dir directory to contain the new repository
+   */
   def initSvnRepo(dir: File)(implicit context: ActorRefFactory): Unit = {
     // Create the new main repo
     FSRepositoryFactory.setup()
@@ -97,17 +96,17 @@ object SvnConfigManager {
 }
 
 /**
-  * Uses JSvn to manage versions of configuration files.
-  * Special handling is available for large/binary files (oversize option in create).
-  * Oversize files can be stored on an "annex" server using the SHA-1 hash of the file
-  * contents for the name (similar to the way Svn stores file objects).
-  * (Note: This special handling is probably not necessary when using svn)
-  *
-  * @param svn        used to access the svn repository
-  * @param name       the name of the service
-  */
+ * Uses JSvn to manage versions of configuration files.
+ * Special handling is available for large/binary files (oversize option in create).
+ * Oversize files can be stored on an "annex" server using the SHA-1 hash of the file
+ * contents for the name (similar to the way Svn stores file objects).
+ * (Note: This special handling is probably not necessary when using svn)
+ *
+ * @param svn        used to access the svn repository
+ * @param name       the name of the service
+ */
 class SvnConfigManager(val svn: SVNRepository, override val name: String)(implicit context: ActorRefFactory)
-  extends ConfigManager with LazyLogging {
+    extends ConfigManager with LazyLogging {
 
   import context.dispatcher
 
@@ -122,7 +121,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       for {
         _ ← configData.writeToFile(file)
         sha1 ← annex.post(file)
-        _ <- deleteTempFile(file)
+        _ ← deleteTempFile(file)
         configId ← create(shaFile(path), ConfigData(sha1), oversize = false, comment)
       } yield configId
     }
@@ -140,15 +139,15 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
 
     logger.debug(s"create $path")
     for {
-      present <- exists(path)
-      configId <- createImpl(present)
+      present ← exists(path)
+      configId ← createImpl(present)
     } yield configId
   }
 
   // Temp files for "oversize" option
   private val tempDir = System.getProperty("java.io.tmpdir")
   private def getTempFile: File = new File(tempDir, UUID.randomUUID().toString)
-  private def deleteTempFile(file: File): Future[Unit] = Future(file.delete())
+  private def deleteTempFile(file: File): Future[Unit] = Future(file.deleteOnExit())
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
 
@@ -157,7 +156,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       for {
         _ ← configData.writeToFile(file)
         sha1 ← annex.post(file)
-        _ <- deleteTempFile(file)
+        _ ← deleteTempFile(file)
         configId ← update(shaFile(path), ConfigData(sha1), comment)
       } yield configId
     }
@@ -175,8 +174,8 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
 
     logger.debug(s"update $path")
     for {
-      present <- exists(path)
-      configId <- updateImpl(present)
+      present ← exists(path)
+      configId ← updateImpl(present)
     } yield configId
   }
 
@@ -228,7 +227,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       for {
         opt ← get(shaFile(path), id)
         data ← getData(file, opt)
-        _ <- deleteTempFile(file)
+        _ ← deleteTempFile(file)
       } yield data
     }
 
@@ -272,8 +271,8 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
     // -- svn get --
     logger.debug(s"get $path")
     for {
-      present <- exists(path)
-      configData <- getImpl(present)
+      present ← exists(path)
+      configData ← getImpl(present)
     } yield configData
   }
 
@@ -295,7 +294,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       svnOperationFactory.dispose()
     }
     entries.filter(_.getKind == SVNNodeKind.FILE).sortWith(_.getRelativePath < _.getRelativePath)
-      .map(e => ConfigFileInfo(new File(e.getRelativePath), ConfigId(e.getRevision), e.getCommitMessage))
+      .map(e ⇒ ConfigFileInfo(new File(e.getRelativePath), ConfigId(e.getRevision), e.getCommitMessage))
   }
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
@@ -318,21 +317,21 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       clientManager.dispose()
     }
     logEntries.sortWith(_.getRevision > _.getRevision)
-      .map(e => ConfigFileHistory(ConfigId(e.getRevision), e.getMessage, e.getDate))
+      .map(e ⇒ ConfigFileHistory(ConfigId(e.getRevision), e.getMessage, e.getDate))
   }
 
   /**
-    * Creates or updates a config file with the given path and data and optional comment.
-    *
-    * @param path       the config file path
-    * @param configData the contents of the file
-    * @param comment    an optional comment to associate with this file
-    * @return a future unique id that can be used to refer to the file
-    */
+   * Creates or updates a config file with the given path and data and optional comment.
+   *
+   * @param path       the config file path
+   * @param configData the contents of the file
+   * @param comment    an optional comment to associate with this file
+   * @return a future unique id that can be used to refer to the file
+   */
   private def put(path: File, configData: ConfigData, update: Boolean, comment: String = ""): Future[ConfigId] = {
     val os = new ByteArrayOutputStream()
     for {
-      _ <- configData.writeToOutputStream(os)
+      _ ← configData.writeToOutputStream(os)
     } yield {
       val svnOperationFactory = new SvnOperationFactory
       try {
@@ -354,8 +353,8 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   // Gets the svn revision from the given id, defaulting to HEAD
   private def svnRevision(id: Option[ConfigId] = None): SVNRevision = {
     id match {
-      case Some(configId) => SVNRevision.create(configId.id.toLong)
-      case None => SVNRevision.HEAD
+      case Some(configId) ⇒ SVNRevision.create(configId.id.toLong)
+      case None           ⇒ SVNRevision.HEAD
     }
   }
 

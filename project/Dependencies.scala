@@ -40,7 +40,7 @@ object Dependencies {
 
   val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion // ApacheV2
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
-  val ficus = "net.ceedubs" % "ficus_2.11" % "1.1.2" // MIT
+  val ficus = "com.iheart" %% "ficus" % "1.2.0" // MIT
 
   val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.6.1" // New BSD license
 

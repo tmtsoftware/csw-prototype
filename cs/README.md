@@ -19,7 +19,7 @@ Before starting the config service, the [location service](../loc)
 and the the [config service annex server](../apps/configServiceAnnex)
 should both be running.
 You can start the config service with the `cs` command (found under target/universal/stage/bin).
-The default config service name and the location of the local and main Git repositories is defined in resources/reference.conf.
+The default config service name and the location of the git or svn repository is defined in resources/reference.conf.
 Alternatively you can specify a different config file on the command line in the same format.
 You can also override the values with system properties. For example:
 
@@ -30,7 +30,13 @@ You can also override the values with system properties. For example:
 ```
 
 Note that multiple config service instances may be running in the network, but the names an host:port combinations should
-each be unique. Only a single config service instance should access a given local repository.
+each be unique. Only a single config service instance should access a given local git repository.
+
+Svn or Git
+----------
+
+There are currently two alternatives you can choose from for the version control system used by the config service.
+You can configure this in the application settings by setting the value of `csw.services.cs.useSvn` to true to use Subversion or false to use Git.
 
 Config Service Http Server
 --------------------------
@@ -142,18 +148,18 @@ Assuming that the config service http server is running on localhost on port 854
 Main Packages:
 --------------
 
-* core - the core implementation of the API based on JGit
+* core - the core implementation of the API
 * akka - (based on core) the Akka actor interface as well as the http server and client interfaces.
 
-Large/binary files can slow down the Git repository, so these are stored separately using
+Large/binary files can slow down the repository (especially when using Git), so these can be stored separately using
 the the [ConfigServiceAnnex](../apps/configServiceAnnex) http file server.
 
-When you first create a config file, you can choose to store it in the normal way (in the Git repository)
+When you first create a config file, you can choose to store it in the normal way (in the repository)
 or as a *large/binary* file, in which case only *$file.sha1* is checked in, containing the SHA-1 hash of the
 file's contents. The actual binary file is then stored on the annex server in a file name based on the SHA-1 hash.
 
 The config service also supports the concept of *default versions* of files. In this case a file named
-*$file.default* is checked in to Git behind the scenes and contains the id of the default version of the file.
+*$file.default* is checked in behind the scenes and contains the id of the default version of the file.
 If there is no default, this file is not present and the latest version is always considered the default.
 
 The config service can be started as a standalone application. *sbt stage* installs the command under
@@ -166,7 +172,7 @@ The contents of the files are exchanged using [Akka reactive streams](http://www
 No concurrent access to local Git repository
 --------------------------------------------
 
-Note that each instance of the config service should manage its own local Git repository.
+Note that if using Git, each instance of the config service should manage its own local Git repository.
 All of the local repositories may reference a common central repository, however it is probably not
 safe to allow concurrent access to the local Git repository, which reads and writes files
 in the Git working directory.
@@ -175,6 +181,9 @@ Having copies of the files in the Git working directory has the advantage of bei
 so that the files do not have to be pulled from the server each time they are needed.
 However care needs to be taken not to allow different threads to potentially read and write the
 same files at once.
+
+When using svn (the default setting) this should not be a problem, since no local repository or working 
+directory is used.
 
 Running the tests
 -----------------

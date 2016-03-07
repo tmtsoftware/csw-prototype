@@ -31,18 +31,21 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     // (In normal operations, this server would already be running)
     val annexServer = ConfigServiceAnnexServer()
 
-    val f = for {
-      _ ← runTests(settings, oversize = false)
-      _ ← runTests2(settings2, oversize = false)
+    try {
+      val f = for {
+        _ ← runTests(settings, oversize = false)
+        _ ← runTests2(settings2, oversize = false)
 
-      _ ← runTests(settings, oversize = true)
-      _ ← runTests2(settings2, oversize = true)
-    } yield ()
+        _ ← runTests(settings, oversize = true)
+        _ ← runTests2(settings2, oversize = true)
+      } yield ()
 
-    Await.ready(f, 60.seconds)
+      Await.ready(f, 60.seconds)
 
-    logger.info("Shutting down annex server")
-    annexServer.shutdown()
+    } finally {
+      logger.info("Shutting down annex server")
+      annexServer.shutdown()
+    }
   }
 
   // Runs the tests for the config service, using the given oversize option.
@@ -68,8 +71,8 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     logger.info(s"--- Verify config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
-    GitConfigManager.deleteDirectoryRecursively(settings.gitLocalRepository)
-    val manager = GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
+    GitConfigManager.deleteDirectoryRecursively(settings.localRepository)
+    val manager = settings.getConfigManager
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService2")

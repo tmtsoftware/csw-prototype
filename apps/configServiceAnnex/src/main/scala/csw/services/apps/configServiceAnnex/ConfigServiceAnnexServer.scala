@@ -106,7 +106,10 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val response = Promise[HttpResponse]()
     if (file.exists) {
       logger.info(s"Ignoring POST request for existing $file (uri = $uri)")
-      response.success(HttpResponse(StatusCodes.OK))
+      val m = entity.dataBytes.runWith(Sink.ignore)
+      m.onComplete {
+        case _ ⇒ response.success(HttpResponse(StatusCodes.OK))
+      }
     } else {
       logger.info(s"Received POST request for $file (uri = $uri)")
       val out = new FileOutputStream(file)

@@ -11,8 +11,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Tests the SvnConfigManager class
-  */
+ * Tests the SvnConfigManager class
+ */
 class SvnConfigManagerTests extends FunSuite with LazyLogging {
   implicit val system = ActorSystem()
 
@@ -22,8 +22,11 @@ class SvnConfigManagerTests extends FunSuite with LazyLogging {
     // Start the config service annex http server and wait for it to be ready for connections
     // (In normal operations, this server would already be running)
     val server = ConfigServiceAnnexServer()
-    runTests(Some(server), oversize = true)
-    server.shutdown()
+    try {
+      runTests(Some(server), oversize = true)
+    } finally {
+      server.shutdown()
+    }
   }
 
   def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {

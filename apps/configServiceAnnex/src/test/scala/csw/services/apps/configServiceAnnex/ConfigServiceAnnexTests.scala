@@ -25,24 +25,27 @@ class ConfigServiceAnnexTests extends FunSuite with LazyLogging {
 
     val file = makeTestFile()
 
-    val x = for {
-      id ← client.post(file)
-      exists1 ← client.head(id)
-      file1 ← client.get(id, file)
-      delete1 ← client.delete(id)
-      exists2 ← client.head(id)
-    } yield {
-      assert(id == HashGeneratorUtils.generateSHA1(file))
-      assert(exists1)
-      assert(file1 == file)
-      assert(delete1)
-      assert(!exists2)
-      println("All Tests Passed")
+    try {
+      val f = for {
+        id ← client.post(file)
+        exists1 ← client.head(id)
+        file1 ← client.get(id, file)
+        delete1 ← client.delete(id)
+        exists2 ← client.head(id)
+      } yield {
+        assert(id == HashGeneratorUtils.generateSHA1(file))
+        assert(exists1)
+        assert(file1 == file)
+        assert(delete1)
+        assert(!exists2)
+        println("All Tests Passed")
+      }
+      Await.result(f, 30.seconds)
+    } finally {
       server.shutdown()
       client.shutdown()
       file.delete()
     }
-    Await.result(x, 30.seconds)
   }
 
   // Create a file for testing

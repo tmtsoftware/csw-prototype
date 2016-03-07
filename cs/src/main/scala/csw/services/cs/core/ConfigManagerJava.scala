@@ -1,28 +1,22 @@
-package csw.services.cs.core.git
+package csw.services.cs.core
 
 import java.io.File
-import java.net.URI
 import java.{lang, util}
 
 import akka.actor.ActorRefFactory
 import csw.services.cs.{JConfigData, JConfigManager}
-import csw.services.cs.core.{ConfigData, ConfigFileHistory, ConfigFileInfo, ConfigId}
 
 import scala.collection.JavaConverters._
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 /**
- * Uses JGit to manage versions of configuration files.
- *
- * Note: This version is for use by Java applications. Scala applications should use
- * [[csw.services.cs.core.git.GitConfigManager]].
+ * Java API implementation for the config service.
  */
-case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit context: ActorRefFactory)
+case class ConfigManagerJava(manager: ConfigManager)(implicit context: ActorRefFactory)
     extends JConfigManager {
 
   import context.dispatcher
-  private val manager = GitConfigManager(gitWorkDir, remoteRepo)
 
   // XXX For now, wait for results in the Java version.
   // Later, if needed, we could convert to Java futures (maybe in Scala 2.12, when Java8 support is better)
@@ -72,10 +66,10 @@ case class JGitConfigManager(gitWorkDir: File, remoteRepo: URI)(implicit context
 }
 
 case class JGitConfigData(configData: ConfigData)(implicit context: ActorRefFactory) extends JConfigData {
-  import context.dispatcher
   private val timeout = 30.seconds
 
   override def toString: String = Await.result(configData.toFutureString, timeout)
 
-  override def writeToFile(file: File): Unit = Await.result(configData.writeToFile(file), timeout);
+  override def writeToFile(file: File): Unit = Await.result(configData.writeToFile(file), timeout)
 }
+
