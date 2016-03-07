@@ -66,18 +66,18 @@ object ConfigService extends App {
       case None       ⇒ ConfigServiceSettings(system)
     }
 
-    logger.info(s"Config Service(${settings.name}}): using local repo: ${settings.localRepository}, remote repo: ${settings.mainRepository}")
+    logger.info(s"Config Service(${settings.name}}): using local repo: ${settings.gitLocalRepository}, remote repo: ${settings.gitMainRepository}")
 
     if (options.init) {
-      if (settings.mainRepository.getScheme != "file") {
+      if (settings.gitMainRepository.getScheme != "file") {
         logger.error(s"Please specify a file URI for csw.services.cs.main-repository for testing")
         System.exit(1)
       }
-      val gitMainRepo = new File(settings.mainRepository.getPath)
+      val gitMainRepo = new File(settings.gitMainRepository.getPath)
 
       if (options.delete) {
         GitConfigManager.deleteDirectoryRecursively(gitMainRepo)
-        val gitLocalRepo = new File(settings.localRepository.getPath)
+        val gitLocalRepo = new File(settings.gitLocalRepository.getPath)
         GitConfigManager.deleteDirectoryRecursively(gitLocalRepo)
       }
 
@@ -87,7 +87,7 @@ object ConfigService extends App {
       }
     }
 
-    val configManager = GitConfigManager(settings.localRepository, settings.mainRepository, settings.name)
+    val configManager = GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
     val configServiceActor = system.actorOf(ConfigServiceActor.props(configManager), "ConfigServiceActor")
 
     if (!options.noregister)

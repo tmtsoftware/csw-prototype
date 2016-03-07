@@ -87,7 +87,7 @@ object ConfigServiceActor {
    */
   def defaultConfigManager(implicit system: ActorSystem): ConfigManager = {
     val settings = ConfigServiceSettings(system)
-    GitConfigManager(settings.localRepository, settings.mainRepository, settings.name)
+    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
   }
 
   /**

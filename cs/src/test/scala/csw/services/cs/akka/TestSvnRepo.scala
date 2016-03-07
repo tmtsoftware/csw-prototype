@@ -8,21 +8,21 @@ import csw.services.cs.core.ConfigManager
 import csw.services.cs.core.svn.SvnConfigManager
 
 /**
-  * Utility class to create temporary Svn repositories for use in testing.
+  * Utility class to create a temporary Svn repository for use in testing.
   */
 object TestSvnRepo {
 
   private def resetRepo(settings: ConfigServiceSettings)(implicit context: ActorRefFactory): Unit = {
 //    // XXX FIXME TODO: Use generated temp dirs, not settings
-    println(s"Local repo = ${settings.localRepository}, remote = ${settings.mainRepository}")
-    if (settings.mainRepository.getScheme != "file")
+    println(s"Using test svn repo at = ${settings.svnRepository}")
+    if (settings.svnRepository.getScheme != "file")
       throw new RuntimeException(s"Please specify a file URI for csw.services.cs.main-repository for testing")
 
-    val svnMainRepo = new File(settings.mainRepository.getPath)
+    val svnMainRepo = new File(settings.svnRepository.getPath)
     // Delete the main and local test repositories (Only use this in test cases!)
     SvnConfigManager.deleteDirectoryRecursively(svnMainRepo)
     SvnConfigManager.initSvnRepo(svnMainRepo)
-    SvnConfigManager.deleteDirectoryRecursively(settings.localRepository)
+//    SvnConfigManager.deleteDirectoryRecursively(settings.gitLocalRepository)
   }
 
   /**
@@ -33,7 +33,7 @@ object TestSvnRepo {
     */
   def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))(implicit context: ActorRefFactory): ConfigManager = {
     resetRepo(settings)
-    SvnConfigManager(settings.localRepository, settings.mainRepository, settings.name)
+    SvnConfigManager(settings.svnRepository, settings.name)
   }
 
 //  /**

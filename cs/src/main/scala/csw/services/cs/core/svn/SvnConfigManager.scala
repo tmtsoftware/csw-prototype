@@ -2,6 +2,7 @@ package csw.services.cs.core.svn
 
 import java.io.{IOException, ByteArrayOutputStream, File, FileNotFoundException}
 import java.net.URI
+import java.util.UUID
 
 import akka.actor.ActorRefFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -34,18 +35,14 @@ object SvnConfigManager {
   private val sha1Suffix = ".sha1"
 
   /**
-    * Creates and returns a SvnConfigManager instance using the given directory as the
-    * local Svn repository root (directory containing .svn dir) and the given
+    * Creates and returns a SvnConfigManager instance using the given
     * URI as the remote, central Svn repository.
-    * If the local repository already exists, it is opened, otherwise it is created.
-    * An exception is thrown if the remote repository does not exist.
     *
-    * @param svnWorkDir top level directory to use for storing configuration files and the local svn repository (under .svn)
-    * @param remoteRepo the URI of the remote, main repository
-    * @param name       the name of this service
-    * @return a new SvnConfigManager configured to use the given local and remote repositories
+    * @param svnRepo the URI of the remote svn repository
+    * @param name    the name of this service
+    * @return a new SvnConfigManager configured to use the given remote repository
     */
-  def apply(svnWorkDir: File, remoteRepo: URI, name: String = "Config Service")
+  def apply(svnRepo: URI, name: String = "Config Service")
            (implicit context: ActorRefFactory): SvnConfigManager = {
 
     //Set up connection protocols support:
@@ -56,11 +53,11 @@ object SvnConfigManager {
     //file:///
     FSRepositoryFactory.setup()
 
-    val url = SVNURL.parseURIEncoded(remoteRepo.toString)
+    val url = SVNURL.parseURIEncoded(svnRepo.toString)
     val svn = SVNRepositoryFactory.create(url)
     val authManager = SVNWCUtil.createDefaultAuthenticationManager()
     svn.setAuthenticationManager(authManager)
-    new SvnConfigManager(svn, svnWorkDir, name)
+    new SvnConfigManager(svn, name)
   }
 
   /**
@@ -102,23 +99,14 @@ object SvnConfigManager {
 /**
   * Uses JSvn to manage versions of configuration files.
   * Special handling is available for large/binary files (oversize option in create).
-  * Oversize files are stored on an "annex" server using the SHA-1 hash of the file
+  * Oversize files can be stored on an "annex" server using the SHA-1 hash of the file
   * contents for the name (similar to the way Svn stores file objects).
-  *
-  * Note that although the API is non-blocking, we need to be careful when dealing
-  * with the file system (the local Svn repo), which is static, and not attempt multiple
-  * conflicting file read, write or Svn operations at once. The remote (bare) Svn repo should
-  * be able to handle the concurrent usage, but not the local repo, which has files in the
-  * working directory. Having the files checked out in working directory should help avoid
-  * having to download them every time an application starts.
-  *
-  * Only one instance of this class should exist for a given local Svn repository.
+  * (Note: This special handling is probably not necessary when using svn)
   *
   * @param svn        used to access the svn repository
-  * @param svnWorkDir the working directory in which the files from the repository are checked out
   * @param name       the name of the service
   */
-class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val name: String)(implicit context: ActorRefFactory)
+class SvnConfigManager(val svn: SVNRepository, override val name: String)(implicit context: ActorRefFactory)
   extends ConfigManager with LazyLogging {
 
   import context.dispatcher
@@ -129,10 +117,12 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
   val url = svn.getRepositoryRoot(true)
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
-    def createOversize(file: File): Future[ConfigId] = {
+    def createOversize(): Future[ConfigId] = {
+      val file = getTempFile
       for {
         _ ← configData.writeToFile(file)
         sha1 ← annex.post(file)
+        _ <- deleteTempFile(file)
         configId ← create(shaFile(path), ConfigData(sha1), oversize = false, comment)
       } yield configId
     }
@@ -142,7 +132,7 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
       if (present) {
         Future.failed(new IOException("File already exists in repository: " + path))
       } else if (oversize) {
-        createOversize(fileForPath(path))
+        createOversize()
       } else {
         put(path, configData, update = false, comment)
       }
@@ -155,13 +145,19 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
     } yield configId
   }
 
+  // Temp files for "oversize" option
+  private val tempDir = System.getProperty("java.io.tmpdir")
+  private def getTempFile: File = new File(tempDir, UUID.randomUUID().toString)
+  private def deleteTempFile(file: File): Future[Unit] = Future(file.delete())
+
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
 
-    def updateOversize(file: File): Future[ConfigId] = {
-      // XXX TODO FIXME: use temp file and delete afterwards
+    def updateOversize(): Future[ConfigId] = {
+      val file = getTempFile
       for {
         _ ← configData.writeToFile(file)
         sha1 ← annex.post(file)
+        _ <- deleteTempFile(file)
         configId ← update(shaFile(path), ConfigData(sha1), comment)
       } yield configId
     }
@@ -171,7 +167,7 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
       if (!present) {
         Future.failed(new FileNotFoundException("File not found: " + path))
       } else if (isOversize(path)) {
-        updateOversize(fileForPath(path))
+        updateOversize()
       } else {
         put(path, configData, update = true, comment)
       }
@@ -196,7 +192,6 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
     logger.debug(s"exists $path")
     svn.checkPath(path.getPath, -1L) == SVNNodeKind.FILE || isOversize(path)
   }
-
 
   override def delete(path: File, comment: String = "deleted"): Future[Unit] = {
     def deleteFile(path: File, comment: String = "deleted"): Unit = {
@@ -228,10 +223,12 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
   override def get(path: File, id: Option[ConfigId]): Future[Option[ConfigData]] = {
 
     // Get oversize files that are stored in the annex server
-    def getOversize(file: File): Future[Option[ConfigData]] = {
+    def getOversize: Future[Option[ConfigData]] = {
+      val file = getTempFile
       for {
         opt ← get(shaFile(path), id)
         data ← getData(file, opt)
+        _ <- deleteTempFile(file)
       } yield data
     }
 
@@ -266,7 +263,7 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
       if (!present) {
         Future(None)
       } else if (isOversize(path)) {
-        getOversize(fileForPath(path))
+        getOversize
       } else {
         getConfigData
       }
@@ -301,8 +298,12 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
       .map(e => ConfigFileInfo(new File(e.getRelativePath), ConfigId(e.getRevision), e.getCommitMessage))
   }
 
-  override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] =
-    Future(hist(path, maxResults))
+  override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
+    if (isOversize(path))
+      Future(hist(shaFile(path), maxResults))
+    else
+      Future(hist(path, maxResults))
+  }
 
   private def hist(path: File, maxResults: Int = Int.MaxValue): List[ConfigFileHistory] = {
     val clientManager = SVNClientManager.newInstance()
@@ -358,11 +359,6 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
     }
   }
 
-  // Returns the absolute path of the file in the Svn repository working tree
-  //  private def fileForPath(path: File): File = new File(svn.getFullPath(path.getPath))
-  private def fileForPath(path: File): File = new File(svnWorkDir, path.getPath)
-
-
   // File used to store the SHA-1 of the actual file, if oversized.
   private def shaFile(file: File): File =
     new File(s"${file.getPath}${SvnConfigManager.sha1Suffix}")
@@ -374,7 +370,10 @@ class SvnConfigManager(val svn: SVNRepository, svnWorkDir: File, override val na
 
   // Returns the current version of the file, if known
   private def getCurrentVersion(path: File): Option[ConfigId] = {
-    hist(path, 1).headOption.map(_.id)
+    if (isOversize(path))
+      hist(shaFile(path), 1).headOption.map(_.id)
+    else
+      hist(path, 1).headOption.map(_.id)
   }
 
   // File used to store the id of the default version of the file.
