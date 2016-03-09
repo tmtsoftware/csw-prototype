@@ -13,7 +13,7 @@ import csw.services.cs.core.svn.SvnConfigManager
 object TestSvnRepo {
 
   private def resetRepo(settings: ConfigServiceSettings)(implicit context: ActorRefFactory): Unit = {
-    //    // XXX FIXME TODO: Use generated temp dirs, not settings
+    // XXX FIXME TODO: Use generated temp dirs, not settings
     println(s"Using test svn repo at = ${settings.mainRepository}")
     if (settings.mainRepository.getScheme != "file")
       throw new RuntimeException(s"Please specify a file URI for csw.services.cs.main-repository for testing")

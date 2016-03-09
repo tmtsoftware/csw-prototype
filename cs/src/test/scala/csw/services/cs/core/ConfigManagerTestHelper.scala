@@ -142,8 +142,8 @@ object ConfigManagerTestHelper extends FunSuite {
 
       assert(historyList1.size == 3)
       assert(historyList2.size == 1)
-      assert(historyList1(0).comment == comment3)
-      assert(historyList2(0).comment == comment1)
+      assert(historyList1.head.comment == comment3)
+      assert(historyList2.head.comment == comment1)
       assert(historyList1(1).comment == comment2)
       assert(historyList1(2).comment == comment1)
 
@@ -167,3 +167,4 @@ object ConfigManagerTestHelper extends FunSuite {
     result
   }
 }
+

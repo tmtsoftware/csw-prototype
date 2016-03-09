@@ -1,22 +1,21 @@
-package csw.services.cs.core.git
+package csw.services.cs.core
 
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
-import csw.services.cs.akka.TestGitRepo
-import csw.services.cs.core.ConfigManagerTestHelper
+import csw.services.cs.akka.{TestSvnRepo, ConfigServiceSettings, TestGitRepo}
 import org.scalatest.FunSuite
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * Tests the GitConfigManager class
+ * Tests the ConfigManager class
  */
-class GitConfigManagerTests extends FunSuite with LazyLogging {
+class ConfigManagerTests extends FunSuite with LazyLogging {
   implicit val system = ActorSystem()
 
-  test("Test creating a GitConfigManager, storing and retrieving some files") {
+  test("Test creating a ConfigManager, storing and retrieving some files") {
     runTests(None, oversize = false)
 
     // Start the config service annex http server and wait for it to be ready for connections
@@ -32,8 +31,9 @@ class GitConfigManagerTests extends FunSuite with LazyLogging {
   def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {
     logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
-    // create a test repository and use it to create the manager
-    val manager = TestGitRepo.getConfigManager()
+    // create a test git or svn repository and use it to create the manager
+    val settings = ConfigServiceSettings(ActorSystem())
+    val manager = if (settings.useSvn) TestSvnRepo.getConfigManager(settings) else TestGitRepo.getConfigManager(settings)
 
     val result = ConfigManagerTestHelper.runTests(manager, oversize)
 
