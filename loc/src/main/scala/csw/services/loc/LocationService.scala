@@ -21,20 +21,23 @@ object LocationService {
   private val logger = Logger(LoggerFactory.getLogger("LocationService"))
 
   // Share the JmDNS instance within this jvm for better performance
-  private val registry = getRegistry
+  // (Note: Using lazy initialization, since this should run after calling initInterface() below
+  private lazy val registry = getRegistry
+
+  // Used to log a warning if initInterface was not called before registering
+  private var initialized = false
 
   /**
    * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
-   * set on the command line, so that any services or akka actors created will use and publish the correct IP address.
+   * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
    * This method should be called before creating any actors or web services that depend on the location service.
    *
    * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
    * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
    * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
-   *
-   * @param hostname if not empty, use this as the hostname or IP address, otherwise attempt to guess the main IP address
    */
-  def initInterface(hostname: String = ""): Unit = {
+  def initInterface(): Unit = {
+    initialized = true
     case class Addr(index: Int, addr: InetAddress)
     def defaultAddr = Addr(0, InetAddress.getLocalHost)
     def filter(a: Addr): Boolean = {
@@ -138,6 +141,7 @@ object LocationService {
 
   // Get JmDNS instance
   private def getRegistry: JmDNS = {
+    if (!initialized) logger.warn("LocationService.initInterface() should be called once before using this class or starting any actors!")
     val hostname = Option(System.getProperty("akka.remote.netty.tcp.hostname"))
     val registry = if (hostname.isDefined) {
       val addr = InetAddress.getByName(hostname.get)

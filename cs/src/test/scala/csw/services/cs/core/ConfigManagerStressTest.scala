@@ -16,7 +16,7 @@ object ConfigManagerStressTest extends App {
   // create a test git or svn repository and use it to create the manager
   implicit val system = ActorSystem()
 
-//  import system.dispatcher
+  //  import system.dispatcher
 
   val settings = ConfigServiceSettings(system)
   val manager = if (settings.useSvn) TestSvnRepo.getConfigManager(settings) else TestGitRepo.getConfigManager(settings)

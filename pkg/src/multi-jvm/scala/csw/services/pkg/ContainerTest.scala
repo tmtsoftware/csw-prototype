@@ -20,6 +20,7 @@ import scala.concurrent.duration._
  * See http://doc.akka.io/docs/akka/current/dev/multi-node-testing.html#multi-node-testing.
  */
 object ContainerConfig extends MultiNodeConfig {
+  LocationService.initInterface()
 
   val container1 = role("container1")
 
@@ -79,10 +80,10 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             val client = AssemblyClient(assembly1)
             assert(Await.result(client.submit(TestConfig.testConfigArg), timeout.duration).isSuccess)
           }
-          println("\nContainer1 tests passed\n")
-          enterBarrier("done")
-          container ! Supervisor.Uninitialize
         }
+        println("\nContainer1 tests passed\n")
+        container ! Supervisor.Uninitialize
+        enterBarrier("done")
       }
 
       runOn(container2) {
@@ -95,9 +96,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           val stateChange = expectMsgType[LifecycleStateChanged]
           assert(stateChange.state.isRunning)
         }
-
         println("\nContainer2 tests passed\n")
-
         enterBarrier("deployed")
         enterBarrier("done")
       }

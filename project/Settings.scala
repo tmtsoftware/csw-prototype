@@ -10,6 +10,7 @@ import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
 import sbtunidoc.Plugin.UnidocKeys
 import UnidocKeys._
+import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
@@ -42,8 +43,8 @@ object Settings {
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
     javacOptions in Compile ++= Seq("-source", "1.8"),
     javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
-    javaOptions in Test += "-Xmx2048m",
-    javaOptions += "-Djava.net.preferIPv4Stack=true"  // For location service
+    javaOptions in (Test, run) ++= Seq("-Djava.net.preferIPv4Stack=true"),  // For location service
+    jvmOptions in MultiJvm := Seq("-Djava.net.preferIPv4Stack=true")
   )
 
   // For standalone applications
