@@ -50,7 +50,7 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
     logger.info(s"--- Testing config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
-    val manager = TestGitRepo.getConfigManager(settings)
+    val manager = TestRepo.getTestRepoConfigManager(settings)
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager))
@@ -76,7 +76,7 @@ class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager))
-    val csClient = ConfigServiceClient(csActor)
+    val csClient = ConfigServiceClient(csActor, settings.name)
 
     for {
       _ ← ConfigManagerTestHelper.runTests2(csClient, oversize)

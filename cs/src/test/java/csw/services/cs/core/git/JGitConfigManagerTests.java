@@ -30,7 +30,7 @@ public class JGitConfigManagerTests {
     private static final String comment2 = "update 1 comment";
     private static final String comment3 = "update 2 comment";
 
-    FiniteDuration timeout = new FiniteDuration(5, TimeUnit.SECONDS);
+//    FiniteDuration timeout = new FiniteDuration(5, TimeUnit.SECONDS);
 
     // Test creating a GitConfigManager, storing and retrieving some files
     @Test

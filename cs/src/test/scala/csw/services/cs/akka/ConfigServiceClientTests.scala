@@ -12,6 +12,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success}
 
 /**
  * Tests the Config Service actor
@@ -35,12 +36,19 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
       val f = for {
         _ ← runTests(settings, oversize = false)
         _ ← runTests2(settings2, oversize = false)
+        _ ← runTests3(List(settings, settings2), oversize = false)
 
         _ ← runTests(settings, oversize = true)
         _ ← runTests2(settings2, oversize = true)
+        _ ← runTests3(List(settings, settings2), oversize = true)
       } yield ()
 
-      Await.ready(f, 60.seconds)
+      f.onComplete {
+        case Success(_) => logger.info("Success")
+        case Failure(ex) => logger.error("Failure", ex)
+      }
+
+      Await.ready(f, 600.seconds)
 
     } finally {
       logger.info("Shutting down annex server")
@@ -53,11 +61,11 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     logger.info(s"--- Testing config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
-    val manager = TestGitRepo.getConfigManager(settings)
+    val manager = TestRepo.getTestRepoConfigManager(settings)
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
-    val csClient = ConfigServiceClient(csActor)
+    val csClient = ConfigServiceClient(csActor, settings.name)
 
     val result = ConfigManagerTestHelper.runTests(csClient, oversize)
     result.onComplete {
@@ -76,7 +84,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
     // Create the actor
     val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService2")
-    val csClient = ConfigServiceClient(csActor)
+    val csClient = ConfigServiceClient(csActor, settings.name)
 
     val result = ConfigManagerTestHelper.runTests2(csClient, oversize)
     result.onComplete {
@@ -85,7 +93,24 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     result
   }
 
+  // Test concurrent access
+  def runTests3(settings: List[ConfigServiceSettings], oversize: Boolean): Future[Unit] = {
+    logger.info(s"--- Test concurrent access: oversize = $oversize ---")
+
+    val managers = settings.map(_.getConfigManager)
+
+    // Create the actor
+    val csActors = managers.map(manager => system.actorOf(ConfigServiceActor.props(manager)))
+    val csClients = csActors.zip(settings).map(p => ConfigServiceClient(p._1, p._2.name))
+    val result = ConfigManagerTestHelper.concurrentTest(csClients, oversize)
+    result.onComplete {
+      case _ ⇒ csActors.foreach(csActor => system.stop(csActor))
+    }
+    result
+  }
+
+
   override def afterAll(): Unit = {
-    system.terminate()
+//    system.terminate()
   }
 }

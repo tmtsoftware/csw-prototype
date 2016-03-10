@@ -12,6 +12,7 @@ import csw.services.cs.core.{ConfigIdImpl, _}
 import net.codejava.security.HashGeneratorUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib._
+import org.eclipse.jgit.merge.MergeStrategy
 import org.eclipse.jgit.revwalk.{RevCommit, RevWalk}
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder
 import org.eclipse.jgit.treewalk.TreeWalk
@@ -163,7 +164,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
       } yield configId
     }
 
-    logger.debug(s"create $path")
+    logger.debug(s"$name: create $path")
     val file = fileForPath(path)
     if (oversize) {
       createOversize(file)
@@ -186,7 +187,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
       } yield configId
     }
 
-    logger.debug(s"update $path")
+    logger.debug(s"$name: update $path")
     val file = fileForPath(path)
     Future(pull()).flatMap { _ ⇒
       if (isOversize(file)) {
@@ -208,16 +209,16 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     } yield result
 
   override def exists(path: File): Future[Boolean] = Future {
-    logger.debug(s"exists $path")
+    logger.debug(s"$name: exists $path")
     pull()
     val file = fileForPath(path)
-    logger.debug(s"exists $path: $file exists? ${file.exists} || oversize? ${isOversize(file)}")
+    logger.debug(s"$name: exists $path: $file exists? ${file.exists} || oversize? ${isOversize(file)}")
     file.exists || isOversize(file)
   }
 
   override def delete(path: File, comment: String = "deleted"): Future[Unit] = {
     def deleteFile(path: File, comment: String = "deleted"): Unit = {
-      logger.debug(s"delete $path")
+      logger.debug(s"$name: delete $path")
       val file = fileForPath(path)
       pull()
       if (isOversize(file)) {
@@ -289,7 +290,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
       }
     }
 
-    logger.debug(s"get $path")
+    logger.debug(s"$name: get $path")
     val file = fileForPath(path)
 
     Future(pull()).flatMap { _ ⇒
@@ -323,7 +324,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
       }
     }
 
-    logger.debug(s"list")
+    logger.debug(s"$name: list")
     pull()
     val repo = git.getRepository
 
@@ -350,7 +351,8 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     Future(hist(path, maxResults))
 
   private def hist(path: File, maxResults: Int = Int.MaxValue): List[ConfigFileHistory] = {
-    logger.debug(s"history $path")
+    // XXX Should .sha1 files have the .sha1 suffix removed in the result?
+    logger.debug(s"$name: history $path")
     pull()
     // Check sha1 file history first (may have been deleted, so don't check if it exists)
     val shaPath = shaFile(path)
@@ -421,7 +423,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
    * Does a "git pull" to update the local repo with any changes made from the outside
    */
   private def pull(): Unit = {
-    val result = git.pull.call
+    val result = git.pull.setStrategy(MergeStrategy.THEIRS).call
     if (!result.isSuccessful) throw new IOException(result.toString)
   }
 
@@ -459,7 +461,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   private def hasDefault(file: File): Boolean = defaultFile(file).exists
 
   def setDefault(path: File, id: Option[ConfigId] = None): Future[Unit] = {
-    logger.debug(s"setDefault $path $id")
+    logger.debug(s"$name: setDefault $path $id")
     (if (id.isDefined) id else getCurrentVersion(path)) match {
       case Some(configId) ⇒
         create(defaultFile(path), ConfigData(configId.id)).map(_ ⇒ ())
@@ -469,12 +471,12 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   }
 
   def resetDefault(path: File): Future[Unit] = {
-    logger.debug(s"resetDefault $path")
+    logger.debug(s"$name: resetDefault $path")
     delete(defaultFile(path))
   }
 
   def getDefault(path: File): Future[Option[ConfigData]] = {
-    logger.debug(s"getDefault $path")
+    logger.debug(s"$name: getDefault $path")
     val currentId = getCurrentVersion(path)
     if (currentId.isEmpty)
       Future(None)

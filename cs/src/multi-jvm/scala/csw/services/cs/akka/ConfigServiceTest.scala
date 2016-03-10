@@ -61,7 +61,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
 
       runOn(configService) {
         val config = ConfigServiceSettings(system)
-        val manager = TestGitRepo.getConfigManager(config)
+        val manager = TestRepo.getTestRepoConfigManager()
         val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
         configServiceActor ! RegisterWithLocationService
         enterBarrier("deployed")

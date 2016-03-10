@@ -22,7 +22,7 @@ object ConfigServiceClient {
     import system.dispatcher
     for {
       cs ← locateConfigService(settings.name)
-      configDataOpt ← ConfigServiceClient(cs).get(path, id)
+      configDataOpt ← ConfigServiceClient(cs, settings.name).get(path, id)
       s ← configDataOpt.get.toFutureString
     } yield s
   }
@@ -50,10 +50,11 @@ object ConfigServiceClient {
  * @param system the caller's actor system
  * @param timeout amount of time to wait for config service operations to complete
  */
-case class ConfigServiceClient(configServiceActor: ActorRef)(implicit system: ActorSystem, timeout: Timeout) extends ConfigManager {
+case class ConfigServiceClient(configServiceActor: ActorRef, name: String = "Config Service")
+                              (implicit system: ActorSystem, timeout: Timeout) extends ConfigManager {
 
-  val settings = ConfigServiceSettings(system)
-  override val name = settings.name
+//  val settings = ConfigServiceSettings(system)
+//  override val name = settings.name
 
   import system.dispatcher
 

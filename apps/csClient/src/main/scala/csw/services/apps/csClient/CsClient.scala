@@ -33,7 +33,7 @@ object CsClient extends App {
 
     val f = for {
       cs ← ConfigServiceActor.locateConfigService(settings.name)
-      result ← commandLine(ConfigServiceClient(cs), options)
+      result ← commandLine(ConfigServiceClient(cs, settings.name), options)
     } yield result
 
     f.onComplete {

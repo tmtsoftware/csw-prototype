@@ -137,7 +137,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       }
     }
 
-    logger.debug(s"create $path")
+    logger.debug(s"$name: create $path")
     for {
       present ← exists(path)
       configId ← createImpl(present)
@@ -172,7 +172,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       }
     }
 
-    logger.debug(s"update $path")
+    logger.debug(s"$name: update $path")
     for {
       present ← exists(path)
       configId ← updateImpl(present)
@@ -188,13 +188,13 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   override def exists(path: File): Future[Boolean] = Future(pathExists(path))
 
   private def pathExists(path: File): Boolean = {
-    logger.debug(s"exists $path")
+    logger.debug(s"$name: exists $path")
     svn.checkPath(path.getPath, -1L) == SVNNodeKind.FILE || isOversize(path)
   }
 
   override def delete(path: File, comment: String = "deleted"): Future[Unit] = {
     def deleteFile(path: File, comment: String = "deleted"): Unit = {
-      logger.debug(s"delete $path")
+      logger.debug(s"$name: delete $path")
       if (isOversize(path)) {
         deleteFile(shaFile(path), comment)
       } else {
@@ -269,7 +269,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
     }
 
     // -- svn get --
-    logger.debug(s"get $path")
+    logger.debug(s"$name: get $path")
     for {
       present ← exists(path)
       configData ← getImpl(present)
@@ -277,6 +277,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   }
 
   override def list(): Future[List[ConfigFileInfo]] = Future {
+    // XXX Should .sha1 files have the .sha1 suffix removed in the result?
     var entries = List[SVNDirEntry]()
     val svnOperationFactory = new SvnOperationFactory()
     try {
@@ -298,6 +299,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   }
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
+    // XXX Should .sha1 files have the .sha1 suffix removed in the result?
     if (isOversize(path))
       Future(hist(shaFile(path), maxResults))
     else
@@ -380,7 +382,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
     new File(s"${file.getPath}${SvnConfigManager.defaultSuffix}")
 
   def setDefault(path: File, id: Option[ConfigId] = None): Future[Unit] = {
-    logger.debug(s"setDefault $path $id")
+    logger.debug(s"$name: setDefault $path $id")
     (if (id.isDefined) id else getCurrentVersion(path)) match {
       case Some(configId) ⇒
         create(defaultFile(path), ConfigData(configId.id)).map(_ ⇒ ())
@@ -390,12 +392,12 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   }
 
   def resetDefault(path: File): Future[Unit] = {
-    logger.debug(s"resetDefault $path")
+    logger.debug(s"$name: resetDefault $path")
     delete(defaultFile(path))
   }
 
   def getDefault(path: File): Future[Option[ConfigData]] = {
-    logger.debug(s"getDefault $path")
+    logger.debug(s"$name: getDefault $path")
     val currentId = getCurrentVersion(path)
     if (currentId.isEmpty)
       Future(None)

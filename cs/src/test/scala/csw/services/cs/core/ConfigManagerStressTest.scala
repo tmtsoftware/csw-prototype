@@ -3,14 +3,18 @@ package csw.services.cs.core
 import java.io.File
 
 import akka.actor.ActorSystem
-import csw.services.cs.akka.{ConfigServiceSettings, TestGitRepo, TestSvnRepo}
+import csw.services.cs.akka.{TestRepo, ConfigServiceSettings, TestGitRepo, TestSvnRepo}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * Tests performance accessing earlier revisions of files after many commits
- */
+  * Tests performance accessing earlier revisions of files after many commits
+  *
+  * Note: you might want to set the logging level to ERROR to avoid too much output.
+  * This can be done in the src/main/resources/logback.xml file in the log package at:
+  * logger name="csw" level="DEBUG"
+  */
 object ConfigManagerStressTest extends App {
 
   // create a test git or svn repository and use it to create the manager
@@ -19,7 +23,7 @@ object ConfigManagerStressTest extends App {
   //  import system.dispatcher
 
   val settings = ConfigServiceSettings(system)
-  val manager = if (settings.useSvn) TestSvnRepo.getConfigManager(settings) else TestGitRepo.getConfigManager(settings)
+  val manager = TestRepo.getTestRepoConfigManager(settings)
   val vcs = if (settings.useSvn) "svn" else "git"
 
   val (_, totalTime) = runTest().elapsed()
@@ -53,12 +57,13 @@ object ConfigManagerStressTest extends App {
     }
   }
 
+  // Used to time operations.
   implicit class RichElapsed[A](f: ⇒ A) {
+    // Returns (result, timeInSeconds)
     def elapsed(): (A, Double) = {
       val start = System.nanoTime()
       val res = f
       val end = System.nanoTime()
-
       (res, (end - start) / 1e9)
     }
   }

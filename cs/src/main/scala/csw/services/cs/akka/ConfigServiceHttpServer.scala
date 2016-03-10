@@ -26,7 +26,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   import system.dispatcher
 
   implicit val askTimeout = settings.timeout
-  val client = ConfigServiceClient(configServiceActor)
+  val client = ConfigServiceClient(configServiceActor, settings.name)
   implicit val materializer = ActorMaterializer()
 
   val binding = Http().bind(interface = settings.httpInterface, port = settings.httpPort)

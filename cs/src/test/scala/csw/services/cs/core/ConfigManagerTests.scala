@@ -3,7 +3,7 @@ package csw.services.cs.core
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
-import csw.services.cs.akka.{TestSvnRepo, ConfigServiceSettings, TestGitRepo}
+import csw.services.cs.akka.{TestRepo, TestSvnRepo, ConfigServiceSettings, TestGitRepo}
 import org.scalatest.FunSuite
 
 import scala.concurrent.Await
@@ -33,7 +33,7 @@ class ConfigManagerTests extends FunSuite with LazyLogging {
 
     // create a test git or svn repository and use it to create the manager
     val settings = ConfigServiceSettings(ActorSystem())
-    val manager = if (settings.useSvn) TestSvnRepo.getConfigManager(settings) else TestGitRepo.getConfigManager(settings)
+    val manager = TestRepo.getTestRepoConfigManager(settings)
 
     val result = ConfigManagerTestHelper.runTests(manager, oversize)
 
