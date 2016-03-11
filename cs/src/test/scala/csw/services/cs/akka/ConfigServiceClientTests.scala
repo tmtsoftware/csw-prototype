@@ -44,8 +44,8 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
       } yield ()
 
       f.onComplete {
-        case Success(_) => logger.info("Success")
-        case Failure(ex) => logger.error("Failure", ex)
+        case Success(_)  ⇒ logger.info("Success")
+        case Failure(ex) ⇒ logger.error("Failure", ex)
       }
 
       Await.ready(f, 600.seconds)
@@ -100,17 +100,16 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     val managers = settings.map(_.getConfigManager)
 
     // Create the actor
-    val csActors = managers.map(manager => system.actorOf(ConfigServiceActor.props(manager)))
-    val csClients = csActors.zip(settings).map(p => ConfigServiceClient(p._1, p._2.name))
+    val csActors = managers.map(manager ⇒ system.actorOf(ConfigServiceActor.props(manager)))
+    val csClients = csActors.zip(settings).map(p ⇒ ConfigServiceClient(p._1, p._2.name))
     val result = ConfigManagerTestHelper.concurrentTest(csClients, oversize)
     result.onComplete {
-      case _ ⇒ csActors.foreach(csActor => system.stop(csActor))
+      case _ ⇒ csActors.foreach(csActor ⇒ system.stop(csActor))
     }
     result
   }
 
-
   override def afterAll(): Unit = {
-//    system.terminate()
+    //    system.terminate()
   }
 }

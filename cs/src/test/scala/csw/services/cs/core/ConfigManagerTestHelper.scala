@@ -12,8 +12,8 @@ import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
 /**
-  * Common test code for classes that implement the ConfigManager trait
-  */
+ * Common test code for classes that implement the ConfigManager trait
+ */
 object ConfigManagerTestHelper extends FunSuite {
   val logger = Logger(LoggerFactory.getLogger("ConfigManagerTestHelper"))
 
@@ -32,7 +32,7 @@ object ConfigManagerTestHelper extends FunSuite {
   def runTests(manager: ConfigManager, oversize: Boolean)(implicit system: ActorSystem): Future[Unit] = {
     import system.dispatcher
     val result = for {
-    // Try to update a file that does not exist (should fail)
+      // Try to update a file that does not exist (should fail)
       updateIdNull ← manager.update(path1, ConfigData(contents2), comment2) recover {
         case e: IOException ⇒ null
       }
@@ -93,7 +93,7 @@ object ConfigManagerTestHelper extends FunSuite {
         info.path match {
           case this.path1 ⇒ assert(info.comment == this.comment3)
           case this.path2 ⇒ assert(info.comment == this.comment1)
-          case _ ⇒
+          case _          ⇒
         }
       }
 
@@ -120,7 +120,7 @@ object ConfigManagerTestHelper extends FunSuite {
 
     // Sequential, non-blocking for-comprehension
     val result = for {
-    // Check that we can access each version
+      // Check that we can access each version
       result1 ← manager.get(path1).flatMap(_.get.toFutureString)
       result5 ← manager.get(path2).flatMap(_.get.toFutureString)
 
@@ -159,7 +159,7 @@ object ConfigManagerTestHelper extends FunSuite {
         info.path match {
           case this.path1 ⇒ assert(info.comment == this.comment3)
           case this.path2 ⇒ assert(info.comment == this.comment1)
-          case _ ⇒ // other files: README, *.default...
+          case _          ⇒ // other files: README, *.default...
         }
       }
 
@@ -174,38 +174,37 @@ object ConfigManagerTestHelper extends FunSuite {
     result
   }
 
-
   // Does some updates and gets
   private def test3(manager: ConfigManager)(implicit system: ActorSystem): Future[Unit] = {
     import system.dispatcher
-    val result = for {
+    val f = for {
+      _ ← manager.get(path1)
       _ ← manager.update(path1, ConfigData(s"${contents2}Added by ${manager.name}\n"), s"$comment1 - ${manager.name}")
+      _ ← manager.get(path2)
       _ ← manager.update(path2, ConfigData(s"${contents1}Added by ${manager.name}\n"), s"$comment2 - ${manager.name}")
-//      _ ← manager.get(path1)
-//      _ ← manager.get(path2)
     } yield ()
-    result.onComplete {
+    f.onComplete {
       case Success(_) ⇒
         logger.info(s"test3 (${manager.name}) done")
       case Failure(ex) ⇒
         logger.error(s"test3 (${manager.name}) failed", ex)
     }
-    result
+    Await.ready(f, 10.seconds) // XXX removing this causes conflict when using svn!
+    f
   }
-
 
   // Tests concurrent access to a central repository (see if there are any conflicts, etc.)
   def concurrentTest(managers: List[ConfigManager], oversize: Boolean)(implicit system: ActorSystem): Future[Unit] = {
     import system.dispatcher
     val result = Future.sequence {
-      val f = for (manager <- managers) yield {
+      val f = for (manager ← managers) yield {
         test3(manager)
       }
       // wait here, since we want to do the updates sequentially for each configManager
       f.foreach(Await.ready(_, 10.seconds))
       f
     }
-    result.map(_ => ())
+    result.map(_ ⇒ ())
   }
 }
 

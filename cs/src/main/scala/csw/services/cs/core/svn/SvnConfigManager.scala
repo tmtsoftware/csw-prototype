@@ -53,10 +53,7 @@ object SvnConfigManager {
     FSRepositoryFactory.setup()
 
     val url = SVNURL.parseURIEncoded(svnRepo.toString)
-    val svn = SVNRepositoryFactory.create(url)
-    val authManager = SVNWCUtil.createDefaultAuthenticationManager()
-    svn.setAuthenticationManager(authManager)
-    new SvnConfigManager(svn, name)
+    new SvnConfigManager(url, name)
   }
 
   /**
@@ -102,10 +99,10 @@ object SvnConfigManager {
  * contents for the name (similar to the way Svn stores file objects).
  * (Note: This special handling is probably not necessary when using svn)
  *
- * @param svn        used to access the svn repository
- * @param name       the name of the service
+ * @param url  used to access the svn repository
+ * @param name the name of the service
  */
-class SvnConfigManager(val svn: SVNRepository, override val name: String)(implicit context: ActorRefFactory)
+class SvnConfigManager(val url: SVNURL, override val name: String)(implicit context: ActorRefFactory)
     extends ConfigManager with LazyLogging {
 
   import context.dispatcher
@@ -113,7 +110,13 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   // used to access the http server that manages oversize files
   val annex = ConfigServiceAnnexClient
 
-  val url = svn.getRepositoryRoot(true)
+  // Gets an object for accessing the svn repository (not reusing a single instance since not thread safe)
+  private def getSvn: SVNRepository = {
+    val svn = SVNRepositoryFactory.create(url)
+    val authManager = SVNWCUtil.createDefaultAuthenticationManager()
+    svn.setAuthenticationManager(authManager)
+    svn
+  }
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
     def createOversize(): Future[ConfigId] = {
@@ -146,7 +149,9 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
 
   // Temp files for "oversize" option
   private val tempDir = System.getProperty("java.io.tmpdir")
+
   private def getTempFile: File = new File(tempDir, UUID.randomUUID().toString)
+
   private def deleteTempFile(file: File): Future[Unit] = Future(file.deleteOnExit())
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
@@ -189,7 +194,12 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
 
   private def pathExists(path: File): Boolean = {
     logger.debug(s"$name: exists $path")
-    svn.checkPath(path.getPath, -1L) == SVNNodeKind.FILE || isOversize(path)
+    val svn = getSvn
+    try {
+      svn.checkPath(path.getPath, -1L) == SVNNodeKind.FILE || isOversize(path)
+    } finally {
+      svn.closeSession()
+    }
   }
 
   override def delete(path: File, comment: String = "deleted"): Future[Unit] = {
@@ -214,6 +224,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
       }
     }
 
+    logger.debug(s"$name: delete $path")
     Future {
       deleteFile(path, comment)
     }
@@ -253,7 +264,12 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
     // Returns the contents of the given version of the file, if found
     def getConfigData: Future[Option[ConfigData]] = Future {
       val os = new ByteArrayOutputStream()
-      svn.getFile(path.getPath, svnRevision(id).getNumber, null, os)
+      val svn = getSvn
+      try {
+        svn.getFile(path.getPath, svnRevision(id).getNumber, null, os)
+      } finally {
+        svn.closeSession()
+      }
       Some(ConfigData(os.toByteArray))
     }
 
@@ -277,6 +293,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   }
 
   override def list(): Future[List[ConfigFileInfo]] = Future {
+    logger.debug(s"$name: list")
     // XXX Should .sha1 files have the .sha1 suffix removed in the result?
     var entries = List[SVNDirEntry]()
     val svnOperationFactory = new SvnOperationFactory()
@@ -299,6 +316,7 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
   }
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
+    logger.debug(s"$name: history $path")
     // XXX Should .sha1 files have the .sha1 suffix removed in the result?
     if (isOversize(path))
       Future(hist(shaFile(path), maxResults))
@@ -331,24 +349,21 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
    * @return a future unique id that can be used to refer to the file
    */
   private def put(path: File, configData: ConfigData, update: Boolean, comment: String = ""): Future[ConfigId] = {
+    logger.debug(s"$name: put $path")
     val os = new ByteArrayOutputStream()
+
     for {
       _ ← configData.writeToOutputStream(os)
     } yield {
-      val svnOperationFactory = new SvnOperationFactory
-      try {
-        val commitBuilder = new CommitBuilder(url)
-        commitBuilder.setCommitMessage(comment)
-        val data = os.toByteArray
-        if (update)
-          commitBuilder.changeFile(path.getPath, data)
-        else
-          commitBuilder.addFile(path.getPath, data)
-        val commitInfo = commitBuilder.commit()
-        ConfigId(commitInfo.getNewRevision)
-      } finally {
-        svnOperationFactory.dispose()
-      }
+      val commitBuilder = new CommitBuilder(url)
+      commitBuilder.setCommitMessage(comment)
+      val data = os.toByteArray
+      if (update)
+        commitBuilder.changeFile(path.getPath, data)
+      else
+        commitBuilder.addFile(path.getPath, data)
+      val commitInfo = commitBuilder.commit()
+      ConfigId(commitInfo.getNewRevision)
     }
   }
 
@@ -365,7 +380,14 @@ class SvnConfigManager(val svn: SVNRepository, override val name: String)(implic
     new File(s"${file.getPath}${SvnConfigManager.sha1Suffix}")
 
   // True if the .sha1 file exists, meaning the file needs special oversize handling.
-  private def isOversize(path: File): Boolean = svn.checkPath(shaFile(path).getPath, -1L) == SVNNodeKind.FILE
+  private def isOversize(path: File): Boolean = {
+    val svn = getSvn
+    try {
+      svn.checkPath(shaFile(path).getPath, -1L) == SVNNodeKind.FILE
+    } finally {
+      svn.closeSession()
+    }
+  }
 
   // --- Default version handling ---
 

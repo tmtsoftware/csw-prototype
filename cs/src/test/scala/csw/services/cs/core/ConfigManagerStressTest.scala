@@ -9,12 +9,12 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Tests performance accessing earlier revisions of files after many commits
-  *
-  * Note: you might want to set the logging level to ERROR to avoid too much output.
-  * This can be done in the src/main/resources/logback.xml file in the log package at:
-  * logger name="csw" level="DEBUG"
-  */
+ * Tests performance accessing earlier revisions of files after many commits
+ *
+ * Note: you might want to set the logging level to ERROR to avoid too much output.
+ * This can be done in the src/main/resources/logback.xml file in the log package at:
+ * logger name="csw" level="DEBUG"
+ */
 object ConfigManagerStressTest extends App {
 
   // create a test git or svn repository and use it to create the manager
