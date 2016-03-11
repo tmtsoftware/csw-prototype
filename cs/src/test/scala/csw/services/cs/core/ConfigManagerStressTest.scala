@@ -33,20 +33,26 @@ object ConfigManagerStressTest extends App {
 
   def runTest(): Unit = {
     // number of files
-    val nf = 1
+    val nf = 100
 
     // number of times to commit updates to each file
-    val nt = 1000
+    val nt = 100
 
     // If of first check in
     var first = ConfigId(-1)
 
     for (t ← 1 to nt) {
-      println(s"$t / $nt")
+//      println(s"$t / $nt")
       for (f ← 1 to nf) {
         val fname = s"$f.txt"
         val configData = ConfigData(s"hello$t")
-        val configId = Await.result(manager.createOrUpdate(new File(fname), configData), 1.second)
+        val configId = if (nf == f) {
+          val (result, time) = Await.result(manager.createOrUpdate(new File(fname), configData), 1.second).elapsed()
+          println(s"Time to checkin commit #$t: $time sec")
+          result
+        } else {
+          Await.result(manager.createOrUpdate(new File(fname), configData), 1.second)
+        }
         if (t == 1 && f == 1) {
           first = configId
         } else if (t == nt && f == nf) {
