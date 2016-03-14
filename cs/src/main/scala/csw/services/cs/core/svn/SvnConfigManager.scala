@@ -354,9 +354,7 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
 
   // XXX Temp placeholder for future login name handling
   private def getUserName: String = {
-    val user = System.getProperty("user.name")
-    logger.info(s"XXX user = $user")
-    user
+    System.getProperty("user.name")
   }
 
   // XXX The code below worked, but might need some work (see closeDir below), Using borrowed CommitBuilder class for now

@@ -42,7 +42,6 @@ object ConfigManagerStressTest extends App {
     var first = ConfigId(-1)
 
     for (t ← 1 to nt) {
-      //      println(s"$t / $nt")
       for (f ← 1 to nf) {
         val fname = s"$f.txt"
         val configData = ConfigData(s"hello$t")

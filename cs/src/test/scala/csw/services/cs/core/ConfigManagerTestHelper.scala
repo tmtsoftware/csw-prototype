@@ -189,7 +189,8 @@ object ConfigManagerTestHelper extends FunSuite {
       case Failure(ex) ⇒
         logger.error(s"test3 (${manager.name}) failed", ex)
     }
-    Await.ready(f, 10.seconds) // XXX removing this causes conflict when using svn!
+    // XXX removing this causes conflict when using svn, since both managers point to same repo (not a good idea)!
+    Await.ready(f, 10.seconds)
     f
   }
 
