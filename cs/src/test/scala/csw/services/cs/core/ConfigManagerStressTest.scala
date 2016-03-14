@@ -33,16 +33,16 @@ object ConfigManagerStressTest extends App {
 
   def runTest(): Unit = {
     // number of files
-    val nf = 100
+    val nf = 10
 
     // number of times to commit updates to each file
-    val nt = 100
+    val nt = 10
 
     // If of first check in
     var first = ConfigId(-1)
 
     for (t ← 1 to nt) {
-//      println(s"$t / $nt")
+      //      println(s"$t / $nt")
       for (f ← 1 to nf) {
         val fname = s"$f.txt"
         val configData = ConfigData(s"hello$t")

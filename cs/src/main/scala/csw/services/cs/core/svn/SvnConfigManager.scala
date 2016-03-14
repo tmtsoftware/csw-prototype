@@ -1,6 +1,6 @@
 package csw.services.cs.core.svn
 
-import java.io.{IOException, ByteArrayOutputStream, File, FileNotFoundException}
+import java.io._
 import java.net.URI
 import java.util.UUID
 
@@ -9,15 +9,15 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
 import csw.services.cs.CommitBuilder
 import csw.services.cs.core._
+import org.tmatesoft.svn.core.auth.{BasicAuthenticationManager, SVNUserNameAuthentication}
 
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl
 import org.tmatesoft.svn.core.wc2._
 import org.tmatesoft.svn.core._
-import org.tmatesoft.svn.core.io.SVNRepository
-import org.tmatesoft.svn.core.io.SVNRepositoryFactory
-import org.tmatesoft.svn.core.wc.{SVNRevision, SVNClientManager, SVNWCUtil}
+import org.tmatesoft.svn.core.io.{SVNRepository, SVNRepositoryFactory}
+import org.tmatesoft.svn.core.wc.{SVNWCClient, SVNRevision, SVNClientManager, SVNWCUtil}
 
 import scala.concurrent.Future
 
@@ -109,11 +109,12 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
 
   // used to access the http server that manages oversize files
   val annex = ConfigServiceAnnexClient
+  val authManager = BasicAuthenticationManager.newInstance(getUserName, Array[Char]())
 
   // Gets an object for accessing the svn repository (not reusing a single instance since not thread safe)
   private def getSvn: SVNRepository = {
     val svn = SVNRepositoryFactory.create(url)
-    val authManager = SVNWCUtil.createDefaultAuthenticationManager()
+    //    val authManager = SVNWCUtil.createDefaultAuthenticationManager(getUserName, Array[Char]())
     svn.setAuthenticationManager(authManager)
     svn
   }
@@ -192,11 +193,22 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
 
   override def exists(path: File): Future[Boolean] = Future(pathExists(path))
 
+  // True if the path exists in the repository
   private def pathExists(path: File): Boolean = {
     logger.debug(s"$name: exists $path")
     val svn = getSvn
     try {
-      svn.checkPath(path.getPath, -1L) == SVNNodeKind.FILE || isOversize(path)
+      svn.checkPath(path.getPath, SVNRepository.INVALID_REVISION) == SVNNodeKind.FILE || isOversize(path)
+    } finally {
+      svn.closeSession()
+    }
+  }
+
+  // True if the directory path exists in the repository
+  private def dirExists(path: File): Boolean = {
+    val svn = getSvn
+    try {
+      svn.checkPath(path.getPath, SVNRepository.INVALID_REVISION) == SVNNodeKind.DIR
     } finally {
       svn.closeSession()
     }
@@ -340,6 +352,66 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
       .map(e ⇒ ConfigFileHistory(ConfigId(e.getRevision), e.getMessage, e.getDate))
   }
 
+  // XXX Temp placeholder for future login name handling
+  private def getUserName: String = {
+    val user = System.getProperty("user.name")
+    logger.info(s"XXX user = $user")
+    user
+  }
+
+  // XXX The code below worked, but might need some work (see closeDir below), Using borrowed CommitBuilder class for now
+  import org.tmatesoft.svn.core.io.diff.SVNDeltaGenerator
+  // Adds the given file (and dir if needed) to svn.
+  // See http://svn.svnkit.com/repos/svnkit/tags/1.3.5/doc/examples/src/org/tmatesoft/svn/examples/repository/Commit.java.
+  private def addFile(comment: String, path: File, data: Array[Byte]): SVNCommitInfo = {
+    val svn = getSvn
+    try {
+      val editor = svn.getCommitEditor(comment, null)
+      editor.openRoot(SVNRepository.INVALID_REVISION)
+      val dirPath = path.getParentFile
+      // Recursively add any missing directories leading to the file
+      def addDir(dir: File): Unit = {
+        if (dir != null) {
+          addDir(dir.getParentFile)
+          if (!dirExists(dir)) {
+            editor.addDir(dir.getPath, null, SVNRepository.INVALID_REVISION)
+          }
+        }
+      }
+      addDir(dirPath)
+      val filePath = path.getPath
+      editor.addFile(filePath, null, SVNRepository.INVALID_REVISION)
+      editor.applyTextDelta(filePath, null)
+      val deltaGenerator = new SVNDeltaGenerator
+      val checksum = deltaGenerator.sendDelta(filePath, new ByteArrayInputStream(data), editor, true)
+      editor.closeFile(filePath, checksum)
+      editor.closeDir() // XXX TODO I think all added parent dirs need to be closed also
+      editor.closeEdit()
+    } finally {
+      svn.closeSession()
+    }
+  }
+
+  // Modifies the contents of the given file in the repository.
+  // See http://svn.svnkit.com/repos/svnkit/tags/1.3.5/doc/examples/src/org/tmatesoft/svn/examples/repository/Commit.java.
+  def modifyFile(comment: String, path: File, data: Array[Byte]): SVNCommitInfo = {
+    val svn = getSvn
+    try {
+      val editor = svn.getCommitEditor(comment, null)
+      editor.openRoot(SVNRepository.INVALID_REVISION)
+      val filePath = path.getPath
+      editor.openFile(filePath, SVNRepository.INVALID_REVISION)
+      editor.applyTextDelta(filePath, null)
+      val deltaGenerator = new SVNDeltaGenerator
+      val checksum = deltaGenerator.sendDelta(filePath, new ByteArrayInputStream(data), editor, true)
+      editor.closeFile(filePath, checksum)
+      editor.closeDir()
+      editor.closeEdit
+    } finally {
+      svn.closeSession()
+    }
+  }
+
   /**
    * Creates or updates a config file with the given path and data and optional comment.
    *
@@ -351,21 +423,55 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
   private def put(path: File, configData: ConfigData, update: Boolean, comment: String = ""): Future[ConfigId] = {
     logger.debug(s"$name: put $path")
     val os = new ByteArrayOutputStream()
-
     for {
       _ ← configData.writeToOutputStream(os)
     } yield {
-      val commitBuilder = new CommitBuilder(url)
-      commitBuilder.setCommitMessage(comment)
       val data = os.toByteArray
-      if (update)
-        commitBuilder.changeFile(path.getPath, data)
-      else
-        commitBuilder.addFile(path.getPath, data)
-      val commitInfo = commitBuilder.commit()
+      val commitInfo = if (update) {
+        modifyFile(comment, path, data)
+      } else {
+        addFile(comment, path, data)
+      }
       ConfigId(commitInfo.getNewRevision)
     }
   }
+
+  //  /**
+  //    * Creates or updates a config file with the given path and data and optional comment.
+  //    *
+  //    * @param path       the config file path
+  //    * @param configData the contents of the file
+  //    * @param comment    an optional comment to associate with this file
+  //    * @return a future unique id that can be used to refer to the file
+  //    */
+  //  private def put(path: File, configData: ConfigData, update: Boolean, comment: String = ""): Future[ConfigId] = {
+  //    logger.debug(s"$name: put $path")
+  //    val os = new ByteArrayOutputStream()
+  //
+  //    for {
+  //      _ ← configData.writeToOutputStream(os)
+  //    } yield {
+  //      val commitBuilder = new CommitBuilder(url)
+  //      commitBuilder.setCommitMessage(comment)
+  //      val data = os.toByteArray
+  //      if (update)
+  //        commitBuilder.changeFile(path.getPath, data)
+  //      else
+  //        commitBuilder.addFile(path.getPath, data)
+  //      val commitInfo = commitBuilder.commit()
+  //
+  ////      val svnOperationFactory = new SvnOperationFactory()
+  ////      try {
+  ////        val svnc = new SVNWCClient(svnOperationFactory)
+  ////        svnc.doSetRevisionProperty(url, SVNRevision.create(commitInfo.getNewRevision),
+  ////          SVNRevisionProperty.AUTHOR, SVNPropertyValue.create(getUserName), true, null)
+  ////      } finally {
+  ////        svnOperationFactory.dispose()
+  ////      }
+  //
+  //      ConfigId(commitInfo.getNewRevision)
+  //    }
+  //  }
 
   // Gets the svn revision from the given id, defaulting to HEAD
   private def svnRevision(id: Option[ConfigId] = None): SVNRevision = {
@@ -383,7 +489,7 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
   private def isOversize(path: File): Boolean = {
     val svn = getSvn
     try {
-      svn.checkPath(shaFile(path).getPath, -1L) == SVNNodeKind.FILE
+      svn.checkPath(shaFile(path).getPath, SVNRepository.INVALID_REVISION) == SVNNodeKind.FILE
     } finally {
       svn.closeSession()
     }

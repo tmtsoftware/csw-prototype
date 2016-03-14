@@ -4,7 +4,6 @@ import java.io.File
 
 import akka.actor._
 import akka.util.Timeout
-import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.{ConfigFileHistory, _}
 import csw.services.loc.AccessType.AkkaType
 import csw.services.loc.{ServiceRef, LocationService, ServiceType, ServiceId}
@@ -20,8 +19,8 @@ import scala.util.{Failure, Success, Try}
  *
  * In this implementation, you should have a single config service actor managing a
  * queue of commands that work on a single local repository, one command at a time.
- * (This could be enforced here if needed by waiting for each command to complete before taking the
- * next one from the queue, although this is not currently done.)
+ * (This is enforced here by waiting for each command to complete before taking the
+ * next one from the queue.)
  * This is because the current implementation reads and writes file to the local Git working directory.
  * This has the advantage of being a cache for files, so they don't always have to
  * be copied from the server. While it might be possible to avoid reading and writing files
