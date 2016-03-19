@@ -10,6 +10,8 @@ import csw.util.cfg.Configurations.SetupConfig
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
+/*
+
 // A test HCD
 object TestHcd {
 
@@ -77,3 +79,4 @@ class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
   }
 }
 
+*/

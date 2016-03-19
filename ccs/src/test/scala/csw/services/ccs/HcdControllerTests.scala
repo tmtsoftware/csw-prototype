@@ -1,17 +1,18 @@
 package csw.services.ccs
 
 import akka.actor._
-import akka.testkit.{ ImplicitSender, TestKit }
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdController.Process
 import csw.services.kvs._
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.StandardKeys.position
-import org.scalatest.{ DoNotDiscover, FunSuiteLike }
+import org.scalatest.{DoNotDiscover, FunSuiteLike}
 
 import scala.concurrent.duration._
 import Implicits._
+import akka.actor.Actor.Receive
 
 object HcdControllerTests {
 
@@ -23,13 +24,13 @@ object HcdControllerTests {
     def props(): Props = Props(classOf[TestPeriodicHcdController])
   }
 
-  class TestPeriodicHcdController extends PeriodicHcdController {
+  class TestPeriodicHcdController extends Actor with ActorLogging with PeriodicHcdController {
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
     val worker = context.actorOf(TestWorker.props())
 
-    override def additionalReceive: Receive = Actor.emptyBehavior
+    def receive: Receive = controllerReceive
 
     override protected def process(): Unit = {
       // Note: There could be some logic here to decide when to take the next config,
@@ -108,10 +109,11 @@ class HcdControllerTests extends TestKit(ActorSystem("test"))
     with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import HcdControllerTests._
+  import PeriodicHcdController._
 
   test("Test periodic HCD controller") {
     val hcdController = system.actorOf(TestPeriodicHcdController.props())
-    hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
+    hcdController ! StartProcess(1.second) // Normally sent by the container when parsing the config file
 
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix1).set(position, "IR2")

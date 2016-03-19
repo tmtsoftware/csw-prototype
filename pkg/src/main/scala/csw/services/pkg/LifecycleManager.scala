@@ -1,19 +1,37 @@
 package csw.services.pkg
 
 import akka.actor._
+import csw.services.pkg.LifecycleManager._
 
-
-
-import csw.services.loc. ServiceId
-//import csw.util.cfg.Configurations.ControlConfigArg
-//import csw.util.cfg.RunId
-
+/**
+ * TMT Source Code: 1/16/16.
+ */
 object LifecycleManager {
 
+  sealed trait LifecycleState
+
+  case object Loaded extends LifecycleState
+
+  case object PendingInitializedFromLoaded extends LifecycleState
+
+  case object PendingLoadedFromInitialized extends LifecycleState
+
+  case object Initialized extends LifecycleState
+
+  case object PendingRunningFromInitialized extends LifecycleState
+
+  case object PendingInitializedFromRunning extends LifecycleState
+
+  case object Running extends LifecycleState
+
+  case object LifecycleFailure extends LifecycleState
+
   /**
-    * Commands sent to components to change the lifecycle
-    */
+   * Commands sent to components to change the lifecycle
+   */
   sealed trait LifecycleCommand
+
+  case object Load extends LifecycleCommand
 
   case object Initialize extends LifecycleCommand
 
@@ -23,328 +41,212 @@ object LifecycleManager {
 
   case object Uninitialize extends LifecycleCommand
 
-  /**
-    * Values that indicate the current lifecycle state for the named component.
-    */
-  sealed trait LifecycleState {
-    val name: String
+  case object Remove extends LifecycleCommand
 
-    def isLoaded: Boolean = false
+  case object Heartbeat extends LifecycleCommand
 
-    def isInitialized: Boolean = false
+  case class LifecycleFailure(state: LifecycleState, reason: String) extends LifecycleCommand
 
-    def isRunning: Boolean = false
-  }
-
-  case class Loaded(name: String) extends LifecycleState {
-    override def isLoaded: Boolean = true
-  }
-
-  case class Initialized(name: String) extends LifecycleState {
-    override def isInitialized: Boolean = true
-  }
-
-  case class Running(name: String) extends LifecycleState {
-    override def isRunning: Boolean = true
-  }
+  sealed trait FSMData
+  case object TargetLoaded extends FSMData
+  case object TargetPendingInitializedFromLoaded extends FSMData
+  case object TargetPendingLoadedFromInitialized extends FSMData
+  case object TargetInitialized extends FSMData
+  case object TargetPendingRunningFromInitialized extends FSMData
+  case object TargetPendingInitializedFromRunning extends FSMData
+  case object TargetRunning extends FSMData
+  case class FailureInfo(state: LifecycleState, reason: String) extends FSMData
 
   /**
-    * Reply from component for failed lifecycle changes
-    */
-  sealed trait LifecycleError {
-    val name: String
-    val reason: String
-  }
+   * Reply from component for failed lifecycle changes
+   */
+  sealed trait LifecycleResponse
 
-  case class InitializeFailed(name: String, reason: String) extends LifecycleError
+  case class InitializeFailure(reason: String) extends LifecycleResponse
 
-  case class StartupFailed(name: String, reason: String) extends LifecycleError
+  case object InitializeSuccess extends LifecycleResponse
 
-  case class ShutdownFailed(name: String, reason: String) extends LifecycleError
+  case class StartupFailure(reason: String) extends LifecycleResponse
 
-  case class UninitializeFailed(name: String, reason: String) extends LifecycleError
+  case object StartupSuccess extends LifecycleResponse
 
-  /**
-    * Message used to subscribe the sender to changes in lifecycle states
-    * @param onlyRunning true if only interested in receiving a message when the component is in the Running state
-    */
-  case class SubscribeToLifecycleStates(onlyRunning: Boolean = false)
+  case class ShutdownFailure(reason: String) extends LifecycleResponse
 
-  /**
-    * Message sent to subscribers of lifecycle states
-    * @param state the current state
-    * @param error set if there was an error preventing the lifecycle state change
-    */
-  case class LifecycleStateChanged(state: LifecycleState, error: Option[LifecycleError])
+  case object ShutdownSuccess extends LifecycleResponse
 
-  /**
-    * When this message is received, the component is unregistered from the location service
-    */
-  //case object UnregisterWithLocationService
+  case class UninitializeFailure(reason: String) extends LifecycleResponse
 
-  /**
-    * Used to create the Lifecycle actor
-*/
-  def props(supervisor: ActorRef, serviceId: ServiceId, component: ActorRef): Props =
-    Props(classOf[LifecycleManager], supervisor, serviceId, component)
+  case object UninitializeSuccess extends LifecycleResponse
+
+  def props(component: ActorRef): Props =
+    Props(classOf[LifecycleManager], component)
 }
 
-/**
-  * A supervisor actor that manages the component actor given by the arguments
-  * (see props() for argument descriptions).
-  */
-case class LifecycleManager(supervisor: ActorRef, serviceId: ServiceId, component: ActorRef)
-  extends Actor with ActorLogging {
+class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData] {
   import LifecycleManager._
+  import scala.concurrent.duration._
 
-  // Used to notify subscribers of a change in the lifecycle
-  var lifecycleStateListeners = Map[ActorRef, Boolean]()
+  private val pendingTimeout = 4.seconds
+  private val timeoutErrorMsg = "timeout out while waiting for component response"
 
+  startWith(Loaded, TargetLoaded)
 
-  // Result of last location service registration, can be used to unregister (by calling close())
-//  var registration: Option[LocationService.Registration] = None
-
-  val name = serviceId.name
-  //val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
-
-
-  context.become(loaded(Loaded(name)))
-
-  override def receive: Receive = {
-    case Terminated(actorRef) ⇒
-      terminated(actorRef)
-
+  when(Loaded) {
+    case Event(Initialize, TargetLoaded) ⇒
+      logState(PendingInitializedFromLoaded, Initialized)
+      goto(PendingInitializedFromLoaded) using TargetInitialized
+    case Event(Startup, TargetLoaded) ⇒
+      logState(PendingInitializedFromLoaded, Running)
+      goto(PendingInitializedFromLoaded) using TargetRunning
+    case Event(Heartbeat, _) ⇒
+      // This is present to notify Supervisor that component is now officially in Loaded state
+      // Use of goto ensures a transition notification, stay does not make a transition
+      logState(Loaded, Loaded)
+      goto(Loaded) using TargetLoaded
   }
 
-  // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
-  // XXX TODO: Maybe combine to one receive methods with a state parameter?
-
-  // Behavior in the Loaded state
-  def loaded(targetState: LifecycleState): Receive = receive orElse {
-    case Initialize ⇒
-      log.debug(s"$name received Initialize")
+  onTransition {
+    case Loaded -> PendingInitializedFromLoaded ⇒
+      // Send initialize to component
+      logTransition("sending Initialize to component")
       component ! Initialize
-      //registerWithLocationService()
-      context.become(loaded(Initialized(name)))
-
-    case Startup ⇒
-      log.debug(s" $name received Startup")
-      component ! Initialize
-      //registerWithLocationService()
-      context.become(loaded(Running(name)))
-
-    case Shutdown ⇒
-      log.debug(s" $name received Shutdown")
-      component ! Initialize
-      context.become(loaded(Initialized(name)))
-
-    case Uninitialize ⇒
-      log.debug(s" $name received Uninitialize")
-      context.become(loaded(Loaded(name)))
-
-    // Message from component indicating current state
-    case s@Loaded(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, loaded(targetState))
-
-    case s@Initialized(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, initialized(targetState))
-
-    case s@Running(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, running(targetState))
-
-    case e: LifecycleError ⇒
-      log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
-      notifyLifecycleListeners(LifecycleStateChanged(Loaded(name), Some(e)))
-
-    case SubscribeToLifecycleStates(onlyRunning) ⇒
-      subscribeToLifecycleStates(Loaded(name), onlyRunning)
-/*
-    case configArg: ControlConfigArg ⇒
-      cmdStatusError(configArg.info.runId, "loaded", "running")
-*/
-    case msg ⇒
-      unexpectedMessage(msg, "loaded")
+    // registerWithLocationService
   }
 
-  // Behavior in the Initialized state
-  def initialized(targetState: LifecycleState): Receive = receive orElse {
-    case Initialize ⇒
-      context.become(initialized(Initialized(name)))
-
-    case Startup ⇒
-      log.debug(s" $name received Startup")
-      component ! _
-      //requestServices()
-      context.become(initialized(Running(name)))
-
-    case Shutdown ⇒
-      log.debug(s" $name received Shutdown")
-      context.become(initialized(Initialized(name)))
-
-    case Uninitialize ⇒
-      log.debug(s" $name received Uninitialize")
-      component ! _
-      context.become(initialized(Loaded(name)))
-
-    // Message from component indicating current state
-    case s@Loaded(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, loaded(targetState))
-
-    case s@Initialized(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, initialized(targetState))
-
-    case s@Running(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, running(targetState))
-
-    case e: LifecycleError ⇒
-      log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
-      notifyLifecycleListeners(LifecycleStateChanged(Initialized(name), Some(e)))
-
-    case SubscribeToLifecycleStates(onlyRunning) ⇒
-      subscribeToLifecycleStates(Initialized(name), onlyRunning)
-
-      /*
-    case configArg: ControlConfigArg ⇒
-      cmdStatusError(configArg.info.runId, "initialized", "running")
-*/
-    case msg ⇒
-      unexpectedMessage(msg, "initialized")
+  // Only wait for pendingTimeout seconds for response
+  when(PendingLoadedFromInitialized, stateTimeout = pendingTimeout) {
+    case Event(UninitializeFailure(reason), _) ⇒
+      goto(LifecycleFailure) using FailureInfo(Loaded, reason)
+    case Event(UninitializeSuccess, TargetLoaded) ⇒
+      logState(Loaded, Loaded)
+      self ! Heartbeat // Not sure I like thi, but it's here to tell supervisor when loaded is attained
+      goto(Loaded) using TargetLoaded
+    // unregisterFromLocationService
+    case (Event(StateTimeout, _)) ⇒
+      goto(LifecycleFailure) using FailureInfo(Loaded, timeoutErrorMsg)
   }
 
-  // Behavior in the Running state
-  def running(targetState: LifecycleState): Receive = receive orElse {
-    case Initialize ⇒
-      log.debug(s" $name received Initialize")
+  // Only wait for pendingTimeout seconds for response
+  when(PendingInitializedFromLoaded, stateTimeout = pendingTimeout) {
+    case Event(InitializeFailure(reason), _) ⇒
+      goto(LifecycleFailure) using FailureInfo(Initialized, reason)
+    case Event(InitializeSuccess, TargetInitialized) ⇒
+      logState(Initialized, Initialized)
+      self ! Heartbeat // Not sure I like this, but it's here to tell supervisor when Initialized is attained
+      goto(Initialized) using TargetInitialized
+    case Event(InitializeSuccess, TargetRunning) ⇒
+      logState(Initialized, Running)
+      self ! Heartbeat // Not sure I like this, but it's here to tell supervisor when Initialized is attained
+      self ! Startup
+      goto(Initialized) using TargetRunning
+    case (Event(StateTimeout, _)) ⇒
+      goto(LifecycleFailure) using FailureInfo(Initialized, timeoutErrorMsg)
+  }
+
+  when(Initialized) {
+    case Event(Uninitialize, _) ⇒
+      logState(Loaded, Loaded)
+      goto(PendingLoadedFromInitialized) using TargetLoaded
+    case Event(Startup, _) ⇒
+      logState(PendingRunningFromInitialized, Running)
+      goto(PendingRunningFromInitialized) using TargetRunning
+    case Event(Heartbeat, _) ⇒
+      // This is present to notify Supervisor that component is now officially in Initialized state
+      // Use of goto ensures a transition notification, stay does not make a transition
+      logState(Initialized, Initialized)
+
+      goto(Initialized) using TargetInitialized
+  }
+
+  onTransition {
+    case Initialized -> PendingRunningFromInitialized ⇒
+      logTransition("sending Startup to component")
+      // Send startup to component
+      component ! Startup
+    // requestServices
+    case Initialized -> PendingLoadedFromInitialized ⇒
+      // Send uninitialize to component
+      logTransition("sending Uninitialize to component")
+      component ! Uninitialize
+    case PendingInitializedFromLoaded -> Initialized ⇒
+      logTransition()
+  }
+
+  // Only wait for pendingTimeout seconds for response
+  when(PendingRunningFromInitialized, stateTimeout = pendingTimeout) {
+    case Event(StartupFailure(reason), _) ⇒
+      goto(LifecycleFailure) using FailureInfo(Running, reason)
+    case Event(StartupSuccess, TargetRunning) ⇒
+      logState(Running, Running)
+      self ! Heartbeat // Not sure I like this, it's not needed, but it's here to tell supervisor when running is attained
+      goto(Running) using TargetRunning
+    case (Event(StateTimeout, _)) ⇒
+      goto(LifecycleFailure) using FailureInfo(Running, timeoutErrorMsg)
+  }
+
+  // Only wait for pendingTimeout seconds for response
+  when(PendingInitializedFromRunning, stateTimeout = pendingTimeout) {
+    case Event(ShutdownFailure(reason), _) ⇒
+      logState(LifecycleFailure, Initialized)
+      goto(LifecycleFailure) using FailureInfo(Initialized, reason)
+    case Event(ShutdownSuccess, TargetInitialized) ⇒
+      logState(Initialized, Initialized)
+      self ! Heartbeat // Not sure I like this, it's not needed, but it's here to tell supervisor when running is attained
+      goto(Initialized) using TargetInitialized
+    case Event(ShutdownSuccess, TargetLoaded) ⇒
+      logState(Initialized, Loaded)
+      self ! Heartbeat // Not sure I like this, it's not needed, but it's here to tell supervisor when running is attained
+      self ! Uninitialize
+      goto(Initialized) using TargetLoaded
+    case (Event(StateTimeout, _)) ⇒
+      goto(LifecycleFailure) using FailureInfo(Initialized, timeoutErrorMsg)
+  }
+
+  when(Running) {
+    case Event(Shutdown, TargetRunning) ⇒
+      logState(PendingInitializedFromRunning, Initialized)
+      goto(PendingInitializedFromRunning) using TargetInitialized
+    case Event(Uninitialize, TargetRunning) ⇒
+      goto(PendingInitializedFromRunning) using TargetLoaded
+    case Event(Heartbeat, _) ⇒
+      // This is present to notify Supervisor that component is now officially in Running state
+      // Use of goto ensures a transition notification, stay does not make a transition
+      logState(Running, Running)
+      goto(Running) using TargetRunning
+  }
+
+  onTransition {
+    case Running -> PendingInitializedFromRunning ⇒
+      logTransition("sending Shutdown to component")
       component ! Shutdown
-      context.become(running(Initialized(name)))
-
-    case Startup ⇒
-      log.debug(s" $name received Startup")
-      context.become(running(Running(name)))
-
-    case Shutdown ⇒
-      log.debug(s" $name received Shutdown")
-      component ! _
-      context.become(running(Initialized(name)))
-
-    case Uninitialize ⇒
-      log.debug(s" $name received Uninitialize")
-      component ! Shutdown
-      context.become(running(Loaded(name)))
-
-    // Message from component indicating current state
-    case s@Loaded(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, loaded(targetState))
-
-    case s@Initialized(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, initialized(targetState))
-
-    case s@Running(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, running(targetState))
-
-    case e: LifecycleError ⇒
-      log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
-      notifyLifecycleListeners(LifecycleStateChanged(Running(name), Some(e)))
-
-    case SubscribeToLifecycleStates(onlyRunning) ⇒
-      subscribeToLifecycleStates(Running(name), onlyRunning)
-
-    case msg ⇒
-      log.debug(s" forwarding $msg from ${sender()} to $component")
-      component.tell(msg, sender())
   }
 
-  // ---
-
-  private def unexpectedMessage(msg: Any, state: String): Unit = {
-    log.error(s"$name: Unexpected message: $msg in $state state")
+  when(LifecycleFailure) {
+    case Event(state @ _, data @ _) ⇒
+      log.info(s"Lifecycle failed event/data: $state/$data in state: $stateName/$stateData")
+      stop
   }
 
-  // The default supervision behavior will normally restart the component automatically.
-  // The Terminated message should only be received if we manually stop the component, or a
-  // system error occurs (Exceptions don't cause termination).
-  private def terminated(actorRef: ActorRef): Unit = {
-    log.info(s"$name: $actorRef has terminated")
-
+  onTransition {
+    case _ -> LifecycleFailure ⇒
+      log.info(s"Sending failure to component: $nextStateData")
+      nextStateData match {
+        case FailureInfo(nextState, reason) ⇒
+          component ! LifecycleFailure(nextState, reason)
+        case _@ msg ⇒
+          log.error(s"While entering LifecycleFailure state from state: $stateName, received unknown data: $msg")
+      }
   }
 
-
-
-
-
-  // Called when a lifecycle state message is received from the component.
-  // If not yet in the target state, sends a command to the component to go
-  // there (without skipping any states).
-  private def updateState(currentState: LifecycleState,
-                          targetState: LifecycleState, nextState: Receive): Unit = {
-
-    log.debug(s" $name update state: current: $currentState, target: $targetState")
-
-    notifyLifecycleListeners(LifecycleStateChanged(currentState, None))
-
-    targetState match {
-      case `currentState` ⇒ // same state, ignore
-
-      case Loaded(_) ⇒
-        currentState match {
-          case Loaded(_) ⇒
-          case Initialized(_) ⇒ component ! Uninitialize
-          case Running(_) ⇒ component ! Shutdown
-        }
-
-      case Initialized(_) ⇒
-        currentState match {
-          case Loaded(_) ⇒ component ! Initialize
-          case Initialized(_) ⇒
-          case Running(_) ⇒ component ! Shutdown
-        }
-
-      case Running(_) ⇒
-        currentState match {
-          case Loaded(_) ⇒ component ! Initialize
-          case Initialized(_) ⇒
-            component ! Startup;
-            //requestServices()
-          case Running(_) ⇒
-        }
-    }
-    context become nextState
+  whenUnhandled {
+    case Event(state @ _, data @ __) ⇒
+      log.debug(s"Unhandled lifecycle event/data: $state/$data in state: $stateName/$stateData")
+      stay
   }
 
-  // Sends a command status error message indicating that the component is not in the required state or condition.
-  // Note that we send it to the component, which forwards it to its commandStatusActor, so it is handled like
-  // other status messages.
-  /*
-  private def cmdStatusError(runId: RunId, currentCond: String, requiredCond: String): Unit = {
-    val msg = s"$name is $currentCond, but not $requiredCond"
-    log.warning(msg)
-    // XXX FIXME
-    sender() ! CommandStatus.Error(runId, msg)
-  }
-  */
+  def logState(nextState: LifecycleState, s: LifecycleState) = log.debug(s"In $stateName/$stateData going to $nextState/$s")
+  def logTransition(message: String = "") = log.debug(s"On transition going from $stateName/$stateData to $nextStateData - $message")
+  def logSameStateError(stateName: LifecycleState) = log.debug(s"Received: $stateName while in $stateName")
 
-  // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state
-  // XXX TODO: Cleanup old subscribers?
-  private def subscribeToLifecycleStates(state: LifecycleState, onlyRunning: Boolean): Unit = {
-    lifecycleStateListeners += (sender() -> onlyRunning)
-    if (!onlyRunning || state.isRunning)
-      sender() ! LifecycleStateChanged(state, None)
-  }
-
-  // Notifies any listeners of the new state, if the filter matches
-  private def notifyLifecycleListeners(msg: LifecycleStateChanged) = {
-    for ((actorRef, onlyRunning) ← lifecycleStateListeners) {
-      if (!onlyRunning || msg.state.isRunning)
-        actorRef ! msg
-    }
-  }
+  initialize()
 }

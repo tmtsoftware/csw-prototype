@@ -1,7 +1,7 @@
 package csw.services.loc
 
 import akka.actor._
-import csw.services.loc.AccessType.HttpType
+import csw.util.Components._
 
 object TestHttpServiceApp extends App {
   implicit lazy val system = ActorSystem("TestHttpServiceApp")
@@ -11,8 +11,8 @@ object TestHttpServiceApp extends App {
 }
 
 object TestHttpService {
-  val serviceId = ServiceId("TestHttpService", ServiceType.Assembly)
-  val serviceRef = ServiceRef(serviceId, HttpType)
+  val componentId = ComponentId("TestHttpService", Assembly)
+  val connection = Connection(componentId, HttpType)
 }
 
 /**
@@ -22,7 +22,7 @@ class TestHttpService extends Actor with ActorLogging {
   import context.dispatcher
 
   val port = 12345 // This should the actually port the HTTP server is running on...
-  LocationService.registerHttpService(TestHttpService.serviceId, port, "test.http.prefix")
+  LocationService.registerHttpConnection(TestHttpService.componentId, port, "test.http.prefix")(context.system)
   override def receive: Receive = {
     case x ⇒
       log.error(s"Received unexpected message $x")

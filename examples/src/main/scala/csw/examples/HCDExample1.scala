@@ -1,18 +1,17 @@
-package csw.services.pkg
-
-import java.time.{Instant, Duration}
+package csw.examples
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.util.Timeout
-import csw.services.ccs.PeriodicHcdController2
-import csw.services.event.{EventSubscriber, EventService}
+import csw.services.ccs.PeriodicHcdController
+import csw.services.event.EventSubscriber
 import csw.services.kvs._
-import csw.services.loc.{ServiceId, ServiceType}
-import csw.services.pkg.Component2.{HcdInfo, RegisterOnly}
+import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
+import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
- import csw.util.cfg.Events.{StatusEvent, SystemEvent}
+import csw.util.cfg.Events.{StatusEvent, SystemEvent}
 import csw.util.cfg.Key
+import csw.util.Components._
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -22,78 +21,85 @@ import scala.util.Random
  */
 object HCDExample1 {
 
-  case class HCDDaemon(name: String, info: HcdInfo) extends Hcd2 with PeriodicHcdController2 with TimeServiceScheduler {
-    import Supervisor2._
+  object Tick
+  object End
+  object Close
+
+  case class HCDDaemon(info: HcdInfo) extends Hcd with PeriodicHcdController with TimeServiceScheduler with LifecycleHandler {
     import TimeService._
-    import PosGenerator._
+    import Supervisor._
 
-    log.info(s"Freq: $context.system.scheduler.maxFrequency")
-    log.info("My Rate: $info.rate")
+    log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
+    log.info(s"My Rate: ${info.rate}")
 
-    val posEventGenerator = context.actorOf(Props(classOf[PosGenerator], "Position Generator", info.prefix))
+    log.info("Startup called")
+    lifecycle(supervisor)
 
-    val killer = scheduleOnce(localTimeNow.plusSeconds(30), self, "end")
+    //val posEventGenerator = context.actorOf(Props(classOf[PosGenerator], "Position Generator", info.prefix))
 
-    startProcessing(info.rate)
+    val killer = scheduleOnce(localTimeNow.plusSeconds(10), self, End)
 
+    processAt(info.rate)
+    var count = 0
     def process(): Unit = {
+      count = count + 1
+      log.info("Process: " + count)
+      if (count == 3) {
+        log.info("starting processing to .5")
+        processAt(500.milli)
+      }
       nextConfig.foreach { config ⇒
         log.info(s"received: $config")
       }
     }
 
-    def additionalReceive: Receive = {
-      case "end" ⇒
+    def componentReceive: Receive = {
+      case End ⇒
         // Need to unregister with the location service (Otherwise application won't exit)
-        posEventGenerator ! End
-        endProcessing(supervisor)
+        //posEventGenerator ! End
+        haltComponent(supervisor)
+
     }
+
+    def receive = componentReceive orElse controllerReceive orElse lifecycleHandlerReceive
 
   }
 
   object PosGenerator {
-    object Tick
-    object End
-    object Close
-
     val azkey = Key.create[Int]("az")
     val elkey = Key.create[Int]("el")
   }
 
   class PosGenerator(name: String, prefix: String) extends Actor with ActorLogging with TimeService.TimeServiceScheduler with Implicits {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    import java.time._
-
     import PosGenerator._
-    import TimeService._
 
     println("Prefix: " + prefix)
 
     // Create the Event Service
-    val eventService = EventService(prefix)
+    //val eventService = EventService(prefix)
     // Create the Telemetry Service
     val settings = KvsSettings(context.system)
     val ts = TelemetryService(settings)
     implicit val timeout = Timeout(5.seconds)
     val bts = BlockingTelemetryService(ts)
 
-    val evs = List.tabulate(10)(n => {
+    val evs = List.tabulate(1)(n => {
       println(s"N: $n")
-      context.actorOf(Props(classOf[EventPosSubscriber], s"ev subscriber${n}", prefix))
+      context.actorOf(Props(classOf[TelPosSubscriber], s"ev subscriber${n}", prefix))
     })
     //val eventSubscriber = context.actorOf(Props(classOf[EventPosSubscriber], "event subscriber", prefix))
     //val telemSubscriber = context.actorOf(Props(classOf[TelPosSubscriber], "telem subscriber", prefix))
 
     var count = 0
-    val cancel = schedule(localTimeNow.plusSeconds(1), Duration.ofMillis(10), self, Tick)
+  //  val cancel = schedule(localTimeNow.plusSeconds(1), Duration.ofMillis(500), self, Tick)
     val rand = Random
 
     def receive: Receive = {
       case Tick =>
         count = count + 1
         val (az, el) = genPair(rand)
-        val ev = SystemEvent(prefix).set(azkey, az).set(elkey, el)
-        eventService.publish(ev)
+        //val ev = SystemEvent(prefix).set(azkey, az).set(elkey, el)
+        //eventService.publish(ev)
         val se = StatusEvent(prefix).set(azkey, az).set(elkey, el)
         bts.set(se)
         //log.info(s"Tick: $az/$el")
@@ -108,8 +114,8 @@ object HCDExample1 {
 
       case Close =>
         log.info(s"Closing")
-        eventService.close
-        cancel.cancel
+        //eventService.close
+        //cancel.cancel
     }
 
     def genPair(r: Random): (Int, Int) = {
@@ -125,8 +131,9 @@ object HCDExample1 {
 class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
   log.info(s"prefix: $prefix")
   var count = 0
-  import HCDExample1.PosGenerator._
   import java.time._
+
+  import HCDExample1._
 
   val startTime = Instant.now
   subscribe(prefix)
@@ -150,8 +157,9 @@ class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
 
 class TelPosSubscriber(name: String, prefix: String) extends TelemetrySubscriber {
   var count = 0
-  import HCDExample1.PosGenerator._
   import java.time._
+
+  import HCDExample1._
 
   val startTime = Instant.now
   subscribe(prefix)
@@ -172,7 +180,7 @@ class TelPosSubscriber(name: String, prefix: String) extends TelemetrySubscriber
   }
 }
 /**
- * Starts Hcd2 as a standalone application.
+ * Starts Hcd as a standalone application.
  * Args: name, configPath
  */
 object HCDExample1App extends App {
@@ -185,14 +193,11 @@ object HCDExample1App extends App {
   println("Starting!")
   val name = "example1"
   val prefix = "tcs.fake.pos"
-  val serviceId = ServiceId(name, ServiceType.HCD)
+  val className = "csw.examples.HCDExample1$HCDDaemon"
 
-  //def props(name: String): Props = Props(classOf[HCDDaemon], name)
-  //val cname = classOf[HCDDaemon].getName
-  //println("Name: " + cname)
+  val hcdInfo = HcdInfo(name, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
 
-  val className = "csw.services.pkg.HCDExample1$HCDDaemon"
-
-  val result = Hcd2.create(className, serviceId, prefix, RegisterOnly, 1.second)
+  val supervisor = Supervisor(hcdInfo)
+  //supervisor ! Startup
 
 }

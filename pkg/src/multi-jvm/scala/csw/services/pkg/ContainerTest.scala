@@ -1,5 +1,5 @@
 package csw.services.pkg
-
+/*
 import akka.actor._
 import akka.remote.testkit._
 import akka.testkit.ImplicitSender
@@ -51,10 +51,10 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
     "be able to create a local Assembly and add two remote Hcds" in {
       runOn(container1) {
         enterBarrier("deployed")
-        val container = Container.create(ConfigFactory.load("container1.conf"))
+        val container = ContainerComponent.create(ConfigFactory.load("container1.conf"))
         within(30.seconds) {
-          container ! Container.GetComponents
-          val map = expectMsgType[Container.Components].map
+          container ! ContainerComponent.GetComponents
+          val map = expectMsgType[ContainerComponent.Components].map
           assert(map.size == 1)
           for((name, assembly1) <- map) {
             assembly1 ! Supervisor.SubscribeToLifecycleStates(onlyRunning = true)
@@ -85,9 +85,9 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
       }
 
       runOn(container2) {
-        val container = Container.create(ConfigFactory.load("container2.conf"))
-        container ! Container.GetComponents
-        val map = expectMsgType[Container.Components].map
+        val container = ContainerComponent.create(ConfigFactory.load("container2.conf"))
+        container ! ContainerComponent.GetComponents
+        val map = expectMsgType[ContainerComponent.Components].map
         assert(map.size == 2)
         for ((name, hcd) <- map) {
           hcd ! Supervisor.SubscribeToLifecycleStates(onlyRunning = true)
@@ -105,3 +105,5 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
     }
   }
 }
+
+*/

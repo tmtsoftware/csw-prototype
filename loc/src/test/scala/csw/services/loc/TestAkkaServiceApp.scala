@@ -1,7 +1,7 @@
 package csw.services.loc
 
 import akka.actor._
-import csw.services.loc.AccessType.AkkaType
+import csw.util.Components._
 
 object TestAkkaServiceApp extends App {
   implicit lazy val system = ActorSystem("TestAkkaServiceApp")
@@ -11,15 +11,15 @@ object TestAkkaServiceApp extends App {
 }
 
 object TestAkkaService {
-  val serviceId = ServiceId("TestAkkaService", ServiceType.Assembly)
-  val serviceRef = ServiceRef(serviceId, AkkaType)
+  val componentId = ComponentId("TestAkkaService", HCD)
+  val connecton = Connection(componentId, AkkaType)
 }
 
 /**
  * A dummy akka test service that registers with the location service
  */
 class TestAkkaService extends Actor with ActorLogging {
-  LocationService.registerAkkaService(TestAkkaService.serviceId, self, "test.akka.prefix")(context.system)
+  LocationService.registerAkkaConnection(TestAkkaService.componentId, self, "test.akka.prefix")(context.system)
   override def receive: Receive = {
     case x ⇒
       log.error(s"Received unexpected message $x")

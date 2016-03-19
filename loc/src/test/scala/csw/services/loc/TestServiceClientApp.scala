@@ -1,5 +1,6 @@
 package csw.services.loc
 
+/*
 import akka.actor.{ Props, ActorSystem, ActorLogging, Actor }
 import csw.services.loc.LocationService.{ Disconnected, ServicesReady }
 
@@ -26,4 +27,4 @@ class TestServiceClient extends Actor with ActorLogging {
       log.error(s"Received unexpected message $x")
   }
 }
-
+*/

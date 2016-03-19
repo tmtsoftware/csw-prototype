@@ -12,8 +12,6 @@ object TimeService {
 
   // This are offsets from UTC to TAI and GPS time
   private val UTCtoTAIoffset = 36
-  //seconds
-  private val UTCtoGPSoffset = 19 // seconds
 
   // Java 8 clocks for the different needs
   private val utcClock = Clock.systemUTC()
@@ -67,18 +65,6 @@ object TimeService {
    * @return a LocalDateTime object with TAI time.
    */
   def TAIDateTimeNow = UTCDateTimeNow.plusSeconds(UTCtoTAIoffset)
-
-  /**
-   * Returns the GPS time now.
-   * @return a LocalTime object with the GPS time.
-   */
-  def GPSTimeNow = UTCTimeNow.plusSeconds(UTCtoGPSoffset)
-
-  /**
-   * Returns the GPS data and time now.
-   * @return a LocalDateTime object with the GPS time.
-   */
-  def GPSDateTimeNow = UTCDateTimeNow.plusSeconds(UTCtoGPSoffset)
 
   /**
    * TimeServiceSchedule provides a component actor with timed messages

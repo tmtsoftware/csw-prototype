@@ -1,8 +1,10 @@
 package csw.services.pkg
 
 import akka.actor._
-import csw.services.loc.ServiceId
-import Supervisor._
+import csw.util.Components._
+
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 /**
  * Represents a Component, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).
@@ -11,51 +13,97 @@ import Supervisor._
  */
 object Component {
 
-  /**
-   * Describes a component
-   * @param props the props used to create the component actor
-   * @param serviceId service used to register the component with the location service
-   * @param prefix the configuration prefix (part of configs that component should receive)
-   * @param services a list of service ids for the services the component depends on
-   * @param system the component's private actor system
-   * @param supervisor the component's lifecycle manager
-   */
-  case class ComponentInfo(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId],
-                           system: ActorSystem, supervisor: ActorRef)
+  sealed trait LocationServiceUsage
+  case object DoNotRegister extends LocationServiceUsage
+  case object RegisterOnly extends LocationServiceUsage
+  case object RegisterAndTrackServices extends LocationServiceUsage
+
+  sealed trait ComponentInfo {
+    val componentName: String
+    def componentType: ComponentType
+    def componentClassName: String
+    def locationServiceUsage: LocationServiceUsage
+  }
 
   /**
-   * Creates a component actor with a new ActorSystem and LifecycleManager
-   * using the given props and name
-   * @param props used to create the actor
-   * @param serviceId service used to register the component with the location service
+   * Describes a component
+   *
+   * @param componentName name used to register the component with the location service
    * @param prefix the configuration prefix (part of configs that component should receive)
-   * @param services a list of service ids for the services the component depends on
-   * @return an object describing the component
+   * @param locationServiceUsage how the component plans to use the location service
+   * @param rate the HCD's refresh rate
    */
-  def create(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): ComponentInfo = {
-    val name = serviceId.name
-    val system = ActorSystem(s"$name-system")
-    val supervisor = system.actorOf(Supervisor.props(props, serviceId, prefix, services), s"$name-supervisor")
-    supervisor ! Startup
-    ComponentInfo(props, serviceId, prefix, services, system, supervisor)
+  final case class HcdInfo(componentName: String,
+                           prefix: String,
+                           componentClassName: String,
+                           locationServiceUsage: LocationServiceUsage,
+                           registerAs: Set[ConnectionType],
+                           rate: FiniteDuration) extends ComponentInfo {
+    val componentType = HCD
+  }
+
+  /**
+   * Describes an Assembly
+   *
+   * @param componentName name used to register the component with the location service
+   * @param prefix the configuration prefix (part of configs that component should receive)
+   * @param locationServiceUsage how the component plans to use the location service
+   * @param connections a list of connections that includes componentIds and connection Types
+   */
+  final case class AssemblyInfo(componentName: String,
+                                prefix: String,
+                                componentClassName: String,
+                                locationServiceUsage: LocationServiceUsage,
+                                registerAs: Set[ConnectionType],
+                                connections: Set[Connection]) extends ComponentInfo {
+    val componentType = Assembly
+  }
+
+  final case class ContainerInfo(componentName: String,
+                                 locationServiceUsage: LocationServiceUsage,
+                                 registerAs: Set[ConnectionType],
+                                 initialDelay: FiniteDuration = 1.second,
+                                 creationDelay: FiniteDuration = 1.second,
+                                 lifecycleDelay: FiniteDuration = 1.second,
+                                 componentInfos: List[ComponentInfo]) extends ComponentInfo {
+    val componentType = Container
+    val componentClassName = "csw.services.pkg.ContainerComponent"
+  }
+
+  private def createHCD(context: ActorContext, cinfo: ComponentInfo): ActorRef = {
+    // Form props for component
+    val props = Props(Class.forName(cinfo.componentClassName), cinfo)
+
+    context.actorOf(props, s"${cinfo.componentName}-${cinfo.componentType}")
+  }
+
+  private def createAssembly(context: ActorContext, cinfo: AssemblyInfo): ActorRef = {
+    val props = Props(Class.forName(cinfo.componentClassName), cinfo)
+
+    context.actorOf(props, s"${cinfo.componentName}-${cinfo.componentType}")
+  }
+
+  def create(context: ActorContext, componentInfo: ComponentInfo): ActorRef = componentInfo match {
+    case hcd: HcdInfo ⇒
+      createHCD(context, hcd)
+    case ass: AssemblyInfo ⇒
+      createAssembly(context, ass)
+    case cont: ContainerInfo ⇒
+      ContainerComponent.create(cont)
+  }
+
+}
+
+trait Component extends Actor with ActorLogging {
+  def supervisor = context.parent
+
+  override def postStop: Unit = {
+    log.info(s"Post Stop: !!")
   }
 }
 
-/**
- * Marker trait for a component (HCD, Assembly, etc.)
- */
-trait Component
+trait Assembly extends Component
 
-/**
- * An assembly is a component and may optionally also extend CommandServiceActor (or AssemblyCommandServiceActor)
- */
-trait Assembly extends Component {
-  this: Actor with ActorLogging ⇒
-}
+trait Hcd extends Component
 
-/**
- * An HCD is a component and may optionally also extend CommandServiceActor
- */
-trait Hcd extends Component {
-  this: Actor with ActorLogging ⇒
-}
+trait Container extends Component

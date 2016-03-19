@@ -1,23 +1,24 @@
 package csw.services.apps.configServiceAnnex
 
-import java.io.{ File, FileOutputStream }
-import java.net.{ InetSocketAddress, URI }
-import java.nio.file.{ Files, Path, Paths }
+import java.io.{File, FileOutputStream}
+import java.net.{InetSocketAddress, URI}
+import java.nio.file.{Files, Path, Paths}
 
 import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
-import akka.stream.scaladsl.{ Sink, Source }
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.{ LocationService, ServiceType, ServiceId }
 import org.slf4j.LoggerFactory
 import akka.actor.ActorSystem
+import csw.services.loc.LocationService
+import csw.util.Components.{ComponentId, Service}
 
-import scala.concurrent.{ Promise, Future }
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -70,10 +71,10 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
    * Register with the location service (which must be started as a separate process).
    */
   def registerWithLocationService(addr: InetSocketAddress) {
-    val serviceId = ServiceId("ConfigServiceAnnex", ServiceType.Service)
+    val componentId = ComponentId("ConfigServiceAnnex", Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
     logger.info(s"Registering with the location service with URI $httpUri")
-    LocationService.registerHttpService(serviceId, addr.getPort)
+    LocationService.registerHttpConnection(componentId, addr.getPort)
   }
 
   // Implements Http GET

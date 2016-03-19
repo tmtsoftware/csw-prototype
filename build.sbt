@@ -54,7 +54,7 @@ lazy val loc = project
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, jmdns, akkaHttp) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn log
+  ) dependsOn (util, log)
 
 // Command Service
 lazy val ccs = project
@@ -80,7 +80,7 @@ lazy val cs = project
 lazy val pkg = project
   .settings(defaultSettings: _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(ccs % "compile->compile;test->test", util % "compile->compile;test->test", log, loc, ts, event, kvs)
+  .dependsOn(ccs % "compile->compile;test->test", util % "compile->compile;test->test", log, loc)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
@@ -102,6 +102,14 @@ lazy val ts = project
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn log
+
+// CSW Examples
+lazy val examples = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(ccs % "compile->compile;test->test", util % "compile->compile;test->test", log, loc, ts, event, kvs, pkg)
 
 
 // -- Apps --

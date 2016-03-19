@@ -5,13 +5,16 @@ import java.io.File
 import akka.actor._
 import akka.util.Timeout
 import csw.services.cs.core.git.GitConfigManager
-import csw.services.cs.core.{ ConfigFileHistory, _ }
-import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.{ ServiceRef, LocationService, ServiceType, ServiceId }
+import csw.services.cs.core.{ConfigFileHistory, _}
+import csw.services.loc.LocationService
+import csw.services.loc.LocationService.LocationTrackerWorker.LocationsReady
+import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
+import csw.util.Components
+import csw.util.Components._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * Config service actor.
@@ -83,7 +86,8 @@ object ConfigServiceActor {
 
   /**
    * Returns the default config manager, using the configured settings (see resources/reference.conf).
-   * @param system the caller's actor system, used to access the settings
+    *
+    * @param system the caller's actor system, used to access the settings
    */
   def defaultConfigManager(implicit system: ActorSystem): ConfigManager = {
     val settings = ConfigServiceSettings(system)
@@ -93,24 +97,25 @@ object ConfigServiceActor {
   /**
    * Convenience method that gets the config service actor with the matching name
    * from the location service.
-   * @param name the name of the config service (set in the config file, property csw.services.cs.name)
+    *
+    * @param name the name of the config service (set in the config file, property csw.services.cs.name)
    * @param system the actor system
    * @return a future reference to the named config service actor
    */
   def locateConfigService(name: String)(implicit system: ActorSystem): Future[ActorRef] = {
     import system.dispatcher
-    val serviceId = ServiceId(name, ServiceType.Service)
-    val serviceRef = ServiceRef(serviceId, AkkaType)
+
+    val componentId = ComponentId(name, Service)
+    val connection = AkkaConnection(componentId)
     implicit val timeout: Timeout = 60.seconds
-    LocationService.resolve(Set(serviceRef)).map { servicesReady ⇒
-      servicesReady.services(serviceRef).actorRefOpt.get
-    }
+    LocationService.resolve(Set(connection)).map(lr => lr.locations.head).mapTo[ResolvedAkkaLocation].map(f => f.actorRef.get)
   }
 }
 
 /**
  * An Akka actor class implementing the Config Service.
- * @param configManager the configManager to use
+  *
+  * @param configManager the configManager to use
  */
 class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorLogging {
 
@@ -124,8 +129,8 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
 
   // Registers with the location service
   def registerWithLocationService(): Unit = {
-    val serviceId = ServiceId(configManager.name, ServiceType.Service)
-    LocationService.registerAkkaService(serviceId, self)(context.system)
+    val componentId = ComponentId(configManager.name, Components.Service)
+    LocationService.registerAkkaConnection(componentId, self)(context.system)
   }
 
   override def receive: Receive = {
