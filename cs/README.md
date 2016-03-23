@@ -49,21 +49,20 @@ The HTTP/REST interface to the command service follows the scala and java APIs:
 ---------|---------|-------------------------------------------|---------
 | POST   | /create | path=_filePath_, comment=_create+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /get    | path=_filePath_, id=_id_                  | Contents of file (current or version _id_)
-| POST   | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
+| PUT    | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
 | GET    | /list   |                                           | JSON list of available files
 | GET    | /history      | path=_filePath_, maxResults=_count_ | JSON list of file history
 | GET    | /getDefault   | path=_filePath_                     | Contents of _default_ version of file
-| POST   | /setDefault   | path=_filePath_, id=_id_            | Sets the _default_ version of the file
-| POST   | /resetDefault | path=_filePath_                     | Resets the _default_ version of the file to _current_
+| PUT    | /setDefault   | path=_filePath_, id=_id_            | Sets the _default_ version of the file
+| PUT    | /resetDefault | path=_filePath_                     | Resets the _default_ version of the file to _current_
 
-The _create_ and _update_ methods expect the file data to be posted.
 The _path_ query argument is always required. All other query arguments are optional.
 The _id_ argument (a _ConfigId_) must be taken from the JSON result of _create_, _update_, _list_, or _history_.
 
 The format of the JSON returned from _create_ and _update_ is:
 `{"ConfigId":"da807342bcc21766316c3a91a01f4a513a1adbb3"}`. The _id_ query argument passed to the other methods is
- the value at right.
+ the value at right. (When using svn, the id is a simple number.)
 
 Example or using curl to access the Config Service Http Server
 --------------------------------------------------------------
@@ -78,7 +77,7 @@ Assuming that the config service http server is running on localhost on port 854
 
    Gets the contents of some/test1/TestConfig1 from the service and store in a local file.
 
-`curl -X POST 'http://localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
+`curl -X PUT 'http://localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
 
    Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.
 
@@ -136,11 +135,11 @@ Assuming that the config service http server is running on localhost on port 854
 
    Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).
 
-`curl -X POST 'http://localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
+`curl -X PUT 'http://localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
 
    Sets the default version of the file to the one with the given id (an id returned by the history command).
 
-`curl -X POST 'http://localhost:8541/resetDefault?path=some/test1/TestConfig1'`
+`curl -X PUT 'http://localhost:8541/resetDefault?path=some/test1/TestConfig1'`
 
    Resets the default version of the file to be the latest version.
 
@@ -152,7 +151,7 @@ Main Packages:
 * akka - (based on core) the Akka actor interface as well as the http server and client interfaces.
 
 Large/binary files can slow down the repository (especially when using Git), so these can be stored separately using
-the the [ConfigServiceAnnex](../apps/configServiceAnnex) http file server.
+the the [ConfigServiceAnnex](../apps/configServiceAnnex) http file server. (Note: May not be needed when using svn.)
 
 When you first create a config file, you can choose to store it in the normal way (in the repository)
 or as a *large/binary* file, in which case only *$file.sha1* is checked in, containing the SHA-1 hash of the

@@ -7,9 +7,8 @@ import java.util.UUID
 import akka.actor.ActorRefFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexClient
-import csw.services.cs.CommitBuilder
 import csw.services.cs.core._
-import org.tmatesoft.svn.core.auth.{BasicAuthenticationManager, SVNUserNameAuthentication}
+import org.tmatesoft.svn.core.auth.BasicAuthenticationManager
 
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory
@@ -17,7 +16,7 @@ import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl
 import org.tmatesoft.svn.core.wc2._
 import org.tmatesoft.svn.core._
 import org.tmatesoft.svn.core.io.{SVNRepository, SVNRepositoryFactory}
-import org.tmatesoft.svn.core.wc.{SVNWCClient, SVNRevision, SVNClientManager, SVNWCUtil}
+import org.tmatesoft.svn.core.wc.{SVNRevision, SVNClientManager}
 
 import scala.concurrent.Future
 
@@ -109,12 +108,11 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
 
   // used to access the http server that manages oversize files
   val annex = ConfigServiceAnnexClient
-  val authManager = BasicAuthenticationManager.newInstance(getUserName, Array[Char]())
 
   // Gets an object for accessing the svn repository (not reusing a single instance since not thread safe)
   private def getSvn: SVNRepository = {
     val svn = SVNRepositoryFactory.create(url)
-    //    val authManager = SVNWCUtil.createDefaultAuthenticationManager(getUserName, Array[Char]())
+    val authManager = BasicAuthenticationManager.newInstance(getUserName, Array[Char]())
     svn.setAuthenticationManager(authManager)
     svn
   }
@@ -433,43 +431,6 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
       ConfigId(commitInfo.getNewRevision)
     }
   }
-
-  //  /**
-  //    * Creates or updates a config file with the given path and data and optional comment.
-  //    *
-  //    * @param path       the config file path
-  //    * @param configData the contents of the file
-  //    * @param comment    an optional comment to associate with this file
-  //    * @return a future unique id that can be used to refer to the file
-  //    */
-  //  private def put(path: File, configData: ConfigData, update: Boolean, comment: String = ""): Future[ConfigId] = {
-  //    logger.debug(s"$name: put $path")
-  //    val os = new ByteArrayOutputStream()
-  //
-  //    for {
-  //      _ ← configData.writeToOutputStream(os)
-  //    } yield {
-  //      val commitBuilder = new CommitBuilder(url)
-  //      commitBuilder.setCommitMessage(comment)
-  //      val data = os.toByteArray
-  //      if (update)
-  //        commitBuilder.changeFile(path.getPath, data)
-  //      else
-  //        commitBuilder.addFile(path.getPath, data)
-  //      val commitInfo = commitBuilder.commit()
-  //
-  ////      val svnOperationFactory = new SvnOperationFactory()
-  ////      try {
-  ////        val svnc = new SVNWCClient(svnOperationFactory)
-  ////        svnc.doSetRevisionProperty(url, SVNRevision.create(commitInfo.getNewRevision),
-  ////          SVNRevisionProperty.AUTHOR, SVNPropertyValue.create(getUserName), true, null)
-  ////      } finally {
-  ////        svnOperationFactory.dispose()
-  ////      }
-  //
-  //      ConfigId(commitInfo.getNewRevision)
-  //    }
-  //  }
 
   // Gets the svn revision from the given id, defaulting to HEAD
   private def svnRevision(id: Option[ConfigId] = None): SVNRevision = {

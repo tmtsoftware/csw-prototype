@@ -10,10 +10,10 @@ import scala.collection.immutable.Queue
  */
 object HcdController {
 
-//  /**
-//   * The type of the queue of incoming configs
-//   */
-//  type HcdQueueType = Queue[SetupConfig]
+  //  /**
+  //   * The type of the queue of incoming configs
+  //   */
+  //  type HcdQueueType = Queue[SetupConfig]
 
   /**
    * Base trait of received messages

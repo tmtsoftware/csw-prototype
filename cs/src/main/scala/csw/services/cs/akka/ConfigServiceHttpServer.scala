@@ -35,6 +35,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     c.handleWithAsyncHandler {
       case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
       case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
+      case HttpRequest(PUT, uri, _, entity, _)  ⇒ httpPut(uri, entity)
       case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
       case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
       case x: HttpRequest                       ⇒ unknownResource(x.toString)
@@ -148,11 +149,19 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     logger.info(s"Received POST request for $path (uri = $uri)")
     path match {
       case "/create"         ⇒ createOrUpdate(uri, entity)
-      case "/update"         ⇒ createOrUpdate(uri, entity)
       case "/createOrUpdate" ⇒ createOrUpdate(uri, entity)
-      case "/setDefault"     ⇒ setDefault(uri)
-      case "/resetDefault"   ⇒ resetDefault(uri)
       case _                 ⇒ unknownResource(path)
+    }
+  }
+
+  private def httpPut(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
+    val path = uri.path.toString()
+    logger.info(s"Received PUT request for $path (uri = $uri)")
+    path match {
+      case "/update"       ⇒ createOrUpdate(uri, entity)
+      case "/setDefault"   ⇒ setDefault(uri)
+      case "/resetDefault" ⇒ resetDefault(uri)
+      case _               ⇒ unknownResource(path)
     }
   }
 
