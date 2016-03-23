@@ -259,11 +259,6 @@ case class LocationService(serviceRefs: Set[ServiceRef], replyTo: Option[ActorRe
   // Listen for future changes
   registry.addServiceListener(dnsType, this)
 
-  override def postStop(): Unit = {
-    log.info("Closing JmDNS")
-    registry.close()
-  }
-
   override def serviceAdded(event: ServiceEvent): Unit = {
     log.info(s"service added: ${event.getName} ${event.getInfo}")
   }
