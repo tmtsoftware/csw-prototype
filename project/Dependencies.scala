@@ -21,7 +21,9 @@ object Dependencies {
   val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamsVersion
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaStreamsVersion
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamsVersion
+
   val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.5.0" // ApacheV2
+  val akkaKryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.0" // ApacheV2
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.5" // LGPL
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" // ApacheV2
@@ -33,7 +35,7 @@ object Dependencies {
   val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1" // SCALA LICENSE (BSD-like)
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
-  val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11"
+  val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11" // TMate Open Source License
 
 
   val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0" // ApacheV2
