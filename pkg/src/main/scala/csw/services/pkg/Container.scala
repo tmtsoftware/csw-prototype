@@ -2,9 +2,10 @@ package csw.services.pkg
 
 import akka.actor._
 import com.typesafe.config.Config
-import csw.services.loc.{LocationService, ServiceType, ServiceId}
+import csw.services.loc.{ComponentId, ComponentType, LocationService}
 
 import scala.collection.JavaConversions._
+import scala.util.{Failure, Success, Try}
 
 /**
  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
@@ -49,6 +50,7 @@ object Container {
 
   /**
    * Exits the application when the given actor stops
+   *
    * @param ref reference to the main actor of an application
    */
   class Terminator(ref: ActorRef) extends Actor with ActorLogging {
@@ -63,6 +65,7 @@ object Container {
 
   /**
    * Describes a container
+   *
    * @param system the container's actor system
    * @param container the container actor
    */
@@ -100,6 +103,7 @@ object Container {
 
   /**
    * Reply to GetComponents
+   *
    * @param map a map of component name to actor for the component (actually the lifecycle manager)
    */
   case class Components(map: Map[String, ActorRef]) extends ContainerReplyMessage
@@ -138,19 +142,19 @@ class Container(config: Config) extends Actor with ActorLogging {
   // (as a proxy for the component)
   private def registerWithLocationService(): Unit = {
     val name = config.getString("container.name")
-    val serviceId = ServiceId(name, ServiceType.Container)
-    LocationService.registerAkkaService(serviceId, self)(context.system)
+    val componentId = ComponentId(name, ComponentType.Container)
+    LocationService.registerAkkaService(componentId, self)(context.system)
   }
 
-  private def createComponent(props: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId],
+  private def createComponent(props: Props, componentId: ComponentId, prefix: String, services: List[ComponentId],
                               components: Map[String, Component.ComponentInfo]): Option[Component.ComponentInfo] = {
-    val name = serviceId.name
+    val name = componentId.name
     components.get(name) match {
       case Some(componentInfo) ⇒
         log.error(s"Component $name already exists")
         None
       case None ⇒
-        val componentInfo = Component.create(props, serviceId, prefix, services)
+        val componentInfo = Component.create(props, componentId, prefix, services)
         context.watch(componentInfo.supervisor)
         Some(componentInfo)
     }
@@ -178,21 +182,21 @@ class Container(config: Config) extends Actor with ActorLogging {
     val className = conf.getString("class")
     log.info(s"Create component $name with class $className and config $conf")
     val props = Props(Class.forName(className), name, conf)
-    val serviceType = ServiceType(conf.getString("type"))
-    if (serviceType == ServiceType.Unknown) {
-      log.error(s"Unknown service type: ${conf.getString("type")}")
-      None
-    } else {
-      val serviceId = ServiceId(name, serviceType)
-      val prefix = if (conf.hasPath("prefix")) conf.getString("prefix") else ""
-      val services = if (conf.hasPath("services")) parseServices(conf.getConfig("services")) else Nil
-      createComponent(props, serviceId, prefix, services, Map.empty)
+    Try(ComponentType(conf.getString("type"))) match {
+      case Failure(ex) ⇒
+        log.error(s"Unknown service type: ${conf.getString("type")}")
+        None
+      case Success(componentType) ⇒
+        val componentId = ComponentId(name, componentType)
+        val prefix = if (conf.hasPath("prefix")) conf.getString("prefix") else ""
+        val services = if (conf.hasPath("services")) parseServices(conf.getConfig("services")) else Nil
+        createComponent(props, componentId, prefix, services, Map.empty)
     }
   }
 
   // Parse the "services" section of the component config
-  private def parseServices(conf: Config): List[ServiceId] = {
-    for (key ← conf.root.keySet().toList) yield ServiceId(key, ServiceType(conf.getString(key)))
+  private def parseServices(conf: Config): List[ComponentId] = {
+    for (key ← conf.root.keySet().toList) yield ComponentId(key, ComponentType(conf.getString(key)))
   }
 
   // Sends the given lifecycle command to all components

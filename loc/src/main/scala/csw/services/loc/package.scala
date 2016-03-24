@@ -12,14 +12,14 @@ package csw.services
  * Two types of services are currently supported: Akka/actor based and HTTP based services.
  * To register an Akka actor based service, you can use code like this:
  *
- *     {{{LocationService.registerAkkaService(serviceId, self, "test.akka.prefix")}}}
+ *     {{{LocationService.registerAkkaService(componentId, self, "test.akka.prefix")}}}
  *
  * Where self is a reference to the services own actorRef and the prefix argument indicates the
  * part of a configuration the actor is interested in receiving.
  *
  * To register an HTTP based service, you can make a call like this:
  *
- *     {{{LocationService.registerHttpService(serviceId, port)}}}
+ *     {{{LocationService.registerHttpService(componentId, port)}}}
  *
  * Here you specify the port and the DNS name for the local host is automatically determined.
  *
@@ -34,15 +34,15 @@ package csw.services
  *
  * {{{
  * class TestServiceClient extends Actor with ActorLogging {
- *   val serviceRefs = Set(TestAkkaService.serviceRef, TestHttpService.serviceRef)
- *   context.actorOf(LocationService.props(serviceRefs))
+ *   val connections = Set(TestAkkaService.connection, TestHttpService.connection)
+ *   context.actorOf(LocationService.props(connections))
  *
  *   override def receive: Receive = {
  *     case ServicesReady(services) =>
- *       log.info(s"Received services: \${services.values.map(_.serviceRef.serviceId.name).mkString(", ")}")
+ *       log.info(s"Received services: \${services.values.map(_.connection.componentId.name).mkString(", ")}")
  *
- *     case Disconnected(serviceRef) =>
- *       log.info(s"Disconnected service: \${serviceRef.serviceId.name}")
+ *     case Disconnected(connection) =>
+ *       log.info(s"Disconnected service: \${connection.componentId.name}")
  *
  *     case x =>
  *       log.error(s"Received unexpected message \$x")
@@ -66,8 +66,8 @@ package csw.services
  *
  * `_csw._tcp` is the mDNS type used for all CSW services. The default domain is `local.`.
  *
- * The CSW/mDNS application names here are in the format: ''name-serviceType-accessType'',
- * where ''serviceType'' is assembly, hcd, etc. and ''accessType'' is `http` or `akka`.
+ * The CSW/mDNS application names here are in the format: ''name-componentType-connectionType'',
+ * where ''componentType'' is assembly, hcd, etc. and ''connectionType'' is `http` or `akka`.
  */
 package object loc {
 

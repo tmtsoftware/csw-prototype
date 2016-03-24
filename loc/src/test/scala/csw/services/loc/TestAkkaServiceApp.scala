@@ -1,7 +1,7 @@
 package csw.services.loc
 
 import akka.actor._
-import csw.services.loc.AccessType.AkkaType
+import csw.services.loc.Connection.AkkaConnection
 
 /**
  * Starts one or more akka services in order to test the location service.
@@ -24,15 +24,15 @@ object TestAkkaServiceApp extends App {
 
 object TestAkkaService {
   def props(i: Int): Props = Props(classOf[TestAkkaService], i)
-  def serviceId(i: Int) = ServiceId(s"TestAkkaService-$i", ServiceType.Assembly)
-  def serviceRef(i: Int) = ServiceRef(serviceId(i), AkkaType)
+  def componentId(i: Int) = ComponentId(s"TestAkkaService-$i", ComponentType.Assembly)
+  def connection(i: Int): Connection = AkkaConnection(componentId(i))
 }
 
 /**
  * A dummy akka test service that registers with the location service
  */
 class TestAkkaService(i: Int) extends Actor with ActorLogging {
-  LocationService.registerAkkaService(TestAkkaService.serviceId(i), self, "test.akka.prefix")(context.system)
+  LocationService.registerAkkaService(TestAkkaService.componentId(i), self, "test.akka.prefix")(context.system)
   override def receive: Receive = {
     case x ⇒
       log.error(s"Received unexpected message $x")

@@ -1,11 +1,11 @@
 package examples
 
-import akka.actor.{Props, ActorRef}
-import csw.services.ccs.{CommandStatus, HcdController, AssemblyController}
-import csw.services.loc.AccessType.AkkaType
+import akka.actor.{ActorRef, Props}
+import csw.services.ccs.{AssemblyController, CommandStatus, HcdController}
+import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.ResolvedService
-import csw.services.loc.{LocationService, ServiceId, ServiceType, ServiceRef}
-import csw.services.pkg.{Component, LifecycleHandler, Assembly}
+import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
+import csw.services.pkg.{Assembly, Component, LifecycleHandler}
 import csw.services.pkg.Component.ComponentInfo
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
@@ -16,7 +16,7 @@ object Assembly1 {
   val assemblyName = "assembly1"
 
   // Used to lookup the HCD this assembly uses
-  val targetServiceRef = ServiceRef(ServiceId(HCDExample.hcdName, ServiceType.HCD), AkkaType)
+  val targetConnection = AkkaConnection(ComponentId(HCDExample.hcdName, ComponentType.HCD))
 
   /**
    * Returns a config for setting the rate
@@ -65,12 +65,12 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
    * @param configArg contains a list of setup configurations
    * @param replyTo if defined, the actor that should receive the final command status.
    */
-  override protected def setup(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg,
+  override protected def setup(services: Map[Connection, ResolvedService], configArg: SetupConfigArg,
                                replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
       // Get a reference to the actor for the HCD
-      val actorRef = services(Assembly1.targetServiceRef).actorRefOpt.get
+      val actorRef = services(Assembly1.targetConnection).actorRefOpt.get
 
       // Submit each config
       configArg.configs.foreach { config ⇒
@@ -85,7 +85,7 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
     valid
   }
 
-  override protected def connected(services: Map[ServiceRef, ResolvedService]): Unit = {
+  override protected def connected(services: Map[Connection, ResolvedService]): Unit = {
     log.info("Connected: " + services)
   }
 
@@ -101,8 +101,8 @@ object AssemblyExampleApp extends App {
   import Assembly1._
   println("Starting Assembly1")
   LocationService.initInterface()
-  val serviceId = ServiceId(assemblyName, ServiceType.Assembly)
-  val targetServiceId = targetServiceRef.serviceId
+  val componentId = ComponentId(assemblyName, ComponentType.Assembly)
+  val targetComponentId = targetConnection.componentId
   val props = Assembly1.props()
-  val compInfo: ComponentInfo = Component.create(props, serviceId, "", List(targetServiceId))
+  val compInfo: ComponentInfo = Component.create(props, componentId, "", List(targetComponentId))
 }

@@ -3,17 +3,10 @@ package csw.services.ccs
 import akka.actor.{ActorLogging, Actor}
 import csw.util.cfg.Configurations._
 
-import scala.collection.immutable.Queue
-
 /**
  * Command service controller
  */
 object HcdController {
-
-  //  /**
-  //   * The type of the queue of incoming configs
-  //   */
-  //  type HcdQueueType = Queue[SetupConfig]
 
   /**
    * Base trait of received messages

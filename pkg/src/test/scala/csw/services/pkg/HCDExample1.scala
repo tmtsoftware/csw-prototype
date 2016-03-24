@@ -3,7 +3,7 @@ package csw.services.pkg
 import akka.actor.{ActorRef, ActorLogging, Props}
 import csw.services.ccs.PeriodicHcdController
 import csw.services.ccs.PeriodicHcdController.Process
-import csw.services.loc.{ServiceType, ServiceId}
+import csw.services.loc.{ComponentType, ComponentId}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import scala.concurrent.duration._
@@ -48,10 +48,10 @@ object HCDExample1App extends App {
   val name = "example1"
   val prefix = "ex1"
   val props = HCDExample1.DaemonHCD.props()
-  val serviceId = ServiceId(name, ServiceType.HCD)
+  val componentId = ComponentId(name, ComponentType.HCD)
   val httpUri = None
   val services = Nil
-  val compInfo = Component.create(props, serviceId, prefix, services)
+  val compInfo = Component.create(props, componentId, prefix, services)
   val svisor: ActorRef = compInfo.supervisor
   svisor.tell(Process(1.second), null)
 }

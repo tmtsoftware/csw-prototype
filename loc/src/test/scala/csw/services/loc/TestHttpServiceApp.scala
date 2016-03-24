@@ -1,7 +1,7 @@
 package csw.services.loc
 
 import akka.actor._
-import csw.services.loc.AccessType.HttpType
+import csw.services.loc.Connection.HttpConnection
 
 /**
  * Starts one or more (dummy) http services in order to test the location service.
@@ -24,8 +24,8 @@ object TestHttpServiceApp extends App {
 
 object TestHttpService {
   def props(i: Int): Props = Props(classOf[TestHttpService], i)
-  def serviceId(i: Int) = ServiceId(s"TestHttpService-$i", ServiceType.Assembly)
-  def serviceRef(i: Int) = ServiceRef(serviceId(i), HttpType)
+  def componentId(i: Int) = ComponentId(s"TestHttpService-$i", ComponentType.Assembly)
+  def connection(i: Int): Connection = HttpConnection(componentId(i))
 }
 
 /**
@@ -35,7 +35,7 @@ class TestHttpService(i: Int) extends Actor with ActorLogging {
   import context.dispatcher
 
   val port = 9000 + i // Dummy value for testing: Normally should be the actually port the HTTP server is running on...
-  LocationService.registerHttpService(TestHttpService.serviceId(i), port, "test.http.prefix")
+  LocationService.registerHttpService(TestHttpService.componentId(i), port, "test.http.prefix")
   override def receive: Receive = {
     case x ⇒
       log.error(s"Received unexpected message $x")

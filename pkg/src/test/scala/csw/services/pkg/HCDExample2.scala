@@ -3,7 +3,7 @@ package csw.services.pkg
 import akka.actor.{Actor, ActorLogging, Props}
 import csw.services.ccs.PeriodicHcdController
 import csw.services.kvs._
-import csw.services.loc.{ServiceId, ServiceType}
+import csw.services.loc.{ComponentId, ComponentType}
 import csw.services.pkg.Component.ComponentInfo
 import csw.services.pkg.HCDExample2.HCDDaemon
 import csw.services.ts.TimeService
@@ -144,10 +144,10 @@ object HCDExample2App extends App {
   println("Starting example1 HCD!")
   val name = "example1"
   val prefix = "tcs.fake.pos"
-  val serviceId = ServiceId(name, ServiceType.HCD)
+  val componentId = ComponentId(name, ComponentType.HCD)
   val props = HCDDaemon.props(name, prefix)
 
-  val compInfo: ComponentInfo = Component.create(props, serviceId, prefix, Nil)
+  val compInfo: ComponentInfo = Component.create(props, componentId, prefix, Nil)
   compInfo.supervisor ! PeriodicHcdController.Process(1.second)
 
 }

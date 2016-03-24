@@ -3,14 +3,15 @@ package csw.services.pkg
 import akka.actor.ActorRef
 import com.typesafe.config.{ConfigFactory, Config}
 import csw.services.ccs.{HcdController, StateMatcherActor, AssemblyController}
-import csw.services.loc.AccessType.AkkaType
+import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService.ResolvedService
-import csw.services.loc.ServiceRef
+import csw.services.loc.Connection
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
+  *
   * @param name the name of the asembly
   * @param config config file with settings for the assembly
   */
@@ -46,7 +47,7 @@ case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
     * @param configArg contains a list of setup configurations
     * @param replyTo if defined, the actor that should receive the final command status.
     */
-  override protected def setup(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg,
+  override protected def setup(services: Map[Connection, ResolvedService], configArg: SetupConfigArg,
                                replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
@@ -54,7 +55,7 @@ case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
       // but you could just as well generate new configs and send them here...
       val demandStates = for {
         config ← configArg.configs
-        service ← services.values.find(v ⇒ v.prefix == config.configKey.prefix && v.serviceRef.accessType == AkkaType)
+        service ← services.values.find(v ⇒ v.prefix == config.configKey.prefix && v.connection.connectionType == AkkaType)
         actorRef ← service.actorRefOpt
       } yield {
         actorRef ! HcdController.Submit(config)

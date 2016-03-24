@@ -2,9 +2,9 @@ package csw.services.pkg
 
 import akka.actor._
 import csw.services.ccs.{CommandStatus, PeriodicHcdController}
-import csw.services.loc.AccessType.AkkaType
+import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.{ResolvedService, ServicesReady}
-import csw.services.loc.{ServiceType, ServiceRef, LocationService, ServiceId}
+import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.util.cfg.Configurations.ControlConfigArg
 import csw.util.cfg.RunId
 
@@ -78,12 +78,14 @@ object Supervisor {
 
   /**
    * Message used to subscribe the sender to changes in lifecycle states
+   *
    * @param onlyRunning true if only interested in receiving a message when the component is in the Running state
    */
   case class SubscribeToLifecycleStates(onlyRunning: Boolean = false)
 
   /**
    * Message sent to subscribers of lifecycle states
+   *
    * @param state the current state
    * @param error set if there was an error preventing the lifecycle state change
    */
@@ -96,21 +98,22 @@ object Supervisor {
 
   /**
    * Used to create the Supervisor actor
+   *
    * @param componentProps used to create the component
-   * @param serviceId service used to register the component with the location service
+   * @param componentId service used to register the component with the location service
    * @param prefix the configuration prefix (part of configs that component should receive)
    * @param services a list of service ids for the services the component depends on
    * @return an object to be used to create the Supervisor actor
    */
-  def props(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): Props =
-    Props(classOf[Supervisor], componentProps, serviceId, prefix, services)
+  def props(componentProps: Props, componentId: ComponentId, prefix: String, services: List[ComponentId]): Props =
+    Props(classOf[Supervisor], componentProps, componentId, prefix, services)
 }
 
 /**
  * A supervisor actor that manages the component actor given by the arguments
  * (see props() for argument descriptions).
  */
-case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId])
+case class Supervisor(componentProps: Props, componentId: ComponentId, prefix: String, services: List[ComponentId])
     extends Actor with ActorLogging {
 
   import Supervisor._
@@ -118,11 +121,11 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   // Used to notify subscribers of a change in the lifecycle
   var lifecycleStateListeners = Map[ActorRef, Boolean]()
 
-  // Result of last location service registration, can be used to unregister (by calling close())
+  // Result of last location service registration, can be used to unregister
   var registration: Option[LocationService.Registration] = None
 
-  val name = serviceId.name
-  val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
+  val name = componentId.name
+  val connections: Set[Connection] = services.map(AkkaConnection(_)).toSet
   val component = startComponent()
 
   context.become(loaded(Loaded(name)))
@@ -316,9 +319,9 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   // so that there are no hanging jmdns threads from previous registrations.
   private def registerWithLocationService(): Unit = {
     import context.dispatcher
-    LocationService.registerAkkaService(serviceId, self, prefix)(context.system).onComplete {
+    registration.foreach(_.close())
+    LocationService.registerAkkaService(componentId, self, prefix)(context.system).onComplete {
       case Success(reg) ⇒
-        registration.foreach(_.close())
         registration = Some(reg)
       case Failure(ex) ⇒
         log.error(s"Location Service registration failed", ex)
@@ -330,16 +333,16 @@ case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: Strin
   // Once all the services are available, it sends a ServicesReady message to the component.
   // If any service terminates, a Disconnected message is sent to this actor.
   private def requestServices(): Unit = {
-    if (serviceId.serviceType != ServiceType.HCD) { // HCDs don't need services(?) (Who needs them besides assemblies?)
-      if (serviceRefs.nonEmpty) {
+    if (componentId.componentType != ComponentType.HCD) { // HCDs don't need services(?) (Who needs them besides assemblies?)
+      if (connections.nonEmpty) {
         // Services required: start a local location service actor to monitor them
         log.debug(s" requestServices $services")
         val actorName = s"$name-loc-client"
         if (context.child(actorName).isEmpty)
-          context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
+          context.actorOf(LocationService.props(connections, Some(component)), actorName)
       } else {
         // No services required: tell the component
-        component ! ServicesReady(Map[ServiceRef, ResolvedService]())
+        component ! ServicesReady(Map[Connection, ResolvedService]())
       }
     }
   }

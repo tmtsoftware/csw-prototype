@@ -5,11 +5,11 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import csw.services.ccs.{CommandStatus, AssemblyClient}
+import csw.services.ccs.{AssemblyClient, CommandStatus}
 import csw.services.ccs.AssemblyController.Submit
-import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.ServiceType.HCD
-import csw.services.loc.{ServiceRef, ServiceId, LocationService}
+import csw.services.loc.ComponentType.HCD
+import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.{ComponentId, Connection, LocationService}
 import csw.services.pkg.Supervisor.LifecycleStateChanged
 
 import scala.concurrent.Await
@@ -64,12 +64,12 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             assert(stateChange.state.isRunning)
 
             // Make sure the HCDs are ready before sending the test config
-            val serviceRefs = Set(
-              ServiceRef(ServiceId("HCD-2A", HCD), AkkaType),
-              ServiceRef(ServiceId("HCD-2B", HCD), AkkaType)
+            val connections: Set[Connection] = Set(
+              AkkaConnection(ComponentId("HCD-2A", HCD)),
+              AkkaConnection(ComponentId("HCD-2B", HCD))
             )
             implicit val timeout: Timeout = 60.seconds
-            Await.result(LocationService.resolve(serviceRefs), timeout.duration)
+            Await.result(LocationService.resolve(connections), timeout.duration)
 
             // Use actor API
             assembly1 ! Submit(TestConfig.testConfigArg)

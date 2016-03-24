@@ -35,7 +35,7 @@ package csw.services
  *       args = [Assembly-1]
  *       services {
  *         // Services required by this component
- *         // Name: ServiceType
+ *         // Name: ComponentType
  *         HCD-2A: HCD
  *         HCD-2B: HCD
  *       }

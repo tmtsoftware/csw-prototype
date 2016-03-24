@@ -26,14 +26,14 @@ object TestServiceClient {
  * A test client actor that uses the location service to resolve services
  */
 class TestServiceClient(numServices: Int) extends Actor with ActorLogging {
-  val serviceRefs = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.serviceRef(i), TestHttpService.serviceRef(i))).toSet
-  context.actorOf(LocationService.props(serviceRefs))
+  val connections = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.connection(i), TestHttpService.connection(i))).toSet
+  context.actorOf(LocationService.props(connections))
 
   override def receive: Receive = {
     case ServicesReady(services) ⇒
-      log.info(s"Test Passed: Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString(", ")}")
-    case Disconnected(serviceRef) ⇒
-      log.info(s"Disconnected service: ${serviceRef.serviceId.name}")
+      log.info(s"Test Passed: Received services: ${services.values.map(_.connection.componentId.name).mkString(", ")}")
+    case Disconnected(connection) ⇒
+      log.info(s"Disconnected service: ${connection.componentId.name}")
     case x ⇒
       log.error(s"Received unexpected message $x")
   }

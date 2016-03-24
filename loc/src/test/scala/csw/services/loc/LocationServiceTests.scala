@@ -3,13 +3,11 @@ package csw.services.loc
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{Disconnected, ServicesReady}
+import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.LocationService.ServicesReady
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 
 object LocationServiceTests {
   LocationService.initInterface()
@@ -21,15 +19,15 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   test("Test location service") {
-    val serviceRefs = Set(ServiceRef(ServiceId("TestService", ServiceType.Assembly), AkkaType))
-    system.actorOf(LocationService.props(serviceRefs, Some(self)))
+    val connections: Set[Connection] = Set(AkkaConnection(ComponentId("TestService", ComponentType.Assembly)))
+    system.actorOf(LocationService.props(connections, Some(self)))
 
     // register
-    LocationService.registerAkkaService(serviceRefs.head.serviceId, testActor, "test.prefix")
+    LocationService.registerAkkaService(connections.head.componentId, testActor, "test.prefix")
     within(25.seconds) {
       val ready = expectMsgType[ServicesReady](20.seconds)
       logger.info(s"Services ready: $ready")
-      assert(serviceRefs == ready.services.keys)
+      assert(connections == ready.services.keys)
     }
   }
 

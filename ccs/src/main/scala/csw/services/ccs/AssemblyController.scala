@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor.{ActorRef, ActorLogging, Actor}
 import akka.util.Timeout
 import csw.services.loc.LocationService.{ResolvedService, Disconnected, ServicesReady}
-import csw.services.loc.ServiceRef
+import csw.services.loc.Connection
 import csw.util.cfg.Configurations.StateVariable._
 import csw.util.cfg.Configurations.{StateVariable, ObserveConfigArg, SetupConfigArg, ControlConfigArg}
 import csw.util.cfg.RunId
@@ -54,6 +54,7 @@ object AssemblyController {
 
   /**
    * Indicates an invalid config
+   *
    * @param reason a description of why the config is invalid
    */
   case class Invalid(reason: String) extends Validation {
@@ -94,7 +95,7 @@ trait AssemblyController extends Actor with ActorLogging {
   /**
    * Receive state while required services are available
    */
-  private def ready(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
+  private def ready(services: Map[Connection, ResolvedService]): Receive = additionalReceive orElse {
     case Submit(config)     ⇒ submit(services, config, oneway = false, sender())
     case OneWay(config)     ⇒ submit(services, config, oneway = true, sender())
 
@@ -107,13 +108,14 @@ trait AssemblyController extends Actor with ActorLogging {
 
   /**
    * Called for Submit messages
+   *
    * @param services map of the required services
    * @param config the config received
    * @param oneway true if no completed response is needed
    * @param replyTo actorRef of the actor that submitted the config
    */
   private def submit(
-    services: Map[ServiceRef, ResolvedService],
+    services: Map[Connection, ResolvedService],
     config:   ControlConfigArg, oneway: Boolean, replyTo: ActorRef
   ): Unit = {
 
@@ -134,6 +136,7 @@ trait AssemblyController extends Actor with ActorLogging {
 
   /**
    * Replies with an error message if we receive a config when not in the ready state
+   *
    * @param config the received config
    */
   private def notReady(config: ControlConfigArg): Unit = {
@@ -151,7 +154,7 @@ trait AssemblyController extends Actor with ActorLogging {
    * @param replyTo if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def setup(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg,
+  protected def setup(services: Map[Connection, ResolvedService], configArg: SetupConfigArg,
                       replyTo: Option[ActorRef]): Validation
 
   /**
@@ -162,7 +165,7 @@ trait AssemblyController extends Actor with ActorLogging {
    * @param replyTo if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def observe(services: Map[ServiceRef, ResolvedService], configArg: ObserveConfigArg,
+  protected def observe(services: Map[Connection, ResolvedService], configArg: ObserveConfigArg,
                         replyTo: Option[ActorRef]): Validation = Valid
 
   /**
@@ -172,9 +175,10 @@ trait AssemblyController extends Actor with ActorLogging {
 
   /**
    * Derived classes and traits can extend this to be notified when required services are ready
-   * @param services maps serviceRef to information that includes the host, port and actorRef
+   *
+   * @param services maps connection to information that includes the host, port and actorRef
    */
-  protected def connected(services: Map[ServiceRef, ResolvedService]): Unit = {}
+  protected def connected(services: Map[Connection, ResolvedService]): Unit = {}
 
   /**
    * Derived classes and traits can extend this to be notified when required services are disconnected
