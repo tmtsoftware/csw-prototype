@@ -3,7 +3,7 @@ package csw.services
 /**
  * This project deals with the packaging of components, such as HCDs and Assemblies.
  *
- * Components are usually created by a [[csw.services.pkg.Container]] from a configuration file
+ * Components are usually created by a [[csw.services.pkg.ContainerComponent]] from a configuration file
  * and are then controlled by a [[csw.services.pkg.Supervisor]] actor that intercepts ''lifecycle'' messages
  * to determine the state of the component (Components that are not in the ''Running'' state, do not
  * receive commands, for example).

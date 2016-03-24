@@ -6,7 +6,7 @@ import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.{AssemblyClient, BlockingAssemblyClient}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
-import csw.services.pkg.{Container, Supervisor}
+import csw.services.pkg.{ContainerComponent, Supervisor}
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.Await
@@ -66,9 +66,9 @@ object Seq {
    * @param actorRef the container actor
    */
   case class ContainerClient(actorRef: ActorRef) {
-    def stop(): Unit = actorRef ! Container.Stop
-    def halt(): Unit = actorRef ! Container.Halt
-    def restart(): Unit = actorRef ! Container.Restart
+    def stop(): Unit = actorRef ! ContainerComponent.Stop
+    def halt(): Unit = actorRef ! ContainerComponent.Halt
+    def restart(): Unit = actorRef ! ContainerComponent.Restart
     def initialize(): Unit = actorRef ! Supervisor.Initialize
     def Startup(): Unit = actorRef ! Supervisor.Startup
     def shutdown(): Unit = actorRef ! Supervisor.Shutdown

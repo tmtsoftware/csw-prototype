@@ -7,7 +7,7 @@ import akka.util.Timeout
 import com.typesafe.config.{ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.akka.{ConfigServiceSettings, ConfigServiceClient}
-import csw.services.pkg.Container
+import csw.services.pkg.ContainerComponent
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -17,6 +17,7 @@ object ContainerCmd {
 
   /**
    * Command line options: [--config config] file
+ *
    * @param csConfig optional config file to use for config service settings, if needed
    * @param file optional container config file to override the default
    */
@@ -59,7 +60,7 @@ case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
       case Some(file) ⇒
         if (file.exists) {
           logger.info(s" Using file: $file")
-          Container.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
+          ContainerComponent.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
         } else {
           logger.info(s" Attempting to get '$file' from the config service")
           initFromConfigService(file, options.csConfig)
@@ -68,7 +69,7 @@ case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
       case None ⇒
         if (resource.isDefined) {
           logger.info(s" Using default resource: $resource")
-          Container.create(ConfigFactory.load(resource.get))
+          ContainerComponent.create(ConfigFactory.load(resource.get))
         } else {
           logger.error("Error: No config file or resource was specified")
           System.exit(1)
@@ -90,7 +91,7 @@ case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
     val f = for {
       config ← ConfigServiceClient.getConfigFromConfigService(settings, file)
     } yield {
-      Container.create(config)
+      ContainerComponent.create(config)
     }
     f.onComplete {
       case Success(_)  ⇒ logger.info(s"XXX Created container based on $file")

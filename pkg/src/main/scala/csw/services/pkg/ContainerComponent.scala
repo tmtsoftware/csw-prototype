@@ -29,12 +29,12 @@ import scala.util.{Failure, Success, Try}
  *
  * See also "OSW TN012 Component Lifecycle Design".
  */
-object Container {
+object ContainerComponent {
 
   /**
    * Used to create the actor
    */
-  def props(config: Config): Props = Props(classOf[Container], config)
+  def props(config: Config): Props = Props(classOf[ContainerComponent], config)
 
   /**
    * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
@@ -113,9 +113,9 @@ object Container {
 /**
  * Implements the container actor based on the contents of the given config.
  */
-class Container(config: Config) extends Actor with ActorLogging {
+class ContainerComponent(config: Config) extends Actor with ActorLogging {
 
-  import csw.services.pkg.Container._
+  import csw.services.pkg.ContainerComponent._
   import csw.services.pkg.Supervisor._
 
   registerWithLocationService()
