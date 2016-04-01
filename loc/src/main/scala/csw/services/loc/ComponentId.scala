@@ -1,5 +1,7 @@
 package csw.services.loc
 
+import scala.util.Try
+
 /**
  * Used to identify a component
  *
@@ -14,9 +16,9 @@ object ComponentId {
   /**
    * Gets a ComponentId from a string, as output by ComponentId.toString
    */
-  def apply(s: String): ComponentId = {
+  def apply(s: String): Try[ComponentId] = {
     val (name, typ) = s.splitAt(s.lastIndexOf('-'))
-    ComponentId(name, ComponentType(typ.drop(1)))
+    ComponentType(typ.drop(1)).map(ComponentId(name, _))
   }
 }
 

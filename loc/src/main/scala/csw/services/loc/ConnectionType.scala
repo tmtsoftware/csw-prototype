@@ -1,5 +1,7 @@
 package csw.services.loc
 
+import scala.util.{Failure, Success, Try}
+
 /**
  * Connection type: Indicate if it is an http server or an akka actor.
  */
@@ -31,12 +33,12 @@ object ConnectionType {
   case class UnknownConnectionTypeException(message: String) extends Exception(message)
 
   /**
-   * Gets a ConnectionType from the string value ("akka" or "http") or throws an UnknownConnectionTypeException
+   * Gets a ConnectionType from the string value ("akka" or "http") or an UnknownConnectionTypeException
    */
-  def apply(name: String): ConnectionType = name match {
-    case "http" ⇒ HttpType
-    case "akka" ⇒ AkkaType
-    case x      ⇒ throw UnknownConnectionTypeException(x)
+  def apply(name: String): Try[ConnectionType] = name match {
+    case "http" ⇒ Success(HttpType)
+    case "akka" ⇒ Success(AkkaType)
+    case x      ⇒ Failure(UnknownConnectionTypeException(x))
   }
 
 }

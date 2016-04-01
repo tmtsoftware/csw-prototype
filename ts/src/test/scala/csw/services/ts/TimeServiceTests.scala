@@ -1,45 +1,37 @@
 package csw.services.ts
 
-import java.time.Duration
 import java.time._
 
 import akka.actor._
-import akka.testkit.{TestKit, ImplicitSender}
+import akka.testkit.{ TestKit, ImplicitSender }
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
+import org.scalatest.{ BeforeAndAfterAll, FunSuiteLike }
 
 /**
- * Tests the TimeService
- */
+  * Tests the TimeService
+  */
 class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike
-    with LazyLogging with BeforeAndAfterAll {
+  with LazyLogging with BeforeAndAfterAll {
 
   test("Basic Java Time Tests") {
     import TimeService._
 
     // Assume an eastern time zone for tests
     val eclock = Clock.system(ZoneId.of("America/New_York"))
-    val hoursFromNyToHI = 6
 
     // Can't do much test to see now equal implying bad clocks
     val nyNow = LocalTime.now(eclock)
     val hwNow = hawaiiLocalTimeNow
     val now = localTimeNow
 
-    //    assert(nyNow.isAfter(hwNow))
+    assert(nyNow.isAfter(hwNow))
     // Try to determine that we have Hawaii time
     assert(!hwNow.equals(now)) // Not the same, good
-    val diffHwNy = Duration.between(nyNow, hwNow) // Difference should be 6 hrs (XXX or sometimes 5 hrs...)
-    //    assert(Math.abs(diffHwNy.toHours) == hoursFromNyToHI)
 
     val utcNow = UTCTimeNow
-    val gpsNow: LocalTime = GPSTimeNow
     val taiNow = TAITimeNow
 
-    assert(gpsNow.isAfter(utcNow))
     assert(taiNow.isAfter(utcNow))
-    assert(taiNow.isAfter(gpsNow))
-
   }
 
   test("Call scheduler once") {

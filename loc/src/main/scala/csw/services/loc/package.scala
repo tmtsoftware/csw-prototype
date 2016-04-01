@@ -12,14 +12,14 @@ package csw.services
  * Two types of services are currently supported: Akka/actor based and HTTP based services.
  * To register an Akka actor based service, you can use code like this:
  *
- *     {{{LocationService.registerAkkaService(componentId, self, "test.akka.prefix")}}}
+ *     {{{LocationService.registerAkkaConnection(componentId, self, "test.akka.prefix")}}}
  *
  * Where self is a reference to the services own actorRef and the prefix argument indicates the
  * part of a configuration the actor is interested in receiving.
  *
  * To register an HTTP based service, you can make a call like this:
  *
- *     {{{LocationService.registerHttpService(componentId, port)}}}
+ *     {{{LocationService.registerHttpConnection(componentId, port)}}}
  *
  * Here you specify the port and the DNS name for the local host is automatically determined.
  *

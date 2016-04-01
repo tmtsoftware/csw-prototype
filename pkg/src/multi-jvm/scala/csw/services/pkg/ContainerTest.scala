@@ -10,6 +10,8 @@ import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}
+import csw.services.pkg.ContainerComponent.Stop
+import csw.services.pkg.LifecycleManager.Running
 import csw.services.pkg.Supervisor.LifecycleStateChanged
 
 import scala.concurrent.Await
@@ -53,15 +55,17 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
     "be able to create a local Assembly and add two remote Hcds" in {
       runOn(container1) {
         enterBarrier("deployed")
-        val container = ContainerComponent.create(ConfigFactory.load("container1.conf"))
+        val container = ContainerComponent.create(ConfigFactory.load("container1.conf")).get
         within(30.seconds) {
           container ! ContainerComponent.GetComponents
-          val map = expectMsgType[ContainerComponent.Components].map
-          assert(map.size == 1)
-          for((name, assembly1) <- map) {
-            assembly1 ! Supervisor.SubscribeToLifecycleStates(onlyRunning = true)
-            val stateChange = expectMsgType[LifecycleStateChanged]
-            assert(stateChange.state.isRunning)
+          val components = expectMsgType[ContainerComponent.Components].components
+          assert(components.size == 1)
+          for(comp <- components) {
+            val assembly1 = comp.supervisor
+            assembly1 ! Supervisor.SubscribeLifecycleCallback(self)
+            while(expectMsgType[LifecycleStateChanged].state != Running) {
+              log.info("Waiting for running state")
+            }
 
             // Make sure the HCDs are ready before sending the test config
             val connections: Set[Connection] = Set(
@@ -82,19 +86,21 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           }
         }
         println("\nContainer1 tests passed\n")
-        container ! Supervisor.Uninitialize
+        container ! Stop
         enterBarrier("done")
       }
 
       runOn(container2) {
-        val container = ContainerComponent.create(ConfigFactory.load("container2.conf"))
+        val container = ContainerComponent.create(ConfigFactory.load("container2.conf")).get
         container ! ContainerComponent.GetComponents
-        val map = expectMsgType[ContainerComponent.Components].map
-        assert(map.size == 2)
-        for ((name, hcd) <- map) {
-          hcd ! Supervisor.SubscribeToLifecycleStates(onlyRunning = true)
-          val stateChange = expectMsgType[LifecycleStateChanged]
-          assert(stateChange.state.isRunning)
+        val components = expectMsgType[ContainerComponent.Components].components
+        assert(components.size == 2)
+        for (comp <- components) {
+          val hcd = comp.supervisor
+          hcd ! Supervisor.SubscribeLifecycleCallback(self)
+          while(expectMsgType[LifecycleStateChanged].state != Running) {
+            log.info("Waiting for running state")
+          }
         }
         println("\nContainer2 tests passed\n")
         enterBarrier("deployed")

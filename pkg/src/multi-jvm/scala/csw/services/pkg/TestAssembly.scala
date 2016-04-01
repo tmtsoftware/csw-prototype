@@ -4,7 +4,6 @@ import akka.actor.ActorRef
 import com.typesafe.config.{ConfigFactory, Config}
 import csw.services.ccs.{HcdController, StateMatcherActor, AssemblyController}
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.LocationService.ResolvedService
 import csw.services.loc.Connection
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
@@ -40,15 +39,10 @@ case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
     if (list.nonEmpty) list.head else Valid
   }
 
-  /**
-    * Called to process the setup config and reply to the given actor with the command status.
-    *
-    * @param services contains information about any required services
-    * @param configArg contains a list of setup configurations
-    * @param replyTo if defined, the actor that should receive the final command status.
-    */
-  override protected def setup(services: Map[Connection, ResolvedService], configArg: SetupConfigArg,
-                               replyTo: Option[ActorRef]): Validation = {
+  override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
+                      replyTo: Option[ActorRef]): Validation = {
+//  override protected def setup(services: Map[Connection, ResolvedService], configArg: SetupConfigArg,
+//                               replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
       // The code below just distributes the configs to the HCDs based on matching prefix,

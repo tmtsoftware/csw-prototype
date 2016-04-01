@@ -6,6 +6,7 @@ import akka.actor._
 import akka.util.Timeout
 import csw.services.cs.core.{ConfigFileHistory, _}
 import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 
 import scala.concurrent.{Await, Future}
@@ -103,9 +104,7 @@ object ConfigServiceActor {
     val componentId = ComponentId(name, ComponentType.Service)
     val connection = AkkaConnection(componentId)
     implicit val timeout: Timeout = 60.seconds
-    LocationService.resolve(Set(connection)).map { servicesReady ⇒
-      servicesReady.services(connection).actorRefOpt.get
-    }
+    LocationService.resolve(Set(connection)).map(_.locations.head).mapTo[ResolvedAkkaLocation].map(_.actorRef.get)
   }
 }
 
@@ -127,7 +126,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   // Registers with the location service
   def registerWithLocationService(): Unit = {
     val componentId = ComponentId(configManager.name, ComponentType.Service)
-    LocationService.registerAkkaService(componentId, self)(context.system)
+    LocationService.registerAkkaConnection(componentId, self)(context.system)
   }
 
   override def receive: Receive = {

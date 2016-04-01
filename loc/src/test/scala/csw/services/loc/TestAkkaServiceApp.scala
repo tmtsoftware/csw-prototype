@@ -32,7 +32,7 @@ object TestAkkaService {
  * A dummy akka test service that registers with the location service
  */
 class TestAkkaService(i: Int) extends Actor with ActorLogging {
-  LocationService.registerAkkaService(TestAkkaService.componentId(i), self, "test.akka.prefix")(context.system)
+  LocationService.registerAkkaConnection(TestAkkaService.componentId(i), self, "test.akka.prefix")(context.system)
   override def receive: Receive = {
     case x ⇒
       log.error(s"Received unexpected message $x")

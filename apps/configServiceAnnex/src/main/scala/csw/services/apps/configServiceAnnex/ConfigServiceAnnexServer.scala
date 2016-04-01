@@ -73,7 +73,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val componentId = ComponentId("ConfigServiceAnnex", ComponentType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
     logger.info(s"Registering with the location service with URI $httpUri")
-    LocationService.registerHttpService(componentId, addr.getPort)
+    LocationService.registerHttpConnection(componentId, addr.getPort)
   }
 
   // Implements Http GET

@@ -2,30 +2,7 @@ package csw.services.loc
 
 import csw.services.loc.ConnectionType.{AkkaType, HttpType}
 
-///**
-// * Describes a component and the way it is accessed (http, akka)
-//  *
-//  * @param componentId holds the component name and type (assembly, hcd, etc.)
-// * @param connectionType indicates how the component is accessed (http, akka)
-// */
-//case class Connection(componentId: ComponentId, connectionType: ConnectionType) {
-//  override def toString = s"$componentId-$connectionType"
-//
-//  override def equals(that: Any) = that match {
-//    case (that: Connection) ⇒ this.toString == that.toString;
-//    case _                  ⇒ false;
-//  }
-//}
-//
-//object Connection {
-//  /**
-//   * Gets a Connection from a string (as output by toString)
-//   */
-//  def apply(s: String): Connection = {
-//    val (a, b) = s.splitAt(s.lastIndexOf('-'))
-//    Connection(ComponentId(a), ConnectionType(b.drop(1)))
-//  }
-//}
+import scala.util.{Failure, Success, Try}
 
 /**
  * Describes a component and the way it is accessed (http, akka)
@@ -68,11 +45,19 @@ object Connection {
   /**
    * Gets a LocationRef from a string as output by toString
    */
-  def apply(s: String): Connection = {
+  def apply(s: String): Try[Connection] = {
     val (id, typ) = s.splitAt(s.lastIndexOf('-')) // To strings
     ConnectionType(typ.drop(1)) match {
-      case AkkaType ⇒ AkkaConnection(ComponentId(id))
-      case HttpType ⇒ HttpConnection(ComponentId(id))
+      case Success(AkkaType) ⇒ ComponentId(id).map(AkkaConnection)
+      case Success(HttpType) ⇒ ComponentId(id).map(HttpConnection)
+      case Failure(ex) => Failure(ex)
+    }
+  }
+
+  def apply(componentId: ComponentId, connectionType: ConnectionType): Connection = {
+    connectionType match {
+      case AkkaType ⇒ AkkaConnection(componentId)
+      case HttpType ⇒ HttpConnection(componentId)
     }
   }
 }

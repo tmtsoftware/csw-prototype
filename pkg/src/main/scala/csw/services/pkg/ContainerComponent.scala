@@ -2,10 +2,19 @@ package csw.services.pkg
 
 import akka.actor._
 import com.typesafe.config.Config
-import csw.services.loc.{ComponentId, ComponentType, LocationService}
+import com.typesafe.scalalogging.slf4j.Logger
+import csw.services.loc.ConnectionType._
+import csw.services.loc._
+import csw.services.loc.ComponentType._
+import csw.services.pkg.Component._
+import csw.services.pkg.LifecycleManager.{ LifecycleCommand, Loaded, Startup, Uninitialize }
+import csw.services.pkg.Supervisor.{ HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback }
+import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.{ FiniteDuration, _ }
+import scala.language.higherKinds
+import scala.util.{ Failure, Success, Try }
 
 /**
  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
@@ -30,19 +39,46 @@ import scala.util.{Failure, Success, Try}
  * See also "OSW TN012 Component Lifecycle Design".
  */
 object ContainerComponent {
+  private val logger = Logger(LoggerFactory.getLogger("ContainerComponent"))
+
+  // for parsing of file
+  val CONTAINER = "container"
+  val TYPE = "type"
+  val CLASS = "class"
+  val PREFIX = "prefix"
+  val CONNTYPE = "conntype"
+  val CONNECTIONS = "connections"
+  val NAME = "name"
+  val RATE = "rate"
+  val DELAY = "delay"
+  val INITIAL_DELAY = "initialdelay"
+  val CREATION_DELAY = "creationdelay"
+  val LIFECYCLE_DELAY = "lifecycledelay"
+
+  val DEFAULT_INITIAL_DELAY = 1.seconds
+  val DEFAULT_CREATION_DELAY = 1.seconds
+  val DEFAULT_LIFECYCLE_DELAY = 1.seconds
+
+  val DEFAULT_CONNECTION_TYPE = Set(AkkaType)
 
   /**
-   * Used to create the actor
+   * Used to create the actor(Note: Throws an exception if the config is not valid)
    */
-  def props(config: Config): Props = Props(classOf[ContainerComponent], config)
+  def props(config: Config): Props = Props(ContainerComponent(config).get)
+
+  def props(containerInfo: ContainerInfo): Props = Props(classOf[ContainerComponent], containerInfo)
 
   /**
    * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
    */
-  def create(config: Config): ActorRef = {
-    val name = config.getString("container.name")
+  def create(config: Config): Try[ActorRef] = {
+    parseConfigToContainerInfo(config).map(create)
+  }
+
+  def create(containerInfo: ContainerInfo): ActorRef = {
+    val name = containerInfo.componentName
     val system = ActorSystem(s"$name-system")
-    val actorRef = system.actorOf(props(config), name)
+    val actorRef = system.actorOf(props(containerInfo), name)
     // Exit when the container shuts down
     system.actorOf(Props(classOf[Terminator], actorRef), "terminator")
     actorRef
@@ -63,13 +99,8 @@ object ContainerComponent {
     }
   }
 
-  /**
-   * Describes a container
-   *
-   * @param system the container's actor system
-   * @param container the container actor
-   */
-  case class ContainerInfo(system: ActorSystem, container: ActorRef)
+  // Parsing Exception
+  case class ConfigurationParsingException(message: String) extends Exception(message)
 
   /**
    * Type of messages the container receives
@@ -96,6 +127,10 @@ object ContainerComponent {
    */
   case object Restart extends ContainerMessage
 
+  case class CreateComponents(infos: List[ComponentInfo]) extends ContainerMessage
+
+  case class LifecycleToAll(cmd: LifecycleCommand) extends ContainerMessage
+
   /**
    * Reply messages.
    */
@@ -104,123 +139,324 @@ object ContainerComponent {
   /**
    * Reply to GetComponents
    *
-   * @param map a map of component name to actor for the component (actually the lifecycle manager)
+   * @param components a list of component name to actor for the component (actually the lifecycle manager)
    */
-  case class Components(map: Map[String, ActorRef]) extends ContainerReplyMessage
+  case class Components(components: List[SupervisorInfo]) extends ContainerReplyMessage
 
+  // Parses the config file argument and creates the container,
+  // adding the components specified in the config file.
+  private[pkg] def parseConfig(config: Config): Try[List[ComponentInfo]] = {
+    Try {
+      val conf = config.getConfig("container.components")
+      val names = conf.root.keySet().toList
+      val entries = for {
+        key ← names
+        value ← parseComponentConfig(key, conf.getConfig(key))
+      } yield value
+      List(entries: _*)
+    }
+  }
+
+  // Parse the "components" section of the config file
+  private[pkg] def parseComponentConfig(name: String, conf: Config): Option[ComponentInfo] = {
+    val t = conf.getString(TYPE)
+    val info = ComponentType(t) match {
+      case Success(HCD)      ⇒ parseHcd(name, conf)
+      case Success(Assembly) ⇒ parseAssembly(name, conf)
+      case Failure(ex) ⇒
+        logger.error(s"Unknown component type: $t", ex); None
+      case _ ⇒ None
+    }
+    info
+
+  }
+
+  private[pkg] def parseName(name: String, conf: Config): Try[String] = {
+    if (!conf.hasPath(NAME)) Failure(ConfigurationParsingException(s"Missing configuration field: >$NAME< in connections for component: $name"))
+    else Success(conf.getString(NAME))
+  }
+
+  private[pkg] def parseClassName(name: String, conf: Config): Try[String] = {
+    if (!conf.hasPath(CLASS)) Failure(ConfigurationParsingException(s"Missing configuration field: >$CLASS< for component: $name"))
+    else Success(conf.getString(CLASS))
+  }
+
+  private[pkg] def parsePrefix(name: String, conf: Config): Try[String] = {
+    if (!conf.hasPath(PREFIX)) Failure(ConfigurationParsingException(s"Missing configuration field: >$PREFIX< for component: $name"))
+    else Success(conf.getString(PREFIX))
+  }
+
+  private[pkg] def parseComponentId(name: String, conf: Config): Try[ComponentId] = {
+    if (!conf.hasPath(TYPE))
+      Failure(ConfigurationParsingException(s"Missing configuration field: >$TYPE< for component: $name"))
+    else
+      ComponentType(conf.getString(TYPE)).map(ComponentId(name, _))
+  }
+
+  // Parse the "conntype" section of the component config
+  private[pkg] def parseConnType(name: String, conf: Config): Try[Set[ConnectionType]] = {
+    if (!conf.hasPath(CONNTYPE))
+      Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNTYPE< for component: $name"))
+    else Try {
+      val set = conf.getStringList(CONNTYPE).map(ctype ⇒ ConnectionType(ctype)).toSet
+      if (set.exists(_.isFailure))
+        throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNTYPE)}< for component: $name")
+      set.map(_.asInstanceOf[Success[ConnectionType]].get)
+    }
+  }
+
+  // Parse the "conntype" section of the component config
+  private[pkg] def parseConnTypeWithDefault(name: String, conf: Config, default: Set[ConnectionType]): Set[ConnectionType] = {
+    parseConnType(name, conf).getOrElse(default)
+  }
+
+  // Parse the "services" section of the component config
+  private[pkg] def parseRate(name: String, conf: Config): Try[FiniteDuration] = {
+    import scala.concurrent.duration._
+    if (!conf.hasPath(RATE))
+      Failure(ConfigurationParsingException(s"Missing configuration field: >$RATE< for component: $name"))
+    else
+      Try(conf.getDuration(RATE).asInstanceOf[FiniteDuration])
+  }
+
+  private[pkg] def parseDuration(name: String, configName: String, conf: Config, defaultDuration: FiniteDuration): FiniteDuration = {
+    import scala.concurrent.duration._
+    val t = Try(conf.getDuration(configName).asInstanceOf[FiniteDuration])
+    if (t.isFailure) logger.error(s"Container delay for >$name< is not valid, returning: >1 second<.")
+    t.getOrElse(defaultDuration)
+  }
+
+  private[pkg] def parseConnections(name: String, config: Config): Try[Set[Connection]] = {
+    if (!config.hasPath(CONNECTIONS))
+      Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNECTIONS< for Assembly: $name"))
+    else Try {
+      val list = config.getConfigList(CONNECTIONS).toList.map { conf: Config ⇒
+        for {
+          connName ← parseName(name, conf)
+          componentId ← parseComponentId(connName, conf)
+          connTypes ← parseConnType(connName, conf)
+        } yield connTypes.map(Connection(componentId, _))
+      }
+      val failed = list.find(_.isFailure).map(_.asInstanceOf[Failure[_]].exception)
+      if (failed.nonEmpty)
+        throw failed.get
+      else
+        list.flatMap(_.get).toSet
+    }
+  }
+
+  // Parse the "services" section of the component config
+  private[pkg] def parseHcd(name: String, conf: Config): Option[HcdInfo] = {
+    val x = for {
+      componentClassName <- parseClassName(name, conf)
+      prefix <- parsePrefix(name, conf)
+      registerAs <- parseConnType(name, conf)
+      cycle <- parseRate(name, conf)
+    } yield HcdInfo(name, prefix, componentClassName, RegisterOnly, registerAs, cycle)
+    if (x.isFailure) logger.error(s"An error occurred while parsing HCD info for: $name", x.asInstanceOf[Failure[_]].exception)
+    x.toOption
+  }
+
+  // Parse the "services" section of the component config
+  private[pkg] def parseAssembly(name: String, conf: Config): Option[AssemblyInfo] = {
+    val x = for {
+      componentClassName <- parseClassName(name, conf)
+      prefix <- parsePrefix(name, conf)
+      registerAs <- parseConnType(name, conf)
+      connections <- parseConnections(name, conf)
+    } yield AssemblyInfo(name, prefix, componentClassName, RegisterAndTrackServices, registerAs, connections)
+    if (x.isFailure) logger.error(s"An error occurred while parsing Assembly info for: $name", x.asInstanceOf[Failure[_]].exception)
+    x.toOption
+  }
+
+  private[pkg] def parseConfigToContainerInfo(config: Config): Try[ContainerInfo] = {
+    for {
+      componentConfigs <- parseConfig(config)
+      containerConfig <- Try(config.getConfig(CONTAINER))
+      name <- parseName("container", containerConfig)
+      initialDelay <- parseDuration(name, INITIAL_DELAY, containerConfig, DEFAULT_INITIAL_DELAY)
+      creationDelay <- parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
+      lifecycleDelay <- parseDuration(name, LIFECYCLE_DELAY, containerConfig, DEFAULT_LIFECYCLE_DELAY)
+    } yield {
+      logger.info("Initial delay: " + initialDelay)
+      logger.info("Creation delay: " + creationDelay)
+      logger.info("Lifecycle delay: " + lifecycleDelay)
+      // For container, if no conntype, set to Akka
+      val registerAs = parseConnTypeWithDefault(name, containerConfig, Set(AkkaType))
+      ContainerInfo(name, RegisterOnly, registerAs, initialDelay, creationDelay, lifecycleDelay, componentConfigs)
+    }
+  }
+
+  case class SupervisorInfo(supervisor: ActorRef, componentInfo: ComponentInfo)
+
+  def apply(config: Config): Try[ContainerComponent] = parseConfigToContainerInfo(config).map(ContainerComponent(_))
 }
 
 /**
+ * ***************************
  * Implements the container actor based on the contents of the given config.
  */
-class ContainerComponent(config: Config) extends Actor with ActorLogging {
+final case class ContainerComponent(containerInfo: ContainerInfo) extends Container {
 
-  import csw.services.pkg.ContainerComponent._
-  import csw.services.pkg.Supervisor._
+  implicit val ec = context.dispatcher
 
-  registerWithLocationService()
+  import ContainerComponent._
 
-  // Maps component name to the info returned when creating it
-  private val components = parseConfig()
+  //registerWithLocationService()
+  log.info("Container should be registering with Location Service!")
+
+  val componentInfos = containerInfo.componentInfos
+
+  // Send ourselves a message after initialDelay to create components
+  override def preStart() {
+    context.system.scheduler.scheduleOnce(containerInfo.initialDelay, self, CreateComponents(componentInfos)) // XXX allan: why delay?
+  }
+
+  // This is filled in as side effects of creating (components)
+  private var supervisors = List.empty[SupervisorInfo] // XXX allan: Is var needed?
+
+  def receive = runningReceive
 
   // Receive messages
-  override def receive: Receive = {
-    case cmd: LifecycleCommand ⇒ allComponents(cmd)
+  private def runningReceive: Receive = {
 
-    case GetComponents         ⇒ sender() ! getComponents
+    case LifecycleToAll(cmd: LifecycleCommand) ⇒ sendAllComponents(cmd, supervisors)
 
-    case Stop                  ⇒ stop()
-    case Halt                  ⇒ halt()
-    case Restart               ⇒ restart()
+    case GetComponents                         ⇒ sender() ! getComponents
+    case Stop                                  ⇒ stop()
+    case Halt                                  ⇒ halt()
+    case Restart                               ⇒ restart()
 
-    case Terminated(actorRef)  ⇒ componentDied(actorRef)
+    case CreateComponents(infos) ⇒
+      var cinfos = infos
+      stagedCommand(cinfos.nonEmpty, containerInfo.creationDelay) {
+        val cinfo = cinfos.head
+        log.info(s"Creating component: " + cinfo.componentName)
+        createComponent(cinfo)
+        cinfos = cinfos.tail
+      }
 
-    case x                     ⇒ log.error(s"Unexpected message: $x")
+    case LifecycleStateChanged(state) ⇒
+      log.info("Received state while running: " + state)
+//      val mysender = sender()
+//      val isUs = supervisors.find(si ⇒ si.supervisor == mysender)
+
+    case Terminated(actorRef) ⇒ componentDied(actorRef)
+
+    case x                    ⇒ log.error(s"Unexpected message: $x")
   }
 
-  // Starts an actor to manage registering this actor with the location service
-  // (as a proxy for the component)
-  private def registerWithLocationService(): Unit = {
-    val name = config.getString("container.name")
-    val componentId = ComponentId(name, ComponentType.Container)
-    LocationService.registerAkkaService(componentId, self)(context.system)
+  private def restartReceive(componentsLeft: List[SupervisorInfo]): Receive = {
+    case LifecycleStateChanged(state) ⇒
+      log.info(s"Received1: $state in ${containerInfo.componentName} with $componentsLeft")
+      val mysender = sender()
+      log.info("Received: " + state)
+      if (state == Loaded) {
+        if (componentsLeft.map(_.supervisor == mysender).nonEmpty) {
+          mysender ! UnsubscribeLifecycleCallback(self)
+          val newlist: List[SupervisorInfo] = componentsLeft.filter(_.supervisor != mysender)
+          log.info("New list: " + newlist)
+          checkDone(newlist)
+        }
+      }
+    case x ⇒
+      log.info(s"Unhandled command in receiveState: $x")
   }
 
-  private def createComponent(props: Props, componentId: ComponentId, prefix: String, services: List[ComponentId],
-                              components: Map[String, Component.ComponentInfo]): Option[Component.ComponentInfo] = {
-    val name = componentId.name
-    components.get(name) match {
-      case Some(componentInfo) ⇒
-        log.error(s"Component $name already exists")
-        None
-      case None ⇒
-        val componentInfo = Component.create(props, componentId, prefix, services)
-        context.watch(componentInfo.supervisor)
-        Some(componentInfo)
+  def checkDone(components: List[SupervisorInfo]): Unit = {
+    if (components.isEmpty) {
+      log.info("Empty")
+      context.become(runningReceive)
+      self ! LifecycleToAll(Startup)
+      log.info("________ FINISHED ++++++++++")
+    } else {
+      log.info("Not empty")
+      context.become(restartReceive(components))
     }
   }
+
+  private def getComponents = supervisors.map(_.supervisor)
+
+  // Tell all components to uninitialize and start an actor to wait until they do before restarting them.
+  private def restart(): Unit = {
+    log.info("RESTART RESTART")
+    context.become(restartReceive(supervisors))
+    supervisors.foreach(si ⇒ si.supervisor ! SubscribeLifecycleCallback(self))
+    sendAllComponents(Uninitialize, supervisors)
+  }
+
+//  // Starts an actor to manage registering this actor with the location service
+//  // (as a proxy for the component)
+//  private def registerWithLocationService(): Unit = {
+//    val name = containerInfo.componentName
+//    val componentId = ComponentId(name, Container)
+//    LocationService.registerAkkaConnection(componentId, self)(context.system)
+//  }
+
+  private def createComponent(componentInfo: ComponentInfo): Option[ActorRef] = {
+    supervisors.find(_.componentInfo == componentInfo) match {
+      case Some(existingComponentInfo) ⇒
+        log.error(s"In supervisor ${containerInfo.componentName}, component ${componentInfo.componentName} already exists")
+        None
+      case None ⇒
+        val supervisor = Supervisor(componentInfo)
+        supervisors = SupervisorInfo(supervisor, componentInfo) :: supervisors
+        Some(supervisor)
+    }
+  }
+
+  private def sendAllComponents(cmd: Any, infos: List[SupervisorInfo]) = {
+    var sinfos = infos
+    stagedCommand(sinfos.nonEmpty, containerInfo.creationDelay) {
+      val sinfo: SupervisorInfo = sinfos.head
+      log.info(s"Sending $cmd to: ${sinfo.componentInfo.componentName}")
+      sinfo.supervisor ! cmd
+      sinfos = sinfos.tail
+    }
+  }
+
+  private def stagedCommand(conditional: ⇒ Boolean, duration: FiniteDuration = 1.seconds)(body: ⇒ Unit) {
+    if (conditional) {
+      context.system.scheduler.scheduleOnce(duration) {
+        body
+        stagedCommand(conditional, duration)(body)
+      }
+    }
+  }
+
+  /*
+  private def createComponents(infos: List[ComponentInfo]): Map[String, SupervisorInfo] = {
+    val supervisors = infos.map(cinfo ⇒ cinfo.componentName -> SupervisorInfo(Supervisor(cinfo), cinfo))
+    supervisors.toMap
+  }
+  */
 
   // Called when a component (lifecycle manager) terminates
   private def componentDied(actorRef: ActorRef): Unit = {
     log.info(s"Actor $actorRef terminated")
   }
 
-  // Parses the config file argument and creates the container,
-  // adding the components specified in the config file.
-  private def parseConfig(): Map[String, Component.ComponentInfo] = {
-    val conf = config.getConfig("container.components")
-    val names = conf.root.keySet().toList
-    val entries = for {
-      key ← names
-      value ← parseComponentConfig(key, conf.getConfig(key))
-    } yield (key, value)
-    Map(entries: _*)
-  }
-
-  // Parse the "components" section of the config file
-  private def parseComponentConfig(name: String, conf: Config): Option[Component.ComponentInfo] = {
-    val className = conf.getString("class")
-    log.info(s"Create component $name with class $className and config $conf")
-    val props = Props(Class.forName(className), name, conf)
-    Try(ComponentType(conf.getString("type"))) match {
-      case Failure(ex) ⇒
-        log.error(s"Unknown service type: ${conf.getString("type")}")
-        None
-      case Success(componentType) ⇒
-        val componentId = ComponentId(name, componentType)
-        val prefix = if (conf.hasPath("prefix")) conf.getString("prefix") else ""
-        val services = if (conf.hasPath("services")) parseServices(conf.getConfig("services")) else Nil
-        createComponent(props, componentId, prefix, services, Map.empty)
-    }
-  }
-
-  // Parse the "services" section of the component config
-  private def parseServices(conf: Config): List[ComponentId] = {
-    for (key ← conf.root.keySet().toList) yield ComponentId(key, ComponentType(conf.getString(key)))
-  }
-
-  // Sends the given lifecycle command to all components
-  private def allComponents(cmd: LifecycleCommand): Unit =
-    for ((name, info) ← components) {
-      info.supervisor ! cmd
-    }
-
-  private def getComponents: Components =
-    Components(components.mapValues(_.supervisor))
+  //private def getComponents: Components = Components(supervisors.map(si => (si.componentInfo.componentName -> si.supervisor)).toMap)
 
   // Tell all components to uninitialize
   private def stop(): Unit = {
-    allComponents(Uninitialize)
+    sendAllComponents(Uninitialize, supervisors)
   }
 
-  // Tell all components to uninitialize and start an actor to wait until they do before exiting.
+  def staged[A, B, C](in: List[A], f: A ⇒ Option[B], f2: (List[A]) ⇒ C)(delay: FiniteDuration = 1.second) = {
+    log.info("Staged!!! " + in)
+    in match {
+      case Nil ⇒ log.info("Staged Done") // Done
+      case cinfo :: tail ⇒
+        f(cinfo)
+        val message = f2(tail)
+        context.system.scheduler.scheduleOnce(delay, self, message)
+    }
+  }
+
   private def halt(): Unit = {
-    context.actorOf(ContainerUninitializeActor.props(components, exit = true))
-  }
-
-  // Tell all components to uninitialize and start an actor to wait until they do before restarting them.
-  private def restart(): Unit = {
-    context.actorOf(ContainerUninitializeActor.props(components, exit = false))
+    log.info("Halting")
+    //supervisors.foreach(si => si.supervisor ! SubscribeLifecycleCallback(self))
+    sendAllComponents(HaltComponent, supervisors)
   }
 }
-
