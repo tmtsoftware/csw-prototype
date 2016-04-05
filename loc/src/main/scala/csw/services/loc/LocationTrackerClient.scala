@@ -10,8 +10,11 @@ object LocationTrackerClient {
   private val logger = Logger(LoggerFactory.getLogger("LocationTrackerClient"))
   type LocationMap = Map[Connection, Location]
 
-  private[loc] def handleLocationMessage(connectionsIn: LocationMap, message: Any): LocationMap = {
-    val connectionsOut: Option[LocationMap] = message match {
+  // XXX allan FIXME: overwrite already resolved in case of new start after crash?
+  private[loc] def handleLocationMessage(connectionsIn: LocationMap, loc: Location): LocationMap = {
+    logger.info(s"XXX Received location $loc")
+
+    val connectionsOut: Option[LocationMap] = loc match {
       // Outer case is for current state
       case urc: Unresolved ⇒
         logger.info(s"Unresolved: ${urc.connection}")
@@ -32,34 +35,38 @@ object LocationTrackerClient {
         Some(connectionsIn - c)
     }
     connectionsOut.getOrElse(connectionsIn)
+
+//    if (connectionsIn.contains(loc.connection)) connectionsIn + (loc.connection -> loc) else connectionsIn
   }
 }
 
 case class LocationTrackerClient(tracker: ActorRef) {
   // Set of conection states
-  private[loc] var connections = Map.empty[Connection, Location]
+  private var connections = Map.empty[Connection, Location]
 
-  def trackerClientReceive: Receive = {
-    case c: Any ⇒ connections = LocationTrackerClient.handleLocationMessage(connections, c)
+  def trackerClientReceive(loc: Location): Unit = {
+    connections = LocationTrackerClient.handleLocationMessage(connections, loc)
   }
 
-  def trackConnection(connection: Connection) = {
+  def trackConnection(connection: Connection): Unit = {
     // Add it for checking first tracker message
     connections += (connection -> Unresolved(connection))
     tracker ! TrackConnection(connection)
   }
 
-  def untrackConnection(connection: Connection) = {
+  def untrackConnection(connection: Connection): Unit = {
     tracker ! UnTrackConnection(connection)
   }
 
-  def getLocation(connection: Connection): Location = connections(connection)
+  def getLocation(connection: Connection): Option[Location] = connections.get(connection)
 
-  def getLocations = connections.values.toSet
+  def getLocations: Set[Location] = connections.values.toSet
+
   /*
    * Returns true if all the tracked connections are resolved to locations
    */
-  def allResolved: Boolean = connections.values.collect { case c: Unresolved ⇒ c }.isEmpty
+//  def allResolved: Boolean = connections.values.collect { case c: Unresolved ⇒ c }.isEmpty
+  def allResolved: Boolean = !connections.values.exists(!_.isResolved)
 
 }
 
@@ -74,13 +81,14 @@ trait LocationTrackerClient2 {
 
   def trackerClientReceive: Receive = {
     // Outer case is for current state
-    case c: Any ⇒ connections = LocationTrackerClient.handleLocationMessage(connections, c)
+    case c: Location ⇒ connections = LocationTrackerClient.handleLocationMessage(connections, c)
+    case x => log.error(s"Received unexpected message: $x")
   }
 
-  def checkLocationMessage(message: Any): Boolean = {
-    connections = LocationTrackerClient.handleLocationMessage(connections, message)
-    allResolved
-  }
+//  def checkLocationMessage(message: Location): Boolean = {
+//    connections = LocationTrackerClient.handleLocationMessage(connections, message)
+//    allResolved
+//  }
 
   def trackConnection(connection: Connection) = {
     // Add it for checking first tracker message

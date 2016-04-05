@@ -23,7 +23,8 @@ object LocationService {
   private val logger = Logger(LoggerFactory.getLogger("LocationService"))
 
   // Share the JmDNS instance within this jvm for better performance
-  private val registry = getRegistry
+  // (Note: Using lazy initialization, since this should run after calling initInterface() below
+  private lazy val registry = getRegistry
 
   // Used to log a warning if initInterface was not called before registering
   private var initialized = false
@@ -118,15 +119,25 @@ object LocationService {
 
   sealed trait Location {
     def connection: Connection
+
+    val isResolved: Boolean
   }
 
-  final case class UnTrackedLocation(connection: Connection) extends Location
+  final case class UnTrackedLocation(connection: Connection) extends Location {
+    override val isResolved = false
+  }
 
-  final case class Unresolved(connection: Connection) extends Location
+  final case class Unresolved(connection: Connection) extends Location {
+    override val isResolved = false
+  }
 
-  final case class ResolvedAkkaLocation(connection: AkkaConnection, uri: URI, prefix: String = "", actorRef: Option[ActorRef] = None) extends Location
+  final case class ResolvedAkkaLocation(connection: AkkaConnection, uri: URI, prefix: String = "", actorRef: Option[ActorRef] = None) extends Location {
+    override val isResolved = true
+  }
 
-  final case class ResolvedHttpLocation(connection: HttpConnection, uri: URI, path: String) extends Location
+  final case class ResolvedHttpLocation(connection: HttpConnection, uri: URI, path: String) extends Location {
+    override val isResolved = true
+  }
 
   /**
    * Returned from register calls so that client can close the connection and deregister the service
@@ -216,13 +227,13 @@ object LocationService {
 
   def unregisterConnection(connection: Connection): Unit = {
     val services: Array[ServiceInfo] = registry.list(dnsType)
-    val filteredServices = services.filter(si ⇒ si.getName == connection.toString)
+    val filteredServices = services.filter(_.getName == connection.toString)
     filteredServices.foreach { si ⇒
       logger.info(s"Unregistered connection: $connection")
       registry.unregisterService(si)
     }
     if (filteredServices.length == 0) {
-      logger.info(s"Failed to find and unregister: $connection")
+      logger.warn(s"Failed to find and unregister: $connection")
     }
   }
 
@@ -246,19 +257,13 @@ object LocationService {
    *
    * @param connections set of requested connections
    * @param system      the caller's actor system
-   * @return a future ServicesReady object describing the services found
+   * @return a future object describing the services found
    */
   def resolve(connections: Set[Connection])(implicit system: ActorSystem, timeout: Timeout): Future[LocationsReady] = {
     import akka.pattern.ask
     import system.dispatcher
     val actorRef = system.actorOf(LocationTrackerWorker.props(None))
-    val f = (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]
-    f.onComplete {
-      case _ ⇒
-        logger.debug("LocationTrackerWorker completed")
-        system.stop(actorRef)
-    }
-    f
+    (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]
   }
 
   /**
@@ -525,14 +530,10 @@ object LocationService {
 
   }
 
-  /**
-   * A class that can be started from non-actor code that runs a location service actor until it
-   * gets a result.
-   */
   object LocationTrackerWorker {
 
     /**
-     * Message sent to the parent actor whenever all the requested services become available
+     * Message sent to the replyTo actor (or sender) whenever all the requested services become available
      *
      * @param locations requested connections to the resolved information
      */
@@ -540,11 +541,15 @@ object LocationService {
 
     case class TrackConnections(connection: Set[Connection])
 
+    /**
+      * Used to create the actor
+      * @param replyTo the LocationsReady message is sent to this actor, if set, otherwise the actor that sent the
+      *                TrackConnections message
+      */
     def props(replyTo: Option[ActorRef]): Props = Props(classOf[LocationTrackerWorker], replyTo)
   }
 
-  protected class LocationTrackerWorker(replyTo: Option[ActorRef]) extends Actor with ActorLogging {
-
+  private class LocationTrackerWorker(replyTo: Option[ActorRef]) extends Actor with ActorLogging {
     import LocationTrackerWorker._
 
     // Create a tracker for this set of connections
@@ -552,21 +557,24 @@ object LocationService {
     // And a client for watching the answers
     val trackerClient = LocationTrackerClient(tracker)
 
+    // This is needed in order to get a sender to reply to in the case that replyTo is None
+    // (This is the case when used in an "ask" message, where you want to turn the response into a Future)
     def startupReceive: Receive = {
       case TrackConnections(connections) ⇒
-        val mysender = sender()
-        context.become(finishReceive(mysender))
-        // Track each of the connections in the set while giving the caller to the finishReceive partial
+        context.become(finishReceive(replyTo.getOrElse(sender())))
+        // Track each of the connections
         connections.foreach(c ⇒ trackerClient.trackConnection(c))
     }
 
-    def finishReceive(sender: ActorRef): Receive = {
-      case m ⇒
-        trackerClient.trackerClientReceive(m) // Pass this to client receive
+    def finishReceive(a: ActorRef): Receive = {
+      case loc: Location =>
+        trackerClient.trackerClientReceive(loc)
         if (trackerClient.allResolved) {
-          // The replyTo is for testing and possible use outside of resolve call
-          replyTo.getOrElse(sender) ! LocationsReady(trackerClient.getLocations)
+          a ! LocationsReady(trackerClient.getLocations)
+          context.stop(self)
         }
+
+      case x => log.error(s"Unexpected message: $x")
     }
 
     // Start with startup Receive

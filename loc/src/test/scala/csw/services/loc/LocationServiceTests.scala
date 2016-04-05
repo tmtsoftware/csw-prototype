@@ -138,7 +138,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     val testProbe = TestProbe()
 
-    val f = LocationService.registerHttpConnection(componentId, testPort, testPrefix)
+    val f = LocationService.registerHttpConnection(componentId, testPort)
 
     val tracker = system.actorOf(LocationTracker.props(Some(testProbe.ref)))
 
@@ -169,7 +169,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     val actorTestProbe = TestProbe()
 
     val fList = List(
-      LocationService.registerHttpConnection(componentId, testPort, testPrefix),
+      LocationService.registerHttpConnection(componentId, testPort),
       LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix))
 
     val tracker = system.actorOf(LocationTracker.props(Some(testProbe.ref)))
@@ -239,7 +239,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     val r1 = testProbe.expectMsgClass(10.seconds, classOf[ResolvedAkkaLocation])
     assert(r1.connection == ac)
 
-    val f2 = LocationService.registerHttpConnection(componentId, testPort, testPrefix)
+    val f2 = LocationService.registerHttpConnection(componentId, testPort)
     val r2 = testProbe.expectMsgClass(15.seconds, classOf[ResolvedHttpLocation])
     assert(r2.connection == hc)
     // Assure no messages coming for no tracking
@@ -280,7 +280,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     val r1 = testProbe.expectMsgClass(10.seconds, classOf[ResolvedAkkaLocation])
     assert(r1.connection == ac)
 
-    val f2 = LocationService.registerHttpConnection(componentId, testPort, testPrefix)
+    val f2 = LocationService.registerHttpConnection(componentId, testPort)
     val r2 = testProbe.expectMsgClass(15.seconds, classOf[ResolvedHttpLocation])
     assert(r2.connection == hc)
 

@@ -7,12 +7,12 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
 class ComponentTypeTests extends FunSpecLike with Matchers with BeforeAndAfterAll {
 
   it("component type should be creatable from string") {
-    assert(ComponentType("Assembly") === Assembly)
-    assert(ComponentType( "hcd") === HCD)
-    assert(ComponentType("CONTAINER") === Container)
-    assert(ComponentType("Service") === Service)
+    assert(ComponentType("Assembly").get === Assembly)
+    assert(ComponentType( "hcd").get === HCD)
+    assert(ComponentType("CONTAINER").get === Container)
+    assert(ComponentType("Service").get === Service)
     intercept[UnknownComponentTypeException] {
-      ComponentType("NotAType")
+      ComponentType("NotAType").get
     }
 
     assert(Assembly.toString === "Assembly")
