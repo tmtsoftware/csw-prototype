@@ -14,29 +14,29 @@ object LocationTrackerClient {
   private[loc] def handleLocationMessage(connectionsIn: LocationMap, loc: Location): LocationMap = {
     logger.info(s"XXX Received location $loc")
 
-    val connectionsOut: Option[LocationMap] = loc match {
-      // Outer case is for current state
-      case urc: Unresolved ⇒
-        logger.info(s"Unresolved: ${urc.connection}")
-        connectionsIn.get(urc.connection).collect {
-          case _: Unresolved ⇒
-            connectionsIn
-          case _ ⇒
-            connectionsIn + (urc.connection -> urc)
-        }
-      case rac: ResolvedAkkaLocation ⇒
-        logger.info(s"Resolved Akka Location: " + rac)
-        connectionsIn.get(rac.connection).collect { case Unresolved(c) ⇒ connectionsIn + (c -> rac) }
-      case rhl: ResolvedHttpLocation ⇒
-        logger.info(s"Resolved Http Location")
-        connectionsIn.get(rhl.connection).collect { case Unresolved(c) ⇒ connectionsIn + (c -> rhl) }
-      case UnTrackedLocation(c) ⇒
-        logger.info(s"Untrack Received for: $c")
-        Some(connectionsIn - c)
-    }
-    connectionsOut.getOrElse(connectionsIn)
+//    val connectionsOut: Option[LocationMap] = loc match {
+//      // Outer case is for current state
+//      case urc: Unresolved ⇒
+//        logger.info(s"Unresolved: ${urc.connection}")
+//        connectionsIn.get(urc.connection).collect {
+//          case _: Unresolved ⇒
+//            connectionsIn
+//          case _ ⇒
+//            connectionsIn + (urc.connection -> urc)
+//        }
+//      case rac: ResolvedAkkaLocation ⇒
+//        logger.info(s"Resolved Akka Location: " + rac)
+//        connectionsIn.get(rac.connection).collect { case Unresolved(c) ⇒ connectionsIn + (c -> rac) }
+//      case rhl: ResolvedHttpLocation ⇒
+//        logger.info(s"Resolved Http Location")
+//        connectionsIn.get(rhl.connection).collect { case Unresolved(c) ⇒ connectionsIn + (c -> rhl) }
+//      case UnTrackedLocation(c) ⇒
+//        logger.info(s"Untrack Received for: $c")
+//        Some(connectionsIn - c)
+//    }
+//    connectionsOut.getOrElse(connectionsIn)
 
-//    if (connectionsIn.contains(loc.connection)) connectionsIn + (loc.connection -> loc) else connectionsIn
+    if (connectionsIn.contains(loc.connection)) connectionsIn + (loc.connection -> loc) else connectionsIn
   }
 }
 

@@ -1,7 +1,7 @@
 package csw.services.loc
 
 import akka.actor._
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.loc.ComponentType._
@@ -87,12 +87,13 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val testPrefix = "test.prefix"
     val testPort = 1000
     val f = LocationService.registerHttpConnection(componentId, testPort)
-    val tester = system.actorOf(TestActor.props(self))
+    val testProbe = TestProbe("probe1")
+    val tester = system.actorOf(TestActor.props(testProbe.ref))
     val hc = HttpConnection(componentId)
 
     tester ! TrackConnection(hc)
 
-    val locations = expectMsgType[AllResolved](t).locations
+    val locations = testProbe.expectMsgType[AllResolved](t).locations
     assert(locations.size == 1)
 
     val result = Await.result(f, t)
@@ -104,11 +105,12 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val componentId = ComponentId("TestAss2", Assembly)
     val testPrefix = "test.prefix"
     val testPort = 1000
+    val testProbe = TestProbe("probe2")
 
-    val tester = system.actorOf(TestActor.props(self), "test")
+    val tester = system.actorOf(TestActor.props(testProbe.ref))
 
     val f = Future.sequence(List(LocationService.registerHttpConnection(componentId, testPort),
-      LocationService.registerAkkaConnection(componentId, self, testPrefix)))
+      LocationService.registerAkkaConnection(componentId, testProbe.ref, testPrefix)))
 
 
     val hc = HttpConnection(componentId)
@@ -116,18 +118,18 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
 
     tester ! TrackConnection(hc)
 
-    val locations = expectMsgType[AllResolved](t).locations
+    val locations = testProbe.expectMsgType[AllResolved](t).locations
     assert(locations.size == 1)
 
     tester ! TrackConnection(ac)
 
-    val locations2 = expectMsgType[AllResolved](t).locations
+    val locations2 = testProbe.expectMsgType[AllResolved](t).locations
     assert(locations2.size == 2)
 
     // Now remove one - it should still be allResolved since we removed one
     tester ! UntrackConnection(ac)
     tester ! QueryResolved
-    expectMsgType[AllResolved](t).locations
+    testProbe.expectMsgType[AllResolved](t).locations
 
     val resultList = Await.result(f, t)
     resultList.foreach(_.unregister())
@@ -135,26 +137,26 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
   }
 
   test("Test Location Service Client2") {
-
     val componentId = ComponentId("TestAss3", Assembly)
     val testPrefix = "test.prefix"
     val testPort = 1000
+    val testProbe = TestProbe("probe3")
 
     val f = LocationService.registerHttpConnection(componentId, testPort)
-    val tester = system.actorOf(TestActor.props(self))
+    val tester = system.actorOf(TestActor.props(testProbe.ref))
     val hc = HttpConnection(componentId)
 
     tester ! TrackConnection(hc)
 
-    val locations = expectMsgType[AllResolved](t).locations
+    val locations = testProbe.expectMsgType[AllResolved](t).locations
     assert(locations.size == 1)
 
     LocationService.unregisterConnection(hc)
     // Note: Need to wait in this case, since TestActor doesn't automatically send a message for removed components,
     // so the query would arrive before the message indicating that the component was removed...
-    expectNoMsg(5.seconds)
+    testProbe.expectNoMsg(20.seconds) // XXX FIXME: need a message here
     tester ! QueryResolved
-    val locations2 = expectMsgType[NotAllResolved](t).locations
+    val locations2 = testProbe.expectMsgType[NotAllResolved](t).locations
     assert(locations2.size == 1)
 
     Await.result(f, t)
@@ -167,11 +169,12 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val testPort = 1000
     val f = LocationService.registerHttpConnection(componentId, testPort)
     val hc = HttpConnection(componentId)
-    val tester = system.actorOf(LocationTrackerWorker.props(Some(self)))
+    val testProbe = TestProbe("probe4")
+    val tester = system.actorOf(LocationTrackerWorker.props(Some(testProbe.ref)))
 
     tester ! LocationTrackerWorker.TrackConnections(Set(hc))
 
-    val result = expectMsgType[LocationsReady](30.seconds)
+    val result = testProbe.expectMsgType[LocationsReady](30.seconds)
     logger.info("Result =:" + result)
 
     val r = Await.result(f, t)
@@ -182,9 +185,10 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val componentId = ComponentId("TestAss5", Assembly)
     val testPrefix = "test.prefix"
     val testPort = 1000
+    val testProbe = TestProbe("probe5")
 
     val f = Future.sequence(
-      List(LocationService.registerAkkaConnection(componentId, self, testPrefix),
+      List(LocationService.registerAkkaConnection(componentId, testProbe.ref, testPrefix),
         LocationService.registerHttpConnection(componentId, testPort)))
 
     val ac = AkkaConnection(componentId)
@@ -203,11 +207,12 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
   test("Try to do like Allan") {
     val componentId = ComponentId("TestAss6", Assembly)
     val testPrefix = "test.prefix"
+    val testProbe = TestProbe("probe6")
 
     import system.dispatcher
     implicit val timeout: Timeout = 60.seconds
 
-    val f = LocationService.registerAkkaConnection(componentId, self, testPrefix)
+    val f = LocationService.registerAkkaConnection(componentId, testProbe.ref, testPrefix)
     val ac = AkkaConnection(componentId)
 
     LocationService.resolve(Set(ac)).map(_.locations.head).mapTo[ResolvedAkkaLocation] onSuccess {
