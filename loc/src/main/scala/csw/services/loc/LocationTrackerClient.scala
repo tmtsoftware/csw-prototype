@@ -23,10 +23,10 @@ object LocationTrackerClient {
 }
 
 /**
-  * Wraps a LocationTracker actor to provide a more convenient API
+  * Wraps a LocationTracker actor in an immutable class
   *
   * @param tracker     the LocationTracker actor ref
-  * @param connections : set of conection states
+  * @param connections set of conection states
   */
 case class LocationTrackerClient(tracker: ActorRef, connections: LocationMap = Map.empty[Connection, Location]) {
 
@@ -71,36 +71,52 @@ case class LocationTrackerClient(tracker: ActorRef, connections: LocationMap = M
 }
 
 
-// XXX allan: needs a better name
+/**
+  * Can be used by an actor to keep track of component connections
+  */
 trait LocationTrackerClientActor {
   this: Actor with ActorLogging ⇒
 
   // Set of conection states
   private var connections = Map.empty[Connection, Location]
 
-  private lazy val tracker = context.actorOf(LocationTracker.props(Some(context.self)))
+  private lazy val tracker = context.actorOf(LocationTracker.props(Some(self)))
 
+  /**
+    * Handles location updates and updates the connections map (Should be called from the actor's receive method)
+    */
   def trackerClientReceive: Receive = {
-    case c: Location ⇒ connections = LocationTrackerClient.handleLocationMessage(connections, c)
+    case loc: Location ⇒ connections = LocationTrackerClient.handleLocationMessage(connections, loc)
     case x => log.error(s"Received unexpected message: $x")
   }
 
+  /**
+    * Starts tracking the given connection, setting the initial state to Unresolved
+    */
   def trackConnection(connection: Connection) = {
-    // Add it for checking first tracker message
     connections += (connection -> Unresolved(connection))
     tracker ! TrackConnection(connection)
   }
 
+  /**
+    * Stops tracking the given connection
+    */
   def untrackConnection(connection: Connection) = {
     tracker ! UnTrackConnection(connection)
   }
 
-  def getLocation(connection: Connection): Location = connections(connection)
+  /**
+    * Returns the location for the given connection, if known
+    */
+  def getLocation(connection: Connection): Option[Location] = connections.get(connection)
 
+  /**
+    * Returns the set of known locations
+    */
   def getLocations: Set[Location] = connections.values.toSet
 
   /*
-   * Returns true if all the tracked connections are resolved to locations
+   * Returns true if all the tracked connections are currently resolved to locations
    */
-  def allResolved: Boolean = connections.values.collect { case c: Unresolved ⇒ c }.isEmpty
+  def allResolved: Boolean = !connections.values.exists(!_.isResolved)
 }

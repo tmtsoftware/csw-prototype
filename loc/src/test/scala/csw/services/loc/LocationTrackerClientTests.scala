@@ -132,7 +132,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     system.stop(tester)
   }
 
-  test("Test Location Service Client2") {
+  test("Test Location Service Client 2") {
     val componentId = ComponentId("TestAss3", Assembly)
     val testPort = 1000
     val testProbe = TestProbe("probe3")
