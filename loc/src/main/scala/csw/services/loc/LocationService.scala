@@ -286,13 +286,13 @@ object LocationService {
         list.find(_.componentId == c.componentId).foreach { result ⇒
           replyTo.getOrElse(context.parent) ! ComponentRegistered(c, result)
         }
-        a ! PoisonPill
+        system.stop(a)
       }
       case Failure(ex) ⇒
         val failed = registration.map(_.connection)
         log.error(s"Registration failed for $failed", ex)
         // XXX allan: Shoud an error message be sent to replyTo?
-        a ! PoisonPill
+        system.stop(a)
     }
 
     def receive: Receive = {
@@ -342,26 +342,14 @@ object LocationService {
     // If it is Unresolved, it's still unresolved
     // If it is resolved, we update to unresolved and send a message to the client
     private def removeService(connection: Connection): Unit = {
-      // XXX allan: simplify?
-      def rm(loc: Location): Unit = loc match {
-        case Unresolved(_) ⇒
-          log.info("Removing a service that is already unresolved.")
-        case UnTrackedLocation(c) ⇒
-          // This should never occur here
-          log.info(s"Untracked location: $c")
-        case cstate ⇒
-          // Update to be unresolved
-          log.info(s"Updating a resolved connection to unresolved: $cstate")
-          val unc = Unresolved(cstate.connection)
-          connections += (cstate.connection -> unc)
+      def rm(loc: Location): Unit = {
+        if (loc.isResolved) {
+          val unc = Unresolved(loc.connection)
+          connections += (loc.connection -> unc)
           sendLocationUpdate(unc)
+        }
       }
-      connections.get(connection) match {
-        case None ⇒
-          // A service that has been requested, but not yet resolved
-          log.warning("Attempt to remove an unknown service")
-        case Some(loc) ⇒ rm(loc)
-      }
+      connections.get(connection).foreach(rm)
     }
 
     private def tryToResolve(connection: Connection): Unit = {
