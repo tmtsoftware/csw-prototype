@@ -6,7 +6,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.loc.ComponentType._
 import csw.services.loc.Connection._
-import csw.services.loc.LocationService.{Location, LocationTracker, LocationTrackerWorker, ResolvedAkkaLocation}
+import csw.services.loc.LocationService._
 import csw.services.loc.LocationService.LocationTrackerWorker.LocationsReady
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
@@ -27,41 +27,29 @@ object LocationTrackerClientTests {
     case class AllResolved(locations: Set[Location]) extends TestActorMessage
     case class NotAllResolved(locations: Set[Location]) extends TestActorMessage
     case object QueryResolved extends TestActorMessage
-    case class TrackConnection(connection: Connection) extends TestActorMessage
-    case class UntrackConnection(connection: Connection) extends TestActorMessage
 
     def props(replyTo: ActorRef): Props = Props(classOf[TestActor], replyTo)
   }
 
-  class TestActor(replyTo: ActorRef) extends Actor with ActorLogging {
+  class TestActor(replyTo: ActorRef) extends Actor with ActorLogging with LocationTrackerClientActor {
     import TestActor._
-    private val tracker = context.actorOf(LocationTracker.props(Some(self)))
-    private var trackerClient = LocationTrackerClient(tracker)
 
-    override def receive = recv()
+    context.become(recv() orElse trackerClientReceive)
+
+    override def receive = Actor.emptyBehavior
 
     // query is set to true once after a QueryResolved message was received
     def recv(query: Boolean = false): Receive = {
       case loc: Location ⇒
-        log.info(s"Received location: $loc")
-        trackerClient = trackerClient.locationUpdate(loc)
-        if (trackerClient.allResolved)
-          replyTo ! AllResolved(trackerClient.getLocations)
+        trackerClientReceive(loc)
+        if (allResolved)
+          replyTo ! AllResolved(getLocations)
         else if (loc.isResolved || query)
-          replyTo ! NotAllResolved(trackerClient.getLocations)
-        context.become(recv(false))
-
-      case TrackConnection(connection) =>
-        trackerClient = trackerClient.trackConnection(connection)
-
-      case UntrackConnection(connection) =>
-        trackerClient.untrackConnection(connection)
+          replyTo ! NotAllResolved(getLocations)
+        context.become(recv() orElse trackerClientReceive)
 
       case QueryResolved =>
-        context.become(recv(true))
-
-      case x             ⇒
-        log.error(s"Unexpected message: $x")
+        context.become(recv(true) orElse trackerClientReceive)
     }
   }
 }
@@ -79,7 +67,6 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
   val t: FiniteDuration = 20.seconds
 
   test("Test Location Service Client") {
-
     val componentId = ComponentId("TestAss1", Assembly)
     val testPort = 1000
     val f = LocationService.registerHttpConnection(componentId, testPort)
@@ -107,7 +94,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
 
     val f = Future.sequence(List(LocationService.registerHttpConnection(componentId, testPort),
       LocationService.registerAkkaConnection(componentId, testProbe.ref, testPrefix)))
-
+    val resultList = Await.result(f, t)
 
     val hc = HttpConnection(componentId)
     val ac = AkkaConnection(componentId)
@@ -127,7 +114,6 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     tester ! QueryResolved
     testProbe.expectMsgType[AllResolved](t).locations
 
-    val resultList = Await.result(f, t)
     resultList.foreach(_.unregister())
     system.stop(tester)
   }

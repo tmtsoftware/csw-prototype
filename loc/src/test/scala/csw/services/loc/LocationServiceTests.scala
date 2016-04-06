@@ -284,7 +284,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     val r2 = testProbe.expectMsgClass(15.seconds, classOf[ResolvedHttpLocation])
     assert(r2.connection == hc)
 
-    tracker ! UnTrackConnection(hc)
+    tracker ! UntrackConnection(hc)
 
     val r3 = testProbe.expectMsgClass(15.seconds, classOf[UnTrackedLocation])
     assert(r3.connection == hc)

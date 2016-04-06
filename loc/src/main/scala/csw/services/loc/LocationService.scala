@@ -115,7 +115,7 @@ object LocationService {
 
   case class TrackConnection(connection: Connection)
 
-  case class UnTrackConnection(connection: Connection)
+  case class UntrackConnection(connection: Connection)
 
   sealed trait Location {
     def connection: Connection
@@ -470,7 +470,7 @@ object LocationService {
         // Note this will be called whether we are currently tracking or not, could already be resolved
         tryToResolve(connection)
 
-      case UnTrackConnection(connection: Connection) ⇒
+      case UntrackConnection(connection: Connection) ⇒
         // This is called from outside, so if it isn't in the tracking list, ignore it
         if (connections.contains(connection)) {
           // Remove from the map and send an updated Resolved List
@@ -508,6 +508,7 @@ object LocationService {
 
     /**
       * Used to create the actor
+ *
       * @param replyTo the LocationsReady message is sent to this actor, if set, otherwise the actor that sent the
       *                TrackConnections message
       */
