@@ -36,7 +36,7 @@ object LocationTrackerClientTests {
   class TestActor(replyTo: ActorRef) extends Actor with ActorLogging {
     import TestActor._
     private val tracker = context.actorOf(LocationTracker.props(Some(self)))
-    private val trackerClient = LocationTrackerClient(tracker)
+    private var trackerClient = LocationTrackerClient(tracker)
 
     override def receive = recv()
 
@@ -44,7 +44,7 @@ object LocationTrackerClientTests {
     def recv(query: Boolean = false): Receive = {
       case loc: Location ⇒
         log.info(s"Received location: $loc")
-        trackerClient.trackerClientReceive(loc)
+        trackerClient = trackerClient.locationUpdate(loc)
         if (trackerClient.allResolved)
           replyTo ! AllResolved(trackerClient.getLocations)
         else if (loc.isResolved || query)
@@ -52,7 +52,7 @@ object LocationTrackerClientTests {
         context.become(recv(false))
 
       case TrackConnection(connection) =>
-        trackerClient.trackConnection(connection)
+        trackerClient = trackerClient.trackConnection(connection)
 
       case UntrackConnection(connection) =>
         trackerClient.untrackConnection(connection)
@@ -63,10 +63,6 @@ object LocationTrackerClientTests {
       case x             ⇒
         log.error(s"Unexpected message: $x")
     }
-  }
-
-  class TestActor2 extends Actor with ActorLogging with LocationTrackerClient2 {
-    def receive = trackerClientReceive
   }
 }
 
@@ -85,7 +81,6 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
   test("Test Location Service Client") {
 
     val componentId = ComponentId("TestAss1", Assembly)
-    val testPrefix = "test.prefix"
     val testPort = 1000
     val f = LocationService.registerHttpConnection(componentId, testPort)
     val testProbe = TestProbe("probe1")
@@ -139,7 +134,6 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
 
   test("Test Location Service Client2") {
     val componentId = ComponentId("TestAss3", Assembly)
-    val testPrefix = "test.prefix"
     val testPort = 1000
     val testProbe = TestProbe("probe3")
 
@@ -163,7 +157,6 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
 
   test("Test Location TrackerWorker") {
     val componentId = ComponentId("TestAss4", Assembly)
-    val testPrefix = "test.prefix"
     val testPort = 1000
     val f = LocationService.registerHttpConnection(componentId, testPort)
     val hc = HttpConnection(componentId)

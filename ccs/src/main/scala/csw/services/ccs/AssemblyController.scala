@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
-import csw.services.loc.LocationTrackerClient2
+import csw.services.loc.LocationTrackerClientActor
 import csw.util.cfg.Configurations.StateVariable._
 import csw.util.cfg.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg, StateVariable}
 import csw.util.cfg.RunId
@@ -62,7 +62,7 @@ object AssemblyController {
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
-trait AssemblyController extends LocationTrackerClient2 {
+trait AssemblyController extends LocationTrackerClientActor {
   this: Actor with ActorLogging ⇒
 
   import AssemblyController._

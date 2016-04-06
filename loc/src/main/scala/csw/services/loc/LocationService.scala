@@ -369,31 +369,10 @@ object LocationService {
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
-      // XXX allan: simplify?
-      def res(loc: Location): Unit = loc match {
-        case Unresolved(c) ⇒
-          log.info("Resolve an unresolved service: " + c)
-          resolveService(c, event.getInfo)
-        case ResolvedAkkaLocation(c, _, _, _) ⇒
-          log.info(s"Update an already resolved Akka service: $c")
-          resolveService(c, event.getInfo)
-        case ResolvedHttpLocation(c, _, _) ⇒
-          log.info(s"Update an already resolved Http service: $c")
-          resolveService(c, event.getInfo)
-        case UnTrackedLocation(c) ⇒
-          // This should never occur here
-          log.info(s"Untracked location: $c")
-      }
-      log.info(s"Service Resolved Listener: ${event.getName}")
-      // Attempt to fetch the connection from the map of connections
-      Connection(event.getName).foreach { connection ⇒
-        connections.get(connection) match {
-          case None ⇒
-            // A service that has been requested, but not yet resolved
-            log.info(s"Some service that we don't care about: $connection")
-          case Some(loc) ⇒ res(loc)
-        }
-      }
+      // Gets the connection from the name and, if we are tracking the connection, resolve it
+      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc =>
+        resolveService(loc.connection, event.getInfo)
+      })
     }
 
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {
@@ -483,7 +462,6 @@ object LocationService {
       case TrackConnection(connection: Connection) ⇒
         // This is called from outside, so if it isn't in the tracking list, add it
         if (!connections.contains(connection)) {
-          log.info("Not currently in list so add it")
           val unc = Unresolved(connection)
           connections += connection -> unc
           // Should we send an update here?
@@ -494,9 +472,7 @@ object LocationService {
 
       case UnTrackConnection(connection: Connection) ⇒
         // This is called from outside, so if it isn't in the tracking list, ignore it
-        if (!connections.contains(connection)) {
-          log.info("Not currently in list so ignore")
-        } else {
+        if (connections.contains(connection)) {
           // Remove from the map and send an updated Resolved List
           connections -= connection
           // Send Untrack back so state can be updated
@@ -504,14 +480,13 @@ object LocationService {
         }
 
       case Terminated(actorRef) ⇒
-        // XXX allan: simplify
         // If a requested Akka service terminates, remove it, just in case it didn't unregister with mDns...
         connections.values.foreach {
           case ResolvedAkkaLocation(c, _, _, Some(otherActorRef)) ⇒
-            log.info(s"Unresolving service we care about upon death: $c")
+            log.info(s"Unresolving terminated actor: $c")
             if (actorRef == otherActorRef) removeService(c)
-          case _ ⇒
-            log.info(s"Death to non-Akka actor.  Not sure how we get here!")
+          case x ⇒ // should not happen
+            log.warning(s"Received Terminated message from unknown location: $x")
         }
 
       case x ⇒
@@ -544,8 +519,9 @@ object LocationService {
 
     // Create a tracker for this set of connections
     val tracker = context.actorOf(LocationTracker.props(Some(context.self)))
+
     // And a client for watching the answers
-    val trackerClient = LocationTrackerClient(tracker)
+    var trackerClient = LocationTrackerClient(tracker)
 
     // This is needed in order to get a sender to reply to in the case that replyTo is None
     // (This is the case when used in an "ask" message, where you want to turn the response into a Future)
@@ -553,12 +529,12 @@ object LocationService {
       case TrackConnections(connections) ⇒
         context.become(finishReceive(replyTo.getOrElse(sender())))
         // Track each of the connections
-        connections.foreach(c ⇒ trackerClient.trackConnection(c))
+        connections.foreach(c ⇒ trackerClient = trackerClient.trackConnection(c))
     }
 
     def finishReceive(a: ActorRef): Receive = {
       case loc: Location =>
-        trackerClient.trackerClientReceive(loc)
+        trackerClient = trackerClient.locationUpdate(loc)
         if (trackerClient.allResolved) {
           a ! LocationsReady(trackerClient.getLocations)
           context.stop(self)
