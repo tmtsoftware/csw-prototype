@@ -120,16 +120,15 @@ object LocationService {
   sealed trait Location {
     def connection: Connection
 
-    val isResolved: Boolean
+    val isResolved: Boolean = false
+    val isTracked: Boolean = true
   }
 
   final case class UnTrackedLocation(connection: Connection) extends Location {
-    override val isResolved = false
+    override val isTracked = false
   }
 
-  final case class Unresolved(connection: Connection) extends Location {
-    override val isResolved = false
-  }
+  final case class Unresolved(connection: Connection) extends Location
 
   final case class ResolvedAkkaLocation(connection: AkkaConnection, uri: URI, prefix: String = "", actorRef: Option[ActorRef] = None) extends Location {
     override val isResolved = true
@@ -343,6 +342,7 @@ object LocationService {
     // If it is Unresolved, it's still unresolved
     // If it is resolved, we update to unresolved and send a message to the client
     private def removeService(connection: Connection): Unit = {
+      // XXX allan: simplify?
       def rm(loc: Location): Unit = loc match {
         case Unresolved(_) ⇒
           log.info("Removing a service that is already unresolved.")
@@ -381,6 +381,7 @@ object LocationService {
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
+      // XXX allan: simplify?
       def res(loc: Location): Unit = loc match {
         case Unresolved(c) ⇒
           log.info("Resolve an unresolved service: " + c)
@@ -515,6 +516,7 @@ object LocationService {
         }
 
       case Terminated(actorRef) ⇒
+        // XXX allan: simplify
         // If a requested Akka service terminates, remove it, just in case it didn't unregister with mDns...
         connections.values.foreach {
           case ResolvedAkkaLocation(c, _, _, Some(otherActorRef)) ⇒

@@ -38,14 +38,18 @@ object LocationTrackerClientTests {
     private val tracker = context.actorOf(LocationTracker.props(Some(self)))
     private val trackerClient = LocationTrackerClient(tracker)
 
-    override def receive: Receive = {
+    override def receive = recv()
+
+    // query is set to true once after a QueryResolved message was received
+    def recv(query: Boolean = false): Receive = {
       case loc: Location ⇒
         log.info(s"Received location: $loc")
         trackerClient.trackerClientReceive(loc)
         if (trackerClient.allResolved)
           replyTo ! AllResolved(trackerClient.getLocations)
-        else if (loc.isResolved)
+        else if (loc.isResolved || query)
           replyTo ! NotAllResolved(trackerClient.getLocations)
+        context.become(recv(false))
 
       case TrackConnection(connection) =>
         trackerClient.trackConnection(connection)
@@ -54,10 +58,7 @@ object LocationTrackerClientTests {
         trackerClient.untrackConnection(connection)
 
       case QueryResolved =>
-        if (trackerClient.allResolved)
-          replyTo ! AllResolved(trackerClient.getLocations)
-        else
-          replyTo ! NotAllResolved(trackerClient.getLocations)
+        context.become(recv(true))
 
       case x             ⇒
         log.error(s"Unexpected message: $x")
@@ -143,6 +144,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val testProbe = TestProbe("probe3")
 
     val f = LocationService.registerHttpConnection(componentId, testPort)
+    Await.result(f, t)
     val tester = system.actorOf(TestActor.props(testProbe.ref))
     val hc = HttpConnection(componentId)
 
@@ -152,14 +154,10 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     assert(locations.size == 1)
 
     LocationService.unregisterConnection(hc)
-    // Note: Need to wait in this case, since TestActor doesn't automatically send a message for removed components,
-    // so the query would arrive before the message indicating that the component was removed...
-    testProbe.expectNoMsg(20.seconds) // XXX FIXME: need a message here
     tester ! QueryResolved
     val locations2 = testProbe.expectMsgType[NotAllResolved](t).locations
     assert(locations2.size == 1)
 
-    Await.result(f, t)
     system.stop(tester)
   }
 

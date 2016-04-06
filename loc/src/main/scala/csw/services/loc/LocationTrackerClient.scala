@@ -36,7 +36,12 @@ object LocationTrackerClient {
 //    }
 //    connectionsOut.getOrElse(connectionsIn)
 
-    if (connectionsIn.contains(loc.connection)) connectionsIn + (loc.connection -> loc) else connectionsIn
+    if (connectionsIn.contains(loc.connection)) {
+      if (loc.isTracked)
+        connectionsIn + (loc.connection -> loc)
+      else
+        connectionsIn - loc.connection
+    } else connectionsIn
   }
 }
 
