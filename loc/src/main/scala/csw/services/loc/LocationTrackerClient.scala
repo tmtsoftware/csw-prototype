@@ -91,8 +91,6 @@ trait LocationTrackerClientActor {
 
     case UntrackConnection(connection) ⇒
       trackerClient.untrackConnection(connection)
-
-    //    case x ⇒ log.error(s"Received unexpected message: $x")
   }
 
   /**

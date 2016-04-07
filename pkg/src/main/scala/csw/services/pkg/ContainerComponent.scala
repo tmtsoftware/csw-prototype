@@ -204,7 +204,8 @@ object ContainerComponent {
       if (set.exists(_.isFailure))
         throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNTYPE)}< for component: $name")
       set.map(_.asInstanceOf[Success[ConnectionType]].get)
-    }
+    } //    val t = Try(conf.getDuration(configName))
+
   }
 
   // Parse the "conntype" section of the component config

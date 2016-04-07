@@ -185,14 +185,13 @@ case class TestAssembly2(info: AssemblyInfo) extends Assembly with AssemblyContr
 
   var count = 0
 
-  def componentReceive: Receive = {
+  def receive = lifecycleHandlerReceive orElse controllerReceive orElse {
     case End ⇒
       // Need to unregister with the location service (Otherwise application won't exit)
       //posEventGenerator ! End
       haltComponent(supervisor)
+
+    case x => log.error(s"Unexpected message: $x")
   }
-
-  def receive = componentReceive orElse lifecycleHandlerReceive orElse controllerReceive
-
 }
 

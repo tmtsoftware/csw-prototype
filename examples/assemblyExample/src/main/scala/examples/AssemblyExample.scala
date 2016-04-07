@@ -1,8 +1,11 @@
 package examples
 
+import java.net.URI
+
 import akka.actor.{ActorRef, Props}
 import csw.services.ccs.{AssemblyController, CommandStatus, HcdController}
 import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.{Assembly, Component, LifecycleHandler}
 import csw.services.pkg.Component.ComponentInfo
@@ -36,6 +39,10 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
 
   val name = Assembly1.assemblyName
 
+  override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
+    case x => log.error(s"Unexpected message: $x")
+  }
+
   /**
    * Validates a received config arg
    */
@@ -57,23 +64,20 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
     if (list.nonEmpty) list.head else Valid
   }
 
-  /**
-   * Called to process the setup config and reply to the given actor with the command status.
-   *
-   * @param services contains information about any required services
-   * @param configArg contains a list of setup configurations
-   * @param replyTo if defined, the actor that should receive the final command status.
-   */
-  override protected def setup(services: Map[Connection, ResolvedService], configArg: SetupConfigArg,
-                               replyTo: Option[ActorRef]): Validation = {
+  override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
+                      replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
       // Get a reference to the actor for the HCD
-      val actorRef = services(Assembly1.targetConnection).actorRefOpt.get
-
+      val hcdActorRefOpt = getLocation(Assembly1.targetConnection).flatMap {
+        case ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) => actorRefOpt
+      }
       // Submit each config
-      configArg.configs.foreach { config ⇒
-        actorRef ! HcdController.Submit(config)
+      for {
+        config <- configArg.configs
+        hcdActorRef <- hcdActorRefOpt
+      } {
+        hcdActorRef ! HcdController.Submit(config)
       }
 
       // If a replyTo actor was given, reply with the command status
@@ -82,14 +86,6 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
       }
     }
     valid
-  }
-
-  override protected def connected(services: Map[Connection, ResolvedService]): Unit = {
-    log.info("Connected: " + services)
-  }
-
-  override protected def disconnected(): Unit = {
-    log.info("Disconnected!")
   }
 }
 
