@@ -5,6 +5,7 @@ import csw.services.pkg.LifecycleManager._
 import scala.concurrent.Future
 
 object LifecycleHandler {
+
   /**
    * Return type of LifecycleHandler methods that component actors can implement
    */

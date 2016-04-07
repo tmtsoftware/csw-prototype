@@ -45,13 +45,21 @@ object LifecycleManager {
   case class LifecycleFailure(state: LifecycleState, reason: String) extends LifecycleCommand
 
   sealed trait FSMData
+
   case object TargetLoaded extends FSMData
+
   case object TargetPendingInitializedFromLoaded extends FSMData
+
   case object TargetPendingLoadedFromInitialized extends FSMData
+
   case object TargetInitialized extends FSMData
+
   case object TargetPendingRunningFromInitialized extends FSMData
+
   case object TargetPendingInitializedFromRunning extends FSMData
+
   case object TargetRunning extends FSMData
+
   case class FailureInfo(state: LifecycleState, reason: String) extends FSMData
 
   /**
@@ -80,6 +88,7 @@ object LifecycleManager {
 }
 
 class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData] {
+
   import LifecycleManager._
 
   import scala.concurrent.duration._
@@ -104,7 +113,7 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case Loaded → PendingInitializedFromLoaded ⇒
+    case Loaded -> PendingInitializedFromLoaded ⇒
       // Send initialize to component
       logTransition("sending Initialize to component")
       component ! Initialize
@@ -117,7 +126,7 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
       goto(LifecycleFailure) using FailureInfo(Loaded, reason)
     case Event(UninitializeSuccess, TargetLoaded) ⇒
       logState(Loaded, Loaded)
-      self ! Heartbeat // Not sure I like thi, but it's here to tell supervisor when loaded is attained
+      self ! Heartbeat // Not sure I like this, but it's here to tell supervisor when loaded is attained
       goto(Loaded) using TargetLoaded
     // unregisterFromLocationService
     case (Event(StateTimeout, _)) ⇒
@@ -157,16 +166,16 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case Initialized → PendingRunningFromInitialized ⇒
+    case Initialized -> PendingRunningFromInitialized ⇒
       logTransition("sending Startup to component")
       // Send startup to component
       component ! Startup
     // requestServices
-    case Initialized → PendingLoadedFromInitialized ⇒
+    case Initialized -> PendingLoadedFromInitialized ⇒
       // Send uninitialize to component
       logTransition("sending Uninitialize to component")
       component ! Uninitialize
-    case PendingInitializedFromLoaded → Initialized ⇒
+    case PendingInitializedFromLoaded -> Initialized ⇒
       logTransition()
   }
 
@@ -214,7 +223,7 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case Running → PendingInitializedFromRunning ⇒
+    case Running -> PendingInitializedFromRunning ⇒
       logTransition("sending Shutdown to component")
       component ! Shutdown
   }
@@ -226,7 +235,7 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case _ → LifecycleFailure ⇒
+    case _ -> LifecycleFailure ⇒
       log.info(s"Sending failure to component: $nextStateData")
       nextStateData match {
         case FailureInfo(nextState, reason) ⇒
@@ -243,7 +252,9 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   def logState(nextState: LifecycleState, s: LifecycleState) = log.debug(s"In $stateName/$stateData going to $nextState/$s")
+
   def logTransition(message: String = "") = log.debug(s"On transition going from $stateName/$stateData to $nextStateData - $message")
+
   def logSameStateError(stateName: LifecycleState) = log.debug(s"Received: $stateName while in $stateName")
 
   initialize()

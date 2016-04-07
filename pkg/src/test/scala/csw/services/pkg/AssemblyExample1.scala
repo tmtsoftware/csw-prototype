@@ -93,13 +93,13 @@ package csw.services.pkg
  * Args: name, configPath
  */
 object Assembly1ExampleApp extends App {
-//  println("Starting! assembly1")
-//  val name = "assembly1"
-//  val prefix = "tcs.pos.assem"
-//  val componentId = ComponentId(name, ComponentType.Assembly)
-//  val targetComponentId = ComponentId("example1", ComponentType.HCD)
-//  val props = Assembly1.props(name, prefix)
-//
-//  val compInfo: ComponentInfo = Component.create(props, componentId, prefix, List(targetComponentId))
+  //  println("Starting! assembly1")
+  //  val name = "assembly1"
+  //  val prefix = "tcs.pos.assem"
+  //  val componentId = ComponentId(name, ComponentType.Assembly)
+  //  val targetComponentId = ComponentId("example1", ComponentType.HCD)
+  //  val props = Assembly1.props(name, prefix)
+  //
+  //  val compInfo: ComponentInfo = Component.create(props, componentId, prefix, List(targetComponentId))
 }
 

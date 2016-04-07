@@ -1,5 +1,7 @@
 package csw.services.pkg
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor._
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.Logger
@@ -216,7 +218,7 @@ object ContainerComponent {
     if (!conf.hasPath(RATE))
       Failure(ConfigurationParsingException(s"Missing configuration field: >$RATE< for component: $name"))
     else
-      Try(conf.getDuration(RATE).asInstanceOf[FiniteDuration])
+      Try(FiniteDuration(conf.getDuration(RATE).getSeconds, TimeUnit.SECONDS))
   }
 
   private[pkg] def parseDuration(name: String, configName: String, conf: Config, defaultDuration: FiniteDuration): FiniteDuration = {
@@ -274,13 +276,11 @@ object ContainerComponent {
       componentConfigs ← parseConfig(config)
       containerConfig ← Try(config.getConfig(CONTAINER))
       name ← parseName("container", containerConfig)
-      initialDelay ← parseDuration(name, INITIAL_DELAY, containerConfig, DEFAULT_INITIAL_DELAY)
-      creationDelay ← parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
-      lifecycleDelay ← parseDuration(name, LIFECYCLE_DELAY, containerConfig, DEFAULT_LIFECYCLE_DELAY)
     } yield {
-      logger.info("Initial delay: " + initialDelay)
-      logger.info("Creation delay: " + creationDelay)
-      logger.info("Lifecycle delay: " + lifecycleDelay)
+      val initialDelay = parseDuration(name, INITIAL_DELAY, containerConfig, DEFAULT_INITIAL_DELAY)
+      val creationDelay = parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
+      val lifecycleDelay = parseDuration(name, LIFECYCLE_DELAY, containerConfig, DEFAULT_LIFECYCLE_DELAY)
+      logger.info(s"Delays: init: $initialDelay, create: $creationDelay, lifecycle: $lifecycleDelay")
       // For container, if no conntype, set to Akka
       val registerAs = parseConnTypeWithDefault(name, containerConfig, Set(AkkaType))
       ContainerInfo(name, RegisterOnly, registerAs, initialDelay, creationDelay, lifecycleDelay, componentConfigs)

@@ -58,7 +58,7 @@ object Supervisor {
    * Function called by a component to indicate the lifecycle should be started.
    *
    * @param supervisor the ActorRef of the component's supervisor
-   * @param command the LifecycleCommand to be sent to the supervisor
+   * @param command    the LifecycleCommand to be sent to the supervisor
    */
   def lifecycle(supervisor: ActorRef, command: LifecycleCommand = Startup): Unit = {
     supervisor ! command
@@ -211,6 +211,7 @@ final class Supervisor(val componentInfo: ComponentInfo)
   private val listeners: java.util.Set[ActorRef] = new java.util.TreeSet[ActorRef]
 
   private def addListener(l: ActorRef) = listeners add l
+
   private def removeListener(l: ActorRef) = listeners remove l
 
   /**

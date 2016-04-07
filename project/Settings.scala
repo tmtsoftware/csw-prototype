@@ -73,7 +73,7 @@ object Settings {
 
   def formattingPreferences: FormattingPreferences =
     FormattingPreferences()
-      .setPreference(RewriteArrowSymbols, true)
+//      .setPreference(RewriteArrowSymbols, true)
       .setPreference(AlignParameters, true)
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)

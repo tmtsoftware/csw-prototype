@@ -138,17 +138,17 @@ package csw.services.pkg
  * Starts Hcd2 as a standalone application.
  */
 object HCDExample2App extends App {
-//  // For logging
-//  System.setProperty("application-name", "HCDExample2")
-//
-//  println("Starting example1 HCD!")
-//  val name = "example1"
-//  val prefix = "tcs.fake.pos"
-//  val componentId = ComponentId(name, ComponentType.HCD)
-//  val props = HCDDaemon.props(name, prefix)
-//
-//  val compInfo: ComponentInfo = Component.create(props, componentId, prefix, Nil)
-//  compInfo.supervisor ! PeriodicHcdController.Process(1.second)
+  //  // For logging
+  //  System.setProperty("application-name", "HCDExample2")
+  //
+  //  println("Starting example1 HCD!")
+  //  val name = "example1"
+  //  val prefix = "tcs.fake.pos"
+  //  val componentId = ComponentId(name, ComponentType.HCD)
+  //  val props = HCDDaemon.props(name, prefix)
+  //
+  //  val compInfo: ComponentInfo = Component.create(props, componentId, prefix, Nil)
+  //  compInfo.supervisor ! PeriodicHcdController.Process(1.second)
 
 }
 

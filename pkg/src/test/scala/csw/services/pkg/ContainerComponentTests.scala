@@ -4,7 +4,9 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.loc.LocationService
+import csw.services.loc.ComponentType.HCD
+import csw.services.loc.ConnectionType.{AkkaType, HttpType}
+import csw.services.loc.{ComponentId, Connection, LocationService}
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager.{Shutdown, Startup, Uninitialize}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
@@ -44,7 +46,8 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     val component = system.actorOf(Props(
       new Actor with Hcd with LifecycleHandler {
         def receive = lifecycleHandlerReceive
-      }), "LifecycleHandlerTester1")
+      }
+    ), "LifecycleHandlerTester1")
     component
   }
 
@@ -52,7 +55,8 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     val component = system.actorOf(Props(
       new Actor with Assembly with LifecycleHandler {
         def receive = lifecycleHandlerReceive
-      }), "LifecycleHandlerTester1")
+      }
+    ), "LifecycleHandlerTester1")
     component
   }
 
@@ -73,13 +77,15 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
   }
 
   def testContainerInfo: ContainerInfo = {
-    ContainerInfo("TestContainer",
+    ContainerInfo(
+      "TestContainer",
       RegisterOnly,
       Set(AkkaType),
       DEFAULT_INITIAL_DELAY,
       DEFAULT_CREATION_DELAY,
       DEFAULT_LIFECYCLE_DELAY,
-      List(testAssemblyInfo, testHcdInfo))
+      List(testAssemblyInfo, testHcdInfo)
+    )
   }
 
   val t1 =
@@ -192,27 +198,25 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     val t1 = conf.getConfig(BAD2)
 
     intercept[ConfigurationParsingException] {
-      parseClassName(BAD2, t1)
+      parseClassName(BAD2, t1).get
     }
     intercept[ConfigurationParsingException] {
-      parseComponentId(BAD2, t1)
+      parseComponentId(BAD2, t1).get
     }
     intercept[ConfigurationParsingException] {
-      parsePrefix(BAD2, t1)
+      parsePrefix(BAD2, t1).get
     }
     intercept[ConfigurationParsingException] {
-      parseConnType(BAD2, t1)
+      parseConnType(BAD2, t1).get
     }
-    // Bad units will result in 1 second
-    assert(parseRate(BAD2, t1) == 1.second)
+    assert(parseRate(BAD2, t1).getOrElse(1.second) == 1.second)
   }
 
   it("Should have container fields") {
     val setup1: Config = testParseStringConfig(t2)
     val setup = setup1.getConfig(CONTAINER)
-    //logger.info("setup: " + setup)
 
-    val containerName = parseName(CONTAINERNAME, setup)
+    val containerName = parseName(CONTAINERNAME, setup).get
 
     assert(containerName == CONTAINERNAME)
 
@@ -225,7 +229,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
 
     // This one has no delays so should report defaults
     val setup2: Config = testParseStringConfig(t1).getConfig(CONTAINER)
-    val containerName2 = parseName("Container-1", setup2)
+    val containerName2 = parseName("Container-1", setup2).get
 
     assert(containerName2 == "Container-1")
     assert(parseDuration(containerName2, CREATION_DELAY, setup2, DEFAULT_CREATION_DELAY) == DEFAULT_CREATION_DELAY)
@@ -244,15 +248,15 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     val conf = setupComponents
     val t1 = conf.getConfig(HCD2A)
 
-    assert(parseClassName(HCD2A, t1) == "csw.pkgDemo.hcd2")
+    assert(parseClassName(HCD2A, t1).get == "csw.pkgDemo.hcd2")
 
-    assert(parseComponentId(HCD2A, t1) == ComponentId("HCD-2A", HCD))
+    assert(parseComponentId(HCD2A, t1).get == ComponentId("HCD-2A", HCD))
 
-    assert(parsePrefix(HCD2A, t1) == "tcs.mobie.blue.filter")
+    assert(parsePrefix(HCD2A, t1).get == "tcs.mobie.blue.filter")
 
-    assert(parseConnType(HCD2A, t1) == Set(AkkaType))
+    assert(parseConnType(HCD2A, t1).get == Set(AkkaType))
 
-    assert(parseRate(HCD2A, t1) == 1.second)
+    assert(parseRate(HCD2A, t1).get == 1.second)
 
   }
 

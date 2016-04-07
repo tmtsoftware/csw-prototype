@@ -414,7 +414,8 @@ class LifecycleManagerTest() extends FSMSpec {
     val component = system.actorOf(Props(
       new Actor with Hcd with LifecycleHandler {
         def receive = lifecycleHandlerReceive
-      }), "LifecycleHandlerTester1")
+      }
+    ), "LifecycleHandlerTester1")
 
     //val component = TestProbe()
     val fsm = newFSM(component)
@@ -449,7 +450,8 @@ class LifecycleManagerTest() extends FSMSpec {
         override def startup(): HandlerResponse = {
           Failure(failureReason)
         }
-      }), "LifecycleHandlerTester2")
+      }
+    ), "LifecycleHandlerTester2")
 
     //val component = TestProbe()
     val fsm = newFSM(component)

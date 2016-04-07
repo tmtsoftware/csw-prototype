@@ -90,7 +90,8 @@ trait AssemblyController extends LocationTrackerClientActor {
    * @param replyTo actorRef of the actor that submitted the config
    */
   private def submit(
-    locationsResolved: Boolean, config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
+    locationsResolved: Boolean, config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef
+  ): Unit = {
     val statusReplyTo = if (oneway) None else Some(replyTo)
     val valid = config match {
       case sc: SetupConfigArg   ⇒ setup(locationsResolved, sc, statusReplyTo)

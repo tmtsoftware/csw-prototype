@@ -3,8 +3,12 @@ package csw.services.pkg
 import akka.actor.FSM.UnsubscribeTransitionCallBack
 import akka.actor._
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import csw.services.ccs.AssemblyController
+import csw.services.loc.{Connection, ConnectionType}
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager._
+import csw.services.ts.TimeService
+import csw.services.ts.TimeService.TimeServiceScheduler
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, MustMatchers}
 
 abstract class AkkaTestSpec extends TestKit(ActorSystem()) with ImplicitSender
@@ -21,9 +25,11 @@ object SupervisorTests {
   case class SimpleTestAssembly(assemblyInfo: AssemblyInfo) extends Assembly with LifecycleHandler {
     def receive = lifecycleHandlerReceive
   }
+
 }
 
 class SupervisorTests extends AkkaTestSpec {
+
   import Supervisor._
 
   import scala.concurrent.duration._
@@ -34,7 +40,8 @@ class SupervisorTests extends AkkaTestSpec {
     val component = system.actorOf(Props(
       new Actor with Hcd with LifecycleHandler {
         def receive = lifecycleHandlerReceive
-      }), "LifecycleHandlerTester1")
+      }
+    ), "LifecycleHandlerTester1")
     component
   }
 
@@ -42,7 +49,8 @@ class SupervisorTests extends AkkaTestSpec {
     val component = system.actorOf(Props(
       new Actor with Assembly with LifecycleHandler {
         def receive = lifecycleHandlerReceive
-      }), "LifecycleHandlerTester1")
+      }
+    ), "LifecycleHandlerTester1")
     component
   }
 
@@ -159,7 +167,7 @@ class SupervisorTests extends AkkaTestSpec {
 
   }
 }
-/*
+
 case class TestAssembly2(info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler with TimeServiceScheduler {
   import Supervisor._
   import TimeService._
@@ -189,4 +197,3 @@ case class TestAssembly2(info: AssemblyInfo) extends Assembly with AssemblyContr
 }
 
 
-*/
