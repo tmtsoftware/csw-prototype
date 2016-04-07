@@ -31,7 +31,6 @@ trait LifecycleHandler {
   /**
    * This implements additional behavior (used in receive method of ccs controller actors)
    */
-  //protected def additionalReceive: Receive = {
   def lifecycleHandlerReceive: Receive = {
     case Initialize ⇒
       val manager = sender()

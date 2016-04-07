@@ -223,7 +223,7 @@ object ContainerComponent {
 
   private[pkg] def parseDuration(name: String, configName: String, conf: Config, defaultDuration: FiniteDuration): FiniteDuration = {
     import scala.concurrent.duration._
-    val t = Try(conf.getDuration(configName).asInstanceOf[FiniteDuration])
+    val t = Try(FiniteDuration(conf.getDuration(configName).getSeconds, TimeUnit.SECONDS))
     if (t.isFailure) logger.error(s"Container delay for >$name< is not valid, returning: >1 second<.")
     t.getOrElse(defaultDuration)
   }

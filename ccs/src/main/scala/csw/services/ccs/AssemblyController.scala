@@ -75,11 +75,10 @@ trait AssemblyController extends LocationTrackerClientActor {
   protected def controllerLocalReceive: Receive = {
     case Submit(config) ⇒ submit(allResolved, config, oneway = false, sender())
     case OneWay(config) ⇒ submit(allResolved, config, oneway = true, sender())
-
-    case x              ⇒ log.warning(s"Received unexpected message: $x")
+//    case x              ⇒ log.warning(s"Received unexpected message: $x")
   }
 
-  protected def controllerReceive = controllerLocalReceive
+  protected def controllerReceive = controllerLocalReceive orElse trackerClientReceive
 
   /**
    * Called for Submit messages

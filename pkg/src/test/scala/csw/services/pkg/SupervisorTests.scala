@@ -196,4 +196,3 @@ case class TestAssembly2(info: AssemblyInfo) extends Assembly with AssemblyContr
 
 }
 
-

@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.loc.ComponentType.HCD
+import csw.services.loc.ComponentType.{HCD, UnknownComponentTypeException}
 import csw.services.loc.ConnectionType.{AkkaType, HttpType}
 import csw.services.loc.{ComponentId, Connection, LocationService}
 import csw.services.pkg.Component._
@@ -197,18 +197,10 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     val conf = setupComponents
     val t1 = conf.getConfig(BAD2)
 
-    intercept[ConfigurationParsingException] {
-      parseClassName(BAD2, t1).get
-    }
-    intercept[ConfigurationParsingException] {
-      parseComponentId(BAD2, t1).get
-    }
-    intercept[ConfigurationParsingException] {
-      parsePrefix(BAD2, t1).get
-    }
-    intercept[ConfigurationParsingException] {
-      parseConnType(BAD2, t1).get
-    }
+    assert(parseClassName(BAD2, t1).isFailure)
+    assert(parseComponentId(BAD2, t1).isFailure)
+    assert(parsePrefix(BAD2, t1).isFailure)
+    assert(parseConnType(BAD2, t1).isFailure)
     assert(parseRate(BAD2, t1).getOrElse(1.second) == 1.second)
   }
 
@@ -224,7 +216,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     assert(parseDuration(containerName, INITIAL_DELAY, setup, 5.seconds) == 2.seconds)
     assert(parseDuration(containerName, LIFECYCLE_DELAY, setup, 5.seconds) == 3.seconds)
 
-    val connType = parseConnType(containerName, setup)
+    val connType = parseConnType(containerName, setup).get
     assert(connType == Set(AkkaType))
 
     // This one has no delays so should report defaults
@@ -237,7 +229,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     assert(parseDuration(containerName2, LIFECYCLE_DELAY, setup2, DEFAULT_LIFECYCLE_DELAY) == DEFAULT_LIFECYCLE_DELAY)
     // should catch default conntype
     intercept[ConfigurationParsingException] {
-      parseConnType(containerName2, setup2)
+      parseConnType(containerName2, setup2).get
     }
     // Also
     assert(parseConnTypeWithDefault(containerName2, setup2, Set(AkkaType)) == Set(AkkaType))

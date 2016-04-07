@@ -26,9 +26,13 @@ object TestHcd {
 case class TestHcd(name: String, config: Config = ConfigFactory.empty())
   extends Hcd with PeriodicHcdController with LifecycleHandler {
 
-  // Reads the "rate" from the config file and starts the periodic processing
-  // (process() method will be called at the given rate)
-  startProcessing(config)
+//  // Reads the "rate" from the config file and starts the periodic processing
+//  // (process() method will be called at the given rate)
+//  startProcessing(config)
+
+  override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
+    case x => log.error(s"Unexpected message: $x")
+  }
 
   override def process(): Unit = {
     nextConfig.foreach { config =>

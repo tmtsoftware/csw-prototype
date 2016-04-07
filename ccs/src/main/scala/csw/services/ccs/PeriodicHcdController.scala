@@ -106,7 +106,7 @@ trait PeriodicHcdController {
   }
 
   /**
-   * Event periodic HCD should call this method once to start processing.
+   * HCD should call this method once to start processing.
    *
    * The rate is available to the HCD,
    * It then sends a message to self to start the periodic processing.
