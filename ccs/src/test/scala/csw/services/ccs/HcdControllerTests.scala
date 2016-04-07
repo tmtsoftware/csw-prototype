@@ -4,18 +4,17 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
-import csw.services.ccs.PeriodicHcdController.Process
 import csw.services.kvs._
-import csw.services.loc.LocationService
 import csw.util.cfg.Configurations.SetupConfig
 import csw.util.cfg.StandardKeys.position
-import org.scalatest.{DoNotDiscover, FunSuiteLike}
+import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
-import Implicits._
+import csw.services.loc.LocationService
 
 object HcdControllerTests {
-
+  // The next two lines force the location service to initialize the environment
+  // before the actor system is created
   LocationService.initInterface()
   val system = ActorSystem("Test")
 
@@ -27,13 +26,13 @@ object HcdControllerTests {
     def props(): Props = Props(classOf[TestPeriodicHcdController])
   }
 
-  class TestPeriodicHcdController extends PeriodicHcdController {
+  class TestPeriodicHcdController extends Actor with ActorLogging with PeriodicHcdController {
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
     val worker = context.actorOf(TestWorker.props())
 
-    override def additionalReceive: Receive = Actor.emptyBehavior
+    def receive: Receive = controllerReceive
 
     override protected def process(): Unit = {
       // Note: There could be some logic here to decide when to take the next config,
@@ -59,8 +58,6 @@ object HcdControllerTests {
     override protected def process(config: SetupConfig): Unit = {
       worker ! config
     }
-
-    override protected def additionalReceive: Receive = Actor.emptyBehavior
   }
 
   // -- Test worker actor that simulates doing some work --
@@ -114,15 +111,15 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import HcdControllerTests._
+  import PeriodicHcdController._
 
   test("Test periodic HCD controller") {
     val hcdController = system.actorOf(TestPeriodicHcdController.props())
-    hcdController ! Process(1.second)
+    hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
 
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix1).set(position, "IR2")
     hcdController ! Submit(config)
-    //    val demand = DemandState(config.prefix, config.data)
     system.actorOf(StateMatcherActor.props(List(config), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed]
@@ -136,7 +133,6 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix2).set(position, "IR3")
     hcdController ! Submit(config)
-    //    val demand = DemandState(config.prefix, config.data)
     system.actorOf(StateMatcherActor.props(List(config), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed]

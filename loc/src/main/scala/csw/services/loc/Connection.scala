@@ -50,7 +50,7 @@ object Connection {
     ConnectionType(typ.drop(1)) match {
       case Success(AkkaType) ⇒ ComponentId(id).map(AkkaConnection)
       case Success(HttpType) ⇒ ComponentId(id).map(HttpConnection)
-      case Failure(ex) => Failure(ex)
+      case Failure(ex)       ⇒ Failure(ex)
     }
   }
 

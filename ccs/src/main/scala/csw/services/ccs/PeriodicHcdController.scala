@@ -6,12 +6,7 @@ import csw.util.cfg.Configurations.SetupConfig
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 
-/**
- * Created by gillies on 11/8/15.
- */
 object PeriodicHcdController {
-
-  case class ProcessRequest(current: FiniteDuration = 1.second, next: FiniteDuration)
 
   /**
    * Base trait of received messages
@@ -23,15 +18,11 @@ object PeriodicHcdController {
    *
    * @param interval the amount of time until the next update
    */
-  private case class Process(interval: FiniteDuration) extends PeriodicHcdControllerMessage
+  case class Process(interval: FiniteDuration) extends PeriodicHcdControllerMessage
 
   /**
-   * Tells the controller to start checking its inputs and update its outputs with the given interval
-   *
-   * @param interval the amount of time until the next update
+   * Tells the controller to stop periodic processing
    */
-  case class StartProcess(interval: FiniteDuration) extends PeriodicHcdControllerMessage
-
   case object EndProcess extends PeriodicHcdControllerMessage
 
 }
@@ -55,8 +46,9 @@ trait PeriodicHcdController {
   private var currentInterval = 1.second
 
   // This variable stores the current timer to allow cancelling when changing period
-  private var cancel: Cancellable = new Cancellable {
+  private var timer = new Cancellable {
     override def isCancelled: Boolean = true
+
     override def cancel(): Boolean = true
   }
 
@@ -71,22 +63,28 @@ trait PeriodicHcdController {
       try process() catch {
         case ex: Exception ⇒ log.error(s"Failed to process message", ex)
       }
-      // A not so great attempt at supporting multiple calls to startProcessing
-      // Need to cancel current before starting new one
-      // XXX allan: TODO FIXME
-      if (currentInterval != newInterval && !cancel.isCancelled) {
-        log.info(s"Cancelling current schedule timer of $currentInterval with new value of $newInterval")
-        cancel.cancel()
-        // Save interval
+
+      // May need to cancel current timer before starting new one, if new message received before existing timer fires
+      if (currentInterval != newInterval) {
+        if (!timer.isCancelled) {
+          log.info(s"Cancelling current schedule timer of $currentInterval with new value of $newInterval")
+          timer.cancel()
+        }
         currentInterval = newInterval
       }
 
       // Schedule the next update
-      cancel = context.system.scheduler.scheduleOnce(currentInterval, self, msg)
+      timer = context.system.scheduler.scheduleOnce(currentInterval, self, msg)
+
+    case EndProcess ⇒
+      if (!timer.isCancelled) {
+        log.info(s"Processing stopped")
+        timer.cancel()
+      }
 
     case Submit(config) ⇒ queue = queue.enqueue(config)
 
-    //case x              ⇒ log.warning(s"Received unexpected xxmessage: $x")
+    //case x              ⇒ log.warning(s"Received unexpected message: $x")
   }
 
   /**

@@ -104,7 +104,7 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case Loaded -> PendingInitializedFromLoaded ⇒
+    case Loaded → PendingInitializedFromLoaded ⇒
       // Send initialize to component
       logTransition("sending Initialize to component")
       component ! Initialize
@@ -157,16 +157,16 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case Initialized -> PendingRunningFromInitialized ⇒
+    case Initialized → PendingRunningFromInitialized ⇒
       logTransition("sending Startup to component")
       // Send startup to component
       component ! Startup
     // requestServices
-    case Initialized -> PendingLoadedFromInitialized ⇒
+    case Initialized → PendingLoadedFromInitialized ⇒
       // Send uninitialize to component
       logTransition("sending Uninitialize to component")
       component ! Uninitialize
-    case PendingInitializedFromLoaded -> Initialized ⇒
+    case PendingInitializedFromLoaded → Initialized ⇒
       logTransition()
   }
 
@@ -214,7 +214,7 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case Running -> PendingInitializedFromRunning ⇒
+    case Running → PendingInitializedFromRunning ⇒
       logTransition("sending Shutdown to component")
       component ! Shutdown
   }
@@ -226,7 +226,7 @@ class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData]
   }
 
   onTransition {
-    case _ -> LifecycleFailure ⇒
+    case _ → LifecycleFailure ⇒
       log.info(s"Sending failure to component: $nextStateData")
       nextStateData match {
         case FailureInfo(nextState, reason) ⇒

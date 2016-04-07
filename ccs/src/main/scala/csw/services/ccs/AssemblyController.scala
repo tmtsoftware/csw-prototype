@@ -56,7 +56,6 @@ object AssemblyController {
   case class Invalid(reason: String) extends Validation {
     override def isValid: Boolean = false
   }
-
 }
 
 /**
@@ -90,9 +89,8 @@ trait AssemblyController extends LocationTrackerClientActor {
    * @param oneway true if no completed response is needed
    * @param replyTo actorRef of the actor that submitted the config
    */
-  private def submit(locationsResolved: Boolean,
-                     config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
-
+  private def submit(
+    locationsResolved: Boolean, config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
     val statusReplyTo = if (oneway) None else Some(replyTo)
     val valid = config match {
       case sc: SetupConfigArg   ⇒ setup(locationsResolved, sc, statusReplyTo)
@@ -105,18 +103,6 @@ trait AssemblyController extends LocationTrackerClientActor {
         replyTo ! CommandStatus.Error(config.info.runId, reason)
     }
   }
-
-//  /**
-//   * Replies with an error message if we receive a config when not in the ready state
-//   *
-//   * @param config the received config
-//   */
-//  private def notReady(config: ControlConfigArg): Unit = {
-//    val s = s"Ignoring config since services not connected: $config"
-//    log.warning(s)
-//    sender() ! CommandStatus.Error(config.info.runId, s)
-//
-//  }
 
   /**
    * Called to process the setup config and reply to the given actor with the command status.

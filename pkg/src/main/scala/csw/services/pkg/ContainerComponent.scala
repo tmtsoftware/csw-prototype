@@ -7,14 +7,14 @@ import csw.services.loc.ConnectionType._
 import csw.services.loc._
 import csw.services.loc.ComponentType._
 import csw.services.pkg.Component._
-import csw.services.pkg.LifecycleManager.{ LifecycleCommand, Loaded, Startup, Uninitialize }
-import csw.services.pkg.Supervisor.{ HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback }
+import csw.services.pkg.LifecycleManager.{LifecycleCommand, Loaded, Startup, Uninitialize}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
-import scala.concurrent.duration.{ FiniteDuration, _ }
+import scala.concurrent.duration.{FiniteDuration, _}
 import scala.language.higherKinds
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 /**
  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
@@ -248,10 +248,10 @@ object ContainerComponent {
   // Parse the "services" section of the component config
   private[pkg] def parseHcd(name: String, conf: Config): Option[HcdInfo] = {
     val x = for {
-      componentClassName <- parseClassName(name, conf)
-      prefix <- parsePrefix(name, conf)
-      registerAs <- parseConnType(name, conf)
-      cycle <- parseRate(name, conf)
+      componentClassName ← parseClassName(name, conf)
+      prefix ← parsePrefix(name, conf)
+      registerAs ← parseConnType(name, conf)
+      cycle ← parseRate(name, conf)
     } yield HcdInfo(name, prefix, componentClassName, RegisterOnly, registerAs, cycle)
     if (x.isFailure) logger.error(s"An error occurred while parsing HCD info for: $name", x.asInstanceOf[Failure[_]].exception)
     x.toOption
@@ -260,10 +260,10 @@ object ContainerComponent {
   // Parse the "services" section of the component config
   private[pkg] def parseAssembly(name: String, conf: Config): Option[AssemblyInfo] = {
     val x = for {
-      componentClassName <- parseClassName(name, conf)
-      prefix <- parsePrefix(name, conf)
-      registerAs <- parseConnType(name, conf)
-      connections <- parseConnections(name, conf)
+      componentClassName ← parseClassName(name, conf)
+      prefix ← parsePrefix(name, conf)
+      registerAs ← parseConnType(name, conf)
+      connections ← parseConnections(name, conf)
     } yield AssemblyInfo(name, prefix, componentClassName, RegisterAndTrackServices, registerAs, connections)
     if (x.isFailure) logger.error(s"An error occurred while parsing Assembly info for: $name", x.asInstanceOf[Failure[_]].exception)
     x.toOption
@@ -271,12 +271,12 @@ object ContainerComponent {
 
   private[pkg] def parseConfigToContainerInfo(config: Config): Try[ContainerInfo] = {
     for {
-      componentConfigs <- parseConfig(config)
-      containerConfig <- Try(config.getConfig(CONTAINER))
-      name <- parseName("container", containerConfig)
-      initialDelay <- parseDuration(name, INITIAL_DELAY, containerConfig, DEFAULT_INITIAL_DELAY)
-      creationDelay <- parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
-      lifecycleDelay <- parseDuration(name, LIFECYCLE_DELAY, containerConfig, DEFAULT_LIFECYCLE_DELAY)
+      componentConfigs ← parseConfig(config)
+      containerConfig ← Try(config.getConfig(CONTAINER))
+      name ← parseName("container", containerConfig)
+      initialDelay ← parseDuration(name, INITIAL_DELAY, containerConfig, DEFAULT_INITIAL_DELAY)
+      creationDelay ← parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
+      lifecycleDelay ← parseDuration(name, LIFECYCLE_DELAY, containerConfig, DEFAULT_LIFECYCLE_DELAY)
     } yield {
       logger.info("Initial delay: " + initialDelay)
       logger.info("Creation delay: " + creationDelay)
@@ -338,8 +338,8 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
     case LifecycleStateChanged(state) ⇒
       log.info("Received state while running: " + state)
-//      val mysender = sender()
-//      val isUs = supervisors.find(si ⇒ si.supervisor == mysender)
+    //      val mysender = sender()
+    //      val isUs = supervisors.find(si ⇒ si.supervisor == mysender)
 
     case Terminated(actorRef) ⇒ componentDied(actorRef)
 
@@ -385,13 +385,13 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     sendAllComponents(Uninitialize, supervisors)
   }
 
-//  // Starts an actor to manage registering this actor with the location service
-//  // (as a proxy for the component)
-//  private def registerWithLocationService(): Unit = {
-//    val name = containerInfo.componentName
-//    val componentId = ComponentId(name, Container)
-//    LocationService.registerAkkaConnection(componentId, self)(context.system)
-//  }
+  //  // Starts an actor to manage registering this actor with the location service
+  //  // (as a proxy for the component)
+  //  private def registerWithLocationService(): Unit = {
+  //    val name = containerInfo.componentName
+  //    val componentId = ComponentId(name, Container)
+  //    LocationService.registerAkkaConnection(componentId, self)(context.system)
+  //  }
 
   private def createComponent(componentInfo: ComponentInfo): Option[ActorRef] = {
     supervisors.find(_.componentInfo == componentInfo) match {

@@ -3,7 +3,6 @@ package examples
 import akka.actor.{ActorRef, Props}
 import csw.services.ccs.{AssemblyController, CommandStatus, HcdController}
 import csw.services.loc.Connection.AkkaConnection
-import csw.services.loc.LocationService.ResolvedService
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.{Assembly, Component, LifecycleHandler}
 import csw.services.pkg.Component.ComponentInfo
@@ -35,7 +34,7 @@ object Assembly1 {
 class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
   import AssemblyController._
 
-  override val name = Assembly1.assemblyName
+  val name = Assembly1.assemblyName
 
   /**
    * Validates a received config arg

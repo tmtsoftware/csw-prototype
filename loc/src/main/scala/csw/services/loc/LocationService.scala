@@ -1,18 +1,18 @@
 package csw.services.loc
 
-import java.net.{ Inet6Address, InetAddress, NetworkInterface, URI }
+import java.net.{Inet6Address, InetAddress, NetworkInterface, URI}
 import javax.jmdns._
 
 import akka.actor._
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.Connection.{ AkkaConnection, HttpConnection }
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
 import csw.services.loc.LocationService.LocationTrackerWorker.LocationsReady
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /**
  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
@@ -192,9 +192,10 @@ object LocationService {
     Future {
       val uri = getActorUri(actorRef, system)
       val values = Map(
-        PATH_KEY -> uri.getPath,
-        SYSTEM_KEY -> uri.getUserInfo,
-        PREFIX_KEY -> prefix)
+        PATH_KEY → uri.getPath,
+        SYSTEM_KEY → uri.getUserInfo,
+        PREFIX_KEY → prefix
+      )
       val service = ServiceInfo.create(dnsType, connection.toString, uri.getPort, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered Akka $connection at $uri")
@@ -216,7 +217,8 @@ object LocationService {
     val connection = HttpConnection(componentId)
     Future {
       val values = Map(
-        PATH_KEY -> path)
+        PATH_KEY → path
+      )
       val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.info(s"Registered HTTP $connection")
@@ -345,7 +347,7 @@ object LocationService {
       def rm(loc: Location): Unit = {
         if (loc.isResolved) {
           val unc = Unresolved(loc.connection)
-          connections += (loc.connection -> unc)
+          connections += (loc.connection → unc)
           sendLocationUpdate(unc)
         }
       }
@@ -370,7 +372,7 @@ object LocationService {
 
     override def serviceResolved(event: ServiceEvent): Unit = {
       // Gets the connection from the name and, if we are tracking the connection, resolve it
-      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc =>
+      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc ⇒
         resolveService(loc.connection, event.getInfo)
       })
     }
@@ -398,7 +400,7 @@ object LocationService {
                 // An Http connection is finished off here
                 val path = info.getPropertyString(PATH_KEY)
                 val rhc = ResolvedHttpLocation(hc, uri, path)
-                connections += (connection -> rhc)
+                connections += (connection → rhc)
                 log.info("Resolved HTTP: " + connections.values.toList)
                 // Here is where the resolved message is sent for an Http Connection
                 sendLocationUpdate(rhc)
@@ -434,7 +436,7 @@ object LocationService {
         log.info(s"Resolved identified actor $actorRefOpt")
         // Update the table
         val newrc = rs.copy(actorRef = actorRefOpt)
-        connections += (rs.connection -> newrc)
+        connections += (rs.connection → newrc)
         // Watch the actor for death
         context.watch(actorRefOpt.get)
         // Here is where the resolved message is sent for an Akka Connection
@@ -463,7 +465,7 @@ object LocationService {
         // This is called from outside, so if it isn't in the tracking list, add it
         if (!connections.contains(connection)) {
           val unc = Unresolved(connection)
-          connections += connection -> unc
+          connections += connection → unc
           // Should we send an update here?
           sendLocationUpdate(unc)
         }
@@ -507,11 +509,11 @@ object LocationService {
     case class TrackConnections(connection: Set[Connection])
 
     /**
-      * Used to create the actor
- *
-      * @param replyTo the LocationsReady message is sent to this actor, if set, otherwise the actor that sent the
-      *                TrackConnections message
-      */
+     * Used to create the actor
+     *
+     * @param replyTo the LocationsReady message is sent to this actor, if set, otherwise the actor that sent the
+     *                TrackConnections message
+     */
     def props(replyTo: Option[ActorRef]): Props = Props(classOf[LocationTrackerWorker], replyTo)
   }
 
@@ -534,14 +536,14 @@ object LocationService {
     }
 
     def finishReceive(a: ActorRef): Receive = {
-      case loc: Location =>
+      case loc: Location ⇒
         trackerClient = trackerClient.locationUpdate(loc)
         if (trackerClient.allResolved) {
           a ! LocationsReady(trackerClient.getLocations)
           context.stop(self)
         }
 
-      case x => log.error(s"Unexpected message: $x")
+      case x ⇒ log.error(s"Unexpected message: $x")
     }
 
     // Start with startup Receive
