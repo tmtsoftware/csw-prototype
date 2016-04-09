@@ -1,4 +1,4 @@
-package examples
+package csw.examples
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.util.Timeout
@@ -23,7 +23,9 @@ import scala.util.Random
 object HCDExample1 {
 
   object Tick
+
   object End
+
   object Close
 
   case class HCDDaemon(info: HcdInfo) extends Hcd with PeriodicHcdController with TimeServiceScheduler with LifecycleHandler {
@@ -42,6 +44,7 @@ object HCDExample1 {
 
     processAt(info.rate)
     var count = 0
+
     def process(): Unit = {
       count = count + 1
       log.info("Process: " + count)
@@ -72,6 +75,7 @@ object HCDExample1 {
   }
 
   class PosGenerator(name: String, prefix: String) extends Actor with ActorLogging with TimeService.TimeServiceScheduler with Implicits {
+
     import PosGenerator._
 
     println("Prefix: " + prefix)
@@ -84,7 +88,7 @@ object HCDExample1 {
     implicit val timeout = Timeout(5.seconds)
     val bts = BlockingTelemetryService(ts)
 
-    val evs = List.tabulate(1)(n => {
+    val evs = List.tabulate(1)(n ⇒ {
       println(s"N: $n")
       context.actorOf(Props(classOf[TelPosSubscriber], s"ev subscriber$n", prefix))
     })
@@ -92,31 +96,31 @@ object HCDExample1 {
     //val telemSubscriber = context.actorOf(Props(classOf[TelPosSubscriber], "telem subscriber", prefix))
 
     var count = 0
-  //  val cancel = schedule(localTimeNow.plusSeconds(1), Duration.ofMillis(500), self, Tick)
+    //  val cancel = schedule(localTimeNow.plusSeconds(1), Duration.ofMillis(500), self, Tick)
     val rand = Random
 
     def receive: Receive = {
-      case Tick =>
+      case Tick ⇒
         count = count + 1
         val (az, el) = genPair(rand)
         //val ev = SystemEvent(prefix).set(azkey, az).set(elkey, el)
         //eventService.publish(ev)
         val se = StatusEvent(prefix).set(azkey, az).set(elkey, el)
         bts.set(se)
-        //log.info(s"Tick: $az/$el")
+      //log.info(s"Tick: $az/$el")
 
-      case End =>
+      case End ⇒
         log.info(s"Ending Daemon")
         log.info(s"Published total of: $count")
         evs.foreach(_ ! End)
-       // eventSubscriber ! End
-      //  telemSubscriber ! End
+        // eventSubscriber ! End
+        //  telemSubscriber ! End
         self ! Close
 
-      case Close =>
+      case Close ⇒
         log.info(s"Closing")
-        //eventService.close
-        //cancel.cancel
+      //eventService.close
+      //cancel.cancel
     }
 
     def genPair(r: Random): (Int, Int) = {
@@ -127,59 +131,55 @@ object HCDExample1 {
 
   }
 
-}
+  class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
+    log.info(s"prefix: $prefix")
+    var count = 0
 
-class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
-  log.info(s"prefix: $prefix")
-  var count = 0
-  import java.time._
+    import java.time._
 
-  import HCDExample1._
+    val startTime = Instant.now
+    subscribe(prefix)
 
-  val startTime = Instant.now
-  subscribe(prefix)
+    def receive: Receive = {
+      case event: SystemEvent ⇒
+        count = count + 1
+        //log.info(s"Sub event: $event")
+        if (count % 500 == 0) {
+          val t = Duration.between(startTime, Instant.now).getSeconds
+          log.info(s"Received $count on event service in $t seconds (${count.toFloat / t} per second)")
+        }
 
-  def receive: Receive = {
-    case event:SystemEvent =>
-      count = count + 1
-      //log.info(s"Sub event: $event")
-      if (count % 500 == 0) {
-        val t = Duration.between(startTime, Instant.now).getSeconds
-        log.info(s"Received $count on event service in $t seconds (${count.toFloat / t} per second)")
-      }
+      case End ⇒
+        unsubscribe(prefix)
+        log.info(s"Final Event Subscriber Count: $count")
 
-    case End =>
-      unsubscribe(prefix)
-      log.info(s"Final Event Subscriber Count: $count")
-
-  }
-
-}
-
-class TelPosSubscriber(name: String, prefix: String) extends TelemetrySubscriber {
-  var count = 0
-  import java.time._
-
-  import HCDExample1._
-
-  val startTime = Instant.now
-  subscribe(prefix)
-
-  def receive: Receive = {
-    case event:StatusEvent =>
-      count = count + 1
-      //log.info(s"TSub: $event")
-      if (count % 1000 == 0) {
-        val t = Duration.between(startTime, Instant.now).getSeconds
-        log.info(s"Received $count on telemetry service in $t seconds (${count * 1.0 / t} per second)")
-      }
-
-    case End =>
-      unsubscribe(prefix)
-      log.info(s"Final Telemetry Subscriber Count: $count")
+    }
 
   }
+
+  class TelPosSubscriber(name: String, prefix: String) extends TelemetrySubscriber {
+    import java.time._
+
+    var count = 0
+    val startTime = Instant.now
+    subscribe(prefix)
+
+    def receive: Receive = {
+      case event: StatusEvent ⇒
+        count = count + 1
+        //log.info(s"TSub: $event")
+        if (count % 1000 == 0) {
+          val t = Duration.between(startTime, Instant.now).getSeconds
+          log.info(s"Received $count on telemetry service in $t seconds (${count * 1.0 / t} per second)")
+        }
+
+      case End ⇒
+        unsubscribe(prefix)
+        log.info(s"Final Telemetry Subscriber Count: $count")
+    }
+  }
 }
+
 /**
  * Starts Hcd as a standalone application.
  * Args: name, configPath

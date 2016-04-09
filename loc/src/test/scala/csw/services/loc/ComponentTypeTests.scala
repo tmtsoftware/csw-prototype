@@ -3,12 +3,11 @@ package csw.services.loc
 import csw.services.loc.ComponentType._
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
 
-
 class ComponentTypeTests extends FunSpecLike with Matchers with BeforeAndAfterAll {
 
   it("component type should be creatable from string") {
     assert(ComponentType("Assembly").get === Assembly)
-    assert(ComponentType( "hcd").get === HCD)
+    assert(ComponentType("hcd").get === HCD)
     assert(ComponentType("CONTAINER").get === Container)
     assert(ComponentType("Service").get === Service)
     intercept[UnknownComponentTypeException] {

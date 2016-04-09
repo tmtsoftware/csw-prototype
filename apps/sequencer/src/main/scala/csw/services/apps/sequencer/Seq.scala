@@ -5,7 +5,8 @@ import akka.util.Timeout
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.{AssemblyClient, BlockingAssemblyClient}
 import csw.services.loc.Connection.AkkaConnection
-import csw.services.loc.{ComponentId, ComponentType, LocationService}
+import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
+import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.{ContainerComponent, Supervisor}
 import csw.util.cfg.Configurations.SetupConfig
 
@@ -20,10 +21,22 @@ object Seq {
   implicit val system = ActorSystem("Sequencer")
   implicit val timeout: Timeout = 60.seconds
 
-  private def resolve(name: String, componentType: ComponentType): BlockingAssemblyClient = {
-    val connection = AkkaConnection(ComponentId(name, componentType))
+  private def getActorRef(locations: Set[Location], connection: Connection): ActorRef = {
+    locations.collect {
+      case ResolvedAkkaLocation(conn, uri, prefix, actorRefOpt) if connection == conn => actorRefOpt.get
+    }.head
+  }
+
+  /**
+   * Returns a client object to use to access the given assembly
+   *
+   * @param name the name of the assembly
+   * @return the client object
+   */
+  def resolveAssembly(name: String): BlockingAssemblyClient = {
+    val connection = AkkaConnection(ComponentId(name, ComponentType.Assembly))
     val info = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    val actorRef = info.services(connection).actorRefOpt.get
+    val actorRef = getActorRef(info.locations, connection)
     BlockingAssemblyClient(AssemblyClient(actorRef))
   }
 
@@ -36,17 +49,9 @@ object Seq {
   def resolveHcd(name: String): HcdClient = {
     val connection = AkkaConnection(ComponentId(name, ComponentType.HCD))
     val info = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    val actorRef = info.services(connection).actorRefOpt.get
+    val actorRef = getActorRef(info.locations, connection)
     HcdClient(actorRef)
   }
-
-  /**
-   * Returns a client object to use to access the given assembly
-   *
-   * @param name the name of the assembly
-   * @return the client object
-   */
-  def resolveAssembly(name: String): BlockingAssemblyClient = resolve(name, ComponentType.Assembly)
 
   /**
    * Returns a client object to use to access the given container
@@ -57,7 +62,8 @@ object Seq {
   def resolveContainer(name: String): ContainerClient = {
     val connection = AkkaConnection(ComponentId(name, ComponentType.Container))
     val info = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    ContainerClient(info.services(connection).actorRefOpt.get)
+    val actorRef = getActorRef(info.locations, connection)
+    ContainerClient(actorRef)
   }
 
   /**
@@ -69,10 +75,7 @@ object Seq {
     def stop(): Unit = actorRef ! ContainerComponent.Stop
     def halt(): Unit = actorRef ! ContainerComponent.Halt
     def restart(): Unit = actorRef ! ContainerComponent.Restart
-    def initialize(): Unit = actorRef ! Supervisor.Initialize
-    def Startup(): Unit = actorRef ! Supervisor.Startup
-    def shutdown(): Unit = actorRef ! Supervisor.Shutdown
-    def uninitialize(): Unit = actorRef ! Supervisor.Uninitialize
+    // TODO: add more...
   }
 
   /**

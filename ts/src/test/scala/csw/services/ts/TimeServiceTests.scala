@@ -3,15 +3,15 @@ package csw.services.ts
 import java.time._
 
 import akka.actor._
-import akka.testkit.{ TestKit, ImplicitSender }
+import akka.testkit.{TestKit, ImplicitSender}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import org.scalatest.{ BeforeAndAfterAll, FunSuiteLike }
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 /**
-  * Tests the TimeService
-  */
+ * Tests the TimeService
+ */
 class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike
-  with LazyLogging with BeforeAndAfterAll {
+    with LazyLogging with BeforeAndAfterAll {
 
   test("Basic Java Time Tests") {
     import TimeService._

@@ -1,43 +1,37 @@
-package examples
+package csw.examples
 
 import java.net.URI
 
 import akka.actor.{ActorRef, Props}
 import csw.services.ccs.{AssemblyController, CommandStatus, HcdController}
 import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
-import csw.services.pkg.{Assembly, Component, LifecycleHandler}
-import csw.services.pkg.Component.ComponentInfo
+import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
+import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
  * An example assembly
  */
-object Assembly1 {
-  val assemblyName = "assembly1"
+object AssemblyExample {
+  val assemblyName = "assemblyExample"
+  val className = "csw.examples.AssemblyExample"
 
   // Used to lookup the HCD this assembly uses
-  val targetConnection = AkkaConnection(ComponentId(HCDExample.hcdName, ComponentType.HCD))
-
-  /**
-   * Returns a config for setting the rate
-   */
-  def getRateConfig(rate: Int): SetupConfigArg = {
-    val sc = SetupConfig(HCDExample.prefix).set(HCDExample.rateKey, rate)
-    SetupConfigArg("test", sc)
-  }
+  val targetHcdConnection = AkkaConnection(ComponentId(HCDExample.hcdName, ComponentType.HCD))
 
   /**
    * Used to create the assembly actor
    */
-  def props(): Props = Props(classOf[Assembly1])
+  def props(): Props = Props(classOf[AssemblyExample])
 }
 
-class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
+class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
   import AssemblyController._
 
-  val name = Assembly1.assemblyName
+  val name = AssemblyExample.assemblyName
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")
@@ -65,13 +59,13 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
   }
 
   override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
-                      replyTo: Option[ActorRef]): Validation = {
+                               replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
       // Get a reference to the actor for the HCD
-      val hcdActorRefOpt = getLocation(Assembly1.targetConnection).flatMap {
+      val hcdActorRefOpt = getLocation(AssemblyExample.targetHcdConnection).collect {
         case ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) => actorRefOpt
-      }
+      }.flatten
       // Submit each config
       for {
         config <- configArg.configs
@@ -93,11 +87,11 @@ class Assembly1 extends Assembly with AssemblyController with LifecycleHandler {
  * Starts Hcd as a standalone application.
  */
 object AssemblyExampleApp extends App {
-  import Assembly1._
+  import AssemblyExample._
   println("Starting Assembly1")
   LocationService.initInterface()
   val componentId = ComponentId(assemblyName, ComponentType.Assembly)
-  val targetComponentId = targetConnection.componentId
-  val props = Assembly1.props()
-  val compInfo: ComponentInfo = Component.create(props, componentId, "", List(targetComponentId))
+  val hcdConnections: Set[Connection] = Set(targetHcdConnection)
+  val assemblyInfo = AssemblyInfo(assemblyName, "", className, RegisterOnly, Set(AkkaType), hcdConnections)
+  val supervisor = Supervisor(assemblyInfo)
 }

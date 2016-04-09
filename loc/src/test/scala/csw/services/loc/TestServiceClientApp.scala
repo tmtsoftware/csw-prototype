@@ -9,12 +9,12 @@ import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
  * The client and service applications can be run on the same or different hosts.
  */
 object TestServiceClientApp extends App {
-//  val numServices = args.headOption.map(_.toInt).getOrElse(1)
-//  LocationService.initInterface()
-//  implicit lazy val system = ActorSystem("TestServiceClientApp")
-//  implicit val dispatcher = system.dispatcher
-//  sys.addShutdownHook(system.terminate())
-//  system.actorOf(TestServiceClient.props(numServices))
+  //  val numServices = args.headOption.map(_.toInt).getOrElse(1)
+  //  LocationService.initInterface()
+  //  implicit lazy val system = ActorSystem("TestServiceClientApp")
+  //  implicit val dispatcher = system.dispatcher
+  //  sys.addShutdownHook(system.terminate())
+  //  system.actorOf(TestServiceClient.props(numServices))
 }
 
 //object TestServiceClient {

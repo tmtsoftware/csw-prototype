@@ -3,6 +3,7 @@ package csw.services.pkg
 import akka.actor.ActorRef
 import com.typesafe.config.{Config, ConfigFactory}
 import csw.services.ccs.{AssemblyController, HcdController, StateMatcherActor}
+import csw.services.loc.Connection
 import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
@@ -13,6 +14,7 @@ import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
   * @param name the name of the asembly
   * @param config config file with settings for the assembly
   */
+// XXX args = info: AssemblyInfo?
 case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
   extends Assembly with AssemblyController with LifecycleHandler {
 
