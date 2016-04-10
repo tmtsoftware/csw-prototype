@@ -92,13 +92,10 @@ final class Supervisor(val componentInfo: ComponentInfo)
   log.info("Starting Supervisor:" + context.self.path)
 
   val name = componentInfo.componentName
-  //val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
   val component = startComponent(context, componentInfo)
 
   val lifecycleManager = context.actorOf(LifecycleManager.props(component), "lifecycleManager")
   lifecycleManager ! SubscribeTransitionCallBack(self)
-
-  //lifecycleManager ! Startup
 
   private def commonMessageReceive: Receive = {
     case SubscribeLifecycleCallback(actorRef) ⇒

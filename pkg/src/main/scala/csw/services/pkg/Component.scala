@@ -91,7 +91,7 @@ object Component {
       componentName:        String,
       locationServiceUsage: LocationServiceUsage,
       registerAs:           Set[ConnectionType],
-      componentInfos:       List[ComponentInfo],
+      componentInfos:       Set[ComponentInfo],
       initialDelay:         FiniteDuration       = 0.seconds,
       creationDelay:        FiniteDuration       = 0.seconds,
       lifecycleDelay:       FiniteDuration       = 0.seconds

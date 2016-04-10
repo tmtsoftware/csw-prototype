@@ -52,119 +52,59 @@ class SupervisorTests extends AkkaTestSpec {
   import scala.concurrent.duration._
 
   it("Should get one event for Initialize") {
-    val supervisor = newHcdSupervisor()
-
     val stateProbe = TestProbe()
-
+    val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
-
     supervisor ! Initialize
-
+    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectNoMsg(1.seconds)
-
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
+    system.stop(supervisor)
   }
 
   it("Should get two events for Startup") {
-    val supervisor = newHcdSupervisor()
-
     val stateProbe = TestProbe()
-
+    val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
-
     supervisor ! Startup
-
+    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectMsg(new LifecycleStateChanged(Running))
     stateProbe.expectNoMsg(1.seconds)
-
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
+    system.stop(supervisor)
   }
 
   it("Should get three events for Startup/Shutdown") {
-    val supervisor = newHcdSupervisor()
-
     val stateProbe = TestProbe()
-
+    val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
-
     supervisor ! Startup
-
+    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectMsg(new LifecycleStateChanged(Running))
-
     supervisor ! Shutdown
-
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectNoMsg(1.seconds)
-
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
+    system.stop(supervisor)
   }
 
   it("Should get four events for Startup/Uninitialize") {
-    val supervisor = newHcdSupervisor()
-
     val stateProbe = TestProbe()
-
+    val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
-
     supervisor ! Startup
-
+    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectMsg(new LifecycleStateChanged(Running))
-
     supervisor ! Uninitialize
-
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
-
     stateProbe.expectNoMsg(1.seconds)
-
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
+    system.stop(supervisor)
   }
-
-  //  it("Should create an Assembly") {
-  //
-  //    val probe = TestProbe()
-  //
-  //    val actorRef = TestActorRef(new Supervisor(testAssemblyInfo))
-  //
-  //    //actorRef ! Startup
-  //
-  //    // println(actorRef.underlyingActor.component)
-  //
-  //    //println(s"Assembly: ${actorRef.underlyingActor.componentInfo}")
-  //
-  //    probe.expectNoMsg(25.seconds)
-  //
-  //  }
 }
 
-//case class TestAssembly2(info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler with TimeServiceScheduler {
-//  import Supervisor._
-//  import TimeService._
-//
-//  object Tick
-//  object End
-//  object Close
-//
-//  log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
-//
-//  log.info("Startup called")
-//  lifecycle(supervisor, Startup)
-//
-//  val killer = scheduleOnce(localTimeNow.plusSeconds(10), self, End)
-//
-//  var count = 0
-//
-//  def receive = lifecycleHandlerReceive orElse controllerReceive orElse {
-//    case End ⇒
-//      // Need to unregister with the location service (Otherwise application won't exit)
-//      //posEventGenerator ! End
-//      haltComponent(supervisor)
-//
-//    case x => log.error(s"Unexpected message: $x")
-//  }
-//}
-//

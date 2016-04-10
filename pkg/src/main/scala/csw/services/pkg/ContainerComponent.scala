@@ -9,7 +9,7 @@ import csw.services.loc.ConnectionType._
 import csw.services.loc._
 import csw.services.loc.ComponentType._
 import csw.services.pkg.Component._
-import csw.services.pkg.LifecycleManager.{LifecycleCommand, Loaded, Startup, Uninitialize}
+import csw.services.pkg.LifecycleManager.{LifecycleCommand, Loaded, Uninitialize}
 import csw.services.pkg.Supervisor.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
 import org.slf4j.LoggerFactory
 
@@ -133,7 +133,7 @@ object ContainerComponent {
    */
   case object Restart extends ContainerMessage
 
-  case class CreateComponents(infos: List[ComponentInfo]) extends ContainerMessage
+  case class CreateComponents(infos: Set[ComponentInfo]) extends ContainerMessage
 
   case class LifecycleToAll(cmd: LifecycleCommand) extends ContainerMessage
 
@@ -151,7 +151,7 @@ object ContainerComponent {
 
   // Parses the config file argument and creates the container,
   // adding the components specified in the config file.
-  private[pkg] def parseConfig(config: Config): Try[List[ComponentInfo]] = {
+  private[pkg] def parseConfig(config: Config): Try[Set[ComponentInfo]] = {
     Try {
       val conf = config.getConfig("container.components")
       val names = conf.root.keySet().toList
@@ -159,7 +159,7 @@ object ContainerComponent {
         key ← names
         value ← parseComponentConfig(key, conf.getConfig(key))
       } yield value
-      List(entries: _*)
+      Set(entries: _*)
     }
   }
 
@@ -319,97 +319,63 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     context.system.scheduler.scheduleOnce(containerInfo.initialDelay, self, CreateComponents(componentInfos)) // XXX allan: why delay?
   }
 
-  // This is filled in as side effects of creating (components)
-  private var supervisors = List.empty[SupervisorInfo] // XXX allan: Is var needed?
-
-  def receive = runningReceive
+  def receive = Actor.emptyBehavior
+  context.become(runningReceive(Nil))
 
   // Receive messages
-  private def runningReceive: Receive = {
-
+  private def runningReceive(supervisors: List[SupervisorInfo]): Receive = {
     case LifecycleToAll(cmd: LifecycleCommand) ⇒ sendAllComponents(cmd, supervisors)
-
-    case GetComponents                         ⇒ sender() ! getComponents
-    case Stop                                  ⇒ stop()
-    case Halt                                  ⇒ halt()
-    case Restart                               ⇒ restart()
-
-    case CreateComponents(infos) ⇒
-      var cinfos = infos
-      stagedCommand(cinfos.nonEmpty, containerInfo.creationDelay) {
-        val cinfo = cinfos.head
-        log.info(s"Creating component: " + cinfo.componentName)
-        createComponent(cinfo)
-        cinfos = cinfos.tail
-      }
-
-    case LifecycleStateChanged(state) ⇒
-      log.info("Received state while running: " + state)
-    //      val mysender = sender()
-    //      val isUs = supervisors.find(si ⇒ si.supervisor == mysender)
-
-    case Terminated(actorRef) ⇒ componentDied(actorRef)
-
-    case x                    ⇒ log.error(s"Unexpected message: $x")
+    case GetComponents                         ⇒ sender() ! Components(supervisors)
+    case Stop                                  ⇒ stop(supervisors)
+    case Halt                                  ⇒ halt(supervisors)
+    case Restart                               ⇒ restart(supervisors)
+    case CreateComponents(infos)               ⇒ createComponents(infos, supervisors)
+    case LifecycleStateChanged(state)          ⇒ log.info("Received state while running: " + state)
+    case Terminated(actorRef)                  ⇒ componentDied(actorRef)
+    case x                                     ⇒ log.error(s"Unexpected message: $x")
   }
 
-  private def restartReceive(componentsLeft: List[SupervisorInfo]): Receive = {
+  private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {
     case LifecycleStateChanged(state) ⇒
-      log.info(s"Received1: $state in ${containerInfo.componentName} with $componentsLeft")
-      val mysender = sender()
-      log.info("Received: " + state)
       if (state == Loaded) {
-        if (componentsLeft.map(_.supervisor == mysender).nonEmpty) { // XXX allan: FIXME use exists()
-          mysender ! UnsubscribeLifecycleCallback(self)
-          val newlist: List[SupervisorInfo] = componentsLeft.filter(_.supervisor != mysender)
-          log.info("New list: " + newlist)
-          checkDone(newlist)
-        }
+        sender() ! UnsubscribeLifecycleCallback(self)
+        val reloaded = (supervisors.find(_.supervisor == sender()) ++ restarted).toList
+        if (reloaded.size == supervisors.size)
+          context.become(runningReceive(reloaded))
+        else
+          context.become(restartReceive(supervisors, reloaded))
       }
     case x ⇒
       log.info(s"Unhandled command in receiveState: $x")
   }
 
-  def checkDone(components: List[SupervisorInfo]): Unit = {
-    if (components.isEmpty) {
-      log.info("Empty")
-      context.become(runningReceive)
-      self ! LifecycleToAll(Startup)
-      log.info("________ FINISHED ++++++++++")
-    } else {
-      log.info("Not empty")
-      context.become(restartReceive(components))
-    }
-  }
-
-  // XXX allan: FIXME
-  private def getComponents = supervisors
-
   // Tell all components to uninitialize and start an actor to wait until they do before restarting them.
-  private def restart(): Unit = {
-    log.info("RESTART RESTART")
-    context.become(restartReceive(supervisors))
-    supervisors.foreach(si ⇒ si.supervisor ! SubscribeLifecycleCallback(self))
+  private def restart(supervisors: List[SupervisorInfo]): Unit = {
+    context.become(restartReceive(supervisors, Nil))
+    supervisors.foreach(_.supervisor ! SubscribeLifecycleCallback(self))
     sendAllComponents(Uninitialize, supervisors)
   }
 
-  //  // Starts an actor to manage registering this actor with the location service
-  //  // (as a proxy for the component)
-  //  private def registerWithLocationService(): Unit = {
-  //    val name = containerInfo.componentName
-  //    val componentId = ComponentId(name, Container)
-  //    LocationService.registerAkkaConnection(componentId, self)(context.system)
-  //  }
+  private def createComponents(cinfos: Set[ComponentInfo], supervisors: List[SupervisorInfo]): Unit = {
+    //    stagedCommand(cinfos.nonEmpty, containerInfo.creationDelay) {
+    //      val cinfo = cinfos.head
+    //      log.info(s"Creating component: " + cinfo.componentName)
+    //      createComponent(cinfo)
+    //      cinfos = cinfos.tail
+    //    }
 
-  private def createComponent(componentInfo: ComponentInfo): Option[ActorRef] = {
+    val newSupervisors = supervisors ::: cinfos.flatMap(createComponent(_, supervisors)).toList
+    context.become(runningReceive(newSupervisors))
+  }
+
+  private def createComponent(componentInfo: ComponentInfo, supervisors: List[SupervisorInfo]): Option[SupervisorInfo] = {
     supervisors.find(_.componentInfo == componentInfo) match {
       case Some(existingComponentInfo) ⇒
         log.error(s"In supervisor ${containerInfo.componentName}, component ${componentInfo.componentName} already exists")
         None
       case None ⇒
         val supervisor = Supervisor(componentInfo)
-        supervisors = SupervisorInfo(supervisor, componentInfo) :: supervisors
-        Some(supervisor)
+        Some(SupervisorInfo(supervisor, componentInfo))
     }
   }
 
@@ -432,22 +398,13 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     }
   }
 
-  /*
-  private def createComponents(infos: List[ComponentInfo]): Map[String, SupervisorInfo] = {
-    val supervisors = infos.map(cinfo ⇒ cinfo.componentName -> SupervisorInfo(Supervisor(cinfo), cinfo))
-    supervisors.toMap
-  }
-  */
-
   // Called when a component (lifecycle manager) terminates
   private def componentDied(actorRef: ActorRef): Unit = {
     log.info(s"Actor $actorRef terminated")
   }
 
-  //private def getComponents: Components = Components(supervisors.map(si => (si.componentInfo.componentName -> si.supervisor)).toMap)
-
   // Tell all components to uninitialize
-  private def stop(): Unit = {
+  private def stop(supervisors: List[SupervisorInfo]): Unit = {
     sendAllComponents(Uninitialize, supervisors)
   }
 
@@ -462,9 +419,8 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     }
   }
 
-  private def halt(): Unit = {
+  private def halt(supervisors: List[SupervisorInfo]): Unit = {
     log.info("Halting")
-    //supervisors.foreach(si => si.supervisor ! SubscribeLifecycleCallback(self))
     sendAllComponents(HaltComponent, supervisors)
   }
 }

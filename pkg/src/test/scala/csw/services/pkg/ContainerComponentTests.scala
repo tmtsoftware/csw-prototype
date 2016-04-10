@@ -48,7 +48,7 @@ object ContainerComponentTests {
       "TestContainer",
       RegisterOnly,
       Set(AkkaType),
-      List(testAssemblyInfo, testHcdInfo)
+      Set(testAssemblyInfo, testHcdInfo)
     )
   }
 }
@@ -306,7 +306,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
   }
 
   it("Should be possible to create and halt") {
-    val cc2 = testContainerInfo.copy(componentInfos = List(testAssemblyInfo, testHcdInfo))
+    val cc2 = testContainerInfo.copy(componentInfos = Set(testAssemblyInfo, testHcdInfo))
     val cc = ContainerComponent.create(cc2)
 
     val tp = TestProbe()
