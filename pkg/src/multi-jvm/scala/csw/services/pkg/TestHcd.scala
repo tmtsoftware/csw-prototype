@@ -1,10 +1,10 @@
 package csw.services.pkg
 
-import akka.actor.{ActorLogging, Actor, Props}
-import com.typesafe.config.{ConfigFactory, Config}
+import akka.actor.{Actor, ActorLogging, Props}
 import csw.services.ccs.PeriodicHcdController
-import csw.services.kvs.{StateVariableStore, KvsSettings}
+import csw.services.kvs.{KvsSettings, StateVariableStore}
 import csw.services.kvs.Implicits._
+import csw.services.pkg.Component.HcdInfo
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.duration._
@@ -20,15 +20,16 @@ object TestHcd {
 
 /**
   * Test HCD
-  * @param name the name of the HCD
-  * @param config config file with settings for the HCD
   */
-case class TestHcd(name: String, config: Config = ConfigFactory.empty())
+case class TestHcd(info: HcdInfo)
   extends Hcd with PeriodicHcdController with LifecycleHandler {
 
 //  // Reads the "rate" from the config file and starts the periodic processing
 //  // (process() method will be called at the given rate)
 //  startProcessing(config)
+
+  import Supervisor._
+  lifecycle(supervisor)
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")

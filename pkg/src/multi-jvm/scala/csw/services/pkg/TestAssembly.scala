@@ -1,24 +1,22 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
-import com.typesafe.config.{Config, ConfigFactory}
 import csw.services.ccs.{AssemblyController, HcdController, StateMatcherActor}
-import csw.services.loc.Connection
 import csw.services.loc.LocationService.ResolvedAkkaLocation
+import csw.services.pkg.Component.AssemblyInfo
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
-  *
-  * @param name the name of the asembly
-  * @param config config file with settings for the assembly
   */
-// XXX args = info: AssemblyInfo?
-case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
+case class TestAssembly(info: AssemblyInfo)
   extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
+
+  import Supervisor._
+  lifecycle(supervisor)
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")
