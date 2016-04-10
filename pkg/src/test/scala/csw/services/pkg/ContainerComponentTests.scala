@@ -1,10 +1,10 @@
 package csw.services.pkg
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.loc.ComponentType.{HCD, UnknownComponentTypeException}
+import csw.services.loc.ComponentType.HCD
 import csw.services.loc.ConnectionType.{AkkaType, HttpType}
 import csw.services.loc.{ComponentId, Connection, LocationService}
 import csw.services.pkg.Component._
@@ -26,12 +26,38 @@ object ContainerComponentTests {
     def receive = lifecycleHandlerReceive
   }
 
+  val testAssemblyInfo: AssemblyInfo = {
+    val name = "test1"
+    val prefix = "test1.prefix"
+    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestAssembly"
+
+    AssemblyInfo(name, prefix, className, RegisterOnly, Set(AkkaType), Set.empty[Connection])
+  }
+
+  val testHcdInfo: HcdInfo = {
+    val name = "test1Hcd"
+    val prefix = "test1.Hcd.prefix"
+    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestHcd"
+
+    HcdInfo(name, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
+  }
+
+  val testContainerInfo: ContainerInfo = {
+    import ContainerComponent._
+    ContainerInfo(
+      "TestContainer",
+      RegisterOnly,
+      Set(AkkaType),
+      List(testAssemblyInfo, testHcdInfo)
+    )
+  }
 }
 
 class ContainerComponentTests extends TestKit(ContainerComponentTests.system) with ImplicitSender
     with FunSpecLike with Matchers with LazyLogging with BeforeAndAfterAll {
 
   import ContainerComponent._
+  import ContainerComponentTests._
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
@@ -42,52 +68,6 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
   private val BAD2 = "BAD2"
   private val CONTAINERNAME = "Container-2"
 
-  def newTestHcd() = {
-    val component = system.actorOf(Props(
-      new Actor with Hcd with LifecycleHandler {
-        def receive = lifecycleHandlerReceive
-      }
-    ), "LifecycleHandlerTester1")
-    component
-  }
-
-  def newTestAssembly() = {
-    val component = system.actorOf(Props(
-      new Actor with Assembly with LifecycleHandler {
-        def receive = lifecycleHandlerReceive
-      }
-    ), "LifecycleHandlerTester1")
-    component
-  }
-
-  def testAssemblyInfo: AssemblyInfo = {
-    val name = "test1"
-    val prefix = "test1.prefix"
-    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestAssembly"
-
-    AssemblyInfo(name, prefix, className, RegisterOnly, Set(AkkaType), Set.empty[Connection])
-  }
-
-  def testHcdInfo: HcdInfo = {
-    val name = "test1Hcd"
-    val prefix = "test1.Hcd.prefix"
-    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestHcd"
-
-    HcdInfo(name, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
-  }
-
-  def testContainerInfo: ContainerInfo = {
-    ContainerInfo(
-      "TestContainer",
-      RegisterOnly,
-      Set(AkkaType),
-      DEFAULT_INITIAL_DELAY,
-      DEFAULT_CREATION_DELAY,
-      DEFAULT_LIFECYCLE_DELAY,
-      List(testAssemblyInfo, testHcdInfo)
-    )
-  }
-
   val t1 =
     """
      container {
@@ -97,19 +77,19 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
       |      type = Assembly
       |      class = csw.pkgDemo.Assembly1
       |      prefix = ass1.test
-      |      conntype: [http, akka]
+      |      connectionType: [http, akka]
       |      connections = [
       |        // Component connections used by this component
       |        // Name: ComponentType ConnectionType
       |        {
       |          name: HCD-2A
       |          type: HCD
-      |          conntype: [akka, http]
+      |          connectionType: [akka, http]
       |        }
       |        {
       |          name: HCD-2B
       |          type: HCD
-      |          conntype: [http]
+      |          connectionType: [http]
       |        }
       |      ]
       |    }
@@ -117,28 +97,28 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
       |      type = HCD
       |      class = csw.pkgDemo.hcd2
       |      prefix = tcs.mobie.blue.filter
-      |      conntype: [akka]
+      |      connectionType: [akka, http]
       |      rate = 1 second
       |    }
       |    HCD-2B {
       |      type: HCD
       |      class: csw.pkgDemo.hcd2
       |      prefix: tcs.mobie.blue.disperser
-      |      conntype: [http, akka]
+      |      connectionType: [http]
       |      rate: 1 second
       |    }
       |    BAD1 {
       |      type: BAD
       |      class: csw.pkgDemo.hcd2
       |      prefix: ""
-      |      conntype: [http, akkax]
+      |      connectionType: [http, akkax]
       |      rate: 1 seconds
       |    }
       |    BAD2 {
       |      type: BAD
       |      // no class
       |      prefixx: ""
-      |      conntype: [http, akkax]
+      |      connectionType: [http, akkax]
       |      rate: 11 turkey
       |    }
       |  }
@@ -149,23 +129,23 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     """
      container {
       |  name = "Container-2"
-      |  conntype: [akka]
-      |  initialdelay = 2 second
-      |  creationdelay = 1 second
-      |  lifecycledelay = 3 seconds
+      |  connectionType: [akka]
+      |  initialDelay = 2 second
+      |  creationDelay = 1 second
+      |  lifecycleDelay = 3 seconds
       |  components {
       |     Assembly-1 {
       |      type = Assembly
       |      class = "csw.services.pkg.ContainerComponentTests$SimpleTestAssembly"
       |      prefix = ass1.test
-      |      conntype: [akka]
+      |      connectionType: [akka]
       |      connections = [
       |        // Component connections used by this component
       |        // Name: ComponentType ConnectionType
       |        {
       |          name: HCD-2A
       |          type: HCD
-      |          conntype: [akka]
+      |          connectionType: [akka]
       |        }
       |      ]
       |      }
@@ -173,7 +153,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
       |        type = HCD
       |        class = "csw.services.pkg.ContainerComponentTests$SimpleTestHcd"
       |        prefix = tcs.mobie.blue.filter
-      |        conntype: [akka]
+      |        connectionType: [akka]
       |        rate = 1 second
       |     }
       |   }
@@ -227,7 +207,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     assert(parseDuration(containerName2, CREATION_DELAY, setup2, DEFAULT_CREATION_DELAY) == DEFAULT_CREATION_DELAY)
     assert(parseDuration(containerName2, INITIAL_DELAY, setup2, DEFAULT_INITIAL_DELAY) == DEFAULT_INITIAL_DELAY)
     assert(parseDuration(containerName2, LIFECYCLE_DELAY, setup2, DEFAULT_LIFECYCLE_DELAY) == DEFAULT_LIFECYCLE_DELAY)
-    // should catch default conntype
+    // should catch default connectionType
     intercept[ConfigurationParsingException] {
       parseConnType(containerName2, setup2).get
     }
@@ -246,7 +226,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
 
     assert(parsePrefix(HCD2A, t1).get == "tcs.mobie.blue.filter")
 
-    assert(parseConnType(HCD2A, t1).get == Set(AkkaType))
+    assert(parseConnType(HCD2A, t1).get == Set(AkkaType, HttpType))
 
     assert(parseRate(HCD2A, t1).get == 1.second)
 
@@ -257,7 +237,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     val t1 = conf.getConfig(HCD2A)
 
     val hcdInfo = parseHcd(HCD2A, t1)
-    assert(hcdInfo.get == HcdInfo(HCD2A, "tcs.mobie.blue.filter", "csw.pkgDemo.hcd2", RegisterOnly, Set(AkkaType), 1.second))
+    assert(hcdInfo.get == HcdInfo(HCD2A, "tcs.mobie.blue.filter", "csw.pkgDemo.hcd2", RegisterOnly, Set(AkkaType, HttpType), 1.second))
   }
 
   it("Should be able to good assembly") {
@@ -300,11 +280,9 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
 
     val cc = ContainerComponent.create(setup2).get
 
+    // XXX allan: FIXME: expectNoMsg makes the tests run very slow
     val tp = TestProbe()
-    //nval a1 = Supervisor(assInfo.get)
-    //a1 ! LifecycleManager.Startup
     tp.expectNoMsg(15.seconds)
-    //a1 ! LifecycleManager.Shutdown
 
     cc ! LifecycleToAll(Startup)
     tp.expectNoMsg(10.seconds)

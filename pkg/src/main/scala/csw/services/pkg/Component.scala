@@ -1,10 +1,10 @@
 package csw.services.pkg
 
 import akka.actor._
-import csw.services.loc.{Connection, ComponentType, ConnectionType}
+import csw.services.loc.{ Connection, ComponentType, ConnectionType }
 import csw.services.loc.ComponentType._
 
-import scala.concurrent.duration.{FiniteDuration, _}
+import scala.concurrent.duration.{ FiniteDuration, _ }
 
 /**
  * Represents a Component, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).
@@ -13,6 +13,9 @@ import scala.concurrent.duration.{FiniteDuration, _}
  */
 object Component {
 
+  /**
+   * Describes how a component uses the location service
+   */
   sealed trait LocationServiceUsage
 
   case object DoNotRegister extends LocationServiceUsage
@@ -21,18 +24,33 @@ object Component {
 
   case object RegisterAndTrackServices extends LocationServiceUsage
 
+  /**
+   * The information needed to create a component
+   */
   sealed trait ComponentInfo {
+    /**
+     * A unique name for the component
+     */
     val componentName: String
 
-    def componentType: ComponentType
+    /**
+     * The component type (HCD, Assembly, etc.)
+     */
+    val componentType: ComponentType
 
-    def componentClassName: String
+    /**
+     * The name of the class that implements the component (used to create the class via reflection)
+     */
+    val componentClassName: String
 
-    def locationServiceUsage: LocationServiceUsage
+    /**
+     * Indicates if the component needs to be registered with the location service or lookup other services
+     */
+    val locationServiceUsage: LocationServiceUsage
   }
 
   /**
-   * Describes a component
+   * Describes an HCD component
    *
    * @param componentName        name used to register the component with the location service
    * @param prefix               the configuration prefix (part of configs that component should receive)
@@ -40,18 +58,17 @@ object Component {
    * @param rate                 the HCD's refresh rate
    */
   final case class HcdInfo(
-      componentName:        String,
-      prefix:               String,
-      componentClassName:   String,
+      componentName: String,
+      prefix: String,
+      componentClassName: String,
       locationServiceUsage: LocationServiceUsage,
-      registerAs:           Set[ConnectionType],
-      rate:                 FiniteDuration
-  ) extends ComponentInfo {
+      registerAs: Set[ConnectionType],
+      rate: FiniteDuration) extends ComponentInfo {
     val componentType = HCD
   }
 
   /**
-   * Describes an Assembly
+   * Describes an Assembly component
    *
    * @param componentName        name used to register the component with the location service
    * @param prefix               the configuration prefix (part of configs that component should receive)
@@ -59,25 +76,23 @@ object Component {
    * @param connections          a list of connections that includes componentIds and connection Types
    */
   final case class AssemblyInfo(
-      componentName:        String,
-      prefix:               String,
-      componentClassName:   String,
+      componentName: String,
+      prefix: String,
+      componentClassName: String,
       locationServiceUsage: LocationServiceUsage,
-      registerAs:           Set[ConnectionType],
-      connections:          Set[Connection]
-  ) extends ComponentInfo {
+      registerAs: Set[ConnectionType],
+      connections: Set[Connection]) extends ComponentInfo {
     val componentType = Assembly
   }
 
   final case class ContainerInfo(
-      componentName:        String,
+      componentName: String,
       locationServiceUsage: LocationServiceUsage,
-      registerAs:           Set[ConnectionType],
-      initialDelay:         FiniteDuration       = 1.second,
-      creationDelay:        FiniteDuration       = 1.second,
-      lifecycleDelay:       FiniteDuration       = 1.second,
-      componentInfos:       List[ComponentInfo]
-  ) extends ComponentInfo {
+      registerAs: Set[ConnectionType],
+      componentInfos: List[ComponentInfo],
+      initialDelay: FiniteDuration = 0.seconds,
+      creationDelay: FiniteDuration = 0.seconds,
+      lifecycleDelay: FiniteDuration = 0.seconds) extends ComponentInfo {
     val componentType = Container
     val componentClassName = "csw.services.pkg.ContainerComponent"
   }

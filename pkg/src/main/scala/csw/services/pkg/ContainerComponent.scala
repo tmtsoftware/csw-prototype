@@ -19,27 +19,27 @@ import scala.language.higherKinds
 import scala.util.{Failure, Success, Try}
 
 /**
- * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
- *
- * A container is a software environment for deploying software components.
- * A single container can host several components. The container manages lifecycle activities like starting,
- * stopping and initialization of components. It also provides software interfaces for the services a component
- * can use to access lower-level functionality needed for the component’s operation.
- *
- * A single computer can host 0 to N containers (one per JVM).
- * A container can include zero or more components (HCDs, assemblies, sequence components).
- *
- * The Akka interface consists of messages that can be sent to the container.
- * These messages will be needed for automated startup and shutdown.
- * Supporting these messages requires one or more Akka actors that can instantiate and delete OMOA components.
- * The componentState message will allow us to take each component through a lifecycle similar to what is shown in
- * Figure 5 from AP03.
- *
- * The Container then keeps a collection of Components. If the Component includes the CommandService (some may not),
- * then it will be visible externally for commands.
- *
- * See also "OSW TN012 Component Lifecycle Design".
- */
+  * From OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT":
+  *
+  * A container is a software environment for deploying software components.
+  * A single container can host several components. The container manages lifecycle activities like starting,
+  * stopping and initialization of components. It also provides software interfaces for the services a component
+  * can use to access lower-level functionality needed for the component’s operation.
+  *
+  * A single computer can host 0 to N containers (one per JVM).
+  * A container can include zero or more components (HCDs, assemblies, sequence components).
+  *
+  * The Akka interface consists of messages that can be sent to the container.
+  * These messages will be needed for automated startup and shutdown.
+  * Supporting these messages requires one or more Akka actors that can instantiate and delete OMOA components.
+  * The componentState message will allow us to take each component through a lifecycle similar to what is shown in
+  * Figure 5 from AP03.
+  *
+  * The Container then keeps a collection of Components. If the Component includes the CommandService (some may not),
+  * then it will be visible externally for commands.
+  *
+  * See also "OSW TN012 Component Lifecycle Design".
+  */
 object ContainerComponent {
   private val logger = Logger(LoggerFactory.getLogger("ContainerComponent"))
 
@@ -48,31 +48,35 @@ object ContainerComponent {
   val TYPE = "type"
   val CLASS = "class"
   val PREFIX = "prefix"
-  val CONNTYPE = "conntype"
+  val CONNECTION_TYPE = "connectionType"
   val CONNECTIONS = "connections"
   val NAME = "name"
   val RATE = "rate"
   val DELAY = "delay"
-  val INITIAL_DELAY = "initialdelay"
-  val CREATION_DELAY = "creationdelay"
-  val LIFECYCLE_DELAY = "lifecycledelay"
+  val INITIAL_DELAY = "initialDelay"
+  val CREATION_DELAY = "creationDelay"
+  val LIFECYCLE_DELAY = "lifecycleDelay"
 
-  val DEFAULT_INITIAL_DELAY = 1.seconds
-  val DEFAULT_CREATION_DELAY = 1.seconds
-  val DEFAULT_LIFECYCLE_DELAY = 1.seconds
+  val DEFAULT_INITIAL_DELAY = 0.seconds
+  val DEFAULT_CREATION_DELAY = 0.seconds
+  val DEFAULT_LIFECYCLE_DELAY = 0.seconds
 
   val DEFAULT_CONNECTION_TYPE = Set(AkkaType)
 
   /**
-   * Used to create the actor(Note: Throws an exception if the config is not valid)
-   */
-  def props(config: Config): Props = Props(ContainerComponent(config).get)
+    * Used to create the component actor from a config (which may come from a config file)
+    * Returns a Try[Props], since the config may or may not be valid.
+    */
+  def props(config: Config): Try[Props] = ContainerComponent(config).map(Props(_))
 
+  /**
+    * Used to create the component actor from the given info
+    */
   def props(containerInfo: ContainerInfo): Props = Props(classOf[ContainerComponent], containerInfo)
 
   /**
-   * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
-   */
+    * Creates a container actor with a new ActorSystem based on the given config and returns the ActorRef
+    */
   def create(config: Config): Try[ActorRef] = {
     parseConfigToContainerInfo(config).map(create)
   }
@@ -87,10 +91,10 @@ object ContainerComponent {
   }
 
   /**
-   * Exits the application when the given actor stops
-   *
-   * @param ref reference to the main actor of an application
-   */
+    * Exits the application when the given actor stops
+    *
+    * @param ref reference to the main actor of an application
+    */
   class Terminator(ref: ActorRef) extends Actor with ActorLogging {
     context watch ref
 
@@ -105,28 +109,28 @@ object ContainerComponent {
   case class ConfigurationParsingException(message: String) extends Exception(message)
 
   /**
-   * Type of messages the container receives
-   */
+    * Type of messages the container receives
+    */
   sealed trait ContainerMessage
 
   /**
-   * Requests information about the components being managed by the container (A Components(map) object is sent to the sender)
-   */
+    * Requests information about the components being managed by the container (A Components(map) object is sent to the sender)
+    */
   case object GetComponents extends ContainerMessage
 
   /**
-   * Tells the container to uninitialize all of its components.
-   */
+    * Tells the container to uninitialize all of its components.
+    */
   case object Stop extends ContainerMessage
 
   /**
-   * Tells the container to stop all its components and then quit, ending execution of the container process.
-   */
+    * Tells the container to stop all its components and then quit, ending execution of the container process.
+    */
   case object Halt extends ContainerMessage
 
   /**
-   * Indicates the container should take all its component to uninitialized and then to running.
-   */
+    * Indicates the container should take all its component to uninitialized and then to running.
+    */
   case object Restart extends ContainerMessage
 
   case class CreateComponents(infos: List[ComponentInfo]) extends ContainerMessage
@@ -134,15 +138,15 @@ object ContainerComponent {
   case class LifecycleToAll(cmd: LifecycleCommand) extends ContainerMessage
 
   /**
-   * Reply messages.
-   */
+    * Reply messages.
+    */
   sealed trait ContainerReplyMessage
 
   /**
-   * Reply to GetComponents
-   *
-   * @param components a list of component name to actor for the component (actually the lifecycle manager)
-   */
+    * Reply to GetComponents
+    *
+    * @param components a list of component name to actor for the component (actually the lifecycle manager)
+    */
   case class Components(components: List[SupervisorInfo]) extends ContainerReplyMessage
 
   // Parses the config file argument and creates the container,
@@ -163,7 +167,7 @@ object ContainerComponent {
   private[pkg] def parseComponentConfig(name: String, conf: Config): Option[ComponentInfo] = {
     val t = conf.getString(TYPE)
     val info = ComponentType(t) match {
-      case Success(HCD)      ⇒ parseHcd(name, conf)
+      case Success(HCD) ⇒ parseHcd(name, conf)
       case Success(Assembly) ⇒ parseAssembly(name, conf)
       case Failure(ex) ⇒
         logger.error(s"Unknown component type: $t", ex); None
@@ -195,20 +199,21 @@ object ContainerComponent {
       ComponentType(conf.getString(TYPE)).map(ComponentId(name, _))
   }
 
-  // Parse the "conntype" section of the component config
+  // Parse the "connectionType" section of the component config
   private[pkg] def parseConnType(name: String, conf: Config): Try[Set[ConnectionType]] = {
-    if (!conf.hasPath(CONNTYPE))
-      Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNTYPE< for component: $name"))
+    if (!conf.hasPath(CONNECTION_TYPE))
+      Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNECTION_TYPE< for component: $name"))
     else Try {
-      val set = conf.getStringList(CONNTYPE).map(ctype ⇒ ConnectionType(ctype)).toSet
+      // Note that conf.getStringList can throw an exception...
+      val set = conf.getStringList(CONNECTION_TYPE).map(ctype ⇒ ConnectionType(ctype)).toSet
       if (set.exists(_.isFailure))
-        throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNTYPE)}< for component: $name")
+        throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNECTION_TYPE)}< for component: $name")
       set.map(_.asInstanceOf[Success[ConnectionType]].get)
-    } //    val t = Try(conf.getDuration(configName))
+    }
 
   }
 
-  // Parse the "conntype" section of the component config
+  // Parse the "connectionType" section of the component config
   private[pkg] def parseConnTypeWithDefault(name: String, conf: Config, default: Set[ConnectionType]): Set[ConnectionType] = {
     parseConnType(name, conf).getOrElse(default)
   }
@@ -233,6 +238,7 @@ object ContainerComponent {
     if (!config.hasPath(CONNECTIONS))
       Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNECTIONS< for Assembly: $name"))
     else Try {
+      // Note: config.getConfigList could throw an exception...
       val list = config.getConfigList(CONNECTIONS).toList.map { conf: Config ⇒
         for {
           connName ← parseName(name, conf)
@@ -282,9 +288,9 @@ object ContainerComponent {
       val creationDelay = parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
       val lifecycleDelay = parseDuration(name, LIFECYCLE_DELAY, containerConfig, DEFAULT_LIFECYCLE_DELAY)
       logger.info(s"Delays: init: $initialDelay, create: $creationDelay, lifecycle: $lifecycleDelay")
-      // For container, if no conntype, set to Akka
+      // For container, if no connectionType, set to Akka
       val registerAs = parseConnTypeWithDefault(name, containerConfig, Set(AkkaType))
-      ContainerInfo(name, RegisterOnly, registerAs, initialDelay, creationDelay, lifecycleDelay, componentConfigs)
+      ContainerInfo(name, RegisterOnly, registerAs, componentConfigs, initialDelay, creationDelay, lifecycleDelay)
     }
   }
 
@@ -294,9 +300,9 @@ object ContainerComponent {
 }
 
 /**
- * ***************************
- * Implements the container actor based on the contents of the given config.
- */
+  * ***************************
+  * Implements the container actor based on the contents of the given config.
+  */
 final case class ContainerComponent(containerInfo: ContainerInfo) extends Container {
 
   implicit val ec = context.dispatcher
@@ -323,10 +329,10 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
     case LifecycleToAll(cmd: LifecycleCommand) ⇒ sendAllComponents(cmd, supervisors)
 
-    case GetComponents                         ⇒ sender() ! getComponents
-    case Stop                                  ⇒ stop()
-    case Halt                                  ⇒ halt()
-    case Restart                               ⇒ restart()
+    case GetComponents ⇒ sender() ! getComponents
+    case Stop ⇒ stop()
+    case Halt ⇒ halt()
+    case Restart ⇒ restart()
 
     case CreateComponents(infos) ⇒
       var cinfos = infos
@@ -344,7 +350,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
     case Terminated(actorRef) ⇒ componentDied(actorRef)
 
-    case x                    ⇒ log.error(s"Unexpected message: $x")
+    case x ⇒ log.error(s"Unexpected message: $x")
   }
 
   private def restartReceive(componentsLeft: List[SupervisorInfo]): Receive = {

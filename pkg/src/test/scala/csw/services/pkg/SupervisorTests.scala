@@ -1,14 +1,10 @@
 package csw.services.pkg
 
-import akka.actor.FSM.UnsubscribeTransitionCallBack
 import akka.actor._
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import csw.services.ccs.AssemblyController
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import csw.services.loc.{Connection, ConnectionType}
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager._
-import csw.services.ts.TimeService
-import csw.services.ts.TimeService.TimeServiceScheduler
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, MustMatchers}
 
 abstract class AkkaTestSpec extends TestKit(ActorSystem()) with ImplicitSender
@@ -26,34 +22,6 @@ object SupervisorTests {
     def receive = lifecycleHandlerReceive
   }
 
-}
-
-class SupervisorTests extends AkkaTestSpec {
-
-  import Supervisor._
-
-  import scala.concurrent.duration._
-
-  def nilActor = TestProbe().ref
-
-  def newTestHcd() = {
-    val component = system.actorOf(Props(
-      new Actor with Hcd with LifecycleHandler {
-        def receive = lifecycleHandlerReceive
-      }
-    ), "LifecycleHandlerTester1")
-    component
-  }
-
-  def newTestAssembly() = {
-    val component = system.actorOf(Props(
-      new Actor with Assembly with LifecycleHandler {
-        def receive = lifecycleHandlerReceive
-      }
-    ), "LifecycleHandlerTester1")
-    component
-  }
-
   def newHcdSupervisor(): ActorRef = {
     import scala.concurrent.duration._
 
@@ -67,16 +35,21 @@ class SupervisorTests extends AkkaTestSpec {
     actorRef
   }
 
-  def testAssemblyInfo: AssemblyInfo = {
+  val testAssemblyInfo: AssemblyInfo = {
     val name = "test1"
     val prefix = "test1.prefix"
     val className = "csw.services.pkg.TestAssembly2"
-    // val className = "csw.services.pkg.SupervisorTests$SimpleTestAssembly"
 
     AssemblyInfo(name, prefix, className, RegisterOnly, Set.empty[ConnectionType], Set.empty[Connection])
   }
 
-  def newAssemblySupervisor: ActorRef = Supervisor(testAssemblyInfo)
+}
+
+class SupervisorTests extends AkkaTestSpec {
+  import SupervisorTests._
+  import Supervisor._
+
+  import scala.concurrent.duration._
 
   it("Should get one event for Initialize") {
     val supervisor = newHcdSupervisor()
@@ -90,7 +63,7 @@ class SupervisorTests extends AkkaTestSpec {
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectNoMsg(1.seconds)
 
-    supervisor ! UnsubscribeTransitionCallBack(stateProbe.ref)
+    supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
   }
 
   it("Should get two events for Startup") {
@@ -106,7 +79,7 @@ class SupervisorTests extends AkkaTestSpec {
     stateProbe.expectMsg(new LifecycleStateChanged(Running))
     stateProbe.expectNoMsg(1.seconds)
 
-    supervisor ! UnsubscribeTransitionCallBack(stateProbe.ref)
+    supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
   }
 
   it("Should get three events for Startup/Shutdown") {
@@ -126,7 +99,7 @@ class SupervisorTests extends AkkaTestSpec {
     stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
     stateProbe.expectNoMsg(1.seconds)
 
-    supervisor ! UnsubscribeTransitionCallBack(stateProbe.ref)
+    supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
   }
 
   it("Should get four events for Startup/Uninitialize") {
@@ -148,50 +121,50 @@ class SupervisorTests extends AkkaTestSpec {
 
     stateProbe.expectNoMsg(1.seconds)
 
-    supervisor ! UnsubscribeTransitionCallBack(stateProbe.ref)
+    supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
   }
 
-  it("Should create an Assembly") {
-
-    val probe = TestProbe()
-
-    val actorRef = TestActorRef(new Supervisor(testAssemblyInfo))
-
-    //actorRef ! Startup
-
-    // println(actorRef.underlyingActor.component)
-
-    //println(s"Assembly: ${actorRef.underlyingActor.componentInfo}")
-
-    probe.expectNoMsg(25.seconds)
-
-  }
+  //  it("Should create an Assembly") {
+  //
+  //    val probe = TestProbe()
+  //
+  //    val actorRef = TestActorRef(new Supervisor(testAssemblyInfo))
+  //
+  //    //actorRef ! Startup
+  //
+  //    // println(actorRef.underlyingActor.component)
+  //
+  //    //println(s"Assembly: ${actorRef.underlyingActor.componentInfo}")
+  //
+  //    probe.expectNoMsg(25.seconds)
+  //
+  //  }
 }
 
-case class TestAssembly2(info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler with TimeServiceScheduler {
-  import Supervisor._
-  import TimeService._
-
-  object Tick
-  object End
-  object Close
-
-  log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
-
-  log.info("Startup called")
-  lifecycle(supervisor, Startup)
-
-  val killer = scheduleOnce(localTimeNow.plusSeconds(10), self, End)
-
-  var count = 0
-
-  def receive = lifecycleHandlerReceive orElse controllerReceive orElse {
-    case End ⇒
-      // Need to unregister with the location service (Otherwise application won't exit)
-      //posEventGenerator ! End
-      haltComponent(supervisor)
-
-    case x => log.error(s"Unexpected message: $x")
-  }
-}
-
+//case class TestAssembly2(info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler with TimeServiceScheduler {
+//  import Supervisor._
+//  import TimeService._
+//
+//  object Tick
+//  object End
+//  object Close
+//
+//  log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
+//
+//  log.info("Startup called")
+//  lifecycle(supervisor, Startup)
+//
+//  val killer = scheduleOnce(localTimeNow.plusSeconds(10), self, End)
+//
+//  var count = 0
+//
+//  def receive = lifecycleHandlerReceive orElse controllerReceive orElse {
+//    case End ⇒
+//      // Need to unregister with the location service (Otherwise application won't exit)
+//      //posEventGenerator ! End
+//      haltComponent(supervisor)
+//
+//    case x => log.error(s"Unexpected message: $x")
+//  }
+//}
+//
