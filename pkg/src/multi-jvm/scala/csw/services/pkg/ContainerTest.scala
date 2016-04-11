@@ -11,7 +11,7 @@ import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}
 import csw.services.pkg.ContainerComponent.Stop
-import csw.services.pkg.LifecycleManager.Running
+import csw.services.pkg.LifecycleManager.{Running, Startup}
 import csw.services.pkg.Supervisor.LifecycleStateChanged
 
 import scala.concurrent.Await
@@ -98,7 +98,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         for (comp <- components) {
           val hcd = comp.supervisor
           hcd ! Supervisor.SubscribeLifecycleCallback(self)
-          while(expectMsgType[LifecycleStateChanged].state != Running) {
+          while(expectMsgType[LifecycleStateChanged](10.seconds).state != Running) {
             log.info("Waiting for running state")
           }
         }

@@ -314,13 +314,15 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
   val componentInfos = containerInfo.componentInfos
 
-  // Send ourselves a message after initialDelay to create components
-  override def preStart() {
-    context.system.scheduler.scheduleOnce(containerInfo.initialDelay, self, CreateComponents(componentInfos)) // XXX allan: why delay?
-  }
+  //  // Send ourselves a message after initialDelay to create components
+  //  override def preStart() {
+  //    context.system.scheduler.scheduleOnce(containerInfo.initialDelay, self, CreateComponents(componentInfos)) // XXX allan: why delay?
+  //  }
 
   def receive = Actor.emptyBehavior
   context.become(runningReceive(Nil))
+
+  createComponents(componentInfos, Nil)
 
   // Receive messages
   private def runningReceive(supervisors: List[SupervisorInfo]): Receive = {
@@ -329,7 +331,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     case Stop                                  ⇒ stop(supervisors)
     case Halt                                  ⇒ halt(supervisors)
     case Restart                               ⇒ restart(supervisors)
-    case CreateComponents(infos)               ⇒ createComponents(infos, supervisors)
+    //    case CreateComponents(infos)               ⇒ createComponents(infos, supervisors)
     case LifecycleStateChanged(state)          ⇒ log.info("Received state while running: " + state)
     case Terminated(actorRef)                  ⇒ componentDied(actorRef)
     case x                                     ⇒ log.error(s"Unexpected message: $x")

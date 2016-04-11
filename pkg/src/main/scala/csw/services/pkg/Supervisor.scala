@@ -204,12 +204,11 @@ final class Supervisor(val componentInfo: ComponentInfo)
     actorRef
   }
 
+
   // The following is listener support for the container
-  private val listeners: java.util.Set[ActorRef] = new java.util.TreeSet[ActorRef]
-
-  private def addListener(l: ActorRef) = listeners add l
-
-  private def removeListener(l: ActorRef) = listeners remove l
+  private var listeners = Set[ActorRef]()
+  private def addListener(l: ActorRef) = listeners = listeners + l
+  private def removeListener(l: ActorRef) = listeners = listeners - l
 
   /**
    * Sends the supplied message to all current listeners using the provided sender() as sender.
@@ -217,8 +216,6 @@ final class Supervisor(val componentInfo: ComponentInfo)
    * @param msg a message to send to all listeners
    */
   private def notifyListeners(msg: Any): Unit = {
-    val i = listeners.iterator
-    while (i.hasNext) i.next ! msg
+    listeners.foreach(_ ! msg)
   }
-
 }
