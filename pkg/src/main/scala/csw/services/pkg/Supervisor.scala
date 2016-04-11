@@ -192,8 +192,8 @@ final class Supervisor(val componentInfo: ComponentInfo)
   private def haltComponent(): Unit = {
     log.info(s"Halting component: ${componentInfo.componentName}")
     context.stop(self)
-    context.system.terminate
-    context.system.whenTerminated
+    context.system.terminate // XXX allan: Why ignoring return value future?
+    context.system.whenTerminated // XXX allan: Why call this unless you want to wait for the future it returns?
   }
 
   // Starts the component actor
