@@ -8,12 +8,13 @@ import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
+  *
+  * @param info contains information about the assembly and the components it depends on
   */
 case class TestAssembly(info: AssemblyInfo)
   extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
-
   import Supervisor._
   lifecycle(supervisor)
 

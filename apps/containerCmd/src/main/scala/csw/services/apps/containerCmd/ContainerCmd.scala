@@ -6,14 +6,16 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.{ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.cs.akka.{ConfigServiceSettings, ConfigServiceClient}
+import csw.services.cs.akka.{ConfigServiceClient, ConfigServiceSettings}
+import csw.services.loc.LocationService
 import csw.services.pkg.ContainerComponent
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 object ContainerCmd {
+  LocationService.initInterface()
 
   /**
    * Command line options: [--config config] file

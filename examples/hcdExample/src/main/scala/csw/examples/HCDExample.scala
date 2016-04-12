@@ -32,7 +32,7 @@ object HCDExample {
   /**
    * Used to create the HCD actor
    */
-  def props(): Props = Props(classOf[HCDExample])
+  def props(info: HcdInfo): Props = Props(classOf[HCDExample], info)
 
   // Generate position events
   protected object PosGenerator {
@@ -123,12 +123,8 @@ class HCDExample(info: HcdInfo) extends Hcd with PeriodicHcdController with Time
 
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")
-
-  log.info("Startup called")
   lifecycle(supervisor)
-
-  log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
-  log.info("My Rate: $rate")
+  processAt(info.rate)
 
   // Create an actor to generate position events
   val posEventGenerator = context.actorOf(PosGenerator.props(prefix))
