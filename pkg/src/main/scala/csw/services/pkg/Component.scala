@@ -47,6 +47,11 @@ object Component {
      * Indicates if the component needs to be registered with the location service or lookup other services
      */
     val locationServiceUsage: LocationServiceUsage
+
+    /**
+     * An optional, dot separated prefix (for example tcs.ao.mycomp) that applies to this component
+     */
+    val prefix: String
   }
 
   /**
@@ -98,6 +103,7 @@ object Component {
   ) extends ComponentInfo {
     val componentType = Container
     val componentClassName = "csw.services.pkg.ContainerComponent"
+    val prefix = ""
   }
 
   private def createHCD(context: ActorContext, cinfo: ComponentInfo): ActorRef = {

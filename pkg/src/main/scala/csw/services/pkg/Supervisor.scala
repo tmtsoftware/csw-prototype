@@ -2,8 +2,15 @@ package csw.services.pkg
 
 import akka.actor.FSM.{CurrentState, SubscribeTransitionCallBack, Transition}
 import akka.actor._
-import csw.services.pkg.Component.ComponentInfo
+import csw.services.ccs.AssemblyController.AssemblyControllerMessage
+import csw.services.ccs.HcdController.HcdControllerMessage
+import csw.services.loc.ComponentType.{Assembly, HCD}
+import csw.services.loc.{ComponentId, LocationService}
+import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 import csw.services.pkg.LifecycleManager._
+import csw.util.cfg.Configurations.{ControlConfig, ControlConfigArg, SetupConfig}
+
+import scala.util.{Failure, Success}
 
 /**
  * The Supervisor is an actor that supervises the component actors and deals with
@@ -77,7 +84,6 @@ object Supervisor {
   def haltComponent(supervisor: ActorRef): Unit = {
     supervisor ! HaltComponent
   }
-
 }
 
 /**
@@ -91,10 +97,14 @@ final class Supervisor(val componentInfo: ComponentInfo)
 
   log.info("Starting Supervisor:" + context.self.path)
 
-  val name = componentInfo.componentName
-  val component = startComponent(context, componentInfo)
+  private val name = componentInfo.componentName
+  private val componentId = ComponentId(name, componentInfo.componentType)
+  private val component = startComponent(context, componentInfo)
 
-  val lifecycleManager = context.actorOf(LifecycleManager.props(component), "lifecycleManager")
+  // This is set once the component is registered with the location service
+  private var registrationOpt: Option[LocationService.RegistrationResult] = None
+
+  private val lifecycleManager = context.actorOf(LifecycleManager.props(component, name), "lifecycleManager")
   lifecycleManager ! SubscribeTransitionCallBack(self)
 
   private def commonMessageReceive: Receive = {
@@ -105,25 +115,25 @@ final class Supervisor(val componentInfo: ComponentInfo)
     case Terminated(actorRef) ⇒
       terminated(actorRef)
     case x ⇒
-      log.warning(s"Supervisor received an unexpected message: $x")
+      log.warning(s"$name: Supervisor received an unexpected message: $x")
   }
 
   private def notRunningReceivePF: Receive = {
     case CurrentState(_, Loaded) ⇒
       // This message is sent as a side effect of subscribing to the Lifecycle FSM
-      log.debug("LifecycleManager indicates Loaded")
+      log.debug(s"$name: LifecycleManager indicates Loaded")
       notifyListeners(LifecycleStateChanged(Loaded))
     case Initialize ⇒
-      log.info("Handle Initialize message from container or elsewhere")
+      log.info(s"$name: Handle Initialize message from container or elsewhere")
       lifecycleManager ! Initialize
     case Startup ⇒
-      log.info("Handle Startup message from container or elsewhere")
+      log.info(s"$name: Handle Startup message from container or elsewhere")
       lifecycleManager ! Startup
     case Transition(_, PendingInitializedFromLoaded, Initialized) ⇒
       // LifecycleManager has sent Initialized to component and is waiting for response
-      log.info(">>>>>>>RegisterWithLocationService")
+      registerWithLocationService()
     case Transition(_, Initialized, PendingLoadedFromInitialized) ⇒
-      log.info(">>>>>>>>>UnregisterWithLocationService")
+      unregisterFromLocationService()
     case Transition(_, Loaded, Loaded) ⇒
       // This transition indicates the component is now firmly in Loaded (only during shutdown/restart
       notifyListeners(LifecycleStateChanged(Loaded))
@@ -132,39 +142,43 @@ final class Supervisor(val componentInfo: ComponentInfo)
       notifyListeners(LifecycleStateChanged(Initialized))
     case Transition(_, Running, Running) ⇒
       // This transition indicates the component is now firmly in Running
-      log.info(">>>>>>> Transition to Running <<<<<<<<<<<<")
+      log.info(s"$name: Transition to Running")
       notifyListeners(LifecycleStateChanged(Running))
       context become runningReceive
     case t @ Transition(_, from, to) ⇒
-      log.debug(s"notRunningReceivePF: unhandled transition: $from/$to")
+      log.debug(s"$name: notRunningReceivePF: unhandled transition: $from/$to")
   }
 
   def notRunningReceive = notRunningReceivePF orElse commonMessageReceive
 
   private def runningReceivePF: Receive = {
     case t @ Transition(_, from, to) ⇒
-      log.info(s"supervisorReceive Transition: $from/$to")
+      log.info(s"$name: supervisorReceive Transition: $from/$to")
     case Uninitialize ⇒
-      log.info("Handle Uninitialize message from container")
+      log.info(s"$name: Handle Uninitialize message from container")
       lifecycleManager ! Uninitialize
       context become notRunningReceive
     case Shutdown ⇒
-      log.info("Handle Shutdown message from container")
+      log.info(s"$name: Handle Shutdown message from container")
       lifecycleManager ! Shutdown
       context become notRunningReceive
     case HaltComponent ⇒
-      log.info("Supervisor received \"HaltComponent\" in Running state.")
+      log.info(s"$name: Supervisor received 'HaltComponent' in Running state.")
       lifecycleManager ! Uninitialize
       context become haltingReceive
     case RestartComponent ⇒
     // TODO -- Implement supervisor-based restart
+
+    // Forward configs to the component 
+    case msg: AssemblyControllerMessage if componentInfo.componentType == Assembly ⇒ component.tell(msg, sender())
+    case msg: HcdControllerMessage if componentInfo.componentType == HCD ⇒ component.tell(msg, sender())
   }
 
   def runningReceive = runningReceivePF orElse commonMessageReceive
 
   def haltingReceivePF: Receive = {
     case Transition(_, Initialized, PendingLoadedFromInitialized) ⇒
-      log.info(">>>>>>>>>UnregisterWithLocationService")
+      unregisterFromLocationService()
     case Transition(_, Initialized, Initialized) ⇒
       // This transition indicates the component is now firmly in Initialized from Loaded or Running
       notifyListeners(LifecycleStateChanged(Initialized))
@@ -173,27 +187,52 @@ final class Supervisor(val componentInfo: ComponentInfo)
       notifyListeners(LifecycleStateChanged(Loaded))
       haltComponent()
     case Transition(_, PendingLoadedFromInitialized, Loaded) ⇒
-      log.info(">>>>>>>>Shut this bitch down!")
+      log.info(s"$name: shutting down")
     case t @ Transition(_, from, to) ⇒
-      log.debug(s"haltingReceive Transition: $from/$to")
+      log.debug(s"$name: haltingReceive Transition: $from/$to")
   }
 
   def haltingReceive = haltingReceivePF orElse commonMessageReceive
 
   def receive = notRunningReceive
 
+  // If the component is configured to register with the location service, do it,
+  // and save the result for unregistering later.
+  private def registerWithLocationService(): Unit = {
+    import context.dispatcher
+    if (componentInfo.locationServiceUsage != DoNotRegister) {
+      LocationService.registerAkkaConnection(componentId, self, componentInfo.prefix)(context.system).onComplete {
+        case Success(reg) ⇒
+          registrationOpt = Some(reg)
+          log.info(s"$name: Registered $componentId with the location service")
+        case Failure(ex) ⇒
+          // XXX allan: What to do in case of error?
+          log.error(s"$name: Failed to register $componentId with the location service")
+      }
+    }
+  }
+
+  // If the component is registered with the location service, unregister it
+  private def unregisterFromLocationService(): Unit = {
+    registrationOpt.foreach {
+      log.info(s"Unregistering $componentId from the location service")
+      _.unregister()
+    }
+  }
+
   // The default supervision behavior will normally restart the component automatically.
+  // (XXX allan: check this: needs to be properly configured)
   // The Terminated message should only be received if we manually stop the component, or a
   // system error occurs (Exceptions don't cause termination).
   private def terminated(actorRef: ActorRef): Unit = {
     log.info(s"$name: $actorRef has terminated")
+    unregisterFromLocationService()
   }
 
   private def haltComponent(): Unit = {
     log.info(s"Halting component: ${componentInfo.componentName}")
     context.stop(self)
-    context.system.terminate // XXX allan: Why ignoring return value future?
-    context.system.whenTerminated // XXX allan: Why call this unless you want to wait for the future it returns?
+    context.system.terminate
   }
 
   // Starts the component actor
@@ -204,10 +243,11 @@ final class Supervisor(val componentInfo: ComponentInfo)
     actorRef
   }
 
-
   // The following is listener support for the container
   private var listeners = Set[ActorRef]()
+
   private def addListener(l: ActorRef) = listeners = listeners + l
+
   private def removeListener(l: ActorRef) = listeners = listeners - l
 
   /**

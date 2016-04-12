@@ -81,30 +81,69 @@ trait LocationTrackerClientActor {
   /**
    * Handles location updates and updates the connections map (Should be called from the actor's receive method)
    */
-  def trackerClientReceive: Receive = {
+  protected def trackerClientReceive: Receive = {
     case loc: Location ⇒
       log.info(s"Received location: $loc")
       trackerClient = trackerClient.locationUpdate(loc)
 
     case TrackConnection(connection) ⇒
-      trackerClient = trackerClient.trackConnection(connection)
+      trackConnection(connection)
 
     case UntrackConnection(connection) ⇒
-      trackerClient.untrackConnection(connection)
+      untrackConnection(connection)
+  }
+
+  /**
+   * Tracks the locations of the given connections
+   */
+  protected def trackConnections(connections: Set[Connection]): Unit = {
+    connections.foreach(trackConnection)
+  }
+
+  /**
+   * Stops tracking the locations of the given connections
+   */
+  protected def untrackConnections(connections: Set[Connection]): Unit = {
+    connections.foreach(untrackConnection)
+  }
+
+  /**
+   * Starts tracking the location for the given connection
+   */
+  protected def trackConnection(connection: Connection): Unit = {
+    trackerClient = trackerClient.trackConnection(connection)
+  }
+
+  /**
+   * Stops tracking the location for the given connection
+   */
+  protected def untrackConnection(connection: Connection): Unit = {
+    trackerClient.untrackConnection(connection)
   }
 
   /**
    * Returns the location for the given connection, if known
    */
-  def getLocation(connection: Connection): Option[Location] = trackerClient.getLocation(connection)
+  protected def getLocation(connection: Connection): Option[Location] = trackerClient.getLocation(connection)
 
   /**
    * Returns the set of known locations
    */
-  def getLocations: Set[Location] = trackerClient.getLocations
+  protected def getLocations: Set[Location] = trackerClient.getLocations
 
   /*
    * Returns true if all the tracked connections are currently resolved to locations
    */
-  def allResolved: Boolean = trackerClient.allResolved
+  protected def allResolved: Boolean = trackerClient.allResolved
+
+  /**
+   * Returns a set of ActorRefs for the components that are resolved and match the config's prefix
+   */
+  protected def getActorRefs(targetPrefix: String): Set[ActorRef] = {
+    val x = getLocations.collect {
+      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) if prefix == targetPrefix => actorRefOpt
+    }
+    x.flatten
+  }
+
 }

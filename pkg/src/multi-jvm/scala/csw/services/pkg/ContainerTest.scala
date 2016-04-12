@@ -62,10 +62,10 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           assert(components.size == 1)
           for(comp <- components) {
             val assembly1 = comp.supervisor
-            assembly1 ! Supervisor.SubscribeLifecycleCallback(self)
-            while(expectMsgType[LifecycleStateChanged].state != Running) {
-              log.info("Waiting for running state")
-            }
+//            assembly1 ! Supervisor.SubscribeLifecycleCallback(self)
+//            while(expectMsgType[LifecycleStateChanged].state != Running) {
+//              log.info("Waiting for running state")
+//            }
 
             // Make sure the HCDs are ready before sending the test config
             val connections: Set[Connection] = Set(
@@ -95,13 +95,13 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         container ! ContainerComponent.GetComponents
         val components = expectMsgType[ContainerComponent.Components].components
         assert(components.size == 2)
-        for (comp <- components) {
-          val hcd = comp.supervisor
-          hcd ! Supervisor.SubscribeLifecycleCallback(self)
-          while(expectMsgType[LifecycleStateChanged](10.seconds).state != Running) {
-            log.info("Waiting for running state")
-          }
-        }
+//        for (comp <- components) {
+//          val hcd = comp.supervisor
+//          hcd ! Supervisor.SubscribeLifecycleCallback(self)
+//          while(expectMsgType[LifecycleStateChanged](10.seconds).state != Running) {
+//            log.info("Waiting for running state")
+//          }
+//        }
         println("\nContainer2 tests passed\n")
         enterBarrier("deployed")
         enterBarrier("done")

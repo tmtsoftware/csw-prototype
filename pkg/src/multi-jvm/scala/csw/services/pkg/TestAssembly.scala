@@ -2,7 +2,6 @@ package csw.services.pkg
 
 import akka.actor.ActorRef
 import csw.services.ccs.{AssemblyController, HcdController, StateMatcherActor}
-import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.services.pkg.Component.AssemblyInfo
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
@@ -17,6 +16,9 @@ case class TestAssembly(info: AssemblyInfo)
 
   import Supervisor._
   lifecycle(supervisor)
+
+  // Get the connections to the HCDs this assembly uses and track them
+  trackConnections(info.connections)
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")
@@ -42,14 +44,6 @@ case class TestAssembly(info: AssemblyInfo)
     if (list.nonEmpty) list.head else Valid
   }
 
-  // Returns a set of ActorRefs for the services that are resolved and match the config's prefix
-  private def getActorRefs(config: SetupConfig): Set[ActorRef] = {
-    val x = getLocations.collect {
-      case r@ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) if config.configKey.prefix == prefix => actorRefOpt
-    }
-    x.flatten
-  }
-
   override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
                       replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
@@ -58,7 +52,7 @@ case class TestAssembly(info: AssemblyInfo)
       // but you could just as well generate new configs and send them here...
       val demandStates = for {
         config ← configArg.configs
-        actorRef ← getActorRefs(config)
+        actorRef ← getActorRefs(config.prefix)
       } yield {
         actorRef ! HcdController.Submit(config)
         DemandState(config)

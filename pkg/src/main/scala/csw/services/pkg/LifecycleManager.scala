@@ -83,11 +83,11 @@ object LifecycleManager {
 
   case object UninitializeSuccess extends LifecycleResponse
 
-  def props(component: ActorRef): Props =
-    Props(classOf[LifecycleManager], component)
+  def props(component: ActorRef, name: String): Props =
+    Props(classOf[LifecycleManager], component, name)
 }
 
-class LifecycleManager(component: ActorRef) extends FSM[LifecycleState, FSMData] {
+class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleState, FSMData] {
 
   import LifecycleManager._
 

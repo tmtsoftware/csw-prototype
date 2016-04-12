@@ -21,7 +21,7 @@ class LifecycleManagerTest() extends FSMSpec {
   def nilActor = TestProbe().ref
 
   def newFSM(component: ActorRef = nilActor): MyTestFsm = {
-    TestFSMRef(new LifecycleManager(component))
+    TestFSMRef(new LifecycleManager(component, "test"))
   }
 
   it("should be initialized in the Loaded State") {
