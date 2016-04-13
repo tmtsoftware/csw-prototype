@@ -433,7 +433,7 @@ object LocationService {
     // Update the resolved map and check if we have everything that was requested.
     private def actorIdentified(actorRefOpt: Option[ActorRef], rs: ResolvedAkkaLocation): Unit = {
       if (actorRefOpt.isDefined) {
-        log.info(s"Resolved identified actor $actorRefOpt")
+        log.info(s"Resolved: Identified actor $actorRefOpt")
         // Update the table
         val newrc = rs.copy(actorRef = actorRefOpt)
         connections += (rs.connection → newrc)

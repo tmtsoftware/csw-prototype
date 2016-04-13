@@ -7,7 +7,7 @@ import csw.services.ccs.{AssemblyClient, BlockingAssemblyClient}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
-import csw.services.pkg.{ContainerComponent, Supervisor}
+import csw.services.pkg.ContainerComponent
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.concurrent.Await
@@ -17,7 +17,7 @@ import scala.concurrent.duration._
  * Defines utility method and shortcuts for use in the sequencer shell
  */
 object Seq {
-  LocationService.initInterface()
+  //  LocationService.initInterface()
   implicit val system = ActorSystem("Sequencer")
   implicit val timeout: Timeout = 60.seconds
 

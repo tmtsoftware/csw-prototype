@@ -300,24 +300,20 @@ object ContainerComponent {
 }
 
 /**
- * ***************************
  * Implements the container actor based on the contents of the given config.
  */
 final case class ContainerComponent(containerInfo: ContainerInfo) extends Container {
-
   implicit val ec = context.dispatcher
-
   import ContainerComponent._
 
-  //registerWithLocationService()
-  log.info("Container should be registering with Location Service!")
-
   val componentInfos = containerInfo.componentInfos
+  private val name = containerInfo.componentName
+  private val componentId = ComponentId(name, containerInfo.componentType)
 
-  //  // Send ourselves a message after initialDelay to create components
-  //  override def preStart() {
-  //    context.system.scheduler.scheduleOnce(containerInfo.initialDelay, self, CreateComponents(componentInfos)) // XXX allan: why delay?
-  //  }
+  //  // This is set once the component is registered with the location service
+  //  private var registrationOpt: Option[LocationService.RegistrationResult] = None
+
+  registerWithLocationService()
 
   def receive = Actor.emptyBehavior
   context.become(runningReceive(Nil))
@@ -359,6 +355,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   }
 
   private def createComponents(cinfos: Set[ComponentInfo], supervisors: List[SupervisorInfo]): Unit = {
+    // XXX allan: Delayed start caused problems in tests - unpredictable when Loaded status is received
     //    stagedCommand(cinfos.nonEmpty, containerInfo.creationDelay) {
     //      val cinfo = cinfos.head
     //      log.info(s"Creating component: " + cinfo.componentName)
@@ -369,6 +366,29 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     val newSupervisors = supervisors ::: cinfos.flatMap(createComponent(_, supervisors)).toList
     context.become(runningReceive(newSupervisors))
   }
+
+  // If the component is configured to register with the location service, do it,
+  // and save the result for unregistering later.
+  private def registerWithLocationService(): Unit = {
+    if (containerInfo.locationServiceUsage != DoNotRegister) {
+      LocationService.registerAkkaConnection(componentId, self, containerInfo.prefix)(context.system).onComplete {
+        case Success(reg) ⇒
+          //          registrationOpt = Some(reg)
+          log.info(s"$name: Registered $componentId with the location service")
+        case Failure(ex) ⇒
+          // XXX allan: What to do in case of error?
+          log.error(s"$name: Failed to register $componentId with the location service")
+      }
+    }
+  }
+
+  //  // If the component is registered with the location service, unregister it
+  //  private def unregisterFromLocationService(): Unit = {
+  //    registrationOpt.foreach {
+  //      log.info(s"Unregistering $componentId from the location service")
+  //      _.unregister()
+  //    }
+  //  }
 
   private def createComponent(componentInfo: ComponentInfo, supervisors: List[SupervisorInfo]): Option[SupervisorInfo] = {
     supervisors.find(_.componentInfo == componentInfo) match {

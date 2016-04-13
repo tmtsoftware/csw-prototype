@@ -144,6 +144,7 @@ lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
 lazy val hcdExample = Project(id = "hcdExample", base = file("examples/hcdExample"))
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("hcdExample", "HCD Example", "Simple HCD example application"): _*)
+  .settings(mainClass in Compile := Some("csw.examples.HCDExampleApp"))
   .dependsOn(pkg, ts, event)
 
 // Assembly Example project

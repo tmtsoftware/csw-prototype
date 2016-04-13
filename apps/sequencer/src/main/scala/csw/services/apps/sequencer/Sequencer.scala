@@ -1,5 +1,7 @@
 package csw.services.apps.sequencer
 
+import csw.services.loc.LocationService
+
 import scala.tools.nsc._
 import scala.tools.nsc.interpreter._
 
@@ -7,6 +9,7 @@ import scala.tools.nsc.interpreter._
  * Sequencer REPL shell.
  */
 object Sequencer extends App {
+  LocationService.initInterface()
 
   def repl = new ILoop {
     override def createInterpreter(): Unit = {

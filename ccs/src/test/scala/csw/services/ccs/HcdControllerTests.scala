@@ -10,12 +10,10 @@ import csw.util.cfg.StandardKeys.position
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
-import csw.services.loc.LocationService
 
 object HcdControllerTests {
   // The next two lines force the location service to initialize the environment
   // before the actor system is created
-  LocationService.initInterface()
   val system = ActorSystem("Test")
 
   val testPrefix1 = "wfos.blue.filter"

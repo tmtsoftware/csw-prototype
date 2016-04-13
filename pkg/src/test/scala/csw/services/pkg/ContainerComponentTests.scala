@@ -317,6 +317,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     tp.expectNoMsg(10.seconds)
 
     cc ! Restart
+    // XXX allan: Test that Restart actually worked!
     tp.expectNoMsg(20.seconds)
   }
 
