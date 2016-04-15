@@ -114,6 +114,9 @@ final class Supervisor(val componentInfo: ComponentInfo)
       removeListener(actorRef)
     case Terminated(actorRef) ⇒
       terminated(actorRef)
+    case Heartbeat ⇒
+      // Forward to lifecycle manager - causes it to reply with the current state
+      lifecycleManager ! Heartbeat
     case x ⇒
       log.warning(s"$name: Supervisor received an unexpected message: $x")
   }

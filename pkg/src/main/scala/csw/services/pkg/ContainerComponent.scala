@@ -9,7 +9,7 @@ import csw.services.loc.ConnectionType._
 import csw.services.loc._
 import csw.services.loc.ComponentType._
 import csw.services.pkg.Component._
-import csw.services.pkg.LifecycleManager.{LifecycleCommand, Loaded, Uninitialize}
+import csw.services.pkg.LifecycleManager._
 import csw.services.pkg.Supervisor.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
 import org.slf4j.LoggerFactory
 
@@ -330,7 +330,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     //    case CreateComponents(infos)               ⇒ createComponents(infos, supervisors)
     case LifecycleStateChanged(state)          ⇒ log.info("Received state while running: " + state)
     case Terminated(actorRef)                  ⇒ componentDied(actorRef)
-    case x                                     ⇒ log.error(s"Unexpected message: $x")
+    case x                                     ⇒ log.info(s"Unhandled command in runningReceive: $x")
   }
 
   private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {
@@ -338,20 +338,25 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
       if (state == Loaded) {
         sender() ! UnsubscribeLifecycleCallback(self)
         val reloaded = (supervisors.find(_.supervisor == sender()) ++ restarted).toList
-        if (reloaded.size == supervisors.size)
+        if (reloaded.size == supervisors.size) {
           context.become(runningReceive(reloaded))
-        else
+          sendAllComponents(Startup, supervisors)
+        } else {
           context.become(restartReceive(supervisors, reloaded))
+        }
       }
     case x ⇒
-      log.info(s"Unhandled command in receiveState: $x")
+      log.info(s"Unhandled command in restartReceive: $x")
   }
 
   // Tell all components to uninitialize and start an actor to wait until they do before restarting them.
+  // XXX allan: This is broken! Missing actor to restart...
   private def restart(supervisors: List[SupervisorInfo]): Unit = {
     context.become(restartReceive(supervisors, Nil))
     supervisors.foreach(_.supervisor ! SubscribeLifecycleCallback(self))
     sendAllComponents(Uninitialize, supervisors)
+    // If the container is already stopped, this ensures that we get a message with the current state
+    sendAllComponents(Heartbeat, supervisors)
   }
 
   private def createComponents(cinfos: Set[ComponentInfo], supervisors: List[SupervisorInfo]): Unit = {

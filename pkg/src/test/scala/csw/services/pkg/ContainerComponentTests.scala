@@ -16,59 +16,14 @@ import scala.concurrent.duration._
 object ContainerComponentTests {
   LocationService.initInterface()
 
-  val system = ActorSystem("Test")
-
-  case class SimpleTestHcd(hcdInfo: HcdInfo) extends Hcd with LifecycleHandler {
-    def receive = lifecycleHandlerReceive
-  }
-
-  case class SimpleTestAssembly(assemblyInfo: AssemblyInfo) extends Assembly with LifecycleHandler {
-    def receive = lifecycleHandlerReceive
-  }
-
-  val testAssemblyInfo: AssemblyInfo = {
-    val name = "test1"
-    val prefix = "test1.prefix"
-    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestAssembly"
-
-    AssemblyInfo(name, prefix, className, RegisterOnly, Set(AkkaType), Set.empty[Connection])
-  }
-
-  val testHcdInfo: HcdInfo = {
-    val name = "test1Hcd"
-    val prefix = "test1.Hcd.prefix"
-    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestHcd"
-
-    HcdInfo(name, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
-  }
-
-  val testContainerInfo: ContainerInfo = {
-    import ContainerComponent._
-    ContainerInfo(
-      "TestContainer",
-      RegisterOnly,
-      Set(AkkaType),
-      Set(testAssemblyInfo, testHcdInfo)
-    )
-  }
-}
-
-class ContainerComponentTests extends TestKit(ContainerComponentTests.system) with ImplicitSender
-    with FunSpecLike with Matchers with LazyLogging with BeforeAndAfterAll {
-
-  import ContainerComponent._
-  import ContainerComponentTests._
-
-  override def afterAll = TestKit.shutdownActorSystem(system)
-
+  private val system = ActorSystem("Test")
   private val ASS1 = "Assembly-1"
   private val HCD2A = "HCD-2A"
   private val HCD2B = "HCD-2B"
-  //private val BAD1 = "BAD1"
   private val BAD2 = "BAD2"
   private val CONTAINERNAME = "Container-2"
 
-  val t1 =
+  private val t1 =
     """
      container {
       |  name = "Container-1"
@@ -125,7 +80,7 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
       |}
     """.stripMargin
 
-  val t2 =
+  private val t2 =
     """
      container {
       |  name = "Container-2"
@@ -160,7 +115,40 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
       |}
     """.stripMargin
 
-  protected def testParseStringConfig(s: String) = {
+  case class SimpleTestHcd(hcdInfo: HcdInfo) extends Hcd with LifecycleHandler {
+    def receive = lifecycleHandlerReceive
+  }
+
+  case class SimpleTestAssembly(assemblyInfo: AssemblyInfo) extends Assembly with LifecycleHandler {
+    def receive = lifecycleHandlerReceive
+  }
+
+  private val testAssemblyInfo: AssemblyInfo = {
+    val name = "test1"
+    val prefix = "test1.prefix"
+    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestAssembly"
+
+    AssemblyInfo(name, prefix, className, RegisterOnly, Set(AkkaType), Set.empty[Connection])
+  }
+
+  private val testHcdInfo: HcdInfo = {
+    val name = "test1Hcd"
+    val prefix = "test1.Hcd.prefix"
+    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestHcd"
+
+    HcdInfo(name, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
+  }
+
+  private val testContainerInfo: ContainerInfo = {
+    ContainerInfo(
+      "TestContainer",
+      RegisterOnly,
+      Set(AkkaType),
+      Set(testAssemblyInfo, testHcdInfo)
+    )
+  }
+
+  private def testParseStringConfig(s: String) = {
     val options = ConfigParseOptions.defaults().
       setOriginDescription("test string").
       setSyntax(ConfigSyntax.CONF)
@@ -168,8 +156,16 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
   }
 
   private def setup1: Config = testParseStringConfig(t1)
-
   private def setupComponents = setup1.getConfig("container.components")
+}
+
+class ContainerComponentTests extends TestKit(ContainerComponentTests.system) with ImplicitSender
+    with FunSpecLike with Matchers with LazyLogging with BeforeAndAfterAll {
+
+  import ContainerComponent._
+  import ContainerComponentTests._
+
+  override def afterAll = TestKit.shutdownActorSystem(system)
 
   it("Should handle individual pieces going poorly") {
     import scala.concurrent.duration._
@@ -251,74 +247,74 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     assert(assInfo.get == AssemblyInfo(ASS1, "ass1.test", "csw.pkgDemo.Assembly1", RegisterAndTrackServices, Set(HttpType, AkkaType), Set(c1, c2, c3)))
   }
 
-  it("Should create a new Ass") {
-    val tp = TestProbe()
-    val a1 = Supervisor(testAssemblyInfo)
-    a1 ! LifecycleManager.Startup
-    tp.expectNoMsg(5.seconds)
-    a1 ! LifecycleManager.Shutdown
+  // XXX allan: (mis)use of TestProbe below is equivalent to using Thread.sleep? tp is not setup to receive any messages!
 
-  }
+  //  it("Should create a new Ass") {
+  //    val tp = TestProbe()
+  //    val a1 = Supervisor(testAssemblyInfo)
+  //    a1 ! LifecycleManager.Startup
+  //    tp.expectNoMsg(1.seconds)
+  //    a1 ! LifecycleManager.Shutdown
+  //  }
 
-  it("Should create a new Hcd") {
-    val tp = TestProbe()
-    val a1 = Supervisor(testHcdInfo)
-    a1 ! LifecycleManager.Startup
-    tp.expectNoMsg(5.seconds)
-    a1 ! LifecycleManager.Shutdown
+  //  it("Should create a new Hcd") {
+  //    val tp = TestProbe()
+  //    val a1 = Supervisor(testHcdInfo)
+  //    a1 ! LifecycleManager.Startup
+  //    tp.expectNoMsg(1.seconds)
+  //    a1 ! LifecycleManager.Shutdown
+  //  }
 
-  }
+  //  it("Should create a new Ass from config") {
+  //    import scala.collection.JavaConversions._
+  //
+  //    val setup2: Config = testParseStringConfig(t2)
+  //    val conf = setup2.getConfig("container.components")
+  //    val conf2 = conf.root.keySet().toList
+  //
+  //    logger.info("Name: " + conf2)
+  //
+  //    val cc = ContainerComponent.create(setup2).get
+  //
+  //    // XXX allan: FIXME: expectNoMsg makes the tests run very slow, and no messages will ever be received!
+  //    val tp = TestProbe()
+  //    tp.expectNoMsg(1.seconds)
+  //
+  //    cc ! LifecycleToAll(Startup)
+  //    tp.expectNoMsg(1.seconds)
+  //
+  //    cc ! LifecycleToAll(Shutdown)
+  //    tp.expectNoMsg(1.seconds)
+  //
+  //  }
 
-  it("Should create a new Ass from config") {
-    import scala.collection.JavaConversions._
+  //  it("Should be possible to create a container with a list of componentInfos") {
+  //    val cc = ContainerComponent.create(testContainerInfo)
+  //
+  //    val tp = TestProbe()
+  //    tp.expectNoMsg(1.seconds)
+  //
+  //    cc ! LifecycleToAll(Startup)
+  //    tp.expectNoMsg(1.seconds)
+  //
+  //    cc ! LifecycleToAll(Uninitialize)
+  //    tp.expectNoMsg(1.seconds)
+  //  }
 
-    val setup2: Config = testParseStringConfig(t2)
-    val conf = setup2.getConfig("container.components")
-    val conf2 = conf.root.keySet().toList
-
-    logger.info("Name: " + conf2)
-
-    val cc = ContainerComponent.create(setup2).get
-
-    // XXX allan: FIXME: expectNoMsg makes the tests run very slow
-    val tp = TestProbe()
-    tp.expectNoMsg(15.seconds)
-
-    cc ! LifecycleToAll(Startup)
-    tp.expectNoMsg(10.seconds)
-
-    cc ! LifecycleToAll(Shutdown)
-    tp.expectNoMsg(10.seconds)
-
-  }
-
-  it("Should be possible to create a container witha list of componentInfos") {
-    val cc = ContainerComponent.create(testContainerInfo)
-
-    val tp = TestProbe()
-    tp.expectNoMsg(15.seconds)
-
-    cc ! LifecycleToAll(Startup)
-    tp.expectNoMsg(10.seconds)
-
-    cc ! LifecycleToAll(Uninitialize)
-    tp.expectNoMsg(10.seconds)
-  }
-
-  it("Should be possible to create and halt") {
-    val cc2 = testContainerInfo.copy(componentInfos = Set(testAssemblyInfo, testHcdInfo))
-    val cc = ContainerComponent.create(cc2)
-
-    val tp = TestProbe()
-    tp.expectNoMsg(10.seconds)
-
-    logger.info("Sending startup")
-    cc ! LifecycleToAll(Startup)
-    tp.expectNoMsg(10.seconds)
-
-    cc ! Restart
-    // XXX allan: Test that Restart actually worked!
-    tp.expectNoMsg(20.seconds)
-  }
+  //  it("Should be possible to create and halt") {
+  //    val cc2 = testContainerInfo.copy(componentInfos = Set(testAssemblyInfo, testHcdInfo))
+  //    val cc = ContainerComponent.create(cc2)
+  //
+  //    val tp = TestProbe()
+  //    tp.expectNoMsg(1.seconds)
+  //
+  //    logger.info("Sending startup")
+  //    cc ! LifecycleToAll(Startup)
+  //    tp.expectNoMsg(10.seconds)
+  //
+  //    cc ! Restart
+  //    // XXX allan: Need a test that Restart actually worked!
+  //    tp.expectNoMsg(20.seconds)
+  //  }
 
 }
