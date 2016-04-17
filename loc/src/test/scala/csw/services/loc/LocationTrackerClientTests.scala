@@ -22,15 +22,20 @@ object LocationTrackerClientTests {
 
   // Local test actor to test the tracker client
   object TestActor {
+
     sealed trait TestActorMessage
+
     case class AllResolved(locations: Set[Location]) extends TestActorMessage
+
     case class NotAllResolved(locations: Set[Location]) extends TestActorMessage
+
     case object QueryResolved extends TestActorMessage
 
     def props(replyTo: ActorRef): Props = Props(classOf[TestActor], replyTo)
   }
 
   class TestActor(replyTo: ActorRef) extends Actor with ActorLogging with LocationTrackerClientActor {
+
     import TestActor._
 
     context.become(recv() orElse trackerClientReceive)
@@ -47,10 +52,11 @@ object LocationTrackerClientTests {
           replyTo ! NotAllResolved(getLocations)
         context.become(recv() orElse trackerClientReceive)
 
-      case QueryResolved =>
+      case QueryResolved ⇒
         context.become(recv(true) orElse trackerClientReceive)
     }
   }
+
 }
 
 // Tests: Note that LocationTrackerClientTests.mySystem is used to ensure that the
@@ -63,6 +69,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
   import LocationTrackerClientTests.TestActor._
 
   override def afterAll = TestKit.shutdownActorSystem(system)
+
   val t: FiniteDuration = 20.seconds
 
   test("Test Location Service Client") {
@@ -125,7 +132,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val testProbe = TestProbe("probe3")
 
     val f = LocationService.registerHttpConnection(componentId, testPort)
-    Await.result(f, t)
+    val reg = Await.result(f, t)
     val tester = system.actorOf(TestActor.props(testProbe.ref))
     val hc = HttpConnection(componentId)
 
@@ -134,7 +141,17 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val locations = testProbe.expectMsgType[AllResolved](t).locations
     assert(locations.size == 1)
 
-    LocationService.unregisterConnection(hc)
+    reg.unregister()
+    // LocationService.unregisterConnection(hc)  // alternative call
+
+    // Note: According to the spec the record disappears from the cache 1s after it has been unregistered
+
+    // An AllResolved message is received first (Probably due to call to LocationService.tryToResolve())
+    tester ! QueryResolved
+    val locations1 = testProbe.expectMsgType[AllResolved](t).locations
+    assert(locations.size == 1)
+
+    // Shortly afterwards we should receive the notification that the service was removed
     tester ! QueryResolved
     val locations2 = testProbe.expectMsgType[NotAllResolved](t).locations
     assert(locations2.size == 1)

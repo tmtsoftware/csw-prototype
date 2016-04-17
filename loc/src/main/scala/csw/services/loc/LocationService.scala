@@ -229,16 +229,16 @@ object LocationService {
     }
   }
 
+  /**
+   * Unregisters the connection from the location service
+   * (Note: it can take some time before the service is removed from the list: see
+   * comments in registry.unregisterService())
+   */
   def unregisterConnection(connection: Connection): Unit = {
-    val services: Array[ServiceInfo] = registry.list(dnsType)
-    val filteredServices = services.filter(_.getName == connection.toString)
-    filteredServices.foreach { si ⇒
-      logger.info(s"Unregistered connection: $connection")
-      registry.unregisterService(si)
-    }
-    if (filteredServices.length == 0) {
-      logger.warn(s"Failed to find and unregister: $connection")
-    }
+    import scala.collection.JavaConverters._
+    logger.info(s"Unregistered connection: $connection")
+    val si = ServiceInfo.create(dnsType, connection.toString, 0, 0, 0, Map.empty[String, String].asJava)
+    registry.unregisterService(si)
   }
 
   // --- Used to get the full path URI of an actor from the actorRef ---
@@ -369,14 +369,10 @@ object LocationService {
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
-      log.info(s"XXX serviceResolved 1: ${event.getInfo.toString}")
       // Gets the connection from the name and, if we are tracking the connection, resolve it
-      if (event.getInfo.hasData) {
-        Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc ⇒
-          log.info(s"XXX serviceResolved 2: ${event.getInfo.toString}")
-          resolveService(loc.connection, event.getInfo)
-        })
-      }
+      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc ⇒
+        resolveService(loc.connection, event.getInfo)
+      })
     }
 
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {
@@ -520,6 +516,7 @@ object LocationService {
   }
 
   private class LocationTrackerWorker(replyTo: Option[ActorRef]) extends Actor with ActorLogging {
+
     import LocationTrackerWorker._
 
     // Create a tracker for this set of connections
