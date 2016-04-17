@@ -310,8 +310,8 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   private val name = containerInfo.componentName
   private val componentId = ComponentId(name, containerInfo.componentType)
 
-  //  // This is set once the component is registered with the location service
-  //  private var registrationOpt: Option[LocationService.RegistrationResult] = None
+  // This is set once the component is registered with the location service
+  private var registrationOpt: Option[LocationService.RegistrationResult] = None
 
   registerWithLocationService()
 
@@ -350,12 +350,11 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   }
 
   // Tell all components to uninitialize and start an actor to wait until they do before restarting them.
-  // XXX allan: This is broken! Missing actor to restart...
   private def restart(supervisors: List[SupervisorInfo]): Unit = {
     context.become(restartReceive(supervisors, Nil))
     supervisors.foreach(_.supervisor ! SubscribeLifecycleCallback(self))
     sendAllComponents(Uninitialize, supervisors)
-    // If the container is already stopped, this ensures that we get a message with the current state
+    // XXX allan: If the container is already stopped, this ensures that we get a message with the current state
     sendAllComponents(Heartbeat, supervisors)
   }
 
@@ -378,7 +377,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     if (containerInfo.locationServiceUsage != DoNotRegister) {
       LocationService.registerAkkaConnection(componentId, self, containerInfo.prefix)(context.system).onComplete {
         case Success(reg) ⇒
-          //          registrationOpt = Some(reg)
+          registrationOpt = Some(reg)
           log.info(s"$name: Registered $componentId with the location service")
         case Failure(ex) ⇒
           // XXX allan: What to do in case of error?
@@ -387,13 +386,13 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     }
   }
 
-  //  // If the component is registered with the location service, unregister it
-  //  private def unregisterFromLocationService(): Unit = {
-  //    registrationOpt.foreach {
-  //      log.info(s"Unregistering $componentId from the location service")
-  //      _.unregister()
-  //    }
-  //  }
+  // If the component is registered with the location service, unregister it
+  private def unregisterFromLocationService(): Unit = {
+    registrationOpt.foreach {
+      log.info(s"Unregistering $componentId from the location service")
+      _.unregister()
+    }
+  }
 
   private def createComponent(componentInfo: ComponentInfo, supervisors: List[SupervisorInfo]): Option[SupervisorInfo] = {
     supervisors.find(_.componentInfo == componentInfo) match {

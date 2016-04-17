@@ -39,39 +39,42 @@ object LocationService {
    * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
    */
   def initInterface(): Unit = {
-    initialized = true
-    case class Addr(index: Int, addr: InetAddress)
-    def defaultAddr = Addr(0, InetAddress.getLocalHost)
-    def filter(a: Addr): Boolean = {
-      // Don't use ipv6 addresses yet, since it seems to not be working with the current akka version
-      !a.addr.isLoopbackAddress && !a.addr.isInstanceOf[Inet6Address]
-    }
-    // Get this host's primary IP address.
-    // Note: The trick to getting the right one seems to be in sorting by network interface index
-    // and then ignoring the loopback address.
-    // I'm assuming that the addresses are sorted by network interface priority (which seems to be the case),
-    // although this is not documented anywhere.
-    def getIpAddress: String = {
-      import scala.collection.JavaConversions._
-      val addresses = for {
-        i ← NetworkInterface.getNetworkInterfaces
-        a ← i.getInetAddresses
-      } yield Addr(i.getIndex, a)
-      addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
-    }
+    if (!initialized) {
+      initialized = true
+      case class Addr(index: Int, addr: InetAddress)
+      def defaultAddr = Addr(0, InetAddress.getLocalHost)
 
-    val akkaKey = "akka.remote.netty.tcp.hostname"
-    val mdnsKey = "net.mdns.interface"
-    //    val config = ConfigFactory.load()
-    val mdnsHost = Option(System.getProperty(mdnsKey))
-    mdnsHost.foreach(h ⇒ logger.info(s"Found system property for $mdnsKey: $h"))
-    //    val akkaHost = if (config.hasPath(akkaKey) && config.getString(akkaKey).nonEmpty) Some(config.getString(akkaKey)) else None
-    val akkaHost = Option(System.getProperty(akkaKey))
-    akkaHost.foreach(h ⇒ logger.info(s"Found system property for: $akkaKey: $h"))
-    val host = akkaHost.getOrElse(mdnsHost.getOrElse(getIpAddress))
-    logger.info(s"Using $host as listening IP address")
-    System.setProperty(akkaKey, host)
-    System.setProperty(mdnsKey, host)
+      def filter(a: Addr): Boolean = {
+        // Don't use ipv6 addresses yet, since it seems to not be working with the current akka version
+        !a.addr.isLoopbackAddress && !a.addr.isInstanceOf[Inet6Address]
+      }
+      // Get this host's primary IP address.
+      // Note: The trick to getting the right one seems to be in sorting by network interface index
+      // and then ignoring the loopback address.
+      // I'm assuming that the addresses are sorted by network interface priority (which seems to be the case),
+      // although this is not documented anywhere.
+      def getIpAddress: String = {
+        import scala.collection.JavaConversions._
+        val addresses = for {
+          i ← NetworkInterface.getNetworkInterfaces
+          a ← i.getInetAddresses
+        } yield Addr(i.getIndex, a)
+        addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
+      }
+
+      val akkaKey = "akka.remote.netty.tcp.hostname"
+      val mdnsKey = "net.mdns.interface"
+      //    val config = ConfigFactory.load()
+      val mdnsHost = Option(System.getProperty(mdnsKey))
+      mdnsHost.foreach(h ⇒ logger.info(s"Found system property for $mdnsKey: $h"))
+      //    val akkaHost = if (config.hasPath(akkaKey) && config.getString(akkaKey).nonEmpty) Some(config.getString(akkaKey)) else None
+      val akkaHost = Option(System.getProperty(akkaKey))
+      akkaHost.foreach(h ⇒ logger.info(s"Found system property for: $akkaKey: $h"))
+      val host = akkaHost.getOrElse(mdnsHost.getOrElse(getIpAddress))
+      logger.info(s"Using $host as listening IP address")
+      System.setProperty(akkaKey, host)
+      System.setProperty(mdnsKey, host)
+    }
   }
 
   // Get JmDNS instance
@@ -198,7 +201,7 @@ object LocationService {
       )
       val service = ServiceInfo.create(dnsType, connection.toString, uri.getPort, 0, 0, values.asJava)
       registry.registerService(service)
-      logger.info(s"Registered Akka $connection at $uri")
+      logger.info(s"Registered Akka $connection at $uri with $values")
       RegisterResult(registry, service, componentId)
     }
   }
@@ -262,7 +265,6 @@ object LocationService {
    */
   def resolve(connections: Set[Connection])(implicit system: ActorSystem, timeout: Timeout): Future[LocationsReady] = {
     import akka.pattern.ask
-    import system.dispatcher
     val actorRef = system.actorOf(LocationTrackerWorker.props(None))
     (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]
   }
@@ -354,27 +356,27 @@ object LocationService {
       connections.get(connection).foreach(rm)
     }
 
+    // Check to see if a connection is already resolved, and if so, resolve the service
     private def tryToResolve(connection: Connection): Unit = {
-      // Check to see if it is already resolved
       connections.get(connection) match {
         case Some(Unresolved(c)) ⇒
-          log.info("Resolve an unresolved service: " + c)
-          // Check to see if is already known in registry
-          val services: Array[ServiceInfo] = registry.list(dnsType)
-          services.filter(si ⇒ si.getName == connection.toString).foreach { s ⇒
-            logger.info(s"tryToResolve will resolve connection: $s")
-            resolveService(connection, s)
-          }
+          val s = Option(registry.getServiceInfo(dnsType, connection.toString))
+          log.info(s"Try to resolve connection: $connection: Result: $s")
+          s.foreach(resolveService(connection, _))
         case x ⇒
-          log.info(s"Attempt to track and already tracked connection: $x")
+          log.warning(s"Attempt to track and already tracked connection: $x")
       }
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
+      log.info(s"XXX serviceResolved 1: ${event.getInfo.toString}")
       // Gets the connection from the name and, if we are tracking the connection, resolve it
-      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc ⇒
-        resolveService(loc.connection, event.getInfo)
-      })
+      if (event.getInfo.hasData) {
+        Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc ⇒
+          log.info(s"XXX serviceResolved 2: ${event.getInfo.toString}")
+          resolveService(loc.connection, event.getInfo)
+        })
+      }
     }
 
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {

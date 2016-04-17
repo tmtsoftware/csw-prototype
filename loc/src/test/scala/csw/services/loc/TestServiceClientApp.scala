@@ -2,6 +2,8 @@ package csw.services.loc
 
 import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
 
+// XXX allan: TODO: Update to new API
+
 /**
  * A location service test client application that attempts to resolve one or more sets of
  * akka and http services.
