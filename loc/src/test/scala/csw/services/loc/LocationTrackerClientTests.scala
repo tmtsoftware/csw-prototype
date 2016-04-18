@@ -38,22 +38,22 @@ object LocationTrackerClientTests {
 
     import TestActor._
 
-    context.become(recv() orElse trackerClientReceive)
+    context.become(recv() orElse trackerClientReceive())
 
     override def receive = Actor.emptyBehavior
 
     // query is set to true once after a QueryResolved message was received
     def recv(query: Boolean = false): Receive = {
       case loc: Location ⇒
-        trackerClientReceive(loc)
+        trackerClientReceive()(loc)
         if (allResolved)
           replyTo ! AllResolved(getLocations)
         else if (loc.isResolved || query)
           replyTo ! NotAllResolved(getLocations)
-        context.become(recv() orElse trackerClientReceive)
+        context.become(recv() orElse trackerClientReceive())
 
       case QueryResolved ⇒
-        context.become(recv(true) orElse trackerClientReceive)
+        context.become(recv(true) orElse trackerClientReceive())
     }
   }
 

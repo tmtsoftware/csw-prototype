@@ -32,7 +32,6 @@ object TestHttpService {
  * A dummy akka test service that registers with the location service
  */
 class TestHttpService(i: Int) extends Actor with ActorLogging {
-  import context.dispatcher
   import context.system
 
   val port = 9000 + i // Dummy value for testing: Normally should be the actually port the HTTP server is running on...

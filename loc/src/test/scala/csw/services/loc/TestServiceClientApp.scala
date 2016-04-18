@@ -1,6 +1,7 @@
 package csw.services.loc
 
-import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import csw.services.loc.LocationTrackerClient.AllResolved
 
 // XXX allan: TODO: Update to new API
 
@@ -11,32 +12,31 @@ import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
  * The client and service applications can be run on the same or different hosts.
  */
 object TestServiceClientApp extends App {
-  //  val numServices = args.headOption.map(_.toInt).getOrElse(1)
-  //  LocationService.initInterface()
-  //  implicit lazy val system = ActorSystem("TestServiceClientApp")
-  //  implicit val dispatcher = system.dispatcher
-  //  sys.addShutdownHook(system.terminate())
-  //  system.actorOf(TestServiceClient.props(numServices))
+  val numServices = args.headOption.map(_.toInt).getOrElse(1)
+  LocationService.initInterface()
+  implicit lazy val system = ActorSystem("TestServiceClientApp")
+  implicit val dispatcher = system.dispatcher
+  sys.addShutdownHook(system.terminate())
+  system.actorOf(TestServiceClient.props(numServices))
 }
 
-//object TestServiceClient {
-//  def props(numServices: Int): Props = Props(classOf[TestServiceClient], numServices)
-//}
-//
-///**
-// * A test client actor that uses the location service to resolve services
-// */
-//class TestServiceClient(numServices: Int) extends Actor with ActorLogging {
-//  val connections = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.connection(i), TestHttpService.connection(i))).toSet
-//  context.actorOf(LocationService.props(connections))
-//
-//  override def receive: Receive = {
-//    case ServicesReady(services) ⇒
-//      log.info(s"Test Passed: Received services: ${services.values.map(_.connection.componentId.name).mkString(", ")}")
-//    case Disconnected(connection) ⇒
-//      log.info(s"Disconnected service: ${connection.componentId.name}")
-//    case x ⇒
-//      log.error(s"Received unexpected message $x")
-//  }
-//}
-//
+object TestServiceClient {
+  def props(numServices: Int): Props = Props(classOf[TestServiceClient], numServices)
+}
+
+/**
+ * A test client actor that uses the location service to resolve services
+ */
+class TestServiceClient(numServices: Int) extends Actor with ActorLogging with LocationTrackerClientActor {
+  val connections = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.connection(i), TestHttpService.connection(i))).toSet
+  connections.foreach(trackConnection)
+
+  override def receive: Receive = trackerClientReceive(true) orElse {
+    case AllResolved =>
+      log.info(s"Test Passed: Received services: ${connections.map(_.componentId.name).mkString(", ")}")
+
+    case x ⇒
+      log.error(s"Received unexpected message $x")
+  }
+}
+

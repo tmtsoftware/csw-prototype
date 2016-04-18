@@ -77,7 +77,7 @@ trait AssemblyController extends LocationTrackerClientActor {
     case OneWay(config) ⇒ submit(allResolved, config, oneway = true, sender())
   }
 
-  protected def controllerReceive = controllerLocalReceive orElse trackerClientReceive
+  protected def controllerReceive = controllerLocalReceive orElse trackerClientReceive()
 
   /**
    * Called for Submit messages
