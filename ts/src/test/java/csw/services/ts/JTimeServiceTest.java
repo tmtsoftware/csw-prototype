@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContextExecutor;
  */
 public class JTimeServiceTest {
 
-    static ActorSystem system;
+    private static ActorSystem system;
 
     @BeforeClass
     public static void setup() {
@@ -35,11 +35,11 @@ public class JTimeServiceTest {
     @Test
     public void basicJavaTimeTests() throws Exception {
         // Assume an eastern time zone for tests
-        Clock eclock = Clock.system(ZoneId.of("America/New_York"));
-        int hoursFromNyToHI = 6;
+//        Clock eclock = Clock.system(ZoneId.of("America/New_York"));
+//        int hoursFromNyToHI = 6;
 
         // Can't do much test to see now equal implying bad clocks
-        LocalTime nyNow = LocalTime.now(eclock);
+//        LocalTime nyNow = LocalTime.now(eclock);
         LocalTime hwNow = TimeService.hawaiiLocalTimeNow();
         LocalTime now = TimeService.localTimeNow();
 
@@ -47,12 +47,12 @@ public class JTimeServiceTest {
         assert (!hwNow.equals(now)); // Not the same, good
 
         LocalTime utcNow = TimeService.UTCTimeNow();
-        LocalTime gpsNow = TimeService.GPSTimeNow();
+//        LocalTime gpsNow = TimeService.GPSTimeNow();
         LocalTime taiNow = TimeService.TAITimeNow();
 
-        assert (gpsNow.isAfter(utcNow));
+//        assert (gpsNow.isAfter(utcNow));
         assert (taiNow.isAfter(utcNow));
-        assert (taiNow.isAfter(gpsNow));
+//        assert (taiNow.isAfter(gpsNow));
     }
 
     @Test
@@ -93,19 +93,19 @@ public class JTimeServiceTest {
         };
     }
 
-    static class JTestScheduler extends TimeService.JTimeServiceScheduler {
+    private static class JTestScheduler extends TimeService.JTimeServiceScheduler {
         LoggingAdapter log = log();
 
         private final String name;
         private final ActorRef caller;
         private int count = 0;
 
-        public JTestScheduler(String name, ActorRef caller) {
+        JTestScheduler(String name, ActorRef caller) {
             this.name = name;
             this.caller = caller;
         }
 
-        public static Props props(final String name, final ActorRef caller) {
+        static Props props(final String name, final ActorRef caller) {
             return Props.create(new Creator<JTestScheduler>() {
                 private static final long serialVersionUID = 1L;
 
