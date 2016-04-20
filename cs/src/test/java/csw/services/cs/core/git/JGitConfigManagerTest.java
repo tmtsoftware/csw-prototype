@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Test access to GitConfigManager from java
  */
-public class JGitConfigManagerTests {
+public class JGitConfigManagerTest {
     private static final File path1 = new File("some/test1/TestConfig1");
     private static final File path2 = new File("some/test2/TestConfig2");
 

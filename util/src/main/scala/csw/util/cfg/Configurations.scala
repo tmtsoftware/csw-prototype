@@ -19,6 +19,7 @@ object Configurations {
 
     /**
      * Creates a ConfigKey from the given string
+     *
      * @return a ConfigKey object parsed for the subsystem and prefix
      */
     implicit def stringToConfigKey(prefix: String): ConfigKey = {
@@ -31,6 +32,7 @@ object Configurations {
 
   /**
    * The base trait for various configuration types whether command configurations or events
+   *
    * @tparam T the subclass of ConfigType
    */
   sealed trait ConfigType[T <: ConfigType[T]] {
@@ -48,14 +50,27 @@ object Configurations {
 
     /**
      * The number of key/value pairs in the Map
+     *
      * @return the size of the Map
      */
     def size = data.size
 
+    /**
+     * Returns a new instance with the value for the given key set to the given value
+     *
+     * @param key   the key, which also contains the value type
+     * @param value the value
+     * @tparam A the type of the value
+     * @return a new instance of this object with the key set to the given value
+     */
     final def set[A](key: Key.Aux[A], value: A): T = create(data.set(key, value))
+
+    // XXX java API
+    final private[cfg] def jset[A](key: Key, value: Object): T = create(data.jset(key, value))
 
     /**
      * Lookup a Key in Map and returns an Option
+     *
      * @param key the Key to be used for lookup
      * @return an option value typed to the Key
      */
@@ -63,6 +78,7 @@ object Configurations {
 
     /**
      * Remove a Key from the Map and return a new Map
+     *
      * @param key the Key to be used for removal
      * @return a new T, where T is a ConfigType child
      */
@@ -70,6 +86,7 @@ object Configurations {
 
     /**
      * Return the value associated with a Key rather than an Option
+     *
      * @param key the Key to be used for lookup
      * @return the value associated with the Key or a NoSuchElementException if the key does not exist
      */
@@ -152,7 +169,8 @@ object Configurations {
 
     /**
      * The default matcher for state variables tests for an exact match
-     * @param demand the demand state
+     *
+     * @param demand  the demand state
      * @param current the current state
      * @return true if the demand and current states match (in this case, are equal)
      */
@@ -161,8 +179,9 @@ object Configurations {
 
     /**
      * A state variable that indicates the ''demand'' or requested state.
+     *
      * @param configKey ket for the data
-     * @param data the data
+     * @param data      the data
      */
     case class DemandState(configKey: ConfigKey, data: ConfigData = ConfigData())
         extends ConfigType[DemandState] with StateVariable {
@@ -181,8 +200,9 @@ object Configurations {
 
     /**
      * A state variable that indicates the ''current'' or actual state.
+     *
      * @param configKey ket for the data
-     * @param data the data
+     * @param data      the data
      */
     case class CurrentState(configKey: ConfigKey, data: ConfigData = ConfigData())
         extends ConfigType[CurrentState] with StateVariable {
@@ -198,6 +218,7 @@ object Configurations {
        */
       implicit def apply(config: SetupConfig): CurrentState = CurrentState(config.prefix, config.data)
     }
+
   }
 
   /**
@@ -285,6 +306,7 @@ object Configurations {
    * Contains a list of configs that can be sent to a sequencer
    */
   final case class ConfigArgList(configs: Seq[SequenceConfig])
+
 }
 
 /**
@@ -402,10 +424,6 @@ object Events {
     def apply(prefix: String, time: EventTime): ObserveEvent = ObserveEvent(EventInfo(prefix, time))
 
     def apply(prefix: String, time: EventTime, obsId: ObsId): ObserveEvent = ObserveEvent(EventInfo(prefix, time, Some(obsId)))
-
-    // Java friendly alternatives to apply(...), create() is already taken
-    def make(prefix: String, time: EventTime): ObserveEvent = ObserveEvent(prefix, time)
-    def make(prefix: String, time: EventTime, obsId: ObsId): ObserveEvent = ObserveEvent(prefix, time, obsId)
   }
 
   case class SystemEvent(info: EventInfo, data: ConfigData = ConfigData()) extends EventType[SystemEvent] with EventServiceEvent {
@@ -419,4 +437,5 @@ object Events {
 
     def apply(prefix: String, time: EventTime, obsId: ObsId): SystemEvent = SystemEvent(EventInfo(prefix, time, Some(obsId)))
   }
+
 }
