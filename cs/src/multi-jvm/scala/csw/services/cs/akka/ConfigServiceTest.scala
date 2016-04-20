@@ -7,6 +7,7 @@ import akka.util.Timeout
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.core.ConfigManagerTestHelper
+import csw.services.loc.LocationService
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -17,6 +18,8 @@ import scala.concurrent.duration._
  * See http://doc.akka.io/docs/akka/current/dev/multi-node-testing.html#multi-node-testing.
  */
 object TestConfig extends MultiNodeConfig {
+  LocationService.initInterface()
+
   val configServiceAnnex = role("configServiceAnnex")
 
   val configService = role("configService")
@@ -58,8 +61,7 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
 
       runOn(configService) {
         val config = ConfigServiceSettings(system)
-        val host = config.hostname
-        val manager = TestRepo.getConfigManager(config)
+        val manager = TestRepo.getTestRepoConfigManager()
         val configServiceActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
         configServiceActor ! RegisterWithLocationService
         enterBarrier("deployed")

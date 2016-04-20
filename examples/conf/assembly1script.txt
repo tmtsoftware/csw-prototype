@@ -2,11 +2,11 @@
 // Pass this file as an argument to the csw sequencer command,
 // so you can set the rate interactively
 
-import examples.HCDExample._
+import csw.examples.HCDExample._
 
 val obsId = "obs001"
-val a1 = resolveAssembly("assembly1")
-val h1 = resolveHcd("example1")
+val a1 = resolveAssembly("assemblyExample")
+val h1 = resolveHcd("hcdExample")
 
 // Sets the rate by sending a message to assembly1
 def setRate(rate: Int): Unit = {

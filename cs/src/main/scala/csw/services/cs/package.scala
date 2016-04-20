@@ -165,5 +165,4 @@ package csw.services
  * To run the multi-jvm tests, use `sbt multi-jvm:test`.
  */
 package object cs {
-
 }

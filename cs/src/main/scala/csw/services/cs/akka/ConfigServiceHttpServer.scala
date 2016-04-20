@@ -11,7 +11,7 @@ import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.core.{ConfigData, ConfigId}
-import csw.services.loc.{LocationService, ServiceType, ServiceId}
+import csw.services.loc.{LocationService, ComponentType, ComponentId}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
@@ -26,7 +26,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   import system.dispatcher
 
   implicit val askTimeout = settings.timeout
-  val client = ConfigServiceClient(configServiceActor)
+  val client = ConfigServiceClient(configServiceActor, settings.name)
   implicit val materializer = ActorMaterializer()
 
   val binding = Http().bind(interface = settings.httpInterface, port = settings.httpPort)
@@ -35,6 +35,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     c.handleWithAsyncHandler {
       case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
       case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
+      case HttpRequest(PUT, uri, _, entity, _)  ⇒ httpPut(uri, entity)
       case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
       case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
       case x: HttpRequest                       ⇒ unknownResource(x.toString)
@@ -59,10 +60,10 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
    * Register with the location service (which must be started as a separate process).
    */
   def registerWithLocationService(addr: InetSocketAddress) {
-    val serviceId = ServiceId("ConfigServiceHttpServer", ServiceType.Service)
+    val componentId = ComponentId("ConfigServiceHttpServer", ComponentType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
     logger.info(s"Registering with the location service with URI $httpUri")
-    LocationService.registerHttpService(serviceId, addr.getPort)
+    LocationService.registerHttpConnection(componentId, addr.getPort)
   }
 
   // Error returned for invalid requests
@@ -148,11 +149,19 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     logger.info(s"Received POST request for $path (uri = $uri)")
     path match {
       case "/create"         ⇒ createOrUpdate(uri, entity)
-      case "/update"         ⇒ createOrUpdate(uri, entity)
       case "/createOrUpdate" ⇒ createOrUpdate(uri, entity)
-      case "/setDefault"     ⇒ setDefault(uri)
-      case "/resetDefault"   ⇒ resetDefault(uri)
       case _                 ⇒ unknownResource(path)
+    }
+  }
+
+  private def httpPut(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
+    val path = uri.path.toString()
+    logger.info(s"Received PUT request for $path (uri = $uri)")
+    path match {
+      case "/update"       ⇒ createOrUpdate(uri, entity)
+      case "/setDefault"   ⇒ setDefault(uri)
+      case "/resetDefault" ⇒ resetDefault(uri)
+      case _               ⇒ unknownResource(path)
     }
   }
 

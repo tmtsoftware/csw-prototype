@@ -12,7 +12,7 @@ import akka.http.scaladsl.Http
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.{LocationService, ServiceType, ServiceId}
+import csw.services.loc.{LocationService, ComponentType, ComponentId}
 import org.slf4j.LoggerFactory
 import akka.actor.ActorSystem
 
@@ -70,10 +70,10 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
    * Register with the location service (which must be started as a separate process).
    */
   def registerWithLocationService(addr: InetSocketAddress) {
-    val serviceId = ServiceId("ConfigServiceAnnex", ServiceType.Service)
+    val componentId = ComponentId("ConfigServiceAnnex", ComponentType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
     logger.info(s"Registering with the location service with URI $httpUri")
-    LocationService.registerHttpService(serviceId, addr.getPort)
+    LocationService.registerHttpConnection(componentId, addr.getPort)
   }
 
   // Implements Http GET
@@ -106,7 +106,10 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val response = Promise[HttpResponse]()
     if (file.exists) {
       logger.info(s"Ignoring POST request for existing $file (uri = $uri)")
-      response.success(HttpResponse(StatusCodes.OK))
+      val m = entity.dataBytes.runWith(Sink.ignore)
+      m.onComplete {
+        case _ ⇒ response.success(HttpResponse(StatusCodes.OK))
+      }
     } else {
       logger.info(s"Received POST request for $file (uri = $uri)")
       val out = new FileOutputStream(file)

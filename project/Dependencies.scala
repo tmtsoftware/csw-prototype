@@ -4,10 +4,10 @@ import sbt._
 
 object Dependencies {
 
-  val scalaVersion = "2.11.7"
+  val scalaVersion = "2.11.8"
 
-  val akkaVersion = "2.4.2"
-  val akkaStreamsVersion = "2.4.2"
+  val akkaVersion = "2.4.4"
+  val akkaStreamsVersion = "2.4.4"
 
   val hornetqVersion = "2.4.7.Final"
 
@@ -23,7 +23,9 @@ object Dependencies {
   val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamsVersion
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaStreamsVersion
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamsVersion
+
   val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.5.0" // ApacheV2
+  val akkaKryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.0" // ApacheV2
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.5" // LGPL
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" // ApacheV2
@@ -35,12 +37,14 @@ object Dependencies {
   val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1" // SCALA LICENSE (BSD-like)
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
+  val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11" // TMate Open Source License
+
 
   val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0" // ApacheV2
 
   val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion // ApacheV2
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
-  val ficus = "net.ceedubs" % "ficus_2.11" % "1.1.2" // MIT
+  val ficus = "com.iheart" %% "ficus" % "1.2.0" // MIT
 
   val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.6.1" // New BSD license
 

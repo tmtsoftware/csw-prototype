@@ -1,15 +1,16 @@
 package csw.services.ccs
 
-import akka.actor.{Props, Actor, ActorLogging}
+/*
+import akka.actor.{ Props, Actor, ActorLogging }
 import akka.util.Timeout
 import akka.pattern.ask
 import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{Disconnected, ServicesReady, ResolvedService}
-import csw.services.loc.{LocationService, ServiceRef}
+import csw.services.loc.LocationService.{ Disconnected, ServicesReady, ResolvedService }
+import csw.services.loc.{ LocationService, ServiceRef }
 import csw.util.cfg.Configurations.SetupConfigArg
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
  * A controller that forwards lists of configs (SetupConfigArg) to assemblies based on
@@ -91,4 +92,5 @@ protected case class DistributorController(serviceRefs: Set[ServiceRef], timeout
     }
   }
 }
+*/
 

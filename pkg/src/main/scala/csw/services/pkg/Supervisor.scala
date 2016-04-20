@@ -1,12 +1,14 @@
 package csw.services.pkg
 
+import akka.actor.FSM.{CurrentState, SubscribeTransitionCallBack, Transition}
 import akka.actor._
-import csw.services.ccs.{CommandStatus, PeriodicHcdController}
-import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.{ResolvedService, ServicesReady}
-import csw.services.loc.{ServiceType, ServiceRef, LocationService, ServiceId}
-import csw.util.cfg.Configurations.ControlConfigArg
-import csw.util.cfg.RunId
+import csw.services.ccs.AssemblyController.AssemblyControllerMessage
+import csw.services.ccs.HcdController.HcdControllerMessage
+import csw.services.loc.ComponentType.{Assembly, HCD}
+import csw.services.loc.{ComponentId, LocationService}
+import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
+import csw.services.pkg.LifecycleManager._
+import csw.util.cfg.Configurations.{ControlConfig, ControlConfigArg, SetupConfig}
 
 import scala.util.{Failure, Success}
 
@@ -22,391 +24,241 @@ import scala.util.{Failure, Success}
  */
 object Supervisor {
 
-  /**
-   * Commands sent to components to change the lifecycle
-   */
-  sealed trait LifecycleCommand
-
-  case object Initialize extends LifecycleCommand
-
-  case object Startup extends LifecycleCommand
-
-  case object Shutdown extends LifecycleCommand
-
-  case object Uninitialize extends LifecycleCommand
-
-  /**
-   * Values that indicate the current lifecycle state for the named component.
-   */
-  sealed trait LifecycleState {
-    val name: String
-
-    def isLoaded: Boolean = false
-
-    def isInitialized: Boolean = false
-
-    def isRunning: Boolean = false
+  def apply(componentInfo: ComponentInfo): ActorRef = {
+    val system = ActorSystem(s"${componentInfo.componentName}-system")
+    system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor")
   }
-
-  case class Loaded(name: String) extends LifecycleState {
-    override def isLoaded: Boolean = true
-  }
-
-  case class Initialized(name: String) extends LifecycleState {
-    override def isInitialized: Boolean = true
-  }
-
-  case class Running(name: String) extends LifecycleState {
-    override def isRunning: Boolean = true
-  }
-
-  /**
-   * Reply from component for failed lifecycle changes
-   */
-  sealed trait LifecycleError {
-    val name: String
-    val reason: String
-  }
-
-  case class InitializeFailed(name: String, reason: String) extends LifecycleError
-
-  case class StartupFailed(name: String, reason: String) extends LifecycleError
-
-  case class ShutdownFailed(name: String, reason: String) extends LifecycleError
-
-  case class UninitializeFailed(name: String, reason: String) extends LifecycleError
-
-  /**
-   * Message used to subscribe the sender to changes in lifecycle states
-   * @param onlyRunning true if only interested in receiving a message when the component is in the Running state
-   */
-  case class SubscribeToLifecycleStates(onlyRunning: Boolean = false)
-
-  /**
-   * Message sent to subscribers of lifecycle states
-   * @param state the current state
-   * @param error set if there was an error preventing the lifecycle state change
-   */
-  case class LifecycleStateChanged(state: LifecycleState, error: Option[LifecycleError])
-
-  /**
-   * When this message is received, the component is unregistered from the location service
-   */
-  case object UnregisterWithLocationService
 
   /**
    * Used to create the Supervisor actor
-   * @param componentProps used to create the component
-   * @param serviceId service used to register the component with the location service
-   * @param prefix the configuration prefix (part of configs that component should receive)
-   * @param services a list of service ids for the services the component depends on
+   *
+   * @param componentInfo used to create the component
    * @return an object to be used to create the Supervisor actor
    */
-  def props(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId]): Props =
-    Props(classOf[Supervisor], componentProps, serviceId, prefix, services)
+  private def props(componentInfo: ComponentInfo): Props = Props(classOf[Supervisor], componentInfo)
+
+  /**
+   * Message used to subscribe the sender to changes in lifecycle states
+   *
+   * @param actorRef the actor subscribing to callbacks
+   */
+  case class SubscribeLifecycleCallback(actorRef: ActorRef)
+
+  /**
+   * Message to unsubscribe  from lifecycle state changes
+   */
+  final case class UnsubscribeLifecycleCallback(actorRef: ActorRef)
+
+  /**
+   * Message sent to subscribers of lifecycle states
+   *
+   * @param state the current state
+   */
+  case class LifecycleStateChanged(state: LifecycleState)
+
+  /**
+   * Message sent to supervisor from component or elsewhere to restart lifecycle for component
+   */
+  case object RestartComponent
+
+  /**
+   * Function called by a component to indicate the lifecycle should be started.
+   *
+   * @param supervisor the ActorRef of the component's supervisor
+   * @param command    the LifecycleCommand to be sent to the supervisor
+   */
+  def lifecycle(supervisor: ActorRef, command: LifecycleCommand = Startup): Unit = {
+    supervisor ! command
+  }
+
+  /**
+   * When this message is received, the component goes through shutdown, uninitialize, and then exits
+   */
+  case object HaltComponent
+
+  /**
+   * Function called by a component to exit in a controlled way.
+   *
+   * @param supervisor the ActorRef of the component's supervisor
+   */
+  def haltComponent(supervisor: ActorRef): Unit = {
+    supervisor ! HaltComponent
+  }
 }
 
 /**
  * A supervisor actor that manages the component actor given by the arguments
  * (see props() for argument descriptions).
  */
-case class Supervisor(componentProps: Props, serviceId: ServiceId, prefix: String, services: List[ServiceId])
+final class Supervisor(val componentInfo: ComponentInfo)
     extends Actor with ActorLogging {
 
   import Supervisor._
 
-  // Used to notify subscribers of a change in the lifecycle
-  var lifecycleStateListeners = Map[ActorRef, Boolean]()
+  log.info("Starting Supervisor:" + context.self.path)
 
-  // Result of last location service registration, can be used to unregister (by calling close())
-  var registration: Option[LocationService.Registration] = None
+  private val name = componentInfo.componentName
+  private val componentId = ComponentId(name, componentInfo.componentType)
+  private val component = startComponent(context, componentInfo)
 
-  val name = serviceId.name
-  val serviceRefs = services.map(ServiceRef(_, AkkaType)).toSet
-  val component = startComponent()
+  // This is set once the component is registered with the location service
+  private var registrationOpt: Option[LocationService.RegistrationResult] = None
 
-  context.become(loaded(Loaded(name)))
+  private val lifecycleManager = context.actorOf(LifecycleManager.props(component, name), "lifecycleManager")
+  lifecycleManager ! SubscribeTransitionCallBack(self)
 
-  override def receive: Receive = {
+  private def commonMessageReceive: Receive = {
+    case SubscribeLifecycleCallback(actorRef) ⇒
+      addListener(actorRef)
+    case UnsubscribeLifecycleCallback(actorRef) ⇒
+      removeListener(actorRef)
     case Terminated(actorRef) ⇒
       terminated(actorRef)
-
-    // Forward periodic Process messages in any case
-    // (XXX What if the HCD has messages in the queue and leaves the running state? Could also reschedule? Or let HCD decide? )
-    case process @ PeriodicHcdController.Process(rate) ⇒
-      component ! process
-
-    case UnregisterWithLocationService ⇒
-      registration.foreach(_.unregister())
+    case Heartbeat ⇒
+      // Forward to lifecycle manager - causes it to reply with the current state
+      lifecycleManager ! Heartbeat
+    case x ⇒
+      log.warning(s"$name: Supervisor received an unexpected message: $x")
   }
 
-  // --- Receive states (See OSW TN012 - COMPONENT LIFECYCLE DESIGN) ---
-  // XXX TODO: Maybe combine to one receive methods with a state parameter?
-
-  // Behavior in the Loaded state
-  def loaded(targetState: LifecycleState): Receive = receive orElse {
+  private def notRunningReceivePF: Receive = {
+    case CurrentState(_, Loaded) ⇒
+      // This message is sent as a side effect of subscribing to the Lifecycle FSM
+      log.debug(s"$name: LifecycleManager indicates Loaded")
+      notifyListeners(LifecycleStateChanged(Loaded))
     case Initialize ⇒
-      log.debug(s"$name received Initialize")
-      component ! Initialize
+      log.info(s"$name: Handle Initialize message from container or elsewhere")
+      lifecycleManager ! Initialize
+    case Startup ⇒
+      log.info(s"$name: Handle Startup message from container or elsewhere")
+      lifecycleManager ! Startup
+    case Transition(_, PendingInitializedFromLoaded, Initialized) ⇒
+      // LifecycleManager has sent Initialized to component and is waiting for response
       registerWithLocationService()
-      context.become(loaded(Initialized(name)))
+    case Transition(_, Initialized, PendingLoadedFromInitialized) ⇒
+      unregisterFromLocationService()
+    case Transition(_, Loaded, Loaded) ⇒
+      // This transition indicates the component is now firmly in Loaded (only during shutdown/restart
+      notifyListeners(LifecycleStateChanged(Loaded))
+    case Transition(_, Initialized, Initialized) ⇒
+      // This transition indicates the component is now firmly in Initialized from Loaded or Running
+      notifyListeners(LifecycleStateChanged(Initialized))
+    case Transition(_, Running, Running) ⇒
+      // This transition indicates the component is now firmly in Running
+      log.info(s"$name: Transition to Running")
+      notifyListeners(LifecycleStateChanged(Running))
+      context become runningReceive
+    case t @ Transition(_, from, to) ⇒
+      log.debug(s"$name: notRunningReceivePF: unhandled transition: $from/$to")
+  }
 
-    case Startup ⇒
-      log.debug(s" $name received Startup")
-      component ! Initialize
-      registerWithLocationService()
-      context.become(loaded(Running(name)))
+  def notRunningReceive = notRunningReceivePF orElse commonMessageReceive
 
-    case Shutdown ⇒
-      log.debug(s" $name received Shutdown")
-      component ! Initialize
-      context.become(loaded(Initialized(name)))
-
+  private def runningReceivePF: Receive = {
+    case t @ Transition(_, from, to) ⇒
+      log.info(s"$name: supervisorReceive Transition: $from/$to")
     case Uninitialize ⇒
-      log.debug(s" $name received Uninitialize")
-      context.become(loaded(Loaded(name)))
-
-    // Message from component indicating current state
-    case s @ Loaded(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, loaded(targetState))
-
-    case s @ Initialized(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, initialized(targetState))
-
-    case s @ Running(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, running(targetState))
-
-    case e: LifecycleError ⇒
-      log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
-      notifyLifecycleListeners(LifecycleStateChanged(Loaded(name), Some(e)))
-
-    case SubscribeToLifecycleStates(onlyRunning) ⇒
-      subscribeToLifecycleStates(Loaded(name), onlyRunning)
-
-    case configArg: ControlConfigArg ⇒
-      cmdStatusError(configArg.info.runId, "loaded", "running")
-
-    case msg ⇒
-      unexpectedMessage(msg, "loaded")
-  }
-
-  // Behavior in the Initialized state
-  def initialized(targetState: LifecycleState): Receive = receive orElse {
-    case Initialize ⇒
-      context.become(initialized(Initialized(name)))
-
-    case Startup ⇒
-      log.debug(s" $name received Startup")
-      component ! _
-      requestServices()
-      context.become(initialized(Running(name)))
-
+      log.info(s"$name: Handle Uninitialize message from container")
+      lifecycleManager ! Uninitialize
+      context become notRunningReceive
     case Shutdown ⇒
-      log.debug(s" $name received Shutdown")
-      context.become(initialized(Initialized(name)))
+      log.info(s"$name: Handle Shutdown message from container")
+      lifecycleManager ! Shutdown
+      context become notRunningReceive
+    case HaltComponent ⇒
+      log.info(s"$name: Supervisor received 'HaltComponent' in Running state.")
+      lifecycleManager ! Uninitialize
+      context become haltingReceive
+    case RestartComponent ⇒
+    // TODO -- Implement supervisor-based restart
 
-    case Uninitialize ⇒
-      log.debug(s" $name received Uninitialize")
-      component ! _
-      context.become(initialized(Loaded(name)))
-
-    // Message from component indicating current state
-    case s @ Loaded(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, loaded(targetState))
-
-    case s @ Initialized(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, initialized(targetState))
-
-    case s @ Running(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, running(targetState))
-
-    case e: LifecycleError ⇒
-      log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
-      notifyLifecycleListeners(LifecycleStateChanged(Initialized(name), Some(e)))
-
-    case SubscribeToLifecycleStates(onlyRunning) ⇒
-      subscribeToLifecycleStates(Initialized(name), onlyRunning)
-
-    case configArg: ControlConfigArg ⇒
-      cmdStatusError(configArg.info.runId, "initialized", "running")
-
-    case msg ⇒
-      unexpectedMessage(msg, "initialized")
+    // Forward configs to the component 
+    case msg: AssemblyControllerMessage if componentInfo.componentType == Assembly ⇒ component.tell(msg, sender())
+    case msg: HcdControllerMessage if componentInfo.componentType == HCD ⇒ component.tell(msg, sender())
   }
 
-  // Behavior in the Running state
-  def running(targetState: LifecycleState): Receive = receive orElse {
-    case Initialize ⇒
-      log.debug(s" $name received Initialize")
-      component ! Shutdown
-      context.become(running(Initialized(name)))
+  def runningReceive = runningReceivePF orElse commonMessageReceive
 
-    case Startup ⇒
-      log.debug(s" $name received Startup")
-      context.become(running(Running(name)))
-
-    case Shutdown ⇒
-      log.debug(s" $name received Shutdown")
-      component ! _
-      context.become(running(Initialized(name)))
-
-    case Uninitialize ⇒
-      log.debug(s" $name received Uninitialize")
-      component ! Shutdown
-      context.become(running(Loaded(name)))
-
-    // Message from component indicating current state
-    case s @ Loaded(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, loaded(targetState))
-
-    case s @ Initialized(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, initialized(targetState))
-
-    case s @ Running(_) ⇒
-      log.debug(s" $name received $s")
-      updateState(s, targetState, running(targetState))
-
-    case e: LifecycleError ⇒
-      log.error(e.reason, s"${e.name}: lifecycle error: ${e.getClass.getSimpleName}")
-      notifyLifecycleListeners(LifecycleStateChanged(Running(name), Some(e)))
-
-    case SubscribeToLifecycleStates(onlyRunning) ⇒
-      subscribeToLifecycleStates(Running(name), onlyRunning)
-
-    case msg ⇒
-      log.debug(s" forwarding $msg from ${sender()} to $component")
-      component.tell(msg, sender())
+  def haltingReceivePF: Receive = {
+    case Transition(_, Initialized, PendingLoadedFromInitialized) ⇒
+      unregisterFromLocationService()
+    case Transition(_, Initialized, Initialized) ⇒
+      // This transition indicates the component is now firmly in Initialized from Loaded or Running
+      notifyListeners(LifecycleStateChanged(Initialized))
+    case Transition(_, Loaded, Loaded) ⇒
+      // This transition indicates the component is now firmly in Loaded from Loaded or Running
+      notifyListeners(LifecycleStateChanged(Loaded))
+      haltComponent()
+    case Transition(_, PendingLoadedFromInitialized, Loaded) ⇒
+      log.info(s"$name: shutting down")
+    case t @ Transition(_, from, to) ⇒
+      log.debug(s"$name: haltingReceive Transition: $from/$to")
   }
 
-  // ---
+  def haltingReceive = haltingReceivePF orElse commonMessageReceive
 
-  private def unexpectedMessage(msg: Any, state: String): Unit = {
-    log.error(s"$name: Unexpected message: $msg in $state state")
-  }
+  def receive = notRunningReceive
 
-  // The default supervision behavior will normally restart the component automatically.
-  // The Terminated message should only be received if we manually stop the component, or a
-  // system error occurs (Exceptions don't cause termination).
-  private def terminated(actorRef: ActorRef): Unit = {
-    log.info(s"$name: $actorRef has terminated")
-
-  }
-
-  // Starts the component actor
-  private def startComponent(): ActorRef = {
-    log.info(s"Starting $name")
-    val actorRef = context.actorOf(componentProps, name)
-    context.watch(actorRef)
-    actorRef
-  }
-
-  // Registers this actor with the location service.
-  // The value returned from registerAkkaService can be used to call a close()
-  // method that unregisters the component again. This also ends the jmdns thread
-  // that renews the lease on the DNS registration.
-  // If this method is called multiple times, the previous registration is closed,
-  // so that there are no hanging jmdns threads from previous registrations.
+  // If the component is configured to register with the location service, do it,
+  // and save the result for unregistering later.
   private def registerWithLocationService(): Unit = {
     import context.dispatcher
-    LocationService.registerAkkaService(serviceId, self, prefix)(context.system).onComplete {
-      case Success(reg) ⇒
-        registration.foreach(_.close())
-        registration = Some(reg)
-      case Failure(ex) ⇒
-        log.error(s"Location Service registration failed", ex)
-    }
-  }
-
-  // If not already started, start an actor to manage getting the services the
-  // component depends on.
-  // Once all the services are available, it sends a ServicesReady message to the component.
-  // If any service terminates, a Disconnected message is sent to this actor.
-  private def requestServices(): Unit = {
-    if (serviceId.serviceType != ServiceType.HCD) { // HCDs don't need services(?) (Who needs them besides assemblies?)
-      if (serviceRefs.nonEmpty) {
-        // Services required: start a local location service actor to monitor them
-        log.debug(s" requestServices $services")
-        val actorName = s"$name-loc-client"
-        if (context.child(actorName).isEmpty)
-          context.actorOf(LocationService.props(serviceRefs, Some(component)), actorName)
-      } else {
-        // No services required: tell the component
-        component ! ServicesReady(Map[ServiceRef, ResolvedService]())
+    if (componentInfo.locationServiceUsage != DoNotRegister) {
+      LocationService.registerAkkaConnection(componentId, self, componentInfo.prefix)(context.system).onComplete {
+        case Success(reg) ⇒
+          registrationOpt = Some(reg)
+          log.info(s"$name: Registered $componentId with the location service")
+        case Failure(ex) ⇒
+          // XXX allan: What to do in case of error?
+          log.error(s"$name: Failed to register $componentId with the location service")
       }
     }
   }
 
-  // Called when a lifecycle state message is received from the component.
-  // If not yet in the target state, sends a command to the component to go
-  // there (without skipping any states).
-  private def updateState(
-    currentState: LifecycleState,
-    targetState:  LifecycleState, nextState: Receive
-  ): Unit = {
-
-    log.debug(s" $name update state: current: $currentState, target: $targetState")
-
-    notifyLifecycleListeners(LifecycleStateChanged(currentState, None))
-
-    targetState match {
-      case `currentState` ⇒ // same state, ignore
-
-      case Loaded(_) ⇒
-        currentState match {
-          case Loaded(_)      ⇒
-          case Initialized(_) ⇒ component ! Uninitialize
-          case Running(_)     ⇒ component ! Shutdown
-        }
-
-      case Initialized(_) ⇒
-        currentState match {
-          case Loaded(_)      ⇒ component ! Initialize
-          case Initialized(_) ⇒
-          case Running(_)     ⇒ component ! Shutdown
-        }
-
-      case Running(_) ⇒
-        currentState match {
-          case Loaded(_) ⇒ component ! Initialize
-          case Initialized(_) ⇒
-            component ! Startup; requestServices()
-          case Running(_) ⇒
-        }
+  // If the component is registered with the location service, unregister it
+  private def unregisterFromLocationService(): Unit = {
+    registrationOpt.foreach {
+      log.info(s"Unregistering $componentId from the location service")
+      _.unregister()
     }
-    context become nextState
   }
 
-  // Sends a command status error message indicating that the component is not in the required state or condition.
-  // Note that we send it to the component, which forwards it to its commandStatusActor, so it is handled like
-  // other status messages.
-  private def cmdStatusError(runId: RunId, currentCond: String, requiredCond: String): Unit = {
-    val msg = s"$name is $currentCond, but not $requiredCond"
-    log.warning(msg)
-    // XXX FIXME
-    sender() ! CommandStatus.Error(runId, msg)
+  // The default supervision behavior will normally restart the component automatically.
+  // (XXX allan: check this: needs to be properly configured)
+  // The Terminated message should only be received if we manually stop the component, or a
+  // system error occurs (Exceptions don't cause termination).
+  private def terminated(actorRef: ActorRef): Unit = {
+    log.info(s"$name: $actorRef has terminated")
+    unregisterFromLocationService()
   }
 
-  // Subscribes the sender to lifecycle changes matching the filter and starts by sending the current state
-  // XXX TODO: Cleanup old subscribers?
-  private def subscribeToLifecycleStates(state: LifecycleState, onlyRunning: Boolean): Unit = {
-    lifecycleStateListeners += (sender() → onlyRunning)
-    if (!onlyRunning || state.isRunning)
-      sender() ! LifecycleStateChanged(state, None)
+  private def haltComponent(): Unit = {
+    log.info(s"Halting component: ${componentInfo.componentName}")
+    context.stop(self)
+    context.system.terminate
   }
 
-  // Notifies any listeners of the new state, if the filter matches
-  private def notifyLifecycleListeners(msg: LifecycleStateChanged) = {
-    for ((actorRef, onlyRunning) ← lifecycleStateListeners) {
-      if (!onlyRunning || msg.state.isRunning)
-        actorRef ! msg
-    }
+  // Starts the component actor
+  private def startComponent(context: ActorContext, componentInfo: ComponentInfo): ActorRef = {
+    log.info(s"Starting ${componentInfo.componentName}")
+    val actorRef = Component.create(context, componentInfo)
+    context.watch(actorRef)
+    actorRef
+  }
+
+  // The following is listener support for the container
+  private var listeners = Set[ActorRef]()
+
+  private def addListener(l: ActorRef) = listeners = listeners + l
+
+  private def removeListener(l: ActorRef) = listeners = listeners - l
+
+  /**
+   * Sends the supplied message to all current listeners using the provided sender() as sender.
+   *
+   * @param msg a message to send to all listeners
+   */
+  private def notifyListeners(msg: Any): Unit = {
+    listeners.foreach(_ ! msg)
   }
 }

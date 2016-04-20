@@ -1,9 +1,6 @@
 package csw.services.ccs
 
-import java.util.concurrent.TimeUnit
-
-import akka.actor.{ActorLogging, Actor}
-import com.typesafe.config.Config
+import akka.actor._
 import csw.util.cfg.Configurations.SetupConfig
 
 import scala.collection.immutable.Queue
@@ -18,16 +15,24 @@ object PeriodicHcdController {
 
   /**
    * Tells the controller to check its inputs and update its outputs
+   *
    * @param interval the amount of time until the next update
    */
   case class Process(interval: FiniteDuration) extends PeriodicHcdControllerMessage
+
+  /**
+   * Tells the controller to stop periodic processing
+   */
+  case object EndProcess extends PeriodicHcdControllerMessage
+
 }
 
 /**
  * Base trait for an HCD controller actor that checks its queue for inputs and updates its
  * state variables at a given rate.
  */
-trait PeriodicHcdController extends Actor with ActorLogging {
+trait PeriodicHcdController {
+  this: Actor with ActorLogging ⇒
 
   import HcdController._
   import PeriodicHcdController._
@@ -38,21 +43,48 @@ trait PeriodicHcdController extends Actor with ActorLogging {
    */
   private var queue = Queue.empty[SetupConfig]
 
+  private var currentInterval = 1.second
+
+  // This variable stores the current timer to allow cancelling when changing period
+  private var timer = new Cancellable {
+    override def isCancelled: Boolean = true
+
+    override def cancel(): Boolean = true
+  }
+
   /**
    * This should be used by the implementer actor's receive method.
    * For example: def receive: Receive = receiveCommands orElse receiveLifecycleCommands
    */
-  def receive: Receive = additionalReceive orElse {
-    case msg @ Process(interval) ⇒
+  def controllerReceive: Receive = {
+
+    case msg @ Process(newInterval) ⇒
+
       try process() catch {
         case ex: Exception ⇒ log.error(s"Failed to process message", ex)
       }
+
+      // May need to cancel current timer before starting new one, if new message received before existing timer fires
+      if (currentInterval != newInterval) {
+        if (!timer.isCancelled) {
+          log.info(s"Cancelling current schedule timer of $currentInterval with new value of $newInterval")
+          timer.cancel()
+        }
+        currentInterval = newInterval
+      }
+
       // Schedule the next update
-      context.system.scheduler.scheduleOnce(interval, self, msg)
+      timer = context.system.scheduler.scheduleOnce(currentInterval, self, msg)
+
+    case EndProcess ⇒
+      if (!timer.isCancelled) {
+        log.info(s"Processing stopped")
+        timer.cancel()
+      }
 
     case Submit(config) ⇒ queue = queue.enqueue(config)
 
-    case x              ⇒ log.warning(s"Received unexpected message: $x")
+    //case x              ⇒ log.warning(s"Received unexpected message: $x")
   }
 
   /**
@@ -74,22 +106,17 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   }
 
   /**
-   * Event periodic HCD should call this method once to start processing.
+   * HCD should call this method once to start processing.
    *
-   * If the "rate" key is specified in the config, use it, otherwise the default rate to
-   * send a message to self to start the periodic processing.
+   * The rate is available to the HCD,
+   * It then sends a message to self to start the periodic processing.
    * Each time the Process message is received, a timer should be started again
    * for the given duration (A repeating timer would risk continuing after an actor crashes).
    *
-   * @param conf the component's config file
-   * @param defaultRate the default duration to use if not defined in the config
+   * @param rate the rate to use for process - default is 1 second
    */
-  protected def startProcessing(conf: Config, defaultRate: FiniteDuration = 1.second): Unit = {
-    import scala.concurrent.duration._
-    val rate = if (conf.hasPath("rate"))
-      FiniteDuration(conf.getDuration("rate", TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS)
-    else defaultRate
-    self ! PeriodicHcdController.Process(rate)
+  def processAt(rate: FiniteDuration = 1.second): Unit = {
+    self ! Process(rate)
   }
 
   /**
@@ -102,5 +129,5 @@ trait PeriodicHcdController extends Actor with ActorLogging {
   /**
    * Derived classes and traits can extend this to accept additional messages
    */
-  protected def additionalReceive: Receive
+  //protected def additionalReceive: Receive
 }

@@ -10,6 +10,7 @@ import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
 import sbtunidoc.Plugin.UnidocKeys
 import UnidocKeys._
+import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
@@ -29,7 +30,7 @@ object Settings {
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     resolvers += "Spray repo" at "http://repo.spray.io",
     resolvers += Resolver.sonatypeRepo("releases"),
-    resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2",
+//    resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2",
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
     resolvers += sbtResolver.value
@@ -42,8 +43,8 @@ object Settings {
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
     javacOptions in Compile ++= Seq("-source", "1.8"),
     javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
-    javaOptions in Test += "-Xmx2048m",
-    javaOptions += "-Djava.net.preferIPv4Stack=true"  // For location service
+    javaOptions in (Test, run) ++= Seq("-Djava.net.preferIPv4Stack=true"),  // For location service
+    jvmOptions in MultiJvm := Seq("-Djava.net.preferIPv4Stack=true")
   )
 
   // For standalone applications
@@ -72,7 +73,7 @@ object Settings {
 
   def formattingPreferences: FormattingPreferences =
     FormattingPreferences()
-      .setPreference(RewriteArrowSymbols, true)
+//      .setPreference(RewriteArrowSymbols, true)
       .setPreference(AlignParameters, true)
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)

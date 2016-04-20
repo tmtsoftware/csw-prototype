@@ -1,7 +1,9 @@
 package csw.services.loc
 
-import akka.actor.{Props, ActorSystem, ActorLogging, Actor}
-import csw.services.loc.LocationService.{Disconnected, ServicesReady}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import csw.services.loc.LocationTrackerClient.AllResolved
+
+// XXX allan: TODO: Update to new API
 
 /**
  * A location service test client application that attempts to resolve one or more sets of
@@ -25,15 +27,14 @@ object TestServiceClient {
 /**
  * A test client actor that uses the location service to resolve services
  */
-class TestServiceClient(numServices: Int) extends Actor with ActorLogging {
-  val serviceRefs = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.serviceRef(i), TestHttpService.serviceRef(i))).toSet
-  context.actorOf(LocationService.props(serviceRefs))
+class TestServiceClient(numServices: Int) extends Actor with ActorLogging with LocationTrackerClientActor {
+  val connections = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.connection(i), TestHttpService.connection(i))).toSet
+  connections.foreach(trackConnection)
 
-  override def receive: Receive = {
-    case ServicesReady(services) ⇒
-      log.info(s"Test Passed: Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString(", ")}")
-    case Disconnected(serviceRef) ⇒
-      log.info(s"Disconnected service: ${serviceRef.serviceId.name}")
+  override def receive: Receive = trackerClientReceive(true) orElse {
+    case AllResolved =>
+      log.info(s"Test Passed: Received services: ${connections.map(_.componentId.name).mkString(", ")}")
+
     case x ⇒
       log.error(s"Received unexpected message $x")
   }

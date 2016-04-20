@@ -1,14 +1,13 @@
 package csw.services.ccs
 
 import akka.actor._
+import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
-import csw.services.kvs.{StateVariableStore, KvsSettings}
-import csw.util.cfg.Configurations.{SetupConfigArg, SetupConfig}
+import csw.services.kvs.{KvsSettings, StateVariableStore}
+import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 import scala.concurrent.{Await, Future}
-import akka.pattern.ask
-
 import scala.util.{Failure, Success}
 
 /**

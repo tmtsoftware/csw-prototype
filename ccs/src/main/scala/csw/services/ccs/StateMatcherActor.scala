@@ -1,14 +1,14 @@
 package csw.services.ccs
 
-import akka.actor.{Actor, Props, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
-import csw.services.kvs.{KvsSettings, StateVariableStore, Subscriber}
+import csw.services.kvs.{Implicits, KvsSettings, StateVariableStore, Subscriber}
+import Implicits._
 import csw.util.cfg.Configurations.StateVariable
 import csw.util.cfg.Configurations.StateVariable.{CurrentState, DemandState, Matcher}
 import csw.util.cfg.RunId
-import scala.concurrent.duration._
 
-import csw.services.kvs.Implicits._
+import scala.concurrent.duration._
 
 object StateMatcherActor {
 

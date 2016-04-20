@@ -19,7 +19,7 @@ Before starting the config service, the [location service](../loc)
 and the the [config service annex server](../apps/configServiceAnnex)
 should both be running.
 You can start the config service with the `cs` command (found under target/universal/stage/bin).
-The default config service name and the location of the local and main Git repositories is defined in resources/reference.conf.
+The default config service name and the location of the git or svn repository is defined in resources/reference.conf.
 Alternatively you can specify a different config file on the command line in the same format.
 You can also override the values with system properties. For example:
 
@@ -30,7 +30,13 @@ You can also override the values with system properties. For example:
 ```
 
 Note that multiple config service instances may be running in the network, but the names an host:port combinations should
-each be unique. Only a single config service instance should access a given local repository.
+each be unique. Only a single config service instance should access a given local git repository.
+
+Svn or Git
+----------
+
+There are currently two alternatives you can choose from for the version control system used by the config service.
+You can configure this in the application settings by setting the value of `csw.services.cs.useSvn` to true to use Subversion or false to use Git.
 
 Config Service Http Server
 --------------------------
@@ -43,21 +49,20 @@ The HTTP/REST interface to the command service follows the scala and java APIs:
 ---------|---------|-------------------------------------------|---------
 | POST   | /create | path=_filePath_, comment=_create+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /get    | path=_filePath_, id=_id_                  | Contents of file (current or version _id_)
-| POST   | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
+| PUT    | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
 | GET    | /list   |                                           | JSON list of available files
 | GET    | /history      | path=_filePath_, maxResults=_count_ | JSON list of file history
 | GET    | /getDefault   | path=_filePath_                     | Contents of _default_ version of file
-| POST   | /setDefault   | path=_filePath_, id=_id_            | Sets the _default_ version of the file
-| POST   | /resetDefault | path=_filePath_                     | Resets the _default_ version of the file to _current_
+| PUT    | /setDefault   | path=_filePath_, id=_id_            | Sets the _default_ version of the file
+| PUT    | /resetDefault | path=_filePath_                     | Resets the _default_ version of the file to _current_
 
-The _create_ and _update_ methods expect the file data to be posted.
 The _path_ query argument is always required. All other query arguments are optional.
 The _id_ argument (a _ConfigId_) must be taken from the JSON result of _create_, _update_, _list_, or _history_.
 
 The format of the JSON returned from _create_ and _update_ is:
 `{"ConfigId":"da807342bcc21766316c3a91a01f4a513a1adbb3"}`. The _id_ query argument passed to the other methods is
- the value at right.
+ the value at right. (When using svn, the id is a simple number.)
 
 Example or using curl to access the Config Service Http Server
 --------------------------------------------------------------
@@ -72,7 +77,7 @@ Assuming that the config service http server is running on localhost on port 854
 
    Gets the contents of some/test1/TestConfig1 from the service and store in a local file.
 
-`curl -X POST 'http://localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
+`curl -X PUT 'http://localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
 
    Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.
 
@@ -130,11 +135,11 @@ Assuming that the config service http server is running on localhost on port 854
 
    Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).
 
-`curl -X POST 'http://localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
+`curl -X PUT 'http://localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
 
    Sets the default version of the file to the one with the given id (an id returned by the history command).
 
-`curl -X POST 'http://localhost:8541/resetDefault?path=some/test1/TestConfig1'`
+`curl -X PUT 'http://localhost:8541/resetDefault?path=some/test1/TestConfig1'`
 
    Resets the default version of the file to be the latest version.
 
@@ -142,18 +147,18 @@ Assuming that the config service http server is running on localhost on port 854
 Main Packages:
 --------------
 
-* core - the core implementation of the API based on JGit
+* core - the core implementation of the API
 * akka - (based on core) the Akka actor interface as well as the http server and client interfaces.
 
-Large/binary files can slow down the Git repository, so these are stored separately using
-the the [ConfigServiceAnnex](../apps/configServiceAnnex) http file server.
+Large/binary files can slow down the repository (especially when using Git), so these can be stored separately using
+the the [ConfigServiceAnnex](../apps/configServiceAnnex) http file server. (Note: May not be needed when using svn.)
 
-When you first create a config file, you can choose to store it in the normal way (in the Git repository)
+When you first create a config file, you can choose to store it in the normal way (in the repository)
 or as a *large/binary* file, in which case only *$file.sha1* is checked in, containing the SHA-1 hash of the
 file's contents. The actual binary file is then stored on the annex server in a file name based on the SHA-1 hash.
 
 The config service also supports the concept of *default versions* of files. In this case a file named
-*$file.default* is checked in to Git behind the scenes and contains the id of the default version of the file.
+*$file.default* is checked in behind the scenes and contains the id of the default version of the file.
 If there is no default, this file is not present and the latest version is always considered the default.
 
 The config service can be started as a standalone application. *sbt stage* installs the command under
@@ -166,7 +171,7 @@ The contents of the files are exchanged using [Akka reactive streams](http://www
 No concurrent access to local Git repository
 --------------------------------------------
 
-Note that each instance of the config service should manage its own local Git repository.
+Note that if using Git, each instance of the config service should manage its own local Git repository.
 All of the local repositories may reference a common central repository, however it is probably not
 safe to allow concurrent access to the local Git repository, which reads and writes files
 in the Git working directory.
@@ -175,6 +180,9 @@ Having copies of the files in the Git working directory has the advantage of bei
 so that the files do not have to be pulled from the server each time they are needed.
 However care needs to be taken not to allow different threads to potentially read and write the
 same files at once.
+
+When using svn (the default setting) this should not be a problem, since no local repository or working 
+directory is used.
 
 Running the tests
 -----------------

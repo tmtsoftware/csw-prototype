@@ -1,23 +1,29 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
-import com.typesafe.config.{ConfigFactory, Config}
-import csw.services.ccs.{HcdController, StateMatcherActor, AssemblyController}
-import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.LocationService.ResolvedService
-import csw.services.loc.ServiceRef
+import csw.services.ccs.{AssemblyController, HcdController, StateMatcherActor}
+import csw.services.pkg.Component.AssemblyInfo
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
-  * @param name the name of the asembly
-  * @param config config file with settings for the assembly
+  *
+  * @param info contains information about the assembly and the components it depends on
   */
-case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
+case class TestAssembly(info: AssemblyInfo)
   extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
+  import Supervisor._
+  lifecycle(supervisor)
+
+  // Get the connections to the HCDs this assembly uses and track them
+  trackConnections(info.connections)
+
+  override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
+    case x => log.error(s"Unexpected message: $x")
+  }
 
   /**
     * Validates a received config arg
@@ -39,23 +45,15 @@ case class TestAssembly(name: String, config: Config = ConfigFactory.empty())
     if (list.nonEmpty) list.head else Valid
   }
 
-  /**
-    * Called to process the setup config and reply to the given actor with the command status.
-    *
-    * @param services contains information about any required services
-    * @param configArg contains a list of setup configurations
-    * @param replyTo if defined, the actor that should receive the final command status.
-    */
-  override protected def setup(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg,
-                               replyTo: Option[ActorRef]): Validation = {
+  override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
+                      replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
       // The code below just distributes the configs to the HCDs based on matching prefix,
       // but you could just as well generate new configs and send them here...
       val demandStates = for {
         config ← configArg.configs
-        service ← services.values.find(v ⇒ v.prefix == config.configKey.prefix && v.serviceRef.accessType == AkkaType)
-        actorRef ← service.actorRefOpt
+        actorRef ← getActorRefs(config.prefix)
       } yield {
         actorRef ! HcdController.Submit(config)
         DemandState(config)

@@ -1,9 +1,8 @@
 package csw.services.pkg
 
-import akka.actor.{ActorLogging, Actor}
+import csw.services.pkg.LifecycleManager._
 
 import scala.concurrent.Future
-import Supervisor._
 
 object LifecycleHandler {
 
@@ -22,107 +21,127 @@ object LifecycleHandler {
  * Containers and Components can override these to handle lifecycle changes.
  */
 trait LifecycleHandler {
-  this: Actor with ActorLogging ⇒
+  this: Component ⇒
 
   import LifecycleHandler._
   import context.dispatcher
 
-  /**
-   * The name of the component (for error messages)
-   */
-  val name: String
+  val componentName = self.path.name
 
   /**
    * This implements additional behavior (used in receive method of ccs controller actors)
    */
-  protected def additionalReceive: Receive = {
+  def lifecycleHandlerReceive: Receive = {
     case Initialize ⇒
+      val manager = sender()
       for (
         result ← Future(initialize()) recover {
           case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ Initialized(name)
-          case Failure(reason) ⇒ InitializeFailed(name, reason)
+          case Success         ⇒ InitializeSuccess
+          case Failure(reason) ⇒ InitializeFailure(reason)
         }
-        context.parent ! msg
+        manager ! msg
       }
 
     case Startup ⇒
+      val manager = sender()
       for (
         result ← Future(startup()) recover {
           case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ Running(name)
-          case Failure(reason) ⇒ StartupFailed(name, reason)
+          case Success         ⇒ StartupSuccess
+          case Failure(reason) ⇒ StartupFailure(reason)
         }
-        context.parent ! msg
+        manager ! msg
       }
 
     case Shutdown ⇒
+      val manager = sender()
       for (
         result ← Future(shutdown()) recover {
           case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ Initialized(name)
-          case Failure(reason) ⇒ ShutdownFailed(name, reason)
+          case Success         ⇒ ShutdownSuccess
+          case Failure(reason) ⇒ ShutdownFailure(reason)
         }
-        context.parent ! msg
+        manager ! msg
       }
 
     case Uninitialize ⇒
+      val manager = sender()
       for (
         result ← Future(uninitialize()) recover {
           case ex ⇒ Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ Loaded(name)
-          case Failure(reason) ⇒ UninitializeFailed(name, reason)
+          case Success         ⇒ UninitializeSuccess
+          case Failure(reason) ⇒ UninitializeFailure(reason)
         }
-        context.parent ! msg
+        manager ! msg
       }
+
+    case LifecycleFailure(state: LifecycleState, reason: String) ⇒
+      val manager = sender()
+      // No result
+      Future(lifecycleFailure(state, reason))
+      manager ! Success
   }
 
   /**
    * Components can override this method to run code when initializing.
+   *
    * @return either the new lifecycle state, or the lifecycle error
    */
   def initialize(): HandlerResponse = {
-    log.info(s"initialize $name")
+    log.info(s"initialize $componentName")
     Success
   }
 
   /**
    * Components can override this method to run code when starting up.
+   *
    * @return either the new lifecycle state, or the lifecycle error
    */
   def startup(): HandlerResponse = {
-    log.info(s"startup $name")
+    log.info(s"startup $componentName")
     Success
   }
 
   /**
    * Components can override this method to run code when shutting down.
+   *
    * @return either the new lifecycle state, or the lifecycle error
    */
   def shutdown(): HandlerResponse = {
-    log.info(s"shutdown $name")
+    log.info(s"shutdown $componentName")
     Success
   }
 
   /**
    * Components can override this method to run code when uninitializing.
+   *
    * @return either the new lifecycle state, or the lifecycle error
    */
   def uninitialize(): HandlerResponse = {
-    log.info(s"uninitialize $name")
+    log.info(s"uninitialize $componentName")
     Success
   }
-}
 
+  /**
+   * Components can override this method to run code when a lifecycle failure has occurred.
+   *
+   * @return nothing
+   */
+  def lifecycleFailure(lifecycleState: LifecycleState, reason: String): Unit = {
+    log.info(s"lifecycleFailure for $componentName going to state $lifecycleState failed for reason: $reason")
+  }
+
+}

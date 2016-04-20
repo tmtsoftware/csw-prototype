@@ -1,19 +1,15 @@
 package csw.services.ccs
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
-import csw.services.loc.LocationService.{ResolvedService, Disconnected, ServicesReady}
-import csw.services.loc.ServiceRef
+import csw.services.loc.LocationTrackerClientActor
 import csw.util.cfg.Configurations.StateVariable._
-import csw.util.cfg.Configurations.{StateVariable, ObserveConfigArg, SetupConfigArg, ControlConfigArg}
+import csw.util.cfg.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg, StateVariable}
 import csw.util.cfg.RunId
+
 import scala.concurrent.duration._
 
-/**
- * Defines the Assembly controller actor messages
- */
 object AssemblyController {
-
   /**
    * Base trait of all received messages
    */
@@ -54,75 +50,50 @@ object AssemblyController {
 
   /**
    * Indicates an invalid config
+   *
    * @param reason a description of why the config is invalid
    */
   case class Invalid(reason: String) extends Validation {
     override def isValid: Boolean = false
   }
-
 }
 
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
-trait AssemblyController extends Actor with ActorLogging {
+trait AssemblyController extends LocationTrackerClientActor {
+  this: Actor with ActorLogging ⇒
 
   import AssemblyController._
 
   // Optional actor waiting for current state variables to match demand states
   private var stateMatcherActor: Option[ActorRef] = None
 
-  override def receive = waitingForServices
-
-  /**
-   * Receive state while waiting for required services
-   */
-  private def waitingForServices: Receive = additionalReceive orElse {
-
-    case Submit(config) ⇒
-      notReady(config)
-
-    case ServicesReady(map) ⇒
-      connected(map)
-      context.become(ready(map))
-
-    case Disconnected ⇒
-
-    case x            ⇒ log.warning(s"Received unexpected message: $x")
-  }
-
   /**
    * Receive state while required services are available
    */
-  private def ready(services: Map[ServiceRef, ResolvedService]): Receive = additionalReceive orElse {
-    case Submit(config)     ⇒ submit(services, config, oneway = false, sender())
-    case OneWay(config)     ⇒ submit(services, config, oneway = true, sender())
-
-    case ServicesReady(map) ⇒ context.become(ready(map))
-
-    case Disconnected       ⇒ context.become(waitingForServices)
-
-    case x                  ⇒ log.warning(s"Received unexpected message: $x")
+  protected def controllerLocalReceive: Receive = {
+    case Submit(config) ⇒ submit(allResolved, config, oneway = false, sender())
+    case OneWay(config) ⇒ submit(allResolved, config, oneway = true, sender())
   }
+
+  protected def controllerReceive = controllerLocalReceive orElse trackerClientReceive()
 
   /**
    * Called for Submit messages
-   * @param services map of the required services
+   *
+   * @param locationsResolved indicates if all the Assemblies connections are resolved
    * @param config the config received
    * @param oneway true if no completed response is needed
    * @param replyTo actorRef of the actor that submitted the config
    */
   private def submit(
-    services: Map[ServiceRef, ResolvedService],
-    config:   ControlConfigArg, oneway: Boolean, replyTo: ActorRef
+    locationsResolved: Boolean, config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef
   ): Unit = {
-
     val statusReplyTo = if (oneway) None else Some(replyTo)
     val valid = config match {
-      case sc: SetupConfigArg ⇒
-        setup(services, sc, statusReplyTo)
-      case ob: ObserveConfigArg ⇒
-        observe(services, ob, statusReplyTo)
+      case sc: SetupConfigArg   ⇒ setup(locationsResolved, sc, statusReplyTo)
+      case ob: ObserveConfigArg ⇒ observe(locationsResolved, ob, statusReplyTo)
     }
     valid match {
       case Valid ⇒
@@ -133,53 +104,26 @@ trait AssemblyController extends Actor with ActorLogging {
   }
 
   /**
-   * Replies with an error message if we receive a config when not in the ready state
-   * @param config the received config
-   */
-  private def notReady(config: ControlConfigArg): Unit = {
-    val s = s"Ignoring config since services not connected: $config"
-    log.warning(s)
-    sender() ! CommandStatus.Error(config.info.runId, s)
-
-  }
-
-  /**
    * Called to process the setup config and reply to the given actor with the command status.
    *
-   * @param services contains information about any required services
+   * @param locationsResolved indicates if all the Assemblies connections are resolved
    * @param configArg contains a list of setup configurations
    * @param replyTo if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def setup(services: Map[ServiceRef, ResolvedService], configArg: SetupConfigArg,
-                      replyTo: Option[ActorRef]): Validation
+  protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
+                      replyTo: Option[ActorRef]): Validation = Valid
 
   /**
    * Called to process the observe config and reply to the given actor with the command status.
    *
-   * @param services contains information about any required services
+   * @param locationsResolved indicates if all the Assemblies connections are resolved
    * @param configArg contains a list of observe configurations
    * @param replyTo if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def observe(services: Map[ServiceRef, ResolvedService], configArg: ObserveConfigArg,
+  protected def observe(locationsResolved: Boolean, configArg: ObserveConfigArg,
                         replyTo: Option[ActorRef]): Validation = Valid
-
-  /**
-   * Derived classes and traits can extend this to accept additional messages
-   */
-  protected def additionalReceive: Receive
-
-  /**
-   * Derived classes and traits can extend this to be notified when required services are ready
-   * @param services maps serviceRef to information that includes the host, port and actorRef
-   */
-  protected def connected(services: Map[ServiceRef, ResolvedService]): Unit = {}
-
-  /**
-   * Derived classes and traits can extend this to be notified when required services are disconnected
-   */
-  protected def disconnected(): Unit = {}
 
   /**
    * Convenience method that can be used to monitor a set of state variables and reply to
@@ -203,5 +147,4 @@ trait AssemblyController extends Actor with ActorLogging {
       stateMatcherActor = Some(context.actorOf(props))
     }
   }
-
 }

@@ -47,27 +47,27 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
     val uri = makeUri("/create", "path" → path.toString, "oversize" → oversize.toString, "comment" → comment)
-    createOrUpdate(uri, configData, comment, create = true)
+    createOrUpdate(POST, uri, configData, comment, create = true)
   }
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
     val uri = makeUri("/update", "path" → path.toString, "comment" → comment)
-    createOrUpdate(uri, configData, comment, create = false)
+    createOrUpdate(PUT, uri, configData, comment, create = false)
   }
 
   override def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
     val uri = makeUri("/createOrUpdate", "path" → path.toString, "oversize" → oversize.toString, "comment" → comment)
-    createOrUpdate(uri, configData, comment, create = true)
+    createOrUpdate(POST, uri, configData, comment, create = true)
   }
 
-  def createOrUpdate(uri: Uri, configData: ConfigData, comment: String, create: Boolean): Future[ConfigId] = {
+  private def createOrUpdate(method: HttpMethod, uri: Uri, configData: ConfigData, comment: String, create: Boolean): Future[ConfigId] = {
     logger.info(s"$uri")
     implicit val materializer = ActorMaterializer()
 
     val chunks = configData.source.map(ChunkStreamPart.apply)
     val entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks)
     val connection = Http().outgoingConnection(host, port)
-    val request = HttpRequest(method = POST, uri = uri, entity = entity)
+    val request = HttpRequest(method, uri = uri, entity = entity)
 
     for {
       result ← sendRequest(request, connection)
@@ -179,7 +179,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     logger.info(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
-    val request = HttpRequest(POST, uri = uri)
+    val request = HttpRequest(PUT, uri = uri)
     implicit val materializer = ActorMaterializer()
 
     for {
@@ -192,7 +192,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     logger.info(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
-    val request = HttpRequest(POST, uri = uri)
+    val request = HttpRequest(PUT, uri = uri)
     implicit val materializer = ActorMaterializer()
 
     for {

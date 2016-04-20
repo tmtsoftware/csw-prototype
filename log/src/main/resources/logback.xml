@@ -15,6 +15,7 @@
     <logger name="javax.jmdns" level="ERROR"/>
     <logger name="com.google.inject" level="ERROR"/>
     <logger name="com.digitalpetri.opcua" level="ERROR"/>
+    <logger name="com.romix.akka.serialization.kryo" level="WARN"/>
 
     <if condition='isDefined("application-name")'>
         <then>

@@ -4,12 +4,12 @@ import java.io.File
 
 import akka.actor._
 import akka.util.Timeout
-import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.{ConfigFileHistory, _}
-import csw.services.loc.AccessType.AkkaType
-import csw.services.loc.{ServiceRef, LocationService, ServiceType, ServiceId}
+import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.LocationService.ResolvedAkkaLocation
+import csw.services.loc.{ComponentId, ComponentType, LocationService}
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -83,33 +83,34 @@ object ConfigServiceActor {
 
   /**
    * Returns the default config manager, using the configured settings (see resources/reference.conf).
+   *
    * @param system the caller's actor system, used to access the settings
    */
   def defaultConfigManager(implicit system: ActorSystem): ConfigManager = {
     val settings = ConfigServiceSettings(system)
-    GitConfigManager(settings.gitLocalRepository, settings.gitMainRepository, settings.name)
+    settings.getConfigManager
   }
 
   /**
    * Convenience method that gets the config service actor with the matching name
    * from the location service.
-   * @param name the name of the config service (set in the config file, property csw.services.cs.name)
+   *
+   * @param name   the name of the config service (set in the config file, property csw.services.cs.name)
    * @param system the actor system
    * @return a future reference to the named config service actor
    */
   def locateConfigService(name: String)(implicit system: ActorSystem): Future[ActorRef] = {
     import system.dispatcher
-    val serviceId = ServiceId(name, ServiceType.Service)
-    val serviceRef = ServiceRef(serviceId, AkkaType)
+    val componentId = ComponentId(name, ComponentType.Service)
+    val connection = AkkaConnection(componentId)
     implicit val timeout: Timeout = 60.seconds
-    LocationService.resolve(Set(serviceRef)).map { servicesReady ⇒
-      servicesReady.services(serviceRef).actorRefOpt.get
-    }
+    LocationService.resolve(Set(connection)).map(_.locations.head).mapTo[ResolvedAkkaLocation].map(_.actorRef.get)
   }
 }
 
 /**
  * An Akka actor class implementing the Config Service.
+ *
  * @param configManager the configManager to use
  */
 class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorLogging {
@@ -124,107 +125,133 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
 
   // Registers with the location service
   def registerWithLocationService(): Unit = {
-    val serviceId = ServiceId(configManager.name, ServiceType.Service)
-    LocationService.registerAkkaService(serviceId, self)(context.system)
+    val componentId = ComponentId(configManager.name, ComponentType.Service)
+    LocationService.registerAkkaConnection(componentId, self)(context.system)
   }
 
   override def receive: Receive = {
-    case CreateRequest(path, configData, oversize, comment) ⇒ handleCreateRequest(sender(), path, configData, oversize, comment)
-    case UpdateRequest(path, configData, comment) ⇒ handleUpdateRequest(sender(), path, configData, comment)
-    case CreateOrUpdateRequest(path, configData, oversize, comment) ⇒ handleCreateOrUpdateRequest(sender(), path, configData, oversize, comment)
-    case GetRequest(path, id) ⇒ handleGetRequest(sender(), path, id)
-    case ExistsRequest(path) ⇒ handleExistsRequest(sender(), path)
-    case DeleteRequest(path, comment) ⇒ handleDeleteRequest(sender(), path, comment)
-    case ListRequest ⇒ handleListRequest(sender())
-    case HistoryRequest(path, maxResults) ⇒ handleHistoryRequest(sender(), path, maxResults)
-    case SetDefaultRequest(path, id) ⇒ handleSetDefaultRequest(sender(), path, id)
-    case ResetDefaultRequest(path) ⇒ handleResetDefaultRequest(sender(), path)
-    case GetDefaultRequest(path) ⇒ handleGetDefaultRequest(sender(), path)
-    case RegisterWithLocationService ⇒ registerWithLocationService()
+    case CreateRequest(path, configData, oversize, comment) ⇒
+      wrap(handleCreateRequest(sender(), path, configData, oversize, comment))
+    case UpdateRequest(path, configData, comment) ⇒
+      wrap(handleUpdateRequest(sender(), path, configData, comment))
+    case CreateOrUpdateRequest(path, configData, oversize, comment) ⇒
+      wrap(handleCreateOrUpdateRequest(sender(), path, configData, oversize, comment))
+    case GetRequest(path, id) ⇒
+      wrap(handleGetRequest(sender(), path, id))
+    case ExistsRequest(path) ⇒
+      wrap(handleExistsRequest(sender(), path))
+    case DeleteRequest(path, comment) ⇒
+      wrap(handleDeleteRequest(sender(), path, comment))
+    case ListRequest ⇒
+      wrap(handleListRequest(sender()))
+    case HistoryRequest(path, maxResults) ⇒
+      wrap(handleHistoryRequest(sender(), path, maxResults))
+    case SetDefaultRequest(path, id) ⇒
+      wrap(handleSetDefaultRequest(sender(), path, id))
+    case ResetDefaultRequest(path) ⇒
+      wrap(handleResetDefaultRequest(sender(), path))
+    case GetDefaultRequest(path) ⇒
+      wrap(handleGetDefaultRequest(sender(), path))
+    case RegisterWithLocationService ⇒
+      registerWithLocationService()
 
     case x ⇒ log.error(s"Received unknown message $x from ${sender()}")
   }
 
-  def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit = {
+  // Used to wait for an operation to complete before receiving the next message
+  def wrap(f: ⇒ Future[Unit]): Unit = {
+    Await.ready(f, timeout)
+  }
+
+  def handleCreateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[Unit] = {
     val result = configManager.create(path, configData, oversize, comment)
     result onComplete {
       case Success(configId) ⇒ replyTo ! CreateOrUpdateResult(path, Success(configId))
       case Failure(ex)       ⇒ replyTo ! CreateOrUpdateResult(path, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Unit = {
+  def handleUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, comment: String): Future[Unit] = {
     val result = configManager.update(path, configData, comment)
     result onComplete {
       case Success(configId) ⇒ replyTo ! CreateOrUpdateResult(path, Success(configId))
       case Failure(ex)       ⇒ replyTo ! CreateOrUpdateResult(path, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  def handleCreateOrUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Unit = {
+  def handleCreateOrUpdateRequest(replyTo: ActorRef, path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[Unit] = {
     val result = configManager.createOrUpdate(path, configData, oversize, comment)
     result onComplete {
       case Success(configId) ⇒ replyTo ! CreateOrUpdateResult(path, Success(configId))
       case Failure(ex)       ⇒ replyTo ! CreateOrUpdateResult(path, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
+  def handleGetRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Future[Unit] = {
     val result = configManager.get(path, id)
     result onComplete {
       case Success(configDataOpt) ⇒ replyTo ! GetResult(path, id, Success(configDataOpt))
       case Failure(ex)            ⇒ replyTo ! GetResult(path, id, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  def handleExistsRequest(replyTo: ActorRef, path: File): Unit = {
+  def handleExistsRequest(replyTo: ActorRef, path: File): Future[Unit] = {
     val result = configManager.exists(path)
     result onComplete {
       case Success(bool) ⇒ replyTo ! ExistsResult(path, Success(bool))
       case Failure(ex)   ⇒ replyTo ! ExistsResult(path, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Unit = {
+  def handleDeleteRequest(replyTo: ActorRef, path: File, comment: String): Future[Unit] = {
     unitReply(replyTo, path, configManager.delete(path, comment))
   }
 
-  def handleListRequest(replyTo: ActorRef): Unit = {
+  def handleListRequest(replyTo: ActorRef): Future[Unit] = {
     val result = configManager.list()
     result onComplete {
       case Success(list) ⇒ replyTo ! ListResult(Success(list))
       case Failure(ex)   ⇒ replyTo ! ListResult(Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  def handleHistoryRequest(replyTo: ActorRef, path: File, maxResults: Int = Int.MaxValue): Unit = {
+  def handleHistoryRequest(replyTo: ActorRef, path: File, maxResults: Int = Int.MaxValue): Future[Unit] = {
     val result = configManager.history(path, maxResults)
     result onComplete {
       case Success(list) ⇒ replyTo ! HistoryResult(path, Success(list))
       case Failure(ex)   ⇒ replyTo ! HistoryResult(path, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  def handleSetDefaultRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Unit = {
+  def handleSetDefaultRequest(replyTo: ActorRef, path: File, id: Option[ConfigId]): Future[Unit] = {
     unitReply(replyTo, path, configManager.setDefault(path, id))
   }
 
-  def handleResetDefaultRequest(replyTo: ActorRef, path: File): Unit = {
+  def handleResetDefaultRequest(replyTo: ActorRef, path: File): Future[Unit] = {
     unitReply(replyTo, path, configManager.resetDefault(path))
   }
 
-  def handleGetDefaultRequest(replyTo: ActorRef, path: File): Unit = {
+  def handleGetDefaultRequest(replyTo: ActorRef, path: File): Future[Unit] = {
     val result = configManager.getDefault(path)
     result onComplete {
       case Success(configDataOpt) ⇒ replyTo ! GetResult(path, None, Success(configDataOpt))
       case Failure(ex)            ⇒ replyTo ! GetResult(path, None, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 
-  private def unitReply(replyTo: ActorRef, path: File, result: Future[Unit]): Unit = {
+  private def unitReply(replyTo: ActorRef, path: File, result: Future[Unit]): Future[Unit] = {
     result onComplete {
       case Success(u)  ⇒ replyTo ! UnitResult(path, Success(u))
       case Failure(ex) ⇒ replyTo ! UnitResult(path, Failure(ex))
     }
+    result.map(_ ⇒ ())
   }
 }

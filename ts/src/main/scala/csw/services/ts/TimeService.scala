@@ -12,8 +12,6 @@ object TimeService {
 
   // This are offsets from UTC to TAI and GPS time
   private val UTCtoTAIoffset = 36
-  //seconds
-  private val UTCtoGPSoffset = 19 // seconds
 
   // Java 8 clocks for the different needs
   private val utcClock = Clock.systemUTC()
@@ -69,18 +67,6 @@ object TimeService {
   def TAIDateTimeNow = UTCDateTimeNow.plusSeconds(UTCtoTAIoffset)
 
   /**
-   * Returns the GPS time now.
-   * @return a LocalTime object with the GPS time.
-   */
-  def GPSTimeNow = UTCTimeNow.plusSeconds(UTCtoGPSoffset)
-
-  /**
-   * Returns the GPS data and time now.
-   * @return a LocalDateTime object with the GPS time.
-   */
-  def GPSDateTimeNow = UTCDateTimeNow.plusSeconds(UTCtoGPSoffset)
-
-  /**
    * TimeServiceSchedule provides a component actor with timed messages
    * scheduleOne -  sends a message to an actor once some time in the future
    * schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled
@@ -97,8 +83,9 @@ object TimeService {
     // This converts java.time data into Akka FiniteDuration
     // Assumes startTime is in the future
     private def toStartDuration(startTime: LocalTime): FiniteDuration = {
+      val now = LocalTime.now.toNanoOfDay
       val t1 = startTime.toNanoOfDay
-      val futureTimeNano = t1 - LocalTime.now.toNanoOfDay
+      val futureTimeNano = t1 - now
       if (futureTimeNano < 0) {
         log.error(s"Requested schedule start time in not in the future: $futureTimeNano")
       }
@@ -137,10 +124,5 @@ object TimeService {
     }
 
   }
-
-  /**
-    * A java friendly version of [[TimeServiceScheduler]]
-    */
-  abstract class JTimeServiceScheduler extends UntypedActor with ActorLogging with TimeService.TimeServiceScheduler
 }
 

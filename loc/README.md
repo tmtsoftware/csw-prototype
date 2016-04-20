@@ -72,14 +72,12 @@ Connection Issues
 -----------------
 
 The location service is based on Multicast DNS (mDNS). The server process is running by default on
-Mac OS X and CentOS. Make sure the firewall is either disabled or allows port 5353/UDP.
+Mac OS X and Linux. Make sure the firewall is either disabled or allows port 5353/UDP.
 
-Applications using the location service may, but should not need to, define these VM options when running:
+Applications using the location service may need to define these VM options when running:
 
 * -Djava.net.preferIPv4Stack=true (due to problems handling ipv6 addresses in some library classes)
   
-This should not be needed if you called `LocationService.initInterface()`, since it ignores ipv6 addresses.
-
 * -Dakka.remote.netty.tcp.hostname=XXX.XXX.XXX.XX (To make sure Akka uses the correct IP address, in case there are multiple interfaces)
 
 This could be used to override the default IP address used to advertize the services.
