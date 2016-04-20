@@ -10,8 +10,17 @@ import akka.actor._
  */
 object TimeService {
 
-  // This are offsets from UTC to TAI and GPS time
-  private val UTCtoTAIoffset = 36
+  // As of July 2015, GPS time is 17 seconds ahead of UTC
+  // NOTE: Dependent on number of leap seconds so far and can not be calculated!
+  // May need to update this value if another leap second is declared...
+  private[ts] val UTCtoGPSoffset = 17
+
+  // TAI − GPS = 19 seconds (constant)
+  private[ts] val GPStoTAIoffset = 19
+
+  // Offset from UTC to TAI
+  private[ts] val UTCtoTAIoffset = UTCtoGPSoffset + GPStoTAIoffset
+
 
   // Java 8 clocks for the different needs
   private val utcClock = Clock.systemUTC()
