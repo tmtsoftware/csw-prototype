@@ -66,6 +66,9 @@ object TimeService {
    */
   def TAIDateTimeNow = UTCDateTimeNow.plusSeconds(UTCtoTAIoffset)
 
+  val ZoneIdOfTMTLocation: ZoneId = ZoneId.of("US/Hawaii")
+
+
   /**
    * TimeServiceSchedule provides a component actor with timed messages
    * scheduleOne -  sends a message to an actor once some time in the future
