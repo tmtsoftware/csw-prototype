@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
-import csw.services.ccs.{AssemblyController, HcdController, StateMatcherActor}
+import csw.services.ccs.{AssemblyController, HcdController, StateVariableMatcherActor}
 import csw.services.pkg.Component.AssemblyInfo
 import csw.util.cfg.Configurations.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
@@ -60,7 +60,7 @@ case class TestAssembly(info: AssemblyInfo)
       }
       replyTo.foreach { actorRef =>
         // Wait for the demand states to match the current states, then reply to the sender with the command status
-        context.actorOf(StateMatcherActor.props(demandStates.toList, actorRef, configArg.info.runId))
+        context.actorOf(StateVariableMatcherActor.props(demandStates.toList, actorRef, configArg.info.runId))
       }
     }
     valid

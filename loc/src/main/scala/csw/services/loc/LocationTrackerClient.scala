@@ -150,7 +150,7 @@ trait LocationTrackerClientActor {
    */
   protected def getActorRefs(targetPrefix: String): Set[ActorRef] = {
     val x = getLocations.collect {
-      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) if prefix == targetPrefix => actorRefOpt
+      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) if prefix == targetPrefix ⇒ actorRefOpt
     }
     x.flatten
   }

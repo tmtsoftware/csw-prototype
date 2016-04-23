@@ -5,65 +5,64 @@ import java.time.Clock
 import java.time.ZoneId
 
 /**
-  * TODO: Work in progress...
-  * See https://confluence.qps.nl/display/KBE/UTC+to+GPS+Time+Correction for background information.
-  *
-  * (Based on code contributed by Takashi Nakamoto)
-  */
+ * TODO: Work in progress...
+ * See https://confluence.qps.nl/display/KBE/UTC+to+GPS+Time+Correction for background information.
+ *
+ * (Based on code contributed by Takashi Nakamoto)
+ */
 object TimeScale {
 
   sealed trait TimeScale
 
   /**
-    * TAI, Temps Atomique International, is the international atomic time scale based on a continuous counting of the
-    * SI second. TAI is currently ahead of UTC by 36 seconds. TAI is always ahead of GPS by 19 seconds.
-    */
+   * TAI, Temps Atomique International, is the international atomic time scale based on a continuous counting of the
+   * SI second. TAI is currently ahead of UTC by 36 seconds. TAI is always ahead of GPS by 19 seconds.
+   */
   case object TAI extends TimeScale
 
   /**
-    * UTC, Coordinated Universal Time, popularly known as GMT (Greenwich Mean Time), or Zulu time. Local time differs
-    * from UTC by the number of hours of your timezone.
-    */
+   * UTC, Coordinated Universal Time, popularly known as GMT (Greenwich Mean Time), or Zulu time. Local time differs
+   * from UTC by the number of hours of your timezone.
+   */
   case object UTC extends TimeScale
 
   /**
-    * Local time, the date/time reported by your PC. If your PC clock is accurate to
-    * a second then the other time scales displayed above will also be accurate to within one second.
-    */
+   * Local time, the date/time reported by your PC. If your PC clock is accurate to
+   * a second then the other time scales displayed above will also be accurate to within one second.
+   */
   case object LOCAL extends TimeScale
 
-
   /**
-    * An instant in the given time scale
-    */
+   * An instant in the given time scale
+   */
   case class TsInstant[A <: TimeScale](instant: Instant, timeScale: A) {
     override def toString = instant.toString + " in " + timeScale.toString
   }
 
   /**
-    * Converts the given instant to TAI time
-    */
+   * Converts the given instant to TAI time
+   */
   def toTAI[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[TAI.type]] = tsi match {
-    case TsInstant(i, TAI) => Some(TsInstant(i, TAI))
-    case TsInstant(i, UTC) => Some(TsInstant(i.plusSeconds(TimeService.UTCtoTAIoffset), TAI))
-    case _ => None
+    case TsInstant(i, TAI) ⇒ Some(TsInstant(i, TAI))
+    case TsInstant(i, UTC) ⇒ Some(TsInstant(i.plusSeconds(TimeService.UTCtoTAIoffset), TAI))
+    case _                 ⇒ None
   }
 
   /**
-    * Converts the given instant to UTC time
-    */
+   * Converts the given instant to UTC time
+   */
   def toUTC[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[UTC.type]] = tsi match {
-    case TsInstant(i, UTC) => Some(TsInstant(i, UTC))
-    case TsInstant(i, TAI) => Some(TsInstant[UTC.type](i.minusSeconds(TimeService.UTCtoTAIoffset), UTC))
-    case _ => None
+    case TsInstant(i, UTC) ⇒ Some(TsInstant(i, UTC))
+    case TsInstant(i, TAI) ⇒ Some(TsInstant[UTC.type](i.minusSeconds(TimeService.UTCtoTAIoffset), UTC))
+    case _                 ⇒ None
   }
 
   /**
-    * Converts the given instant to LOCAL time
-    */
+   * Converts the given instant to LOCAL time
+   */
   def toLocalTime[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[LOCAL.type]] = tsi match {
-    case TsInstant(i, LOCAL) => Some(TsInstant(i, LOCAL))
-    case _ => None
+    case TsInstant(i, LOCAL) ⇒ Some(TsInstant(i, LOCAL))
+    case _                   ⇒ None
   }
 
   class TAIClock(zoneId: ZoneId) extends Clock {

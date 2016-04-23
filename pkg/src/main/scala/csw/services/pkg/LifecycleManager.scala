@@ -87,6 +87,8 @@ object LifecycleManager {
     Props(classOf[LifecycleManager], component, name)
 }
 
+// format: OFF    <-- this directive disables scalariform formatting from this point
+// (due to problem where -> in Akka FSM state machines is not equivalent to ⇒)
 class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleState, FSMData] {
 
   import LifecycleManager._
@@ -259,3 +261,5 @@ class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleS
 
   initialize()
 }
+// format: ON    <-- this directive enables scalariform formatting from this point
+

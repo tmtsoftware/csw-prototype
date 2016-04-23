@@ -126,15 +126,15 @@ object Main extends App {
   val allStores = List(
     system.actorOf(DataStore.props(
       "name",
-      Map(1 -> "Mike", 2 -> "Robert", 3 -> "Joe")
+      Map(1 → "Mike", 2 → "Robert", 3 → "Joe")
     )),
     system.actorOf(DataStore.props(
       "location",
-      Map(1 -> "UK", 2 -> "Sweden", 3 -> "Germany")
+      Map(1 → "UK", 2 → "Sweden", 3 → "Germany")
     )),
     system.actorOf(DataStore.props(
       "lastPurchase",
-      Map(1 -> "couch", 2 -> "laptop")
+      Map(1 → "couch", 2 → "laptop")
     ))
   )
 

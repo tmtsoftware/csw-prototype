@@ -143,7 +143,7 @@ trait AssemblyController extends LocationTrackerClientActor {
     stateMatcherActor.foreach(context.stop)
     replyTo.foreach { actorRef ⇒
       // Wait for the demand states to match the current states, then reply to the sender with the command status
-      val props = StateMatcherActor.props(demandStates.toList, actorRef, runId, timeout, matcher)
+      val props = StateVariableMatcherActor.props(demandStates.toList, actorRef, runId, timeout, matcher)
       stateMatcherActor = Some(context.actorOf(props))
     }
   }

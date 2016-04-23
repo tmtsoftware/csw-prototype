@@ -23,7 +23,7 @@ object Seq {
 
   private def getActorRef(locations: Set[Location], connection: Connection): ActorRef = {
     locations.collect {
-      case ResolvedAkkaLocation(conn, uri, prefix, actorRefOpt) if connection == conn => actorRefOpt.get
+      case ResolvedAkkaLocation(conn, uri, prefix, actorRefOpt) if connection == conn ⇒ actorRefOpt.get
     }.head
   }
 

@@ -21,7 +21,6 @@ object TimeService {
   // Offset from UTC to TAI
   private[ts] val UTCtoTAIoffset = UTCtoGPSoffset + GPStoTAIoffset
 
-
   // Java 8 clocks for the different needs
   private val utcClock = Clock.systemUTC()
   private val localClock = Clock.systemDefaultZone()
@@ -76,7 +75,6 @@ object TimeService {
   def TAIDateTimeNow = UTCDateTimeNow.plusSeconds(UTCtoTAIoffset)
 
   val ZoneIdOfTMTLocation: ZoneId = ZoneId.of("US/Hawaii")
-
 
   /**
    * TimeServiceSchedule provides a component actor with timed messages
@@ -138,8 +136,8 @@ object TimeService {
   }
 
   /**
-    * A java friendly version of [[TimeServiceScheduler]]
-    */
+   * A java friendly version of [[TimeServiceScheduler]]
+   */
   abstract class JTimeServiceScheduler extends UntypedActor with ActorLogging with TimeService.TimeServiceScheduler
 }
 
