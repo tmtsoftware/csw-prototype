@@ -15,13 +15,6 @@ object TimeScale {
   sealed trait TimeScale
 
   /**
-    * GPS, Global Positioning System time, is the atomic time scale implemented by the atomic clocks in the GPS ground
-    * control stations and the GPS satellites themselves. GPS time was zero at 0h 6-Jan-1980 and since it is not
-    * perturbed by leap seconds GPS is now ahead of UTC by 17 seconds.
-    */
-  case object GPS extends TimeScale
-
-  /**
     * TAI, Temps Atomique International, is the international atomic time scale based on a continuous counting of the
     * SI second. TAI is currently ahead of UTC by 36 seconds. TAI is always ahead of GPS by 19 seconds.
     */
@@ -52,18 +45,7 @@ object TimeScale {
     */
   def toTAI[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[TAI.type]] = tsi match {
     case TsInstant(i, TAI) => Some(TsInstant(i, TAI))
-    case TsInstant(i, GPS) => Some(TsInstant(i.plusSeconds(TimeService.GPStoTAIoffset), TAI))
     case TsInstant(i, UTC) => Some(TsInstant(i.plusSeconds(TimeService.UTCtoTAIoffset), TAI))
-    case _ => None
-  }
-
-  /**
-    * Converts the given instant to GPS time
-    */
-  def toGPS[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[GPS.type]] = tsi match {
-    case TsInstant(i, GPS) => Some(TsInstant(i, GPS))
-    case TsInstant(i, TAI) => Some(TsInstant(i.minusSeconds(TimeService.GPStoTAIoffset), GPS))
-    case TsInstant(i, UTC) => Some(TsInstant(i.plusSeconds(TimeService.UTCtoGPSoffset), GPS))
     case _ => None
   }
 
@@ -73,7 +55,6 @@ object TimeScale {
   def toUTC[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[UTC.type]] = tsi match {
     case TsInstant(i, UTC) => Some(TsInstant(i, UTC))
     case TsInstant(i, TAI) => Some(TsInstant[UTC.type](i.minusSeconds(TimeService.UTCtoTAIoffset), UTC))
-    case TsInstant(i, GPS) => Some(TsInstant(i.minusSeconds(TimeService.UTCtoGPSoffset), UTC))
     case _ => None
   }
 
@@ -109,11 +90,7 @@ object Main extends App {
   val taii = TAIClock.taiInstant()
   println(taii)
 
-  // TODO: calculate the number of leap seconds!
-  val gpsi = TimeScale.toGPS(taii).get
-  println(gpsi)
-
-  val utci = TimeScale.toUTC(gpsi).get
+  val utci = TimeScale.toUTC(taii).get
   println(utci)
 
   val hawaiiLocalTime = utci.instant.atZone(TimeService.ZoneIdOfTMTLocation)
