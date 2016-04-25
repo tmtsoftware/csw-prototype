@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
-import csw.services.ccs.HcdController.{Subscribe, Unsubscribe}
+import csw.util.akka.PublisherActor
 import csw.util.cfg.Configurations.StateVariable
 import csw.util.cfg.Configurations.StateVariable.{CurrentState, DemandState, Matcher}
 import csw.util.cfg.RunId
@@ -40,7 +40,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
   import context.dispatcher
   context.become(waiting(Set[CurrentState]()))
 
-  hcds.foreach(_ ! Subscribe)
+  hcds.foreach(_ ! PublisherActor.Subscribe)
   val timer = context.system.scheduler.scheduleOnce(timeout.duration, self, timeout)
 
   override def receive: Receive = Actor.emptyBehavior
@@ -56,7 +56,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
           if (set.size == demands.size) {
             timer.cancel()
             replyTo ! CommandStatus.Completed(runId)
-            hcds.foreach(_ ! Unsubscribe)
+            hcds.foreach(_ ! PublisherActor.Unsubscribe)
             context.stop(self)
           } else context.become(waiting(set))
         }
@@ -65,7 +65,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
     case `timeout` ⇒
       log.info(s"received timeout")
       replyTo ! CommandStatus.Error(runId, "Command timed out")
-      hcds.foreach(_ ! Unsubscribe)
+      hcds.foreach(_ ! PublisherActor.Unsubscribe)
       context.stop(self)
 
     case x ⇒ log.error(s"Unexpected message $x")

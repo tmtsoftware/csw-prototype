@@ -65,5 +65,9 @@ case class TestAssembly(info: AssemblyInfo)
     }
     valid
   }
+
+  override protected def requestCurrent(): Unit = {
+    // TODO
+  }
 }
 

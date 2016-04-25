@@ -35,7 +35,7 @@ object HcdControllerTests {
     }
 
     // Ask the worker actor to send us the current state (handled by parent trait)
-    override protected def requestCurrentState(): Unit = {
+    override protected def requestCurrent(): Unit = {
       worker ! TestWorker.RequestCurrentState
     }
 

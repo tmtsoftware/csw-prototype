@@ -2,7 +2,7 @@ package csw.services.loc
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import csw.services.loc.LocationService._
-import csw.services.loc.LocationTrackerClient.{AllResolved, LocationMap}
+import csw.services.loc.LocationTrackerClient.LocationMap
 
 object LocationTrackerClient {
   /**
@@ -19,11 +19,6 @@ object LocationTrackerClient {
         connectionsIn - loc.connection
     } else connectionsIn
   }
-
-  /**
-   * Message optionally sent to self when all connections are resolved
-   */
-  case object AllResolved
 }
 
 /**
@@ -85,15 +80,12 @@ trait LocationTrackerClientActor {
 
   /**
    * Handles location updates and updates the connections map (Should be called from the actor's receive method)
-   * @param notifyAllResolved if true, an AllResolved message is sent to self once all connections are resolved
    */
-  protected def trackerClientReceive(notifyAllResolved: Boolean = false): Receive = {
+  protected def trackerClientReceive: Receive = {
     case loc: Location ⇒
       log.info(s"Received location: $loc")
       trackerClient = trackerClient.locationUpdate(loc)
-      if (notifyAllResolved && allResolved) {
-        self ! AllResolved
-      }
+      if (allResolved) allResolved(getLocations)
 
     case TrackConnection(connection) ⇒
       trackConnection(connection)
@@ -144,6 +136,12 @@ trait LocationTrackerClientActor {
    * Returns true if all the tracked connections are currently resolved to locations
    */
   protected def allResolved: Boolean = trackerClient.allResolved
+
+  /**
+   * Called when all locations are resolved
+   * @param locations the resolved locations (of HCDs, etc.)
+   */
+  protected def allResolved(locations: Set[Location]): Unit = {}
 
   /**
    * Returns a set of ActorRefs for the components that are resolved and match the config's prefix

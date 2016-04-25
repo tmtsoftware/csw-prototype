@@ -64,7 +64,7 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
     val valid = validate(configArg)
     if (valid.isValid) {
       // Submit each config
-      val list = for {
+      for {
         config ← configArg.configs
         hcdActorRef ← getActorRefs(config.prefix)
       } {
@@ -77,6 +77,10 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
       }
     }
     valid
+  }
+
+  override protected def requestCurrent(): Unit = {
+    // TODO
   }
 }
 

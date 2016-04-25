@@ -18,8 +18,9 @@ package csw.services
  * This controller wakes up regularly, checks the incoming queue and updates its state variable with the current
  * state of the HCD.
  *
- * - '''[[StateMatcherActor]]''' - an actor used to match demand and current state and then notify a given actor
+ * - '''[[StateVariableMatcherActor]]''' - an actor used to match demand and current state variables (via Redis/kvs) and then notify a given actor
  *
+ * - '''[[HcdStatusMatcherActor]]''' - an actor used to match demand and current state (by subscribing to HCD status messages) and then notify a given actor
  *
  * === Example ===
  *

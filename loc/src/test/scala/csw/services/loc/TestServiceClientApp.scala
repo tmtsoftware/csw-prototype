@@ -1,7 +1,7 @@
 package csw.services.loc
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
-import csw.services.loc.LocationTrackerClient.AllResolved
+import csw.services.loc.LocationService.Location
 
 // XXX allan: TODO: Update to new API
 
@@ -31,12 +31,13 @@ class TestServiceClient(numServices: Int) extends Actor with ActorLogging with L
   val connections = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.connection(i), TestHttpService.connection(i))).toSet
   connections.foreach(trackConnection)
 
-  override def receive: Receive = trackerClientReceive(true) orElse {
-    case AllResolved =>
-      log.info(s"Test Passed: Received services: ${connections.map(_.componentId.name).mkString(", ")}")
-
+  override def receive: Receive = trackerClientReceive orElse {
     case x ⇒
       log.error(s"Received unexpected message $x")
+  }
+
+  override protected def allResolved(locations: Set[Location]): Unit = {
+    log.info(s"Test Passed: Received services: ${connections.map(_.componentId.name).mkString(", ")}")
   }
 }
 

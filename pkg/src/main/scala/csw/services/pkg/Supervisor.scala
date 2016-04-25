@@ -8,6 +8,7 @@ import csw.services.loc.ComponentType.{Assembly, HCD}
 import csw.services.loc.{ComponentId, LocationService}
 import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 import csw.services.pkg.LifecycleManager._
+import csw.util.akka.PublisherActor
 import csw.util.cfg.Configurations.{ControlConfig, ControlConfigArg, SetupConfig}
 
 import scala.util.{Failure, Success}
@@ -117,6 +118,9 @@ final class Supervisor(val componentInfo: ComponentInfo)
     case Heartbeat ⇒
       // Forward to lifecycle manager - causes it to reply with the current state
       lifecycleManager ! Heartbeat
+    // Forward Subscribe/Unsubscribe messages to the component (HCD and Assembly support subscriptions)
+    case msg: PublisherActor.PublisherActorMessage ⇒
+      component.tell(msg, sender())
     case x ⇒
       log.warning(s"$name: Supervisor received an unexpected message: $x")
   }

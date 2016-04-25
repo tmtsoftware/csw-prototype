@@ -3,6 +3,7 @@ package csw.services.ccs
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
 import csw.services.loc.LocationTrackerClientActor
+import csw.util.akka.PublisherActor
 import csw.util.cfg.Configurations.StateVariable._
 import csw.util.cfg.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg, StateVariable}
 import csw.util.cfg.RunId
@@ -10,6 +11,7 @@ import csw.util.cfg.RunId
 import scala.concurrent.duration._
 
 object AssemblyController {
+
   /**
    * Base trait of all received messages
    */
@@ -56,36 +58,37 @@ object AssemblyController {
   case class Invalid(reason: String) extends Validation {
     override def isValid: Boolean = false
   }
+
 }
 
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
+ * XXX TODO: CurrentState only allows one prefix. Should it be a list or a different object?
  */
-trait AssemblyController extends LocationTrackerClientActor {
+trait AssemblyController extends LocationTrackerClientActor with PublisherActor[CurrentState] {
   this: Actor with ActorLogging ⇒
 
   import AssemblyController._
 
-  // Optional actor waiting for current state variables to match demand states
+  // Optional actor waiting for current HCD states to match demand states
   private var stateMatcherActor: Option[ActorRef] = None
 
   /**
-   * Receive state while required services are available
+   * Receive actor messages
    */
-  protected def controllerLocalReceive: Receive = {
+  protected def controllerReceive: Receive = publisherReceive orElse trackerClientReceive orElse {
     case Submit(config) ⇒ submit(allResolved, config, oneway = false, sender())
+
     case OneWay(config) ⇒ submit(allResolved, config, oneway = true, sender())
   }
-
-  protected def controllerReceive = controllerLocalReceive orElse trackerClientReceive()
 
   /**
    * Called for Submit messages
    *
    * @param locationsResolved indicates if all the Assemblies connections are resolved
-   * @param config the config received
-   * @param oneway true if no completed response is needed
-   * @param replyTo actorRef of the actor that submitted the config
+   * @param config            the config received
+   * @param oneway            true if no completed response is needed
+   * @param replyTo           actorRef of the actor that submitted the config
    */
   private def submit(
     locationsResolved: Boolean, config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef
@@ -107,8 +110,8 @@ trait AssemblyController extends LocationTrackerClientActor {
    * Called to process the setup config and reply to the given actor with the command status.
    *
    * @param locationsResolved indicates if all the Assemblies connections are resolved
-   * @param configArg contains a list of setup configurations
-   * @param replyTo if defined, the actor that should receive the final command status.
+   * @param configArg         contains a list of setup configurations
+   * @param replyTo           if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
   protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
@@ -118,8 +121,8 @@ trait AssemblyController extends LocationTrackerClientActor {
    * Called to process the observe config and reply to the given actor with the command status.
    *
    * @param locationsResolved indicates if all the Assemblies connections are resolved
-   * @param configArg contains a list of observe configurations
-   * @param replyTo if defined, the actor that should receive the final command status.
+   * @param configArg         contains a list of observe configurations
+   * @param replyTo           if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
   protected def observe(locationsResolved: Boolean, configArg: ObserveConfigArg,
@@ -131,19 +134,20 @@ trait AssemblyController extends LocationTrackerClientActor {
    * there is a timeout.
    *
    * @param demandStates list of state variables to be matched (wait until current state matches demand)
-   * @param replyTo actor to receive CommandStatus.Completed or CommandStatus.Error("timeout...") message
-   * @param runId runId to include in the command status message sent to the replyTo actor
-   * @param timeout amount of time to wait for states to match (default: 60 sec)
-   * @param matcher matcher to use (default: equality)
+   * @param hcds         the target HCD actors
+   * @param replyTo      actor to receive CommandStatus.Completed or CommandStatus.Error("timeout...") message
+   * @param runId        runId to include in the command status message sent to the replyTo actor
+   * @param timeout      amount of time to wait for states to match (default: 60 sec)
+   * @param matcher      matcher to use (default: equality)
    */
-  protected def matchDemandStates(demandStates: Seq[DemandState], replyTo: Option[ActorRef], runId: RunId,
+  protected def matchDemandStates(demandStates: Seq[DemandState], hcds: Set[ActorRef], replyTo: Option[ActorRef], runId: RunId,
                                   timeout: Timeout = Timeout(60.seconds),
                                   matcher: Matcher = StateVariable.defaultMatcher): Unit = {
     // Cancel any previous state matching, so that no timeout errors are sent to the replyTo actor
     stateMatcherActor.foreach(context.stop)
     replyTo.foreach { actorRef ⇒
       // Wait for the demand states to match the current states, then reply to the sender with the command status
-      val props = StateVariableMatcherActor.props(demandStates.toList, actorRef, runId, timeout, matcher)
+      val props = HcdStatusMatcherActor.props(demandStates.toList, hcds, actorRef, runId, timeout, matcher)
       stateMatcherActor = Some(context.actorOf(props))
     }
   }
