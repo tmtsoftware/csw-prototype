@@ -104,6 +104,14 @@ lazy val ts = project
       test(scalaTest, akkaTestKit, junit)
   ) dependsOn log
 
+// Java APIs
+lazy val javacsw = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor) ++
+      test(akkaTestKit, junit)
+  ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts)
+
 
 // -- Apps --
 

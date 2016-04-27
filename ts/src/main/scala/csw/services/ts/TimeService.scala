@@ -3,6 +3,7 @@ package csw.services.ts
 import java.time._
 
 import akka.actor._
+import akka.event.Logging
 
 /**
  * TMT Prototype CSW Time Service
@@ -28,65 +29,78 @@ object TimeService {
 
   /**
    * Returns the local time in the current time zone.
+   *
    * @return a LocalTime now value.
    */
-  def localTimeNow = LocalTime.now(localClock)
+  def localTimeNow: LocalTime = LocalTime.now(localClock)
 
   /**
    * Returns the local date and time in the current time zone.
+   *
    * @return a LocalDateTime now value.
    */
-  def localTimeDateNow = LocalDateTime.now(localClock)
+  def localTimeDateNow: LocalDateTime = LocalDateTime.now(localClock)
 
   /**
    * Returns the local time now in Hawaii
+   *
    * @return a LocalTime now value in the "US/Pacific" zone.
    */
-  def hawaiiLocalTimeNow = LocalTime.now(hclock)
+  def hawaiiLocalTimeNow: LocalTime = LocalTime.now(hclock)
 
   /**
    * Returns the local date and time in Hawaii
+   *
    * @return a LocalDateTime now value in the "US/Pacific" zone.
    */
-  def hawaiiLocalTimeDateNow = LocalDateTime.now(hclock)
+  def hawaiiLocalTimeDateNow: LocalDateTime = LocalDateTime.now(hclock)
 
   /**
    * Returns the UTC now time.
+   *
    * @return a LocalTime in UTC.
    */
-  def UTCTimeNow = LocalTime.now(utcClock)
+  def UTCTimeNow: LocalTime = LocalTime.now(utcClock)
 
   /**
    * Returns the UTC now date and time.
+   *
    * @return a LocalDateTime in UTC.
    */
-  def UTCDateTimeNow = LocalDateTime.now(utcClock)
+  def UTCDateTimeNow: LocalDateTime = LocalDateTime.now(utcClock)
 
   /**
    * Returns the TAI time now.
+   *
    * @return a LocalTime object with TAI time.
    */
-  def TAITimeNow = UTCTimeNow.plusSeconds(UTCtoTAIoffset)
+  def TAITimeNow: LocalTime = UTCTimeNow.plusSeconds(UTCtoTAIoffset)
 
   /**
    * Returns TAI as a data and time.
+   *
    * @return a LocalDateTime object with TAI time.
    */
-  def TAIDateTimeNow = UTCDateTimeNow.plusSeconds(UTCtoTAIoffset)
+  def TAIDateTimeNow: LocalDateTime = UTCDateTimeNow.plusSeconds(UTCtoTAIoffset)
 
+  /**
+   * The zone id corresponding to the TMT telescope location (TODO: find location for telescope)
+   */
   val ZoneIdOfTMTLocation: ZoneId = ZoneId.of("US/Hawaii")
 
   /**
    * TimeServiceSchedule provides a component actor with timed messages
-   * scheduleOne -  sends a message to an actor once some time in the future
+   * <p>
+   * scheduleOnce -  sends a message to an actor once some time in the future
+   * <p>
    * schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled
-   *
+   * <p>
    * Must extend an Actor with ActorLogging
    */
   trait TimeServiceScheduler {
     self: Actor with ActorLogging ⇒
 
-    import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
+    import scala.concurrent.duration.{ FiniteDuration, NANOSECONDS }
 
     implicit val ec = context.system.dispatcher
 
@@ -105,9 +119,10 @@ object TimeService {
     /**
      * Schedule a message to be sent once to an actor at a future time.
      * Uses Java 8 java.time types.
+     *
      * @param startTime a LocalTime when the message should be sent
-     * @param receiver an actorRef for an actor that will receive the message
-     * @param message some message to be sent
+     * @param receiver  an actorRef for an actor that will receive the message
+     * @param message   some message to be sent
      * @return a Cancellable that can be used to cancel the timer
      */
     def scheduleOnce(startTime: LocalTime, receiver: ActorRef, message: Any): Cancellable = {
@@ -120,10 +135,11 @@ object TimeService {
      * Schedule a message to be sent periodically to an actor starting at a future time. The scheduler must be
      * cancelled to stop the message.
      * Uses Java 8 java.time types.
+     *
      * @param startTime a LocalTime when the first message should be sent
-     * @param period the Duration between messages
-     * @param receiver an actorRef for an actor that will receive the message
-     * @param message some message to be sent
+     * @param period    the Duration between messages
+     * @param receiver  an actorRef for an actor that will receive the message
+     * @param message   some message to be sent
      * @return a Cancellable that can be used to cancel the timer
      */
     def schedule(startTime: LocalTime, period: Duration, receiver: ActorRef, message: Any): Cancellable = {
@@ -132,12 +148,12 @@ object TimeService {
       val schedulePeriod = FiniteDuration(period.toNanos, NANOSECONDS)
       context.system.scheduler.schedule(startDuration, schedulePeriod, receiver, message)
     }
-
   }
-
-  /**
-   * A java friendly version of [[TimeServiceScheduler]]
-   */
-  abstract class JTimeServiceScheduler extends UntypedActor with ActorLogging with TimeService.TimeServiceScheduler
 }
+
+/**
+  * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]]
+  */
+abstract class JavaTimeServiceScheduler extends UntypedActor with ActorLogging with TimeService.TimeServiceScheduler
+
 

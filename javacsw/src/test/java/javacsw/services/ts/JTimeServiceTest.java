@@ -1,4 +1,4 @@
-package csw.services.ts;
+package javacsw.services.ts;
 
 import akka.actor.*;
 import akka.japi.Creator;
@@ -15,7 +15,6 @@ import scala.concurrent.ExecutionContextExecutor;
 
 /**
  * Tests using the time service from Java.
- * (This is a java version of the Scala TimeServiceTest.)
  */
 public class JTimeServiceTest {
 
@@ -34,25 +33,16 @@ public class JTimeServiceTest {
 
     @Test
     public void basicJavaTimeTests() throws Exception {
-        // Assume an eastern time zone for tests
-//        Clock eclock = Clock.system(ZoneId.of("America/New_York"));
-//        int hoursFromNyToHI = 6;
-
-        // Can't do much test to see now equal implying bad clocks
-//        LocalTime nyNow = LocalTime.now(eclock);
-        LocalTime hwNow = TimeService.hawaiiLocalTimeNow();
-        LocalTime now = TimeService.localTimeNow();
+        LocalTime hwNow = JTimeService.hawaiiLocalTimeNow();
+        LocalTime now = JTimeService.localTimeNow();
 
         // Try to determine that we have Hawaii time
         assert (!hwNow.equals(now)); // Not the same, good
 
-        LocalTime utcNow = TimeService.UTCTimeNow();
-//        LocalTime gpsNow = TimeService.GPSTimeNow();
-        LocalTime taiNow = TimeService.TAITimeNow();
+        LocalTime utcNow = JTimeService.UTCTimeNow();
+        LocalTime taiNow = JTimeService.TAITimeNow();
 
-//        assert (gpsNow.isAfter(utcNow));
         assert (taiNow.isAfter(utcNow));
-//        assert (taiNow.isAfter(gpsNow));
     }
 
     @Test
@@ -62,7 +52,7 @@ public class JTimeServiceTest {
                 ActorRef timerTest = system.actorOf(JTestScheduler.props("tester", getRef()));
                 timerTest.tell("once", getRef());
 
-                new Within(duration("10 seconds")) {
+                new Within(JavaTestKit.duration("10 seconds")) {
                     protected void run() {
                         expectMsgEquals("done");
                     }
@@ -79,7 +69,7 @@ public class JTimeServiceTest {
                 ActorRef timerTest = system.actorOf(JTestScheduler.props("tester", getRef()));
                 timerTest.tell("five", getRef());
 
-                new Within(duration("10 seconds")) {
+                new Within(JavaTestKit.duration("10 seconds")) {
                     protected void run() {
                         Cancellable cancellable = expectMsgClass(Cancellable.class);
                         logger.info("Received cancellable: " + cancellable);
@@ -93,9 +83,8 @@ public class JTimeServiceTest {
         };
     }
 
-    private static class JTestScheduler extends TimeService.JTimeServiceScheduler {
-        LoggingAdapter log = log();
-
+    // Actor used in above test
+    private static class JTestScheduler extends JTimeServiceScheduler {
         private final String name;
         private final ActorRef caller;
         private int count = 0;
@@ -119,20 +108,20 @@ public class JTimeServiceTest {
         public void onReceive(Object message) throws Exception {
             if (message instanceof String) {
                 if (message.equals("once")) {
-                    log.info("Received once start");
-                    scheduleOnce(TimeService.localTimeNow().plusSeconds(5), context().self(), "once-done");
+                    log.info(name + ": Received once start");
+                    scheduleOnce(JTimeService.localTimeNow().plusSeconds(5), context().self(), "once-done");
                 } else if (message.equals("five")) {
-                    log.info("Received multi start");
-                    Cancellable c = schedule(TimeService.localTimeNow().plusSeconds(1), java.time.Duration.ofSeconds(1), context().self(), "count");
+                    log.info(name + ": Received multi start");
+                    Cancellable c = schedule(JTimeService.localTimeNow().plusSeconds(1), java.time.Duration.ofSeconds(1), context().self(), "count");
                     caller.tell(c, self()); //Return the cancellable
 
                 } else if (message.equals("count")) {
                     count = count + 1;
-                    log.info("Count: " + count);
+                    log.info(name + ": Count: " + count);
                     if (count >= 5) caller.tell(count, self());
 
                 } else if (message.equals("once-done")) {
-                    log.info("Received Done");
+                    log.info(name + ": Received Done");
                     caller.tell("done", self());
                 }
             } else
