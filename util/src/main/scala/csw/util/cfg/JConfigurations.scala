@@ -1,10 +1,10 @@
 package csw.util.cfg
 
-import java.util.{OptionalDouble, Optional}
+import java.util.{Optional, OptionalDouble, OptionalInt}
 
 import csw.util.cfg.Events.{EventTime, ObserveEvent}
+
 import scala.compat.java8.OptionConverters._
-import scala.reflect.{ClassTag, classTag}
 
 /**
  * Java API to Scala Configurations classes (Experimental)
@@ -14,17 +14,6 @@ object JConfigurations {
 
   def createObserveEvent(prefix: String, time: EventTime, obsId: ObsId): JObserveEvent = JObserveEvent(ObserveEvent(prefix, time, obsId))
 }
-
-//sealed trait JConfigType {
-//
-//}
-//
-//
-//
-//sealed trait JEventType extends JConfigType {
-//
-//}
-//
 
 /**
  * Java wrapper for ObserveEvent
@@ -52,4 +41,5 @@ case class JObserveEvent(oe: ObserveEvent) {
   def get(key: Key): Optional[Object] = oe.get(key).map(_.asInstanceOf[Object]).asJava
 
   def getAsDouble(key: Key): OptionalDouble = oe.get(key).map(_.asInstanceOf[Double]).asPrimitive
+  def getAsInteger(key: Key): OptionalInt = oe.get(key).map(_.asInstanceOf[Int]).asPrimitive
 }
