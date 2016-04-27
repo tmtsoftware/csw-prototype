@@ -1,8 +1,9 @@
-package csw.util.cfg
+package javacsw.util.cfg
 
 import java.util.{Optional, OptionalDouble, OptionalInt}
 
 import csw.util.cfg.Events.{EventTime, ObserveEvent}
+import csw.util.cfg.{Key, ObsId}
 
 import scala.compat.java8.OptionConverters._
 
@@ -13,6 +14,7 @@ object JConfigurations {
   def createObserveEvent(prefix: String, time: EventTime): JObserveEvent = JObserveEvent(ObserveEvent(prefix, time))
 
   def createObserveEvent(prefix: String, time: EventTime, obsId: ObsId): JObserveEvent = JObserveEvent(ObserveEvent(prefix, time, obsId))
+
 }
 
 /**
@@ -41,5 +43,8 @@ case class JObserveEvent(oe: ObserveEvent) {
   def get(key: Key): Optional[Object] = oe.get(key).map(_.asInstanceOf[Object]).asJava
 
   def getAsDouble(key: Key): OptionalDouble = oe.get(key).map(_.asInstanceOf[Double]).asPrimitive
+
   def getAsInteger(key: Key): OptionalInt = oe.get(key).map(_.asInstanceOf[Int]).asPrimitive
+
+  def getAsString(key: Key): Optional[String] = oe.get(key).map(_.asInstanceOf[String]).asJava
 }

@@ -5,6 +5,10 @@ import java.util.UUID
 import scala.compat.Platform
 import scala.language.implicitConversions
 
+import java.util.{ Optional, OptionalDouble, OptionalInt }
+import scala.compat.java8.OptionConverters._
+
+
 object Configurations {
 
   case class ConfigKey(subsystem: Subsystem, prefix: String) {
@@ -65,8 +69,16 @@ object Configurations {
      */
     final def set[A](key: Key.Aux[A], value: A): T = create(data.set(key, value))
 
-    // XXX java API
-    final private[cfg] def jset[A](key: Key, value: Object): T = create(data.jset(key, value))
+    /**
+      * (For Java API)
+      * Returns a new instance with the value for the given key set to the given value
+      *
+      * @param key   the key, which also contains the value type
+      * @param value the value
+      * @tparam A the type of the value
+      * @return a new instance of this object with the key set to the given value
+      */
+    final def jset[A](key: Key, value: Object): T = create(data.jset(key, value))
 
     /**
      * Lookup a Key in Map and returns an Option
@@ -75,6 +87,16 @@ object Configurations {
      * @return an option value typed to the Key
      */
     final def get(key: Key): Option[key.Value] = data.get(key)
+
+    /**
+      * (For Java API)
+      * Lookup a Key in Map and returns an Option
+      *
+      * @param key the Key to be used for lookup
+      * @return an option value
+      */
+//    final def jget(key: Key): Optional[key.Value] = data.get(key).asJava
+    final def jget(key: Key): Optional[Object] = data.get(key).map(_.asInstanceOf[Object]).asJava
 
     /**
      * Remove a Key from the Map and return a new Map
