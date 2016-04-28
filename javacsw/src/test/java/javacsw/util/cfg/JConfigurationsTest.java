@@ -1,32 +1,44 @@
 package javacsw.util.cfg;
 
-import javacsw.util.cfg.JObserveEvent;
-import csw.util.cfg.StandardKeys;
 import org.junit.Test;
-import csw.util.cfg.Events.*;
 
-import java.util.Date;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
 /**
- * Tests using the config based classes from Java (Experimental)
+ * Tests using the config based classes from Java
  */
 public class JConfigurationsTest {
     @Test
-    public void testEvent() throws Exception {
-        String prefix = "";
-        EventTime t = new EventTime(new Date().getTime());
+    public void testObserveEvent() throws Exception {
+        String prefix = "my.prefix";
 
-        JObserveEvent oe = JConfigurations.createObserveEvent(prefix, t)
-                .set(StandardKeys.exposureTime(), 1.0)
-                .set(StandardKeys.exposureClass(), JStandardKeys.ACQUISITION());
+        JObserveEvent oe = JConfigurations.createObserveEvent(prefix)
+                .set(JStandardKeys.exposureTime, 1.0)
+                .set(JStandardKeys.exposureClass, JStandardKeys.ACQUISITION);
 
-        OptionalDouble d = oe.getAsDouble(StandardKeys.exposureTime());
+        OptionalDouble d = oe.getAsDouble(JStandardKeys.exposureTime);
         assert (d.isPresent() && d.getAsDouble() == 1.0);
 
-        Optional expClass = oe.get(StandardKeys.exposureClass());
-        assert (expClass.isPresent() && expClass.get()== JStandardKeys.ACQUISITION());
+        Optional expClass = oe.get(JStandardKeys.exposureClass);
+        assert (expClass.isPresent() && expClass.get()== JStandardKeys.ACQUISITION);
     }
+
+    @Test
+    public void testSetupConfig() throws Exception {
+        String prefix = "my.prefix";
+
+        JSetupConfig sc = JConfigurations.createSetupConfig(prefix)
+                .set(JStandardKeys.filter, "MyFilter")
+                .set(JStandardKeys.disperser, "MyDisperser");
+
+        Optional<String> filter = sc.getAsString(JStandardKeys.filter);
+        assert (filter.isPresent() && filter.get().equals("MyFilter"));
+
+        Optional<String> disperser = sc.getAsString(JStandardKeys.disperser);
+        assert (disperser.isPresent() && disperser.get().equals("MyDisperser"));
+
+    }
+
 }
 
