@@ -22,7 +22,7 @@ def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor) ++
+    compile(akkaActor, scalaReflect) ++
     test(scalaTest, junit)
   )
 

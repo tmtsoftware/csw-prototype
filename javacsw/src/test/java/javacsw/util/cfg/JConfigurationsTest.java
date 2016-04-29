@@ -29,8 +29,8 @@ public class JConfigurationsTest {
     @Test
     public void testSetupConfig() throws Exception {
         String prefix = "my.prefix";
-        Key myKey = Key.<Integer>create("myKey");
-        Key myOtherKey = JStandardKeys.createKey("myOtherKey", String.class);
+        Key myKey = Key.createIntKey("myKey");
+        Key myOtherKey = Key.createStringKey("myOtherKey");
 
         JSetupConfig sc = JConfigurations.createSetupConfig(prefix)
                 .set(JStandardKeys.filter, "MyFilter")

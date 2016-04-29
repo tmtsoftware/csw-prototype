@@ -7,6 +7,7 @@ import csw.util.cfg.Configurations.*;
 import csw.util.cfg.Key;
 import javacsw.util.cfg.JConfigurations;
 import javacsw.util.cfg.JSetupConfig;
+import javacsw.util.cfg.JStandardKeys;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,13 +17,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
-import static javacsw.util.cfg.JStandardKeys.exposureTime;
+import static javacsw.util.cfg.JStandardKeys.*;
 
 public class JBlockingKeyValueStoreTests {
 
     // Keys used in test
-    private static final Key infoValue = Key.<Integer>create("infoValue");
-    private static final Key infoStr = Key.<String>create("infoStr");
+    private static final Key infoValue = Key.createIntKey("infoValue");
+    private static final Key infoStr = Key.createStringKey("infoStr");
 
     // Amount of time to wait for Redis server to answer
     private static Duration timeout = Duration.create(5, "seconds");
@@ -86,15 +87,15 @@ public class JBlockingKeyValueStoreTests {
     @Test
     public void TestSetGetAndGetHistory() throws Exception {
         JSetupConfig config = JConfigurations.createSetupConfig("tcs.testPrefix")
-                .set(exposureTime, 2);
+                .set(exposureTime, 2.0);
 
         String key = "test";
         int n = 3;
-        kvs.set(key, config.set(exposureTime, 3).configType(), n);
-        kvs.set(key, config.set(exposureTime, 4).configType(), n);
-        kvs.set(key, config.set(exposureTime, 5).configType(), n);
-        kvs.set(key, config.set(exposureTime, 6).configType(), n);
-        kvs.set(key, config.set(exposureTime, 7).configType(), n);
+        kvs.set(key, config.set(exposureTime, 3.0).configType(), n);
+        kvs.set(key, config.set(exposureTime, 4.0).configType(), n);
+        kvs.set(key, config.set(exposureTime, 5.0).configType(), n);
+        kvs.set(key, config.set(exposureTime, 6.0).configType(), n);
+        kvs.set(key, config.set(exposureTime, 7.0).configType(), n);
 
         Optional<SetupConfig> v = kvs.get(key);
         assert(v.isPresent());
@@ -110,20 +111,4 @@ public class JBlockingKeyValueStoreTests {
         }
         kvs.delete(key);
     }
-
-/*
- val h = kvs.getHistory(key, n + 1)
- assert(h.size == n + 1)
- for (i ← 0 to n) {
- logger.info(s"History: $i: ${h(i)}")
- }
-
- kvs.delete(key)
-
- }
- }
- */
-
-
-
 }

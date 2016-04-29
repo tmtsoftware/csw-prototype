@@ -8,24 +8,24 @@ import csw.util.cfg.StandardKeys;
  */
 public class JStandardKeys {
 
-    /**
-     * Create a new key from Java
-     * @param name key name
-     * @param valueType type of key
-     * @param <T> type of key
-     * @return the new key
-     *
-     * Here are two ways to create keys from Java:
-     * <code>
-     *    Key myKey = Key.<Integer>create("myKey");
-     *    Key myOtherKey = JStandardKeys.createKey("myOtherKey", String.class);
-     * </code>
-     *
-     * Note: Care needs to be taken when creating keys with primitive types,
-     * since Scala Int and Java Integer are not the same class (although on the Scala
-     * side automatic conversions apply).
-     */
-    public static <T> Key createKey(String name, Class<T> valueType) {return Key.<T>create(name);}
+//    /**
+//     * Create a new key from Java
+//     * @param name key name
+//     * @param valueType type of key
+//     * @param <T> type of key
+//     * @return the new key
+//     *
+//     * Here are two ways to create keys from Java:
+//     * <code>
+//     *    Key myKey = Key.<Integer>create("myKey");
+//     *    Key myOtherKey = JStandardKeys.createKey("myOtherKey", String.class);
+//     * </code>
+//     *
+//     * Note: Care needs to be taken when creating keys with primitive types,
+//     * since Scala Int and Java Integer are not the same class (although on the Scala
+//     * side automatic conversions apply).
+//     */
+//    public static <T> Key createKey(String name, Class<T> valueType) {return Key.<T>create(name);}
 
     // -- Exposure classes --
     public static final StandardKeys.ExposureClass SCIENCE = StandardKeys.SCIENCE$.MODULE$;
@@ -48,6 +48,8 @@ public class JStandardKeys {
     public static final StandardKeys.CloudCoverType ANY = StandardKeys.ANY$.MODULE$;
 
     // -- Common keys --
+
+    // public static final JKey units = new JKey<UnitsOfMeasure.Units>(StandardKeys.units(), UnitsOfMeasure.Units.class);
     public static final Key units = StandardKeys.units();
 
     // -- Setup keys --
@@ -55,10 +57,19 @@ public class JStandardKeys {
     public static final Key cloudCover = StandardKeys.cloudCover();
 
     // -- ObserveConfig --
+
+    // XXX TEMP
+//    public static final JKey<Double> exposureTime = new JKey<>(StandardKeys.exposureTime(), Double.class);
+//    public static final JKey<StandardKeys.ExposureType> exposureType = new JKey<>(StandardKeys.exposureType(), StandardKeys.ExposureType.class);
+//    public static final JKey<StandardKeys.ExposureClass> exposureClass = new JKey<>(StandardKeys.exposureClass(), StandardKeys.ExposureClass.class);
+//    public static final JKey<Integer> repeats = new JKey<>(StandardKeys.repeats(), Integer.class);
+
     public static final Key exposureTime = StandardKeys.exposureTime();
     public static final Key exposureType = StandardKeys.exposureType();
     public static final Key exposureClass = StandardKeys.exposureClass();
     public static final Key repeats = StandardKeys.repeats();
+
+
 
     // -- For tests --
     public static final Key filter = StandardKeys.filter();

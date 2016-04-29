@@ -4,8 +4,8 @@ import java.util.UUID
 
 import scala.compat.Platform
 import scala.language.implicitConversions
+import java.util.{Optional, OptionalDouble, OptionalInt}
 
-import java.util.{ Optional, OptionalDouble, OptionalInt }
 import scala.compat.java8.OptionConverters._
 
 
@@ -75,10 +75,11 @@ object Configurations {
       *
       * @param key   the key, which also contains the value type
       * @param value the value
-      * @tparam A the type of the value
       * @return a new instance of this object with the key set to the given value
       */
-    final def jset[A](key: Key, value: Object): T = create(data.jset(key, value))
+    final def jset(key: Key, value: Any): T = {
+      create(data.jset(key, value))
+    }
 
     /**
      * Lookup a Key in Map and returns an Option

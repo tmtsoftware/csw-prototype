@@ -80,7 +80,7 @@ case class JObserveEvent(configType: ObserveEvent) extends JConfigurations.Confi
    * @param value the value, which must be of the type Key#Value
    * @return a new instance with key set to value
    */
-  def set(key: Key, value: Object): JObserveEvent = {
+  def set(key: Key, value: Any): JObserveEvent = {
     JObserveEvent(configType.jset(key, value))
   }
 }
@@ -98,7 +98,7 @@ case class JStatusEvent(configType: StatusEvent) extends JConfigurations.ConfigG
    * @param value the value, which must be of the type Key#Value
    * @return a new instance with key set to value
    */
-  def set(key: Key, value: Object): JStatusEvent = {
+  def set(key: Key, value: Any): JStatusEvent = {
     JStatusEvent(configType.jset(key, value))
   }
 }
@@ -116,7 +116,7 @@ case class JSystemEvent(configType: SystemEvent) extends JConfigurations.ConfigG
    * @param value the value, which must be of the type Key#Value
    * @return a new instance with key set to value
    */
-  def set(key: Key, value: Object): JSystemEvent = {
+  def set(key: Key, value: Any): JSystemEvent = {
     JSystemEvent(configType.jset(key, value))
   }
 }
@@ -128,16 +128,13 @@ case class JSystemEvent(configType: SystemEvent) extends JConfigurations.ConfigG
  */
 case class JSetupConfig(configType: SetupConfig) extends JConfigurations.ConfigGetters[SetupConfig] {
   /**
-   * Returns a new instance of this object with the given key set to the given value.
-   *
-   * @param key   the key, which also defines the expected value type
-   * @param value the value, which must be of the type Key#Value
-   * @return a new instance with key set to value
-   */
-  def set(key: Key, value: Object): JSetupConfig = {
-    if (!value.isInstanceOf[key.Value]) {
-      throw new IllegalArgumentException(s"Wrong value type for key: $key")
-    }
+    * Returns a new instance of this object with the given key set to the given value.
+    *
+    * @param key   the key, which also defines the expected value type
+    * @param value the value, which must be of the type Key#Value
+    * @return a new instance with key set to value
+    */
+  def set(key: Key, value: Any): JSetupConfig = {
     JSetupConfig(configType.jset(key, value))
   }
 }
@@ -155,7 +152,7 @@ case class JObserveConfig(configType: ObserveConfig) extends JConfigurations.Con
    * @param value the value, which must be of the type Key#Value
    * @return a new instance with key set to value
    */
-  def set(key: Key, value: Object): JObserveConfig = {
+  def set(key: Key, value: Any): JObserveConfig = {
     JObserveConfig(configType.jset(key, value))
   }
 }
@@ -173,7 +170,7 @@ case class JWaitConfig(configType: WaitConfig) extends JConfigurations.ConfigGet
    * @param value the value, which must be of the type Key#Value
    * @return a new instance with key set to value
    */
-  def set(key: Key, value: Object): JWaitConfig = {
+  def set(key: Key, value: Any): JWaitConfig = {
     JWaitConfig(configType.jset(key, value))
   }
 }
