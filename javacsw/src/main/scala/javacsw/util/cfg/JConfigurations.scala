@@ -135,6 +135,9 @@ case class JSetupConfig(configType: SetupConfig) extends JConfigurations.ConfigG
    * @return a new instance with key set to value
    */
   def set(key: Key, value: Object): JSetupConfig = {
+    if (!value.isInstanceOf[key.Value]) {
+      throw new IllegalArgumentException(s"Wrong value type for key: $key")
+    }
     JSetupConfig(configType.jset(key, value))
   }
 }

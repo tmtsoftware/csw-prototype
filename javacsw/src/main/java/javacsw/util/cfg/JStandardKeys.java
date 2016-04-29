@@ -4,9 +4,28 @@ import csw.util.cfg.Key;
 import csw.util.cfg.StandardKeys;
 
 /**
- * Created by abrighto on 28/04/16.
+ * Defines standard keys to be used in configurations (from Java).
  */
 public class JStandardKeys {
+
+    /**
+     * Create a new key from Java
+     * @param name key name
+     * @param valueType type of key
+     * @param <T> type of key
+     * @return the new key
+     *
+     * Here are two ways to create keys from Java:
+     * <code>
+     *    Key myKey = Key.<Integer>create("myKey");
+     *    Key myOtherKey = JStandardKeys.createKey("myOtherKey", String.class);
+     * </code>
+     *
+     * Note: Care needs to be taken when creating keys with primitive types,
+     * since Scala Int and Java Integer are not the same class (although on the Scala
+     * side automatic conversions apply).
+     */
+    public static <T> Key createKey(String name, Class<T> valueType) {return Key.<T>create(name);}
 
     // -- Exposure classes --
     public static final StandardKeys.ExposureClass SCIENCE = StandardKeys.SCIENCE$.MODULE$;
