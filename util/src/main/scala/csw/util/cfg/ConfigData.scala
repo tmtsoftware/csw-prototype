@@ -12,7 +12,7 @@ abstract case class Key(name: String) extends Serializable {
    */
   type Value
 
-//  val valueType: Type
+  //  val valueType: Type
 
   override def toString = name
 }
@@ -27,11 +27,10 @@ object Key {
     type Value = A
   }
 
-//  def create[A: TypeTag](name: String): Key.Aux[A] = new Key(name) {
-//    type Value = A
-//    @transient val valueType = typeOf[A]
-//  }
-
+  //  def create[A: TypeTag](name: String): Key.Aux[A] = new Key(name) {
+  //    type Value = A
+  //    @transient val valueType = typeOf[A]
+  //  }
 
   // Java API
   def createStringKey(name: String): Key.Aux[String] = create[String](name)
@@ -57,14 +56,14 @@ case class ConfigData(data: Map[Key, Any] = Map.empty) extends Serializable {
   def set[A](key: Key.Aux[A], value: A): ConfigData = ConfigData(data + (key → value))
 
   /**
-    * Immutably sets the value for the given key and returns a new instance.
-    * This is used internally for the java API and should not be called otherwise.
-    */
+   * Immutably sets the value for the given key and returns a new instance.
+   * This is used internally for the java API and should not be called otherwise.
+   */
   final def jset(key: Key, value: Any): ConfigData = {
-//    val kc = Class.forName(key.valueType.typeSymbol.asClass.fullName)
-//    val vc = value.getClass
-//    if (!kc.isAssignableFrom(vc))
-//      throw new IllegalArgumentException(s"Expected value of type $kc but found $vc ($value)")
+    //    val kc = Class.forName(key.valueType.typeSymbol.asClass.fullName)
+    //    val vc = value.getClass
+    //    if (!kc.isAssignableFrom(vc))
+    //      throw new IllegalArgumentException(s"Expected value of type $kc but found $vc ($value)")
     ConfigData(data + (key → value))
   }
 

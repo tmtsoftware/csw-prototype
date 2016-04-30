@@ -380,8 +380,13 @@ object LocationService {
         // Gets the URI, adding the akka system as user if needed
         def getUri(uriStr: String): Option[URI] = {
           connection match {
-            case _: AkkaConnection ⇒ getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
-            case _                 ⇒ Some(new URI(uriStr))
+            case _: AkkaConnection ⇒
+              val path = info.getPropertyString(PATH_KEY)
+              log.info(s"XXX uriStr=$uriStr, path=$path")
+              if (path == null) None else getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
+            case _ ⇒
+              log.info(s"XXX uriStr=$uriStr, (not akka: connection=$connection)")
+              Some(new URI(uriStr))
           }
         }
 
@@ -422,8 +427,8 @@ object LocationService {
     // Sends an Identify message to the URI for the actor, which should result in an
     // ActorIdentity reply containing the actorRef.
     private def identify(rs: ResolvedAkkaLocation): Unit = {
+      log.info(s"Attempting to identify actor ${rs.uri.toString}")
       val actorPath = ActorPath.fromString(rs.uri.toString)
-      log.info(s"Attempting to identify actor ${rs.uri}")
       context.actorSelection(actorPath) ! Identify(rs)
     }
 

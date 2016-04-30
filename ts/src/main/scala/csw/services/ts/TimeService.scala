@@ -100,7 +100,7 @@ object TimeService {
   trait TimeServiceScheduler {
     self: Actor with ActorLogging ⇒
 
-    import scala.concurrent.duration.{ FiniteDuration, NANOSECONDS }
+    import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
     implicit val ec = context.system.dispatcher
 
@@ -152,8 +152,7 @@ object TimeService {
 }
 
 /**
-  * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]]
-  */
+ * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]]
+ */
 abstract class JavaTimeServiceScheduler extends UntypedActor with ActorLogging with TimeService.TimeServiceScheduler
-
 

@@ -102,7 +102,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     // Send a setup config to the HCD
     val config = SetupConfig(testPrefix2).set(position, "IR3")
     hcdController ! Submit(config)
-    system.actorOf(StateVariableMatcherActor.props(List(config), self))
+    system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed]
       logger.info(s"Done (2). Received reply from matcher with current state: $status")
