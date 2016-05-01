@@ -15,6 +15,12 @@ trait EventSubscriber extends Actor with ActorLogging {
   private val settings = EventServiceSettings(context.system)
   private val hq = EventService.connectToServer(settings)
 
+  @throws(classOf[Exception])  // For java API
+  override def postStop(): Unit = {
+    log.info(s"Close connection to the event service")
+    hq.close()
+  }
+
   // Unique id for this subscriber
   private val subscriberId = UUID.randomUUID().toString
 
@@ -73,8 +79,6 @@ trait EventSubscriber extends Actor with ActorLogging {
       hq.session.deleteQueue(info.queueName)
     }
   }
-
-  override def postStop(): Unit = hq.close()
 }
 
 // Worker class used to process incoming messages rather than block the receiver thread

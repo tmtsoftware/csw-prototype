@@ -34,9 +34,14 @@ object Key {
 
   // Java API
   def createStringKey(name: String): Key.Aux[String] = create[String](name)
+  def createShortKey(name: String): Key.Aux[Short] = create[Short](name)
   def createIntKey(name: String): Key.Aux[Int] = create[Int](name)
+  def createLongKey(name: String): Key.Aux[Long] = create[Long](name)
   def createDoubleKey(name: String): Key.Aux[Double] = create[Double](name)
   def createFloatKey(name: String): Key.Aux[Float] = create[Float](name)
+  def createShortArrayKey(name: String): Key.Aux[Array[Short]] = create[Array[Short]](name)
+  def createIntArrayKey(name: String): Key.Aux[Array[Int]] = create[Array[Int]](name)
+  def createLongArrayKey(name: String): Key.Aux[Array[Long]] = create[Array[Long]](name)
   // XXX TODO: add common types...
 }
 
