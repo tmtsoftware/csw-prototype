@@ -127,8 +127,8 @@ case class EventService(prefix: String, host: String = "127.0.0.1", port: Int = 
 
   import EventService._
 
-  protected val hq = connectToHornetQ(host, port, useEmbedded)
-  protected val producer = hq.session.createProducer(prefix)
+  private val hq = connectToHornetQ(host, port, useEmbedded)
+  private val producer = hq.session.createProducer(prefix)
 
   /**
    * Publishes the given event (channel is the event prefix).

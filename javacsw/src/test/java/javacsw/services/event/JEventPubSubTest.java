@@ -54,6 +54,7 @@ public class JEventPubSubTest {
     // Define a key for an event id
     static final Key eventNum = Key.createIntKey("eventNum");
 
+    // A dummy class representing a message containing image data
     @SuppressWarnings("unused")
     static class MyImageData implements Serializable {
         private short[] data;
@@ -73,10 +74,15 @@ public class JEventPubSubTest {
     // Dummy image data
     static final MyImageData testImageData = new MyImageData(new short[10000]);
 
+    // Prefix to use for the event
     static final String prefix = "tcs.mobie.red.dat.exposureInfo";
 
+    // Local actor messages used
     public enum Msg {
-        Publish, Done, SubscriberAck, PublisherInfo
+        Publish, // Publisher should publish an event
+        Done, // Test is done
+        SubscriberAck, // Subscriber message to publisher
+        PublisherInfo // initial publisher message to subscriber
     }
 
     // ---
@@ -100,7 +106,12 @@ public class JEventPubSubTest {
         system = null;
     }
 
-
+    /**
+     * Starts the test by creating the subscriber and publisher actors and sending a Publish
+     * message to the publisher.
+     *
+     * @throws Exception
+     */
     @Test
     public void testEventService() throws Exception {
         new JavaTestKit(system) {
@@ -124,7 +135,6 @@ public class JEventPubSubTest {
 
     // A test class that subscribes to events
     static class Subscriber extends JEventSubscriber {
-
         int count = 0;
         long startTime = 0L;
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
@@ -150,6 +160,7 @@ public class JEventPubSubTest {
                     }).build());
         }
 
+        // Actor state while working (after receiving the initial PublisherInfo message)
         PartialFunction<Object, BoxedUnit> working(ActorRef publisher) {
             return ReceiveBuilder.
                     match(ObserveEvent.class, e -> receivedObserveEvent(publisher, e)).
@@ -159,37 +170,37 @@ public class JEventPubSubTest {
         }
 
         private void receiveTimedOut() {
-          log.error("Publisher seems to be blocked!");
+            log.error("Publisher seems to be blocked!");
             getContext().system().terminate();
         }
 
         private void receivedObserveEvent(ActorRef publisher, ObserveEvent e) {
-//            log.info("Received event: " + e);
             JObserveEvent event = new JObserveEvent(e);
-                if (startTime == 0L) startTime = System.currentTimeMillis();
-                OptionalInt numOpt = event.getAsInteger(eventNum);
-                if (!numOpt.isPresent()) {
-                    log.error("Missing eventNum key");
+            if (startTime == 0L) startTime = System.currentTimeMillis();
+            OptionalInt numOpt = event.getAsInteger(eventNum);
+            if (!numOpt.isPresent()) {
+                log.error("Missing eventNum key");
+                getContext().system().terminate();
+            } else {
+                int num = numOpt.getAsInt();
+                if (num != count) {
+                    log.error("Subscriber missed event: " + num + " != " + count);
                     getContext().system().terminate();
                 } else {
-                    int num = numOpt.getAsInt();
-                    if (num != count) {
-                        log.error("Subscriber missed event: " + num + " != " + count);
-                        getContext().system().terminate();
-                    } else {
-                        count = count + 1;
-                        if (count % 100 == 0) {
-                            double t = (System.currentTimeMillis() - startTime) / 1000.0;
-                            log.info("Received {} events in {} seconds ({} per second)",
-                                    count, t, count * 1.0 / t);
-                        }
-                        publisher.tell(SubscriberAck, sender());
+                    count = count + 1;
+                    if (count % 100 == 0) {
+                        double t = (System.currentTimeMillis() - startTime) / 1000.0;
+                        log.info("Received {} events in {} seconds ({} per second)",
+                                count, t, count * 1.0 / t);
                     }
+                    publisher.tell(SubscriberAck, sender());
                 }
+            }
         }
     }
 
 
+    // A test class that publishes events
     static class Publisher extends AbstractActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
         EventServiceSettings settings = new EventServiceSettings(getContext().system());
@@ -212,7 +223,6 @@ public class JEventPubSubTest {
         }
 
         private void publish() {
-//            log.info("Publish " + count);
             eventService.publish(nextEvent(count), expire);
             count += 1;
         }
@@ -254,7 +264,7 @@ public class JEventPubSubTest {
 //            log.info("Received subscriber ack: " + count);
             if (count < totalEventsToPublish) {
                 try {
-                    Thread.sleep(0L, (int)delay.toNanos());
+                    Thread.sleep(0L, (int) delay.toNanos());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

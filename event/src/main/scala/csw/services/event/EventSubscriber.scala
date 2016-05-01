@@ -40,7 +40,7 @@ trait EventSubscriber extends Actor with ActorLogging {
 
   // Local object used to manage a subscription.
   // It creates a queue with a unique name for each channel.
-  case class SubscriberInfo(channel: String) {
+  private case class SubscriberInfo(channel: String) {
     val coreSession = hq.sf.createSession(false, false, false)
     val queueName = makeQueueName(channel)
     coreSession.createQueue(channel, queueName, /*, filter */ false)
@@ -83,7 +83,7 @@ trait EventSubscriber extends Actor with ActorLogging {
 
 // Worker class used to process incoming messages rather than block the receiver thread
 // while unpacking the message
-case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorLogging {
+private case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorLogging {
   import ConfigSerializer._
   override def receive: Receive = {
     case message: ClientMessage ⇒
