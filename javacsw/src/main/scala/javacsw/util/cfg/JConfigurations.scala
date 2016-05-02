@@ -2,6 +2,7 @@ package javacsw.util.cfg
 
 import java.util.{ Optional, OptionalDouble, OptionalInt }
 
+import csw.util.cfg.StateVariable.{ CurrentState, DemandState }
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Events._
 import csw.util.cfg._
@@ -42,6 +43,14 @@ object JConfigurations {
 
   def createWaitConfig(prefix: String): JWaitConfig = JWaitConfig(WaitConfig(prefix))
 
+  def createCurrentState(prefix: String): JCurrentState = JCurrentState(CurrentState(prefix))
+
+  def createCurrentState(config: SetupConfig): JCurrentState = JCurrentState(CurrentState(config.prefix, config.data))
+
+  def createDemandState(prefix: String): JDemandState = JDemandState(DemandState(prefix))
+
+  def createDemandState(config: SetupConfig): JDemandState = JDemandState(DemandState(config.prefix, config.data))
+
   /**
    * Common getter methods for Java APIs
    *
@@ -65,6 +74,7 @@ object JConfigurations {
 
     def getAsString(key: Key): Optional[String] = configType.get(key).map(_.asInstanceOf[String]).asJava
   }
+
 }
 
 /**
@@ -128,12 +138,12 @@ case class JSystemEvent(configType: SystemEvent) extends JConfigurations.ConfigG
  */
 case class JSetupConfig(configType: SetupConfig) extends JConfigurations.ConfigGetters[SetupConfig] {
   /**
-    * Returns a new instance of this object with the given key set to the given value.
-    *
-    * @param key   the key, which also defines the expected value type
-    * @param value the value, which must be of the type Key#Value
-    * @return a new instance with key set to value
-    */
+   * Returns a new instance of this object with the given key set to the given value.
+   *
+   * @param key   the key, which also defines the expected value type
+   * @param value the value, which must be of the type Key#Value
+   * @return a new instance with key set to value
+   */
   def set(key: Key, value: Any): JSetupConfig = {
     JSetupConfig(configType.jset(key, value))
   }
@@ -172,6 +182,42 @@ case class JWaitConfig(configType: WaitConfig) extends JConfigurations.ConfigGet
    */
   def set(key: Key, value: Any): JWaitConfig = {
     JWaitConfig(configType.jset(key, value))
+  }
+}
+
+/**
+ * Java wrapper for CurrentState
+ *
+ * @param configType the underlying config
+ */
+case class JCurrentState(configType: CurrentState) extends JConfigurations.ConfigGetters[CurrentState] {
+  /**
+   * Returns a new instance of this object with the given key set to the given value.
+   *
+   * @param key   the key, which also defines the expected value type
+   * @param value the value, which must be of the type Key#Value
+   * @return a new instance with key set to value
+   */
+  def set(key: Key, value: Any): JCurrentState = {
+    JCurrentState(configType.jset(key, value))
+  }
+}
+
+/**
+ * Java wrapper for DemandState
+ *
+ * @param configType the underlying config
+ */
+case class JDemandState(configType: DemandState) extends JConfigurations.ConfigGetters[DemandState] {
+  /**
+   * Returns a new instance of this object with the given key set to the given value.
+   *
+   * @param key   the key, which also defines the expected value type
+   * @param value the value, which must be of the type Key#Value
+   * @return a new instance with key set to value
+   */
+  def set(key: Key, value: Any): JDemandState = {
+    JDemandState(configType.jset(key, value))
   }
 }
 

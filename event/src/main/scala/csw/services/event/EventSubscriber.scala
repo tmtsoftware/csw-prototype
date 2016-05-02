@@ -15,7 +15,7 @@ trait EventSubscriber extends Actor with ActorLogging {
   private val settings = EventServiceSettings(context.system)
   private val hq = EventService.connectToServer(settings)
 
-  @throws(classOf[Exception])  // For java API
+  @throws(classOf[Exception]) // For java API
   override def postStop(): Unit = {
     log.info(s"Close connection to the event service")
     hq.close()

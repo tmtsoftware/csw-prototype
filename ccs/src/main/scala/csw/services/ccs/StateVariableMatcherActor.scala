@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
 import csw.services.kvs.{Implicits, KvsSettings, StateVariableStore, Subscriber}
 import Implicits._
-import csw.util.cfg.Configurations.StateVariable
-import csw.util.cfg.Configurations.StateVariable.{CurrentState, DemandState, Matcher}
+import csw.util.cfg.StateVariable
+import csw.util.cfg.StateVariable.{CurrentState, DemandState, Matcher}
 import csw.util.cfg.RunId
 
 import scala.concurrent.duration._

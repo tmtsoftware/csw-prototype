@@ -161,7 +161,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
 
     case SubscriberAck ⇒
       if (count < totalEventsToPublish) {
-//        context.system.scheduler.scheduleOnce(delay, self, Publish)
+        //        context.system.scheduler.scheduleOnce(delay, self, Publish)
         Thread.sleep(0L, delay.toNanos.toInt)
         self ! Publish
       } else {

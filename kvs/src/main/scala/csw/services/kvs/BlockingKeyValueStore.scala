@@ -22,7 +22,6 @@ case class BlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: K
    * @param key the key
    * @param value the value to store
    * @param n the max number of history values to keep (default: 0, no history)
-   * @return the result (true if successful)
    */
   def set(key: String, value: T, n: Int = 0): Unit =
     Await.result[Unit](kvs.set(key, value, n), timeout)

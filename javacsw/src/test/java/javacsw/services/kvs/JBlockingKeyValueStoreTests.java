@@ -7,7 +7,6 @@ import csw.util.cfg.Configurations.*;
 import csw.util.cfg.Key;
 import javacsw.util.cfg.JConfigurations;
 import javacsw.util.cfg.JSetupConfig;
-import javacsw.util.cfg.JStandardKeys;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,14 +73,14 @@ public class JBlockingKeyValueStoreTests {
         assert(val2.get(infoValue).contains(2));
         assert(val2.get(infoStr).contains("info 2"));
 
-        assert(kvs.delete("test1") == 1);
-        assert(kvs.delete("test2") == 1);
+        assert(kvs.delete("test1"));
+        assert(kvs.delete("test2"));
 
         assert(!kvs.get("test1").isPresent());
         assert(!kvs.get("test2").isPresent());
 
-        assert(kvs.delete("test1") == 0);
-        assert(kvs.delete("test2") == 0);
+        assert(!kvs.delete("test1"));
+        assert(!kvs.delete("test2"));
     }
 
     @Test

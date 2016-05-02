@@ -1,7 +1,6 @@
 package javacsw.services.kvs
 
 import java.util.Optional
-import javacsw.util.cfg.JConfigurations.ConfigGetters
 
 import akka.actor.ActorRefFactory
 import csw.services.kvs.KeyValueStore.KvsFormatter
@@ -36,17 +35,17 @@ object JBlockingKeyValueStore {
   * @param system Akka env required by RedisClient
   * @tparam T the type (or base type) of objects to store
   */
-case class JBlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: KvsSettings, system: ActorRefFactory) {
+case class JBlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: KvsSettings, system: ActorRefFactory)
+  extends IBlockingKeyValueStore[T] {
 
-  implicit val _system: ActorRefFactory = system
-  val kvs = BlockingKeyValueStore[T](timeout, settings)
+  private implicit val _system: ActorRefFactory = system
+  private val kvs = BlockingKeyValueStore[T](timeout, settings)
 
   /**
     * Sets (and publishes) the value for the given key
     *
     * @param key the key
     * @param value the value to store
-    * @return the result (true if successful)
     */
   def set(key: String, value: T): Unit = kvs.set(key, value)
 
@@ -56,7 +55,6 @@ case class JBlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: 
     * @param key the key
     * @param value the value to store
     * @param n the max number of history values to keep (0 means no history)
-    * @return the result (true if successful)
     */
   def set(key: String, value: T, n: Int): Unit = kvs.set(key, value, n)
 
@@ -81,7 +79,7 @@ case class JBlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: 
     *
     * @return the number of keys that were deleted
     */
-  def delete(key: String): Long = kvs.delete(key)
+  def delete(key: String): Boolean = kvs.delete(key) == 1L
 
   /**
     * Sets a value for the given key, where the value itself is a map with keys and values.
@@ -90,7 +88,7 @@ case class JBlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: 
     * @param value the map of values to store
     * @return the result (true if successful)
     */
-  def hmset(key: String, value: Map[String, String]): Boolean = kvs.hmset(key, value)
+  def hmset(key: String, value: java.util.Map[String, String]): java.lang.Boolean = kvs.hmset(key, value.asScala.toMap)
 
   /**
     * This method is mainly useful for testing hmset. It gets the value of the given field

@@ -13,8 +13,6 @@ import org.scalatest.FunSuiteLike
 import scala.concurrent.duration._
 
 object PeriodicHcdControllerTests {
-  // The next two lines force the location service to initialize the environment
-  // before the actor system is created
   val system = ActorSystem("Test")
 
   val testPrefix1 = "wfos.blue.filter"
@@ -89,7 +87,7 @@ object PeriodicHcdControllerTests {
 
 // Test requires that Redis is running externally
 //@DoNotDiscover
-class PeriodicHcdControllerTests extends TestKit(HcdControllerTests.system)
+class PeriodicHcdControllerTests extends TestKit(PeriodicHcdControllerTests.system)
     with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import HcdControllerTests._

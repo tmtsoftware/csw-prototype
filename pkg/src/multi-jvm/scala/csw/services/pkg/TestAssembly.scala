@@ -3,7 +3,7 @@ package csw.services.pkg
 import akka.actor.ActorRef
 import csw.services.ccs.{AssemblyController, HcdController, StateVariableMatcherActor}
 import csw.services.pkg.Component.AssemblyInfo
-import csw.util.cfg.Configurations.StateVariable.DemandState
+import csw.util.cfg.StateVariable.DemandState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**

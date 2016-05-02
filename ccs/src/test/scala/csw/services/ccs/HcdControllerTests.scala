@@ -5,15 +5,13 @@ import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
 import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.Configurations.StateVariable.CurrentState
+import csw.util.cfg.StateVariable.CurrentState
 import csw.util.cfg.StandardKeys.position
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
 
 object HcdControllerTests {
-  // The next two lines force the location service to initialize the environment
-  // before the actor system is created
   val system = ActorSystem("Test")
 
   val testPrefix1 = "wfos.blue.filter"
