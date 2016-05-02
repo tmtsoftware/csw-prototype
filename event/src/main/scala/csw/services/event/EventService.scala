@@ -107,7 +107,7 @@ object EventService {
   /**
    * Initialize from the settings in resources.conf or application.conf
    * @param prefix the prefix for the events that will be published
-   * @param settings the settings for connexting to the server
+   * @param settings the settings for connecting to the server
    */
   def apply(prefix: String, settings: EventServiceSettings): EventService =
     EventService(prefix, settings.eventServiceHostname.getOrElse("127.0.0.1"),

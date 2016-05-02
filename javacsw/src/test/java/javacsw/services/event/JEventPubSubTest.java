@@ -204,7 +204,7 @@ public class JEventPubSubTest {
     static class Publisher extends AbstractActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
         EventServiceSettings settings = new EventServiceSettings(getContext().system());
-        EventService eventService = EventService.apply(prefix, settings);
+        JEventService eventService = new JEventService(prefix, settings);
         int count = 0;
 
         @Override
