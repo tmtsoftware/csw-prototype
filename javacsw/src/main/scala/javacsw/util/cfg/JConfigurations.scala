@@ -1,8 +1,8 @@
 package javacsw.util.cfg
 
-import java.util.{ Optional, OptionalDouble, OptionalInt }
+import java.util.{Optional, OptionalDouble, OptionalInt}
 
-import csw.util.cfg.StateVariable.{ CurrentState, DemandState }
+import csw.util.cfg.StateVariable.{CurrentState, DemandState}
 import csw.util.cfg.Configurations._
 import csw.util.cfg.Events._
 import csw.util.cfg._

@@ -5,11 +5,11 @@ import csw.services.ccs.HcdController
 import csw.util.cfg.StateVariable.CurrentState
 
 /**
-  * Java API to HcdController
-  */
-abstract class JHcdController extends AbstractActor with ActorLogging with HcdController {
+ * Supports Java subclasses of HcdController
+ */
+abstract class AbstractHcdController extends AbstractActor with ActorLogging with HcdController {
   /**
-    * Notifies all subscribers with the given value (Need to override For Java API)
-    */
+   * Notifies all subscribers with the given value (Need to override to keep java happy)
+   */
   override protected def notifySubscribers(a: CurrentState): Unit = super.notifySubscribers(a)
 }

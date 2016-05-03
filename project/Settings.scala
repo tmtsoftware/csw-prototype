@@ -30,14 +30,29 @@ object Settings {
     resolvers += "Akka Releases" at "http://repo.typesafe.com/typesafe/akka-releases",
     resolvers += "Spray repo" at "http://repo.spray.io",
     resolvers += Resolver.sonatypeRepo("releases"),
-//    resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2",
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
     resolvers += sbtResolver.value
-    // resolvers += "Local Maven" at Path.userHome.asFile.toURI.toURL + ".m2/repository"
   )
 
-  lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(
+
+  // Used to generate JavaDoc. See https://github.com/typesafehub/genjavadoc
+  lazy val JavaDoc = config("genjavadoc") extend Compile
+
+  lazy val javadocSettings = inConfig(JavaDoc)(Defaults.configSettings) ++ Seq(
+    addCompilerPlugin("com.typesafe.genjavadoc" %% "genjavadoc-plugin" % "0.9" cross CrossVersion.full),
+    scalacOptions += s"-P:genjavadoc:out=${target.value}/java",
+    packageDoc in Compile := (packageDoc in JavaDoc).value,
+    sources in JavaDoc :=
+      (target.value / "java" ** "*.java").get ++
+        (sources in Compile).value.filter(_.getName.endsWith(".java")),
+    javacOptions in JavaDoc := Seq(),
+    artifactName in packageDoc in JavaDoc := ((sv, mod, art) =>
+      "" + mod.name + "_" + sv.binary + "-" + mod.revision + "-javadoc.jar")
+  )
+
+
+  lazy val defaultSettings = buildSettings ++ formatSettings ++ javadocSettings ++ Seq(
     // compile options ScalaUnidoc, unidoc
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
@@ -78,4 +93,5 @@ object Settings {
       .setPreference(AlignParameters, true)
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
+
 }

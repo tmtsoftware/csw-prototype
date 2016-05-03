@@ -162,9 +162,9 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
   .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
   .dependsOn(pkg, ts, hcdExample)
 
-
 // Need a root project for unidoc plugin, so we can merge the scaladocs
 val csw = (project in file(".")).
+  configs(JavaDoc).
   settings(defaultSettings: _*).
   settings(siteSettings: _*).
   settings(unidocSettings: _*).
@@ -175,6 +175,5 @@ val csw = (project in file(".")).
       "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
       "DOCROOT" -> "latest/api/index.html"
     )
-  ).
-  aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
-    containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample)
+  ).aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
+    containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, javacsw)
