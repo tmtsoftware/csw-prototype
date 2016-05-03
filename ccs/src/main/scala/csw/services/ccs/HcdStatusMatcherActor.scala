@@ -1,10 +1,10 @@
 package csw.services.ccs
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.util.Timeout
 import csw.util.akka.PublisherActor
 import csw.util.cfg.StateVariable
-import csw.util.cfg.StateVariable.{CurrentState, DemandState, Matcher}
+import csw.util.cfg.StateVariable.{ CurrentState, DemandState, Matcher }
 import csw.util.cfg.RunId
 
 import scala.concurrent.duration._
@@ -15,15 +15,15 @@ object HcdStatusMatcherActor {
    * Props used to create the HcdStatusMatcherActor actor.
    *
    * @param demands the target states that will be compared to their current states
-   * @param hcds the target HCD actors
+   * @param hcds    the target HCD actors
    * @param replyTo the actor to reply to
-   * @param runId the runId to use in the reply
+   * @param runId   the runId to use in the reply
    * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
    * @param matcher the function used to compare the demand and current states
    */
   def props(demands: List[DemandState], hcds: Set[ActorRef], replyTo: ActorRef, runId: RunId = RunId(),
-            timeout: Timeout = Timeout(60.seconds),
-            matcher: Matcher = StateVariable.defaultMatcher): Props =
+    timeout: Timeout = Timeout(60.seconds),
+    matcher: Matcher = StateVariable.defaultMatcher): Props =
     Props(classOf[HcdStatusMatcherActor], demands, hcds, replyTo, runId, timeout, matcher)
 }
 
@@ -34,10 +34,11 @@ object HcdStatusMatcherActor {
  *
  * See props for a description of the arguments.
  */
-class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], replyTo: ActorRef, runId: RunId,
-                            timeout: Timeout, matcher: Matcher) extends Actor with ActorLogging {
+class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], replyTo: ActorRef, runId: RunId = RunId(),
+  timeout: Timeout = Timeout(60.seconds), matcher: Matcher = StateVariable.defaultMatcher) extends Actor with ActorLogging {
 
   import context.dispatcher
+
   context.become(waiting(Set[CurrentState]()))
 
   hcds.foreach(_ ! PublisherActor.Subscribe)

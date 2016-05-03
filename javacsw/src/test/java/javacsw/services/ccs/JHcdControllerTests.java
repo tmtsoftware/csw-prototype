@@ -6,9 +6,11 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
+import akka.util.Timeout;
 import csw.services.ccs.CommandStatus;
 import csw.services.ccs.HcdController.Submit;
 import csw.util.cfg.Configurations.SetupConfig;
+import csw.util.cfg.RunId;
 import csw.util.cfg.StateVariable.CurrentState;
 import csw.util.cfg.StateVariable.DemandState;
 import javacsw.util.cfg.JConfigurations;
@@ -19,7 +21,10 @@ import scala.PartialFunction;
 import scala.concurrent.duration.FiniteDuration;
 import scala.runtime.BoxedUnit;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
+
 import static javacsw.util.cfg.JStandardKeys.position;
 
 /**
@@ -159,10 +164,11 @@ public class JHcdControllerTests {
                 hcdController.tell(new Submit(config), getRef());
                 DemandState demand = JConfigurations.createDemandState(config).configType();
 
-                system.actorOf(JHcdStatusMatcherActor.props(
-                        Collections.singletonList(demand),
-                        Collections.singleton(hcdController),
-                        getRef()));
+                // Create an actor to subscribe and wait for the HCD to get to the demand state
+                BiFunction<DemandState, CurrentState, Boolean> matcher = (d, c) -> Objects.equals(d.prefix(), c.prefix()) && Objects.equals(d.data(), c.data());
+                JHcdController.getHcdStatusMatcherActor(
+                        system, Collections.singletonList(demand), Collections.singleton(hcdController), getRef(),
+                        RunId.create(), new Timeout(5, TimeUnit.SECONDS), matcher);
 
                 new Within(JavaTestKit.duration("10 seconds")) {
                     protected void run() {

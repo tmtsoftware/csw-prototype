@@ -7,6 +7,7 @@ import java.util.UUID
  */
 object RunId {
   def apply(): RunId = new RunId(UUID.randomUUID().toString)
+  def create(): RunId = new RunId(UUID.randomUUID().toString)
 
   def apply(uuid: UUID): RunId = new RunId(uuid.toString)
 }
