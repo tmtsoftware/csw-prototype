@@ -25,6 +25,9 @@ To build, run 'sbt' in the top level directory and type one of the following com
 * multi-jvm:test - run tests that use multiple JVMs (Switch to individual project first to avoid "address in use" errors or conflicts)
 * stage - create the standalone apps and test apps (installed in */target/universal/stage/bin)
 * publish-local - publish artifacts to the local ivy repository (~/.ivy2)
+* doc - generates the scaladoc
+* genjavadoc:doc - generates documentation in javadoc format
+* unidoc - generates combined scaladocs for all projects
 
 Commands apply to the entire build unless otherwise specified.
 You can narrow the focus to a subproject with the sbt "project" command.
