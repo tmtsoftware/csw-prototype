@@ -1,10 +1,10 @@
 package csw.services.ccs
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import csw.util.akka.PublisherActor
 import csw.util.cfg.StateVariable
-import csw.util.cfg.StateVariable.{ CurrentState, DemandState, Matcher }
+import csw.util.cfg.StateVariable.{CurrentState, DemandState, Matcher}
 import csw.util.cfg.RunId
 
 import scala.concurrent.duration._
@@ -22,8 +22,8 @@ object HcdStatusMatcherActor {
    * @param matcher the function used to compare the demand and current states
    */
   def props(demands: List[DemandState], hcds: Set[ActorRef], replyTo: ActorRef, runId: RunId = RunId(),
-    timeout: Timeout = Timeout(60.seconds),
-    matcher: Matcher = StateVariable.defaultMatcher): Props =
+            timeout: Timeout = Timeout(60.seconds),
+            matcher: Matcher = StateVariable.defaultMatcher): Props =
     Props(classOf[HcdStatusMatcherActor], demands, hcds, replyTo, runId, timeout, matcher)
 }
 
@@ -35,7 +35,7 @@ object HcdStatusMatcherActor {
  * See props for a description of the arguments.
  */
 class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], replyTo: ActorRef, runId: RunId = RunId(),
-  timeout: Timeout = Timeout(60.seconds), matcher: Matcher = StateVariable.defaultMatcher) extends Actor with ActorLogging {
+                            timeout: Timeout = Timeout(60.seconds), matcher: Matcher = StateVariable.defaultMatcher) extends Actor with ActorLogging {
 
   import context.dispatcher
 

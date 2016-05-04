@@ -166,7 +166,7 @@ public class JHcdControllerTests {
 
                 // Create an actor to subscribe and wait for the HCD to get to the demand state
                 BiFunction<DemandState, CurrentState, Boolean> matcher = (d, c) -> Objects.equals(d.prefix(), c.prefix()) && Objects.equals(d.data(), c.data());
-                JHcdController.getHcdStatusMatcherActor(
+                JHcdStatusMatcherActorFactory.getHcdStatusMatcherActor(
                         system, Collections.singletonList(demand), Collections.singleton(hcdController), getRef(),
                         RunId.create(), new Timeout(5, TimeUnit.SECONDS), matcher);
 

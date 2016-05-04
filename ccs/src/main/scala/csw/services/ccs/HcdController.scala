@@ -35,7 +35,7 @@ trait HcdController extends PublisherActor[CurrentState] {
    * This should be used by the implementer actor's receive method.
    * For example: def receive: Receive = controllerReceive orElse ...
    */
-  def controllerReceive: Receive = publisherReceive orElse {
+  protected def controllerReceive: Receive = publisherReceive orElse {
     case Submit(config)  ⇒ process(config)
 
     // Can be used by related actors to post the current status

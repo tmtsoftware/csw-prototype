@@ -2,34 +2,34 @@ package javacsw.services.ccs;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
+import csw.services.ccs.AssemblyController;
+import csw.services.loc.Connection;
+import csw.services.loc.LocationService;
+import csw.services.loc.LocationService.*;
 import csw.util.cfg.Configurations;
 import csw.util.cfg.RunId;
 import csw.util.cfg.StateVariable;
 import csw.util.cfg.StateVariable.*;
+import scala.Function2;
+import scala.Option;
 import scala.PartialFunction;
+import scala.collection.Seq;
 import scala.runtime.BoxedUnit;
 import akka.util.Timeout;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.*;
 
 /**
- * Parent class of HCD controllers implemented in Java
+ * Parent class of assembly controllers implemented in Java.
  * <p>
- * Note: The methods in this class are defined as public although they override protected Scala methods.
- * This is due to differences in the way Scala implements "protected". The methods should still only be called
- * from derived classes.
+ * Note: The non-static methods here are only defined as public due to interoperability issues between Scala and Java
+ * and should normally be protected (Actors only react to messages).
  */
-abstract public class JHcdController extends AbstractHcdController {
+abstract public class JAssemblyController extends AbstractAssemblyController {
 
-    /**
-     * Derived classes should process the given config and eventually either call
-     * notifySubscribers() or send a CurrentState message to itself
-     * (possibly from a worker actor) to indicate changes in the current HCD state.
-     */
-    @Override
-    public /*protected*/ abstract void process(Configurations.SetupConfig config);
 
     /**
      * A request to the implementing actor to publish the current state value
@@ -54,6 +54,5 @@ abstract public class JHcdController extends AbstractHcdController {
     public /*protected*/ void notifySubscribers(StateVariable.CurrentState a) {
         super.notifySubscribers(a);
     }
-
 
 }

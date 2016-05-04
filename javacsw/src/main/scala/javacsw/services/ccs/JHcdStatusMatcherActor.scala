@@ -10,12 +10,12 @@ import scala.concurrent.duration._
 object JHcdStatusMatcherActor {
 
   /**
-    * Props used to create the HcdStatusMatcherActor actor from Java.
-    *
-    * @param demands the target states that will be compared to their current states
-    * @param hcds    the target HCD actors
-    * @param replyTo the actor to reply to
-    */
+   * Props used to create the HcdStatusMatcherActor actor from Java.
+   *
+   * @param demands the target states that will be compared to their current states
+   * @param hcds    the target HCD actors
+   * @param replyTo the actor to reply to
+   */
   def props(demands: java.util.List[DemandState], hcds: java.util.Set[ActorRef], replyTo: ActorRef): Props = {
     import scala.collection.JavaConversions._
     Props(classOf[HcdStatusMatcherActor], demands.toList, hcds.toSet, replyTo, RunId(), Timeout(60.seconds),
@@ -23,19 +23,18 @@ object JHcdStatusMatcherActor {
   }
 
   /**
-    * Props used to create the HcdStatusMatcherActor actor from Java.
-    *
-    * @param demands the target states that will be compared to their current states
-    * @param hcds    the target HCD actors
-    * @param replyTo the actor to reply to
-    * @param runId   the runId to use in the reply
-    * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
-    * @param matcher the function used to compare the demand and current states
-    */
+   * Props used to create the HcdStatusMatcherActor actor from Java.
+   *
+   * @param demands the target states that will be compared to their current states
+   * @param hcds    the target HCD actors
+   * @param replyTo the actor to reply to
+   * @param runId   the runId to use in the reply
+   * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
+   * @param matcher the function used to compare the demand and current states
+   */
   def props(demands: java.util.List[DemandState], hcds: java.util.Set[ActorRef], replyTo: ActorRef, runId: RunId,
             timeout: Timeout,
-            matcher: java.util.function.BiFunction[DemandState, CurrentState, java.lang.Boolean])
-  : Props = {
+            matcher: java.util.function.BiFunction[DemandState, CurrentState, java.lang.Boolean]): Props = {
     import scala.collection.JavaConversions._
     import java.util.function._
     import scala.compat.java8.FunctionConverters._
