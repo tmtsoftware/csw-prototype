@@ -1,7 +1,5 @@
 package javacsw.services.kvs;
 
-import csw.services.kvs.KeyValueStore;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,12 +43,14 @@ public interface IBlockingKeyValueStore<T> {
      *
      * @param key the key to use
      * @param n max number of history values to return
+     * @return list of the last n values
      */
     List<T> getHistory(String key, int n);
 
     /**
      * Deletes the given key(s) from the store
      *
+     * @param key the key to delete
      * @return the number of keys that were deleted
      */
     boolean delete(String key);

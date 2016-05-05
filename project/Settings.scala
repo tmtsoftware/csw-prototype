@@ -36,23 +36,23 @@ object Settings {
   )
 
 
-  // Used to generate JavaDoc. See https://github.com/typesafehub/genjavadoc
-  lazy val JavaDoc = config("genjavadoc") extend Compile
+//  // Used to generate JavaDoc. See https://github.com/typesafehub/genjavadoc
+//  lazy val JavaDoc = config("genjavadoc") extend Compile
+//
+//  lazy val javadocSettings = inConfig(JavaDoc)(Defaults.configSettings) ++ Seq(
+//    addCompilerPlugin("com.typesafe.genjavadoc" %% "genjavadoc-plugin" % "0.9" cross CrossVersion.full),
+//    scalacOptions += s"-P:genjavadoc:out=${target.value}/java",
+//    packageDoc in Compile := (packageDoc in JavaDoc).value,
+//    sources in JavaDoc :=
+//      (target.value / "java" ** "*.java").get ++
+//        (sources in Compile).value.filter(_.getName.endsWith(".java")),
+//    javacOptions in JavaDoc := Seq(),
+//    artifactName in packageDoc in JavaDoc := ((sv, mod, art) =>
+//      "" + mod.name + "_" + sv.binary + "-" + mod.revision + "-javadoc.jar")
+//  )
 
-  lazy val javadocSettings = inConfig(JavaDoc)(Defaults.configSettings) ++ Seq(
-    addCompilerPlugin("com.typesafe.genjavadoc" %% "genjavadoc-plugin" % "0.9" cross CrossVersion.full),
-    scalacOptions += s"-P:genjavadoc:out=${target.value}/java",
-    packageDoc in Compile := (packageDoc in JavaDoc).value,
-    sources in JavaDoc :=
-      (target.value / "java" ** "*.java").get ++
-        (sources in Compile).value.filter(_.getName.endsWith(".java")),
-    javacOptions in JavaDoc := Seq(),
-    artifactName in packageDoc in JavaDoc := ((sv, mod, art) =>
-      "" + mod.name + "_" + sv.binary + "-" + mod.revision + "-javadoc.jar")
-  )
 
-
-  lazy val defaultSettings = buildSettings ++ formatSettings ++ javadocSettings ++ Seq(
+  lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(
     // compile options ScalaUnidoc, unidoc
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),

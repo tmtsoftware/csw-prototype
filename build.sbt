@@ -164,7 +164,7 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
 
 // Need a root project for unidoc plugin, so we can merge the scaladocs
 val csw = (project in file(".")).
-  configs(JavaDoc).
+//  configs(JavaDoc).
   settings(defaultSettings: _*).
   settings(siteSettings: _*).
   settings(unidocSettings: _*).
