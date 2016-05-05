@@ -7,16 +7,25 @@ import akka.actor._
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
-import csw.services.loc.LocationService.LocationTrackerWorker.LocationsReady
+import csw.services.loc.LocationTrackerWorker.LocationsReady
 import org.slf4j.LoggerFactory
 
-import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
+import collection.JavaConverters._
+
 /**
  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
- * Note: On a mac, you can use the command line tool dns-sd to browser the registered services.
+ *
+ * The Location Service is based on Multicast DNS (AppleTalk, Bonjour) and can be used to register and lookup
+ * akka and http based services in the local network.
+ *
+ * Every application using the location service should call the initInterface() method once at startup,
+ * before creating any actors.
+ *
+ * Note: On a mac, you can use the command line tool dns-sd to browse the registered services.
+ * On Linux use avahi-browse.
  */
 object LocationService {
 
@@ -92,12 +101,21 @@ object LocationService {
     registry
   }
 
+  /**
+   * Represents a registered connection to a service
+   */
   sealed trait Registration {
     def connection: Connection
   }
 
+  /**
+   * Represents a registered connection to an Akka service
+   */
   final case class AkkaRegistration(connection: AkkaConnection, component: ActorRef, prefix: String = "") extends Registration
 
+  /**
+   * Represents a registered connection to a HTTP based service
+   */
   final case class HttpRegistration(connection: HttpConnection, port: Int, path: String) extends Registration
 
   // Multicast DNS service type
@@ -252,10 +270,6 @@ object LocationService {
   private def getActorUri(actorRef: ActorRef, system: ActorSystem): URI =
     new URI(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
-  object RegistrationTracker {
-    def props(register: Set[Registration], replyTo: Option[ActorRef] = None): Props = Props(classOf[RegistrationTracker], register, replyTo)
-  }
-
   /**
    * Convenience method that gets the location service information for a given set of services.
    *
@@ -267,6 +281,16 @@ object LocationService {
     import akka.pattern.ask
     val actorRef = system.actorOf(LocationTrackerWorker.props(None))
     (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]
+  }
+
+  object RegistrationTracker {
+    /**
+     * Used to create the RegistrationTracker actor
+     *
+     * @param registration Set of registrations to be registered with Location Service
+     * @param replyTo      optional actorRef to reply to (default: parent of this actor)
+     */
+    def props(registration: Set[Registration], replyTo: Option[ActorRef] = None): Props = Props(classOf[RegistrationTracker], registration, replyTo)
   }
 
   /**
@@ -500,59 +524,4 @@ object LocationService {
 
   }
 
-  object LocationTrackerWorker {
-
-    /**
-     * Message sent to the replyTo actor (or sender) whenever all the requested services become available
-     *
-     * @param locations requested connections to the resolved information
-     */
-    case class LocationsReady(locations: Set[Location])
-
-    case class TrackConnections(connection: Set[Connection])
-
-    /**
-     * Used to create the actor
-     *
-     * @param replyTo the LocationsReady message is sent to this actor, if set, otherwise the actor that sent the
-     *                TrackConnections message
-     */
-    def props(replyTo: Option[ActorRef]): Props = Props(classOf[LocationTrackerWorker], replyTo)
-  }
-
-  private class LocationTrackerWorker(replyTo: Option[ActorRef]) extends Actor with ActorLogging {
-
-    import LocationTrackerWorker._
-
-    // Create a tracker for this set of connections
-    val tracker = context.actorOf(LocationTracker.props(Some(context.self)))
-
-    // And a client for watching the answers
-    var trackerClient = LocationTrackerClient(tracker)
-
-    // This is needed in order to get a sender to reply to in the case that replyTo is None
-    // (This is the case when used in an "ask" message, where you want to turn the response into a Future)
-    def startupReceive: Receive = {
-      case TrackConnections(connections) ⇒
-        context.become(finishReceive(replyTo.getOrElse(sender())))
-        // Track each of the connections
-        connections.foreach(c ⇒ trackerClient = trackerClient.trackConnection(c))
-    }
-
-    def finishReceive(a: ActorRef): Receive = {
-      case loc: Location ⇒
-        trackerClient = trackerClient.locationUpdate(loc)
-        if (trackerClient.allResolved) {
-          a ! LocationsReady(trackerClient.getLocations)
-          context.stop(self)
-        }
-
-      case x ⇒ log.error(s"Unexpected message: $x")
-    }
-
-    // Start with startup Receive
-    def receive = startupReceive
-  }
-
 }
-

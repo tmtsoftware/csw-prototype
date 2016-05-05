@@ -63,8 +63,8 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     val tracker = system.actorOf(RegistrationTracker.props(Set(akkaRegister, httpRegister), Some(trackerResponseProbe.ref)))
 
     val m1 = Seq(
-      trackerResponseProbe.expectMsgType[ComponentRegistered](10.second),
-      trackerResponseProbe.expectMsgType[ComponentRegistered](10.second)
+      trackerResponseProbe.expectMsgType[ComponentRegistered](t),
+      trackerResponseProbe.expectMsgType[ComponentRegistered](t)
     )
 
     assert(m1.size == 2)
@@ -78,11 +78,10 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     import LocationService._
 
     val componentId = ComponentId("TestAss3b", Assembly)
-    val testPrefix = "test.prefix3"
     val testProbe = TestProbe()
     val actorTestProbe = TestProbe()
 
-    val f = LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix)
+    val f = LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, "test.prefix3")
 
     val tracker = system.actorOf(LocationTracker.props(Some(testProbe.ref)), "LocationTracker!")
 
@@ -92,7 +91,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     testProbe.expectMsg(t, Unresolved(ac))
 
-    val ready = testProbe.expectMsgClass(10.seconds, classOf[ResolvedAkkaLocation])
+    val ready = testProbe.expectMsgClass(t, classOf[ResolvedAkkaLocation])
     assert(ready.connection == ac)
     //    expectNoMsg(5.seconds)
 
@@ -120,7 +119,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     testProbe.expectMsg(t, Unresolved(ac))
 
-    val ready = testProbe.expectMsgClass(10.seconds, classOf[ResolvedAkkaLocation])
+    val ready = testProbe.expectMsgClass(t, classOf[ResolvedAkkaLocation])
     assert(ready.connection == ac)
 
     //    expectNoMsg(5.seconds)
@@ -136,7 +135,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     import LocationService._
 
     val componentId = ComponentId("TestAss5b", Assembly)
-    val testPrefix = "test.prefix5"
+//    val testPrefix = "test.prefix5"
     val testPort = 1000
 
     val testProbe = TestProbe()
@@ -151,7 +150,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     testProbe.expectMsg(t, Unresolved(hc))
 
-    val ready = testProbe.expectMsgClass(10.seconds, classOf[ResolvedHttpLocation])
+    val ready = testProbe.expectMsgClass(t, classOf[ResolvedHttpLocation])
     assert(ready.connection == hc)
 
     //    expectNoMsg(5.seconds)
@@ -240,7 +239,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     val f1 = LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix)
 
-    val r1 = testProbe.expectMsgClass(10.seconds, classOf[ResolvedAkkaLocation])
+    val r1 = testProbe.expectMsgClass(t, classOf[ResolvedAkkaLocation])
     assert(r1.connection == ac)
 
     val f2 = LocationService.registerHttpConnection(componentId, testPort)
@@ -281,7 +280,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
 
     val f1 = LocationService.registerAkkaConnection(componentId, actorTestProbe.ref, testPrefix)
 
-    val r1 = testProbe.expectMsgClass(10.seconds, classOf[ResolvedAkkaLocation])
+    val r1 = testProbe.expectMsgClass(t, classOf[ResolvedAkkaLocation])
     assert(r1.connection == ac)
 
     val f2 = LocationService.registerHttpConnection(componentId, testPort)

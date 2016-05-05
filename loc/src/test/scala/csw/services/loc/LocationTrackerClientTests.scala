@@ -7,7 +7,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.loc.ComponentType._
 import csw.services.loc.Connection._
 import csw.services.loc.LocationService._
-import csw.services.loc.LocationService.LocationTrackerWorker.LocationsReady
+import csw.services.loc.LocationTrackerWorker.LocationsReady
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.{Await, Future}

@@ -43,7 +43,7 @@ object Connection {
   }
 
   /**
-   * Gets a LocationRef from a string as output by toString
+   * Gets a Connection from a string as output by toString
    */
   def apply(s: String): Try[Connection] = {
     val (id, typ) = s.splitAt(s.lastIndexOf('-')) // To strings
@@ -54,6 +54,9 @@ object Connection {
     }
   }
 
+  /**
+   * Gets a Connection based on the component id and connection type
+   */
   def apply(componentId: ComponentId, connectionType: ConnectionType): Connection = {
     connectionType match {
       case AkkaType ⇒ AkkaConnection(componentId)
