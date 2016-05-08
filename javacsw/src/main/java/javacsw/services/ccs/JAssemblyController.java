@@ -1,26 +1,9 @@
 package javacsw.services.ccs;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorRefFactory;
 import csw.services.ccs.AssemblyController;
-import csw.services.loc.Connection;
-import csw.services.loc.LocationService;
-import csw.services.loc.LocationService.*;
-import csw.util.cfg.Configurations;
-import csw.util.cfg.RunId;
 import csw.util.cfg.StateVariable;
-import csw.util.cfg.StateVariable.*;
-import scala.Function2;
-import scala.Option;
 import scala.PartialFunction;
-import scala.collection.Seq;
 import scala.runtime.BoxedUnit;
-import akka.util.Timeout;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.*;
 
 /**
  * Parent class of assembly controllers implemented in Java.
@@ -28,8 +11,22 @@ import java.util.function.*;
  * Note: The non-static methods here are only defined as public due to interoperability issues between Scala and Java
  * and should normally be protected (Actors only react to messages).
  */
+@SuppressWarnings("unused")
 abstract public class JAssemblyController extends AbstractAssemblyController {
 
+    /**
+     * Indicates a valid config (Invalid is a class that takes a reason argument)
+     */
+    public static final Validation Valid = Valid$.MODULE$;
+
+    /**
+     * Indicates an invalid config
+     *
+     * @param reason a description of why the config is invalid
+     */
+    public static Validation Invalid(String reason) {
+        return new AssemblyController.Invalid(reason);
+    }
 
     /**
      * A request to the implementing actor to publish the current state value

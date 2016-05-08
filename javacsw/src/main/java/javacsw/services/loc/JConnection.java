@@ -1,6 +1,5 @@
 package javacsw.services.loc;
 
-import akka.http.scaladsl.model.headers.Connection$;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection;
 import csw.services.loc.Connection.*;
@@ -9,18 +8,19 @@ import csw.services.loc.ConnectionType;
 /**
  * Java API for location service connections
  */
+@SuppressWarnings("unused")
 public class JConnection {
     /**
      * A connection to a remote akka actor based component
      */
-    public static AkkaConnection createAkkaConnection(ComponentId componentId) {
+    public static AkkaConnection akkaConnection(ComponentId componentId) {
         return new AkkaConnection(componentId);
     }
 
     /**
      * A connection to a remote http based component
      */
-    public static HttpConnection createHttpConnection(ComponentId componentId) {
+    public static HttpConnection httpConnection(ComponentId componentId) {
         return new HttpConnection(componentId);
     }
 

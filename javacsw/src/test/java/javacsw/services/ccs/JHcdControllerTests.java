@@ -124,7 +124,7 @@ public class JHcdControllerTests {
                     match(SetupConfig.class, this::handleSetupConfig).
                     match(RequestCurrentState.class, rcs -> handleRequestCurrentState()).
                     match(WorkDone.class, wd -> handleWorkDone(wd.config)).
-                    match(Object.class, t -> log.warning("Unknown message received: " + t)).
+                    matchAny(t -> log.warning("Unknown message received: " + t)).
                     build());
         }
 

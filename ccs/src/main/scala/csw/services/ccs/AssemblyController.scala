@@ -2,6 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
+import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.LocationTrackerClientActor
 import csw.util.akka.PublisherActor
 import csw.util.cfg.StateVariable._
@@ -151,4 +152,50 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
       stateMatcherActor = Some(context.actorOf(props))
     }
   }
+
+  /**
+   * This method can be called from the setup method to distribute parts of the configs to HDCs based on the
+   * prefix. If the prefix of a SetupConfig matches the one for the HCD, it is sent to that HCD.
+   *
+   * @param locationsResolved true if the locations of all the assembly's required services (HCDs) have been resolved
+   * @param configArg contains one or more configs
+   * @param replyTo send the command status (Completed) to this actor when all the configs are "matched" or an error status if a timeout occurs
+   * @return Valid if locationsResolved, otherwise Invalid
+   */
+  protected def distributeSetupConfigs(locationsResolved: Boolean, configArg: SetupConfigArg,
+                                       replyTo: Option[ActorRef]): Validation = {
+    if (locationsResolved) {
+      val pairs = for {
+        config ← configArg.configs
+        actorRef ← getActorRefs(config.prefix)
+      } yield {
+        actorRef ! HcdController.Submit(config)
+        (actorRef, DemandState(config))
+      }
+      val hcds = pairs.map(_._1).toSet
+      val demandStates = pairs.map(_._2)
+      matchDemandStates(demandStates, hcds, replyTo, configArg.info.runId)
+      Valid
+    } else {
+      val s = "Unresolved locations for one or more HCDs"
+      log.error(s)
+      Invalid(s)
+    }
+  }
+
+  /**
+   * Helper method to subscribe to status values (CurrentState objects) from the assembly's connections (to HCDs).
+   * This can be called from the allResolved() method.
+   *
+   * @param locations  the resolved locations of the assembly's connections (to HCDs, for example)
+   * @param subscriber the actor that should receive the status messages (CurrentState objects)
+   */
+  protected def subscribe(locations: Set[Location], subscriber: ActorRef = self): Unit = {
+    val x = locations.collect {
+      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) ⇒ actorRefOpt
+    }
+    val hcds = x.flatten
+    hcds.foreach(_ ! PublisherActor.Subscribe)
+  }
+
 }

@@ -44,23 +44,24 @@ object LifecycleManager {
 
   case class LifecycleFailure(state: LifecycleState, reason: String) extends LifecycleCommand
 
-  sealed trait FSMData
+  //
+  private[pkg] sealed trait FSMData
 
-  case object TargetLoaded extends FSMData
+  private[pkg] case object TargetLoaded extends FSMData
 
-  case object TargetPendingInitializedFromLoaded extends FSMData
+  private[pkg] case object TargetPendingInitializedFromLoaded extends FSMData
 
-  case object TargetPendingLoadedFromInitialized extends FSMData
+  private[pkg] case object TargetPendingLoadedFromInitialized extends FSMData
 
-  case object TargetInitialized extends FSMData
+  private[pkg] case object TargetInitialized extends FSMData
 
-  case object TargetPendingRunningFromInitialized extends FSMData
+  private[pkg] case object TargetPendingRunningFromInitialized extends FSMData
 
-  case object TargetPendingInitializedFromRunning extends FSMData
+  private[pkg] case object TargetPendingInitializedFromRunning extends FSMData
 
-  case object TargetRunning extends FSMData
+  private[pkg] case object TargetRunning extends FSMData
 
-  case class FailureInfo(state: LifecycleState, reason: String) extends FSMData
+  private[pkg] case class FailureInfo(state: LifecycleState, reason: String) extends FSMData
 
   /**
    * Reply from component for failed lifecycle changes

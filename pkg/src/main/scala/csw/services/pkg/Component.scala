@@ -59,7 +59,9 @@ object Component {
    *
    * @param componentName        name used to register the component with the location service
    * @param prefix               the configuration prefix (part of configs that component should receive)
+   * @param componentClassName   The name of the class that implements the component (used to create the class via reflection)
    * @param locationServiceUsage how the component plans to use the location service
+   * @param registerAs           register as an akka or http component or both
    * @param rate                 the HCD's refresh rate
    */
   final case class HcdInfo(
@@ -78,7 +80,9 @@ object Component {
    *
    * @param componentName        name used to register the component with the location service
    * @param prefix               the configuration prefix (part of configs that component should receive)
+   * @param componentClassName   The name of the class that implements the component (used to create the class via reflection)
    * @param locationServiceUsage how the component plans to use the location service
+   * @param registerAs           register as an akka or http component or both
    * @param connections          a list of connections that includes componentIds and connection Types
    */
   final case class AssemblyInfo(
@@ -92,6 +96,17 @@ object Component {
     val componentType = Assembly
   }
 
+  /**
+   * Describes a container component.
+   *
+   * @param componentName        name used to register the component with the location service
+   * @param locationServiceUsage how the component plans to use the location service
+   * @param registerAs           register as an akka or http component or both
+   * @param componentInfos       information about the components contained in the container
+   * @param initialDelay         only for testing
+   * @param creationDelay        only for testing
+   * @param lifecycleDelay       only for testing
+   */
   final case class ContainerInfo(
       componentName:        String,
       locationServiceUsage: LocationServiceUsage,

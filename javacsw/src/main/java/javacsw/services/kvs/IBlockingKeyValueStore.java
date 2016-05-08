@@ -12,6 +12,7 @@ import java.util.Optional;
  * I'm leaving that out for now.
  */
 //public interface IBlockingKeyValueStore<T extends KeyValueStore.KvsFormatter> {
+@SuppressWarnings("unused")
 public interface IBlockingKeyValueStore<T> {
     /**
      * Sets (and publishes) the value for the given key

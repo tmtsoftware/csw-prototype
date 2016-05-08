@@ -2,7 +2,6 @@ package javacsw.services.loc;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
 import akka.util.Timeout;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection;

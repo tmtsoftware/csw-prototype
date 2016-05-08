@@ -1,18 +1,9 @@
 package javacsw.services.ccs;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorRefFactory;
 import csw.util.cfg.Configurations;
-import csw.util.cfg.RunId;
 import csw.util.cfg.StateVariable;
-import csw.util.cfg.StateVariable.*;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
-import akka.util.Timeout;
-
-import java.util.List;
-import java.util.Set;
-import java.util.function.*;
 
 /**
  * Parent class of HCD controllers implemented in Java
@@ -54,6 +45,4 @@ abstract public class JHcdController extends AbstractHcdController {
     public /*protected*/ void notifySubscribers(StateVariable.CurrentState a) {
         super.notifySubscribers(a);
     }
-
-
 }

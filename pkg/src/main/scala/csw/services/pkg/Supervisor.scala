@@ -9,7 +9,6 @@ import csw.services.loc.{ComponentId, LocationService}
 import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 import csw.services.pkg.LifecycleManager._
 import csw.util.akka.PublisherActor
-import csw.util.cfg.Configurations.{ControlConfig, ControlConfigArg, SetupConfig}
 
 import scala.util.{Failure, Success}
 
@@ -25,6 +24,11 @@ import scala.util.{Failure, Success}
  */
 object Supervisor {
 
+  /**
+   * Returns a new supervisor actor managing the components described in the argument
+   * @param componentInfo describes the components to create and manage
+   * @return the actorRef for the supervisor (parent actor of the top level component)
+   */
   def apply(componentInfo: ComponentInfo): ActorRef = {
     val system = ActorSystem(s"${componentInfo.componentName}-system")
     system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor")
@@ -39,28 +43,38 @@ object Supervisor {
   private def props(componentInfo: ComponentInfo): Props = Props(classOf[Supervisor], componentInfo)
 
   /**
+   * Base trair of supervisor actor messages
+   */
+  sealed trait SupervisorMessage
+
+  /**
    * Message used to subscribe the sender to changes in lifecycle states
    *
    * @param actorRef the actor subscribing to callbacks
    */
-  case class SubscribeLifecycleCallback(actorRef: ActorRef)
+  case class SubscribeLifecycleCallback(actorRef: ActorRef) extends SupervisorMessage
 
   /**
    * Message to unsubscribe  from lifecycle state changes
    */
-  final case class UnsubscribeLifecycleCallback(actorRef: ActorRef)
+  case class UnsubscribeLifecycleCallback(actorRef: ActorRef) extends SupervisorMessage
 
   /**
    * Message sent to subscribers of lifecycle states
    *
    * @param state the current state
    */
-  case class LifecycleStateChanged(state: LifecycleState)
+  case class LifecycleStateChanged(state: LifecycleState) extends SupervisorMessage
 
   /**
    * Message sent to supervisor from component or elsewhere to restart lifecycle for component
    */
-  case object RestartComponent
+  case object RestartComponent extends SupervisorMessage
+
+  /**
+   * When this message is received, the component goes through shutdown, uninitialize, and then exits
+   */
+  case object HaltComponent extends SupervisorMessage
 
   /**
    * Function called by a component to indicate the lifecycle should be started.
@@ -71,11 +85,6 @@ object Supervisor {
   def lifecycle(supervisor: ActorRef, command: LifecycleCommand = Startup): Unit = {
     supervisor ! command
   }
-
-  /**
-   * When this message is received, the component goes through shutdown, uninitialize, and then exits
-   */
-  case object HaltComponent
 
   /**
    * Function called by a component to exit in a controlled way.
@@ -91,7 +100,7 @@ object Supervisor {
  * A supervisor actor that manages the component actor given by the arguments
  * (see props() for argument descriptions).
  */
-final class Supervisor(val componentInfo: ComponentInfo)
+private final class Supervisor(val componentInfo: ComponentInfo)
     extends Actor with ActorLogging {
 
   import Supervisor._

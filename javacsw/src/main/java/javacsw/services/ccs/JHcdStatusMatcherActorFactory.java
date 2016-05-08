@@ -13,6 +13,7 @@ import java.util.function.BiFunction;
 /**
  * A factory for creating actors to wait for given HCD status messages.
  */
+@SuppressWarnings("unused")
 public class JHcdStatusMatcherActorFactory {
     /**
      * Returns a new HcdStatusMatcherActor actor that subscribes to the current state values of a set of HCDs and notifies the
@@ -43,6 +44,7 @@ public class JHcdStatusMatcherActorFactory {
      */
     public static ActorRef getHcdStatusMatcherActor(ActorRefFactory f, List<StateVariable.DemandState> demands, Set<ActorRef> hcds, ActorRef replyTo, RunId runId,
                                                     Timeout timeout, BiFunction<StateVariable.DemandState, StateVariable.CurrentState, Boolean> matcher) {
+        // XXX might need to be scala.Boolean!
         return f.actorOf(JHcdStatusMatcherActor.props(demands, hcds, replyTo, runId, timeout, matcher));
     }
 }

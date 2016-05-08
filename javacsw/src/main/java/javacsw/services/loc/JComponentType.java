@@ -6,6 +6,7 @@ import csw.services.loc.ComponentType$;
 /**
  * Java API for location service component types.
  */
+@SuppressWarnings("unused")
 public class JComponentType {
 
     /**

@@ -46,10 +46,10 @@ public class JLocationServiceTests {
 
     @Test
     public void TestLocationServiceRegisterWithOnly() throws Exception {
-        ComponentId componentId = JComponentId.getComponentId("TestAss1b", Assembly);
+        ComponentId componentId = JComponentId.componentId("TestAss1b", Assembly);
         TestProbe trackerResponseProbe = new TestProbe(system);
         TestProbe actorTestProbe = new TestProbe(system);
-        AkkaConnection akkaConnection = JConnection.createAkkaConnection(componentId);
+        AkkaConnection akkaConnection = JConnection.akkaConnection(componentId);
         AkkaRegistration akkaRegister = JLocationService.getAkkaRegistration(akkaConnection, actorTestProbe.ref(), "test.prefix1");
         ActorRef tracker = system.actorOf(JRegistrationTracker.props(Collections.singleton(akkaRegister), trackerResponseProbe.ref()));
         ComponentRegistered m1 = trackerResponseProbe.expectMsgClass(t, ComponentRegistered.class);
@@ -60,11 +60,11 @@ public class JLocationServiceTests {
 
     @Test
     public void TestLocationServiceRegisterWithBothAkkaAndHttpAsSequence() throws Exception {
-        ComponentId componentId = JComponentId.getComponentId("TestAss2b", Assembly);
+        ComponentId componentId = JComponentId.componentId("TestAss2b", Assembly);
         TestProbe trackerResponseProbe = new TestProbe(system);
         TestProbe actorTestProbe = new TestProbe(system);
-        AkkaConnection akkaConnection = JConnection.createAkkaConnection(componentId);
-        HttpConnection httpConnection = JConnection.createHttpConnection(componentId);
+        AkkaConnection akkaConnection = JConnection.akkaConnection(componentId);
+        HttpConnection httpConnection = JConnection.httpConnection(componentId);
         AkkaRegistration akkaRegister = JLocationService.getAkkaRegistration(akkaConnection, actorTestProbe.ref(), "test.prefix2");
         HttpRegistration httpRegister = JLocationService.getHttpRegistration(httpConnection, 1000, "test.prefix2");
         Set<Registration> registrations = new HashSet<>(Arrays.asList(akkaRegister, httpRegister));
@@ -82,7 +82,7 @@ public class JLocationServiceTests {
 
     @Test
     public void TestTrackerWithOneAkkaComponent() throws Exception {
-        ComponentId componentId = JComponentId.getComponentId("TestAss3b", Assembly);
+        ComponentId componentId = JComponentId.componentId("TestAss3b", Assembly);
         TestProbe testProbe = new TestProbe(system);
         TestProbe actorTestProbe = new TestProbe(system);
         CompletableFuture<RegistrationResult> f = JLocationService.registerAkkaConnection(componentId, actorTestProbe.ref(), "test.prefix3", system);

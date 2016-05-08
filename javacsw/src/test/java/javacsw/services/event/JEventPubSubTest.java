@@ -165,7 +165,7 @@ public class JEventPubSubTest {
             return ReceiveBuilder.
                     match(ObserveEvent.class, e -> receivedObserveEvent(publisher, e)).
                     match(ReceiveTimeout.class, t -> receiveTimedOut()).
-                    match(Object.class, t -> log.warning("Unknown message received: " + t)).
+                    matchAny(t -> log.warning("Unknown message received: " + t)).
                     build();
         }
 
@@ -247,7 +247,7 @@ public class JEventPubSubTest {
                         publish();
                         getContext().become(publishing(sender()));
                     }).
-                    match(Object.class, t -> log.warning("Unknown message received: " + t)).
+                    matchAny(t -> log.warning("Unknown message received: " + t)).
                     build());
         }
 
@@ -256,7 +256,7 @@ public class JEventPubSubTest {
                     matchEquals(Publish, m -> publish()).
                     matchEquals(SubscriberAck, m -> handleSubscriberAck(testActor)).
                     match(ReceiveTimeout.class, t -> receiveTimedOut()).
-                    match(Object.class, t -> log.warning("Unknown message received: " + t)).
+                    matchAny(t -> log.warning("Unknown message received: " + t)).
                     build();
         }
 

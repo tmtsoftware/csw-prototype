@@ -110,7 +110,7 @@ lazy val javacsw = project
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(akkaTestKit, junit, scalaJava8Compat)
-  ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts)
+  ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts, containerCmd)
 
 
 // -- Apps --

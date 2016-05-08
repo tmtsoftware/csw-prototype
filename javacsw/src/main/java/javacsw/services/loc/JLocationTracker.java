@@ -6,6 +6,7 @@ import akka.actor.Props;
 /**
  * Java API for creating a LocationTracker actor
  */
+@SuppressWarnings("unused")
 public class JLocationTracker {
     /**
      * Used to create the LocationTracker, an actor that notifies the replyTo actor when all the
