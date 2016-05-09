@@ -7,12 +7,15 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.cs.akka.ConfigServiceActor.RegisterWithLocationService
 import csw.services.cs.core.git.GitConfigManager
+import csw.services.cs.core.svn.SvnConfigManager
+import csw.services.loc.LocationService
 import org.slf4j.LoggerFactory
 
 /**
  * Config Service standalone application.
  */
 object ConfigService extends App {
+  LocationService.initInterface()
   val logger = Logger(LoggerFactory.getLogger("ConfigService"))
 
   /**
@@ -73,17 +76,31 @@ object ConfigService extends App {
         logger.error(s"Please specify a file URI for csw.services.cs.main-repository for testing")
         System.exit(1)
       }
-      val gitMainRepo = new File(settings.mainRepository.getPath)
+      val mainRepo = new File(settings.mainRepository.getPath)
 
       if (options.delete) {
-        GitConfigManager.deleteDirectoryRecursively(gitMainRepo)
-        val gitLocalRepo = new File(settings.localRepository.getPath)
-        GitConfigManager.deleteDirectoryRecursively(gitLocalRepo)
+        // Note: both blocks do the same thing...
+        if (settings.useSvn) {
+          SvnConfigManager.deleteDirectoryRecursively(mainRepo)
+          val svnLocalRepo = new File(settings.localRepository.getPath)
+          SvnConfigManager.deleteDirectoryRecursively(svnLocalRepo)
+        } else {
+          GitConfigManager.deleteDirectoryRecursively(mainRepo)
+          val gitLocalRepo = new File(settings.localRepository.getPath)
+          GitConfigManager.deleteDirectoryRecursively(gitLocalRepo)
+        }
       }
 
-      if (!new File(gitMainRepo, ".git").exists) {
-        logger.info(s"creating new main repo under $gitMainRepo")
-        GitConfigManager.initBareRepo(gitMainRepo)
+      if (settings.useSvn) {
+        if (!new File(mainRepo, ".svn").exists) {
+          logger.info(s"creating new svn repo under $mainRepo")
+          SvnConfigManager.initSvnRepo(mainRepo)
+        }
+      } else {
+        if (!new File(mainRepo, ".git").exists) {
+          logger.info(s"creating new git main repo under $mainRepo")
+          GitConfigManager.initBareRepo(mainRepo)
+        }
       }
     }
 

@@ -8,15 +8,23 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.core.ConfigManagerTestHelper
 import csw.services.cs.core.git.GitConfigManager
+import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
+
+object ConfigServiceHttpServerTests {
+  LocationService.initInterface()
+
+  val system = ActorSystem("ConfigServiceHttpServerTests")
+}
+
 /**
  * Tests the Config Service Http server
  */
-class ConfigServiceHttpServerTests extends TestKit(ActorSystem("mySystem"))
+class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.system)
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   import system.dispatcher

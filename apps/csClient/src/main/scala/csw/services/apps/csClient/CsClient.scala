@@ -5,6 +5,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import csw.services.cs.akka.{ConfigServiceActor, ConfigServiceClient, ConfigServiceSettings}
 import csw.services.cs.core.{ConfigData, ConfigId, ConfigManager}
+import csw.services.loc.LocationService
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -15,6 +16,7 @@ import scala.util.{Failure, Success}
  * See this project's README.md for usage. A help message is printed on error.
  */
 object CsClient extends App {
+  LocationService.initInterface()
   implicit val system = ActorSystem()
   implicit val timeout: Timeout = 30.seconds
 
@@ -39,6 +41,7 @@ object CsClient extends App {
     f.onComplete {
       case Success(client) ⇒
         system.terminate()
+        System.exit(0)
       case Failure(ex) ⇒
         System.err.println(s"Error: ${ex.getMessage}")
         system.terminate()
