@@ -135,7 +135,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     import LocationService._
 
     val componentId = ComponentId("TestAss5b", Assembly)
-//    val testPrefix = "test.prefix5"
+    //    val testPrefix = "test.prefix5"
     val testPort = 1000
 
     val testProbe = TestProbe()

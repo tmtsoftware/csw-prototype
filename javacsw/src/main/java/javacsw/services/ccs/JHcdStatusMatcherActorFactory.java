@@ -24,6 +24,7 @@ public class JHcdStatusMatcherActorFactory {
      * @param demands the target states that will be compared to their current states
      * @param hcds    the target HCD actors
      * @param replyTo the actor to reply to
+     * @return actorRef for the actor
      */
     public static ActorRef getHcdStatusMatcherActor(ActorRefFactory f, List<StateVariable.DemandState> demands, Set<ActorRef> hcds, ActorRef replyTo) {
         return f.actorOf(JHcdStatusMatcherActor.props(demands, hcds, replyTo));
@@ -41,6 +42,7 @@ public class JHcdStatusMatcherActorFactory {
      * @param runId   the runId to use in the reply
      * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
      * @param matcher the function used to compare the demand and current states
+     * @return actorRef for the actor
      */
     public static ActorRef getHcdStatusMatcherActor(ActorRefFactory f, List<StateVariable.DemandState> demands, Set<ActorRef> hcds, ActorRef replyTo, RunId runId,
                                                     Timeout timeout, BiFunction<StateVariable.DemandState, StateVariable.CurrentState, Boolean> matcher) {

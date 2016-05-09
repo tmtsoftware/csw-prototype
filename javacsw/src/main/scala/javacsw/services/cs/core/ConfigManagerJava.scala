@@ -1,10 +1,11 @@
-package csw.services.cs.core
+package javacsw.services.cs.core
 
 import java.io.File
 import java.{lang, util}
+import javacsw.services.cs.{JConfigData, JConfigManager}
 
 import akka.actor.ActorRefFactory
-import csw.services.cs.{JConfigData, JConfigManager}
+import csw.services.cs.core.{ConfigFileHistory, _}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Await

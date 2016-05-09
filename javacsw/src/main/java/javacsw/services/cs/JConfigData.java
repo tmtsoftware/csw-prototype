@@ -1,4 +1,4 @@
-package csw.services.cs;
+package javacsw.services.cs;
 
 import java.io.File;
 
@@ -13,7 +13,7 @@ public interface JConfigData {
 
     /**
      * Writes the data to the given file
-     * @param file
+     * @param file file to write to
      */
     void writeToFile(File file);
 

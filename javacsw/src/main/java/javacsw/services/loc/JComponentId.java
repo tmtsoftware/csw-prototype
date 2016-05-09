@@ -15,6 +15,8 @@ public class JComponentId {
 
     /**
      * Gets a ComponentId from a string, as output by ComponentId.toString
+     * @param name the component's name
+     * @return the component id
      */
     public static ComponentId parse(String name) {
         return ComponentId$.MODULE$.apply(name).get();

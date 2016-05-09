@@ -84,6 +84,12 @@ object LifecycleManager {
 
   case object UninitializeSuccess extends LifecycleResponse
 
+  /**
+   * Used to create the LifecycleManager actor
+   * @param component the component being managed
+   * @param name the name of the managed component
+   * @return Props needed to create the actor
+   */
   def props(component: ActorRef, name: String): Props =
     Props(classOf[LifecycleManager], component, name)
 }

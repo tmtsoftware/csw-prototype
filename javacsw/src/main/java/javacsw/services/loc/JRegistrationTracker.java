@@ -16,6 +16,7 @@ public class JRegistrationTracker {
      *
      * @param registration Set of registrations to be registered with Location Service
      * @param replyTo      optional actorRef to reply to (usually self(), the parent of the actor)
+     * @return the props needed to create the actor
      */
     public static Props props(Set<LocationService.Registration> registration, ActorRef replyTo) {
         return JLocationServiceSup.registrationTrackerProps(registration, replyTo);

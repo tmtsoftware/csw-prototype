@@ -43,6 +43,11 @@ public class JLocationService {
 
     /**
      * Represents a registered connection to an Akka service
+     *
+     * @param connection describes the connection
+     * @param component the component being registered
+     * @param prefix the component's prefix
+     * @return the registration object
      */
     public static AkkaRegistration getAkkaRegistration(Connection.AkkaConnection connection, ActorRef component, String prefix) {
         return new AkkaRegistration(connection, component, prefix);
@@ -50,6 +55,11 @@ public class JLocationService {
 
     /**
      * Represents a registered connection to a HTTP service
+     *
+     * @param connection describes the connection
+     * @param port the http port number
+     * @param path the path to use for the URL
+     * @return the registration object
      */
     public static HttpRegistration getHttpRegistration(Connection.HttpConnection connection, int port, String path) {
         return new HttpRegistration(connection, port, path);
@@ -75,6 +85,8 @@ public class JLocationService {
      * @param componentId describes the component or service
      * @param actorRef    the actor reference for the actor being registered
      * @param prefix      indicates the part of a command service config that this service is interested in
+     * @param system      the actor system (needed to manage the future)
+     * @return            a future object that can be used to close the connection and unregister the service
      */
     public static CompletableFuture<RegistrationResult> registerAkkaConnection(ComponentId componentId, ActorRef actorRef,
                                                                                String prefix, ActorSystem system) {
@@ -88,7 +100,8 @@ public class JLocationService {
      * @param componentId describes the component or service
      * @param port        the port the service is running on
      * @param path        the path part of the URI (default: empty)
-     * @return a future object that can be used to close the connection and unregister the service
+     * @param system      the actor system (needed to manage the future)
+     * @return            a future object that can be used to close the connection and unregister the service
      */
     public static CompletableFuture<RegistrationResult> registerHttpConnection(ComponentId componentId, int port,
                                                                                String path, ActorSystem system) {
@@ -99,6 +112,8 @@ public class JLocationService {
      * Unregisters the connection from the location service
      * (Note: it can take some time before the service is removed from the list: see
      * comments in registry.unregisterService())
+     *
+     * @param connection the connection to unregister
      */
     public static void unregisterConnection(Connection connection) {
         LocationService.unregisterConnection(connection);
@@ -109,6 +124,7 @@ public class JLocationService {
      *
      * @param connections set of requested connections
      * @param system      the caller's actor system
+     * @param timeout     amount of time to wait before timing out
      * @return a future object describing the services found
      */
     public static CompletableFuture<LocationTrackerWorker.LocationsReady> resolve(Set<Connection> connections, ActorSystem system, Timeout timeout) {

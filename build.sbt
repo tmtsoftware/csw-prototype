@@ -106,6 +106,8 @@ lazy val ts = project
 
 // Java APIs
 lazy val javacsw = project
+  .configs(JavaDoc)
+  .settings(javadocSettings: _*)
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++

@@ -53,8 +53,6 @@ object JConfigurations {
 
   /**
    * Common getter methods for Java APIs
-   *
-   * @tparam A the type of the config
    */
   trait ConfigGetters[A <: ConfigType[A]] {
     val configType: ConfigType[A]

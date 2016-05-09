@@ -31,6 +31,8 @@ public class JComponentType {
 
     /**
      * Returns the named component type or an UnknownComponentTypeException exception if not known
+     * @param name the simple name of the component type ("Container", "Assembly", "HCD", etc.)
+     * @return the component type
      */
     public static ComponentType parse(String name) {
         return ComponentType$.MODULE$.apply(name).get();

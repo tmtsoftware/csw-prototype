@@ -15,6 +15,7 @@ public class JLocationTracker {
      * services stops being available, a Disconnected messages is sent.
      *
      * @param replyTo optional actorRef to reply to (default: parent of this actor)
+     * @return the props needed to create the actor
      */
     public static Props props(ActorRef replyTo) {
         return JLocationServiceSup.locationTrackerProps(replyTo);

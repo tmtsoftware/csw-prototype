@@ -1,13 +1,15 @@
-package csw.services.cs.akka
+package javacsw.services.cs.akka
 
 import java.io.File
+import javacsw.services.cs.JConfigManager
+import javacsw.services.cs.core.ConfigManagerJava
 
 import akka.actor.{ActorRefFactory, ActorSystem}
-import csw.services.cs.core.ConfigManager
+import csw.services.cs.akka.ConfigServiceSettings
 import csw.services.cs.core.git.GitConfigManager
 
 /**
- * Utility class to create temporary Git repositories for use in testing.
+ * Java API: utility class to create temporary Git repositories for use in testing.
  */
 object TestGitRepo {
 
@@ -25,13 +27,15 @@ object TestGitRepo {
   }
 
   /**
-   * Creates a temporary test Git repository and a bare main repository for push/pull.
+   * Java API: Creates a temporary test Git repository and a bare main repository for push/pull.
    * Any previous contents are deleted.
    *
    * @return a new ConfigManager set to manage the newly created Git repositories
    */
-  def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))(implicit context: ActorRefFactory): ConfigManager = {
+  def getJConfigManager: JConfigManager = {
+    implicit val system = ActorSystem()
+    val settings = ConfigServiceSettings(system)
     resetRepo(settings)
-    GitConfigManager(settings.localRepository, settings.mainRepository, settings.name)
+    ConfigManagerJava(GitConfigManager(settings.localRepository, settings.mainRepository, settings.name))
   }
 }

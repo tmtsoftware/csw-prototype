@@ -23,6 +23,7 @@ abstract public class JAssemblyController extends AbstractAssemblyController {
      * Indicates an invalid config
      *
      * @param reason a description of why the config is invalid
+     * @return the Invalid object
      */
     public static Validation Invalid(String reason) {
         return new AssemblyController.Invalid(reason);

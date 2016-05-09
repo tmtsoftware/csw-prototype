@@ -1,13 +1,16 @@
-package csw.services.cs.akka
+package javacsw.services.cs.akka
 
 import java.io.File
+import javacsw.services.cs.JConfigManager
+import javacsw.services.cs.core.ConfigManagerJava
 
 import akka.actor.{ActorRefFactory, ActorSystem}
+import csw.services.cs.akka.ConfigServiceSettings
 import csw.services.cs.core.ConfigManager
 import csw.services.cs.core.svn.SvnConfigManager
 
 /**
- * Utility class to create a temporary Svn repository for use in testing.
+ * Java API: Utility class to create a temporary Svn repository for use in testing.
  */
 object TestSvnRepo {
 
@@ -24,13 +27,15 @@ object TestSvnRepo {
   }
 
   /**
-   * Creates a temporary test Svn repository and a bare main repository for push/pull.
+   * Java API: Creates a temporary test Svn repository.
    * Any previous contents are deleted.
    *
-   * @return a new ConfigManager set to manage the newly created Svn repositories
+   * @return a new ConfigManager set to manage the newly created Svn repository
    */
-  def getConfigManager(settings: ConfigServiceSettings = ConfigServiceSettings(ActorSystem()))(implicit context: ActorRefFactory): ConfigManager = {
+  def getJConfigManager: JConfigManager = {
+    implicit val system = ActorSystem()
+    val settings = ConfigServiceSettings(system)
     resetRepo(settings)
-    SvnConfigManager(settings.mainRepository, settings.name)
+    ConfigManagerJava(SvnConfigManager(settings.mainRepository, settings.name))
   }
 }

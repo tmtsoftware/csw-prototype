@@ -21,6 +21,9 @@ public class JConnectionType {
 
     /**
      * Gets a ConnectionType from the string value ("akka" or "http") or an UnknownConnectionTypeException
+     *
+     * @param name "akka" or "http"
+     * @return the connection type
      */
     public static ConnectionType parse(String name) {
         return ConnectionType$.MODULE$.apply(name).get();

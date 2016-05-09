@@ -37,6 +37,7 @@ public class JComponent {
      * @param locationServiceUsage how the component plans to use the location service
      * @param registerAs           register as an akka or http component or both
      * @param rate                 the HCD's refresh rate
+     * @return the HcdInfo object
      */
     public static HcdInfo hcdInfo(String componentName,
                                   String prefix,
@@ -56,6 +57,7 @@ public class JComponent {
      * @param locationServiceUsage how the component plans to use the location service
      * @param registerAs           register as an akka or http component or both
      * @param connections          a list of connections that includes componentIds and connection Types
+     * @return the AssemblyInfo object
      */
     public static AssemblyInfo assemblyInfo(String componentName,
                                             String prefix,
@@ -76,6 +78,7 @@ public class JComponent {
      * @param initialDelay         only for testing
      * @param creationDelay        only for testing
      * @param lifecycleDelay       only for testing
+     * @return the ContainerInfo object
      */
     public static ContainerInfo containerInfo(String componentName,
                                               LocationServiceUsage locationServiceUsage,
