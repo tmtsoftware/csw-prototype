@@ -69,27 +69,67 @@ case class DoubleKey(nameIn: String, unitsIn: Units) extends Key1[java.lang.Doub
 }
 
 
-class IntArrayKey(nameIn: String, unitsIn:Units) extends Key1[Seq[Int]](nameIn, unitsIn) {
-  def set(v: Seq[Int]) = CItem[Seq[Int]](this, units, v)
-}
-
 case class JKey1[A](nameIn: String, unitsIn:Units = NoUnits) extends Key1[A](nameIn, unitsIn) {
   def set(v: A) = CItem[A](this, units, v)
 }
 
+/**
+  * Key for an array of values of type A in the given units.
+  */
 case class ArrayKey[A](nameIn: String, unitsIn:Units) extends Key1[Seq[A]](nameIn, unitsIn) {
   def set(v: Seq[A]) = CItem[Seq[A]](this, units, v)
-//  // This is here to allow both set methods
-//  def set[X: ClassTag](v: A*) = CItem(this, units, v.toSeq)
 
+  /**
+    * Allows setting the value from Scala with a variable number of arguments
+    */
   def set[X: ClassTag](v: A*) = CItem(this, units, v.toSeq)
 
+  /**
+    * Java varargs API: allows setting one or more values from Java
+    */
   @annotation.varargs
   def jset(v: A*) = CItem(this, units, v.toSeq)
 }
 
+///**
+//  * A key that has an int array as a value
+//  */
+//class IntArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[Int](nameIn, unitsIn)
+case class IntArrayKey(nameIn: String, unitsIn:Units) extends Key1[Seq[java.lang.Integer]](nameIn, unitsIn) {
+  def set(v: Seq[java.lang.Integer]) = CItem[Seq[java.lang.Integer]](this, units, v)
+
+  /**
+    * Allows setting the value from Scala with a variable number of arguments
+    */
+  def set[X: ClassTag](v: java.lang.Integer*) = CItem(this, units, v.toSeq)
+
+  /**
+    * Java varargs API: allows setting one or more values from Java
+    */
+  @annotation.varargs
+  def jset(v: java.lang.Integer*) = CItem(this, units, v.toSeq)
+}
 
 
+
+/**
+  * A key that has a double array as a value
+  */
+//class DoubleArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[Double](nameIn, unitsIn)
+case class DoubleArrayKey(nameIn: String, unitsIn:Units) extends Key1[Seq[java.lang.Double]](nameIn, unitsIn) {
+  def set(v: Seq[java.lang.Double]) = CItem[Seq[java.lang.Double]](this, units, v)
+
+  /**
+    * Allows setting the value from Scala with a variable number of arguments
+    */
+  def set[X: ClassTag](v: java.lang.Double*) = CItem(this, units, v.toSeq)
+
+  /**
+    * Java varargs API: allows setting one or more values from Java
+    */
+  @annotation.varargs
+  def jset(v: java.lang.Double*) = CItem(this, units, v.toSeq)
+}
 
 object Configurations {
 

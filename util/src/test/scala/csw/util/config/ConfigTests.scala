@@ -4,7 +4,7 @@ import csw.util.config.Configurations.SetupConfig
 import org.scalatest.FunSpec
 
 /**
-  * TMT Source Code: 5/8/16.
+  * Tests the configuration classes
   */
 class ConfigTests extends FunSpec {
   private val s1: String = "encoder"
@@ -48,7 +48,7 @@ class ConfigTests extends FunSpec {
   }
 
   describe("Basic array tests") {
-    val k1:ArrayKey[Int] = ArrayKey[Int]("atest", UnitsOfMeasure.NoUnits)
+    val k1: ArrayKey[Int] = ArrayKey[Int]("atest", UnitsOfMeasure.NoUnits)
 
     it("Should allow an Int array") {
       val i1 = k1.set(Seq(1, 2, 3))
@@ -58,8 +58,8 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should use key equals") {
-      val k2:ArrayKey[Int] = ArrayKey("atest1", UnitsOfMeasure.NoUnits)
-      val k3:ArrayKey[Int] = ArrayKey("atest", UnitsOfMeasure.Deg)
+      val k2: ArrayKey[Int] = ArrayKey("atest1", UnitsOfMeasure.NoUnits)
+      val k3: ArrayKey[Int] = ArrayKey("atest", UnitsOfMeasure.Deg)
 
       assert(k1 == k1)
       assert(k1 != k2)
@@ -68,6 +68,30 @@ class ConfigTests extends FunSpec {
 
     }
   }
+
+  describe("Java compat array tests") {
+    val k1: IntArrayKey = IntArrayKey("atest", UnitsOfMeasure.NoUnits)
+
+    it("Should allow an Int array") {
+      val seq = Seq(1, 2, 3).asInstanceOf[Seq[java.lang.Integer]]
+      val i1 = k1.set(seq)
+      assert(i1.value == seq)
+      val i2 = k1.set(1, 2, 3)
+      assert(i2.value == seq)
+    }
+
+    it("Should use key equals") {
+      val k2: IntArrayKey = IntArrayKey("atest1", UnitsOfMeasure.NoUnits)
+      val k3: IntArrayKey = IntArrayKey("atest", UnitsOfMeasure.Deg)
+
+      assert(k1 == k1)
+      assert(k1 != k2)
+      assert(k1 != k3)
+      assert(k2 != k3)
+    }
+  }
+
+
 
   describe("Checking key updates") {
     val k1: JKey1[Int] = JKey1("atest", UnitsOfMeasure.NoUnits)
@@ -81,7 +105,7 @@ class ConfigTests extends FunSpec {
       val sc = SetupConfig(ck1).add(i1)
       assert(sc.get(k1).get.value == 22)
       val sc2 = sc.add(i2)
-     // assert(sc.get(k1).get.value == 33)
+      // assert(sc.get(k1).get.value == 33)
     }
   }
 
@@ -107,8 +131,6 @@ class ConfigTests extends FunSpec {
       val f2 = set1.find(_.name == "bob")
       //assert(f2.get.value == 33)
     }
-
-
 
   }
 

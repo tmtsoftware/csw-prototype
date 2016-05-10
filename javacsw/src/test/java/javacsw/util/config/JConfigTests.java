@@ -3,24 +3,10 @@ package javacsw.util.config;
 import csw.util.config.*;
 import csw.util.config.Configurations.SetupConfig;
 import org.junit.Test;
+import scala.collection.Seq;
 
 import java.util.Objects;
 import java.util.Optional;
-
-/*
-class MyArrayKey extends KeyTypeArray<Integer> {
-  private MyArrayKey(Vector<Integer> data) {
-
-    super("value", data, JUnitsOfMeasure.Meters);
-  }
-
-  static MyArrayKey adata(int... values) {
-    Vector<Integer> data = new Vector(Arrays.asList(values));
-
-    return new MyArrayKey(data);
-  }
-}
-*/
 
 // An example of defining a key in Java
 class JFilter extends Key1<String> {
@@ -41,7 +27,7 @@ class JFilter extends Key1<String> {
  * Tests the Java API to the config classes
  */
 @SuppressWarnings("OptionalGetWithoutIsPresent")
-public class JConfigKeyTests {
+public class JConfigTests {
     private static final String ck = "wfos.blue.filter";
     private static final String ck1 = "wfos.prog.cloudcover";
     private static final String ck2 = "wfos.red.filter";
@@ -75,11 +61,35 @@ public class JConfigKeyTests {
 
     @Test
     public void arrayKey() {
-//        IntArrayKey ia = new IntArrayKey("iarray", JUnitsOfMeasure.Deg);
         ArrayKey<Integer> ia = new ArrayKey<>("iarray", JUnitsOfMeasure.Deg);
-        // TODO: FIXME
-//        Item ci = ia.jset(1, 2, 3);
-        Item ci = ia.jset(1, 2, 3);
+        Item<Seq<Integer>> ci = ia.jset(1, 2, 3);
+        for(int i = 0; i < 3; i++) {
+            assert(ci.value().apply(i) == i+1);
+        }
+
+        ArrayKey<Double> da = new ArrayKey<>("darray", JUnitsOfMeasure.Deg);
+        Item<Seq<Double>> di = da.jset(1.0, 2.0, 3.0);
+        for(int i = 0; i < 3; i++) {
+            assert(di.value().apply(i) == i+1);
+        }
+    }
+
+    @Test
+    public void intArrayKey() {
+        IntArrayKey ia = new IntArrayKey("iarray", JUnitsOfMeasure.Deg);
+        Item<Seq<Integer>>  ci = ia.jset(1, 2, 3);
+        for(int i = 0; i < 3; i++) {
+            assert(ci.value().apply(i) == i+1);
+        }
+    }
+
+    @Test
+    public void doubleArrayKey() {
+        DoubleArrayKey ia = new DoubleArrayKey("darray", JUnitsOfMeasure.Deg);
+        Item<Seq<java.lang.Double>> ci = ia.jset(1.0, 2.0, 3.0);
+        for(int i = 0; i < 3; i++) {
+            assert(ci.value().apply(i) == i+1);
+        }
     }
 
     @Test
