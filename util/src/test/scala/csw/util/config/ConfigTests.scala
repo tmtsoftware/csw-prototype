@@ -114,7 +114,6 @@ class ConfigTests extends FunSpec {
   }
 
 
-
   describe("Checking key updates") {
     val k1: JKey1[Int] = JKey1("atest", UnitsOfMeasure.NoUnits)
 
@@ -127,33 +126,10 @@ class ConfigTests extends FunSpec {
       val sc = SetupConfig(ck1).add(i1)
       assert(sc.get(k1).get.value == 22)
       val sc2 = sc.add(i2)
-      // assert(sc.get(k1).get.value == 33)
+      assert(sc2.get(k1).get.value == 33)
+      val sc3 = sc.set(k1, 44)
+      assert(sc3.get(k1).get.value == 44)
     }
-  }
-
-  describe("Check set") {
-    case class ttt(name: String, value: Int)
-    // Trying to understand updates
-    it("should allow updates") {
-      val t1 = ttt("bob", 22)
-      val t2 = ttt("ted", 44)
-      val t3 = ttt("bob", 33)
-      val t4 = ttt("bob", 22)
-
-      assert(t1 == t4)
-
-
-      var set1 = Set(t1, t2)
-      assert(set1.contains(t1))
-      assert(set1.contains(t2))
-      val f1 = set1.find(_.name == "bob")
-      assert(f1.get.value == 22)
-
-      set1 = set1 + t3
-      val f2 = set1.find(_.name == "bob")
-      //assert(f2.get.value == 33)
-    }
-
   }
 
 }
