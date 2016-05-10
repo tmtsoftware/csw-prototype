@@ -9,12 +9,12 @@ import org.scalatest.FunSpec
 class ConfigTests extends FunSpec {
   private val s1: String = "encoder"
   private val s2: String = "filter"
-  private val s3: String = "detectorTemp"
+//  private val s3: String = "detectorTemp"
 
-  private val ck = "wfos.blue.filter"
+//  private val ck = "wfos.blue.filter"
   private val ck1 = "wfos.prog.cloudcover"
-  private val ck2 = "wfos.red.filter"
-  private val ck3 = "wfos.red.detector"
+//  private val ck2 = "wfos.red.filter"
+//  private val ck3 = "wfos.red.detector"
 
   describe("Basic key tests") {
     val k1 = IntKey(s1, UnitsOfMeasure.NoUnits)
@@ -26,10 +26,10 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should use set properly") {
-      val i: Item[Integer] = k1.set(22)
+      val i: Item[Int] = k1.set(22)
       assert(i.key.name eq s1)
       assert(i.key.units eq UnitsOfMeasure.NoUnits)
-      assert(i.value == new Integer(22))
+      assert(i.value == 22)
 
       assert(k2.name eq s2)
       assert(k2.units eq UnitsOfMeasure.Meters)
@@ -70,7 +70,7 @@ class ConfigTests extends FunSpec {
   }
 
   describe("Java compat int array tests") {
-    val k1: IntArrayKey = IntArrayKey("atest", UnitsOfMeasure.NoUnits)
+    val k1 = JIntArrayKey("atest", UnitsOfMeasure.NoUnits)
 
     it("Should allow an Int array") {
       val seq = Seq(1, 2, 3).asInstanceOf[Seq[java.lang.Integer]]
@@ -81,8 +81,8 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should use key equals") {
-      val k2: IntArrayKey = IntArrayKey("atest1", UnitsOfMeasure.NoUnits)
-      val k3: IntArrayKey = IntArrayKey("atest", UnitsOfMeasure.Deg)
+      val k2: JIntArrayKey = JIntArrayKey("atest1", UnitsOfMeasure.NoUnits)
+      val k3: JIntArrayKey = JIntArrayKey("atest", UnitsOfMeasure.Deg)
 
       assert(k1 == k1)
       assert(k1 != k2)
@@ -92,7 +92,7 @@ class ConfigTests extends FunSpec {
   }
 
   describe("Java compat double array tests") {
-    val k1 = DoubleArrayKey("atest", UnitsOfMeasure.NoUnits)
+    val k1 = JDoubleArrayKey("atest", UnitsOfMeasure.NoUnits)
 
     it("Should allow an Double array") {
       val seq = Seq(1.0, 2.0, 3.0).asInstanceOf[Seq[java.lang.Double]]
@@ -103,8 +103,8 @@ class ConfigTests extends FunSpec {
     }
 
     it("Should use key equals") {
-      val k2: DoubleArrayKey = DoubleArrayKey("atest1", UnitsOfMeasure.NoUnits)
-      val k3: DoubleArrayKey = DoubleArrayKey("atest", UnitsOfMeasure.Deg)
+      val k2: JDoubleArrayKey = JDoubleArrayKey("atest1", UnitsOfMeasure.NoUnits)
+      val k3: JDoubleArrayKey = JDoubleArrayKey("atest", UnitsOfMeasure.Deg)
 
       assert(k1 == k1)
       assert(k1 != k2)

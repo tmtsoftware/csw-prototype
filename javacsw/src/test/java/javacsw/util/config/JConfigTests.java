@@ -15,7 +15,7 @@ class JFilter extends Key1<String> {
     }
 
     public CItem<String> set(String v) {
-        return new CItem<>(this, units(), v);
+        return new CItem<>(this, v);
     }
 
     static CItem<String> filter(String value) {
@@ -28,7 +28,7 @@ class JFilter extends Key1<String> {
  */
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class JConfigTests {
-    private static final String ck = "wfos.blue.filter";
+//    private static final String ck = "wfos.blue.filter";
     private static final String ck1 = "wfos.prog.cloudcover";
     private static final String ck2 = "wfos.red.filter";
     private static final String ck3 = "wfos.red.detector";
@@ -39,7 +39,7 @@ public class JConfigTests {
 
     @Test
     public void testKey() {
-        IntKey k1 = new IntKey(s1, JUnitsOfMeasure.NoUnits);
+        JIntKey k1 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
         StringKey k2 = new StringKey(s2, JUnitsOfMeasure.Meters);
 
         assert (Objects.equals(k1.name(), s1));
@@ -55,7 +55,7 @@ public class JConfigTests {
         Item<String> j = k2.set("Bob");
         assert (Objects.equals(j.value(), "Bob"));
 
-        IntKey k3 = new IntKey(s1, JUnitsOfMeasure.NoUnits);
+        JIntKey k3 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
         assert (k3.equals(k1));
     }
 
@@ -76,7 +76,7 @@ public class JConfigTests {
 
     @Test
     public void intArrayKey() {
-        IntArrayKey ia = new IntArrayKey("iarray", JUnitsOfMeasure.Deg);
+        JIntArrayKey ia = new JIntArrayKey("iarray", JUnitsOfMeasure.Deg);
         Item<Seq<Integer>>  ci = ia.jset(1, 2, 3);
         for(int i = 0; i < 3; i++) {
             assert(ci.value().apply(i) == i+1);
@@ -85,7 +85,7 @@ public class JConfigTests {
 
     @Test
     public void doubleArrayKey() {
-        DoubleArrayKey ia = new DoubleArrayKey("darray", JUnitsOfMeasure.Deg);
+        JDoubleArrayKey ia = new JDoubleArrayKey("darray", JUnitsOfMeasure.Deg);
         Item<Seq<java.lang.Double>> ci = ia.jset(1.0, 2.0, 3.0);
         for(int i = 0; i < 3; i++) {
             assert(ci.value().apply(i) == i+1);
@@ -110,7 +110,7 @@ public class JConfigTests {
 
     @Test
     public void testConfig() {
-        IntKey k1 = new IntKey(s1, JUnitsOfMeasure.NoUnits);
+        JIntKey k1 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
         Item<Integer> i1 = k1.set(22);
 
         StringKey k2 = new StringKey(s2, JUnitsOfMeasure.Meters);
@@ -169,9 +169,9 @@ public class JConfigTests {
 
     @Test
     public void testRemove() {
-        IntKey k1 = new IntKey(s1, JUnitsOfMeasure.NoUnits);
+        JIntKey k1 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
         StringKey k2 = new StringKey(s2, JUnitsOfMeasure.Meters);
-        DoubleKey k3 = new DoubleKey(s3, JUnitsOfMeasure.Deg);
+        JDoubleKey k3 = new JDoubleKey(s3, JUnitsOfMeasure.Deg);
 
         Item<Integer> i1 = k1.set(22);
         Item<String> i2 = k2.set(s2);

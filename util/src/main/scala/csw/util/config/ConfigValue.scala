@@ -6,7 +6,6 @@ import csw.util.config.UnitsOfMeasure.{ NoUnits, Units }
 
 import scala.compat.java8.OptionConverters._
 import scala.language.implicitConversions
-import scala.reflect.ClassTag
 
 /**
  * The type of an item contained in a configuration
@@ -55,59 +54,16 @@ abstract class Key1[T](nameIn: String, unitsIn: Units = NoUnits) extends Seriali
   def set(v: T): CItem[T]
 }
 
-case class CItem[A](key: Key1[A], units: Units, value: A) extends Item[A] {
-  override def toString = key + "(" + value.toString + ")"
-}
-
-case class IntKey(nameIn: String, unitsIn: Units) extends Key1[Integer](nameIn, unitsIn) {
-  def set(v: Integer) = CItem[Integer](this, units, v)
-}
-
-case class StringKey(nameIn: String, unitsIn: Units) extends Key1[String](nameIn, unitsIn) {
-  def set(v: String) = CItem[String](this, units, v)
-}
-
-case class DoubleKey(nameIn: String, unitsIn: Units) extends Key1[java.lang.Double](nameIn, unitsIn) {
-  def set(v: java.lang.Double) = CItem[java.lang.Double](this, units, v)
-}
-
 case class JKey1[A](nameIn: String, unitsIn: Units = NoUnits) extends Key1[A](nameIn, unitsIn) {
-  def set(v: A) = CItem[A](this, units, v)
+  def set(v: A) = CItem[A](this, v)
 }
 
-/**
- * Key for an array of values of type A in the given units.
- */
-case class ArrayKey[A](nameIn: String, unitsIn: Units) extends Key1[Seq[A]](nameIn, unitsIn) {
-  def set(v: Seq[A]) = CItem[Seq[A]](this, units, v)
 
-  /**
-   * Allows setting the value from Scala with a variable number of arguments
-   */
-  def set[X: ClassTag](v: A*) = CItem(this, units, v.toSeq)
-
-  /**
-   * Java varargs API: allows setting one or more values from Java
-   */
-  @annotation.varargs
-  def jset(v: A*) = CItem(this, units, v.toSeq)
+case class CItem[A](key: Key1[A], value: A) extends Item[A] {
+  override def toString = key + "(" + value.toString + ")"
+  override def units = key.units
 }
 
-/**
-  * A key that has an int array as a value
-  */
-class IntArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[java.lang.Integer](nameIn, unitsIn)
-object IntArrayKey {
-  def apply(nameIn: String, unitsIn:Units): IntArrayKey = new IntArrayKey(nameIn, unitsIn)
-}
-
-/**
- * A key that has a double array as a value
- */
-class DoubleArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[java.lang.Double](nameIn, unitsIn)
-object DoubleArrayKey {
-  def apply(nameIn: String, unitsIn:Units): DoubleArrayKey = new DoubleArrayKey(nameIn, unitsIn)
-}
 
 object Configurations {
 
