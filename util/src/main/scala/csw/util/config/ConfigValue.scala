@@ -93,42 +93,20 @@ case class ArrayKey[A](nameIn: String, unitsIn: Units) extends Key1[Seq[A]](name
   def jset(v: A*) = CItem(this, units, v.toSeq)
 }
 
-///**
-//  * A key that has an int array as a value
-//  */
-//class IntArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[Int](nameIn, unitsIn)
-case class IntArrayKey(nameIn: String, unitsIn: Units) extends Key1[Seq[java.lang.Integer]](nameIn, unitsIn) {
-  def set(v: Seq[java.lang.Integer]) = CItem[Seq[java.lang.Integer]](this, units, v)
-
-  /**
-   * Allows setting the value from Scala with a variable number of arguments
-   */
-  def set[X: ClassTag](v: java.lang.Integer*) = CItem(this, units, v.toSeq)
-
-  /**
-   * Java varargs API: allows setting one or more values from Java
-   */
-  @annotation.varargs
-  def jset(v: java.lang.Integer*) = CItem(this, units, v.toSeq)
+/**
+  * A key that has an int array as a value
+  */
+class IntArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[java.lang.Integer](nameIn, unitsIn)
+object IntArrayKey {
+  def apply(nameIn: String, unitsIn:Units): IntArrayKey = new IntArrayKey(nameIn, unitsIn)
 }
 
 /**
  * A key that has a double array as a value
  */
-//class DoubleArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[Double](nameIn, unitsIn)
-case class DoubleArrayKey(nameIn: String, unitsIn: Units) extends Key1[Seq[java.lang.Double]](nameIn, unitsIn) {
-  def set(v: Seq[java.lang.Double]) = CItem[Seq[java.lang.Double]](this, units, v)
-
-  /**
-   * Allows setting the value from Scala with a variable number of arguments
-   */
-  def set[X: ClassTag](v: java.lang.Double*) = CItem(this, units, v.toSeq)
-
-  /**
-   * Java varargs API: allows setting one or more values from Java
-   */
-  @annotation.varargs
-  def jset(v: java.lang.Double*) = CItem(this, units, v.toSeq)
+class DoubleArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[java.lang.Double](nameIn, unitsIn)
+object DoubleArrayKey {
+  def apply(nameIn: String, unitsIn:Units): DoubleArrayKey = new DoubleArrayKey(nameIn, unitsIn)
 }
 
 object Configurations {
