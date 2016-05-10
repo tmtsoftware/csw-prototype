@@ -75,9 +75,11 @@ public class JConfigKeyTests {
 
     @Test
     public void arrayKey() {
-        IntArrayKey ia = new IntArrayKey("iarray", JUnitsOfMeasure.Deg);
+//        IntArrayKey ia = new IntArrayKey("iarray", JUnitsOfMeasure.Deg);
+        ArrayKey<Integer> ia = new ArrayKey<>("iarray", JUnitsOfMeasure.Deg);
         // TODO: FIXME
-        //Item ci = ia.set(1, 2, 3);
+//        Item ci = ia.jset(1, 2, 3);
+        Item ci = ia.jset(1, 2, 3);
     }
 
     @Test
@@ -124,10 +126,10 @@ public class JConfigKeyTests {
         System.out.println("SC2: " + sc2.get(k1).get());
 
 
-        assert (sc2.get(k1).get().equals(i1));
-        //assert(22 == sc2.get(k1));
-        //assert(ki2.get() == i2);
-        //assert(s2 == ki2.get().value());
+        assert (sc2.jget(k1).get().equals(i1));
+        assert(22 == sc2.jget(k1).get().value());
+        assert(ki2.get() == i2);
+        assert(Objects.equals(s2, ki2.get().value()));
 
         System.out.println("SC2: " + sc2);
 

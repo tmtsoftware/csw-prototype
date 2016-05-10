@@ -8,10 +8,24 @@ import scala.compat.java8.OptionConverters._
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
 
-
+/**
+  * The type of an item contained in a configuration
+  * @tparam A the value type
+  */
 trait Item[A] {
+  /**
+    * The key for this item
+    */
   def key: Key1[A]
+
+  /**
+    * The value for this item
+    */
   def value: A
+
+  /**
+    * The units of the value
+    */
   def units: Units
 }
 
@@ -62,10 +76,16 @@ class IntArrayKey(nameIn: String, unitsIn:Units) extends Key1[Seq[Int]](nameIn, 
 case class JKey1[A](nameIn: String, unitsIn:Units = NoUnits) extends Key1[A](nameIn, unitsIn) {
   def set(v: A) = CItem[A](this, units, v)
 }
+
 case class ArrayKey[A](nameIn: String, unitsIn:Units) extends Key1[Seq[A]](nameIn, unitsIn) {
   def set(v: Seq[A]) = CItem[Seq[A]](this, units, v)
-  // This is here to allow both set methods
+//  // This is here to allow both set methods
+//  def set[X: ClassTag](v: A*) = CItem(this, units, v.toSeq)
+
   def set[X: ClassTag](v: A*) = CItem(this, units, v.toSeq)
+
+  @annotation.varargs
+  def jset(v: A*) = CItem(this, units, v.toSeq)
 }
 
 
@@ -145,7 +165,7 @@ object Configurations {
       * @param key the Key to be used for lookup
       * @return an optional value typed to the Key
       */
-    def jget[A](key: Key1[A]): Optional[Item[A]] = data.find(_.key.name == key.name).asInstanceOf[Option[Item[A]]].asJava
+    def jget[A](key: Key1[A]): Optional[Item[A]] = get(key).asJava
 
     def exists[A](key: Key1[A]): Boolean = get(key).isDefined
 
