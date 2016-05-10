@@ -69,7 +69,7 @@ class ConfigTests extends FunSpec {
     }
   }
 
-  describe("Java compat array tests") {
+  describe("Java compat int array tests") {
     val k1: IntArrayKey = IntArrayKey("atest", UnitsOfMeasure.NoUnits)
 
     it("Should allow an Int array") {
@@ -83,6 +83,28 @@ class ConfigTests extends FunSpec {
     it("Should use key equals") {
       val k2: IntArrayKey = IntArrayKey("atest1", UnitsOfMeasure.NoUnits)
       val k3: IntArrayKey = IntArrayKey("atest", UnitsOfMeasure.Deg)
+
+      assert(k1 == k1)
+      assert(k1 != k2)
+      assert(k1 != k3)
+      assert(k2 != k3)
+    }
+  }
+
+  describe("Java compat double array tests") {
+    val k1 = DoubleArrayKey("atest", UnitsOfMeasure.NoUnits)
+
+    it("Should allow an Double array") {
+      val seq = Seq(1.0, 2.0, 3.0).asInstanceOf[Seq[java.lang.Double]]
+      val i1 = k1.set(seq)
+      assert(i1.value == seq)
+      val i2 = k1.set(1.0, 2.0, 3.0)
+      assert(i2.value == seq)
+    }
+
+    it("Should use key equals") {
+      val k2: DoubleArrayKey = DoubleArrayKey("atest1", UnitsOfMeasure.NoUnits)
+      val k3: DoubleArrayKey = DoubleArrayKey("atest", UnitsOfMeasure.Deg)
 
       assert(k1 == k1)
       assert(k1 != k2)
