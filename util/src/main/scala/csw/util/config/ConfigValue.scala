@@ -2,7 +2,7 @@ package csw.util.config
 
 import java.util.Optional
 
-import csw.util.config.UnitsOfMeasure.{ NoUnits, Units }
+import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 
 import scala.compat.java8.OptionConverters._
 import scala.language.implicitConversions
@@ -33,6 +33,8 @@ trait Item[A] {
  * The shared class for storing telemetry and configuration data.
  *
  * @param nameIn the name of the key
+ * @param unitsIn the units of the value
+ * @tparam T the type of the key's value
  */
 abstract class Key1[T](nameIn: String, unitsIn: Units = NoUnits) extends Serializable {
 
@@ -44,8 +46,8 @@ abstract class Key1[T](nameIn: String, unitsIn: Units = NoUnits) extends Seriali
 
   override def equals(that: Any): Boolean = {
     that match {
-      case that: Key1[T] => this.units == that.units && this.name == that.name
-      case _ => false
+      case that: Key1[T] ⇒ this.units == that.units && this.name == that.name
+      case _             ⇒ false
     }
   }
 
@@ -54,16 +56,15 @@ abstract class Key1[T](nameIn: String, unitsIn: Units = NoUnits) extends Seriali
   def set(v: T): CItem[T]
 }
 
-case class JKey1[A](nameIn: String, unitsIn: Units = NoUnits) extends Key1[A](nameIn, unitsIn) {
+protected case class JKey1[A](nameIn: String, unitsIn: Units = NoUnits) extends Key1[A](nameIn, unitsIn) {
   def set(v: A) = CItem[A](this, v)
 }
 
-
 case class CItem[A](key: Key1[A], value: A) extends Item[A] {
   override def toString = key + "(" + value.toString + ")"
+
   override def units = key.units
 }
-
 
 object Configurations {
 
@@ -186,16 +187,16 @@ object Configurations {
     override def create(data: ConfigData) = SetupConfig(configKey, data)
 
     /**
-      * Returns a new SetupConfig with the contents of this SetupConfig and with the given item added (or replaced)
-      */
+     * Returns a new SetupConfig with the contents of this SetupConfig and with the given item added (or replaced)
+     */
     override def add(ci: Item[_]): SetupConfig = {
       val sc = remove(ci.key)
       SetupConfig(configKey, sc.data + ci)
     }
 
     /**
-      * Returns a new SetupConfig with the contents of this SetupConfig and with the given key set to the given value
-      */
+     * Returns a new SetupConfig with the contents of this SetupConfig and with the given key set to the given value
+     */
     def set[T](key: Key1[T], value: T): SetupConfig = {
       val sc = remove(key)
       create(sc.data + key.set(value))
@@ -204,8 +205,8 @@ object Configurations {
     override def remove[T](key: Key1[T]): SetupConfig = {
       val f = get(key)
       f match {
-        case Some(item) => SetupConfig(configKey, data - item)
-        case None => this
+        case Some(item) ⇒ SetupConfig(configKey, data - item)
+        case None       ⇒ this
       }
     }
 

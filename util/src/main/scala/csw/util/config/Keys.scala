@@ -4,11 +4,18 @@ import csw.util.config.UnitsOfMeasure.Units
 
 import scala.reflect.ClassTag
 
+
 /**
-  *
-  * Scala Key classes
-  *
+  * A Key whose value is a String (Works with Scala and Java strings)
+  * @param nameIn the name of the key
+  * @param unitsIn the units of the value
   */
+case class StringKey(nameIn: String, unitsIn: Units) extends Key1[String](nameIn, unitsIn) {
+  def set(v: String) = CItem[String](this, v)
+}
+
+// --- Keys based on Scala types ---
+
 case class ShortKey(nameIn: String, unitsIn: Units) extends Key1[Short](nameIn, unitsIn) {
   def set(v: Short) = CItem(this, v)
 }
@@ -28,6 +35,31 @@ case class BooleanKey(nameIn: String, unitsIn: Units) extends Key1[Boolean](name
   def set(v: Boolean) = CItem(this, v)
 }
 
+/**
+ * A key that has an Int array as a value
+ */
+class IntArrayKey(nameIn: String, unitsIn: Units) extends ArrayKey[Int](nameIn, unitsIn)
+object IntArrayKey {
+  def apply(nameIn: String, unitsIn: Units): IntArrayKey = new IntArrayKey(nameIn, unitsIn)
+}
+
+/**
+ * A key that has a Double array as a value
+ */
+class DoubleArrayKey(nameIn: String, unitsIn: Units) extends ArrayKey[Double](nameIn, unitsIn)
+object DoubleArrayKey {
+  def apply(nameIn: String, unitsIn: Units): DoubleArrayKey = new DoubleArrayKey(nameIn, unitsIn)
+}
+
+/**
+ * A key that has a Short array as a value
+ */
+class ShortArrayKey(nameIn: String, unitsIn: Units) extends ArrayKey[Short](nameIn, unitsIn)
+object ShortArrayKey {
+  def apply(nameIn: String, unitsIn: Units): ShortArrayKey = new ShortArrayKey(nameIn, unitsIn)
+}
+
+// --- Java Key Classes ---
 
 case class JShortKey(nameIn: String, unitsIn: Units) extends Key1[java.lang.Short](nameIn, unitsIn) {
   def set(v: java.lang.Short) = CItem(this, v)
@@ -48,19 +80,41 @@ case class JBooleanKey(nameIn: String, unitsIn: Units) extends Key1[java.lang.Bo
   def set(v: java.lang.Boolean) = CItem(this, v)
 }
 
-case class StringKey(nameIn: String, unitsIn: Units) extends Key1[String](nameIn, unitsIn) {
-  def set(v: String) = CItem[String](this, v)
+/**
+ * A key that has a java Integer array as a value
+ */
+class JIntArrayKey(nameIn: String, unitsIn: Units) extends ArrayKey[java.lang.Integer](nameIn, unitsIn)
+object JIntArrayKey {
+  def apply(nameIn: String, unitsIn: Units): JIntArrayKey = new JIntArrayKey(nameIn, unitsIn)
 }
 
-class SingleKey[A](nameIn: String, unitsIn: Units) extends Key1[A](nameIn, unitsIn) {
+/**
+ * A key that has a java Double array as a value
+ */
+class JDoubleArrayKey(nameIn: String, unitsIn: Units) extends ArrayKey[java.lang.Double](nameIn, unitsIn)
+object JDoubleArrayKey {
+  def apply(nameIn: String, unitsIn: Units): JDoubleArrayKey = new JDoubleArrayKey(nameIn, unitsIn)
+}
+
+/**
+ * A key that has a java Short array as a value
+ */
+class JShortArrayKey(nameIn: String, unitsIn: Units) extends ArrayKey[java.lang.Short](nameIn, unitsIn)
+object JShortArrayKey {
+  def apply(nameIn: String, unitsIn: Units): JShortArrayKey = new JShortArrayKey(nameIn, unitsIn)
+}
+
+// ---
+
+// XXX Is this needed? Should it be private?
+protected class SingleKey[A](nameIn: String, unitsIn: Units) extends Key1[A](nameIn, unitsIn) {
   def set(v: A) = CItem[A](this, v)
 }
-
 
 /**
  * Key for an array of values of type A in the given units.
  */
-case class ArrayKey[A](nameIn: String, unitsIn: Units) extends Key1[Seq[A]](nameIn, unitsIn) {
+protected case class ArrayKey[A](nameIn: String, unitsIn: Units) extends Key1[Seq[A]](nameIn, unitsIn) {
   def set(v: Seq[A]) = CItem[Seq[A]](this, v)
 
   /**
@@ -76,57 +130,8 @@ case class ArrayKey[A](nameIn: String, unitsIn: Units) extends Key1[Seq[A]](name
 }
 
 /**
-  * A key that has an Int array as a value
-  */
-class IntArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[Int](nameIn, unitsIn)
-object IntArrayKey {
-  def apply(nameIn: String, unitsIn:Units): IntArrayKey = new IntArrayKey(nameIn, unitsIn)
-}
-
-/**
-  * A key that has a java Integer array as a value
-  */
-class JIntArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[java.lang.Integer](nameIn, unitsIn)
-object JIntArrayKey {
-  def apply(nameIn: String, unitsIn:Units): JIntArrayKey = new JIntArrayKey(nameIn, unitsIn)
-}
-
-/**
-  * A key that has a Double array as a value
-  */
-class DoubleArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[Double](nameIn, unitsIn)
-object DoubleArrayKey {
-  def apply(nameIn: String, unitsIn:Units): DoubleArrayKey = new DoubleArrayKey(nameIn, unitsIn)
-}
-
-/**
-  * A key that has a java Double array as a value
-  */
-class JDoubleArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[java.lang.Double](nameIn, unitsIn)
-object JDoubleArrayKey {
-  def apply(nameIn: String, unitsIn:Units): JDoubleArrayKey = new JDoubleArrayKey(nameIn, unitsIn)
-}
-
-/**
-  * A key that has a Short array as a value
-  */
-class ShortArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[Short](nameIn, unitsIn)
-object ShortArrayKey {
-  def apply(nameIn: String, unitsIn:Units): ShortArrayKey = new ShortArrayKey(nameIn, unitsIn)
-}
-
-/**
-  * A key that has a java Short array as a value
-  */
-class JShortArrayKey(nameIn: String, unitsIn:Units) extends ArrayKey[java.lang.Short](nameIn, unitsIn)
-object JShortArrayKey {
-  def apply(nameIn: String, unitsIn:Units): JShortArrayKey = new JShortArrayKey(nameIn, unitsIn)
-}
-
-
-/**
-  * Base type of an enum value
-  */
+ * Base type of an enum value
+ */
 trait eValue {
   def value: String
 
@@ -137,8 +142,7 @@ trait eValue {
 
 case class enumValue(name: String, value: String, description: String = "") extends eValue
 
-case class EnumKey(nameIn: String, unitsIn: Units, possibles: Seq[eValue]) extends Key1[eValue](nameIn, unitsIn) {
+case class EnumKey(nameIn: String, unitsIn: Units, choices: Seq[eValue]) extends Key1[eValue](nameIn, unitsIn) {
   def set(v: eValue) = CItem[eValue](this, v)
 }
-
 

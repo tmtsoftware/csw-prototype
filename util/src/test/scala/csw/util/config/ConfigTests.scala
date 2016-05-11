@@ -4,17 +4,17 @@ import csw.util.config.Configurations.SetupConfig
 import org.scalatest.FunSpec
 
 /**
-  * Tests the configuration classes
-  */
+ * Tests the configuration classes
+ */
 class ConfigTests extends FunSpec {
   private val s1: String = "encoder"
   private val s2: String = "filter"
-//  private val s3: String = "detectorTemp"
+  //  private val s3: String = "detectorTemp"
 
-//  private val ck = "wfos.blue.filter"
+  //  private val ck = "wfos.blue.filter"
   private val ck1 = "wfos.prog.cloudcover"
-//  private val ck2 = "wfos.red.filter"
-//  private val ck3 = "wfos.red.detector"
+  //  private val ck2 = "wfos.red.filter"
+  //  private val ck3 = "wfos.red.detector"
 
   describe("Basic key tests") {
     val k1 = IntKey(s1, UnitsOfMeasure.NoUnits)
@@ -113,9 +113,8 @@ class ConfigTests extends FunSpec {
     }
   }
 
-
   describe("Checking key updates") {
-    val k1: JKey1[Int] = JKey1("atest", UnitsOfMeasure.NoUnits)
+    val k1 = IntKey("atest", UnitsOfMeasure.NoUnits)
 
     it("Should allow updates") {
       val i1 = k1.set(22)
@@ -131,5 +130,27 @@ class ConfigTests extends FunSpec {
       assert(sc3.get(k1).get.value == 44)
     }
   }
+
+
+  describe("Test Standard Key Usage") {
+    import StandardKeys._
+    it("Should be able to use standard enumerated keys") {
+      val sc = SetupConfig(ck1).set(cloudCover, PERCENT_20).set(exposureType, OBSERVE)
+      assert(sc.get(cloudCover).get.value == PERCENT_20)
+      assert(sc.get(exposureType).get.value == OBSERVE)
+    }
+  }
+
+//  describe("Test JSON I/O") {
+//    import StandardKeys._
+//    import upickle.default._
+//
+//    it("Should be able to serialize to and from JSON") {
+//      val sc = SetupConfig(ck1).set(position, "TOP")
+//      val json = write(sc)
+//      println(s"XXX json:\n\n$json\n")
+//    }
+//  }
+
 
 }

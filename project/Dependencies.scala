@@ -33,7 +33,7 @@ object Dependencies {
   val janino = "org.codehaus.janino" % "janino" % "2.7.6" // BSD
   val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1" // ApacheV2
 
-  val upickle = "com.lihaoyi" %% "upickle" % "0.3.8" // MIT
+  val upickle = "com.lihaoyi" %% "upickle" % "0.4.0" // MIT
   val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1" // SCALA LICENSE (BSD-like)
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)

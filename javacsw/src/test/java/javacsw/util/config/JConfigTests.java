@@ -8,21 +8,6 @@ import scala.collection.Seq;
 import java.util.Objects;
 import java.util.Optional;
 
-// An example of defining a key in Java
-class JFilter extends Key1<String> {
-    JFilter() {
-        super("filter", JUnitsOfMeasure.NoUnits);
-    }
-
-    public CItem<String> set(String v) {
-        return new CItem<>(this, v);
-    }
-
-    static CItem<String> filter(String value) {
-        return (new JFilter()).set(value);
-    }
-}
-
 /**
  * Tests the Java API to the config classes
  */
@@ -38,7 +23,7 @@ public class JConfigTests {
     private static final String s3 = "detectorTemp";
 
     @Test
-    public void testKey() {
+    public void testJavaKeys() {
         JIntKey k1 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
         StringKey k2 = new StringKey(s2, JUnitsOfMeasure.Meters);
 
@@ -59,20 +44,21 @@ public class JConfigTests {
         assert (k3.equals(k1));
     }
 
-    @Test
-    public void arrayKey() {
-        ArrayKey<Integer> ia = new ArrayKey<>("iarray", JUnitsOfMeasure.Deg);
-        Item<Seq<Integer>> ci = ia.jset(1, 2, 3);
-        for(int i = 0; i < 3; i++) {
-            assert(ci.value().apply(i) == i+1);
-        }
-
-        ArrayKey<Double> da = new ArrayKey<>("darray", JUnitsOfMeasure.Deg);
-        Item<Seq<Double>> di = da.jset(1.0, 2.0, 3.0);
-        for(int i = 0; i < 3; i++) {
-            assert(di.value().apply(i) == i+1);
-        }
-    }
+    // XXX - The usage below works but should not be part of the public API
+//    @Test
+//    public void arrayKey() {
+//        ArrayKey<Integer> ia = new ArrayKey<>("iarray", JUnitsOfMeasure.Deg);
+//        Item<Seq<Integer>> ci = ia.jset(1, 2, 3);
+//        for(int i = 0; i < 3; i++) {
+//            assert(ci.value().apply(i) == i+1);
+//        }
+//
+//        ArrayKey<Double> da = new ArrayKey<>("darray", JUnitsOfMeasure.Deg);
+//        Item<Seq<Double>> di = da.jset(1.0, 2.0, 3.0);
+//        for(int i = 0; i < 3; i++) {
+//            assert(di.value().apply(i) == i+1);
+//        }
+//    }
 
     @Test
     public void intArrayKey() {
@@ -92,21 +78,39 @@ public class JConfigTests {
         }
     }
 
+    // XXX - The usage below works but should not be part of the public API
+//    @Test
+//    public void jKeyTestNotAllowed() {
+//        JKey1<String> k1 = new JKey1<>(s2, JUnitsOfMeasure.NoUnits);
+//        Item<String> i = k1.set("blue");
+//        assert (Objects.equals(k1.name(), s2));
+//        assert (k1.units() == JUnitsOfMeasure.NoUnits);
+//        assert (Objects.equals(i.value(), "blue"));
+//
+//
+//        JKey1<Double> k2 = new JKey1<>(s3, JUnitsOfMeasure.Deg);
+//        assert (Objects.equals(k2.name(), s3));
+//        assert (k2.units() == JUnitsOfMeasure.Deg);
+//        Item<Double> j = k2.set(34.34);
+//        assert (j.value() == 34.34);
+//    }
+
     @Test
     public void jKeyTest() {
-        JKey1<String> k1 = new JKey1<>(s2, JUnitsOfMeasure.NoUnits);
+        StringKey k1 = new StringKey(s2, JUnitsOfMeasure.NoUnits);
         Item<String> i = k1.set("blue");
         assert (Objects.equals(k1.name(), s2));
         assert (k1.units() == JUnitsOfMeasure.NoUnits);
         assert (Objects.equals(i.value(), "blue"));
 
 
-        JKey1<Double> k2 = new JKey1<>(s3, JUnitsOfMeasure.Deg);
+        JDoubleKey k2 = new JDoubleKey(s3, JUnitsOfMeasure.Deg);
         assert (Objects.equals(k2.name(), s3));
         assert (k2.units() == JUnitsOfMeasure.Deg);
         Item<Double> j = k2.set(34.34);
         assert (j.value() == 34.34);
     }
+
 
     @Test
     public void testConfig() {
@@ -143,6 +147,24 @@ public class JConfigTests {
 
         System.out.println("SC2: " + sc2);
 
+    }
+
+    // An example of defining a key in Java.
+    // Note: In most cases it should be easier to use an existing key: For example:
+    // StringKey filter = new StringKey("filter", JUnitsOfMeasure.NoUnits);
+    // TODO: Implement enum keys?
+    static class JFilter extends StringKey {
+        JFilter() {
+            super("filter", JUnitsOfMeasure.NoUnits);
+        }
+
+        public CItem<String> set(String v) {
+            return new CItem<>(this, v);
+        }
+
+        static CItem<String> filter(String value) {
+            return (new JFilter()).set(value);
+        }
     }
 
 
