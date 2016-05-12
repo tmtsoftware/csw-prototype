@@ -20,6 +20,8 @@ object ConfigServiceSettings extends ExtensionId[ConfigServiceSettings] with Ext
   override def lookup(): ConfigServiceSettings.type = ConfigServiceSettings
 
   override def createExtension(system: ExtendedActorSystem): ConfigServiceSettings = new ConfigServiceSettings(system.settings.config)
+
+  def getConfigServiceSettings(system: ActorSystem): ConfigServiceSettings = ConfigServiceSettings(system)
 }
 
 case class ConfigServiceSettings(config: Config) extends Extension {

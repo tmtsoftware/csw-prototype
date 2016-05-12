@@ -2,7 +2,7 @@ package javacsw.services.cs.core;
 
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import javacsw.services.cs.JBlockingConfigManager;
-import javacsw.services.cs.akka.TestRepo;
+import javacsw.services.cs.akka.JTestRepo;
 import org.junit.Test;
 
 /**
@@ -14,7 +14,7 @@ public class JBlockingConfigManagerTest {
     // Test creating a ConfigManager, storing and retrieving some files
     @Test
     public void testConfigManager() throws Exception {
-        JBlockingConfigManager manager = TestRepo.getTestRepoBlockingConfigManager();
+        JBlockingConfigManager manager = JTestRepo.getTestRepoBlockingConfigManager();
         JConfigManagerTestHelper.runTests(manager, false);
 
         // Start the config service annex http server and wait for it to be ready for connections

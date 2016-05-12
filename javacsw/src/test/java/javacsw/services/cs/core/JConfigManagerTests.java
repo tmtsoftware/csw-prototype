@@ -2,7 +2,7 @@ package javacsw.services.cs.core;
 
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import javacsw.services.cs.JConfigManager;
-import javacsw.services.cs.akka.TestRepo;
+import javacsw.services.cs.akka.JTestRepo;
 import org.junit.Test;
 
 /**
@@ -14,7 +14,7 @@ public class JConfigManagerTests {
     // Test creating a ConfigManager, storing and retrieving some files
     @Test
     public void testConfigManager() throws Exception {
-        JConfigManager manager = TestRepo.getTestRepoConfigManager();
+        JConfigManager manager = JTestRepo.getTestRepoConfigManager();
         JConfigManagerTestHelper.runTests(manager, false);
 
         // Start the config service annex http server and wait for it to be ready for connections
