@@ -1,22 +1,22 @@
 package javacsw.services.cs;
 
+import scala.Unit;
+
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * Java interface to ConfigData
+ * Java asynchronous interface to ConfigData
  */
 public interface JConfigData {
     /**
-     * Returns a string representation of the data (assuming it is not binary data)
+     * Returns a future string representation of the data (assuming it is not binary data)
      */
-    String toString();
+    CompletableFuture<String> toFutureString();
 
     /**
      * Writes the data to the given file
      * @param file file to write to
      */
-    void writeToFile(File file);
-
-    // TODO
-//    byte[] toByteArray();
+    CompletableFuture<Unit>  writeToFile(File file);
 }

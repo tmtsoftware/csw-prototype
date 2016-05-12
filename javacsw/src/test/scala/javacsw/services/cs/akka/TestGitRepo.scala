@@ -1,8 +1,8 @@
 package javacsw.services.cs.akka
 
 import java.io.File
-import javacsw.services.cs.JConfigManager
-import javacsw.services.cs.core.ConfigManagerJava
+import javacsw.services.cs.{JBlockingConfigManager, JConfigManager}
+import javacsw.services.cs.core.{JBlockingConfigManagerImpl, JConfigManagerImpl}
 
 import akka.actor.{ActorRefFactory, ActorSystem}
 import csw.services.cs.akka.ConfigServiceSettings
@@ -30,12 +30,25 @@ object TestGitRepo {
    * Java API: Creates a temporary test Git repository and a bare main repository for push/pull.
    * Any previous contents are deleted.
    *
-   * @return a new ConfigManager set to manage the newly created Git repositories
+   * @return a new blocking ConfigManager set to manage the newly created Git repositories
    */
+  def getJBlockingConfigManager: JBlockingConfigManager = {
+    implicit val system = ActorSystem()
+    val settings = ConfigServiceSettings(system)
+    resetRepo(settings)
+    JBlockingConfigManagerImpl(GitConfigManager(settings.localRepository, settings.mainRepository, settings.name))
+  }
+
+  /**
+    * Java API: Creates a temporary test Git repository and a bare main repository for push/pull.
+    * Any previous contents are deleted.
+    *
+    * @return a new ConfigManager set to manage the newly created Git repositories
+    */
   def getJConfigManager: JConfigManager = {
     implicit val system = ActorSystem()
     val settings = ConfigServiceSettings(system)
     resetRepo(settings)
-    ConfigManagerJava(GitConfigManager(settings.localRepository, settings.mainRepository, settings.name))
+    JConfigManagerImpl(GitConfigManager(settings.localRepository, settings.mainRepository, settings.name))
   }
 }

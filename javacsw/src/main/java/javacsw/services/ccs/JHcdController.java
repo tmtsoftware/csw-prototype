@@ -11,6 +11,8 @@ import scala.runtime.BoxedUnit;
  * Note: The methods in this class are defined as public although they override protected Scala methods.
  * This is due to differences in the way Scala implements "protected". The methods should still only be called
  * from derived classes.
+ *
+ * @deprecated use {@link javacsw.services.pkg.JHcdControllerWithLifecycleHandler)
  */
 abstract public class JHcdController extends AbstractHcdController {
 

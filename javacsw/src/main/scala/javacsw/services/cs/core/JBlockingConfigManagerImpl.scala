@@ -1,27 +1,28 @@
 package javacsw.services.cs.core
 
 import java.io.File
+import java.util.Optional
 import java.{lang, util}
-import javacsw.services.cs.{JConfigData, JConfigManager}
+import javacsw.services.cs.{JBlockingConfigData, JBlockingConfigManager}
 
 import akka.actor.ActorRefFactory
 import csw.services.cs.core.{ConfigFileHistory, _}
 
 import scala.collection.JavaConverters._
+import scala.compat.java8.OptionConverters._
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * Java API implementation for the config service.
+ * Java API for the config service.
  */
-case class ConfigManagerJava(manager: ConfigManager)(implicit context: ActorRefFactory)
-    extends JConfigManager {
+case class JBlockingConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFactory)
+    extends JBlockingConfigManager {
 
   import context.dispatcher
 
-  // XXX For now, wait for results in the Java version.
-  // Later, if needed, we could convert to Java futures (maybe in Scala 2.12, when Java8 support is better)
-  private val timeout = 10.seconds
+  private val timeout = 30.seconds // XXX Should this be a parameter?
 
   override def create(path: File, configData: ConfigData, oversize: lang.Boolean, comment: String): ConfigId = {
     Await.result(manager.create(path, configData, oversize, comment), timeout)
@@ -35,14 +36,18 @@ case class ConfigManagerJava(manager: ConfigManager)(implicit context: ActorRefF
     Await.result(manager.createOrUpdate(path, configData, oversize, comment), timeout)
   }
 
-  override def get(path: File): JConfigData = {
-    val result = Await.result(manager.get(path), timeout).orNull
-    if (result != null) JGitConfigData(result) else null
+  override def get(path: File): Optional[JBlockingConfigData] = {
+    Await.result(manager.get(path), timeout).map {c =>
+      val result: JBlockingConfigData = JBlockingConfigDataImpl(c)
+      result
+    }.asJava
   }
 
-  override def get(path: File, id: ConfigId): JConfigData = {
-    val result = Await.result(manager.get(path, Some(id)), timeout).orNull
-    if (result != null) JGitConfigData(result) else null
+  override def get(path: File, id: ConfigId): Optional[JBlockingConfigData] = {
+    Await.result(manager.get(path, Some(id)), timeout).map {c =>
+      val result: JBlockingConfigData = JBlockingConfigDataImpl(c)
+      result
+    }.asJava
   }
 
   override def exists(path: File): Boolean = {
@@ -66,7 +71,7 @@ case class ConfigManagerJava(manager: ConfigManager)(implicit context: ActorRefF
   }
 }
 
-case class JGitConfigData(configData: ConfigData)(implicit context: ActorRefFactory) extends JConfigData {
+case class JBlockingConfigDataImpl(configData: ConfigData)(implicit context: ActorRefFactory) extends JBlockingConfigData {
   private val timeout = 30.seconds
 
   override def toString: String = Await.result(configData.toFutureString, timeout)
