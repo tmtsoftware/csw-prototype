@@ -37,14 +37,14 @@ case class JBlockingConfigManagerImpl(manager: ConfigManager)(implicit context: 
   }
 
   override def get(path: File): Optional[JBlockingConfigData] = {
-    Await.result(manager.get(path), timeout).map {c =>
+    Await.result(manager.get(path), timeout).map { c ⇒
       val result: JBlockingConfigData = JBlockingConfigDataImpl(c)
       result
     }.asJava
   }
 
   override def get(path: File, id: ConfigId): Optional[JBlockingConfigData] = {
-    Await.result(manager.get(path, Some(id)), timeout).map {c =>
+    Await.result(manager.get(path, Some(id)), timeout).map { c ⇒
       val result: JBlockingConfigData = JBlockingConfigDataImpl(c)
       result
     }.asJava

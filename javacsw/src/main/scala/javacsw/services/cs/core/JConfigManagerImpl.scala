@@ -13,10 +13,10 @@ import scala.compat.java8.FutureConverters._
 import scala.compat.java8.OptionConverters._
 
 /**
-  * Java API for the config service.
-  */
+ * Java API for the config service.
+ */
 case class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFactory)
-  extends JConfigManager {
+    extends JConfigManager {
 
   import context.dispatcher
 
@@ -31,14 +31,14 @@ case class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRef
 
   override def get(path: File): CompletableFuture[Optional[JConfigData]] =
     // Note: First map is for the future, second to convert scala Option to java Optional
-    manager.get(path).map(_.map { c =>
+    manager.get(path).map(_.map { c ⇒
       val result: JConfigData = JConfigDataImpl(c)
       result
     }.asJava).toJava.toCompletableFuture
 
   override def get(path: File, id: ConfigId): CompletableFuture[Optional[JConfigData]] =
     // Note: First map is for the future, second to convert scala Option to java Optional
-    manager.get(path, Some(id)).map(_.map { c =>
+    manager.get(path, Some(id)).map(_.map { c ⇒
       val result: JConfigData = JConfigDataImpl(c)
       result
     }.asJava).toJava.toCompletableFuture

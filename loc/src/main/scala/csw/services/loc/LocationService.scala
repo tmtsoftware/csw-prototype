@@ -406,10 +406,8 @@ object LocationService {
           connection match {
             case _: AkkaConnection ⇒
               val path = info.getPropertyString(PATH_KEY)
-              log.info(s"XXX uriStr=$uriStr, path=$path")
               if (path == null) None else getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
             case _ ⇒
-              log.info(s"XXX uriStr=$uriStr, (not akka: connection=$connection)")
               Some(new URI(uriStr))
           }
         }

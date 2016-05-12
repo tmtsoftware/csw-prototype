@@ -131,7 +131,6 @@ class ConfigTests extends FunSpec {
     }
   }
 
-
   describe("Test Standard Key Usage") {
     import StandardKeys._
     it("Should be able to use standard enumerated keys") {
@@ -141,16 +140,15 @@ class ConfigTests extends FunSpec {
     }
   }
 
-//  describe("Test JSON I/O") {
-//    import StandardKeys._
-//    import upickle.default._
-//
-//    it("Should be able to serialize to and from JSON") {
-//      val sc = SetupConfig(ck1).set(position, "TOP")
-//      val json = write(sc)
-//      println(s"XXX json:\n\n$json\n")
-//    }
-//  }
-
+  //  describe("Test JSON I/O") {
+  //    import StandardKeys._
+  //    import upickle.default._
+  //
+  //    it("Should be able to serialize to and from JSON") {
+  //      val sc = SetupConfig(ck1).set(position, "TOP")
+  //      val json = write(sc)
+  //      println(s"XXX json:\n\n$json\n")
+  //    }
+  //  }
 
 }

@@ -4,12 +4,11 @@ import csw.util.config.UnitsOfMeasure.Units
 
 import scala.reflect.ClassTag
 
-
 /**
-  * A Key whose value is a String (Works with Scala and Java strings)
-  * @param nameIn the name of the key
-  * @param unitsIn the units of the value
-  */
+ * A Key whose value is a String (Works with Scala and Java strings)
+ * @param nameIn the name of the key
+ * @param unitsIn the units of the value
+ */
 case class StringKey(nameIn: String, unitsIn: Units) extends Key1[String](nameIn, unitsIn) {
   def set(v: String) = CItem[String](this, v)
 }

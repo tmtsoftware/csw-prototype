@@ -405,7 +405,6 @@ class LifecycleManagerTest() extends FSMSpec {
     component.expectMsg(LifecycleFailure(Initialized, "timeout out while waiting for component response"))
 
     fsm ! UnsubscribeTransitionCallBack(stateProbe.ref)
-
   }
 
   it("with lifecyclehandler, should accept Initialize") {
@@ -471,7 +470,10 @@ class LifecycleManagerTest() extends FSMSpec {
     stateProbe.expectMsg(new Transition(fsm, Initialized, PendingRunningFromInitialized))
     stateProbe.expectMsg(new Transition(fsm, PendingRunningFromInitialized, LifecycleFailure))
 
+    // XXX Had some failed tests here, sometimes, but not always!
+    println(s"\n\nXXX  assert(${fsm.stateName} === LifecycleFailure)\n\n")
     assert(fsm.stateName === LifecycleFailure)
+
     assert(fsm.stateData === FailureInfo(Running, failureReason))
 
     fsm ! UnsubscribeTransitionCallBack(stateProbe.ref)

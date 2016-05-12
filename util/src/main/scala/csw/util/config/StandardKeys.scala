@@ -19,8 +19,6 @@ object StandardKeys {
 
   case object ACQUISITION extends ExposureClass("acquisition")
 
-
-
   sealed abstract class ExposureType(val description: String) extends Serializable {
     override def toString = description
   }
@@ -32,8 +30,6 @@ object StandardKeys {
   case object BIAS extends ExposureType("bias")
 
   case object OBSERVE extends ExposureType("observe")
-
-
 
   sealed abstract class CloudCoverType(val description: String, val percentage: Int) extends Serializable {
     override def toString = description
@@ -51,7 +47,6 @@ object StandardKeys {
 
   case object ANY extends CloudCoverType("Any", 100)
 
-
   // --- Common keys ---
 
   // --- Setup keys ---
@@ -62,7 +57,7 @@ object StandardKeys {
     def set(v: CloudCoverType) = CItem(this, v)
   }
 
-    //  --- ObserveConfig ---
+  //  --- ObserveConfig ---
 
   val exposureTime = DoubleKey("exposureTime", NoUnits)
 

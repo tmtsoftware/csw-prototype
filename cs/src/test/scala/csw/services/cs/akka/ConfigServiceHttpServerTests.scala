@@ -14,7 +14,6 @@ import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-
 object ConfigServiceHttpServerTests {
   LocationService.initInterface()
 
