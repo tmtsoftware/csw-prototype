@@ -36,11 +36,11 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
       val f = for {
         _ ← runTests(settings, oversize = false)
         _ ← runTests2(settings2, oversize = false)
-        _ ← runTests3(List(settings, settings2), oversize = false)
+//        _ ← runTests3(List(settings, settings2), oversize = false)
 
         _ ← runTests(settings, oversize = true)
         _ ← runTests2(settings2, oversize = true)
-        _ ← runTests3(List(settings, settings2), oversize = true)
+//        _ ← runTests3(List(settings, settings2), oversize = true)
       } yield ()
 
       f.onComplete {
@@ -93,21 +93,22 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     result
   }
 
-  // Test concurrent access
-  def runTests3(settings: List[ConfigServiceSettings], oversize: Boolean): Future[Unit] = {
-    logger.info(s"--- Test concurrent access: oversize = $oversize ---")
-
-    val managers = settings.map(_.getConfigManager)
-
-    // Create the actor
-    val csActors = managers.map(manager ⇒ system.actorOf(ConfigServiceActor.props(manager)))
-    val csClients = csActors.zip(settings).map(p ⇒ ConfigServiceClient(p._1, p._2.name))
-    val result = ConfigManagerTestHelper.concurrentTest(csClients, oversize)
-    result.onComplete {
-      case _ ⇒ csActors.foreach(csActor ⇒ system.stop(csActor))
-    }
-    result
-  }
+//  // Test concurrent access
+//  // (XXX: Doesn't make sense for svn case: There should only be one cs actor per repo)
+//  def runTests3(settings: List[ConfigServiceSettings], oversize: Boolean): Future[Unit] = {
+//    logger.info(s"--- Test concurrent access: oversize = $oversize ---")
+//
+//    val managers = settings.map(_.getConfigManager)
+//
+//    // Create the actor
+//    val csActors = managers.map(manager ⇒ system.actorOf(ConfigServiceActor.props(manager)))
+//    val csClients = csActors.zip(settings).map(p ⇒ ConfigServiceClient(p._1, p._2.name))
+//    val result = ConfigManagerTestHelper.concurrentTest(csClients, oversize)
+//    result.onComplete {
+//      case _ ⇒ csActors.foreach(csActor ⇒ system.stop(csActor))
+//    }
+//    result
+//  }
 
   override def afterAll(): Unit = {
     //    system.terminate()
