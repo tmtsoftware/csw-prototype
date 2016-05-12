@@ -13,12 +13,14 @@ import scala.compat.java8.FutureConverters._
 import scala.compat.java8.OptionConverters._
 
 /**
- * Java API for the config service.
+ * Non-blocking Java API for the config service.
  */
-case class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFactory)
+class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFactory)
     extends JConfigManager {
 
   import context.dispatcher
+
+  override def getManager: ConfigManager = manager
 
   override def create(path: File, configData: ConfigData, oversize: java.lang.Boolean, comment: String): CompletableFuture[ConfigId] =
     manager.create(path, configData, oversize, comment).toJava.toCompletableFuture

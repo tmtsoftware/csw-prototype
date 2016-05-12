@@ -1,8 +1,12 @@
 package javacsw.services.cs.core;
 
+import akka.actor.ActorSystem;
+import akka.testkit.JavaTestKit;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import javacsw.services.cs.JBlockingConfigManager;
 import javacsw.services.cs.akka.JTestRepo;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -11,10 +15,23 @@ import org.junit.Test;
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class JBlockingConfigManagerTest {
 
+    private static ActorSystem system;
+
+    @BeforeClass
+    public static void setup() {
+        system = ActorSystem.create();
+    }
+
+    @AfterClass
+    public static void teardown() {
+        JavaTestKit.shutdownActorSystem(system);
+        system = null;
+    }
+
     // Test creating a ConfigManager, storing and retrieving some files
     @Test
     public void testConfigManager() throws Exception {
-        JBlockingConfigManager manager = JTestRepo.getTestRepoBlockingConfigManager();
+        JBlockingConfigManager manager = JTestRepo.getTestRepoBlockingConfigManager(system);
         JConfigManagerTestHelper.runTests(manager, false);
 
         // Start the config service annex http server and wait for it to be ready for connections

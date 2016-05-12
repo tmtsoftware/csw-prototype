@@ -36,8 +36,7 @@ public class JTestGitRepo {
      *
      * @return a new blocking ConfigManager set to manage the newly created Git repository
      */
-    public static JBlockingConfigManager getJBlockingConfigManager() {
-        ActorSystem system = ActorSystem.create();
+    public static JBlockingConfigManager getJBlockingConfigManager(ActorSystem system) {
         ConfigServiceSettings settings = ConfigServiceSettings.getConfigServiceSettings(system);
         resetRepo(settings, system);
         GitConfigManager manager = GitConfigManager.apply(settings.localRepository(), settings.mainRepository(), settings.name(), system);
@@ -50,8 +49,7 @@ public class JTestGitRepo {
      *
      * @return a new ConfigManager set to manage the newly created Git repository
      */
-    public static JConfigManager getJConfigManager() {
-        ActorSystem system = ActorSystem.create();
+    public static JConfigManager getJConfigManager(ActorSystem system) {
         ConfigServiceSettings settings = ConfigServiceSettings.getConfigServiceSettings(system);
         resetRepo(settings, system);
         GitConfigManager manager = GitConfigManager.apply(settings.localRepository(), settings.mainRepository(), settings.name(), system);

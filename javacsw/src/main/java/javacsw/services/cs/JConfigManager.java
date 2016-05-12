@@ -1,9 +1,6 @@
 package javacsw.services.cs;
 
-import csw.services.cs.core.ConfigData;
-import csw.services.cs.core.ConfigFileHistory;
-import csw.services.cs.core.ConfigFileInfo;
-import csw.services.cs.core.ConfigId;
+import csw.services.cs.core.*;
 import scala.Unit;
 
 import java.io.File;
@@ -16,6 +13,11 @@ import java.util.concurrent.CompletableFuture;
  */
 @SuppressWarnings("unused")
 public interface JConfigManager {
+
+    /**
+     * Returns a reference to the underlying scala ConfigManager
+     */
+    ConfigManager getManager();
 
     /**
      * Creates a config file with the given path and data and optional comment.

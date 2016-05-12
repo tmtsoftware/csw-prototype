@@ -15,7 +15,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * Java API for the config service.
+ * A blocking Java API for the config service.
  */
 case class JBlockingConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFactory)
     extends JBlockingConfigManager {

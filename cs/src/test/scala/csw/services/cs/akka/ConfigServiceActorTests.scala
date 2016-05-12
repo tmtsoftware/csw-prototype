@@ -23,9 +23,6 @@ import scala.util.{Failure, Success}
 class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
-  // Create temporary main (bare) and local git repos for testing
-  val gitRepoPrefix = "test1"
-
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")
 
@@ -134,7 +131,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
       configServiceActor ! ExistsRequest(path2)
       checkExistsResult(path2, exists = false)
 
-      // XXX TODO FIXME: Dosn't work to get history of deleted file with svnkit
+      // XXX TODO FIXME: Doesn't work to get history of deleted file with svnkit
       // XXX TODO FIXME unless you specify an existing revision (works ok with jgit)
 
       //      configServiceActor ! HistoryRequest(path1)

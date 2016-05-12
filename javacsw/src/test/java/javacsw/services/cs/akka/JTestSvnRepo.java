@@ -35,8 +35,7 @@ public class JTestSvnRepo {
    *
    * @return a new blocking ConfigManager set to manage the newly created Svn repository
    */
-  public static JBlockingConfigManager getJBlockingConfigManager() {
-      ActorSystem system = ActorSystem.create();
+  public static JBlockingConfigManager getJBlockingConfigManager(ActorSystem system) {
       ConfigServiceSettings settings = ConfigServiceSettings.getConfigServiceSettings(system);
       resetRepo(settings, system);
       SvnConfigManager manager = SvnConfigManager.apply(settings.mainRepository(), settings.name(), system);
@@ -49,8 +48,7 @@ public class JTestSvnRepo {
     *
     * @return a new ConfigManager set to manage the newly created Svn repository
     */
-  public static JConfigManager getJConfigManager() {
-      ActorSystem system = ActorSystem.create();
+  public static JConfigManager getJConfigManager(ActorSystem system) {
       ConfigServiceSettings settings = ConfigServiceSettings.getConfigServiceSettings(system);
       resetRepo(settings, system);
       SvnConfigManager manager = SvnConfigManager.apply(settings.mainRepository(), settings.name(), system);

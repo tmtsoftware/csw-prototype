@@ -44,11 +44,12 @@ object ConfigServiceClient {
 
 /**
  * Adds a convenience layer over the Akka actor interface to the configuration service.
- * Note:Only one instance of this class should exist for a given local Git repository.
+ * Note:Only one instance of this class should exist for a given repository.
  *
- * @param configServiceActor the config service actor reference to use
- * @param system the caller's actor system
- * @param timeout amount of time to wait for config service operations to complete
+ * @param configServiceActor the config service actor reference to use (Get from location service, if needed)
+ * @param name               the config service name (defaults to "Config Service")
+ * @param system             the caller's actor system
+ * @param timeout            amount of time to wait for config service operations to complete
  */
 case class ConfigServiceClient(configServiceActor: ActorRef, name: String = "Config Service")(implicit system: ActorSystem, timeout: Timeout) extends ConfigManager {
 

@@ -29,7 +29,7 @@ public class JConfigManagerTestHelper {
     private static final String comment2 = "update 1 comment";
     private static final String comment3 = "update 2 comment";
 
-    static void runTests(JConfigManager manager, Boolean oversize) throws ExecutionException, InterruptedException {
+    public static void runTests(JConfigManager manager, Boolean oversize) throws ExecutionException, InterruptedException {
 
         // Note: In the tests below we just call .get() on the future results for simplicity.
         // In a real application, you could use other methods...
@@ -81,7 +81,7 @@ public class JConfigManagerTestHelper {
     }
 
 
-    static void runTests(JBlockingConfigManager manager, Boolean oversize) {
+    public static void runTests(JBlockingConfigManager manager, Boolean oversize) {
         if (manager.exists(path1)) {
             manager.delete(path1, "deleted");
         }

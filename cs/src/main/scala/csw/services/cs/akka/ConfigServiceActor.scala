@@ -16,18 +16,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Config service actor.
  *
- * Note: Only one instance of this actor should exist for a given local Git repository.
- *
- * In this implementation, you should have a single config service actor managing a
- * queue of commands that work on a single local repository, one command at a time.
- * (This is enforced here by waiting for each command to complete before taking the
- * next one from the queue.)
- * This is because the current implementation reads and writes file to the local Git working directory.
- * This has the advantage of being a cache for files, so they don't always have to
- * be copied from the server. While it might be possible to avoid reading and writing files
- * in the working directory using lower level JGit commands, it would still be necessary to
- * have a single config service actor per local repository to avoid potential concurrency
- * issues (Thread-safety might work within the JVM, but not with multiple applications at once).
+ * Note: Only one instance of this actor should exist for a given local repository.
  */
 object ConfigServiceActor {
 
@@ -118,7 +107,7 @@ class ConfigServiceActor(configManager: ConfigManager) extends Actor with ActorL
   import context.dispatcher
   import csw.services.cs.akka.ConfigServiceActor._
 
-  // timeout for blocking wait (used to make sure local Git repo working dir access is not concurrent)
+  // timeout for blocking wait (used to make sure local repo access is not concurrent)
   val timeout = 60.seconds
 
   log.info("Started config service")

@@ -22,7 +22,7 @@ object ConfigService extends App {
    * Command line options: [--config <config> --init --delete --http]
    *
    * @param config optional config file to use for config service settings, if needed
-   * @param init the main git repository is initialized, if it does not yet exist
+   * @param init the repository is initialized, if it does not yet exist
    * (in this case, the value of csw.services.cs.main-repository must be a file URI).
    * @param delete (implies --init) the repositories are first deleted
    * (but only if they are under /tmp - to avoid accidentally deleting any important data)
@@ -41,7 +41,7 @@ object ConfigService extends App {
 
     opt[Unit]("init") action { (_, c) ⇒
       c.copy(init = true)
-    } text "the main git repository is initialized, if it does not yet exist"
+    } text "the repository is initialized, if it does not yet exist"
 
     opt[Unit]("delete") action { (_, c) ⇒
       c.copy(delete = true, init = true)
