@@ -67,7 +67,9 @@ trait PublisherActor[A] {
 
   /**
    * A request to the implementing actor to publish the current state value
-   * by calling notifySubscribers().
+   * by calling notifySubscribers(). Implementing classes should override this
+   * method and call notifySubscribers() if they have state that need to be
+   * published.
    */
-  protected def requestCurrent(): Unit
+  protected def requestCurrent(): Unit = {}
 }

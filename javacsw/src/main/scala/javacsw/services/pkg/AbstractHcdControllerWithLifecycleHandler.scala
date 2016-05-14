@@ -32,11 +32,23 @@ abstract class AbstractHcdControllerWithLifecycleHandler extends AbstractActor
 
   // -- Called from parent --
 
-  override def requestCurrent(): Unit
+  /**
+   * A request to the implementing actor to publish the current state value
+   * by calling notifySubscribers().
+   */
+  override def requestCurrent(): Unit = {}
 
+  /**
+   * Derived classes should process the given config and eventually either call
+   * notifySubscribers() or send a CurrentState message to itself
+   * (possibly from a worker actor) to indicate changes in the current HCD state.
+   */
   override def process(config: SetupConfig): Unit
 
   // -- These can be called from Java based subclasses
 
+  /**
+   * Notifies all subscribers with the given value
+   */
   override protected def notifySubscribers(a: CurrentState): Unit = super.notifySubscribers(a)
 }

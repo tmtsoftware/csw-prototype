@@ -12,7 +12,7 @@ import scala.runtime.BoxedUnit;
  * This is due to differences in the way Scala implements "protected". The methods should still only be called
  * from derived classes.
  *
- * @deprecated use {@link javacsw.services.pkg.JHcdControllerWithLifecycleHandler)
+ * @deprecated use {@link javacsw.services.pkg.JHcdControllerWithLifecycleHandler}
  */
 abstract public class JHcdController extends AbstractHcdController {
 
@@ -29,7 +29,9 @@ abstract public class JHcdController extends AbstractHcdController {
      * by calling notifySubscribers().
      */
     @Override
-    public /*protected*/ abstract void requestCurrent();
+    public /*protected*/ void requestCurrent() {
+
+    }
 
     /**
      * This should be used by the implementer actor's receive method.

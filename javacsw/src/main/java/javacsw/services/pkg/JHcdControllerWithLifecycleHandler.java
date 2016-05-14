@@ -8,7 +8,7 @@ import csw.util.cfg.Configurations;
 @SuppressWarnings("unused")
 public abstract class JHcdControllerWithLifecycleHandler extends AbstractHcdControllerWithLifecycleHandler {
     @Override
-    public abstract void requestCurrent();
+    public void requestCurrent() {}
 
     @Override
     public abstract void process(Configurations.SetupConfig config);

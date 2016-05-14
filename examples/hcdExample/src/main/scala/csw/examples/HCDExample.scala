@@ -1,7 +1,7 @@
 package csw.examples
 
 import akka.actor.{Actor, ActorLogging, Cancellable, Props}
-import csw.services.ccs.PeriodicHcdController
+import csw.services.ccs.HcdController
 import csw.services.event.{EventService, EventServiceSettings, EventSubscriber}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
@@ -28,11 +28,6 @@ object HCDExample {
    * Config key for setting the rate
    */
   val rateKey = Key.create[Int]("rate")
-
-  /**
-   * Used to create the HCD actor
-   */
-  def props(info: HcdInfo): Props = Props(classOf[HCDExample], info)
 
   // Generate position events
   protected object PosGenerator {
@@ -115,7 +110,7 @@ object HCDExample {
   }
 }
 
-class HCDExample(info: HcdInfo) extends Hcd with PeriodicHcdController with TimeServiceScheduler with LifecycleHandler {
+class HCDExample(info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
   import HCDExample._
   import Supervisor._
   import PosGenerator._
@@ -124,13 +119,12 @@ class HCDExample(info: HcdInfo) extends Hcd with PeriodicHcdController with Time
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")
   lifecycle(supervisor)
-  processAt(info.rate)
 
   // Create an actor to generate position events
   val posEventGenerator = context.actorOf(PosGenerator.props(prefix))
 
   // Process a config message
-  private def doProcess(sc: SetupConfig): Unit = {
+  override def process(sc: SetupConfig): Unit = {
     sc.get(rateKey).foreach {
       rate ⇒
         log.info(s"Set rate to $rate")
@@ -138,11 +132,9 @@ class HCDExample(info: HcdInfo) extends Hcd with PeriodicHcdController with Time
     }
   }
 
-  override def process(): Unit = {
-    nextConfig.foreach { config ⇒ doProcess(config) }
-  }
-
+  // Receive actor methods
   def receive = controllerReceive orElse lifecycleHandlerReceive
+
 }
 
 /**

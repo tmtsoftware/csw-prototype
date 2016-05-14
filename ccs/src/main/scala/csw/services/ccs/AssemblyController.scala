@@ -169,6 +169,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
         config ← configArg.configs
         actorRef ← getActorRefs(config.prefix)
       } yield {
+        log.debug(s"Forwarding $config to $actorRef")
         actorRef ! HcdController.Submit(config)
         (actorRef, DemandState(config))
       }

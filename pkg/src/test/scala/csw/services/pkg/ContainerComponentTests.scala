@@ -1,14 +1,13 @@
 package csw.services.pkg
 
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.ConnectionType.{AkkaType, HttpType}
 import csw.services.loc.{ComponentId, Connection, LocationService}
 import csw.services.pkg.Component._
-import csw.services.pkg.LifecycleManager.{Shutdown, Startup, Uninitialize}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
 
 import scala.concurrent.duration._
@@ -123,31 +122,6 @@ object ContainerComponentTests {
     def receive = lifecycleHandlerReceive
   }
 
-  private val testAssemblyInfo: AssemblyInfo = {
-    val name = "test1"
-    val prefix = "test1.prefix"
-    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestAssembly"
-
-    AssemblyInfo(name, prefix, className, RegisterOnly, Set(AkkaType), Set.empty[Connection])
-  }
-
-  private val testHcdInfo: HcdInfo = {
-    val name = "test1Hcd"
-    val prefix = "test1.Hcd.prefix"
-    val className = "csw.services.pkg.ContainerComponentTests$SimpleTestHcd"
-
-    HcdInfo(name, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
-  }
-
-  private val testContainerInfo: ContainerInfo = {
-    ContainerInfo(
-      "TestContainer",
-      RegisterOnly,
-      Set(AkkaType),
-      Set(testAssemblyInfo, testHcdInfo)
-    )
-  }
-
   private def testParseStringConfig(s: String) = {
     val options = ConfigParseOptions.defaults().
       setOriginDescription("test string").
@@ -246,75 +220,4 @@ class ContainerComponentTests extends TestKit(ContainerComponentTests.system) wi
     val c3 = Connection(ComponentId(HCD2B, HCD), HttpType)
     assert(assInfo.get == AssemblyInfo(ASS1, "ass1.test", "csw.pkgDemo.Assembly1", RegisterAndTrackServices, Set(HttpType, AkkaType), Set(c1, c2, c3)))
   }
-
-  // XXX allan: (mis)use of TestProbe below is equivalent to using Thread.sleep? tp is not setup to receive any messages!
-
-  //  it("Should create a new Ass") {
-  //    val tp = TestProbe()
-  //    val a1 = Supervisor(testAssemblyInfo)
-  //    a1 ! LifecycleManager.Startup
-  //    tp.expectNoMsg(1.seconds)
-  //    a1 ! LifecycleManager.Shutdown
-  //  }
-
-  //  it("Should create a new Hcd") {
-  //    val tp = TestProbe()
-  //    val a1 = Supervisor(testHcdInfo)
-  //    a1 ! LifecycleManager.Startup
-  //    tp.expectNoMsg(1.seconds)
-  //    a1 ! LifecycleManager.Shutdown
-  //  }
-
-  //  it("Should create a new Ass from config") {
-  //    import scala.collection.JavaConversions._
-  //
-  //    val setup2: Config = testParseStringConfig(t2)
-  //    val conf = setup2.getConfig("container.components")
-  //    val conf2 = conf.root.keySet().toList
-  //
-  //    logger.info("Name: " + conf2)
-  //
-  //    val cc = ContainerComponent.create(setup2).get
-  //
-  //    // XXX allan: FIXME: expectNoMsg makes the tests run very slow, and no messages will ever be received!
-  //    val tp = TestProbe()
-  //    tp.expectNoMsg(1.seconds)
-  //
-  //    cc ! LifecycleToAll(Startup)
-  //    tp.expectNoMsg(1.seconds)
-  //
-  //    cc ! LifecycleToAll(Shutdown)
-  //    tp.expectNoMsg(1.seconds)
-  //
-  //  }
-
-  //  it("Should be possible to create a container with a list of componentInfos") {
-  //    val cc = ContainerComponent.create(testContainerInfo)
-  //
-  //    val tp = TestProbe()
-  //    tp.expectNoMsg(1.seconds)
-  //
-  //    cc ! LifecycleToAll(Startup)
-  //    tp.expectNoMsg(1.seconds)
-  //
-  //    cc ! LifecycleToAll(Uninitialize)
-  //    tp.expectNoMsg(1.seconds)
-  //  }
-
-  //  it("Should be possible to create and halt") {
-  //    val cc2 = testContainerInfo.copy(componentInfos = Set(testAssemblyInfo, testHcdInfo))
-  //    val cc = ContainerComponent.create(cc2)
-  //
-  //    val tp = TestProbe()
-  //    tp.expectNoMsg(1.seconds)
-  //
-  //    logger.info("Sending startup")
-  //    cc ! LifecycleToAll(Startup)
-  //    tp.expectNoMsg(10.seconds)
-  //
-  //    cc ! Restart
-  //    // XXX allan: Need a test that Restart actually worked!
-  //    tp.expectNoMsg(20.seconds)
-  //  }
-
 }

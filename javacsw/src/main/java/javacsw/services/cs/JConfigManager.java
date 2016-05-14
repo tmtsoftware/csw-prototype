@@ -16,6 +16,7 @@ public interface JConfigManager {
 
     /**
      * Returns a reference to the underlying scala ConfigManager
+     * @return the ConfigManager
      */
     ConfigManager getManager();
 
@@ -83,6 +84,7 @@ public interface JConfigManager {
      * Deletes the given config file (older versions will still be available)
      *
      * @param path the configuration path
+     * @return a future indicating when done
      */
     CompletableFuture<Unit> delete(File path);
 
@@ -91,6 +93,7 @@ public interface JConfigManager {
      *
      * @param path    the configuration path
      * @param comment comment for the delete operation
+     * @return a future indicating when done
      */
     CompletableFuture<Unit> delete(File path, String comment);
 

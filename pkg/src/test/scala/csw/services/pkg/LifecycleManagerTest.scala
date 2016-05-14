@@ -470,7 +470,7 @@ class LifecycleManagerTest() extends FSMSpec {
   //    stateProbe.expectMsg(new Transition(fsm, Initialized, PendingRunningFromInitialized))
   //    stateProbe.expectMsg(new Transition(fsm, PendingRunningFromInitialized, LifecycleFailure))
   //
-  //    // XXX Had some failed tests here, sometimes, but not always!
+  //    // XXX Test sometimes fails here, only when all tests run. Might be timing issue or conflict with other test
   //    println(s"\n\nXXX  assert(${fsm.stateName} === LifecycleFailure)\n\n")
   //    assert(fsm.stateName === LifecycleFailure)
   //

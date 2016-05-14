@@ -1,7 +1,7 @@
 package csw.examples
 
-import akka.actor.{ActorRef, Props}
-import csw.services.ccs.{AssemblyController, CommandStatus, HcdController}
+import akka.actor.ActorRef
+import csw.services.ccs.{AssemblyController, CommandStatus}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
@@ -9,16 +9,6 @@ import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
 import csw.services.pkg.Supervisor._
 import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
-
-/**
- * An example assembly
- */
-object AssemblyExample {
-  /**
-   * Used to create the assembly actor
-   */
-  def props(): Props = Props(classOf[AssemblyExample])
-}
 
 /**
  * Class that implements the assembly actor
@@ -63,13 +53,8 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
                                replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
-      // Submit each config
-      for {
-        config ← configArg.configs
-        hcdActorRef ← getActorRefs(config.prefix)
-      } {
-        hcdActorRef ! HcdController.Submit(config)
-      }
+      // Call a convenience method that will forward the config to the HCD based on the prefix
+      distributeSetupConfigs(locationsResolved, configArg, None)
 
       // If a replyTo actor was given, reply with the command status
       if (replyTo.isDefined) {
@@ -79,9 +64,6 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
     valid
   }
 
-  override protected def requestCurrent(): Unit = {
-    // TODO
-  }
 }
 
 /**
