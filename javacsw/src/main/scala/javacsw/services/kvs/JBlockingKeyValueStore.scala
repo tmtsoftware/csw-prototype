@@ -4,8 +4,11 @@ import java.util.Optional
 
 import akka.actor.ActorRefFactory
 import csw.services.kvs.KeyValueStore.KvsFormatter
-import csw.services.kvs.{BlockingKeyValueStore, KvsSettings, Implicits}
-import csw.util.cfg.Configurations.SetupConfig
+import csw.services.kvs.{BlockingKeyValueStore, Implicits, KvsSettings}
+import csw.util.cfg.Configurations.{ControlConfigArg, SequenceConfigArg, _}
+import csw.util.cfg.Events.{EventServiceEvent, ObserveEvent, StatusEvent, SystemEvent}
+import csw.util.cfg.StateVariable
+import csw.util.cfg.StateVariable.{CurrentState, DemandState}
 
 import scala.concurrent.duration.Duration
 import scala.compat.java8.OptionConverters._
@@ -15,16 +18,44 @@ object JBlockingKeyValueStore {
   import Implicits._
   // This is easier to do from Scala than from Java due to the use of implicits.
 
-  /**
-   * Returns a new JBlockingKeyValueStore[SetupConfig].
-   * @param timeout the max amount of time to wait for an operation to complete
-   * @param settings Redis server settings
-   * @param system Akka env required by RedisClient
-   */
-  def getSetupConfigStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): JBlockingKeyValueStore[SetupConfig] =
+  def getStatusEventStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[StatusEvent] =
+    JBlockingKeyValueStore[StatusEvent](timeout, settings, system)
+
+  def getObserveEventStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[ObserveEvent] =
+    JBlockingKeyValueStore[ObserveEvent](timeout, settings, system)
+
+  def getSystemEventStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[SystemEvent] =
+    JBlockingKeyValueStore[SystemEvent](timeout, settings, system)
+
+  def getSetupConfigStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[SetupConfig] =
     JBlockingKeyValueStore[SetupConfig](timeout, settings, system)
 
-  // XXX TODO add other types
+  def getCurrentStateStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[CurrentState] =
+    JBlockingKeyValueStore[CurrentState](timeout, settings, system)
+
+  def getDemandStateStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[DemandState] =
+    JBlockingKeyValueStore[DemandState](timeout, settings, system)
+
+  def getStateVariableStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[StateVariable] =
+    JBlockingKeyValueStore[StateVariable](timeout, settings, system)
+
+  def getSetupConfigArgStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[SetupConfigArg] =
+    JBlockingKeyValueStore[SetupConfigArg](timeout, settings, system)
+
+  def getEventServiceEventStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[EventServiceEvent] =
+    JBlockingKeyValueStore[EventServiceEvent](timeout, settings, system)
+
+  def getSequenceConfigStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[SequenceConfig] =
+    JBlockingKeyValueStore[SequenceConfig](timeout, settings, system)
+
+  def getControlConfigStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[ControlConfig] =
+    JBlockingKeyValueStore[ControlConfig](timeout, settings, system)
+
+  def getSequenceConfigArgStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[SequenceConfigArg] =
+    JBlockingKeyValueStore[SequenceConfigArg](timeout, settings, system)
+
+  def getControlConfigArgStore(timeout: Duration, settings: KvsSettings, system: ActorRefFactory): IBlockingKeyValueStore[ControlConfigArg] =
+    JBlockingKeyValueStore[ControlConfigArg](timeout, settings, system)
 }
 
 /**
