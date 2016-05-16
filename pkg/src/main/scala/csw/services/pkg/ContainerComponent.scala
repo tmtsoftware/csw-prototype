@@ -44,24 +44,25 @@ object ContainerComponent {
   private val logger = Logger(LoggerFactory.getLogger("ContainerComponent"))
 
   // for parsing of file
-  val CONTAINER = "container"
-  val TYPE = "type"
-  val CLASS = "class"
-  val PREFIX = "prefix"
-  val CONNECTION_TYPE = "connectionType"
-  val CONNECTIONS = "connections"
-  val NAME = "name"
-  val RATE = "rate"
-  val DELAY = "delay"
-  val INITIAL_DELAY = "initialDelay"
-  val CREATION_DELAY = "creationDelay"
-  val LIFECYCLE_DELAY = "lifecycleDelay"
+  private[pkg] val CONTAINER = "container"
+  private[pkg] val TYPE = "type"
+  private[pkg] val CLASS = "class"
+  private[pkg] val PREFIX = "prefix"
+  private[pkg] val CONNECTION_TYPE = "connectionType"
+  private[pkg] val CONNECTIONS = "connections"
+  private[pkg] val NAME = "name"
+  private[pkg] val RATE = "rate"
+  private[pkg] val DELAY = "delay"
+  private[pkg] val INITIAL_DELAY = "initialDelay"
+  private[pkg] val CREATION_DELAY = "creationDelay"
+  private[pkg] val LIFECYCLE_DELAY = "lifecycleDelay"
 
-  val DEFAULT_INITIAL_DELAY = 0.seconds
-  val DEFAULT_CREATION_DELAY = 0.seconds
-  val DEFAULT_LIFECYCLE_DELAY = 0.seconds
+  // XXX Should these be removed?
+  private[pkg] val DEFAULT_INITIAL_DELAY = 0.seconds
+  private[pkg] val DEFAULT_CREATION_DELAY = 0.seconds
+  private[pkg] val DEFAULT_LIFECYCLE_DELAY = 0.seconds
 
-  val DEFAULT_CONNECTION_TYPE = Set(AkkaType)
+  //  val DEFAULT_CONNECTION_TYPE = Set(AkkaType)
 
   /**
    * Used to create the component actor from a config (which may come from a config file)
@@ -302,6 +303,7 @@ object ContainerComponent {
 /**
  * Implements the container actor based on the contents of the given config.
  */
+//noinspection ScalaUnusedSymbol
 final case class ContainerComponent(containerInfo: ContainerInfo) extends Container {
   implicit val ec = context.dispatcher
   import ContainerComponent._
