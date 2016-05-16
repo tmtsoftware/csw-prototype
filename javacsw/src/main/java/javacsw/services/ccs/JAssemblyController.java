@@ -11,7 +11,7 @@ import scala.runtime.BoxedUnit;
  * Note: The non-static methods here are only defined as public due to interoperability issues between Scala and Java
  * and should normally be protected (Actors only react to messages).
  *
- * @deprecated use {@link javacsw.services.pkg.JAssemblyControllerWithLifecycleHandler}
+ * Note: You probably want to use this class instead: {@link javacsw.services.pkg.JAssemblyControllerWithLifecycleHandler}
  *
  */
 @SuppressWarnings("unused")
