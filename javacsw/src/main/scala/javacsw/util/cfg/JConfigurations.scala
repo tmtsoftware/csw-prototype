@@ -8,6 +8,7 @@ import csw.util.cfg.Events._
 import csw.util.cfg._
 
 import scala.compat.java8.OptionConverters._
+import scala.collection.JavaConverters._
 
 /**
  * Java API to Scala Configurations classes
@@ -51,6 +52,14 @@ object JConfigurations {
 
   def createDemandState(config: SetupConfig): JDemandState = JDemandState(DemandState(config.prefix, config.data))
 
+  // --- Used by assemblies --
+
+  @annotation.varargs
+  def createSetupConfigArg(info: ConfigInfo, configs: SetupConfig*): JSetupConfigArg = JSetupConfigArg(SetupConfigArg(configs.toSeq: _*)(info))
+
+  @annotation.varargs
+  def createObserveConfigArg(info: ConfigInfo, configs: ObserveConfig*): JObserveConfigArg = JObserveConfigArg(ObserveConfigArg(configs.toSeq: _*)(info))
+
   /**
    * Common getter methods for Java APIs
    */
@@ -71,6 +80,11 @@ object JConfigurations {
     def getAsInteger(key: Key): OptionalInt = configType.get(key).map(_.asInstanceOf[Int]).asPrimitive
 
     def getAsString(key: Key): Optional[String] = configType.get(key).map(_.asInstanceOf[String]).asJava
+
+    /**
+     * @return the prefix for the config
+     */
+    def getPrefix: String = configType.prefix
   }
 
 }
@@ -145,6 +159,7 @@ case class JSetupConfig(configType: SetupConfig) extends JConfigurations.ConfigG
   def set(key: Key, value: Any): JSetupConfig = {
     JSetupConfig(configType.jset(key, value))
   }
+
 }
 
 /**
@@ -217,5 +232,41 @@ case class JDemandState(configType: DemandState) extends JConfigurations.ConfigG
   def set(key: Key, value: Any): JDemandState = {
     JDemandState(configType.jset(key, value))
   }
+}
+
+// --- These are used by Assemblies --
+
+/**
+ * Java wrapper for SetupConfigArg
+ *
+ * @param setupConfigArg the underlying SetupConfigArg object
+ */
+case class JSetupConfigArg(setupConfigArg: SetupConfigArg) {
+  /**
+   * @return the list of configs in the object
+   */
+  def getConfigs: java.util.List[JSetupConfig] = setupConfigArg.configs.map(JSetupConfig).asJava
+
+  /**
+   * @return an object containing config information
+   */
+  def getInfo: ConfigInfo = setupConfigArg.info
+}
+
+/**
+ * Java wrapper for ObserveConfigArg
+ *
+ * @param observeConfigArg the underlying ObserveConfigArg object
+ */
+case class JObserveConfigArg(observeConfigArg: ObserveConfigArg) {
+  /**
+   * @return the list of configs in the object
+   */
+  def getConfigs: java.util.List[JObserveConfig] = observeConfigArg.configs.map(JObserveConfig).asJava
+
+  /**
+   * @return an object containing config information
+   */
+  def getInfo: ConfigInfo = observeConfigArg.info
 }
 
