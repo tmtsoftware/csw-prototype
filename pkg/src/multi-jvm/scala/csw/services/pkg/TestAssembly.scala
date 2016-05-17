@@ -1,10 +1,10 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
-import csw.services.ccs.{AssemblyController, HcdController, StateVariableMatcherActor}
+import csw.services.ccs.AssemblyController
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
-import csw.util.cfg.StateVariable.{CurrentState, DemandState}
+import csw.util.cfg.StateVariable.CurrentState
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
