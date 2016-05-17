@@ -2,8 +2,9 @@ package csw.services.pkg
 
 import akka.actor.ActorRef
 import csw.services.ccs.{AssemblyController, HcdController, StateVariableMatcherActor}
+import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
-import csw.util.cfg.StateVariable.DemandState
+import csw.util.cfg.StateVariable.{CurrentState, DemandState}
 import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
@@ -22,7 +23,18 @@ case class TestAssembly(info: AssemblyInfo)
   trackConnections(info.connections)
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
+    // Current state received from one of the HCDs: Just forward it to the assembly, which subscribes to the HCD's status
+    case s: CurrentState ⇒
+
     case x => log.error(s"Unexpected message: $x")
+  }
+
+  /**
+    * Called when all HCD locations are resolved.
+    * Overridden here to subscribe to status values from the HCDs.
+    */
+  override protected def allResolved(locations: Set[Location]): Unit = {
+    subscribe(locations)
   }
 
   /**
@@ -49,21 +61,10 @@ case class TestAssembly(info: AssemblyInfo)
                       replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
-      // The code below just distributes the configs to the HCDs based on matching prefix,
+      // The call below just distributes the configs to the HCDs based on matching prefix,
       // but you could just as well generate new configs and send them here...
-      val demandStates = for {
-        config ← configArg.configs
-        actorRef ← getActorRefs(config.prefix)
-      } yield {
-        actorRef ! HcdController.Submit(config)
-        DemandState(config)
-      }
-      replyTo.foreach { actorRef =>
-        // Wait for the demand states to match the current states, then reply to the sender with the command status
-        context.actorOf(StateVariableMatcherActor.props(demandStates.toList, actorRef, configArg.info.runId))
-      }
-    }
-    valid
+      distributeSetupConfigs(locationsResolved, configArg, replyTo)
+    } else valid
   }
 }
 

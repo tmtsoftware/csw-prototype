@@ -26,21 +26,27 @@ package csw.services
  *
  * {{{
  * container {
- *   name = Container-1
- *   components {
- *     Assembly-1 {
- *       type = Assembly
- *       class = csw.services.pkg.TestAssembly
- *       prefix = tcs.base.assembly1
- *       args = [Assembly-1]
- *       services {
- *         // Services required by this component
- *         // Name: ComponentType
- *         HCD-2A: HCD
- *         HCD-2B: HCD
+ * name = Container-1
+ * components {
+ *   Assembly-1 {
+ *     type = Assembly
+ *     class = csw.pkgDemo.assembly1.Assembly1
+ *     prefix = tcs.base.assembly1
+ *     connectionType: [akka]
+ *     connections = [
+ *       {
+ *         name: HCD-2A
+ *         type: HCD
+ *         connectionType: [akka]
  *       }
- *     }
+ *       {
+ *         name: HCD-2B
+ *         type: HCD
+ *         connectionType: [akka]
+ *       }
+ *     ]
  *   }
+ *  }
  * }
  * }}}
  *
@@ -56,17 +62,17 @@ package csw.services
  *   components {
  *     HCD-2A {
  *       type = HCD
- *       class = csw.services.pkg.TestHcd
- *       prefix = tcs.base.pos
+ *       class = csw.pkgDemo.hcd2.Hcd2
+ *       prefix = tcs.mobie.blue.filter
+ *       connectionType: [akka]
  *       rate = 1 second
- *       args = [HCD-2A]
  *     }
  *     HCD-2B {
  *       type = HCD
- *       class = csw.services.pkg.TestHcd
- *       prefix = tcs.ao.pos.one
+ *       class = csw.pkgDemo.hcd2.Hcd2
+ *       prefix = tcs.mobie.blue.disperser
+ *       connectionType: [akka]
  *       rate = 1 second
- *       args = [HCD-2B]
  *     }
  *   }
  * }
