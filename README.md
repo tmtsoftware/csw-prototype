@@ -82,7 +82,7 @@ The following standalone applications are installed here:
 
 The following applications are defined under ../apps:
 
-* [configServiceAnnex](configServiceAnnex) - an http server used to store and retrieve large files, used by the config server
+* [configServiceAnnex](configServiceAnnex) - an http server used to store and retrieve large files, used by the config service
 * [containerCmd](containerCmd) - used to start containers of HCDs or assemblies, based on a given config file (This is not an application, but us used to simplify creating such applications)
 * [sequencer](sequencer) - implements the command line sequencer application, which is a Scala REPL shell
 * [csClient](csClient) - a command line client to the config service (used in some test scripts)

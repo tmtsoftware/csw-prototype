@@ -20,9 +20,9 @@ package csw.services
  * contains one assembly (named ''Assembly-1'') and depends on the services of two HCDs (''HCD-2A'' and ''HCD-2B'').
  * The assembly is implemented by the given class (`csw.services.pkg.TestAssembly`).
  * A `Supervisor` actor will be created to manage the assembly, which includes registering it with the
- * location service, using the given name and prefix. The prefix can be used by a ''distributor'' type
- * actor that receives a large configuration and sends different parts of it to different assemblies,
- * based on the prefix.
+ * location service, using the given name and prefix. The prefix can be used to distribute parts of the
+ * configurations to different HCDs. HCDs register themselves with the Location Service and specify a unique
+ * prefix that can be used for this purpose.
  *
  * {{{
  * container {

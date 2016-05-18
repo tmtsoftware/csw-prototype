@@ -30,6 +30,8 @@ object PeriodicHcdController {
 /**
  * Base trait for an HCD controller actor that checks its queue for inputs and updates its
  * state variables at a given rate.
+ *
+ * @deprecated use [[HcdController]]
  */
 trait PeriodicHcdController {
   this: Actor with ActorLogging ⇒
