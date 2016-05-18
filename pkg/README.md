@@ -1,20 +1,25 @@
-pkg - Component (HCD, Assembly) Packaging
-=========================================
+pkg - Component (Container, HCD, Assembly) Packaging
+====================================================
 
-This project deals with the packaging of components, such as HCDs and Assemblies.
+This project deals with the packaging of components, such as Containers, HCDs and Assemblies.
 
-Components are usually created by a [ContainerComponent](src/main/scala/csw/services/pkg/ContainerComponent.scala) from a configuration file
-and are then controlled by a `csw.services.pkg.Supervisor` actor that intercepts *lifecycle* messages
-to determine the state of the component (Components that are not in the *Running* state, do not
-receive commands, for example).
+Containers and their components can be created from a configuration file
+(in [HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md) format)
+by calling [ContainerComponent.create(config)](src/main/scala/csw/services/pkg/ContainerComponent.scala) and
+passing it the Config object for the file.
 
-Conponents can implement the `csw.services.pkg.LifecycleHandler` trait to be notified about
-lifecycle changes, such as when the component is initialized, started and stopped.
+Components are controlled by a [Supervisor](src/main/scala/csw/services/pkg/Supervisor.scala) actor that
+handles *lifecycle* messages to determine the state of the component
+(Components that are not in the *Running* state, do not receive commands, for example).
 
-A demo/test can be found in the multi-jvm directory and run with:
+Conponents can implement the [LifecycleHandler](src/main/scala/csw/services/pkg/LifecycleHandler.scala)
+trait to be notified about lifecycle changes, such as when the component is initialized, started and stopped.
+
+A demo/test can be found in the [multi-jvm](src/multi-jvm) directory and run with:
 ```sbt "project pkg" multi-jvm:test```
 
-=== Container Config Files ===
+Container Config Files
+----------------------
 
 Here is an example of a config file for creating a container with the name *Container-1* that
 contains one assembly (named *Assembly-1*) and depends on the services of two HCDs (*HCD-2A* and *HCD-2B*).
