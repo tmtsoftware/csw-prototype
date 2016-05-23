@@ -8,8 +8,9 @@ import sbt._
 import com.typesafe.sbt.SbtSite.site
 import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
-import sbtunidoc.Plugin.UnidocKeys
+import sbtunidoc.Plugin._
 import UnidocKeys._
+
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 
 // Defines the global build settings so they don't need to be edited everywhere
@@ -32,24 +33,25 @@ object Settings {
     resolvers += Resolver.sonatypeRepo("releases"),
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
+    resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven",
     resolvers += sbtResolver.value
   )
 
 
-  // Used to generate JavaDoc. See https://github.com/typesafehub/genjavadoc
-  lazy val JavaDoc = config("genjavadoc") extend Compile
-
-  lazy val javadocSettings = inConfig(JavaDoc)(Defaults.configSettings) ++ Seq(
-    addCompilerPlugin("com.typesafe.genjavadoc" %% "genjavadoc-plugin" % "0.9" cross CrossVersion.full),
-    scalacOptions += s"-P:genjavadoc:out=${target.value}/java",
-    packageDoc in Compile := (packageDoc in JavaDoc).value,
-    sources in JavaDoc :=
-      (target.value / "java" ** "*.java").get ++
-        (sources in Compile).value.filter(_.getName.endsWith(".java")),
-    javacOptions in JavaDoc := Seq(),
-    artifactName in packageDoc in JavaDoc := ((sv, mod, art) =>
-      "" + mod.name + "_" + sv.binary + "-" + mod.revision + "-javadoc.jar")
-  )
+//  // Used to generate JavaDoc. See https://github.com/typesafehub/genjavadoc
+//  lazy val JavaDoc = config("genjavadoc") extend Compile
+//
+//  lazy val javadocSettings = inConfig(JavaDoc)(Defaults.configSettings) ++ Seq(
+//    addCompilerPlugin("com.typesafe.genjavadoc" %% "genjavadoc-plugin" % "0.9" cross CrossVersion.full),
+//    scalacOptions += s"-P:genjavadoc:out=${target.value}/java",
+//    packageDoc in Compile := (packageDoc in JavaDoc).value,
+//    sources in JavaDoc :=
+//      (target.value / "java" ** "*.java").get ++
+//        (sources in Compile).value.filter(_.getName.endsWith(".java")),
+//    javacOptions in JavaDoc := Seq(),
+//    artifactName in packageDoc in JavaDoc := ((sv, mod, art) =>
+//      "" + mod.name + "_" + sv.binary + "-" + mod.revision + "-javadoc.jar")
+//  )
 
   lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(
     // compile options ScalaUnidoc, unidoc

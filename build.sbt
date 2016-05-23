@@ -18,6 +18,27 @@ def runtime(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "runtime")
 def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 
 
+// Need a root project for unidoc plugin, so we can merge the scaladocs
+val csw = (project in file("."))
+  //  .configs(JavaDoc).
+  .enablePlugins(cswbuild.UnidocRoot)
+  .settings(UnidocRoot.settings(Nil, Nil): _*)
+  .settings(defaultSettings: _*)
+  //  .settings(scalaJavaUnidocSettings: _*)
+  .settings(siteSettings: _*)
+  //  .settings(unidocSettings: _*)
+  .settings(
+  name := "CSW - TMT Common Software",
+  //    site.addMappingsToSiteDir(mappings in(ScalaUnidoc, packageDoc), "latest/api"),
+  preprocessVars := Map(
+    "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
+    "DOCROOT" -> "latest/api/index.html"
+  )
+).aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
+  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, javacsw)
+
+
+
 // Utility classes
 lazy val util = project
   .settings(defaultSettings: _*)
@@ -106,8 +127,8 @@ lazy val ts = project
 
 // Java APIs
 lazy val javacsw = project
-  .configs(JavaDoc)
-  .settings(javadocSettings: _*)
+//  .configs(JavaDoc)
+//  .settings(javadocSettings: _*)
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
@@ -164,18 +185,3 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
   .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
   .dependsOn(pkg, ts, hcdExample)
 
-// Need a root project for unidoc plugin, so we can merge the scaladocs
-val csw = (project in file(".")).
-//  configs(JavaDoc).
-  settings(defaultSettings: _*).
-  settings(siteSettings: _*).
-  settings(unidocSettings: _*).
-  settings(
-    name := "CSW - TMT Common Software",
-    site.addMappingsToSiteDir(mappings in(ScalaUnidoc, packageDoc), "latest/api"),
-    preprocessVars := Map(
-      "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
-      "DOCROOT" -> "latest/api/index.html"
-    )
-  ).aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
-    containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, javacsw)

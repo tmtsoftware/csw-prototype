@@ -33,8 +33,8 @@ object StateVariableMatcherActor {
  * or with an error status message if the given timeout expires.
  *
  * See props for a description of the arguments.
-  *
-  * @deprecated use [[HcdStatusMatcherActor]] (HCD should call notifySubscribers to publish status)
+ *
+ * @deprecated use [[HcdStatusMatcherActor]] (HCD should call notifySubscribers to publish status)
  */
 class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, runId: RunId,
                                 timeout: Timeout, matcher: Matcher)

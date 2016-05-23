@@ -7,7 +7,7 @@ stage=target/universal/stage
 
 test -d $dir || mkdir -p $dir/bin $dir/lib $dir/conf
 sbt publish-local stage
-sbt unidoc
+sbt unidoc > .unidoc.log 2>&1
 
 for i in bin lib ; do
     for j in */target/universal/stage/$i/* apps/*/target/universal/stage/$i/* examples/*/target/universal/stage/$i/* ; do
