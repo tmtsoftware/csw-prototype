@@ -37,7 +37,7 @@ class TestServiceClient(numServices: Int) extends Actor with ActorLogging with L
   }
 
   override protected def allResolved(locations: Set[Location]): Unit = {
-    log.info(s"Test Passed: Received services: ${connections.map(_.componentId.name).mkString(", ")}")
+    log.info(s"Test Passed: Received services: ${locations.map(_.connection.componentId.name).mkString(", ")}")
   }
 }
 
