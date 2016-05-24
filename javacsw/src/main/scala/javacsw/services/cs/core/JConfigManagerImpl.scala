@@ -1,6 +1,6 @@
 package javacsw.services.cs.core
 
-import java.io.File
+import java.io.{File, OutputStream}
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import javacsw.services.cs.{JConfigData, JConfigManager}
@@ -68,5 +68,7 @@ case class JConfigDataImpl(configData: ConfigData)(implicit context: ActorRefFac
   override def toFutureString: CompletableFuture[String] = configData.toFutureString.toJava.toCompletableFuture
 
   override def writeToFile(file: File): CompletableFuture[Unit] = configData.writeToFile(file).toJava.toCompletableFuture
+
+  override def writeToOutputStream(os: OutputStream): CompletableFuture[Unit] = configData.writeToOutputStream(os).toJava.toCompletableFuture
 }
 

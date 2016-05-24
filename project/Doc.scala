@@ -1,47 +1,113 @@
+/**
+  * Copyright (C) 2009-2016 Lightbend Inc. <http://www.lightbend.com>
+  */
 package cswbuild
 
-/**
-  * Based on Doc.scala from lagom:
- * Copyright (C) 2016 Lightbend Inc. <http://www.lightbend.com>
- */
 import sbt._
 import sbtunidoc.Plugin.UnidocKeys._
-import sbtunidoc.Plugin.{ ScalaUnidoc, JavaUnidoc, Genjavadoc, javaUnidocSettings, baseGenjavadocExtraTasks }
+import sbtunidoc.Plugin.{ ScalaUnidoc, JavaUnidoc, Genjavadoc, scalaJavaUnidocSettings, genjavadocExtraSettings, scalaUnidocSettings }
 import sbt.Keys._
 import sbt.File
+import scala.annotation.tailrec
 
 object Scaladoc extends AutoPlugin {
 
   object CliOptions {
+    val scaladocDiagramsEnabled = CliOption("csw.scaladoc.diagrams", true)
     val scaladocAutoAPI = CliOption("csw.scaladoc.autoapi", true)
   }
 
   override def trigger = allRequirements
   override def requires = plugins.JvmPlugin
 
+  val validateDiagrams = settingKey[Boolean]("Validate generated scaladoc diagrams")
+
   override lazy val projectSettings = {
     inTask(doc)(Seq(
       scalacOptions in Compile <++= (version, baseDirectory in ThisBuild) map scaladocOptions,
       autoAPIMappings := CliOptions.scaladocAutoAPI.get
-    ))
+    )) ++
+      Seq(validateDiagrams in Compile := true) ++
+      CliOptions.scaladocDiagramsEnabled.ifTrue(doc in Compile := {
+        val docs = (doc in Compile).value
+        if ((validateDiagrams in Compile).value)
+          scaladocVerifier(docs)
+        docs
+      })
   }
 
   def scaladocOptions(ver: String, base: File): List[String] = {
     val urlString = GitHub.url(ver) + "/€{FILE_PATH}.scala"
-    val opts = List("-implicits", "-doc-source-url", urlString, "-sourcepath", base.getAbsolutePath)
-    opts
+    val opts = List("-implicits", "-groups", "-doc-source-url", urlString, "-sourcepath", base.getAbsolutePath)
+    CliOptions.scaladocDiagramsEnabled.ifTrue("-diagrams").toList ::: opts
   }
 
+  def scaladocVerifier(file: File): File= {
+    @tailrec
+    def findHTMLFileWithDiagram(dirs: Seq[File]): Boolean = {
+      if (dirs.isEmpty) false
+      else {
+        val curr = dirs.head
+        val (newDirs, files) = curr.listFiles.partition(_.isDirectory)
+        val rest = dirs.tail ++ newDirs
+        val hasDiagram = files exists { f =>
+          val name = f.getName
+          if (name.endsWith(".html") && !name.startsWith("index-") &&
+            !name.equals("index.html") && !name.equals("package.html")) {
+            val source = scala.io.Source.fromFile(f)(scala.io.Codec.UTF8)
+            val hd = try source.getLines().exists(_.contains("<div class=\"toggleContainer block diagram-container\" id=\"inheritance-diagram-container\">"))
+            catch {
+              case e: Exception => throw new IllegalStateException("Scaladoc verification failed for file '"+f+"'", e)
+            } finally source.close()
+            hd
+          }
+          else false
+        }
+        hasDiagram || findHTMLFileWithDiagram(rest)
+      }
+    }
+
+    // if we have generated scaladoc and none of the files have a diagram then fail
+    if (file.exists() && !findHTMLFileWithDiagram(List(file)))
+      sys.error("ScalaDoc diagrams not generated!")
+    else
+      file
+  }
 }
 
 /**
- * Unidoc settings for root project. Adds unidoc command.
- */
+  * For projects with few (one) classes there might not be any diagrams.
+  */
+object ScaladocNoVerificationOfDiagrams extends AutoPlugin {
+
+  override def trigger = noTrigger
+  override def requires = Scaladoc
+
+  override lazy val projectSettings = Seq(
+    Scaladoc.validateDiagrams in Compile := false
+  )
+}
+
+/**
+  * Unidoc settings for root project. Adds unidoc command.
+  */
 object UnidocRoot extends AutoPlugin {
+
+  object CliOptions {
+    val genjavadocEnabled = CliOption("csw.genjavadoc.enabled", false)
+  }
 
   override def trigger = noTrigger
 
-  def settings(ignoreAggregates: Seq[ProjectReference], ignoreProjects: Seq[ProjectReference]) = {
+  val cswSettings = UnidocRoot.CliOptions.genjavadocEnabled.ifTrue(Seq(
+    javacOptions in (JavaUnidoc, unidoc) ++= Seq("-Xdoclint:none"),
+    // genjavadoc needs to generate synthetic methods since the java code uses them
+    scalacOptions += "-P:genjavadoc:suppressSynthetic=false",
+    // FIXME: see #18056
+    sources in(JavaUnidoc, unidoc) ~= (_.filterNot(_.getPath.contains("Access$minusControl$minusAllow$minusOrigin")))
+  )).getOrElse(Nil)
+
+  def settings(ignoreAggregates: Seq[Project], ignoreProjects: Seq[Project]) = {
     val withoutAggregates = ignoreAggregates.foldLeft(inAnyProject) { _ -- inAggregates(_, transitive = true, includeRoot = true) }
     val docProjectFilter = ignoreProjects.foldLeft(withoutAggregates) { _ -- inProjects(_) }
 
@@ -52,87 +118,24 @@ object UnidocRoot extends AutoPlugin {
     ))
   }
 
-  def excludeJavadoc = Set("internal", "protobuf")
-
-  private val allGenjavadocSources = Def.taskDyn {
-    (sources in (Genjavadoc, doc)).all((unidocScopeFilter in (JavaUnidoc, unidoc)).value)
-  }
-
-  /**
-    * This ensures that we can link to the frames version of a page (ie, instead of api/foo/Bar.html,
-    * link to api/index.html?foo/Bar.html), while still being able to also link to a specific method.
-    *
-    * It checks whether the current window is a class frame (rather than the package frame, or
-    * the top level window if not using frames), and if the top window has a hash, takes the
-    * current frame to that hash.
-    *
-    * I'm not sure exactly how this string is processed by what and where, but it seems escaping
-    * newlines and double quotes makes it work with javadoc.
-    */
-  private val framesHashScrollingCode =
-    """<script type="text/javascript">
-      |  if (window.name == "classFrame" && window.top.location.hash) {
-      |    window.location.href = window.top.location.hash;
-      |  }
-      |</script>""".stripMargin.replaceAll("\n", "\\\\n").replaceAll("\"", "\\\\\"")
-
-  override lazy val projectSettings = javaUnidocSettings ++ Seq(
-    unidocAllSources in (JavaUnidoc, unidoc) ++= allGenjavadocSources.value,
-    unidocAllSources in (JavaUnidoc, unidoc) := {
-      (unidocAllSources in (JavaUnidoc, unidoc)).value
-        .map(_.filterNot(f => excludeJavadoc.exists(f.getCanonicalPath.contains)))
-      },
-    javacOptions in doc := Seq(
-      "-windowtitle", "CSW Services API",
-      "-public",
-      "-group", "Services API", packageList("javacsw.services.ccs", "javacsw.services.cs",
-          "javacsw.services.event", "javacsw.services.kvs",
-          "javacsw.services.loc", "javacsw.services.pkg", "javacsw.services.ts"),
-      "-group", "Configurations", packageList("javacsw.util.cfg"),
-      "-noqualifier", "java.lang",
-      "-encoding", "UTF-8", 
-      "-source", "1.8",
-      "-notimestamp",
-      "-footer", framesHashScrollingCode
-    ))
-
-  def packageList(names: String*): String = 
-    names.mkString(":")
+  override lazy val projectSettings =
+    CliOptions.genjavadocEnabled.ifTrue(scalaJavaUnidocSettings).getOrElse(scalaUnidocSettings)
 }
 
-
 /**
- * Unidoc settings for every multi-project. Adds genjavadoc specific settings.
- */
+  * Unidoc settings for every multi-project. Adds genjavadoc specific settings.
+  */
 object Unidoc extends AutoPlugin {
-
-  lazy val GenjavadocCompilerPlugin = config("genjavadocplugin") hide
 
   override def trigger = allRequirements
   override def requires = plugins.JvmPlugin
-  override def projectConfigurations: Seq[Configuration] = Seq(Genjavadoc)
 
-  // Define a new compile task in the genjavadoc configuration that enables genjavadoc
-  // This is so that we don't generate the javadoc code on every Scala compile, but only when we actually want to
-  // build the javadocs.
-  // This means scalac actually will be invoked 3 times any time a publishLocal is done - this can probably be optimised
-  // down to two assuming https://github.com/typesafehub/genjavadoc/issues/66 is possible.
-  override lazy val projectSettings = inConfig(Genjavadoc)(Defaults.configSettings) ++ Seq(
-    ivyConfigurations += GenjavadocCompilerPlugin,
-    libraryDependencies += "com.typesafe.genjavadoc" %% "genjavadoc-plugin" % "0.9" % "genjavadocplugin->default(compile)" cross CrossVersion.full,
-    scalacOptions in Genjavadoc ++= Seq(
-      "-P:genjavadoc:out=" + (target.value / "java"),
-      "-P:genjavadoc:fabricateParams=false"
-    ),
-    scalacOptions in Genjavadoc ++=
-        update.value.matching(configurationFilter(GenjavadocCompilerPlugin.name)).filter(_.getName.contains("genjavadoc"))
-          .map("-Xplugin:" + _.getAbsolutePath),
-    sources in Genjavadoc := (sources in Compile).value,
-    sources in (Genjavadoc, doc) := {
-      val _ = (compile in Genjavadoc).value
-      (target.value / "java" ** "*.java").get
-    },
-    dependencyClasspath in Genjavadoc := (dependencyClasspath in Compile).value
-  )
-
+  override lazy val projectSettings = UnidocRoot.CliOptions.genjavadocEnabled.ifTrue(
+    genjavadocExtraSettings ++ Seq(
+      scalacOptions in Compile += "-P:genjavadoc:fabricateParams=true",
+      unidocGenjavadocVersion in Global := "0.10",
+      // FIXME: see #18056
+      sources in(Genjavadoc, doc) ~= (_.filterNot(_.getPath.contains("Access$minusControl$minusAllow$minusOrigin")))
+    )
+  ).getOrElse(Seq.empty)
 }

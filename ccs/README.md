@@ -13,7 +13,7 @@ The main actors (or actor traits) here are:
     one or more HCDs or other assemblies before replying with a command status
 
 - *HcdController* - trait for an actor that accepts configurations (from an Assembly) for an HCD.
-    The HCD controller sets a state variable, which is used by the assembly to determine when a command has completed.
+    The HCD controller publishes its *current state*, and the assembly can subscribe to it to determine when a command has completed.
 
 - *HcdStatusMatcherActor* - an actor used to match demand and current state by subscribing to HCD status messages and then notifying a given actor
 

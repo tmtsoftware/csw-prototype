@@ -42,10 +42,10 @@ public class JConfigManagerTestHelper {
         }
 
         // Add, then update the file twice
-        ConfigId createId1 = manager.create(path1, new ConfigString(contents1), oversize, comment1).get();
-        ConfigId createId2 = manager.create(path2, new ConfigString(contents1), oversize, comment1).get();
-        ConfigId updateId1 = manager.update(path1, new ConfigString(contents2), comment2).get();
-        ConfigId updateId2 = manager.update(path1, new ConfigString(contents3), comment3).get();
+        ConfigId createId1 = manager.create(path1, JConfigData.create(contents1), oversize, comment1).get();
+        ConfigId createId2 = manager.create(path2, JConfigData.create(contents1), oversize, comment1).get();
+        ConfigId updateId1 = manager.update(path1, JConfigData.create(contents2), comment2).get();
+        ConfigId updateId2 = manager.update(path1, JConfigData.create(contents3), comment3).get();
 
         // Check that we can access each version
         JConfigData data1 = manager.get(path1).get().get();
@@ -90,10 +90,10 @@ public class JConfigManagerTestHelper {
         }
 
         // Add, then update the file twice
-        ConfigId createId1 = manager.create(path1, new ConfigString(contents1), oversize, comment1);
-        ConfigId createId2 = manager.create(path2, new ConfigString(contents1), oversize, comment1);
-        ConfigId updateId1 = manager.update(path1, new ConfigString(contents2), comment2);
-        ConfigId updateId2 = manager.update(path1, new ConfigString(contents3), comment3);
+        ConfigId createId1 = manager.create(path1, JConfigData.create(contents1), oversize, comment1);
+        ConfigId createId2 = manager.create(path2, JConfigData.create(contents1), oversize, comment1);
+        ConfigId updateId1 = manager.update(path1, JConfigData.create(contents2), comment2);
+        ConfigId updateId2 = manager.update(path1, JConfigData.create(contents3), comment3);
 
         // Check that we can access each version
         JBlockingConfigData data1 = manager.get(path1).get();

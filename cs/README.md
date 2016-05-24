@@ -2,7 +2,7 @@ Configuration Service
 =====================
 
 This module implements the Configuration Service, which is used to manage configuration
-files by storing them in a Git repository.
+files by storing them in a repository (by default, using Subversion).
 
 Config Service API
 ------------------
@@ -15,9 +15,8 @@ and provides a somewhat simpler API.
 Config Service Application
 --------------------------
 
-Before starting the config service, the [location service](../loc)
-and the the [config service annex server](../apps/configServiceAnnex)
-should both be running.
+Before starting the config service, the [config service annex server](../apps/configServiceAnnex)
+should be running.
 You can start the config service with the `cs` command (found under target/universal/stage/bin).
 The default config service name and the location of the git or svn repository is defined in resources/reference.conf.
 Alternatively you can specify a different config file on the command line in the same format.
@@ -30,13 +29,14 @@ You can also override the values with system properties. For example:
 ```
 
 Note that multiple config service instances may be running in the network, but the names an host:port combinations should
-each be unique. Only a single config service instance should access a given local git repository.
+each be unique. Only a single config service instance should access a given local repository.
 
 Svn or Git
 ----------
 
 There are currently two alternatives you can choose from for the version control system used by the config service.
 You can configure this in the application settings by setting the value of `csw.services.cs.useSvn` to true to use Subversion or false to use Git.
+(The default is to use svn, due to performance reasons - The access time stays constant as the history grows.)
 
 Config Service Http Server
 --------------------------
@@ -50,7 +50,7 @@ The HTTP/REST interface to the command service follows the scala and java APIs:
 | POST   | /create | path=_filePath_, comment=_create+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /get    | path=_filePath_, id=_id_                  | Contents of file (current or version _id_)
 | PUT    | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
-| GET    | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
+| HEAD   | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
 | GET    | /list   |                                           | JSON list of available files
 | GET    | /history      | path=_filePath_, maxResults=_count_ | JSON list of file history
 | GET    | /getDefault   | path=_filePath_                     | Contents of _default_ version of file
@@ -168,8 +168,8 @@ can be found by other applications.
 
 The contents of the files are exchanged using [Akka reactive streams](http://www.typesafe.com/activator/template/akka-stream-scala).
 
-No concurrent access to local Git repository
---------------------------------------------
+No concurrent access to local repository
+----------------------------------------
 
 Note that if using Git, each instance of the config service should manage its own local Git repository.
 All of the local repositories may reference a common central repository, however it is probably not

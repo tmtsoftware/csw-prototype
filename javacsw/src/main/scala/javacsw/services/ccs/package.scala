@@ -1,7 +1,7 @@
 package javacsw.services
 
 /**
- * XXX This is in the scala package.scala file!
+ * Provides a Java API for the Command and Control Service.
  */
 package object ccs {
 
