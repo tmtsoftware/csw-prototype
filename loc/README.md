@@ -1,11 +1,12 @@
 Location Service
 =====================
 
-The Location Service implemented in this project is based on Multicast DNS.
-The necessary support for this should already be available on Mac and Linux machines.
 The Location Service helps you to find out the hostname and port number for a service,
 as well as other information for determining the correct URI to use, such as the path,
 the actor system name and the config prefix.
+
+The location service is based on Multicast DNS (mDNS). The server process is running by default on
+Mac OS X and Linux. Make sure the firewall is either disabled or allows port 5353/UDP.
 
 Important
 ---------
@@ -16,7 +17,7 @@ Before starting any services that use the location service, this method should b
 
 This determines the primary IP address of the local host and sets some system variables that 
 control which IP address is used. If you forget to call this method, there is a chance that 
-the wrong IP address will be advertized (there is often more than one). 
+the wrong IP address will be advertised (there is often more than one).
 
 If you want to specify the IP address yourself, you can also call it like this:
 
@@ -28,60 +29,42 @@ Service Types
 Two types of services are currently supported: Akka/actor based and HTTP based services.
 To register an Akka actor based service, you can use code like this:
 
-    LocationService.registerAkkaService(serviceId, self, "test.akka.prefix")
+    LocationService.registerAkkaConnection(componentId, self, prefix)(context.system)
 
 Where self is a reference to the services own actorRef and the prefix argument indicates the
 part of a configuration the actor is interested in receiving.
 
 To register an HTTP based service, you can make a call like this:
 
-    LocationService.registerHttpService(serviceId, port)
-    
+    LocationService.registerHttpConnection(componentId, port)
+
 Here you specify the port and the DNS name for the local host is automatically determined.
 
 
 Using the Location Service
 --------------------------
 
-The Location Service actor can be used in an actor based application to be notified whenever
-a set of required services is available or not. In the following example, `TestServiceClient`
-depends on `TestAkkaService` and `TestHttpService` and will receive a `ServicesReady` message
-with the contact information (URI, actorRef, prefix, ...) when they are both available.
-If any of the required services goes down, a Disconnected message is sent.
+The easiest way to use the location service to keep track of connections to other applications
+is to inherit from the `LocationTrackerClientActor` trait and override the `allResolved` method
+to be notified with connection details once (and whenever) all connections have been resolved.
+
+In the following example, `TestServiceClient` depends on `TestAkkaService` and `TestHttpService`:
 
 ```
-class TestServiceClient extends Actor with ActorLogging {
-  val serviceRefs = Set(TestAkkaService.serviceRef, TestHttpService.serviceRef)
-  context.actorOf(LocationService.props(serviceRefs))
+class TestServiceClient extends Actor with ActorLogging with LocationTrackerClientActor {
+  val connections = Set(TestAkkaService.connection(i), TestHttpService.connection(i))
+  connections.foreach(trackConnection)
 
-  override def receive: Receive = {
-    case ServicesReady(services) =>
-      log.info(s"Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString(", ")}")
-    
-    case Disconnected(serviceRef) =>
-      log.info(s"Disconnected service: ${serviceRef.serviceId.name}")
-    
-    case x =>
+  override def receive: Receive = trackerClientReceive orElse {
+    case x ⇒
       log.error(s"Received unexpected message $x")
   }
+
+  override protected def allResolved(locations: Set[Location]): Unit = {
+    log.info(s"Received services: ${connections.map(_.componentId.name).mkString(", ")}")
+  }
 }
-
 ```
-
-Connection Issues
------------------
-
-The location service is based on Multicast DNS (mDNS). The server process is running by default on
-Mac OS X and Linux. Make sure the firewall is either disabled or allows port 5353/UDP.
-
-Applications using the location service may need to define these VM options when running:
-
-* -Djava.net.preferIPv4Stack=true (due to problems handling ipv6 addresses in some library classes)
-  
-* -Dakka.remote.netty.tcp.hostname=XXX.XXX.XXX.XX (To make sure Akka uses the correct IP address, in case there are multiple interfaces)
-
-This could be used to override the default IP address used to advertize the services.
-
 
 Command Line Tools
 ------------------

@@ -31,8 +31,8 @@ public class JKeyValueStoreTests {
     @BeforeClass
     public static void setup() {
         system = ActorSystem.create();
-        KvsSettings settings = JKeyValueStoreFactory.getKvsSettings(system);
-        kvs = JKeyValueStoreFactory.getSetupConfigStore(settings, system);
+        KvsSettings settings = IKeyValueStore.getKvsSettings(system);
+        kvs = IKeyValueStore.getSetupConfigStore(settings, system);
     }
 
     @AfterClass

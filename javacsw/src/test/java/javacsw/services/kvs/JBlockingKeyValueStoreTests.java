@@ -35,8 +35,8 @@ public class JBlockingKeyValueStoreTests {
     @BeforeClass
     public static void setup() {
         system = ActorSystem.create();
-        KvsSettings settings = JKeyValueStoreFactory.getKvsSettings(system);
-        kvs = JKeyValueStoreFactory.getBlockingSetupConfigStore(timeout, settings, system);
+        KvsSettings settings = IKeyValueStore.getKvsSettings(system);
+        kvs = IBlockingKeyValueStore.getSetupConfigStore(timeout, settings, system);
     }
 
     @AfterClass
