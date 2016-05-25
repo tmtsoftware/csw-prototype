@@ -1,7 +1,7 @@
 Time Service
 =============
 
-This projects implements the CSW Time Service based on Java 8 java.time and Akka.
+This project implements the CSW Time Service based on Java 8 java.time and Akka.
 Time Service provides basic time access and a neutral API around the Akka scheduling routines.
 Accessing the time API does not require an actor, but the scheduling routines
 are assumed to be actors. The scheduling trait is TimeServiceScheduler.
