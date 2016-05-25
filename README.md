@@ -30,6 +30,7 @@ To build, run 'sbt' in the top level directory and type one of the following com
 Java APIs
 ---------
 
+Classes providing the Java8 APIs can be found in the [javacsw](javacsw) subproject.
 Use: `sbt -Dcsw.genjavadoc.enabled=true unidoc` to build both the unified javadoc and scaladoc.
 Then the generated documentation can be found under target/javaunidoc/ and target/scala-2.11/unidoc/.
 (The install.sh script puts these in ../install/doc/{scala,java}.)
