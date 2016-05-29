@@ -164,7 +164,7 @@ class JSONTests extends FunSpec {
 
   describe("Trying to understand CItem") {
     it("Should allow a citem") {
-      val k1 = SingleKey[String]("bob", classOf[String])
+      val k1 = SingleKey[String]("bob")
       val i1 = k1.set(Vector("1", "2", "3"), UnitsOfMeasure.NoUnits)
       info("j1: " + i1)
 

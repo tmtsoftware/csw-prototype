@@ -10,13 +10,23 @@ import spray.json._
  */
 object ConfigJSON extends DefaultJsonProtocol {
 
+  // Java types
+  implicit object IntegerJsonFormat extends JsonFormat[Integer] {
+    def write(x: Integer) = JsNumber(x)
+    def read(value: JsValue) = value match {
+      case JsNumber(x) => x.intValue
+      case x => deserializationError("Expected Int as JsNumber, but got " + x)
+    }
+  }
+
+
   implicit val unitsFormat = jsonFormat1(Units.apply)
 
   implicit def cItemFormat[A: JsonFormat] = jsonFormat3(CItem.apply[A])
 
   implicit val charItemFormat = jsonFormat3(CharItem.apply)
   implicit val shortItemFormat = jsonFormat3(ShortItem.apply)
-  implicit val intItemFormat = jsonFormat3(IntItem.apply)
+  implicit val integerItemFormat = jsonFormat3(IntegerItem.apply)
   implicit val longItemFormat = jsonFormat3(LongItem.apply)
   implicit val floatItemFormat = jsonFormat3(FloatItem.apply)
   implicit val doubleItemFormat = jsonFormat3(DoubleItem.apply)
@@ -25,7 +35,7 @@ object ConfigJSON extends DefaultJsonProtocol {
 
   private val charTpe = "CharItem" // Could be classTag[CharItem].toString
   private val shortTpe = "ShortItem"
-  private val intTpe = "IntItem"
+  private val integerTpe = "IntegerItem"
   private val longTpe = "LongItem"
   private val floatTpe = "FloatItem"
   private val doubleTpe = "DoubleItem"
@@ -47,11 +57,12 @@ object ConfigJSON extends DefaultJsonProtocol {
     }
   }
 
+  // XXX Use JNumber?
   def writeItem(item: Item[_]): JsValue = {
     val result: (JsString, JsValue) = item match {
       case ci: CharItem    ⇒ (JsString(charTpe), charItemFormat.write(ci))
       case si: ShortItem   ⇒ (JsString(shortTpe), shortItemFormat.write(si))
-      case ii: IntItem     ⇒ (JsString(intTpe), intItemFormat.write(ii))
+      case ii: IntegerItem ⇒ (JsString(integerTpe), integerItemFormat.write(ii))
       case li: LongItem    ⇒ (JsString(longTpe), longItemFormat.write(li))
       case fi: FloatItem   ⇒ (JsString(floatTpe), floatItemFormat.write(fi))
       case di: DoubleItem  ⇒ (JsString(doubleTpe), doubleItemFormat.write(di))
@@ -66,7 +77,7 @@ object ConfigJSON extends DefaultJsonProtocol {
       (fields("itemType"), fields("item")) match {
         case (JsString(`charTpe`), item)    ⇒ charItemFormat.read(item)
         case (JsString(`shortTpe`), item)   ⇒ shortItemFormat.read(item)
-        case (JsString(`intTpe`), item)     ⇒ intItemFormat.read(item)
+        case (JsString(`integerTpe`), item)     ⇒ integerItemFormat.read(item)
         case (JsString(`longTpe`), item)    ⇒ longItemFormat.read(item)
         case (JsString(`floatTpe`), item)   ⇒ floatItemFormat.read(item)
         case (JsString(`doubleTpe`), item)  ⇒ doubleItemFormat.read(item)

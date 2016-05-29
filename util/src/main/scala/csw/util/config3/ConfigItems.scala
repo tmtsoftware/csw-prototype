@@ -19,7 +19,7 @@ trait Item[+T] {
   def withUnits(units: Units): Item[T]
 }
 
-abstract class Key[T](val keyName: String, val keyClass: Class[T]) extends Serializable {
+abstract class Key[T](val keyName: String) extends Serializable {
 
   override def toString = keyName
 
@@ -77,7 +77,7 @@ object ConfigItems {
    *
    * @param nameIn the name of the key
    */
-  final case class CharKey(nameIn: String) extends Key[Char](nameIn, classOf[Char]) {
+  final case class CharKey(nameIn: String) extends Key[Char](nameIn) {
 
     /**
      * Sets the values for the key
@@ -153,7 +153,7 @@ object ConfigItems {
    *
    * @param nameIn the name of the key
    */
-  final case class ShortKey(nameIn: String) extends Key[Short](nameIn, classOf[Short]) {
+  final case class ShortKey(nameIn: String) extends Key[Short](nameIn) {
 
     /**
      * Sets the values for the key
@@ -230,7 +230,7 @@ object ConfigItems {
     *
     * @param nameIn the name of the key
     */
-  final case class IntegerKey(nameIn: String) extends Key[Integer](nameIn, classOf[Integer]) {
+  final case class IntegerKey(nameIn: String) extends Key[Integer](nameIn) {
 
     /**
       * Sets the values for the key
@@ -239,7 +239,16 @@ object ConfigItems {
       * @param units the units of the values
       * @return a new item containing the key name, values and units
       */
-    def set(v: Vector[Integer], units: Units) = IntegerItem(keyName, v, units)
+    def set(v: Vector[Int], units: Units) = IntegerItem(keyName, v.map(i => i: Integer), units)
+
+//    /**
+//      * Sets the values for the key
+//      *
+//      * @param v     the values
+//      * @param units the units of the values
+//      * @return a new item containing the key name, values and units
+//      */
+//    def set(v: Vector[Integer], units: Units) = IntegerItem(keyName, v, units)
 
     /**
       * Sets the values for the key using a variable number of arguments
@@ -247,7 +256,15 @@ object ConfigItems {
       * @param v the values
       * @return a new item containing the key name, values and no units
       */
-    def set(v: Integer*) = IntegerItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
+    def set(v: Int*) = IntegerItem(keyName, v.map(i => i: Integer).toVector, units = UnitsOfMeasure.NoUnits)
+
+//    /**
+//      * Sets the values for the key using a variable number of arguments
+//      *
+//      * @param v the values
+//      * @return a new item containing the key name, values and no units
+//      */
+//    def set(v: Integer*) = IntegerItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 
     /**
       * Java API to set the values for a key
@@ -270,81 +287,81 @@ object ConfigItems {
 
 
 
-  // -- Int --
-
-  /**
-   * The type of a value for an IntKey
-   *
-   * @param keyName the name of the key
-   * @param value   the value for the key
-   * @param units   the units of the value
-   */
-  final case class IntItem(keyName: String, value: Vector[Int], units: Units) extends Item[Int] {
-    /**
-     * Java API
-     *
-     * @return the values as a java list
-     */
-    def jvalue: java.util.List[Integer] = value.map(i ⇒ i: java.lang.Integer).asJava
-
-    /**
-     * Java API
-     *
-     * @return the value at the given index
-     */
-    def jvalue(index: Int): Integer = value(index)
-
-    /**
-     * Set the units of the value
-     *
-     * @param unitsIn the units to set
-     * @return a copy of this item with the given units set
-     */
-    def withUnits(unitsIn: Units) = copy(units = unitsIn)
-  }
-
-  /**
-   * A key of Int values
-   *
-   * @param nameIn the name of the key
-   */
-  final case class IntKey(nameIn: String) extends Key[Int](nameIn, classOf[Int]) {
-
-    /**
-     * Sets the values for the key
-     *
-     * @param v     the values
-     * @param units the units of the values
-     * @return a new item containing the key name, values and units
-     */
-    def set(v: Vector[Int], units: Units) = IntItem(keyName, v, units)
-
-    /**
-     * Sets the values for the key using a variable number of arguments
-     *
-     * @param v the values
-     * @return a new item containing the key name, values and no units
-     */
-    def set(v: Int*) = IntItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
-
-    /**
-     * Java API to set the values for a key
-     *
-     * @param v     the values as a java list
-     * @param units the units of the values
-     * @return a new item containing the key name, values and units
-     */
-    def jset(v: java.util.List[Integer], units: Units) = IntItem(keyName, v.asScala.toVector.map(i ⇒ i: Int), units)
-
-    /**
-     * Java API: Sets the values for the key using a variable number of arguments
-     *
-     * @param v the values
-     * @return a new item containing the key name, values and no units
-     */
-    @varargs
-    def jset(v: java.lang.Integer*) = IntItem(keyName, v.map(i ⇒ i: Int).toVector, units = UnitsOfMeasure.NoUnits)
-  }
+//  // -- Int --
+//
+//  /**
+//   * The type of a value for an IntKey
+//   *
+//   * @param keyName the name of the key
+//   * @param value   the value for the key
+//   * @param units   the units of the value
+//   */
+//  final case class IntItem(keyName: String, value: Vector[Int], units: Units) extends Item[Int] {
+//    /**
+//     * Java API
+//     *
+//     * @return the values as a java list
+//     */
+//    def jvalue: java.util.List[Integer] = value.map(i ⇒ i: java.lang.Integer).asJava
+//
+//    /**
+//     * Java API
+//     *
+//     * @return the value at the given index
+//     */
+//    def jvalue(index: Int): Integer = value(index)
+//
+//    /**
+//     * Set the units of the value
+//     *
+//     * @param unitsIn the units to set
+//     * @return a copy of this item with the given units set
+//     */
+//    def withUnits(unitsIn: Units) = copy(units = unitsIn)
+//  }
+//
+//  /**
+//   * A key of Int values
+//   *
+//   * @param nameIn the name of the key
+//   */
+//  final case class IntKey(nameIn: String) extends Key[Int](nameIn) {
+//
+//    /**
+//     * Sets the values for the key
+//     *
+//     * @param v     the values
+//     * @param units the units of the values
+//     * @return a new item containing the key name, values and units
+//     */
+//    def set(v: Vector[Int], units: Units) = IntItem(keyName, v, units)
+//
+//    /**
+//     * Sets the values for the key using a variable number of arguments
+//     *
+//     * @param v the values
+//     * @return a new item containing the key name, values and no units
+//     */
+//    def set(v: Int*) = IntItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
+//
+//    /**
+//     * Java API to set the values for a key
+//     *
+//     * @param v     the values as a java list
+//     * @param units the units of the values
+//     * @return a new item containing the key name, values and units
+//     */
+//    def jset(v: java.util.List[Integer], units: Units) = IntItem(keyName, v.asScala.toVector.map(i ⇒ i: Int), units)
+//
+//    /**
+//     * Java API: Sets the values for the key using a variable number of arguments
+//     *
+//     * @param v the values
+//     * @return a new item containing the key name, values and no units
+//     */
+//    @varargs
+//    def jset(v: java.lang.Integer*) = IntItem(keyName, v.map(i ⇒ i: Int).toVector, units = UnitsOfMeasure.NoUnits)
+//  }
 
   // -- Long --
 
@@ -384,7 +401,7 @@ object ConfigItems {
    *
    * @param nameIn the name of the key
    */
-  final case class LongKey(nameIn: String) extends Key[Long](nameIn, classOf[Long]) {
+  final case class LongKey(nameIn: String) extends Key[Long](nameIn) {
 
     /**
      * Sets the values for the key
@@ -460,7 +477,7 @@ object ConfigItems {
    *
    * @param nameIn the name of the key
    */
-  final case class FloatKey(nameIn: String) extends Key[Float](nameIn, classOf[Float]) {
+  final case class FloatKey(nameIn: String) extends Key[Float](nameIn) {
 
     /**
      * Sets the values for the key
@@ -536,7 +553,7 @@ object ConfigItems {
    *
    * @param nameIn the name of the key
    */
-  final case class DoubleKey(nameIn: String) extends Key[Double](nameIn, classOf[Double]) {
+  final case class DoubleKey(nameIn: String) extends Key[Double](nameIn) {
 
     /**
      * Sets the values for the key
@@ -612,7 +629,7 @@ object ConfigItems {
    *
    * @param nameIn the name of the key
    */
-  final case class BooleanKey(nameIn: String) extends Key[Boolean](nameIn, classOf[Boolean]) {
+  final case class BooleanKey(nameIn: String) extends Key[Boolean](nameIn) {
 
     /**
      * Sets the values for the key
@@ -688,7 +705,7 @@ object ConfigItems {
    *
    * @param nameIn the name of the key
    */
-  final case class StringKey(nameIn: String) extends Key[String](nameIn, classOf[String]) {
+  final case class StringKey(nameIn: String) extends Key[String](nameIn) {
 
     /**
      * Sets the values for the key
@@ -736,12 +753,12 @@ object ConfigItems {
    * @param units   the units of the value
    */
   case class CItem[+T](keyName: String, value: Vector[T], units: Units = NoUnits) extends Item[T] {
-    //    /**
-    //      * Java API
-    //      *
-    //      * @return the values as a java list
-    //      */
-    //    def jvalue: java.util.List[T] = value.asJava
+//        /**
+//          * Java API
+//          *
+//          * @return the values as a java list
+//          */
+//        def jvalue: java.util.List[T] = value.asJava
 
     /**
      * Java API
@@ -765,9 +782,8 @@ object ConfigItems {
    * A key for values of the generic type A.
    *
    * @param kn the name of the key
-   * @param kc the class of the key value's data type (The actual value will be a Vector[A])
    */
-  case class SingleKey[A](kn: String, kc: Class[A]) extends Key[A](kn, kc) {
+  case class SingleKey[A](kn: String) extends Key[A](kn) {
     /**
      * Sets the values for the key
      *
@@ -814,7 +830,7 @@ object ConfigItems {
 
   case class OneEnum(name: String, value: String, description: String = "") extends EnumValue
 
-  case class EnumKey(nameIn: String, possibles: Vector[EnumValue]) extends Key[EnumValue](nameIn, classOf[EnumValue]) {
+  case class EnumKey(nameIn: String, possibles: Vector[EnumValue]) extends Key[EnumValue](nameIn) {
     //private def doSet(v: Vector(EnumValue))
     def set(v: Vector[EnumValue], units: Units) = CItem[EnumValue](keyName, v, units)
 

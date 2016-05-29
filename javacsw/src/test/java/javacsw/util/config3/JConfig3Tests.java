@@ -3,7 +3,6 @@ package javacsw.util.config3;
 import csw.util.config3.ConfigItems.*;
 import csw.util.config3.Configurations.SetupConfig;
 import org.junit.Test;
-import scala.collection.immutable.Vector;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -26,12 +25,12 @@ public class JConfig3Tests {
     @Test
     public void basicKeyTests() {
         // Should be constructed properly
-        IntKey k1 = new IntKey(s1);
+        IntegerKey k1 = new IntegerKey(s1);
         StringKey k2 = new StringKey(s2);
         assert (Objects.equals(k1.keyName(), s1));
 
         // Should use set properly
-        IntItem i = k1.jset(22);
+        IntegerItem i = k1.jset(22);
         assert (Objects.equals(i.keyName(), s1));
         assert (i.jvalue().get(0) == 22);
         assert (i.jvalue(0) == 22);
@@ -42,7 +41,7 @@ public class JConfig3Tests {
         assert (Objects.equals(j.jvalue(0), "Bob"));
 
         // Should support equality of keys
-        IntKey k3 = new IntKey(s1);
+        IntegerKey k3 = new IntegerKey(s1);
         assert (k3.equals(k1));
         assert (!k3.equals(k2));
         assert (!k1.equals(k2));
@@ -50,7 +49,7 @@ public class JConfig3Tests {
 
     @Test
     public void basicArrayTests() {
-        SingleKey<Integer> k1 = new SingleKey<>("atest", Integer.class);
+        SingleKey<Integer> k1 = new SingleKey<>("atest");
 
         // "Should allow an Int array"
         CItem<Integer> i1 = k1.jset(Arrays.asList(1, 2, 3), JUnitsOfMeasure.NoUnits);
@@ -63,22 +62,22 @@ public class JConfig3Tests {
         assert(i2.units() == JUnitsOfMeasure.NoUnits);
 
         // Should use key equals
-        SingleKey<Integer> k2 = new SingleKey<>("atest1", Integer.class);
-        SingleKey<Integer> k3 = new SingleKey<>("atest", Integer.class);
-        SingleKey<Float> k4 = new SingleKey<>("atest", Float.class);
+        SingleKey<Integer> k2 = new SingleKey<>("atest1");
+        SingleKey<Integer> k3 = new SingleKey<>("atest");
+        SingleKey<Float> k4 = new SingleKey<>("atest");
         assert (!k1.equals(k2));
         assert (!k2.equals(k3));
     }
 
     @Test
     public void CheckingKeyUpdates() {
-        IntKey k1 = new IntKey("atest");
+        IntegerKey k1 = new IntegerKey("atest");
 
         // Should allow updates
-        IntItem i1 = k1.jset(22);
+        IntegerItem i1 = k1.jset(22);
         assert (i1.jvalue(0) == 22);
         assert (i1.units() == JUnitsOfMeasure.NoUnits);
-        IntItem i2 = k1.jset(33);
+        IntegerItem i2 = k1.jset(33);
         assert (i2.jvalue(0) == 33);
         assert (i2.units() == JUnitsOfMeasure.NoUnits);
 
@@ -154,8 +153,8 @@ public class JConfig3Tests {
 //
 //  describe("SC Test") {
 //
-//    val k1 = IntKey("encoder")
-//    val k2 = IntKey("windspeed")
+//    val k1 = IntegerKey("encoder")
+//    val k2 = IntegerKey("windspeed")
 //    it("Should allow adding") {
 //      var sc1 = SetupConfig(ck3)
 //      val i1 = k1.set(Vector(22), UnitsOfMeasure.NoUnits)
@@ -211,7 +210,7 @@ public class JConfig3Tests {
 //  }
 //
 //  it ("should update for the same key with set") {
-//    val k1 = IntKey("encoder")
+//    val k1 = IntegerKey("encoder")
 //    val k2 = StringKey("windspeed")
 //
 //    var sc1 = SetupConfig(ck1)
@@ -224,7 +223,7 @@ public class JConfig3Tests {
 //    assert(sc1(k2) == Vector("bob"))
 //
 //    sc1.items.foreach {
-//      case _: IntItem => info("IntItem")
+//      case _: IntegerItem => info("IntegerItem")
 //      case _: StringItem => info("StringItem")
 //    }
 //  }
@@ -232,7 +231,7 @@ public class JConfig3Tests {
 //
 //  describe("testing new idea") {
 //
-//    val t1 = IntKey("test1")
+//    val t1 = IntegerKey("test1")
 //    it("should allow setting a single value") {
 //      val i1 = t1.set(1)
 //      assert(i1.value == Vector(1))
