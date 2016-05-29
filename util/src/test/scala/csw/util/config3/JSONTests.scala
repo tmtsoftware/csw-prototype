@@ -7,8 +7,9 @@ import org.scalatest.FunSpec
 import spray.json._
 
 /**
-  * TMT Source Code: 5/10/16.
-  */
+ * TMT Source Code: 5/10/16.
+ */
+//noinspection ScalaUnusedSymbol
 class JSONTests extends FunSpec {
   private val s1: String = "encoder"
   private val s2: String = "filter"
@@ -20,7 +21,7 @@ class JSONTests extends FunSpec {
   private val ck3 = "wfos.red.detector"
 
   describe("Test Subsystem JSON") {
-    val wfos:Subsystem = Subsystem.WFOS
+    val wfos: Subsystem = Subsystem.WFOS
 
     it("should encode and decode properly") {
       val json = wfos.toJson
@@ -149,7 +150,7 @@ class JSONTests extends FunSpec {
     val i6 = k6.set(false)
     val i7 = k7.set(Vector("GG495"), UnitsOfMeasure.Deg)
 
-    it ("Should encode/decode a setupconfig") {
+    it("Should encode/decode a setupconfig") {
       val sc1 = SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
       assert(sc1.size == 7)
       //info("sc1: " + sc1)
@@ -163,7 +164,7 @@ class JSONTests extends FunSpec {
 
   describe("Trying to understand CItem") {
     it("Should allow a citem") {
-      val k1 = SingleKey[String]("bob")
+      val k1 = SingleKey[String]("bob", classOf[String])
       val i1 = k1.set(Vector("1", "2", "3"), UnitsOfMeasure.NoUnits)
       info("j1: " + i1)
 

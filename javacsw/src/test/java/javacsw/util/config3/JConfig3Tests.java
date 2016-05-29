@@ -3,6 +3,7 @@ package javacsw.util.config3;
 import csw.util.config3.ConfigItems.*;
 import csw.util.config3.Configurations.SetupConfig;
 import org.junit.Test;
+import scala.collection.immutable.Vector;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -10,7 +11,7 @@ import java.util.Objects;
 /**
  * Tests the Java API to the config classes
  */
-@SuppressWarnings("OptionalGetWithoutIsPresent")
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "unused"})
 public class JConfig3Tests {
     private static final String s1 = "encoder";
     private static final String s2 = "filter";
@@ -49,7 +50,7 @@ public class JConfig3Tests {
 
     @Test
     public void basicArrayTests() {
-        SingleKey<Integer> k1 = new SingleKey<>("atest");
+        SingleKey<Integer> k1 = new SingleKey<>("atest", Integer.class);
 
         // "Should allow an Int array"
         CItem<Integer> i1 = k1.jset(Arrays.asList(1, 2, 3), JUnitsOfMeasure.NoUnits);
@@ -62,9 +63,9 @@ public class JConfig3Tests {
         assert(i2.units() == JUnitsOfMeasure.NoUnits);
 
         // Should use key equals
-        SingleKey<Integer> k2 = new SingleKey<>("atest1");
-        SingleKey<Integer> k3 = new SingleKey<>("atest");
-        SingleKey<Float> k4 = new SingleKey<>("atest");
+        SingleKey<Integer> k2 = new SingleKey<>("atest1", Integer.class);
+        SingleKey<Integer> k3 = new SingleKey<>("atest", Integer.class);
+        SingleKey<Float> k4 = new SingleKey<>("atest", Float.class);
         assert (!k1.equals(k2));
         assert (!k2.equals(k3));
     }
@@ -82,12 +83,56 @@ public class JConfig3Tests {
         assert (i2.units() == JUnitsOfMeasure.NoUnits);
 
         SetupConfig sc = new SetupConfig(ck1).add(i1);
-//        JSetupConfig sc = JConfigurations.createSetupConfig(ck1).set(k1, Collections.singletonList(22), JUnitsOfMeasure.NoUnits);
-        scala.Int i = sc.jget(k1, 0);
+//        scala.Int i = sc.jget(k1, 0);
 //        assert (sc.jget(k1).get() == 22);
 //        sc = sc.add(i2)
 //        assert (sc.get(k1).get.value == Vector(33))
     }
+
+
+
+    @Test
+    public void CheckingKeyUpdates2() {
+        StringKey k1 = new StringKey("atest");
+
+        // Should allow updates
+        StringItem i1 = k1.jset("abc");
+        assert (Objects.equals(i1.jvalue(0), "abc"));
+        assert (i1.units() == JUnitsOfMeasure.NoUnits);
+        StringItem i2 = k1.jset("xyz");
+        assert (Objects.equals(i2.jvalue(0), "xyz"));
+        assert (i2.units() == JUnitsOfMeasure.NoUnits);
+
+        SetupConfig sc = new SetupConfig(ck1).add(i1);
+        String s = sc.jget(k1, 0);
+//        assert (sc.jget(k1).get() == "abc");
+//        sc = sc.add(i2)
+//        assert (sc.get(k1).get.value == Vector("xyz"))
+    }
+
+
+    @Test
+    public void CheckingKeyUpdates3() {
+        IntegerKey k1 = new IntegerKey("atest");
+
+        // Should allow updates
+        IntegerItem i1 = k1.jset(22);
+        assert (i1.jvalue(0) == 22);
+        assert (i1.units() == JUnitsOfMeasure.NoUnits);
+        IntegerItem i2 = k1.jset(33);
+        assert (i2.jvalue(0) == 33);
+        assert (i2.units() == JUnitsOfMeasure.NoUnits);
+
+        SetupConfig sc = new SetupConfig(ck1).add(i1);
+        assert (sc.jget(k1, 0) == 22);
+        assert (sc.jget(k1).get().apply(0) == 22);
+        sc = sc.add(i2);
+        assert (sc.jget(k1, 0) == 33);
+    }
+
+
+
+
 }
 
 //    }

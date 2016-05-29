@@ -6,9 +6,9 @@ import csw.util.config3.UnitsOfMeasure.{Meters, NoUnits}
 import org.scalatest.FunSpec
 
 /**
-  * TMT Source Code: 5/8/16.
-  */
-//noinspection ComparingUnrelatedTypes
+ * TMT Source Code: 5/8/16.
+ */
+//noinspection ComparingUnrelatedTypes,ScalaUnusedSymbol
 class Config3Tests extends FunSpec {
   private val s1: String = "encoder"
   private val s2: String = "filter"
@@ -49,7 +49,7 @@ class Config3Tests extends FunSpec {
   }
 
   describe("Basic array tests") {
-    val k1 = SingleKey[Int]("atest")
+    val k1 = SingleKey[Int]("atest", classOf[Int])
 
     it("Should allow an Int array") {
       val i1 = k1.set(Vector(1, 2, 3), UnitsOfMeasure.NoUnits)
@@ -60,21 +60,20 @@ class Config3Tests extends FunSpec {
     }
 
     it("Should use key equals") {
-      val k2:SingleKey[Int] = SingleKey[Int]("atest1")
-      val k3:SingleKey[Int] = SingleKey[Int]("atest")
-      val k4:SingleKey[Float] = SingleKey[Float]("atest")
+      val k2: SingleKey[Int] = SingleKey[Int]("atest1", classOf[Int])
+      val k3: SingleKey[Int] = SingleKey[Int]("atest", classOf[Int])
+      val k4: SingleKey[Float] = SingleKey[Float]("atest", classOf[Float])
 
       assert(k1 == k1)
       assert(k1 != k2)
       assert(k2 != k3)
       // Checking for types
-//      assert(k3 != k4)
+      //      assert(k3 != k4)
     }
   }
 
   describe("Checking key updates") {
     val k1: IntKey = new IntKey("atest")
-
 
     it("Should allow updates") {
       val i1 = k1.set(22)
@@ -133,13 +132,13 @@ class Config3Tests extends FunSpec {
 
       val v1 = sc1(k1)
       val v2 = sc1(k2)
-      assert(sc1.get(k1) != None)
-      assert(sc1.get(k2) != None)
+      assert(sc1.get(k1).isDefined)
+      assert(sc1.get(k2).isDefined)
       assert(v1 == Vector(22))
       assert(v2 == Vector(44))
     }
 
-    it ("should update for the same key with set") {
+    it("should update for the same key with set") {
       var sc1 = SetupConfig(ck1)
       sc1 = sc1.set(k2, Vector(22), UnitsOfMeasure.NoUnits)
       assert(sc1.exists(k2))
@@ -150,7 +149,7 @@ class Config3Tests extends FunSpec {
       assert(sc1(k2) == Vector(33))
     }
 
-    it ("should update for the same key with add") {
+    it("should update for the same key with add") {
       var sc1 = SetupConfig(ck1)
       sc1 = sc1.add(k2.set(Vector(22), UnitsOfMeasure.NoUnits))
       assert(sc1.exists(k2))
@@ -163,7 +162,7 @@ class Config3Tests extends FunSpec {
 
   }
 
-  it ("should update for the same key with set") {
+  it("should update for the same key with set") {
     val k1 = IntKey("encoder")
     val k2 = StringKey("windspeed")
 
@@ -177,11 +176,10 @@ class Config3Tests extends FunSpec {
     assert(sc1(k2) == Vector("bob"))
 
     sc1.items.foreach {
-      case _: IntItem => info("IntItem")
-      case _: StringItem => info("StringItem")
+      case _: IntItem    ⇒ info("IntItem")
+      case _: StringItem ⇒ info("StringItem")
     }
   }
-
 
   describe("testing new idea") {
 

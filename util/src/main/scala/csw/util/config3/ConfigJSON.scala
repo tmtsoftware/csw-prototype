@@ -6,13 +6,13 @@ import csw.util.config3.UnitsOfMeasure.Units
 import spray.json._
 
 /**
-  * TMT Source Code: 5/10/16.
-  */
+ * TMT Source Code: 5/10/16.
+ */
 object ConfigJSON extends DefaultJsonProtocol {
 
   implicit val unitsFormat = jsonFormat1(Units.apply)
 
-  implicit def cItemFormat[A:JsonFormat] = jsonFormat3(CItem.apply[A])
+  implicit def cItemFormat[A: JsonFormat] = jsonFormat3(CItem.apply[A])
 
   implicit val charItemFormat = jsonFormat3(CharItem.apply)
   implicit val shortItemFormat = jsonFormat3(ShortItem.apply)
@@ -23,7 +23,7 @@ object ConfigJSON extends DefaultJsonProtocol {
   implicit val booleanItemFormat = jsonFormat3(BooleanItem.apply)
   implicit val stringItemFormat = jsonFormat3(StringItem.apply)
 
-  private val charTpe = "CharItem"   // Could be classTag[CharItem].toString
+  private val charTpe = "CharItem" // Could be classTag[CharItem].toString
   private val shortTpe = "ShortItem"
   private val intTpe = "IntItem"
   private val longTpe = "LongItem"
@@ -37,75 +37,75 @@ object ConfigJSON extends DefaultJsonProtocol {
 
     def read(value: JsValue) = {
       value match {
-        case JsString(subsystemStr) => Subsystem.lookup(subsystemStr) match {
-          case Some(subsystem) => subsystem
-          case None => Subsystem.BAD
+        case JsString(subsystemStr) ⇒ Subsystem.lookup(subsystemStr) match {
+          case Some(subsystem) ⇒ subsystem
+          case None            ⇒ Subsystem.BAD
         }
         // With malformed JSON, return BAD
-        case _ => Subsystem.BAD
+        case _ ⇒ Subsystem.BAD
       }
     }
   }
 
   def writeItem(item: Item[_]): JsValue = {
-    val result:(JsString, JsValue) = item match {
-      case ci: CharItem => (JsString(charTpe), charItemFormat.write(ci))
-      case si: ShortItem => (JsString(shortTpe), shortItemFormat.write(si))
-      case ii:IntItem => (JsString(intTpe), intItemFormat.write(ii))
-      case li: LongItem => (JsString(longTpe), longItemFormat.write(li))
-      case fi: FloatItem => ( JsString(floatTpe), floatItemFormat.write(fi))
-      case di: DoubleItem => (JsString(doubleTpe), doubleItemFormat.write(di))
-      case bi: BooleanItem => (JsString(booleanTpe), booleanItemFormat.write(bi))
-      case si: StringItem => (JsString(stringTpe), stringItemFormat.write(si))
+    val result: (JsString, JsValue) = item match {
+      case ci: CharItem    ⇒ (JsString(charTpe), charItemFormat.write(ci))
+      case si: ShortItem   ⇒ (JsString(shortTpe), shortItemFormat.write(si))
+      case ii: IntItem     ⇒ (JsString(intTpe), intItemFormat.write(ii))
+      case li: LongItem    ⇒ (JsString(longTpe), longItemFormat.write(li))
+      case fi: FloatItem   ⇒ (JsString(floatTpe), floatItemFormat.write(fi))
+      case di: DoubleItem  ⇒ (JsString(doubleTpe), doubleItemFormat.write(di))
+      case bi: BooleanItem ⇒ (JsString(booleanTpe), booleanItemFormat.write(bi))
+      case si: StringItem  ⇒ (JsString(stringTpe), stringItemFormat.write(si))
     }
-    JsObject("itemType" -> result._1, "item" -> result._2)
+    JsObject("itemType" → result._1, "item" → result._2)
   }
 
   def readItemAndType(json: JsValue) = json match {
-    case JsObject(fields) =>
+    case JsObject(fields) ⇒
       (fields("itemType"), fields("item")) match {
-        case (JsString(`charTpe`), item) => charItemFormat.read(item)
-        case (JsString(`shortTpe`), item) => shortItemFormat.read(item)
-        case (JsString(`intTpe`), item) => intItemFormat.read(item)
-        case (JsString(`longTpe`), item) => longItemFormat.read(item)
-        case (JsString(`floatTpe`), item) => floatItemFormat.read(item)
-        case (JsString(`doubleTpe`), item) => doubleItemFormat.read(item)
-        case (JsString(`booleanTpe`), item) => booleanItemFormat.read(item)
-        case (JsString(`stringTpe`), item) => stringItemFormat.read(item)
-        case _ => ConfigJsonFormats.unexpectedJsValueError(json)
+        case (JsString(`charTpe`), item)    ⇒ charItemFormat.read(item)
+        case (JsString(`shortTpe`), item)   ⇒ shortItemFormat.read(item)
+        case (JsString(`intTpe`), item)     ⇒ intItemFormat.read(item)
+        case (JsString(`longTpe`), item)    ⇒ longItemFormat.read(item)
+        case (JsString(`floatTpe`), item)   ⇒ floatItemFormat.read(item)
+        case (JsString(`doubleTpe`), item)  ⇒ doubleItemFormat.read(item)
+        case (JsString(`booleanTpe`), item) ⇒ booleanItemFormat.read(item)
+        case (JsString(`stringTpe`), item)  ⇒ stringItemFormat.read(item)
+        case _                              ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
       }
-    case _ => ConfigJsonFormats.unexpectedJsValueError(json)
+    case _ ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
   }
 
   implicit def itemsFormat: JsonFormat[ConfigData] = new JsonFormat[ConfigData] {
-    def write(items: ConfigData) =  JsArray(items.map(writeItem(_)).toList: _*)
+    def write(items: ConfigData) = JsArray(items.map(writeItem(_)).toList: _*)
 
     def read(json: JsValue) = json match {
-        case a:JsArray => a.elements.map((el:JsValue) => readItemAndType(el)).toSet
-        case _ => ConfigJsonFormats.unexpectedJsValueError(json)
-      }
+      case a: JsArray ⇒ a.elements.map((el: JsValue) ⇒ readItemAndType(el)).toSet
+      case _          ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
+    }
   }
 
   implicit val configKeyFormat = jsonFormat2(ConfigKey.apply)
 
   def writeConfig[A](cfg: A): JsValue = cfg match {
-    case sc:SetupConfig =>
+    case sc: SetupConfig ⇒
       JsObject(
-        "configType" -> JsString(ConfigJsonFormats.SETUP),
-        "configKey" -> configKeyFormat.write(sc.configKey),
-        "items" -> sc.items.toJson
+        "configType" → JsString(ConfigJsonFormats.SETUP),
+        "configKey" → configKeyFormat.write(sc.configKey),
+        "items" → sc.items.toJson
       )
-    }
+  }
 
   def readConfig[A](json: JsValue) = json match {
-    case JsObject(fields) =>
+    case JsObject(fields) ⇒
       (fields("configType"), fields("configKey"), fields("items")) match {
-        case (JsString(ConfigJsonFormats.SETUP), configKey, items) =>
+        case (JsString(ConfigJsonFormats.SETUP), configKey, items) ⇒
           val ck = configKey.convertTo[ConfigKey]
           SetupConfig(ck, itemsFormat.read(items))
-        case _ => ConfigJsonFormats.unexpectedJsValueError(json)
+        case _ ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
       }
-    case _ => ConfigJsonFormats.unexpectedJsValueError(json)
+    case _ ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
   }
 }
 
@@ -150,38 +150,36 @@ private object ConfigJsonFormats {
     case _ ⇒ JsArray(values.map(valueToJsValue).toList: _*)
   }
 
-//  // If the sequence contains elements of non default types (String, Double), Some(typeName)
-//  def typeOption[A](elems: Seq[A]): Option[String] = {
-//    if (elems.isEmpty) None
-//    else elems.head match {
-//      case _: String ⇒ None
-//      case _: Double ⇒ None
-//      case _: Int    ⇒ Some("Int")
-//      case _         ⇒ None
-//    }
-//  }
-
-
+  //  // If the sequence contains elements of non default types (String, Double), Some(typeName)
+  //  def typeOption[A](elems: Seq[A]): Option[String] = {
+  //    if (elems.isEmpty) None
+  //    else elems.head match {
+  //      case _: String ⇒ None
+  //      case _: Double ⇒ None
+  //      case _: Int    ⇒ Some("Int")
+  //      case _         ⇒ None
+  //    }
+  //  }
 
   // -- read --
   def unexpectedJsValueError(x: JsValue) = deserializationError(s"Unexpected JsValue: $x")
 
-//  def JsValueToValue(js: JsValue, typeOpt: Option[String] = None): Any = js match {
-//    case JsString(s) ⇒ s
-//    case JsNumber(n) ⇒
-//      typeOpt match {
-//        case Some("Int")   ⇒ n.toInt
-//        case Some("Short") ⇒ n.toShort
-//        case Some("Long")  ⇒ n.toLong
-//        case Some("Byte")  ⇒ n.toByte
-//        case _             ⇒ n.toDouble
-//      }
-//    case JsArray(l) ⇒ l // only needed if we have lists as values in the sequence
-//    case JsFalse    ⇒ false
-//    case JsTrue     ⇒ true
-//    case JsNull     ⇒ null
-//    case x          ⇒ unexpectedJsValueError(x)
-//  }
+  //  def JsValueToValue(js: JsValue, typeOpt: Option[String] = None): Any = js match {
+  //    case JsString(s) ⇒ s
+  //    case JsNumber(n) ⇒
+  //      typeOpt match {
+  //        case Some("Int")   ⇒ n.toInt
+  //        case Some("Short") ⇒ n.toShort
+  //        case Some("Long")  ⇒ n.toLong
+  //        case Some("Byte")  ⇒ n.toByte
+  //        case _             ⇒ n.toDouble
+  //      }
+  //    case JsArray(l) ⇒ l // only needed if we have lists as values in the sequence
+  //    case JsFalse    ⇒ false
+  //    case JsTrue     ⇒ true
+  //    case JsNull     ⇒ null
+  //    case x          ⇒ unexpectedJsValueError(x)
+  //  }
 
   /*
 

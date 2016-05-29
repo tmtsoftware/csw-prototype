@@ -8,24 +8,24 @@ import scala.compat.java8.OptionConverters._
 import scala.language.implicitConversions
 
 /**
-  * TMT Source Code: 5/22/16.
-  */
+ * TMT Source Code: 5/22/16.
+ */
 object Configurations {
   case class ConfigKey(subsystem: Subsystem, prefix: String) {
     override def toString = s"[$subsystem, $prefix]"
   }
 
   /**
-    * Defines the different types of configurations: setup, observe, wait, ...
-    */
+   * Defines the different types of configurations: setup, observe, wait, ...
+   */
   object ConfigKey {
     private val SEPARATOR = '.'
 
     /**
-      * Creates a ConfigKey from the given string
-      *
-      * @return a ConfigKey object parsed for the subsystem and prefix
-      */
+     * Creates a ConfigKey from the given string
+     *
+     * @return a ConfigKey object parsed for the subsystem and prefix
+     */
     implicit def stringToConfigKey(prefix: String): ConfigKey = {
       assert(prefix != null)
       ConfigKey(subsystem(prefix), prefix)
@@ -37,36 +37,36 @@ object Configurations {
   type ConfigData = Set[Item[_]]
 
   /**
-    * The base trait for various configuration types whether command configurations or events
-    *
-    * @tparam T the subclass of ConfigType
-    */
+   * The base trait for various configuration types whether command configurations or events
+   *
+   * @tparam T the subclass of ConfigType
+   */
   sealed trait ConfigType[T <: ConfigType[T]] {
     self: T ⇒
 
     /**
-      * Returns an object providing the subsystem and prefix for the config
-      */
+     * Returns an object providing the subsystem and prefix for the config
+     */
     def configKey: ConfigKey
 
     /**
-      * Holds the Set of Items
-      */
+     * Holds the Set of Items
+     */
     protected def items: ConfigData
 
     /**
-      * The number of items in the configurations
-      *
-      * @return the number of items in the configuration
-      */
+     * The number of items in the configurations
+     *
+     * @return the number of items in the configuration
+     */
     def size = items.size
 
     /**
-      * Returns a new instance with the value for the given key set to the given value
-      *
-      * @param item the key, which also contains the value type
-      * @return a new instance of this object with the key set to the given value
-      */
+     * Returns a new instance with the value for the given key set to the given value
+     *
+     * @param item the key, which also contains the value type
+     * @return a new instance of this object with the key set to the given value
+     */
     def add[A](item: Item[A]): T = {
       val configRemoved: T = removeByKeyname(item.keyName)
       create(configRemoved.items + item)
@@ -78,11 +78,11 @@ object Configurations {
     }
 
     /**
-      * Lookup a Key in Map and returns an Option
-      *
-      * @param key the Key to be used for lookup
-      * @return an option value typed to the Key
-      */
+     * Lookup a Key in Map and returns an Option
+     *
+     * @param key the Key to be used for lookup
+     * @return an option value typed to the Key
+     */
     def get[A](key: Key[A]): Option[Item[A]] = getByKeyname[A](key.keyName)
 
     def jget[A](key: Key[A]): Optional[Item[A]] = get(key).asJava
@@ -92,18 +92,18 @@ object Configurations {
     def exists[A](key: Key[A]): Boolean = get(key).isDefined
 
     /**
-      * Remove a Key from the Map and return a new Map
-      *
-      * @param key the Key to be used for removal
-      * @return a new T, where T is a ConfigType child with the key removed or identical if the key is not present
-      */
+     * Remove a Key from the Map and return a new Map
+     *
+     * @param key the Key to be used for removal
+     * @return a new T, where T is a ConfigType child with the key removed or identical if the key is not present
+     */
     def remove[A](key: Key[A]): T = removeByKeyname(key.keyName)
 
     private def removeByKeyname(keyname: String): T = {
       val f = getByKeyname(keyname)
       f match {
-        case Some(item) => create(items.-(item))
-        case None => this
+        case Some(item) ⇒ create(items.-(item))
+        case None       ⇒ this
       }
     }
 
@@ -111,26 +111,26 @@ object Configurations {
       items.find(_.keyName == keyname).asInstanceOf[Option[Item[A]]]
 
     /**
-      * Return the value associated with a Key rather than an Option
-      *
-      * @param key the Key to be used for lookup
-      * @return the item associated with the Key or a NoSuchElementException if the key does not exist
-      */
+     * Return the value associated with a Key rather than an Option
+     *
+     * @param key the Key to be used for lookup
+     * @return the item associated with the Key or a NoSuchElementException if the key does not exist
+     */
     final def apply[A](key: Key[A]): Seq[A] = get[A](key).get.value
 
     /**
-      * The subsystem for the config
-      */
+     * The subsystem for the config
+     */
     final def subsystem: Subsystem = configKey.subsystem
 
     /**
-      * The prefix for the config
-      */
+     * The prefix for the config
+     */
     final def prefix: String = configKey.prefix
 
     /**
-      * Method called by subclass to create a copy with the same key (or other fields) and new items
-      */
+     * Method called by subclass to create a copy with the same key (or other fields) and new items
+     */
     protected def create(data: ConfigData): T
 
     protected def dataToString = items.mkString("(", ",", ")")

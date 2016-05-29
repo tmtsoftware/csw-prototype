@@ -1,10 +1,10 @@
 package csw.util.config3
 
 /**
-  * This Units stuff is just for play
-  * although something should be developed or borrowed
-  * for use.
-  */
+ * This Units stuff is just for play
+ * although something should be developed or borrowed
+ * for use.
+ */
 object UnitsOfMeasure {
 
   // Should parameterize Units so concat can be created concat[A, B]
