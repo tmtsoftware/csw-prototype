@@ -34,7 +34,7 @@ object Configurations {
     private def subsystem(keyText: String): Subsystem = Subsystem.lookup(keyText.splitAt(keyText.indexOf(SEPARATOR))._1).getOrElse(Subsystem.BAD)
   }
 
-  type ConfigData = Set[Item[_]]
+  type ConfigData = Set[Item[_, _]]
 
   /**
    * The base trait for various configuration types whether command configurations or events
