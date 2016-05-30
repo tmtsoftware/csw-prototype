@@ -67,13 +67,18 @@ object Configurations {
      * @param item the key, which also contains the value type
      * @return a new instance of this object with the key set to the given value
      */
-    def add[A](item: Item[A]): T = {
+    def add[S, J](item: Item[S, J]): T = {
       val configRemoved: T = removeByKeyname(item.keyName)
       create(configRemoved.items + item)
     }
 
-    def set[A](key: Key[A], v: Vector[A], units: Units): T = {
-      val newItem = key.set(v, units)
+    def set[S, J](key: Key[S, J], v: Vector[S], units: Units): T = {
+      val newItem = key.set(v: _*).withUnits(units)
+      add(newItem)
+    }
+
+    def set[S, J](key: Key[S, J], units: Units, v: S*): T = {
+      val newItem = key.set(v: _*).withUnits(units)
       add(newItem)
     }
 
@@ -83,13 +88,13 @@ object Configurations {
      * @param key the Key to be used for lookup
      * @return an option value typed to the Key
      */
-    def get[A](key: Key[A]): Option[Item[A]] = getByKeyname[A](key.keyName)
+    def get[S, J](key: Key[S, J]): Option[Item[S, J]] = getByKeyname[S, J](key.keyName)
 
-    def jget[A](key: Key[A]): Optional[Item[A]] = get(key).asJava
+    def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = get(key).asJava
 
-    def jget[A](key: Key[A], index: Int): A = get(key).get.value(index)
+    def jget[S, J](key: Key[S, J], index: Int): J = get(key).get.jget(index)
 
-    def exists[A](key: Key[A]): Boolean = get(key).isDefined
+    def exists[S, J](key: Key[S, J]): Boolean = get(key).isDefined
 
     /**
      * Remove a Key from the Map and return a new Map
@@ -97,7 +102,7 @@ object Configurations {
      * @param key the Key to be used for removal
      * @return a new T, where T is a ConfigType child with the key removed or identical if the key is not present
      */
-    def remove[A](key: Key[A]): T = removeByKeyname(key.keyName)
+    def remove[S, J](key: Key[S, J]): T = removeByKeyname(key.keyName)
 
     private def removeByKeyname(keyname: String): T = {
       val f = getByKeyname(keyname)
@@ -107,8 +112,8 @@ object Configurations {
       }
     }
 
-    private def getByKeyname[A](keyname: String): Option[Item[A]] =
-      items.find(_.keyName == keyname).asInstanceOf[Option[Item[A]]]
+    private def getByKeyname[S, J](keyname: String): Option[Item[S, J]] =
+      items.find(_.keyName == keyname).asInstanceOf[Option[Item[S, J]]]
 
     /**
      * Return the value associated with a Key rather than an Option
@@ -116,7 +121,7 @@ object Configurations {
      * @param key the Key to be used for lookup
      * @return the item associated with the Key or a NoSuchElementException if the key does not exist
      */
-    final def apply[A](key: Key[A]): Seq[A] = get[A](key).get.value
+    final def apply[S, J](key: Key[S, J]): Seq[S] = get[S, J](key).get.value
 
     /**
      * The subsystem for the config
@@ -138,34 +143,34 @@ object Configurations {
     protected def doToString(kind: String) = s"$kind[$subsystem, $prefix]$dataToString"
   }
 
-  case class SetupConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]]) extends ConfigType[SetupConfig] {
+  case class SetupConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]]) extends ConfigType[SetupConfig] {
     override def create(data: ConfigData) = SetupConfig(configKey, data)
 
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
-    // The following three seem to be needed by Java since Java can't handle the return type of ConfigType add/set
-    override def add[A](item: Item[A]): SetupConfig = super.add(item)
+    // XXX FIXME The following three seem to be needed by Java since Java can't handle the return type of ConfigType add/set
+    override def add[S, J](item: Item[S, J]): SetupConfig = super.add(item)
 
-    override def set[A](key: Key[A], v: Vector[A], units: Units): SetupConfig = super.set[A](key, v, units)
+    override def set[S, J](key: Key[S, J], v: Vector[S], units: Units): SetupConfig = super.set[S, J](key, v, units)
 
-    override def remove[A](key: Key[A]): SetupConfig = super.remove[A](key)
+    override def remove[S, J](key: Key[S, J]): SetupConfig = super.remove[S, J](key)
 
     override def toString = doToString("SC")
   }
 
-  case class ObserveConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]]) extends ConfigType[ObserveConfig] {
+  case class ObserveConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]]) extends ConfigType[ObserveConfig] {
     override def create(data: ConfigData) = ObserveConfig(configKey, data)
 
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
     // The following three seem to be needed by Java since Java can't handle the return type of ConfigType add/set
-    override def add[A](item: Item[A]): ObserveConfig = super.add(item)
+    override def add[S, J](item: Item[S, J]): ObserveConfig = super.add(item)
 
-    override def set[A](key: Key[A], v: Vector[A], units: Units): ObserveConfig = super.set[A](key, v, units)
+    override def set[S, J](key: Key[S, J], v: Vector[S], units: Units): ObserveConfig = super.set[S, J](key, v, units)
 
-    override def remove[A](key: Key[A]): ObserveConfig = super.remove[A](key)
+    override def remove[S, J](key: Key[S, J]): ObserveConfig = super.remove[S, J](key)
 
     override def toString = doToString("OC")
   }

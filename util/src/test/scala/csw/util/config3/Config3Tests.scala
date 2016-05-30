@@ -1,6 +1,5 @@
 package csw.util.config3
 
-import csw.util.config3.ConfigItems._
 import csw.util.config3.Configurations.SetupConfig
 import csw.util.config3.UnitsOfMeasure.{Meters, NoUnits}
 import org.scalatest.FunSpec
@@ -20,7 +19,7 @@ class Config3Tests extends FunSpec {
   private val ck3 = "wfos.red.detector"
 
   describe("Basic key tests") {
-    val k1 = IntegerKey(s1)
+    val k1 = IntKey(s1)
     val k2 = StringKey(s2)
 
     it("Should be constructed properly") {
@@ -28,12 +27,12 @@ class Config3Tests extends FunSpec {
     }
 
     it("Should use set properly") {
-      val i = k1.set(Vector(22), UnitsOfMeasure.NoUnits)
+      val i = k1.set(22)
       assert(i.keyName eq s1)
       assert(i.value == Vector(22))
 
       assert(k2.keyName eq s2)
-      val j: StringItem = k2.set(Vector("Bob"), UnitsOfMeasure.Meters)
+      val j: StringItem = k2.set("Bob").withUnits(UnitsOfMeasure.Meters)
       assert(j.value == Vector("Bob"))
 
       // Try default
@@ -41,7 +40,7 @@ class Config3Tests extends FunSpec {
     }
 
     it("Should support equality of keys") {
-      val k3 = IntegerKey(s1)
+      val k3 = IntKey(s1)
       assert(k3 == k1)
       assert(k3 != k2)
       assert(k1 != k2)
@@ -49,10 +48,10 @@ class Config3Tests extends FunSpec {
   }
 
   describe("Basic array tests") {
-    val k1 = SingleKey[Int]("atest")
+    val k1 = GenericKey[Int, Integer]("atest", i ⇒ i: Integer, i ⇒ i: Int)
 
     it("Should allow an Int array") {
-      val i1 = k1.set(Vector(1, 2, 3), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.NoUnits)
       assert(i1.value == Vector(1, 2, 3))
       val i2 = k1.set(1, 2, 3)
       assert(i2.value == Vector(1, 2, 3))
@@ -60,9 +59,9 @@ class Config3Tests extends FunSpec {
     }
 
     it("Should use key equals") {
-      val k2: SingleKey[Int] = SingleKey[Int]("atest1")
-      val k3: SingleKey[Int] = SingleKey[Int]("atest")
-      val k4: SingleKey[Float] = SingleKey[Float]("atest")
+      val k2 = GenericKey[Int, Integer]("atest1", i ⇒ i: Integer, i ⇒ i: Int)
+      val k3 = GenericKey[Int, Integer]("atest", i ⇒ i: Integer, i ⇒ i: Int)
+      val k4 = GenericKey[Float, java.lang.Float]("atest", f ⇒ f: java.lang.Float, f ⇒ f: Float)
 
       assert(k1 == k1)
       assert(k1 != k2)
@@ -73,7 +72,7 @@ class Config3Tests extends FunSpec {
   }
 
   describe("Checking key updates") {
-    val k1: IntegerKey = new IntegerKey("atest")
+    val k1: IntKey = new IntKey("atest")
 
     it("Should allow updates") {
       val i1 = k1.set(22)
@@ -106,12 +105,12 @@ class Config3Tests extends FunSpec {
 
   describe("SC Test") {
 
-    val k1 = IntegerKey("encoder")
-    val k2 = IntegerKey("windspeed")
+    val k1 = IntKey("encoder")
+    val k2 = IntKey("windspeed")
     it("Should allow adding") {
       var sc1 = SetupConfig(ck3)
-      val i1 = k1.set(Vector(22), UnitsOfMeasure.NoUnits)
-      val i2 = k2.set(Vector(44), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(22).withUnits(UnitsOfMeasure.NoUnits)
+      val i2 = k2.set(44).withUnits(UnitsOfMeasure.NoUnits)
       sc1 = sc1.add(i1).add(i2)
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
@@ -151,11 +150,11 @@ class Config3Tests extends FunSpec {
 
     it("should update for the same key with add") {
       var sc1 = SetupConfig(ck1)
-      sc1 = sc1.add(k2.set(Vector(22), UnitsOfMeasure.NoUnits))
+      sc1 = sc1.add(k2.set(22).withUnits(UnitsOfMeasure.NoUnits))
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(22))
 
-      sc1 = sc1.add(k2.set(Vector(33), UnitsOfMeasure.NoUnits))
+      sc1 = sc1.add(k2.set(33).withUnits(UnitsOfMeasure.NoUnits))
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(33))
     }
@@ -163,7 +162,7 @@ class Config3Tests extends FunSpec {
   }
 
   it("should update for the same key with set") {
-    val k1 = IntegerKey("encoder")
+    val k1 = IntKey("encoder")
     val k2 = StringKey("windspeed")
 
     var sc1 = SetupConfig(ck1)
@@ -176,14 +175,14 @@ class Config3Tests extends FunSpec {
     assert(sc1(k2) == Vector("bob"))
 
     sc1.items.foreach {
-      case _: IntegerItem    ⇒ info("IntegerItem")
+      case _: IntItem    ⇒ info("IntItem")
       case _: StringItem ⇒ info("StringItem")
     }
   }
 
   describe("testing new idea") {
 
-    val t1 = IntegerKey("test1")
+    val t1 = IntKey("test1")
     it("should allow setting a single value") {
       val i1 = t1.set(1)
       assert(i1.value == Vector(1))
@@ -203,7 +202,7 @@ class Config3Tests extends FunSpec {
     }
     it("should also allow setting with sequence") {
       val s1 = Vector(2, 4, 6, 8)
-      val i1 = t1.set(s1, Meters)
+      val i1 = t1.set(s1: _*).withUnits(Meters)
       assert(i1.value == s1)
       assert(i1.value.size == s1.size)
       assert(i1.units == Meters)

@@ -14,19 +14,19 @@ import csw.util.config3.UnitsOfMeasure.Units
  * @param units   the units of the value
  */
 final case class CharItem(keyName: String, value: Vector[Char], units: Units) extends Item[Char, Character] {
-  /**
-   * Java API
-   *
-   * @return the values as a Scala Vector
-   */
-  override def jvalue: Vector[Character] = value.map(i ⇒ i: Character)
+  //  /**
+  //   * Java API
+  //   *
+  //   * @return the values as a Scala Vector
+  //   */
+  //   def jvalue: Vector[Character] = value.map(i ⇒ i: Character)
 
   /**
    * Java API
    *
    * @return the values as a Java List
    */
-  def jvalues: java.util.List[Character] = jvalue.asJava
+  def jvalues: java.util.List[Character] = value.map(i ⇒ i: Character).asJava
 
   /**
    * Java API
@@ -51,14 +51,14 @@ final case class CharItem(keyName: String, value: Vector[Char], units: Units) ex
  */
 final case class CharKey(nameIn: String) extends Key[Char, Character](nameIn) {
 
-  /**
-   * Sets the values for the key
-   *
-   * @param v     the values
-   * @param units the units of the values
-   * @return a new item containing the key name, values and units
-   */
-  override def set(v: Vector[Char], units: Units) = CharItem(keyName, v, units)
+  //  /**
+  //   * Sets the values for the key
+  //   *
+  //   * @param v     the values
+  //   * @param units the units of the values
+  //   * @return a new item containing the key name, values and units
+  //   */
+  //  override def set(v: Vector[Char], units: Units) = CharItem(keyName, v, units)
 
   /**
    * Sets the values for the key using a variable number of arguments
@@ -68,23 +68,23 @@ final case class CharKey(nameIn: String) extends Key[Char, Character](nameIn) {
    */
   override def set(v: Char*) = CharItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 
-  /**
-   * Java API to set the values for a key
-   *
-   * @param v     the values as a java list
-   * @param units the units of the values
-   * @return a new item containing the key name, values and units
-   */
-  def jset(v: Vector[Character], units: Units) = CharItem(keyName, v.map(i ⇒ i: Char), units)
+  //  /**
+  //   * Java API to set the values for a key
+  //   *
+  //   * @param v     the values as a java list
+  //   * @param units the units of the values
+  //   * @return a new item containing the key name, values and units
+  //   */
+  //  def jset(v: Vector[Character], units: Units) = CharItem(keyName, v.map(i ⇒ i: Char), units)
 
-  /**
-   * Java API to set the values for a key
-   *
-   * @param v     the values as a java list
-   * @param units the units of the values
-   * @return a new item containing the key name, values and units
-   */
-  def jset(v: java.util.List[Character], units: Units) = jset(v.asScala.toVector, units)
+  //  /**
+  //   * Java API to set the values for a key
+  //   *
+  //   * @param v     the values as a java list
+  //   * @param units the units of the values
+  //   * @return a new item containing the key name, values and units
+  //   */
+  //  def jset(v: java.util.List[Character], units: Units) = jset(v.asScala.toVector, units)
 
   /**
    * Java API: Sets the values for the key using a variable number of arguments

@@ -1,7 +1,7 @@
 package javacsw.util.config3;
 
-import csw.util.config3.ConfigItems.CharItem;
-import csw.util.config3.ConfigItems.CharKey;
+import csw.util.config3.CharItem;
+import csw.util.config3.CharKey;
 import csw.util.config3.ConfigJSON;
 import csw.util.config3.Subsystem;
 import org.junit.Test;

@@ -7,91 +7,91 @@ import scala.language.implicitConversions
 import csw.util.config3.UnitsOfMeasure.Units
 
 /**
-  * The type of a value for an LongKey
-  *
-  * @param keyName the name of the key
-  * @param value   the value for the key
-  * @param units   the units of the value
-  */
+ * The type of a value for an LongKey
+ *
+ * @param keyName the name of the key
+ * @param value   the value for the key
+ * @param units   the units of the value
+ */
 final case class LongItem(keyName: String, value: Vector[Long], units: Units) extends Item[Long, java.lang.Long] {
-  /**
-    * Java API
-    *
-    * @return the values as a Scala Vector
-    */
-  override def jvalue: Vector[java.lang.Long] = value.map(i ⇒ i: java.lang.Long)
+  //  /**
+  //    * Java API
+  //    *
+  //    * @return the values as a Scala Vector
+  //    */
+  //  override def jvalue: Vector[java.lang.Long] = value.map(i ⇒ i: java.lang.Long)
 
   /**
-    * Java API
-    *
-    * @return the values as a Java List
-    */
-  def jvalues: java.util.List[java.lang.Long] = jvalue.asJava
+   * Java API
+   *
+   * @return the values as a Java List
+   */
+  def jvalues: java.util.List[java.lang.Long] = value.map(i ⇒ i: java.lang.Long).asJava
 
   /**
-    * Java API
-    *
-    * @return the value at the given index
-    */
+   * Java API
+   *
+   * @return the value at the given index
+   */
   override def jget(index: Int): java.lang.Long = value(index)
 
   /**
-    * Set the units of the value
-    *
-    * @param unitsIn the units to set
-    * @return a copy of this item with the given units set
-    */
+   * Set the units of the value
+   *
+   * @param unitsIn the units to set
+   * @return a copy of this item with the given units set
+   */
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }
 
 /**
-  * A key of Long values
-  *
-  * @param nameIn the name of the key
-  */
+ * A key of Long values
+ *
+ * @param nameIn the name of the key
+ */
 final case class LongKey(nameIn: String) extends Key[Long, java.lang.Long](nameIn) {
 
-  /**
-    * Sets the values for the key
-    *
-    * @param v     the values
-    * @param units the units of the values
-    * @return a new item containing the key name, values and units
-    */
-  override def set(v: Vector[Long], units: Units) = LongItem(keyName, v, units)
+  //  /**
+  //    * Sets the values for the key
+  //    *
+  //    * @param v     the values
+  //    * @param units the units of the values
+  //    * @return a new item containing the key name, values and units
+  //    */
+  //  override def set(v: Vector[Long], units: Units) = LongItem(keyName, v, units)
 
   /**
-    * Sets the values for the key using a variable number of arguments
-    *
-    * @param v the values
-    * @return a new item containing the key name, values and no units
-    */
+   * Sets the values for the key using a variable number of arguments
+   *
+   * @param v the values
+   * @return a new item containing the key name, values and no units
+   */
   override def set(v: Long*) = LongItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 
-  /**
-    * Java API to set the values for a key
-    *
-    * @param v     the values as a java list
-    * @param units the units of the values
-    * @return a new item containing the key name, values and units
-    */
-  def jset(v: Vector[java.lang.Long], units: Units) = LongItem(keyName, v.map(i ⇒ i: Long), units)
+  //  /**
+  //    * Java API to set the values for a key
+  //    *
+  //    * @param v     the values as a java list
+  //    * @param units the units of the values
+  //    * @return a new item containing the key name, values and units
+  //    */
+  //  def jset(v: Vector[java.lang.Long], units: Units) = LongItem(keyName, v.map(i ⇒ i: Long), units)
+  //
+  //  /**
+  //    * Java API to set the values for a key
+  //    *
+  //    * @param v     the values as a java list
+  //    * @param units the units of the values
+  //    * @return a new item containing the key name, values and units
+  //    */
+  //  def jset(v: java.util.List[java.lang.Long], units: Units) = jset(v.asScala.toVector, units)
 
   /**
-    * Java API to set the values for a key
-    *
-    * @param v     the values as a java list
-    * @param units the units of the values
-    * @return a new item containing the key name, values and units
-    */
-  def jset(v: java.util.List[java.lang.Long], units: Units) = jset(v.asScala.toVector, units)
-
-  /**
-    * Java API: Sets the values for the key using a variable number of arguments
-    *
-    * @param v the values
-    * @return a new item containing the key name, values and no units
-    */
+   * Java API: Sets the values for the key using a variable number of arguments
+   *
+   * @param v the values
+   * @return a new item containing the key name, values and no units
+   */
   @varargs
   override def jset(v: java.lang.Long*) = LongItem(keyName, v.map(i ⇒ i: Long).toVector, units = UnitsOfMeasure.NoUnits)
 }

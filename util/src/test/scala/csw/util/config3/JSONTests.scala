@@ -1,6 +1,5 @@
 package csw.util.config3
 
-import csw.util.config3.ConfigItems._
 import csw.util.config3.ConfigJSON._
 import csw.util.config3.Configurations.SetupConfig
 import org.scalatest.FunSpec
@@ -35,7 +34,7 @@ class JSONTests extends FunSpec {
 
     it("char item encode/decode") {
       val k1 = CharKey(s3)
-      val i1 = k1.set(Vector('d'), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set('d').withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[CharItem]
@@ -44,7 +43,7 @@ class JSONTests extends FunSpec {
 
     it("short item encode/decode") {
       val k1 = ShortKey(s3)
-      val i1 = k1.set(Vector[Short](-1), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(-1).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[ShortItem]
@@ -53,7 +52,7 @@ class JSONTests extends FunSpec {
 
     it("int item encode/decode") {
       val k1 = IntKey(s3)
-      val i1 = k1.set(Vector[Int](123), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(23).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[IntItem]
@@ -62,7 +61,7 @@ class JSONTests extends FunSpec {
 
     it("long item encode/decode") {
       val k1 = LongKey(s1)
-      val i1 = k1.set(Vector(123456L), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(123456L).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[LongItem]
@@ -71,7 +70,7 @@ class JSONTests extends FunSpec {
 
     it("float item encode/decode") {
       val k1 = FloatKey(s1)
-      val i1 = k1.set(Vector[Float](123.456f), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(123.456f).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[FloatItem]
@@ -80,7 +79,7 @@ class JSONTests extends FunSpec {
 
     it("double item encode/decode") {
       val k1 = DoubleKey(s1)
-      val i1 = k1.set(Vector[Double](123.456), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(123.456).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[DoubleItem]
@@ -89,7 +88,7 @@ class JSONTests extends FunSpec {
 
     it("boolean item encode/decode") {
       val k1 = BooleanKey(s1)
-      val i1 = k1.set(Vector(true, false), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(true, false).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       info("j1: " + j1)
@@ -105,7 +104,7 @@ class JSONTests extends FunSpec {
 
     it("string item encode/decode") {
       val k1 = StringKey(s2)
-      val i1 = k1.set(Vector("Blue", "Green"), UnitsOfMeasure.NoUnits)
+      val i1 = k1.set("Blue", "Green").withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[StringItem]
@@ -119,7 +118,7 @@ class JSONTests extends FunSpec {
     val k2 = StringKey(s2)
 
     val i1 = k1.set(22, 33, 44)
-    val i2 = k2.set(Vector("a", "b", "c"), UnitsOfMeasure.Deg)
+    val i2 = k2.set("a", "b", "c").withUnits(UnitsOfMeasure.Deg)
 
     it("should encode and decode items list") {
       // Use this to get a list to test
@@ -142,13 +141,13 @@ class JSONTests extends FunSpec {
     val k6 = BooleanKey("f")
     val k7 = StringKey("g")
 
-    val i1 = k1.set(Vector('d'), UnitsOfMeasure.NoUnits)
-    val i2 = k2.set(Vector(22), UnitsOfMeasure.NoUnits)
-    val i3 = k3.set(Vector(1234L), UnitsOfMeasure.NoUnits)
-    val i4 = k4.set(Vector(123.45f), UnitsOfMeasure.Deg)
-    val i5 = k5.set(Vector(123.456), UnitsOfMeasure.Meters)
+    val i1 = k1.set('d').withUnits(UnitsOfMeasure.NoUnits)
+    val i2 = k2.set(22).withUnits(UnitsOfMeasure.NoUnits)
+    val i3 = k3.set(1234L).withUnits(UnitsOfMeasure.NoUnits)
+    val i4 = k4.set(123.45f).withUnits(UnitsOfMeasure.Deg)
+    val i5 = k5.set(123.456).withUnits(UnitsOfMeasure.Meters)
     val i6 = k6.set(false)
-    val i7 = k7.set(Vector("GG495"), UnitsOfMeasure.Deg)
+    val i7 = k7.set("GG495").withUnits(UnitsOfMeasure.Deg)
 
     it("Should encode/decode a setupconfig") {
       val sc1 = SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
@@ -162,17 +161,18 @@ class JSONTests extends FunSpec {
     }
   }
 
-  describe("Trying to understand CItem") {
-    it("Should allow a citem") {
-      val k1 = SingleKey[String]("bob")
-      val i1 = k1.set(Vector("1", "2", "3"), UnitsOfMeasure.NoUnits)
-      info("j1: " + i1)
-
-      val j1 = i1.toJson
-      info("j1citem: " + j1.prettyPrint)
-      val in1 = j1.convertTo[CItem[String]]
-      info("j1in: " + in1)
-    }
-  }
+  // XXX TODO FIXME
+  //  describe("Trying to understand GenericItem") {
+  //    it("Should allow a citem") {
+  //      val k1 = GenericKey[String, java.lang.String]("bob", x ⇒ x, x ⇒ x)
+  //      val i1 = k1.set("1", "2", "3").withUnits(UnitsOfMeasure.NoUnits)
+  //      info("j1: " + i1)
+  //
+  //      val j1 = i1.toJson
+  //      info("j1citem: " + j1.prettyPrint)
+  //      val in1 = j1.convertTo[GenericItem[String, java.lang.String]]
+  //      info("j1in: " + in1)
+  //    }
+  //  }
 }
 

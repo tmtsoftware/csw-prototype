@@ -4,7 +4,6 @@ import csw.util.config3.Configurations.SetupConfig;
 import csw.util.config3.*;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -82,56 +81,10 @@ public class JConfig3Tests {
         assert (i2.units() == JUnitsOfMeasure.NoUnits);
 
         SetupConfig sc = new SetupConfig(ck1).add(i1);
-//        scala.Int i = sc.jget(k1, 0);
-//        assert (sc.jget(k1).get() == 22);
-//        sc = sc.add(i2)
-//        assert (sc.get(k1).get.value == Vector(33))
-    }
-
-
-
-    @Test
-    public void CheckingKeyUpdates2() {
-        StringKey k1 = new StringKey("atest");
-
-        // Should allow updates
-        StringItem i1 = k1.jset("abc");
-        assert (Objects.equals(i1.jvalue(0), "abc"));
-        assert (i1.units() == JUnitsOfMeasure.NoUnits);
-        StringItem i2 = k1.jset("xyz");
-        assert (Objects.equals(i2.jvalue(0), "xyz"));
-        assert (i2.units() == JUnitsOfMeasure.NoUnits);
-
-        SetupConfig sc = new SetupConfig(ck1).add(i1);
-        String s = sc.jget(k1, 0);
-//        assert (sc.jget(k1).get() == "abc");
-//        sc = sc.add(i2)
-//        assert (sc.get(k1).get.value == Vector("xyz"))
-    }
-
-
-    @Test
-    public void CheckingKeyUpdates3() {
-        IntKey k1 = new IntKey("atest");
-
-        // Should allow updates
-        IntItem i1 = k1.jset(22);
-        assert (i1.jvalue(0) == 22);
-        assert (i1.units() == JUnitsOfMeasure.NoUnits);
-        IntItem i2 = k1.jset(33);
-        assert (i2.jvalue(0) == 33);
-        assert (i2.units() == JUnitsOfMeasure.NoUnits);
-
-        SetupConfig sc = new SetupConfig(ck1).add(i1);
         assert (sc.jget(k1, 0) == 22);
-        assert (sc.jget(k1).get().apply(0) == 22);
         sc = sc.add(i2);
         assert (sc.jget(k1, 0) == 33);
     }
-
-
-
-
 }
 
 //    }
