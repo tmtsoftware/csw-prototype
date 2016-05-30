@@ -4,11 +4,15 @@ import csw.util.config3.Configurations.SetupConfig
 import csw.util.config3.UnitsOfMeasure.{Meters, NoUnits}
 import org.scalatest.FunSpec
 
-/**
- * TMT Source Code: 5/8/16.
- */
+
+object Config3Tests {
+  case class MyData(i: Int, f: Float, d: Double, s: String)
+}
+
 //noinspection ComparingUnrelatedTypes,ScalaUnusedSymbol
 class Config3Tests extends FunSpec {
+  import Config3Tests._
+
   private val s1: String = "encoder"
   private val s2: String = "filter"
   private val s3: String = "detectorTemp"
@@ -48,7 +52,7 @@ class Config3Tests extends FunSpec {
   }
 
   describe("Basic array tests") {
-    val k1 = GenericKey[Int, Integer]("atest", i ⇒ i: Integer, i ⇒ i: Int)
+    val k1 = GenericKey[Int, Integer]("atest")
 
     it("Should allow an Int array") {
       val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.NoUnits)
@@ -59,17 +63,41 @@ class Config3Tests extends FunSpec {
     }
 
     it("Should use key equals") {
-      val k2 = GenericKey[Int, Integer]("atest1", i ⇒ i: Integer, i ⇒ i: Int)
-      val k3 = GenericKey[Int, Integer]("atest", i ⇒ i: Integer, i ⇒ i: Int)
-      val k4 = GenericKey[Float, java.lang.Float]("atest", f ⇒ f: java.lang.Float, f ⇒ f: Float)
+      val k2 = GenericKey[Int, Integer]("atest1")
+      val k3 = GenericKey[Int, Integer]("atest")
+      val k4 = GenericKey[Float, java.lang.Float]("atest")
 
       assert(k1 == k1)
       assert(k1 != k2)
       assert(k2 != k3)
-      // Checking for types
-      //      assert(k3 != k4)
     }
   }
+
+  describe("Generic key tests") {
+    val k1 = GenericKey[MyData, MyData]("atest")
+    val d1 = MyData(1, 2.0f, 3.0, "4")
+    val d2 = MyData(10, 20.0f, 30.0, "40")
+
+    it("Should allow an Int array") {
+      val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.NoUnits)
+      assert(i1.value == Vector(d1, d2))
+      assert(i1(0) == d1)
+      assert(i1(1) == d2)
+      assert(i1(0).i == 1)
+    }
+
+    it("Should use key equals") {
+      val k2 = GenericKey[Int, Integer]("atest1")
+      val k3 = GenericKey[Int, Integer]("atest")
+      val k4 = GenericKey[Float, java.lang.Float]("atest")
+
+      assert(k1 == k1)
+      assert(k1 != k2)
+      assert(k2 != k3)
+    }
+  }
+
+
 
   describe("Checking key updates") {
     val k1: IntKey = new IntKey("atest")

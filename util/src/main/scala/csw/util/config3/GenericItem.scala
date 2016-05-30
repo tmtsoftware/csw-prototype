@@ -42,7 +42,11 @@ final case class GenericItem[S, J](keyName: String, value: Vector[S], units: Uni
    * @param unitsIn the units to set
    * @return a copy of this item with the given units set
    */
-  override def withUnits(unitsIn: Units) = copy(units = unitsIn)
+  override def withUnits(unitsIn: Units): Item[S, J] = copy(units = unitsIn)
+}
+
+object GenericKey {
+  def apply[S, J](nameIn: String): GenericKey[S, J] = new GenericKey(nameIn)
 }
 
 /**
@@ -53,6 +57,14 @@ final case class GenericItem[S, J](keyName: String, value: Vector[S], units: Uni
  * @param fjs    a function that converts the Java value to a Scala Value
  */
 case class GenericKey[S, J](nameIn: String, fsj: S ⇒ J, fjs: J ⇒ S) extends Key[S, J](nameIn) {
+
+  /**
+   * Constructor that assumes Scala and Java types are the same
+   * @param nameIn the name of the key
+   */
+  def this(nameIn: String) {
+    this(nameIn, (x: S) ⇒ x.asInstanceOf[J], (y: J) ⇒ y.asInstanceOf[S])
+  }
 
   //  /**
   //    * Sets the values for the key
@@ -69,7 +81,7 @@ case class GenericKey[S, J](nameIn: String, fsj: S ⇒ J, fjs: J ⇒ S) extends 
    * @param v the values
    * @return a new item containing the key name, values and no units
    */
-  override def set(v: S*) = GenericItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits, fsj)
+  override def set(v: S*): Item[S, J] = GenericItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits, fsj)
 
   //  /**
   //    * Java API to set the values for a key
@@ -96,6 +108,6 @@ case class GenericKey[S, J](nameIn: String, fsj: S ⇒ J, fjs: J ⇒ S) extends 
    * @return a new item containing the key name, values and no units
    */
   //  @varargs
-  override def jset(v: J*) = GenericItem(keyName, v.map(fjs).toVector, units = UnitsOfMeasure.NoUnits, fsj)
+  override def jset(v: J*): Item[S, J] = GenericItem(keyName, v.map(fjs).toVector, units = UnitsOfMeasure.NoUnits, fsj)
 }
 
