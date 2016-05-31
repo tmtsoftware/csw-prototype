@@ -1,7 +1,7 @@
 package csw.util.config3
 
 import csw.util.config3.Configurations.SetupConfig
-import csw.util.config3.UnitsOfMeasure.{Meters, NoUnits}
+import csw.util.config3.UnitsOfMeasure._
 import org.scalatest.FunSpec
 import spray.json.DefaultJsonProtocol
 
@@ -53,30 +53,8 @@ class Config3Tests extends FunSpec {
     }
   }
 
-  //  describe("Basic array tests") {
-  //    val k1 = GenericKey[Int, Integer]("atest")
-  //
-  //    it("Should allow an Int array") {
-  //      val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.NoUnits)
-  //      assert(i1.value == Vector(1, 2, 3))
-  //      val i2 = k1.set(1, 2, 3)
-  //      assert(i2.value == Vector(1, 2, 3))
-  //      assert(i2.units == UnitsOfMeasure.NoUnits)
-  //    }
-  //
-  //    it("Should use key equals") {
-  //      val k2 = GenericKey[Int, Integer]("atest1")
-  //      val k3 = GenericKey[Int, Integer]("atest")
-  //      val k4 = GenericKey[Float, java.lang.Float]("atest")
-  //
-  //      assert(k1 == k1)
-  //      assert(k1 != k2)
-  //      assert(k2 != k3)
-  //    }
-  //  }
-
   describe("Generic key tests") {
-    val k1 = GenericKey[MyData]("atest")
+    val k1 = GenericKey[MyData]("MyData", "atest")
     val d1 = MyData(1, 2.0f, 3.0, "4")
     val d2 = MyData(10, 20.0f, 30.0, "40")
 
@@ -95,10 +73,10 @@ class Config3Tests extends FunSpec {
     it("Should allow updates") {
       val i1 = k1.set(22)
       assert(i1.value == Vector(22))
-      assert(i1.units == UnitsOfMeasure.NoUnits)
+      assert(i1.units == NoUnits)
       val i2 = k1.set(33)
       assert(i2.value == Vector(33))
-      assert(i2.units == UnitsOfMeasure.NoUnits)
+      assert(i2.units == NoUnits)
 
       var sc = SetupConfig(ck1).add(i1)
       assert(sc.get(k1).get.value == Vector(22))
@@ -127,8 +105,8 @@ class Config3Tests extends FunSpec {
     val k2 = IntKey("windspeed")
     it("Should allow adding") {
       var sc1 = SetupConfig(ck3)
-      val i1 = k1.set(22).withUnits(UnitsOfMeasure.NoUnits)
-      val i2 = k2.set(44).withUnits(UnitsOfMeasure.NoUnits)
+      val i1 = k1.set(22).withUnits(NoUnits)
+      val i2 = k2.set(44).withUnits(NoUnits)
       sc1 = sc1.add(i1).add(i2)
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
@@ -137,7 +115,7 @@ class Config3Tests extends FunSpec {
 
     it("Should allow setting") {
       var sc1 = SetupConfig(ck1)
-      sc1 = sc1.set(k1, Vector(22), UnitsOfMeasure.NoUnits).set(k2, Vector(44), UnitsOfMeasure.NoUnits)
+      sc1 = sc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
       assert(sc1.exists(k2))
@@ -145,7 +123,7 @@ class Config3Tests extends FunSpec {
 
     it("Should allow apply") {
       var sc1 = SetupConfig(ck1)
-      sc1 = sc1.set(k1, Vector(22), UnitsOfMeasure.NoUnits).set(k2, Vector(44), UnitsOfMeasure.NoUnits)
+      sc1 = sc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
 
       val v1 = sc1(k1)
       val v2 = sc1(k2)
@@ -157,22 +135,22 @@ class Config3Tests extends FunSpec {
 
     it("should update for the same key with set") {
       var sc1 = SetupConfig(ck1)
-      sc1 = sc1.set(k2, Vector(22), UnitsOfMeasure.NoUnits)
+      sc1 = sc1.set(k2, NoUnits, 22)
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(22))
 
-      sc1 = sc1.set(k2, Vector(33), UnitsOfMeasure.NoUnits)
+      sc1 = sc1.set(k2, NoUnits, 33)
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(33))
     }
 
     it("should update for the same key with add") {
       var sc1 = SetupConfig(ck1)
-      sc1 = sc1.add(k2.set(22).withUnits(UnitsOfMeasure.NoUnits))
+      sc1 = sc1.add(k2.set(22).withUnits(NoUnits))
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(22))
 
-      sc1 = sc1.add(k2.set(33).withUnits(UnitsOfMeasure.NoUnits))
+      sc1 = sc1.add(k2.set(33).withUnits(NoUnits))
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(33))
     }
@@ -184,11 +162,11 @@ class Config3Tests extends FunSpec {
     val k2 = StringKey("windspeed")
 
     var sc1 = SetupConfig(ck1)
-    sc1 = sc1.set(k1, Vector(22), UnitsOfMeasure.NoUnits)
+    sc1 = sc1.set(k1, NoUnits, 22)
     assert(sc1.exists(k1))
     assert(sc1(k1) == Vector(22))
 
-    sc1 = sc1.set(k2, Vector("bob"), UnitsOfMeasure.NoUnits)
+    sc1 = sc1.set(k2, NoUnits, "bob")
     assert(sc1.exists(k2))
     assert(sc1(k2) == Vector("bob"))
 
@@ -213,9 +191,9 @@ class Config3Tests extends FunSpec {
       assert(i1.units == NoUnits)
       assert(i1(1) == 3)
 
-      val i2 = t1.set(10, 30, 50, 70).withUnits(UnitsOfMeasure.Deg)
+      val i2 = t1.set(10, 30, 50, 70).withUnits(Deg)
       assert(i2.value == Vector(10, 30, 50, 70))
-      assert(i2.units == UnitsOfMeasure.Deg)
+      assert(i2.units == Deg)
       assert(i2(1) == 30)
     }
     it("should also allow setting with sequence") {

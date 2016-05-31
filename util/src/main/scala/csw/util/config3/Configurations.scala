@@ -4,6 +4,7 @@ import java.util.Optional
 
 import csw.util.config3.UnitsOfMeasure.Units
 
+import scala.annotation.varargs
 import scala.compat.java8.OptionConverters._
 import scala.language.implicitConversions
 
@@ -72,15 +73,12 @@ object Configurations {
       create(configRemoved.items + item)
     }
 
-    def set[S, J](key: Key[S, J], v: Vector[S], units: Units): T = {
-      val newItem = key.set(v: _*).withUnits(units)
-      add(newItem)
-    }
-
     def set[S, J](key: Key[S, J], units: Units, v: S*): T = {
       val newItem = key.set(v: _*).withUnits(units)
       add(newItem)
     }
+
+    def jset[S, J](key: Key[S, J], units: Units, v: S*): T = set(key, units, v: _*)
 
     /**
      * Lookup a Key in Map and returns an Option
@@ -149,10 +147,12 @@ object Configurations {
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
-    // XXX FIXME The following three seem to be needed by Java since Java can't handle the return type of ConfigType add/set
+    // The following three seem to be needed by Java since Java can't handle the return type of ConfigType add/set
     override def add[S, J](item: Item[S, J]): SetupConfig = super.add(item)
 
-    override def set[S, J](key: Key[S, J], v: Vector[S], units: Units): SetupConfig = super.set[S, J](key, v, units)
+    override def set[S, J](key: Key[S, J], units: Units, v: S*): SetupConfig = super.set[S, J](key, units, v: _*)
+
+    @varargs override def jset[S, J](key: Key[S, J], units: Units, v: S*): SetupConfig = super.jset(key, units, v: _*)
 
     override def remove[S, J](key: Key[S, J]): SetupConfig = super.remove[S, J](key)
 
@@ -165,10 +165,12 @@ object Configurations {
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
-    // The following three seem to be needed by Java since Java can't handle the return type of ConfigType add/set
+    // The following seem to be needed by Java since Java can't handle the return type of ConfigType add/set
     override def add[S, J](item: Item[S, J]): ObserveConfig = super.add(item)
 
-    override def set[S, J](key: Key[S, J], v: Vector[S], units: Units): ObserveConfig = super.set[S, J](key, v, units)
+    override def set[S, J](key: Key[S, J], units: Units, v: S*): ObserveConfig = super.set[S, J](key, units, v: _*)
+
+    @varargs override def jset[S, J](key: Key[S, J], units: Units, v: S*): ObserveConfig = super.jset(key, units, v: _*)
 
     override def remove[S, J](key: Key[S, J]): ObserveConfig = super.remove[S, J](key)
 

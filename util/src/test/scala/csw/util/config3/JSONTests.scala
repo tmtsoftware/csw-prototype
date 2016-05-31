@@ -21,10 +21,11 @@ object JSONTests extends DefaultJsonProtocol {
         case Seq(JsString(keyName), JsArray(v), u) ⇒
           val units = ConfigJSON.unitsFormat.read(u)
           val value = v.map(MyData2.myData2Format.read)
-          GenericItem[MyData2](keyName, value, units)
+          GenericItem[MyData2]("MyData2", keyName, value, units)
         case _ ⇒ throw new DeserializationException("Color expected")
       }
     }
+
     GenericItem.register("MyData2", reader)
   }
 
@@ -32,6 +33,7 @@ object JSONTests extends DefaultJsonProtocol {
 
 //noinspection ScalaUnusedSymbol
 class JSONTests extends FunSpec {
+
   import JSONTests._
 
   private val s1: String = "encoder"
@@ -185,7 +187,7 @@ class JSONTests extends FunSpec {
 
   describe("Test GenericItem") {
     it("Should allow a GenericItem with a custom type") {
-      val k1 = GenericKey[MyData2]("MyData2")
+      val k1 = GenericKey[MyData2]("MyData2", "testData")
       val d1 = MyData2(1, 2.0f, 3.0, "4")
       val d2 = MyData2(10, 20.0f, 30.0, "40")
       val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.Meters)
@@ -207,6 +209,31 @@ class JSONTests extends FunSpec {
 
       val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.Meters, d1, d2)
       assert(sc2 == sc1)
+    }
+
+    describe("Test Custom RaDecItem") {
+      it("Should allow cutom RaDecItem") {
+        val k1 = GenericKey[RaDec]("RaDec", "coords")
+        val c1 = RaDec(7.3, 12.1)
+        val c2 = RaDec(9.1, 2.9)
+        val i1 = k1.set(c1, c2)
+        val sc1 = SetupConfig(ck).add(i1)
+        assert(sc1.get(k1).get.value.size == 2)
+        assert(sc1.get(k1).get.value(0) == c1)
+        assert(sc1.get(k1).get.value(1) == c2)
+
+        val sc1out = ConfigJSON.writeConfig(sc1)
+        info("sc1out: " + sc1out.prettyPrint)
+
+        val sc1in = ConfigJSON.readConfig(sc1out)
+        assert(sc1.equals(sc1in))
+        assert(sc1in.get(k1).get.value.size == 2)
+        assert(sc1in.get(k1).get.value(0) == c1)
+        assert(sc1in.get(k1).get.value(1) == c2)
+
+        val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.NoUnits, c1, c2)
+        assert(sc2 == sc1)
+      }
     }
   }
 }

@@ -1,9 +1,7 @@
 package javacsw.util.config3;
 
-import csw.util.config3.CharItem;
-import csw.util.config3.CharKey;
-import csw.util.config3.ConfigJSON;
-import csw.util.config3.Subsystem;
+import csw.util.config3.*;
+import csw.util.config3.Configurations.SetupConfig;
 import org.junit.Test;
 import spray.json.JsValue;
 
@@ -28,6 +26,30 @@ public class JSONTests {
         JsValue json = ConfigJSON.subsystemFormat().write(wfos);
         Subsystem sub = ConfigJSON.subsystemFormat().read(json);
         assert(sub.equals(wfos));
+    }
+
+    @Test
+    public void TestCustomRaDecItem() {
+        GenericKey<RaDec> k1 = new GenericKey<>("RaDec", "coords", RaDec.raDecFormat());
+        RaDec c1 = new RaDec(7.3, 12.1);
+        RaDec c2 = new RaDec(9.1, 2.9);
+        Item<RaDec, RaDec> i1 = k1.jset(c1, c2);
+        SetupConfig sc1 = new SetupConfig(ck).add(i1);
+        assert(sc1.get(k1).get().value().size() == 2);
+        assert(sc1.get(k1).get().jget(0).equals(c1));
+        assert(sc1.get(k1).get().jget(1).equals(c2));
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assert(sc1.equals(sc1in));
+        assert(sc1in.get(k1).get().value().size() == 2);
+        assert(sc1in.get(k1).get().jget(0).equals(c1));
+        assert(sc1in.get(k1).get().jget(1).equals(c2));
+
+        SetupConfig sc2 = new SetupConfig(ck).jset(k1, JUnitsOfMeasure.NoUnits, c1, c2);
+        assert(sc2.equals(sc1));
     }
 
     @Test

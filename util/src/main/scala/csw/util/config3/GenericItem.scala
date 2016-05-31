@@ -5,6 +5,8 @@ import scala.language.implicitConversions
 import csw.util.config3.UnitsOfMeasure.Units
 import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat, JsonReader}
 
+import scala.annotation.varargs
+
 object GenericItem {
 
   /**
@@ -18,7 +20,7 @@ object GenericItem {
   /**
    * Sets the JSON reader and writer for a GenericItem
    *
-   * @param typeName the tag name in JSON
+   * @param typeName   the tag name in JSON
    * @param jsonReader implements creating this object from JSON
    * @tparam T the (scala) type parameter of the GenericItem
    */
@@ -36,11 +38,12 @@ object GenericItem {
 /**
  * The type of a value for an GenericKey
  *
- * @param keyName the name of the key
- * @param value   the value for the key
- * @param units   the units of the value
+ * @param typeName the name of the type S (for JSON serialization)
+ * @param keyName  the name of the key
+ * @param value    the value for the key
+ * @param units    the units of the value
  */
-sealed case class GenericItem[S: JsonFormat](keyName: String, value: Vector[S], units: Units) extends Item[S, S] {
+sealed case class GenericItem[S: JsonFormat](typeName: String, keyName: String, value: Vector[S], units: Units) extends Item[S, S] {
 
   /**
    * @return a JsValue representing this item
@@ -74,9 +77,10 @@ sealed case class GenericItem[S: JsonFormat](keyName: String, value: Vector[S], 
 /**
  * A key of S values
  *
- * @param nameIn the name of the key
+ * @param typeName the name of the type S (for JSON serialization)
+ * @param nameIn   the name of the key
  */
-case class GenericKey[S: JsonFormat](nameIn: String) extends Key[S, S](nameIn) {
+case class GenericKey[S: JsonFormat](typeName: String, nameIn: String) extends Key[S, S](nameIn) {
 
   /**
    * Sets the values for the key using a variable number of arguments
@@ -84,7 +88,7 @@ case class GenericKey[S: JsonFormat](nameIn: String) extends Key[S, S](nameIn) {
    * @param v the values
    * @return a new item containing the key name, values and no units
    */
-  override def set(v: S*): Item[S, S] = GenericItem(keyName, v.toVector, UnitsOfMeasure.NoUnits)
+  override def set(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
 
   /**
    * Java API: Sets the values for the key using a variable number of arguments
@@ -92,6 +96,6 @@ case class GenericKey[S: JsonFormat](nameIn: String) extends Key[S, S](nameIn) {
    * @param v the values
    * @return a new item containing the key name, values and no units
    */
-  override def jset(v: S*): Item[S, S] = GenericItem(keyName, v.toVector, UnitsOfMeasure.NoUnits)
+  @varargs override def jset(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
 }
 
