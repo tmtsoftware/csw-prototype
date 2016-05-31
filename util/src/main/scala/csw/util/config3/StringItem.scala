@@ -14,13 +14,6 @@ import csw.util.config3.UnitsOfMeasure.Units
  * @param units   the units of the value
  */
 final case class StringItem(keyName: String, value: Vector[String], units: Units) extends Item[String, java.lang.String] {
-  //  /**
-  //    * Java API
-  //    *
-  //    * @return the values as a Scala Vector
-  //    */
-  //  override def jvalue: Vector[java.lang.String] = value.map(i ⇒ i: java.lang.String)
-
   /**
    * Java API
    *
@@ -51,15 +44,6 @@ final case class StringItem(keyName: String, value: Vector[String], units: Units
  */
 final case class StringKey(nameIn: String) extends Key[String, java.lang.String](nameIn) {
 
-  //  /**
-  //    * Sets the values for the key
-  //    *
-  //    * @param v     the values
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  override def set(v: Vector[String], units: Units) = StringItem(keyName, v, units)
-
   /**
    * Sets the values for the key using a variable number of arguments
    *
@@ -67,24 +51,6 @@ final case class StringKey(nameIn: String) extends Key[String, java.lang.String]
    * @return a new item containing the key name, values and no units
    */
   override def set(v: String*) = StringItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
-
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: Vector[java.lang.String], units: Units) = StringItem(keyName, v.map(i ⇒ i: String), units)
-  //
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: java.util.List[java.lang.String], units: Units) = jset(v.asScala.toVector, units)
 
   /**
    * Java API: Sets the values for the key using a variable number of arguments

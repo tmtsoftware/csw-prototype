@@ -14,13 +14,6 @@ import csw.util.config3.UnitsOfMeasure.Units
  * @param units   the units of the value
  */
 final case class DoubleItem(keyName: String, value: Vector[Double], units: Units) extends Item[Double, java.lang.Double] {
-  //  /**
-  //    * Java API
-  //    *
-  //    * @return the values as a Scala Vector
-  //    */
-  //  override def jvalue: Vector[java.lang.Double] = value.map(i ⇒ i: java.lang.Double)
-
   /**
    * Java API
    *
@@ -51,15 +44,6 @@ final case class DoubleItem(keyName: String, value: Vector[Double], units: Units
  */
 final case class DoubleKey(nameIn: String) extends Key[Double, java.lang.Double](nameIn) {
 
-  //  /**
-  //    * Sets the values for the key
-  //    *
-  //    * @param v     the values
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  override def set(v: Vector[Double], units: Units) = DoubleItem(keyName, v, units)
-
   /**
    * Sets the values for the key using a variable number of arguments
    *
@@ -67,24 +51,6 @@ final case class DoubleKey(nameIn: String) extends Key[Double, java.lang.Double]
    * @return a new item containing the key name, values and no units
    */
   override def set(v: Double*) = DoubleItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
-
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: Vector[java.lang.Double], units: Units) = DoubleItem(keyName, v.map(i ⇒ i: Double), units)
-
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: java.util.List[java.lang.Double], units: Units) = jset(v.asScala.toVector, units)
 
   /**
    * Java API: Sets the values for the key using a variable number of arguments

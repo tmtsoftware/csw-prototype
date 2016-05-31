@@ -28,6 +28,23 @@ object GenericItem {
    * @return the JsonFormat, if registered
    */
   def lookup(typeName: String): Option[JsonReaderFunc] = jsonReaderMap.get(typeName)
+
+  ////  def read(value: JsValue) = {
+  ////    value.asJsObject.getFields("name", "red", "green", "blue") match {
+  ////      case Seq(JsString(name), JsNumber(red), JsNumber(green), JsNumber(blue)) =>
+  ////        new Color(name, red.toInt, green.toInt, blue.toInt)
+  ////      case _ => throw new DeserializationException("Color expected")
+  ////    }
+  ////  }
+  //
+  //  def fromJson[S: JsonFormat](value: JsValue): GenericItem[S] = {
+  //        value.asJsObject.getFields("keyName", "value", "units") match {
+  //          case Seq(JsString(keyName), JsArray(vSeq), JsObject(green), JsNumber(blue)) =>
+  //            new Color(name, red.toInt, green.toInt, blue.toInt)
+  //          case _ => throw new DeserializationException("Color expected")
+  //        }
+  //
+  //  }
 }
 
 /**
@@ -39,9 +56,17 @@ object GenericItem {
  */
 sealed case class GenericItem[S: JsonFormat](keyName: String, value: Vector[S], units: Units) extends Item[S, S] {
 
-  private[config3] def jsHelper: (JsString, JsArray) = {
-    val jsonFormat = implicitly[JsonFormat[S]]
-    (JsString(keyName), JsArray(value.map(jsonFormat.write)))
+  /**
+   * @return a JsValue representing this item
+   */
+  def toJson: JsValue = {
+    val valueFormat = implicitly[JsonFormat[S]]
+    val unitsFormat = ConfigJSON.unitsFormat
+    JsObject(
+      "keyName" → JsString(keyName),
+      "value" → JsArray(value.map(valueFormat.write)),
+      "units" → unitsFormat.write(units)
+    )
   }
 
   /**
@@ -60,24 +85,12 @@ sealed case class GenericItem[S: JsonFormat](keyName: String, value: Vector[S], 
   override def withUnits(unitsIn: Units): Item[S, S] = copy(units = unitsIn)
 }
 
-//object GenericKey {
-//  def apply[S: JsonFormat](nameIn: String): GenericKey[S] = new GenericKey(nameIn)
-//}
-
 /**
  * A key of S values
  *
  * @param nameIn the name of the key
  */
 case class GenericKey[S: JsonFormat](nameIn: String) extends Key[S, S](nameIn) {
-
-  //  /**
-  //   * Constructor that assumes Scala and Java types are the same
-  //   * @param nameIn the name of the key
-  //   */
-  //  def this(nameIn: String) {
-  //    this(nameIn, (x: S) ⇒ x.asInstanceOf[J], (y: J) ⇒ y.asInstanceOf[S])
-  //  }
 
   /**
    * Sets the values for the key using a variable number of arguments

@@ -6,15 +6,25 @@ import spray.json._
 import ConfigJSON._
 
 object JSONTests extends DefaultJsonProtocol {
+
   case class MyData2(i: Int, f: Float, d: Double, s: String)
-  implicit val myData2Format = jsonFormat4(MyData2.apply)
-  implicit val myGenericItemData2Format = jsonFormat3(GenericItem.apply[MyData2])
-  //  val myGenericItemData2Format = jsonFormat[String, Vector[MyData2], Unit](GenericItem.apply, "keyName", "value", "units")
-  def reader(json: JsValue): GenericItem[MyData2] = {
-    println(s"XXX reader $json")
-    myGenericItemData2Format.read(json)
+
+  case object MyData2 {
+    implicit val myData2Format = jsonFormat4(MyData2.apply)
+
+    def reader(json: JsValue): GenericItem[MyData2] = {
+      println(s"XXX reader $json")
+      json.asJsObject.getFields("keyName", "value", "units") match {
+        case Seq(JsString(keyName), JsArray(v), u) ⇒
+          val units = ConfigJSON.unitsFormat.read(u)
+          val value = v.map(MyData2.myData2Format.read)
+          GenericItem[MyData2](keyName, value, units)
+        case _ ⇒ throw new DeserializationException("Color expected")
+      }
+    }
+    GenericItem.register("MyData2", reader)
   }
-  GenericItem.register("MyData2", reader)
+
 }
 
 //noinspection ScalaUnusedSymbol
@@ -179,6 +189,7 @@ class JSONTests extends FunSpec {
       val d2 = MyData2(10, 20.0f, 30.0, "40")
       val i1 = k1.set(d1, d2)
       val sc1 = SetupConfig(ck).add(i1)
+
       val sc1out = ConfigJSON.writeConfig(sc1)
       info("sc1out: " + sc1out.prettyPrint)
 

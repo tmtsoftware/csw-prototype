@@ -53,15 +53,6 @@ final case class BooleanKey(nameIn: String) extends Key[Boolean, java.lang.Boole
    */
   override def set(v: Boolean*) = BooleanItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: java.util.List[java.lang.Boolean], units: Units): BooleanItem = BooleanItem(keyName, v.asScala.toVector.map(i ⇒ i: Boolean), units)
-
   /**
    * Java API: Sets the values for the key using a variable number of arguments
    *

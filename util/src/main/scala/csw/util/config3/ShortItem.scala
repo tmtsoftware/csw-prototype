@@ -14,12 +14,6 @@ import csw.util.config3.UnitsOfMeasure.Units
  * @param units   the units of the value
  */
 final case class ShortItem(keyName: String, value: Vector[Short], units: Units) extends Item[Short, java.lang.Short] {
-  //  /**
-  //    * Java API
-  //    *
-  //    * @return the values as a Scala Vector
-  //    */
-  //  override def jvalue: Vector[java.lang.Short] = value.map(i ⇒ i: java.lang.Short)
 
   /**
    * Java API
@@ -51,15 +45,6 @@ final case class ShortItem(keyName: String, value: Vector[Short], units: Units) 
  */
 final case class ShortKey(nameIn: String) extends Key[Short, java.lang.Short](nameIn) {
 
-  //  /**
-  //    * Sets the values for the key
-  //    *
-  //    * @param v     the values
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  override def set(v: Vector[Short], units: Units) = ShortItem(keyName, v, units)
-
   /**
    * Sets the values for the key using a variable number of arguments
    *
@@ -67,24 +52,6 @@ final case class ShortKey(nameIn: String) extends Key[Short, java.lang.Short](na
    * @return a new item containing the key name, values and no units
    */
   override def set(v: Short*) = ShortItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
-
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: Vector[java.lang.Short], units: Units) = ShortItem(keyName, v.map(i ⇒ i: Short), units)
-  //
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: java.util.List[java.lang.Short], units: Units) = jset(v.asScala.toVector, units)
 
   /**
    * Java API: Sets the values for the key using a variable number of arguments

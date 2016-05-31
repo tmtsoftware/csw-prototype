@@ -22,13 +22,6 @@ trait Item[+S, +J] {
    */
   def value: Vector[S]
 
-  //  /**
-  //    * Internal Java API (Needed for the implementation: Java callers should use jvalues() instead)
-  //    *
-  //    * @return the values as a Scala Vector of Java values
-  //    */
-  //  def jvalue: Vector[J]
-
   /**
    * @return the units for the values
    */
@@ -68,11 +61,7 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
 
   override def hashCode: Int = 41 * keyName.hashCode
 
-  //  def set(v: Vector[S], units: Units): Item[S, J]
-
   def set(v: S*): Item[S, J]
-
-  //  def jset(v: Vector[J], units: Units): Item[S, J]
 
   @varargs def jset(v: J*): Item[S, J]
 }

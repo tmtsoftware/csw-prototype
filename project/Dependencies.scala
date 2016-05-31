@@ -6,8 +6,8 @@ object Dependencies {
 
   val scalaVersion = "2.11.8"
 
-  val akkaVersion = "2.4.4"
-  val akkaStreamsVersion = "2.4.4"
+  val akkaVersion = "2.4.6"
+  val akkaStreamsVersion = "2.4.6"
 
   val hornetqVersion = "2.4.7.Final"
 
@@ -35,7 +35,7 @@ object Dependencies {
 
   val upickle = "com.lihaoyi" %% "upickle" % "0.4.0" // MIT
   val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1" // SCALA LICENSE (BSD-like)
-  val sprayJsonShapeless = "com.github.fommil" %% "spray-json-shapeless" % "1.2.0" // ApacheV2
+//  val sprayJsonShapeless = "com.github.fommil" %% "spray-json-shapeless" % "1.2.0" // ApacheV2
 
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
   val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11" // TMate Open Source License
