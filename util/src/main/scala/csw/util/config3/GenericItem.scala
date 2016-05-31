@@ -1,10 +1,34 @@
 package csw.util.config3
 
-import scala.annotation.varargs
-import scala.collection.JavaConverters._
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 import csw.util.config3.UnitsOfMeasure.Units
+import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat, JsonReader}
+
+object GenericItem {
+
+  type JsonReaderFunc = JsValue ⇒ GenericItem[_]
+
+  // Used to register a JsonFormat instance to use to read and write JSON for a given GenericItem subclass
+  private var jsonReaderMap = Map[String, JsonReaderFunc]()
+
+  /**
+   * Sets the JSON reader and writer for a GenericItem
+   *
+   * @param typeName the tag name in JSON
+   * @param jsonReader implements creating this object from JSON
+   * @tparam T the (scala) type parameter of the GenericItem
+   */
+  def register[T](typeName: String, jsonReader: JsonReaderFunc): Unit = jsonReaderMap += (typeName → jsonReader)
+
+  /**
+   * Lookup the JsonFormat for the given type name
+   *
+   * @param typeName the JSON key
+   * @return the JsonFormat, if registered
+   */
+  def lookup(typeName: String): Option[JsonReaderFunc] = jsonReaderMap.get(typeName)
+}
 
 /**
  * The type of a value for an GenericKey
@@ -12,29 +36,20 @@ import csw.util.config3.UnitsOfMeasure.Units
  * @param keyName the name of the key
  * @param value   the value for the key
  * @param units   the units of the value
- * @param fsj       a function that converts the Scala value to a Java Value
  */
-final case class GenericItem[S, J](keyName: String, value: Vector[S], units: Units, fsj: S ⇒ J) extends Item[S, J] {
-  //  /**
-  //    * Java API
-  //    *
-  //    * @return the values as a Scala Vector
-  //    */
-  //  override def jvalue: Vector[J] = value.map(fsj)
+sealed case class GenericItem[S: JsonFormat](keyName: String, value: Vector[S], units: Units) extends Item[S, S] {
 
-  //  /**
-  //    * Java API
-  //    *
-  //    * @return the values as a Java List
-  //    */
-  //  def jvalues: java.util.List[J] = jvalue.asJava
+  private[config3] def jsHelper: (JsString, JsArray) = {
+    val jsonFormat = implicitly[JsonFormat[S]]
+    (JsString(keyName), JsArray(value.map(jsonFormat.write)))
+  }
 
   /**
    * Java API
    *
    * @return the value at the given index
    */
-  override def jget(index: Int): J = fsj(value(index))
+  override def jget(index: Int): S = value(index)
 
   /**
    * Set the units of the value
@@ -42,38 +57,27 @@ final case class GenericItem[S, J](keyName: String, value: Vector[S], units: Uni
    * @param unitsIn the units to set
    * @return a copy of this item with the given units set
    */
-  override def withUnits(unitsIn: Units): Item[S, J] = copy(units = unitsIn)
+  override def withUnits(unitsIn: Units): Item[S, S] = copy(units = unitsIn)
 }
 
-object GenericKey {
-  def apply[S, J](nameIn: String): GenericKey[S, J] = new GenericKey(nameIn)
-}
+//object GenericKey {
+//  def apply[S: JsonFormat](nameIn: String): GenericKey[S] = new GenericKey(nameIn)
+//}
 
 /**
  * A key of S values
  *
  * @param nameIn the name of the key
- * @param fsj    a function that converts the Scala value to a Java Value
- * @param fjs    a function that converts the Java value to a Scala Value
  */
-case class GenericKey[S, J](nameIn: String, fsj: S ⇒ J, fjs: J ⇒ S) extends Key[S, J](nameIn) {
-
-  /**
-   * Constructor that assumes Scala and Java types are the same
-   * @param nameIn the name of the key
-   */
-  def this(nameIn: String) {
-    this(nameIn, (x: S) ⇒ x.asInstanceOf[J], (y: J) ⇒ y.asInstanceOf[S])
-  }
+case class GenericKey[S: JsonFormat](nameIn: String) extends Key[S, S](nameIn) {
 
   //  /**
-  //    * Sets the values for the key
-  //    *
-  //    * @param v     the values
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  override def set(v: Vector[S], units: Units) = GenericItem(keyName, v, units, fsj)
+  //   * Constructor that assumes Scala and Java types are the same
+  //   * @param nameIn the name of the key
+  //   */
+  //  def this(nameIn: String) {
+  //    this(nameIn, (x: S) ⇒ x.asInstanceOf[J], (y: J) ⇒ y.asInstanceOf[S])
+  //  }
 
   /**
    * Sets the values for the key using a variable number of arguments
@@ -81,25 +85,7 @@ case class GenericKey[S, J](nameIn: String, fsj: S ⇒ J, fjs: J ⇒ S) extends 
    * @param v the values
    * @return a new item containing the key name, values and no units
    */
-  override def set(v: S*): Item[S, J] = GenericItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits, fsj)
-
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: Vector[J], units: Units) = GenericItem(keyName, v.map(fjs), units, fsj)
-  //
-  //  /**
-  //    * Java API to set the values for a key
-  //    *
-  //    * @param v     the values as a java list
-  //    * @param units the units of the values
-  //    * @return a new item containing the key name, values and units
-  //    */
-  //  def jset(v: java.util.List[J], units: Units) = jset(v.asScala.toVector, units)
+  override def set(v: S*): Item[S, S] = GenericItem(keyName, v.toVector, UnitsOfMeasure.NoUnits)
 
   /**
    * Java API: Sets the values for the key using a variable number of arguments
@@ -107,7 +93,6 @@ case class GenericKey[S, J](nameIn: String, fsj: S ⇒ J, fjs: J ⇒ S) extends 
    * @param v the values
    * @return a new item containing the key name, values and no units
    */
-  //  @varargs
-  override def jset(v: J*): Item[S, J] = GenericItem(keyName, v.map(fjs).toVector, units = UnitsOfMeasure.NoUnits, fsj)
+  override def jset(v: S*): Item[S, S] = GenericItem(keyName, v.toVector, UnitsOfMeasure.NoUnits)
 }
 

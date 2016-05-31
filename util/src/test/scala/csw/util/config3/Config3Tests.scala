@@ -3,10 +3,12 @@ package csw.util.config3
 import csw.util.config3.Configurations.SetupConfig
 import csw.util.config3.UnitsOfMeasure.{Meters, NoUnits}
 import org.scalatest.FunSpec
-
+import spray.json.DefaultJsonProtocol
 
 object Config3Tests {
+  import DefaultJsonProtocol._
   case class MyData(i: Int, f: Float, d: Double, s: String)
+  implicit val MyDataFormat = jsonFormat4(MyData.apply)
 }
 
 //noinspection ComparingUnrelatedTypes,ScalaUnusedSymbol
@@ -51,30 +53,30 @@ class Config3Tests extends FunSpec {
     }
   }
 
-  describe("Basic array tests") {
-    val k1 = GenericKey[Int, Integer]("atest")
-
-    it("Should allow an Int array") {
-      val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.NoUnits)
-      assert(i1.value == Vector(1, 2, 3))
-      val i2 = k1.set(1, 2, 3)
-      assert(i2.value == Vector(1, 2, 3))
-      assert(i2.units == UnitsOfMeasure.NoUnits)
-    }
-
-    it("Should use key equals") {
-      val k2 = GenericKey[Int, Integer]("atest1")
-      val k3 = GenericKey[Int, Integer]("atest")
-      val k4 = GenericKey[Float, java.lang.Float]("atest")
-
-      assert(k1 == k1)
-      assert(k1 != k2)
-      assert(k2 != k3)
-    }
-  }
+  //  describe("Basic array tests") {
+  //    val k1 = GenericKey[Int, Integer]("atest")
+  //
+  //    it("Should allow an Int array") {
+  //      val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.NoUnits)
+  //      assert(i1.value == Vector(1, 2, 3))
+  //      val i2 = k1.set(1, 2, 3)
+  //      assert(i2.value == Vector(1, 2, 3))
+  //      assert(i2.units == UnitsOfMeasure.NoUnits)
+  //    }
+  //
+  //    it("Should use key equals") {
+  //      val k2 = GenericKey[Int, Integer]("atest1")
+  //      val k3 = GenericKey[Int, Integer]("atest")
+  //      val k4 = GenericKey[Float, java.lang.Float]("atest")
+  //
+  //      assert(k1 == k1)
+  //      assert(k1 != k2)
+  //      assert(k2 != k3)
+  //    }
+  //  }
 
   describe("Generic key tests") {
-    val k1 = GenericKey[MyData, MyData]("atest")
+    val k1 = GenericKey[MyData]("atest")
     val d1 = MyData(1, 2.0f, 3.0, "4")
     val d2 = MyData(10, 20.0f, 30.0, "40")
 
@@ -85,19 +87,7 @@ class Config3Tests extends FunSpec {
       assert(i1(1) == d2)
       assert(i1(0).i == 1)
     }
-
-    it("Should use key equals") {
-      val k2 = GenericKey[Int, Integer]("atest1")
-      val k3 = GenericKey[Int, Integer]("atest")
-      val k4 = GenericKey[Float, java.lang.Float]("atest")
-
-      assert(k1 == k1)
-      assert(k1 != k2)
-      assert(k2 != k3)
-    }
   }
-
-
 
   describe("Checking key updates") {
     val k1: IntKey = new IntKey("atest")

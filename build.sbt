@@ -43,7 +43,7 @@ val csw = (project in file("."))
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaHttpSprayJson, scalaReflect, upickle) ++
+    compile(akkaActor, akkaHttpSprayJson, scalaReflect, upickle, sprayJsonShapeless) ++
     test(scalaTest, junit)
   )
 

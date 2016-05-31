@@ -1,15 +1,26 @@
 package csw.util.config3
 
-import csw.util.config3.ConfigJSON._
 import csw.util.config3.Configurations.SetupConfig
 import org.scalatest.FunSpec
 import spray.json._
+import ConfigJSON._
 
-/**
- * TMT Source Code: 5/10/16.
- */
+object JSONTests extends DefaultJsonProtocol {
+  case class MyData2(i: Int, f: Float, d: Double, s: String)
+  implicit val myData2Format = jsonFormat4(MyData2.apply)
+  implicit val myGenericItemData2Format = jsonFormat3(GenericItem.apply[MyData2])
+  //  val myGenericItemData2Format = jsonFormat[String, Vector[MyData2], Unit](GenericItem.apply, "keyName", "value", "units")
+  def reader(json: JsValue): GenericItem[MyData2] = {
+    println(s"XXX reader $json")
+    myGenericItemData2Format.read(json)
+  }
+  GenericItem.register("MyData2", reader)
+}
+
 //noinspection ScalaUnusedSymbol
 class JSONTests extends FunSpec {
+  import JSONTests._
+
   private val s1: String = "encoder"
   private val s2: String = "filter"
   private val s3: String = "detectorTemp"
@@ -161,18 +172,42 @@ class JSONTests extends FunSpec {
     }
   }
 
+  describe("Trying to understand GenericItem") {
+    it("Should allow a GenericItem") {
+      val k1 = GenericKey[MyData2]("MyData2")
+      val d1 = MyData2(1, 2.0f, 3.0, "4")
+      val d2 = MyData2(10, 20.0f, 30.0, "40")
+      val i1 = k1.set(d1, d2)
+      val sc1 = SetupConfig(ck).add(i1)
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      info("sc1out: " + sc1out.prettyPrint)
+
+      val sc2out = ConfigJSON.readConfig(sc1out)
+      info("sc2out: " + sc2out)
+
+      //      val k1 = GenericKey[String, java.lang.String]("bob")
+      //      val i1 = k1.set("1", "2", "3").withUnits(UnitsOfMeasure.NoUnits)
+      //      info("j1: " + i1)
+      //
+      //      val j1 = i1.toJson
+      //      info("j1: " + j1.prettyPrint)
+      //      val in1 = j1.convertTo[GenericItem[String, java.lang.String]]
+      //      info("j1in: " + in1)
+    }
+  }
+
   // XXX TODO FIXME
-  //  describe("Trying to understand GenericItem") {
-  //    it("Should allow a citem") {
-  //      val k1 = GenericKey[String, java.lang.String]("bob", x ⇒ x, x ⇒ x)
-  //      val i1 = k1.set("1", "2", "3").withUnits(UnitsOfMeasure.NoUnits)
-  //      info("j1: " + i1)
+  //    describe("Trying to understand GenericItem") {
+  //      it("Should allow a GenericItem") {
+  //        val k1 = GenericKey[String, java.lang.String]("bob")
+  //        val i1 = k1.set("1", "2", "3").withUnits(UnitsOfMeasure.NoUnits)
+  //        info("j1: " + i1)
   //
-  //      val j1 = i1.toJson
-  //      info("j1citem: " + j1.prettyPrint)
-  //      val in1 = j1.convertTo[GenericItem[String, java.lang.String]]
-  //      info("j1in: " + in1)
+  //        val j1 = i1.toJson
+  //        info("j1: " + j1.prettyPrint)
+  //        val in1 = j1.convertTo[GenericItem[String, java.lang.String]]
+  //        info("j1in: " + in1)
+  //      }
   //    }
-  //  }
 }
 
