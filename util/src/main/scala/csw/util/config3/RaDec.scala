@@ -12,7 +12,8 @@ case class RaDec(ra: Double, dec: Double)
  */
 case object RaDec extends DefaultJsonProtocol {
 
-  val typeName = "RaDec"
+  // Name used as type key in JSON, and for registering the reader: Must be unique
+  private val typeName = "RaDec" // XXX Should use full path name here?
 
   /**
    * JSON read/write for RaDecItem

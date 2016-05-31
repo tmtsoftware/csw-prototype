@@ -47,6 +47,12 @@ public class JSONTests {
         assert(sc1in.get(k1).get().value().size() == 2);
         assert(sc1in.get(k1).get().jget(0).equals(c1));
         assert(sc1in.get(k1).get().jget(1).equals(c2));
+        RaDec cc1 = sc1in.get(k1).get().jget(0);
+        assert(cc1.ra() == 7.3);
+        assert(cc1.dec() == 12.1);
+        RaDec cc2 = sc1in.get(k1).get().jget(1);
+        assert(cc2.ra() == 9.1);
+        assert(cc2.dec() == 2.9);
 
         SetupConfig sc2 = new SetupConfig(ck).jset(k1, JUnitsOfMeasure.NoUnits, c1, c2);
         assert(sc2.equals(sc1));

@@ -63,6 +63,6 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
 
   def set(v: S*): Item[S, J]
 
-  @varargs def jset(v: J*): Item[S, J]
+  def jset(v: J*): Item[S, J]
 }
 
