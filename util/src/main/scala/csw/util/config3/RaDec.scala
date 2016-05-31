@@ -11,6 +11,9 @@ case class RaDec(ra: Double, dec: Double)
  * Since automatic JSON reading doesn't work with generic types, we need to do it manually here.
  */
 case object RaDec extends DefaultJsonProtocol {
+
+  val typeName = "RaDec"
+
   /**
    * JSON read/write for RaDecItem
    */
@@ -24,11 +27,11 @@ case object RaDec extends DefaultJsonProtocol {
       case Seq(JsString(keyName), JsArray(v), u) ⇒
         val units = ConfigJSON.unitsFormat.read(u)
         val value = v.map(RaDec.raDecFormat.read)
-        GenericItem[RaDec]("RaDec", keyName, value, units)
+        GenericItem[RaDec](typeName, keyName, value, units)
       case _ ⇒ throw new DeserializationException("Color expected")
     }
   }
 
-  GenericItem.register("RaDec", reader)
+  GenericItem.register(typeName, reader)
 }
 

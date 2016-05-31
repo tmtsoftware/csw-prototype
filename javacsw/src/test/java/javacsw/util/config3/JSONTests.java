@@ -63,12 +63,11 @@ public class JSONTests {
 
         // short item encode/decode
     }
-}
-//  describe("Test concrete items") {
-//
+
+    //  describe("Test concrete items") {
 //    it("short item encode/decode") {
 //      val k1 = ShortKey(s3)
-//      val i1 = k1.set(Vector[Short](-1), UnitsOfMeasure.NoUnits)
+//      val i1 = k1.set(-1).withUnits(UnitsOfMeasure.NoUnits)
 //
 //      val j1 = i1.toJson
 //      val in1 = j1.convertTo[ShortItem]
@@ -77,7 +76,7 @@ public class JSONTests {
 //
 //    it("int item encode/decode") {
 //      val k1 = IntKey(s3)
-//      val i1 = k1.set(Vector[Int](123), UnitsOfMeasure.NoUnits)
+//      val i1 = k1.set(23).withUnits(UnitsOfMeasure.NoUnits)
 //
 //      val j1 = i1.toJson
 //      val in1 = j1.convertTo[IntItem]
@@ -86,7 +85,7 @@ public class JSONTests {
 //
 //    it("long item encode/decode") {
 //      val k1 = LongKey(s1)
-//      val i1 = k1.set(Vector(123456L), UnitsOfMeasure.NoUnits)
+//      val i1 = k1.set(123456L).withUnits(UnitsOfMeasure.NoUnits)
 //
 //      val j1 = i1.toJson
 //      val in1 = j1.convertTo[LongItem]
@@ -95,7 +94,7 @@ public class JSONTests {
 //
 //    it("float item encode/decode") {
 //      val k1 = FloatKey(s1)
-//      val i1 = k1.set(Vector[Float](123.456f), UnitsOfMeasure.NoUnits)
+//      val i1 = k1.set(123.456f).withUnits(UnitsOfMeasure.NoUnits)
 //
 //      val j1 = i1.toJson
 //      val in1 = j1.convertTo[FloatItem]
@@ -104,7 +103,7 @@ public class JSONTests {
 //
 //    it("double item encode/decode") {
 //      val k1 = DoubleKey(s1)
-//      val i1 = k1.set(Vector[Double](123.456), UnitsOfMeasure.NoUnits)
+//      val i1 = k1.set(123.456).withUnits(UnitsOfMeasure.NoUnits)
 //
 //      val j1 = i1.toJson
 //      val in1 = j1.convertTo[DoubleItem]
@@ -113,7 +112,7 @@ public class JSONTests {
 //
 //    it("boolean item encode/decode") {
 //      val k1 = BooleanKey(s1)
-//      val i1 = k1.set(Vector(true, false), UnitsOfMeasure.NoUnits)
+//      val i1 = k1.set(true, false).withUnits(UnitsOfMeasure.NoUnits)
 //
 //      val j1 = i1.toJson
 //      info("j1: " + j1)
@@ -129,7 +128,7 @@ public class JSONTests {
 //
 //    it("string item encode/decode") {
 //      val k1 = StringKey(s2)
-//      val i1 = k1.set(Vector("Blue", "Green"), UnitsOfMeasure.NoUnits)
+//      val i1 = k1.set("Blue", "Green").withUnits(UnitsOfMeasure.NoUnits)
 //
 //      val j1 = i1.toJson
 //      val in1 = j1.convertTo[StringItem]
@@ -143,7 +142,7 @@ public class JSONTests {
 //    val k2 = StringKey(s2)
 //
 //    val i1 = k1.set(22, 33, 44)
-//    val i2 = k2.set(Vector("a", "b", "c"), UnitsOfMeasure.Deg)
+//    val i2 = k2.set("a", "b", "c").withUnits(UnitsOfMeasure.Deg)
 //
 //    it("should encode and decode items list") {
 //      // Use this to get a list to test
@@ -166,37 +165,74 @@ public class JSONTests {
 //    val k6 = BooleanKey("f")
 //    val k7 = StringKey("g")
 //
-//    val i1 = k1.set(Vector('d'), UnitsOfMeasure.NoUnits)
-//    val i2 = k2.set(Vector(22), UnitsOfMeasure.NoUnits)
-//    val i3 = k3.set(Vector(1234L), UnitsOfMeasure.NoUnits)
-//    val i4 = k4.set(Vector(123.45f), UnitsOfMeasure.Deg)
-//    val i5 = k5.set(Vector(123.456), UnitsOfMeasure.Meters)
+//    val i1 = k1.set('d').withUnits(UnitsOfMeasure.NoUnits)
+//    val i2 = k2.set(22).withUnits(UnitsOfMeasure.NoUnits)
+//    val i3 = k3.set(1234L).withUnits(UnitsOfMeasure.NoUnits)
+//    val i4 = k4.set(123.45f).withUnits(UnitsOfMeasure.Deg)
+//    val i5 = k5.set(123.456).withUnits(UnitsOfMeasure.Meters)
 //    val i6 = k6.set(false)
-//    val i7 = k7.set(Vector("GG495"), UnitsOfMeasure.Deg)
+//    val i7 = k7.set("GG495").withUnits(UnitsOfMeasure.Deg)
 //
-//    it ("Should encode/decode a setupconfig") {
+//    it("Should encode/decode a setupconfig") {
 //      val sc1 = SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
 //      assert(sc1.size == 7)
-//      //info("sc1: " + sc1)
 //
 //      val sc1out = ConfigJSON.writeConfig(sc1)
 //      info("sc1out: " + sc1out.prettyPrint)
 //      val sc1in = ConfigJSON.readConfig(sc1out)
-//      //assert(sc1 == sc1in)
 //    }
 //  }
 //
-//  describe("Trying to understand CItem") {
-//    it("Should allow a citem") {
-//      val k1 = SingleKey[String]("bob")
-//      val i1 = k1.set(Vector("1", "2", "3"), UnitsOfMeasure.NoUnits)
-//      info("j1: " + i1)
+//  describe("Test GenericItem") {
+//    it("Should allow a GenericItem with a custom type") {
+//      val k1 = GenericKey[MyData2]("MyData2", "testData")
+//      val d1 = MyData2(1, 2.0f, 3.0, "4")
+//      val d2 = MyData2(10, 20.0f, 30.0, "40")
+//      val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.Meters)
+//      val sc1 = SetupConfig(ck).add(i1)
+//      assert(sc1.get(k1).get.value.size == 2)
+//      assert(sc1.get(k1).get.value(0) == d1)
+//      assert(sc1.get(k1).get.value(1) == d2)
+//      assert(sc1.get(k1).get.units == UnitsOfMeasure.Meters)
 //
-//      val j1 = i1.toJson
-//      info("j1citem: " + j1.prettyPrint)
-//      val in1 = j1.convertTo[CItem[String]]
-//      info("j1in: " + in1)
+//      val sc1out = ConfigJSON.writeConfig(sc1)
+//      info("sc1out: " + sc1out.prettyPrint)
+//
+//      val sc1in = ConfigJSON.readConfig(sc1out)
+//      assert(sc1.equals(sc1in))
+//      assert(sc1in.get(k1).get.value.size == 2)
+//      assert(sc1in.get(k1).get.value(0) == d1)
+//      assert(sc1in.get(k1).get.value(1) == d2)
+//      assert(sc1in.get(k1).get.units == UnitsOfMeasure.Meters)
+//
+//      val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.Meters, d1, d2)
+//      assert(sc2 == sc1)
+//    }
+//
+//    describe("Test Custom RaDecItem") {
+//      it("Should allow cutom RaDecItem") {
+//        val k1 = GenericKey[RaDec]("RaDec", "coords")
+//        val c1 = RaDec(7.3, 12.1)
+//        val c2 = RaDec(9.1, 2.9)
+//        val i1 = k1.set(c1, c2)
+//        val sc1 = SetupConfig(ck).add(i1)
+//        assert(sc1.get(k1).get.value.size == 2)
+//        assert(sc1.get(k1).get.value(0) == c1)
+//        assert(sc1.get(k1).get.value(1) == c2)
+//
+//        val sc1out = ConfigJSON.writeConfig(sc1)
+//        info("sc1out: " + sc1out.prettyPrint)
+//
+//        val sc1in = ConfigJSON.readConfig(sc1out)
+//        assert(sc1.equals(sc1in))
+//        assert(sc1in.get(k1).get.value.size == 2)
+//        assert(sc1in.get(k1).get.value(0) == c1)
+//        assert(sc1in.get(k1).get.value(1) == c2)
+//
+//        val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.NoUnits, c1, c2)
+//        assert(sc2 == sc1)
+//      }
 //    }
 //  }
-//}
-//
+
+}
