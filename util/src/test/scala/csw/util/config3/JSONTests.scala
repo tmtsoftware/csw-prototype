@@ -183,8 +183,8 @@ class JSONTests extends FunSpec {
     }
   }
 
-  describe("Trying to understand GenericItem") {
-    it("Should allow a GenericItem") {
+  describe("Test GenericItem") {
+    it("Should allow a GenericItem with a custom type") {
       val k1 = GenericKey[MyData2]("MyData2")
       val d1 = MyData2(1, 2.0f, 3.0, "4")
       val d2 = MyData2(10, 20.0f, 30.0, "40")
@@ -204,21 +204,10 @@ class JSONTests extends FunSpec {
       assert(sc1in.get(k1).get.value(0) == d1)
       assert(sc1in.get(k1).get.value(1) == d2)
       assert(sc1in.get(k1).get.units == UnitsOfMeasure.Meters)
+
+      val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.Meters, d1, d2)
+      assert(sc2 == sc1)
     }
   }
-
-  // XXX TODO FIXME
-  //    describe("Trying to understand GenericItem") {
-  //      it("Should allow a GenericItem") {
-  //        val k1 = GenericKey[String, java.lang.String]("bob")
-  //        val i1 = k1.set("1", "2", "3").withUnits(UnitsOfMeasure.NoUnits)
-  //        info("j1: " + i1)
-  //
-  //        val j1 = i1.toJson
-  //        info("j1: " + j1.prettyPrint)
-  //        val in1 = j1.convertTo[GenericItem[String, java.lang.String]]
-  //        info("j1in: " + in1)
-  //      }
-  //    }
 }
 

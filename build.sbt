@@ -20,16 +20,12 @@ def container(deps: ModuleID*): Seq[ModuleID] = deps map (_ % "container")
 
 // Need a root project for unidoc plugin, so we can merge the scaladocs
 val csw = (project in file("."))
-  //  .configs(JavaDoc).
   .enablePlugins(cswbuild.UnidocRoot)
   .settings(UnidocRoot.settings(Nil, Nil): _*)
   .settings(defaultSettings: _*)
-  //  .settings(scalaJavaUnidocSettings: _*)
   .settings(siteSettings: _*)
-  //  .settings(unidocSettings: _*)
   .settings(
   name := "CSW - TMT Common Software",
-  //    site.addMappingsToSiteDir(mappings in(ScalaUnidoc, packageDoc), "latest/api"),
   preprocessVars := Map(
     "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
     "DOCROOT" -> "latest/api/index.html"
@@ -127,12 +123,11 @@ lazy val ts = project
 
 // Java APIs
 lazy val javacsw = project
-//  .configs(JavaDoc)
-//  .settings(javadocSettings: _*)
   .settings(defaultSettings: _*)
+  .settings(crossPaths := false) // important for running Java junit tests!
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
-      test(akkaTestKit, junit, scalaJava8Compat)
+      test(akkaTestKit, junit, junitInterface, scalaJava8Compat)
   ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts, containerCmd)
 
 

@@ -62,6 +62,7 @@ object Dependencies {
 
   val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" // ApacheV2
   val junit = "com.novocode" % "junit-interface" % "0.11" // Two-clause BSD-style license
+  val junitInterface = "com.novocode" % "junit-interface" % "0.11"
   val specs2 = "org.specs2" %% "specs2" % "3.7" // MIT-style
 
   // REPL dependencies

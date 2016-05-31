@@ -46,52 +46,48 @@ public class JConfig3Tests {
         assert (!k1.equals(k2));
     }
 
-    static final class MyData {
-        int x;
-        double y;
-        float z;
-
-//        static MyData f(MyData d) {return d;}
-
-        public MyData(int x, double y, float z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            MyData myData = (MyData) o;
-            return x == myData.x && Double.compare(myData.y, y) == 0 && Float.compare(myData.z, z) == 0;
-        }
-
-        @Override
-        public int hashCode() {
-            int result;
-            long temp;
-            result = x;
-            temp = Double.doubleToLongBits(y);
-            result = 31 * result + (int) (temp ^ (temp >>> 32));
-            result = 31 * result + (z != +0.0f ? Float.floatToIntBits(z) : 0);
-            return result;
-        }
-    }
-
-    @Test
-    public void basicArrayTests() {
-        GenericKey<MyData, MyData> k1 = new GenericKey<>("atest");
-
-        MyData d = new MyData(1, 2.0, 3.0F);
-        Item<MyData, MyData> i1 = k1.jset(d);
-//        GenericItem<MyData, MyData> i1a = i1.withUnits(JUnitsOfMeasure.NoUnits);
-        assert(i1.value().size() == 3);
-        assert(i1.jget(0).equals(d));
-        Item<MyData, MyData> i2 = k1.jset(d);
-        assert(i2.value().equals(i1.value()));
-        assert(i2.units() == JUnitsOfMeasure.NoUnits);
-    }
+//    static final class MyData {
+//        int x;
+//        double y;
+//        float z;
+//
+//        public MyData(int x, double y, float z) {
+//            this.x = x;
+//            this.y = y;
+//            this.z = z;
+//        }
+//
+//        @Override
+//        public boolean equals(Object o) {
+//            if (this == o) return true;
+//            if (o == null || getClass() != o.getClass()) return false;
+//            MyData myData = (MyData) o;
+//            return x == myData.x && Double.compare(myData.y, y) == 0 && Float.compare(myData.z, z) == 0;
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            int result;
+//            long temp;
+//            result = x;
+//            temp = Double.doubleToLongBits(y);
+//            result = 31 * result + (int) (temp ^ (temp >>> 32));
+//            result = 31 * result + (z != +0.0f ? Float.floatToIntBits(z) : 0);
+//            return result;
+//        }
+//    }
+//
+//    @Test
+//    public void basicArrayTests() {
+//        GenericKey<MyData> k1 = new GenericKey<>("atest");
+//        MyData d = new MyData(1, 2.0, 3.0F);
+//        Item<MyData, MyData> i1 = k1.jset(d);
+//        assert(i1.value().size() == 3);
+//        assert(i1.jget(0).equals(d));
+//        Item<MyData, MyData> i2 = k1.jset(d);
+//        assert(i2.value().equals(i1.value()));
+//        assert(i2.units() == JUnitsOfMeasure.NoUnits);
+//    }
 
     @Test
     public void CheckingKeyUpdates() {

@@ -7,6 +7,9 @@ import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat, JsonReader}
 
 object GenericItem {
 
+  /**
+   * type of a function that reads JSON and returns a new GenericItem
+   */
   type JsonReaderFunc = JsValue ⇒ GenericItem[_]
 
   // Used to register a JsonFormat instance to use to read and write JSON for a given GenericItem subclass
@@ -28,23 +31,6 @@ object GenericItem {
    * @return the JsonFormat, if registered
    */
   def lookup(typeName: String): Option[JsonReaderFunc] = jsonReaderMap.get(typeName)
-
-  ////  def read(value: JsValue) = {
-  ////    value.asJsObject.getFields("name", "red", "green", "blue") match {
-  ////      case Seq(JsString(name), JsNumber(red), JsNumber(green), JsNumber(blue)) =>
-  ////        new Color(name, red.toInt, green.toInt, blue.toInt)
-  ////      case _ => throw new DeserializationException("Color expected")
-  ////    }
-  ////  }
-  //
-  //  def fromJson[S: JsonFormat](value: JsValue): GenericItem[S] = {
-  //        value.asJsObject.getFields("keyName", "value", "units") match {
-  //          case Seq(JsString(keyName), JsArray(vSeq), JsObject(green), JsNumber(blue)) =>
-  //            new Color(name, red.toInt, green.toInt, blue.toInt)
-  //          case _ => throw new DeserializationException("Color expected")
-  //        }
-  //
-  //  }
 }
 
 /**
