@@ -4,37 +4,26 @@ import scala.annotation.varargs
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
-import csw.util.config3.UnitsOfMeasure.Units
+import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
 
 /**
  * The type of a value for an FloatKey
  *
  * @param keyName the name of the key
- * @param value   the value for the key
+ * @param values   the value for the key
  * @param units   the units of the value
  */
-final case class FloatItem(keyName: String, value: Vector[Float], units: Units) extends Item[Float, java.lang.Float] {
+final case class FloatItem(keyName: String, values: Vector[Float], units: Units) extends Item[Float, java.lang.Float] {
 
   /**
    * Java API
    *
    * @return the values as a Java List
    */
-  def jvalues: java.util.List[java.lang.Float] = value.map(i ⇒ i: java.lang.Float).asJava
+  def jvalues: java.util.List[java.lang.Float] = values.map(i ⇒ i: java.lang.Float).asJava
 
-  /**
-   * Java API
-   *
-   * @return the value at the given index
-   */
-  override def jget(index: Int): java.lang.Float = value(index)
+  override def jget(index: Int): java.lang.Float = values(index)
 
-  /**
-   * Set the units of the value
-   *
-   * @param unitsIn the units to set
-   * @return a copy of this item with the given units set
-   */
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }
 
@@ -45,20 +34,12 @@ final case class FloatItem(keyName: String, value: Vector[Float], units: Units) 
  */
 final case class FloatKey(nameIn: String) extends Key[Float, java.lang.Float](nameIn) {
 
-  /**
-   * Sets the values for the key using a variable number of arguments
-   *
-   * @param v the values
-   * @return a new item containing the key name, values and no units
-   */
+  override def set(v: Vector[Float], units: Units = NoUnits) = FloatItem(keyName, v, units)
+
   override def set(v: Float*) = FloatItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 
-  /**
-   * Java API: Sets the values for the key using a variable number of arguments
-   *
-   * @param v the values
-   * @return a new item containing the key name, values and no units
-   */
+  override def jset(v: java.util.List[java.lang.Float]): FloatItem = FloatItem(keyName, v.asScala.toVector.map(i ⇒ i: Float), NoUnits)
+
   @varargs
   override def jset(v: java.lang.Float*) = FloatItem(keyName, v.map(i ⇒ i: Float).toVector, units = UnitsOfMeasure.NoUnits)
 }

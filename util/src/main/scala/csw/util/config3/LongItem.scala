@@ -4,36 +4,25 @@ import scala.annotation.varargs
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
-import csw.util.config3.UnitsOfMeasure.Units
+import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
 
 /**
  * The type of a value for an LongKey
  *
  * @param keyName the name of the key
- * @param value   the value for the key
+ * @param values   the value for the key
  * @param units   the units of the value
  */
-final case class LongItem(keyName: String, value: Vector[Long], units: Units) extends Item[Long, java.lang.Long] {
+final case class LongItem(keyName: String, values: Vector[Long], units: Units) extends Item[Long, java.lang.Long] {
   /**
    * Java API
    *
    * @return the values as a Java List
    */
-  def jvalues: java.util.List[java.lang.Long] = value.map(i ⇒ i: java.lang.Long).asJava
+  def jvalues: java.util.List[java.lang.Long] = values.map(i ⇒ i: java.lang.Long).asJava
 
-  /**
-   * Java API
-   *
-   * @return the value at the given index
-   */
-  override def jget(index: Int): java.lang.Long = value(index)
+  override def jget(index: Int): java.lang.Long = values(index)
 
-  /**
-   * Set the units of the value
-   *
-   * @param unitsIn the units to set
-   * @return a copy of this item with the given units set
-   */
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }
 
@@ -44,20 +33,12 @@ final case class LongItem(keyName: String, value: Vector[Long], units: Units) ex
  */
 final case class LongKey(nameIn: String) extends Key[Long, java.lang.Long](nameIn) {
 
-  /**
-   * Sets the values for the key using a variable number of arguments
-   *
-   * @param v the values
-   * @return a new item containing the key name, values and no units
-   */
+  override def set(v: Vector[Long], units: Units = NoUnits) = LongItem(keyName, v, units)
+
   override def set(v: Long*) = LongItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 
-  /**
-   * Java API: Sets the values for the key using a variable number of arguments
-   *
-   * @param v the values
-   * @return a new item containing the key name, values and no units
-   */
+  override def jset(v: java.util.List[java.lang.Long]): LongItem = LongItem(keyName, v.asScala.toVector.map(i ⇒ i: Long), NoUnits)
+
   @varargs
   override def jset(v: java.lang.Long*) = LongItem(keyName, v.map(i ⇒ i: Long).toVector, units = UnitsOfMeasure.NoUnits)
 }

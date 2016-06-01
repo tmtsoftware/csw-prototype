@@ -35,7 +35,7 @@ public class JSONTests {
         RaDec c2 = new RaDec(9.1, 2.9);
         Item<RaDec, RaDec> i1 = k1.jset(c1, c2);
         SetupConfig sc1 = new SetupConfig(ck).add(i1);
-        assert(sc1.get(k1).get().value().size() == 2);
+        assert(sc1.get(k1).get().values().size() == 2);
         assert(sc1.get(k1).get().jget(0).equals(c1));
         assert(sc1.get(k1).get().jget(1).equals(c2));
 
@@ -44,7 +44,7 @@ public class JSONTests {
 
         SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
         assert(sc1.equals(sc1in));
-        assert(sc1in.get(k1).get().value().size() == 2);
+        assert(sc1in.get(k1).get().values().size() == 2);
         assert(sc1in.get(k1).get().jget(0).equals(c1));
         assert(sc1in.get(k1).get().jget(1).equals(c2));
         RaDec cc1 = sc1in.get(k1).get().jget(0);
@@ -65,9 +65,18 @@ public class JSONTests {
         CharItem i1 = k1.jset('d');
         JsValue j1 = ConfigJSON.charItemFormat().write(i1);
         CharItem in1 = ConfigJSON.charItemFormat().read(j1);
-        assert(in1.equals(i1));
+        assert (in1.equals(i1));
+    }
 
-        // short item encode/decode
+    @Test
+    public void TestConcreteItemsShortItemEncodeDecode() {
+        ShortKey k1 = new ShortKey(s3);
+        short s = -1;
+        ShortItem i1 = k1.jset(s).withUnits(JUnitsOfMeasure.NoUnits);
+
+//        val j1 = i1.toJson
+//        val in1 = j1.convertTo[ShortItem]
+//        assert (in1 == i1)
     }
 
     //  describe("Test concrete items") {

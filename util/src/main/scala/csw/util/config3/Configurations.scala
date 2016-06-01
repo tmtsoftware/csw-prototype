@@ -119,7 +119,7 @@ object Configurations {
      * @param key the Key to be used for lookup
      * @return the item associated with the Key or a NoSuchElementException if the key does not exist
      */
-    final def apply[S, J](key: Key[S, J]): Seq[S] = get[S, J](key).get.value
+    final def apply[S, J](key: Key[S, J]): Seq[S] = get[S, J](key).get.values
 
     /**
      * The subsystem for the config

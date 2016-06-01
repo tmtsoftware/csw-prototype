@@ -2,8 +2,8 @@ package csw.util.config3
 
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
-import csw.util.config3.UnitsOfMeasure.Units
-import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat, JsonReader}
+import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat}
 
 import scala.annotation.varargs
 
@@ -40,10 +40,10 @@ object GenericItem {
  *
  * @param typeName the name of the type S (for JSON serialization)
  * @param keyName  the name of the key
- * @param value    the value for the key
+ * @param values    the value for the key
  * @param units    the units of the value
  */
-sealed case class GenericItem[S: JsonFormat](typeName: String, keyName: String, value: Vector[S], units: Units) extends Item[S, S] {
+sealed case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values: Vector[S], units: Units) extends Item[S, S] {
 
   /**
    * @return a JsValue representing this item
@@ -53,24 +53,13 @@ sealed case class GenericItem[S: JsonFormat](typeName: String, keyName: String, 
     val unitsFormat = ConfigJSON.unitsFormat
     JsObject(
       "keyName" → JsString(keyName),
-      "value" → JsArray(value.map(valueFormat.write)),
+      "value" → JsArray(values.map(valueFormat.write)),
       "units" → unitsFormat.write(units)
     )
   }
 
-  /**
-   * Java API
-   *
-   * @return the value at the given index
-   */
-  override def jget(index: Int): S = value(index)
+  override def jget(index: Int): S = values(index)
 
-  /**
-   * Set the units of the value
-   *
-   * @param unitsIn the units to set
-   * @return a copy of this item with the given units set
-   */
   override def withUnits(unitsIn: Units): Item[S, S] = copy(units = unitsIn)
 }
 
@@ -82,20 +71,16 @@ sealed case class GenericItem[S: JsonFormat](typeName: String, keyName: String, 
  */
 case class GenericKey[S: JsonFormat](typeName: String, nameIn: String) extends Key[S, S](nameIn) {
 
-  /**
-   * Sets the values for the key using a variable number of arguments
-   *
-   * @param v the values
-   * @return a new item containing the key name, values and no units
-   */
+  override def set(v: Vector[S], units: Units = NoUnits) = GenericItem(typeName, keyName, v, units)
+
   override def set(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
 
-  /**
-   * Java API: Sets the values for the key using a variable number of arguments
-   *
-   * @param v the values
-   * @return a new item containing the key name, values and no units
-   */
-  @varargs override def jset(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
+  override def jset(v: java.util.List[S]) = {
+    import scala.collection.JavaConverters._
+    GenericItem(typeName, keyName, v.asScala.toVector, NoUnits)
+  }
+
+  @varargs
+  override def jset(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
 }
 

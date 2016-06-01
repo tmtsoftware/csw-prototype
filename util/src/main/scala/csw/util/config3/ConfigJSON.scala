@@ -57,7 +57,6 @@ object ConfigJSON extends DefaultJsonProtocol {
       case di: DoubleItem     ⇒ (JsString(doubleTpe), doubleItemFormat.write(di))
       case bi: BooleanItem    ⇒ (JsString(booleanTpe), booleanItemFormat.write(bi))
       case si: StringItem     ⇒ (JsString(stringTpe), stringItemFormat.write(si))
-      // XXX TODO use keyName or special type tag?
       case gi: GenericItem[S] ⇒ (JsString(gi.typeName), gi.toJson)
     }
     JsObject("itemType" → result._1, "item" → result._2)

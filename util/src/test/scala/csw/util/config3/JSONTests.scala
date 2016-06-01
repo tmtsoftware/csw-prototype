@@ -69,7 +69,8 @@ class JSONTests extends FunSpec {
 
     it("short item encode/decode") {
       val k1 = ShortKey(s3)
-      val i1 = k1.set(-1).withUnits(UnitsOfMeasure.NoUnits)
+      val s: Short = -1
+      val i1 = k1.set(s).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
       val in1 = j1.convertTo[ShortItem]
@@ -192,9 +193,9 @@ class JSONTests extends FunSpec {
       val d2 = MyData2(10, 20.0f, 30.0, "40")
       val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.Meters)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.get(k1).get.value.size == 2)
-      assert(sc1.get(k1).get.value(0) == d1)
-      assert(sc1.get(k1).get.value(1) == d2)
+      assert(sc1.get(k1).get.values.size == 2)
+      assert(sc1.get(k1).get.values(0) == d1)
+      assert(sc1.get(k1).get.values(1) == d2)
       assert(sc1.get(k1).get.units == UnitsOfMeasure.Meters)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
@@ -202,9 +203,9 @@ class JSONTests extends FunSpec {
 
       val sc1in = ConfigJSON.readConfig(sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.get(k1).get.value.size == 2)
-      assert(sc1in.get(k1).get.value(0) == d1)
-      assert(sc1in.get(k1).get.value(1) == d2)
+      assert(sc1in.get(k1).get.values.size == 2)
+      assert(sc1in.get(k1).get.values(0) == d1)
+      assert(sc1in.get(k1).get.values(1) == d2)
       assert(sc1in.get(k1).get.units == UnitsOfMeasure.Meters)
 
       val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.Meters, d1, d2)
@@ -218,18 +219,18 @@ class JSONTests extends FunSpec {
         val c2 = RaDec(9.1, 2.9)
         val i1 = k1.set(c1, c2)
         val sc1 = SetupConfig(ck).add(i1)
-        assert(sc1.get(k1).get.value.size == 2)
-        assert(sc1.get(k1).get.value(0) == c1)
-        assert(sc1.get(k1).get.value(1) == c2)
+        assert(sc1.get(k1).get.values.size == 2)
+        assert(sc1.get(k1).get.values(0) == c1)
+        assert(sc1.get(k1).get.values(1) == c2)
 
         val sc1out = ConfigJSON.writeConfig(sc1)
         info("sc1out: " + sc1out.prettyPrint)
 
         val sc1in = ConfigJSON.readConfig(sc1out)
         assert(sc1.equals(sc1in))
-        assert(sc1in.get(k1).get.value.size == 2)
-        assert(sc1in.get(k1).get.value(0) == c1)
-        assert(sc1in.get(k1).get.value(1) == c2)
+        assert(sc1in.get(k1).get.values.size == 2)
+        assert(sc1in.get(k1).get.values(0) == c1)
+        assert(sc1in.get(k1).get.values(1) == c2)
 
         val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.NoUnits, c1, c2)
         assert(sc2 == sc1)
