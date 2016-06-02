@@ -81,6 +81,9 @@ class Config3Tests extends FunSpec {
 
       var sc = SetupConfig(ck1).add(i1)
       assert(sc.get(k1).get.value == 22)
+      assert(sc.value(k1) == 22)
+      assert(sc.values(k1) == Vector(22))
+      assert(sc.value(k1, 0) == 22)
       sc = sc.add(i2)
       assert(sc.get(k1).get.value == 33)
     }
@@ -107,13 +110,12 @@ class Config3Tests extends FunSpec {
     val k1 = IntKey("encoder")
     val k2 = IntKey("windspeed")
     it("Should allow adding") {
-      var sc1 = SetupConfig(ck3)
-      val i1 = k1.set(22).withUnits(NoUnits)
-      val i2 = k2.set(44).withUnits(NoUnits)
-      sc1 = sc1.add(i1).add(i2)
+      var sc1 = SetupConfig(ck3).set(k1, 22).set(k2, 44)
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
       assert(sc1.exists(k2))
+      assert(sc1.value(k1) == 22)
+      assert(sc1.value(k2) == 44)
     }
 
     it("Should allow setting") {

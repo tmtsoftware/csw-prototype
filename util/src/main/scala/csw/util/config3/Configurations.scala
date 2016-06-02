@@ -96,6 +96,20 @@ object Configurations {
      * Sets the given key to the given values
      *
      * @param key   the key, which also contains the value type
+     * @param v     one or more values
+     * @tparam S the Scala value type
+     * @tparam J the Java value type
+     * @return a new instance of this object with the key set to the given values
+     */
+    def set[S, J](key: Key[S, J], v: S*): T = {
+      val newItem = key.set(v: _*)
+      add(newItem)
+    }
+
+    /**
+     * Sets the given key to the given values
+     *
+     * @param key   the key, which also contains the value type
      * @param v     a vector with the values
      * @param units the units for the values
      * @tparam S the Scala value type
