@@ -5,6 +5,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import scala.compat.java8.OptionConverters._
 
 /**
  * The type of a value for an CharKey
@@ -21,7 +22,21 @@ final case class CharItem(keyName: String, values: Vector[Char], units: Units) e
    */
   def jvalues: java.util.List[Character] = values.map(i ⇒ i: Character).asJava
 
-  override def jget(index: Int): Character = values(index)
+  override def jvalue(index: Int): Character = values(index)
+
+  /**
+   * Java API to get the value at the given index
+   *
+   * @param index the index of a value
+   * @return Some value at the given index, if the index is in range, otherwise None
+   */
+  def jget(index: Int): java.util.Optional[Character] = get(index).map(i ⇒ i: Character).asJava
+
+  /**
+   * Java API to get the first or default value
+   * @return the first or default value (Use this if you know there is only a single value)
+   */
+  def jvalue: Character = values(0)
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }

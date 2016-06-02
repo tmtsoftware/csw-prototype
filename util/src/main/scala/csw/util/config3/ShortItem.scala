@@ -5,6 +5,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import scala.compat.java8.OptionConverters._
 
 /**
  * The type of a value for an ShortKey
@@ -22,7 +23,21 @@ final case class ShortItem(keyName: String, values: Vector[Short], units: Units)
    */
   def jvalues: java.util.List[java.lang.Short] = values.map(i ⇒ i: java.lang.Short).asJava
 
-  override def jget(index: Int): java.lang.Short = values(index)
+  override def jvalue(index: Int): java.lang.Short = values(index)
+
+  /**
+   * Java API to get the value at the given index
+   *
+   * @param index the index of a value
+   * @return Some value at the given index, if the index is in range, otherwise None
+   */
+  def jget(index: Int): java.util.Optional[java.lang.Short] = get(index).map(i ⇒ i: java.lang.Short).asJava
+
+  /**
+   * Java API to get the first or default value
+   * @return the first or default value (Use this if you know there is only a single value)
+   */
+  def jvalue: java.lang.Short = values(0)
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }

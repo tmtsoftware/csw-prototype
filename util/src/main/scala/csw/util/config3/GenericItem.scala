@@ -4,6 +4,7 @@ import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
 import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat}
+import scala.compat.java8.OptionConverters._
 
 import scala.annotation.varargs
 
@@ -58,7 +59,21 @@ sealed case class GenericItem[S: JsonFormat](typeName: String, keyName: String, 
     )
   }
 
-  override def jget(index: Int): S = values(index)
+  override def jvalue(index: Int): S = values(index)
+
+  /**
+   * Java API to get the value at the given index
+   *
+   * @param index the index of a value
+   * @return Some value at the given index, if the index is in range, otherwise None
+   */
+  def jget(index: Int): java.util.Optional[S] = get(index).asJava
+
+  /**
+   * Java API to get the first or default value
+   * @return the first or default value (Use this if you know there is only a single value)
+   */
+  def jvalue: S = values(0)
 
   override def withUnits(unitsIn: Units): Item[S, S] = copy(units = unitsIn)
 }

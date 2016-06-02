@@ -7,6 +7,7 @@ import scala.language.implicitConversions
 
 /**
  * The type of a configuration item
+ *
  * @tparam S the Scala type
  * @tparam J the Java type (may be the same)
  */
@@ -23,6 +24,7 @@ trait Item[+S, +J] {
 
   /**
    * The number of values in this item (values.size)
+   *
    * @return
    */
   def size: Int = values.size
@@ -33,10 +35,30 @@ trait Item[+S, +J] {
   def units: Units
 
   /**
+   * Returns the value at the given index, throwing an exception if the index is out of range
    * @param index the index of a value
    * @return the value at the given index (may throw an exception if the index is out of range)
    */
   def apply(index: Int): S = values(index)
+
+  /**
+   * Returns the value at the given index, throwing an exception if the index is out of range
+   *
+   * @param index the index of a value
+   * @return the value at the given index (may throw an exception if the index is out of range)
+   */
+  def value(index: Int): S = values(index)
+
+  /**
+   * @param index the index of a value
+   * @return Some value at the given index, if the index is in range, otherwise None
+   */
+  def get(index: Int): Option[S] = values.lift(index)
+
+  /**
+   * @return the first or default value (Use this if you know there is only a single value)
+   */
+  def value: S = values(0)
 
   /**
    * Java API to get the value at the given index
@@ -44,7 +66,14 @@ trait Item[+S, +J] {
    * @param index the index of a value
    * @return the value at the given index (may throw an exception if the index is out of range)
    */
-  def jget(index: Int): J
+  def jvalue(index: Int): J
+
+  /**
+   * Java API to get the first or default value
+   *
+   * @return the first or default value (Use this if you know there is only a single value)
+   */
+  def jvalue: J
 
   /**
    * Sets the units for the values
@@ -57,6 +86,7 @@ trait Item[+S, +J] {
 
 /**
  * The type of a configuration item key.
+ *
  * @param keyName the key
  * @tparam S the value's Scala type
  * @tparam J the value's Java type (will be converted to/from Scala, may be the same)
@@ -65,7 +95,8 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
 
   /**
    * Sets the values for the key as a Scala Vector
-   * @param v a vector of values
+   *
+   * @param v     a vector of values
    * @param units optional units of the values (defaults to no units)
    * @return an item containing the key name, values and units
    */
@@ -73,6 +104,7 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
 
   /**
    * Sets the values for the key using a variable number of arguments
+   *
    * @param v one or more values
    * @return an item containing the key name, values (call withUnits() on the result to set the units)
    */
@@ -80,6 +112,7 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
 
   /**
    * Java API: Sets the values for the key as a Java list
+   *
    * @param v a list of values
    * @return an item containing the key name, values (call withUnits() on the result to set the units)
    */
@@ -87,6 +120,7 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
 
   /**
    * Java API: Sets the values for the key using a variable number of arguments
+   *
    * @param v one or more values
    * @return an item containing the key name, values (call withUnits() on the result to set the units)
    */

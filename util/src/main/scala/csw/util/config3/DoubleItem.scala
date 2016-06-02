@@ -5,6 +5,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import scala.compat.java8.OptionConverters._
 
 /**
  * The type of a value for an DoubleKey
@@ -21,7 +22,21 @@ final case class DoubleItem(keyName: String, values: Vector[Double], units: Unit
    */
   def jvalues: java.util.List[java.lang.Double] = values.map(i ⇒ i: java.lang.Double).asJava
 
-  override def jget(index: Int): java.lang.Double = values(index)
+  override def jvalue(index: Int): java.lang.Double = values(index)
+
+  /**
+   * Java API to get the value at the given index
+   *
+   * @param index the index of a value
+   * @return Some value at the given index, if the index is in range, otherwise None
+   */
+  def jget(index: Int): java.util.Optional[java.lang.Double] = get(index).map(i ⇒ i: java.lang.Double).asJava
+
+  /**
+   * Java API to get the first or default value
+   * @return the first or default value (Use this if you know there is only a single value)
+   */
+  def jvalue: java.lang.Double = values(0)
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }

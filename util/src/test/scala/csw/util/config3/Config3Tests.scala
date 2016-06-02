@@ -36,6 +36,7 @@ class Config3Tests extends FunSpec {
       val i = k1.set(22)
       assert(i.keyName eq s1)
       assert(i.values == Vector(22))
+      assert(i.value == 22)
 
       assert(k2.keyName eq s2)
       val j: StringItem = k2.set("Bob").withUnits(UnitsOfMeasure.Meters)
@@ -72,25 +73,27 @@ class Config3Tests extends FunSpec {
 
     it("Should allow updates") {
       val i1 = k1.set(22)
-      assert(i1.values == Vector(22))
+      assert(i1.value == 22)
       assert(i1.units == NoUnits)
       val i2 = k1.set(33)
-      assert(i2.values == Vector(33))
+      assert(i2.value == 33)
       assert(i2.units == NoUnits)
 
       var sc = SetupConfig(ck1).add(i1)
-      assert(sc.get(k1).get.values == Vector(22))
+      assert(sc.get(k1).get.value == 22)
       sc = sc.add(i2)
-      assert(sc.get(k1).get.values == Vector(33))
+      assert(sc.get(k1).get.value == 33)
     }
   }
 
   describe("Test for conversions from Java") {
     it("should allow setting from Java objects") {
-      val tval = new java.lang.Long(1234)
+      val tval = 1234L
       val k1 = LongKey(s1)
       val i1 = k1.set(tval)
       assert(i1.values == Vector(1234L))
+      assert(i1.values(0) == 1234L)
+      assert(i1.value == 1234L)
 
       val tval2 = 4567L
       val k2 = LongKey(s1)
@@ -191,14 +194,15 @@ class Config3Tests extends FunSpec {
       assert(i1.units == NoUnits)
       assert(i1(1) == 3)
 
-      val i2 = t1.set(10, 30, 50, 70).withUnits(Deg)
+      val i2 = t1.set(Vector(10, 30, 50, 70)).withUnits(Deg)
       assert(i2.values == Vector(10, 30, 50, 70))
       assert(i2.units == Deg)
       assert(i2(1) == 30)
+      assert(i2(3) == 70)
     }
     it("should also allow setting with sequence") {
       val s1 = Vector(2, 4, 6, 8)
-      val i1 = t1.set(s1: _*).withUnits(Meters)
+      val i1 = t1.set(s1).withUnits(Meters)
       assert(i1.values == s1)
       assert(i1.values.size == s1.size)
       assert(i1.units == Meters)

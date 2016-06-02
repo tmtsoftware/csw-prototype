@@ -36,8 +36,8 @@ public class JSONTests {
         Item<RaDec, RaDec> i1 = k1.jset(c1, c2);
         SetupConfig sc1 = new SetupConfig(ck).add(i1);
         assert(sc1.get(k1).get().values().size() == 2);
-        assert(sc1.get(k1).get().jget(0).equals(c1));
-        assert(sc1.get(k1).get().jget(1).equals(c2));
+        assert(sc1.get(k1).get().jvalue(0).equals(c1));
+        assert(sc1.get(k1).get().jvalue(1).equals(c2));
 
         JsValue sc1out = ConfigJSON.writeConfig(sc1);
         System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -45,12 +45,12 @@ public class JSONTests {
         SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
         assert(sc1.equals(sc1in));
         assert(sc1in.get(k1).get().values().size() == 2);
-        assert(sc1in.get(k1).get().jget(0).equals(c1));
-        assert(sc1in.get(k1).get().jget(1).equals(c2));
-        RaDec cc1 = sc1in.get(k1).get().jget(0);
+        assert(sc1in.get(k1).get().jvalue(0).equals(c1));
+        assert(sc1in.get(k1).get().jvalue(1).equals(c2));
+        RaDec cc1 = sc1in.get(k1).get().jvalue(0);
         assert(cc1.ra() == 7.3);
         assert(cc1.dec() == 12.1);
-        RaDec cc2 = sc1in.get(k1).get().jget(1);
+        RaDec cc2 = sc1in.get(k1).get().jvalue(1);
         assert(cc2.ra() == 9.1);
         assert(cc2.dec() == 2.9);
 

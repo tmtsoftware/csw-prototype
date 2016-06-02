@@ -31,13 +31,14 @@ public class JConfig3Tests {
         // Should use set properly
         IntItem i = k1.jset(22);
         assert (Objects.equals(i.keyName(), s1));
-        assert (i.jvalues().get(0) == 22);
-        assert (i.jget(0) == 22);
+        assert (i.jvalue() == 22);
+        assert (i.jvalue(0) == 22);
+        assert (i.jget(0).get() == 22);
         assert (i.units() == JUnitsOfMeasure.NoUnits);
 
         assert (Objects.equals(k2.keyName(), s2));
         StringItem j = k2.jset("Bob");
-        assert (Objects.equals(j.jget(0), "Bob"));
+        assert (Objects.equals(j.jvalue(0), "Bob"));
 
         // Should support equality of keys
         IntKey k3 = new IntKey(s1);
@@ -53,16 +54,17 @@ public class JConfig3Tests {
 
         // Should allow updates
         IntItem i1 = k1.jset(22);
-        assert (i1.jget(0) == 22);
+        assert (i1.jvalue() == 22);
+        assert (i1.jvalue(0) == 22);
         assert (i1.units() == JUnitsOfMeasure.NoUnits);
         IntItem i2 = k1.jset(33);
-        assert (i2.jget(0) == 33);
+        assert (i2.jvalue() == 33);
         assert (i2.units() == JUnitsOfMeasure.NoUnits);
 
         SetupConfig sc = new SetupConfig(ck1).add(i1);
-        assert (sc.jget(k1, 0) == 22);
+        assert (sc.jvalue(k1, 0) == 22);
         sc = sc.add(i2);
-        assert (sc.jget(k1, 0) == 33);
+        assert (sc.jvalue(k1, 0) == 33);
     }
 
 
