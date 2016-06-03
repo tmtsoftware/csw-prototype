@@ -89,19 +89,19 @@ class Config3Tests extends FunSpec {
     }
   }
 
-  describe("Test for conversions from Java") {
-    it("should allow setting from Java objects") {
+  describe("Test Long") {
+    it("should allow setting from Long") {
       val tval = 1234L
       val k1 = LongKey(s1)
       val i1 = k1.set(tval)
-      assert(i1.values == Vector(1234L))
-      assert(i1.values(0) == 1234L)
-      assert(i1.value == 1234L)
+      assert(i1.values == Vector(tval))
+      assert(i1.values(0) == tval)
+      assert(i1.value == tval)
 
       val tval2 = 4567L
       val k2 = LongKey(s1)
       val i2 = k2.set(tval2)
-      assert(i2.values == Vector(4567L))
+      assert(i2.values == Vector(tval2))
     }
   }
 
@@ -109,7 +109,7 @@ class Config3Tests extends FunSpec {
 
     val k1 = IntKey("encoder")
     val k2 = IntKey("windspeed")
-    it("Should allow adding") {
+    it("Should allow adding keys") {
       var sc1 = SetupConfig(ck3).set(k1, 22).set(k2, 44)
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
