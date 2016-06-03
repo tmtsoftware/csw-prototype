@@ -16,28 +16,13 @@ import scala.compat.java8.OptionConverters._
  */
 final case class FloatItem(keyName: String, values: Vector[Float], units: Units) extends Item[Float, java.lang.Float] {
 
-  /**
-   * Java API
-   *
-   * @return the values as a Java List
-   */
-  def jvalues: java.util.List[java.lang.Float] = values.map(i ⇒ i: java.lang.Float).asJava
+  override def jvalues: java.util.List[java.lang.Float] = values.map(i ⇒ i: java.lang.Float).asJava
 
   override def jvalue(index: Int): java.lang.Float = values(index)
 
-  /**
-   * Java API to get the value at the given index
-   *
-   * @param index the index of a value
-   * @return Some value at the given index, if the index is in range, otherwise None
-   */
-  def jget(index: Int): java.util.Optional[java.lang.Float] = get(index).map(i ⇒ i: java.lang.Float).asJava
+  override def jget(index: Int): java.util.Optional[java.lang.Float] = get(index).map(i ⇒ i: java.lang.Float).asJava
 
-  /**
-   * Java API to get the first or default value
-   * @return the first or default value (Use this if you know there is only a single value)
-   */
-  def jvalue: java.lang.Float = values(0)
+  override def jvalue: java.lang.Float = values(0)
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }

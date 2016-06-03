@@ -11,7 +11,7 @@ import scala.language.implicitConversions
  * @tparam S the Scala type
  * @tparam J the Java type (may be the same)
  */
-trait Item[+S, +J] {
+trait Item[S, J] {
   /**
    * @return the name of the key for this item
    */
@@ -69,11 +69,25 @@ trait Item[+S, +J] {
   def jvalue(index: Int): J
 
   /**
+   * Java API to get the value at the given index
+   *
+   * @param index the index of a value
+   * @return Some value at the given index, if the index is in range, otherwise None
+   */
+  def jget(index: Int): java.util.Optional[J]
+
+  /**
    * Java API to get the first or default value
    *
    * @return the first or default value (Use this if you know there is only a single value)
    */
   def jvalue: J
+
+  /**
+   * Java API: Returns the item's values as a java list
+   * @return the list of values
+   */
+  def jvalues: java.util.List[J]
 
   /**
    * Sets the units for the values

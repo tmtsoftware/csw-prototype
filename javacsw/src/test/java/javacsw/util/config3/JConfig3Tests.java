@@ -4,6 +4,8 @@ import csw.util.config3.Configurations.SetupConfig;
 import csw.util.config3.*;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 
 /**
@@ -65,6 +67,10 @@ public class JConfig3Tests {
         assert (sc.jvalue(k1, 0) == 22);
         sc = sc.add(i2);
         assert (sc.jvalue(k1, 0) == 33);
+
+        SetupConfig sc2 = new SetupConfig(ck1).jset(k1, 22);
+        assert(sc2.jvalue(k1) == 22);
+        assert(sc2.jvalues(k1).equals(Collections.singletonList(22)));
     }
 
 

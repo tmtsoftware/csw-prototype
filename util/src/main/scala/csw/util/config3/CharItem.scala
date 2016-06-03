@@ -15,28 +15,13 @@ import scala.compat.java8.OptionConverters._
  * @param units   the units of the value
  */
 final case class CharItem(keyName: String, values: Vector[Char], units: Units) extends Item[Char, Character] {
-  /**
-   * Java API
-   *
-   * @return the values as a Java List
-   */
-  def jvalues: java.util.List[Character] = values.map(i ⇒ i: Character).asJava
+  override def jvalues: java.util.List[Character] = values.map(i ⇒ i: Character).asJava
 
   override def jvalue(index: Int): Character = values(index)
 
-  /**
-   * Java API to get the value at the given index
-   *
-   * @param index the index of a value
-   * @return Some value at the given index, if the index is in range, otherwise None
-   */
-  def jget(index: Int): java.util.Optional[Character] = get(index).map(i ⇒ i: Character).asJava
+  override def jget(index: Int): java.util.Optional[Character] = get(index).map(i ⇒ i: Character).asJava
 
-  /**
-   * Java API to get the first or default value
-   * @return the first or default value (Use this if you know there is only a single value)
-   */
-  def jvalue: Character = values(0)
+  override def jvalue: Character = values(0)
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }

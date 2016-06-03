@@ -15,30 +15,15 @@ import scala.compat.java8.OptionConverters._
  * @param units   the units of the value
  */
 final case class LongItem(keyName: String, values: Vector[Long], units: Units) extends Item[Long, java.lang.Long] {
-  /**
-   * Java API
-   *
-   * @return the values as a Java List
-   */
-  def jvalues: java.util.List[java.lang.Long] = values.map(i ⇒ i: java.lang.Long).asJava
+  override def jvalues: java.util.List[java.lang.Long] = values.map(i ⇒ i: java.lang.Long).asJava
 
   override def jvalue(index: Int): java.lang.Long = values(index)
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 
-  /**
-   * Java API to get the value at the given index
-   *
-   * @param index the index of a value
-   * @return Some value at the given index, if the index is in range, otherwise None
-   */
-  def jget(index: Int): java.util.Optional[java.lang.Long] = get(index).map(i ⇒ i: java.lang.Long).asJava
+  override def jget(index: Int): java.util.Optional[java.lang.Long] = get(index).map(i ⇒ i: java.lang.Long).asJava
 
-  /**
-   * Java API to get the first or default value
-   * @return the first or default value (Use this if you know there is only a single value)
-   */
-  def jvalue: java.lang.Long = values(0)
+  override def jvalue: java.lang.Long = values(0)
 }
 
 /**

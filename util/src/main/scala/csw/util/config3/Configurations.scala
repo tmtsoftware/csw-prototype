@@ -2,7 +2,7 @@ package csw.util.config3
 
 import java.util.Optional
 
-import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import csw.util.config3.UnitsOfMeasure.{ NoUnits, Units }
 
 import scala.annotation.varargs
 import scala.compat.java8.OptionConverters._
@@ -95,8 +95,8 @@ object Configurations {
     /**
      * Sets the given key to the given values
      *
-     * @param key   the key, which also contains the value type
-     * @param v     one or more values
+     * @param key the key, which also contains the value type
+     * @param v   one or more values
      * @tparam S the Scala value type
      * @tparam J the Java value type
      * @return a new instance of this object with the key set to the given values
@@ -246,6 +246,16 @@ object Configurations {
     def jvalue[S, J](key: Key[S, J]): J = get(key).get.jvalue
 
     /**
+     * Java API: Returns the first or default value for the given key, throwing an exception if the key is not present
+     *
+     * @param key the key to use
+     * @tparam S the Scala value type
+     * @tparam J the Java value type
+     * @return the first or default value for the given key
+     */
+    def jvalues[S, J](key: Key[S, J]): java.util.List[J] =  get(key).get.jvalues
+
+    /**
      * Java API: Returns the item for the key, if found, otherwise None
      *
      * @param key the Key to be used for lookup
@@ -289,7 +299,7 @@ object Configurations {
       val f = getByKeyname(keyname)
       f match {
         case Some(item) ⇒ create(items.-(item))
-        case None       ⇒ this
+        case None ⇒ this
       }
     }
 
@@ -339,6 +349,8 @@ object Configurations {
 
     @varargs override def jset[S, J](key: Key[S, J], units: Units, v: J*): SetupConfig = super.jset(key, units, v: _*)
 
+    @varargs override def jset[S, J](key: Key[S, J], v: J*): SetupConfig = super.jset(key, v: _*)
+
     override def remove[S, J](key: Key[S, J]): SetupConfig = super.remove[S, J](key)
 
     override def toString = doToString("SC")
@@ -356,6 +368,22 @@ object Configurations {
     override def set[S, J](key: Key[S, J], units: Units, v: S*): ObserveConfig = super.set[S, J](key, units, v: _*)
 
     @varargs override def jset[S, J](key: Key[S, J], units: Units, v: J*): ObserveConfig = super.jset(key, units, v: _*)
+
+    @varargs override def jset[S, J](key: Key[S, J], v: J*): ObserveConfig = super.jset(key, v: _*)
+
+    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): ObserveConfig = super.jset(key, units, v)
+
+    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): ObserveConfig = super.jset(key, v)
+
+    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
+
+    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
+
+    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
+
+    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
+
+    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): ObserveConfig = super.remove[S, J](key)
 

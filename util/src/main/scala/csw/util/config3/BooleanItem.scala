@@ -21,23 +21,13 @@ final case class BooleanItem(keyName: String, values: Vector[Boolean], units: Un
    *
    * @return the values as a Java List
    */
-  def jvalues: java.util.List[java.lang.Boolean] = values.map(i ⇒ i: java.lang.Boolean).asJava
+  override def jvalues: java.util.List[java.lang.Boolean] = values.map(i ⇒ i: java.lang.Boolean).asJava
 
   override def jvalue(index: Int): java.lang.Boolean = values(index)
 
-  /**
-   * Java API to get the value at the given index
-   *
-   * @param index the index of a value
-   * @return Some value at the given index, if the index is in range, otherwise None
-   */
-  def jget(index: Int): java.util.Optional[java.lang.Boolean] = get(index).map(i ⇒ i: java.lang.Boolean).asJava
+  override def jget(index: Int): java.util.Optional[java.lang.Boolean] = get(index).map(i ⇒ i: java.lang.Boolean).asJava
 
-  /**
-   * Java API to get the first or default value
-   * @return the first or default value (Use this if you know there is only a single value)
-   */
-  def jvalue: java.lang.Boolean = values(0)
+  override def jvalue: java.lang.Boolean = values(0)
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }
