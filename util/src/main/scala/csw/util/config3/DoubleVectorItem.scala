@@ -31,7 +31,7 @@ case class JDoubleVector(value: java.util.List[java.lang.Double]) {
 }
 
 /**
- * The type of a value for an DoubleVectorKey
+ * The type of a value for a DoubleVectorKey: One or more vectors of Double
  *
  * @param keyName the name of the key
  * @param values   the value for the key
@@ -51,7 +51,7 @@ final case class DoubleVectorItem(keyName: String, values: Vector[DoubleVector],
 }
 
 /**
- * A key of DoubleVector values
+ * A key for DoubleVector values
  *
  * @param nameIn the name of the key
  */

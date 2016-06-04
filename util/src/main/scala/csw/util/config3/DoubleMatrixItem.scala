@@ -10,7 +10,7 @@ import spray.json.DefaultJsonProtocol
 import scala.compat.java8.OptionConverters._
 
 /**
- * A Scala 2d Vector of Doubles
+ * A Scala equivalent of a 2d array of Doubles
  */
 case class DoubleMatrix(value: Vector[Vector[Double]]) {
   def toJava: JDoubleMatrix = JDoubleMatrix(
@@ -22,7 +22,7 @@ case object DoubleMatrix extends DefaultJsonProtocol {
 }
 
 /**
- * A Java 2d List of Doubles
+ * A Java equivalent of a 2d array of Doubles
  */
 case class JDoubleMatrix(value: java.util.List[java.util.List[java.lang.Double]]) {
   def toScala: DoubleMatrix = DoubleMatrix(
@@ -31,7 +31,7 @@ case class JDoubleMatrix(value: java.util.List[java.util.List[java.lang.Double]]
 }
 
 /**
- * The type of a value for an DoubleMatrixKey
+ * The type of a value for a DoubleMatrixKey: One or more 2d arrays (implemented as DoubleMatrix)
  *
  * @param keyName the name of the key
  * @param values   the value for the key
@@ -51,7 +51,7 @@ final case class DoubleMatrixItem(keyName: String, values: Vector[DoubleMatrix],
 }
 
 /**
- * A key of DoubleMatrix values
+ * A key for DoubleMatrix values
  *
  * @param nameIn the name of the key
  */

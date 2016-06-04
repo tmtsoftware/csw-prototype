@@ -44,7 +44,7 @@ public class JSONTests {
         assert (sc1.get(k1).get().jvalue(1).equals(c2));
 
         JsValue sc1out = ConfigJSON.writeConfig(sc1);
-        System.out.println("sc1out: " + sc1out.prettyPrint());
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
 
         SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
         assert (sc1.equals(sc1in));
@@ -164,7 +164,7 @@ public class JSONTests {
             assert (sc1.size() == 7);
 
             JsValue sc1out = ConfigJSON.writeConfig(sc1);
-            System.out.println("sc1out: " + sc1out.prettyPrint());
+//            System.out.println("sc1out: " + sc1out.prettyPrint());
             SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
             assert (sc1.equals(sc1in));
         }
@@ -184,7 +184,64 @@ public class JSONTests {
         assert(sc1.jvalue(k1).value().get(1).equals(Arrays.asList(4.1, 5.1, 6.1)));
 
         JsValue sc1out = ConfigJSON.writeConfig(sc1);
-        System.out.println("sc1out: " + sc1out.prettyPrint());
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assert (sc1.equals(sc1in));
+        assert (sc1in.jvalue(k1).equals(m1));
+    }
+
+    @Test
+    public void TestDoubleVectorItem() {
+        // Should allow vector values
+        DoubleVectorKey k1 = new DoubleVectorKey("myVector");
+        JDoubleVector m1 = new JDoubleVector(Arrays.asList(1.0, 2.0, 3.0));
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assert (sc1.size() == 1);
+        assert (sc1.jvalue(k1).equals(m1));
+        assert(sc1.jvalue(k1).value().equals(Arrays.asList(1.0, 2.0, 3.0)));
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assert (sc1.equals(sc1in));
+        assert (sc1in.jvalue(k1).equals(m1));
+    }
+
+    @Test
+    public void TestIntMatrixItem() {
+        // Should allow matrix values
+        IntMatrixKey k1 = new IntMatrixKey("myMatrix");
+        JIntMatrix m1 = new JIntMatrix(Arrays.asList(
+                Arrays.asList(1, 2, 3),
+                Arrays.asList(4, 5, 6),
+                Arrays.asList(7, 8, 9)));
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assert (sc1.size() == 1);
+        assert (sc1.jvalue(k1).equals(m1));
+        assert(sc1.jvalue(k1).value().get(1).equals(Arrays.asList(4, 5, 6)));
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assert (sc1.equals(sc1in));
+        assert (sc1in.jvalue(k1).equals(m1));
+    }
+
+    @Test
+    public void TestIntVectorItem() {
+        // Should allow vector values
+        IntVectorKey k1 = new IntVectorKey("myVector");
+        JIntVector m1 = new JIntVector(Arrays.asList(1, 2, 3));
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assert (sc1.size() == 1);
+        assert (sc1.jvalue(k1).equals(m1));
+        assert(sc1.jvalue(k1).value().equals(Arrays.asList(1, 2, 3)));
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
 
         SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
         assert (sc1.equals(sc1in));

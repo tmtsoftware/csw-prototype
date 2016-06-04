@@ -20,6 +20,8 @@ object ConfigJSON extends DefaultJsonProtocol {
   implicit val stringItemFormat = jsonFormat3(StringItem.apply)
   implicit val doubleMatrixItemFormat = jsonFormat3(DoubleMatrixItem.apply)
   implicit val doubleVectorItemFormat = jsonFormat3(DoubleVectorItem.apply)
+  implicit val intMatrixItemFormat = jsonFormat3(IntMatrixItem.apply)
+  implicit val intVectorItemFormat = jsonFormat3(IntVectorItem.apply)
 
   private val charTpe = "CharItem"
   // Could be classTag[CharItem].toString
@@ -32,6 +34,8 @@ object ConfigJSON extends DefaultJsonProtocol {
   private val stringTpe = "StringItem"
   private val doubleMatrixTpe = "DoubleMatrixItem"
   private val doubleVectorTpe = "DoubleVectorItem"
+  private val intMatrixTpe = "IntMatrixItem"
+  private val intVectorTpe = "IntVectorItem"
 
   implicit def subsystemFormat: JsonFormat[Subsystem] = new JsonFormat[Subsystem] {
     def write(obj: Subsystem) = JsString(obj.name)
@@ -61,6 +65,8 @@ object ConfigJSON extends DefaultJsonProtocol {
       case si: StringItem       ⇒ (JsString(stringTpe), stringItemFormat.write(si))
       case di: DoubleMatrixItem ⇒ (JsString(doubleMatrixTpe), doubleMatrixItemFormat.write(di))
       case di: DoubleVectorItem ⇒ (JsString(doubleVectorTpe), doubleVectorItemFormat.write(di))
+      case di: IntMatrixItem    ⇒ (JsString(intMatrixTpe), intMatrixItemFormat.write(di))
+      case di: IntVectorItem    ⇒ (JsString(intVectorTpe), intVectorItemFormat.write(di))
       case gi: GenericItem[S]   ⇒ (JsString(gi.typeName), gi.toJson)
     }
     JsObject("itemType" → result._1, "item" → result._2)
@@ -79,6 +85,8 @@ object ConfigJSON extends DefaultJsonProtocol {
         case (JsString(`stringTpe`), item)       ⇒ stringItemFormat.read(item)
         case (JsString(`doubleMatrixTpe`), item) ⇒ doubleMatrixItemFormat.read(item)
         case (JsString(`doubleVectorTpe`), item) ⇒ doubleVectorItemFormat.read(item)
+        case (JsString(`intMatrixTpe`), item)    ⇒ intMatrixItemFormat.read(item)
+        case (JsString(`intVectorTpe`), item)    ⇒ intVectorItemFormat.read(item)
         case (JsString(typeTag), item) ⇒
           GenericItem.lookup(typeTag) match {
             case Some(jsonReaderFunc) ⇒ jsonReaderFunc(item)
