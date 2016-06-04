@@ -1,4 +1,4 @@
-package csw.util.config3
+package csw.util.config
 
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsArray, JsString, JsValue}
 

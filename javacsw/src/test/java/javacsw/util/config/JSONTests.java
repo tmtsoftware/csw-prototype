@@ -1,13 +1,13 @@
-package javacsw.util.config3;
+package javacsw.util.config;
 
-import csw.util.config3.*;
-import csw.util.config3.Configurations.SetupConfig;
+import csw.util.config.*;
+import csw.util.config.Configurations.SetupConfig;
 import org.junit.Test;
 import spray.json.JsValue;
 
 import java.util.Arrays;
 
-import static javacsw.util.config3.JUnitsOfMeasure.*;
+import static javacsw.util.config.JUnitsOfMeasure.*;
 
 /**
  */

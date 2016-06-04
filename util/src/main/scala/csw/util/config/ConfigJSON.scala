@@ -1,7 +1,7 @@
-package csw.util.config3
+package csw.util.config
 
-import csw.util.config3.Configurations.{ConfigData, ConfigKey, SetupConfig}
-import csw.util.config3.UnitsOfMeasure.Units
+import csw.util.config.Configurations.{ConfigData, ConfigKey, SetupConfig}
+import csw.util.config.UnitsOfMeasure.Units
 import spray.json._
 
 /**

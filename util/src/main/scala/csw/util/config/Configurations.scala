@@ -1,9 +1,9 @@
-package csw.util.config3
+package csw.util.config
 
 import java.util
 import java.util.Optional
 
-import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 
 import scala.annotation.varargs
 import scala.compat.java8.OptionConverters._

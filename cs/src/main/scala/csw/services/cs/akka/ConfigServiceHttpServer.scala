@@ -21,7 +21,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceHttpServer"))
   logger.info("Config service http server started")
 
-  implicit val system = ActorSystem("ConfigServiceAnnexServer")
+  implicit val system = ActorSystem("ConfigServiceHttpServer")
 
   import system.dispatcher
 
@@ -194,7 +194,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
         }
         result.recover {
           case ex ⇒
-            //            logger.error(s"error processing $uri", ex)
+            logger.error(s"error processing $uri", ex)
             HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
       case None ⇒

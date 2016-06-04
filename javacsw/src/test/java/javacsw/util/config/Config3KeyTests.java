@@ -1,17 +1,17 @@
-package javacsw.util.config3;//package config3;
+package javacsw.util.config;
 //
-//import csw.util.config3.*;
-//import csw.util.config3.ConfigItems.*;
-//import csw.util.config3.Configurations.SetupConfig;
+//import csw.util.config.*;
+//import csw.util.config.ConfigItems.*;
+//import csw.util.config.Configurations.SetupConfig;
 //import org.junit.Assert;
 //import org.junit.Test;
 //import scala.Option;
 //
-//import csw.util.config3.KeyHelper.*;
+//import csw.util.config.KeyHelper.*;
 //
 //import java.util.Optional;
 //
-//import static csw.util.config3.KeyHelper.*;
+//import static csw.util.config.KeyHelper.*;
 //import static junit.framework.TestCase.assertEquals;
 //import static junit.framework.TestCase.assertFalse;
 //import static org.junit.Assert.assertTrue;
@@ -48,7 +48,7 @@ package javacsw.util.config3;//package config3;
 ///**
 // * TMT Source Code: 5/3/16.
 // */
-//public class Config3KeyTests {
+//public class ConfigKeyTests {
 //
 //  private String ck = "wfos.blue.filter";
 //  private String ck1 = "wfos.prog.cloudcover";

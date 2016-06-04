@@ -1,10 +1,10 @@
-package csw.util.config3
+package csw.util.config
 
 import java.util
 
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
-import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat}
 
 import scala.compat.java8.OptionConverters._

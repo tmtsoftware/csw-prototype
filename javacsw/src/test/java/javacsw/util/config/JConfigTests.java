@@ -1,221 +1,208 @@
 package javacsw.util.config;
 
-import csw.util.config.*;
 import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.*;
 import org.junit.Test;
-import scala.collection.Seq;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+
+import static javacsw.util.config.JUnitsOfMeasure.*;
 
 /**
  * Tests the Java API to the config classes
  */
-@SuppressWarnings("OptionalGetWithoutIsPresent")
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "unused"})
 public class JConfigTests {
-//    private static final String ck = "wfos.blue.filter";
-    private static final String ck1 = "wfos.prog.cloudcover";
-    private static final String ck2 = "wfos.red.filter";
-    private static final String ck3 = "wfos.red.detector";
-
     private static final String s1 = "encoder";
     private static final String s2 = "filter";
     private static final String s3 = "detectorTemp";
 
+    private static final String ck = "wfos.blue.filter";
+    private static final String ck1 = "wfos.prog.cloudcover";
+    private static final String ck2 = "wfos.red.filter";
+    private static final String ck3 = "wfos.red.detector";
+
+    @SuppressWarnings("EqualsBetweenInconvertibleTypes")
     @Test
-    public void testJavaKeys() {
-        JIntKey k1 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
-        StringKey k2 = new StringKey(s2, JUnitsOfMeasure.Meters);
+    public void basicKeyTests() {
+        // Should be constructed properly
+        IntKey k1 = new IntKey(s1);
+        StringKey k2 = new StringKey(s2);
+        assert (Objects.equals(k1.keyName(), s1));
 
-        assert (Objects.equals(k1.name(), s1));
-        assert (k1.units() == JUnitsOfMeasure.NoUnits);
+        // Should use set properly
+        IntItem i = k1.jset(22);
+        assert (Objects.equals(i.keyName(), s1));
+        assert (i.jvalue() == 22);
+        assert (i.jvalue(0) == 22);
+        assert (i.jget(0).get() == 22);
+        assert (i.units() == NoUnits);
 
-        Item<Integer> i = k1.set(22);
-        assert (Objects.equals(i.key().name(), s1));
-        assert (i.key().units() == JUnitsOfMeasure.NoUnits);
-        assert (i.value() == 22);
+        assert (Objects.equals(k2.keyName(), s2));
+        StringItem j = k2.jset("Bob");
+        assert (Objects.equals(j.jvalue(0), "Bob"));
 
-        assert (Objects.equals(k2.name(), s2));
-        assert (k2.units() == JUnitsOfMeasure.Meters);
-        Item<String> j = k2.set("Bob");
-        assert (Objects.equals(j.value(), "Bob"));
-
-        JIntKey k3 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
+        // Should support equality of keys
+        IntKey k3 = new IntKey(s1);
         assert (k3.equals(k1));
+        assert (!k3.equals(k2));
+        assert (!k1.equals(k2));
     }
 
-    // XXX - The usage below works but should not be part of the public API
-//    @Test
-//    public void arrayKey() {
-//        ArrayKey<Integer> ia = new ArrayKey<>("iarray", JUnitsOfMeasure.Deg);
-//        Item<Seq<Integer>> ci = ia.jset(1, 2, 3);
-//        for(int i = 0; i < 3; i++) {
-//            assert(ci.value().apply(i) == i+1);
-//        }
-//
-//        ArrayKey<Double> da = new ArrayKey<>("darray", JUnitsOfMeasure.Deg);
-//        Item<Seq<Double>> di = da.jset(1.0, 2.0, 3.0);
-//        for(int i = 0; i < 3; i++) {
-//            assert(di.value().apply(i) == i+1);
-//        }
-//    }
 
     @Test
-    public void intArrayKey() {
-        JIntArrayKey ia = new JIntArrayKey("iarray", JUnitsOfMeasure.Deg);
-        Item<Seq<Integer>>  ci = ia.jset(1, 2, 3);
-        for(int i = 0; i < 3; i++) {
-            assert(ci.value().apply(i) == i+1);
+    public void CheckingKeyUpdates() {
+        IntKey k1 = new IntKey("atest");
+
+        // Should allow updates
+        IntItem i1 = k1.jset(22);
+        assert (i1.jvalue() == 22);
+        assert (i1.jvalue(0) == 22);
+        assert (i1.units() == NoUnits);
+        IntItem i2 = k1.jset(33);
+        assert (i2.jvalue() == 33);
+        assert (i2.units() == NoUnits);
+
+        SetupConfig sc = new SetupConfig(ck1).add(i1);
+        assert (sc.jvalue(k1, 0) == 22);
+        sc = sc.add(i2);
+        assert (sc.jvalue(k1, 0) == 33);
+
+        SetupConfig sc2 = new SetupConfig(ck1).jset(k1, 22);
+        assert(sc2.jvalue(k1) == 22);
+        assert(sc2.jvalues(k1).equals(Collections.singletonList(22)));
+    }
+
+    @Test
+    public void TestLong() {
+        // should allow setting from Long
+        long tval = 1234L;
+        LongKey k1 = new LongKey(s1);
+        LongItem i1 = k1.jset(tval);
+        assert (i1.jvalues().equals(Collections.singletonList(tval)));
+        assert (i1.jvalue() == tval);
+        assert (i1.jget(0).get() == tval);
+
+        long tval2 = 4567L;
+        LongKey k2 = new LongKey(s1);
+        LongItem i2 = k2.jset(tval2);
+        assert (i2.jvalue().equals(tval2));
+        assert (i2.jvalues().equals(Collections.singletonList(tval2)));
+    }
+
+    @Test
+    public void scTest() {
+        IntKey k1 = new IntKey("encoder");
+        IntKey k2 = new IntKey("windspeed");
+
+        // Should allow adding keys
+        {
+            SetupConfig sc1 = new SetupConfig(ck3).jset(k1, 22).jset(k2, 44);
+            assert (sc1.size() == 2);
+            assert (sc1.exists(k1));
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k1) == 22);
+            assert (sc1.jvalue(k2) == 44);
+        }
+
+        // Should allow setting
+        {
+            SetupConfig sc1 = new SetupConfig(ck1);
+            sc1 = sc1.jset(k1, NoUnits, 22).jset(k2, NoUnits, 44);
+            assert (sc1.size() == 2);
+            assert (sc1.exists(k1));
+            assert (sc1.exists(k2));
+        }
+
+        // Should allow getting values
+        {
+            SetupConfig sc1 = new SetupConfig(ck1);
+            sc1 = sc1.jset(k1, NoUnits, 22).jset(k2, NoUnits, 44);
+            List<Integer> v1 = sc1.jvalues(k1);
+            List<Integer> v2 = sc1.jvalues(k2);
+            assert (sc1.jget(k1).isPresent());
+            assert (sc1.jget(k2).isPresent());
+            assert (v1.equals(Collections.singletonList(22)));
+            assert (v2.equals(Collections.singletonList(44)));
+        }
+
+        // should update for the same key with set
+        {
+            SetupConfig sc1 = new SetupConfig(ck1);
+            sc1 = sc1.jset(k2, NoUnits, 22);
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 22);
+
+            sc1 = sc1.jset(k2, NoUnits, 33);
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 33);
+        }
+
+        // should update for the same key with add
+        {
+            SetupConfig sc1 = new SetupConfig(ck1);
+            sc1 = sc1.add(k2.jset(22).withUnits(NoUnits));
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 22);
+
+            sc1 = sc1.add(k2.jset(33).withUnits(NoUnits));
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 33);
         }
     }
 
     @Test
-    public void doubleArrayKey() {
-        JDoubleArrayKey ia = new JDoubleArrayKey("darray", JUnitsOfMeasure.Deg);
-        Item<Seq<java.lang.Double>> ci = ia.jset(1.0, 2.0, 3.0);
-        for(int i = 0; i < 3; i++) {
-            assert(ci.value().apply(i) == i+1);
-        }
-    }
+    public void scTest2() {
+        // should update for the same key with set
+        IntKey k1 = new IntKey("encoder");
+        StringKey k2 = new StringKey("windspeed");
 
-    // XXX - The usage below works but should not be part of the public API
-//    @Test
-//    public void jKeyTestNotAllowed() {
-//        JKey1<String> k1 = new JKey1<>(s2, JUnitsOfMeasure.NoUnits);
-//        Item<String> i = k1.set("blue");
-//        assert (Objects.equals(k1.name(), s2));
-//        assert (k1.units() == JUnitsOfMeasure.NoUnits);
-//        assert (Objects.equals(i.value(), "blue"));
-//
-//
-//        JKey1<Double> k2 = new JKey1<>(s3, JUnitsOfMeasure.Deg);
-//        assert (Objects.equals(k2.name(), s3));
-//        assert (k2.units() == JUnitsOfMeasure.Deg);
-//        Item<Double> j = k2.set(34.34);
-//        assert (j.value() == 34.34);
-//    }
+        SetupConfig sc1 = new SetupConfig(ck1);
+        sc1 = sc1.jset(k1, NoUnits, 22);
+        assert (sc1.exists(k1));
+        assert (sc1.jvalue(k1) == 22);
 
-    @Test
-    public void jKeyTest() {
-        StringKey k1 = new StringKey(s2, JUnitsOfMeasure.NoUnits);
-        Item<String> i = k1.set("blue");
-        assert (Objects.equals(k1.name(), s2));
-        assert (k1.units() == JUnitsOfMeasure.NoUnits);
-        assert (Objects.equals(i.value(), "blue"));
-
-
-        JDoubleKey k2 = new JDoubleKey(s3, JUnitsOfMeasure.Deg);
-        assert (Objects.equals(k2.name(), s3));
-        assert (k2.units() == JUnitsOfMeasure.Deg);
-        Item<Double> j = k2.set(34.34);
-        assert (j.value() == 34.34);
-    }
-
-
-    @Test
-    public void testConfig() {
-        JIntKey k1 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
-        Item<Integer> i1 = k1.set(22);
-
-        StringKey k2 = new StringKey(s2, JUnitsOfMeasure.Meters);
-        Item<String> i2 = k2.set(s2);
-
-        SetupConfig sc = new SetupConfig(ck2).add(i1).add(i2);
-        assert (sc.size() == 2);
-
-        Optional<Item<Integer>> ki1 = sc.jget(k1);
-        assert (ki1.get() == i1);
-        assert (22 == ki1.get().value());
-
-        Optional<Item<String>> ki2 = sc.jget(k2);
-        assert (ki2.get() == i2);
-        assert (Objects.equals(s2, ki2.get().value()));
-
-        // Check setting through sc
-        SetupConfig sc2 = new SetupConfig(ck3);
-        sc2 = sc2.add(k1.set(22));
-        sc2 = sc2.add(k2.set(s2));
-        System.out.println("SC2: " + sc2);
-        System.out.println("SC2: " + i1);
-        System.out.println("SC2: " + sc2.get(k1).get());
-
-
-        assert (sc2.jget(k1).get().equals(i1));
-        assert(22 == sc2.jget(k1).get().value());
-        assert(ki2.get() == i2);
-        assert(Objects.equals(s2, ki2.get().value()));
-
-        System.out.println("SC2: " + sc2);
-
-    }
-
-    // An example of defining a key in Java.
-    // Note: In most cases it should be easier to use an existing key: For example:
-    // StringKey filter = new StringKey("filter", JUnitsOfMeasure.NoUnits);
-    // TODO: Implement enum keys?
-    static class JFilter extends StringKey {
-        JFilter() {
-            super("filter", JUnitsOfMeasure.NoUnits);
-        }
-
-        public CItem<String> set(String v) {
-            return new CItem<>(this, v);
-        }
-
-        static CItem<String> filter(String value) {
-            return (new JFilter()).set(value);
-        }
-    }
-
-
-    @Test
-    public void customJavaKey() {
-        // Create an instance
-        JFilter filter = new JFilter();
-        assert (Objects.equals(filter.name(), s2));
-        assert (filter.units() == JUnitsOfMeasure.NoUnits);
-
-        Item<String> i = filter.set("blue");
-        assert (Objects.equals(i.value(), "blue"));
-
-        SetupConfig sc = new SetupConfig(ck1).add(i);
-        System.out.println("SC: " + sc);
-
-        SetupConfig sc2 = new SetupConfig(ck1).set(filter, "red");
-        System.out.println("SC2: " + sc2);
-
-        SetupConfig sc3 = new SetupConfig(ck1).add(JFilter.filter("green")).add(JFilter.filter("blue"));
-        System.out.println("SC3: " + sc3);
-
+        sc1 = sc1.jset(k2, NoUnits, "bob");
+        assert (sc1.exists(k2));
+        assert (Objects.equals(sc1.jvalue(k2), "bob"));
+        assert(sc1.size() == 2);
     }
 
     @Test
-    public void testRemove() {
-        JIntKey k1 = new JIntKey(s1, JUnitsOfMeasure.NoUnits);
-        StringKey k2 = new StringKey(s2, JUnitsOfMeasure.Meters);
-        JDoubleKey k3 = new JDoubleKey(s3, JUnitsOfMeasure.Deg);
+    public void testingNewIdea() {
+        IntKey t1 = new IntKey("test1");
+        // should allow setting a single value
+        {
+            IntItem i1 = t1.jset(1);
+            assert (i1.jvalue() == 1);
+            assert (i1.units() == NoUnits);
+            assert (i1.jvalue(0) == 1);
+        }
+        // should allow setting several
+        {
+            IntItem i1 = t1.jset(1, 3, 5, 7);
+            assert (i1.jvalues().equals(Arrays.asList(1, 3, 5, 7)));
+            assert (i1.units() == NoUnits);
+            assert (i1.jvalue(1) == 3);
 
-        Item<Integer> i1 = k1.set(22);
-        Item<String> i2 = k2.set(s2);
-        Item<Double> i3 = k3.set(-34.56);
-
-        SetupConfig sc = new SetupConfig(ck2).add(i1).add(i2).add(i3);
-        assert (sc.size() == 3);
-
-        sc = sc.remove(k1);
-        assert (sc.size() == 2);
-        assert (!sc.exists(k1));
-        assert (sc.exists(k2));
-        assert (sc.exists(k3));
-        sc = sc.remove(k2);
-        assert (sc.size() == 1);
-        assert (!sc.exists(k1));
-        assert (!sc.exists(k2));
-        assert (sc.exists(k3));
-        sc = sc.remove(k3);
-        assert (sc.size() == 0);
-        assert (!sc.exists(k1));
-        assert (!sc.exists(k2));
-        assert (!sc.exists(k3));
+            IntItem i2 = t1.jset(Arrays.asList(10, 30, 50, 70)).withUnits(Deg);
+            assert (i2.jvalues().equals(Arrays.asList(10, 30, 50, 70)));
+            assert (i2.units() == Deg);
+            assert (i2.jvalue(1) == 30);
+            assert (i2.jvalue(3) == 70);
+        }
+        // should also allow setting with sequence
+        {
+            List<Integer> s1 = Arrays.asList(2, 4, 6, 8);
+            IntItem i1 = t1.jset(s1).withUnits(Meters);
+            assert (i1.jvalues().equals(s1));
+            assert (i1.size() == s1.size());
+            assert (i1.units() == Meters);
+            assert (i1.jvalue(2) == 6);
+        }
     }
 }
+

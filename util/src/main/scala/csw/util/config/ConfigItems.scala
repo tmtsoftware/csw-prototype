@@ -1,6 +1,6 @@
-package csw.util.config3
+package csw.util.config
 
-import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
+import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
@@ -36,6 +36,7 @@ trait Item[S, J] {
 
   /**
    * Returns the value at the given index, throwing an exception if the index is out of range
+   *
    * @param index the index of a value
    * @return the value at the given index (may throw an exception if the index is out of range)
    */
@@ -85,6 +86,7 @@ trait Item[S, J] {
 
   /**
    * Java API: Returns the item's values as a java list
+   *
    * @return the list of values
    */
   def jvalues: java.util.List[J]

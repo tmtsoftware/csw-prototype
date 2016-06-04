@@ -1,5 +1,7 @@
 package csw.util.config
 
+import scala.collection.JavaConverters._
+
 /**
  * Represents a TMT subsystem
  */
@@ -56,6 +58,8 @@ object Subsystem {
     GMS, IRIS, IRMS, LGSF, M1CS, M2CS, M3CS, MCS,
     NFIRAOS, NSCU, OSS, PFCS, PSFR, RPG, SCMS,
     SOSS, STR, SUM, TCS, TINC, WFOS)
+
+  val jSubsystems: java.util.Set[Subsystem] = subsystems.asJava
 
   def lookup(in: String): Option[Subsystem] = subsystems.find(sub ⇒ sub.prefix.equalsIgnoreCase(in))
 }

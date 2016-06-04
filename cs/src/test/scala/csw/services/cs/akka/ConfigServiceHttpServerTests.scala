@@ -36,19 +36,19 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
 
     // Start the config service annex http server and wait for it to be ready for connections
     // (In normal operations, this server would already be running)
-    val annexServer = ConfigServiceAnnexServer()
+    //    val annexServer = ConfigServiceAnnexServer()
     try {
       val f = for {
         _ ← runTests(settings, oversize = false)
-        _ ← runTests2(settings2, oversize = false)
-
-        _ ← runTests(settings, oversize = true)
-        _ ← runTests2(settings2, oversize = true)
+        //        _ ← runTests2(settings2, oversize = false)
+        //
+        //        _ ← runTests(settings, oversize = true)
+        //        _ ← runTests2(settings2, oversize = true)
       } yield ()
       Await.ready(f, 60.seconds)
     } finally {
       logger.info("Shutting down annex server")
-      annexServer.shutdown()
+      //      annexServer.shutdown()
     }
   }
 

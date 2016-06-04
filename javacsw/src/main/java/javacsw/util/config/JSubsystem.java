@@ -1,7 +1,7 @@
-package javacsw.util.config3;
+package javacsw.util.config;
 
-import csw.util.config3.Subsystem;
-import csw.util.config3.Subsystem.*;
+import csw.util.config.Subsystem;
+import csw.util.config.Subsystem.*;
 
 import java.util.Set;
 

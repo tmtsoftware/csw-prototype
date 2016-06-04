@@ -1,154 +1,214 @@
 package csw.util.config
 
 import csw.util.config.Configurations.SetupConfig
+import csw.util.config.UnitsOfMeasure._
 import org.scalatest.FunSpec
+import spray.json.DefaultJsonProtocol
 
-/**
- * Tests the configuration classes
- */
+object ConfigTests {
+  import DefaultJsonProtocol._
+  case class MyData(i: Int, f: Float, d: Double, s: String)
+  implicit val MyDataFormat = jsonFormat4(MyData.apply)
+}
+
+//noinspection ComparingUnrelatedTypes,ScalaUnusedSymbol
 class ConfigTests extends FunSpec {
+  import ConfigTests._
+
   private val s1: String = "encoder"
   private val s2: String = "filter"
-  //  private val s3: String = "detectorTemp"
+  private val s3: String = "detectorTemp"
 
-  //  private val ck = "wfos.blue.filter"
+  private val ck = "wfos.blue.filter"
   private val ck1 = "wfos.prog.cloudcover"
-  //  private val ck2 = "wfos.red.filter"
-  //  private val ck3 = "wfos.red.detector"
+  private val ck2 = "wfos.red.filter"
+  private val ck3 = "wfos.red.detector"
 
   describe("Basic key tests") {
-    val k1 = IntKey(s1, UnitsOfMeasure.NoUnits)
-    val k2 = StringKey(s2, UnitsOfMeasure.Meters)
+    val k1 = IntKey(s1)
+    val k2 = StringKey(s2)
 
     it("Should be constructed properly") {
-      assert(k1.name eq s1)
-      assert(k1.units eq UnitsOfMeasure.NoUnits)
+      assert(k1.keyName eq s1)
     }
 
     it("Should use set properly") {
-      val i: Item[Int] = k1.set(22)
-      assert(i.key.name eq s1)
-      assert(i.key.units eq UnitsOfMeasure.NoUnits)
+      val i = k1.set(22)
+      assert(i.keyName eq s1)
+      assert(i.values == Vector(22))
       assert(i.value == 22)
 
-      assert(k2.name eq s2)
-      assert(k2.units eq UnitsOfMeasure.Meters)
-      val j: Item[String] = k2.set("Bob")
-      assert(j.value == "Bob")
+      assert(k2.keyName eq s2)
+      val j: StringItem = k2.set("Bob").withUnits(UnitsOfMeasure.Meters)
+      assert(j.values == Vector("Bob"))
+
+      // Try default
+      val k = k2.set("Bob")
     }
 
     it("Should support equality of keys") {
-      val k3 = IntKey(s1, UnitsOfMeasure.NoUnits)
+      val k3 = IntKey(s1)
       assert(k3 == k1)
-      //noinspection ComparingUnrelatedTypes
       assert(k3 != k2)
-      //noinspection ComparingUnrelatedTypes
       assert(k1 != k2)
     }
   }
 
-  describe("Basic array tests") {
-    val k1: ArrayKey[Int] = ArrayKey[Int]("atest", UnitsOfMeasure.NoUnits)
+  describe("Generic key tests") {
+    val k1 = GenericKey[MyData]("MyData", "atest")
+    val d1 = MyData(1, 2.0f, 3.0, "4")
+    val d2 = MyData(10, 20.0f, 30.0, "40")
 
     it("Should allow an Int array") {
-      val i1 = k1.set(Seq(1, 2, 3))
-      assert(i1.value == Seq(1, 2, 3))
-      val i2 = k1.set(1, 2, 3)
-      assert(i2.value == Seq(1, 2, 3))
-    }
-
-    it("Should use key equals") {
-      val k2: ArrayKey[Int] = ArrayKey("atest1", UnitsOfMeasure.NoUnits)
-      val k3: ArrayKey[Int] = ArrayKey("atest", UnitsOfMeasure.Deg)
-
-      assert(k1 == k1)
-      assert(k1 != k2)
-      assert(k1 != k3)
-      assert(k2 != k3)
-
-    }
-  }
-
-  describe("Java compat int array tests") {
-    val k1 = JIntArrayKey("atest", UnitsOfMeasure.NoUnits)
-
-    it("Should allow an Int array") {
-      val seq = Seq(1, 2, 3).asInstanceOf[Seq[java.lang.Integer]]
-      val i1 = k1.set(seq)
-      assert(i1.value == seq)
-      val i2 = k1.set(1, 2, 3)
-      assert(i2.value == seq)
-    }
-
-    it("Should use key equals") {
-      val k2: JIntArrayKey = JIntArrayKey("atest1", UnitsOfMeasure.NoUnits)
-      val k3: JIntArrayKey = JIntArrayKey("atest", UnitsOfMeasure.Deg)
-
-      assert(k1 == k1)
-      assert(k1 != k2)
-      assert(k1 != k3)
-      assert(k2 != k3)
-    }
-  }
-
-  describe("Java compat double array tests") {
-    val k1 = JDoubleArrayKey("atest", UnitsOfMeasure.NoUnits)
-
-    it("Should allow an Double array") {
-      val seq = Seq(1.0, 2.0, 3.0).asInstanceOf[Seq[java.lang.Double]]
-      val i1 = k1.set(seq)
-      assert(i1.value == seq)
-      val i2 = k1.set(1.0, 2.0, 3.0)
-      assert(i2.value == seq)
-    }
-
-    it("Should use key equals") {
-      val k2: JDoubleArrayKey = JDoubleArrayKey("atest1", UnitsOfMeasure.NoUnits)
-      val k3: JDoubleArrayKey = JDoubleArrayKey("atest", UnitsOfMeasure.Deg)
-
-      assert(k1 == k1)
-      assert(k1 != k2)
-      assert(k1 != k3)
-      assert(k2 != k3)
+      val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.NoUnits)
+      assert(i1.values == Vector(d1, d2))
+      assert(i1(0) == d1)
+      assert(i1(1) == d2)
+      assert(i1(0).i == 1)
     }
   }
 
   describe("Checking key updates") {
-    val k1 = IntKey("atest", UnitsOfMeasure.NoUnits)
+    val k1: IntKey = new IntKey("atest")
 
     it("Should allow updates") {
       val i1 = k1.set(22)
       assert(i1.value == 22)
+      assert(i1.units == NoUnits)
       val i2 = k1.set(33)
       assert(i2.value == 33)
+      assert(i2.units == NoUnits)
 
-      val sc = SetupConfig(ck1).add(i1)
+      var sc = SetupConfig(ck1).add(i1)
       assert(sc.get(k1).get.value == 22)
-      val sc2 = sc.add(i2)
-      assert(sc2.get(k1).get.value == 33)
-      val sc3 = sc.set(k1, 44)
-      assert(sc3.get(k1).get.value == 44)
+      assert(sc.value(k1) == 22)
+      assert(sc.values(k1) == Vector(22))
+      assert(sc.value(k1, 0) == 22)
+      sc = sc.add(i2)
+      assert(sc.get(k1).get.value == 33)
     }
   }
 
-  describe("Test Standard Key Usage") {
-    import StandardKeys._
-    it("Should be able to use standard enumerated keys") {
-      val sc = SetupConfig(ck1).set(cloudCover, PERCENT_20).set(exposureType, OBSERVE)
-      assert(sc.get(cloudCover).get.value == PERCENT_20)
-      assert(sc.get(exposureType).get.value == OBSERVE)
+  describe("Test Long") {
+    it("should allow setting from Long") {
+      val tval = 1234L
+      val k1 = LongKey(s1)
+      val i1 = k1.set(tval)
+      assert(i1.values == Vector(tval))
+      assert(i1.values(0) == tval)
+      assert(i1.value == tval)
+
+      val tval2 = 4567L
+      val k2 = LongKey(s1)
+      val i2 = k2.set(tval2)
+      assert(i2.values == Vector(tval2))
     }
   }
 
-  //  describe("Test JSON I/O") {
-  //    import StandardKeys._
-  //    import upickle.default._
-  //
-  //    it("Should be able to serialize to and from JSON") {
-  //      val sc = SetupConfig(ck1).set(position, "TOP")
-  //      val json = write(sc)
-  //      println(s"XXX json:\n\n$json\n")
-  //    }
-  //  }
+  describe("SC Test") {
 
+    val k1 = IntKey("encoder")
+    val k2 = IntKey("windspeed")
+    it("Should allow adding keys") {
+      var sc1 = SetupConfig(ck3).set(k1, 22).set(k2, 44)
+      assert(sc1.size == 2)
+      assert(sc1.exists(k1))
+      assert(sc1.exists(k2))
+      assert(sc1.value(k1) == 22)
+      assert(sc1.value(k2) == 44)
+    }
+
+    it("Should allow setting") {
+      var sc1 = SetupConfig(ck1)
+      sc1 = sc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
+      assert(sc1.size == 2)
+      assert(sc1.exists(k1))
+      assert(sc1.exists(k2))
+    }
+
+    it("Should allow apply") {
+      var sc1 = SetupConfig(ck1)
+      sc1 = sc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
+
+      val v1 = sc1(k1)
+      val v2 = sc1(k2)
+      assert(sc1.get(k1).isDefined)
+      assert(sc1.get(k2).isDefined)
+      assert(v1 == Vector(22))
+      assert(v2 == Vector(44))
+    }
+
+    it("should update for the same key with set") {
+      var sc1 = SetupConfig(ck1)
+      sc1 = sc1.set(k2, NoUnits, 22)
+      assert(sc1.exists(k2))
+      assert(sc1(k2) == Vector(22))
+
+      sc1 = sc1.set(k2, NoUnits, 33)
+      assert(sc1.exists(k2))
+      assert(sc1(k2) == Vector(33))
+    }
+
+    it("should update for the same key with add") {
+      var sc1 = SetupConfig(ck1)
+      sc1 = sc1.add(k2.set(22).withUnits(NoUnits))
+      assert(sc1.exists(k2))
+      assert(sc1(k2) == Vector(22))
+
+      sc1 = sc1.add(k2.set(33).withUnits(NoUnits))
+      assert(sc1.exists(k2))
+      assert(sc1(k2) == Vector(33))
+    }
+
+  }
+
+  it("should update for the same key with set") {
+    val k1 = IntKey("encoder")
+    val k2 = StringKey("windspeed")
+
+    var sc1 = SetupConfig(ck1)
+    sc1 = sc1.set(k1, NoUnits, 22)
+    assert(sc1.exists(k1))
+    assert(sc1(k1) == Vector(22))
+
+    sc1 = sc1.set(k2, NoUnits, "bob")
+    assert(sc1.exists(k2))
+    assert(sc1(k2) == Vector("bob"))
+
+    sc1.items.foreach {
+      case _: IntItem    ⇒ info("IntItem")
+      case _: StringItem ⇒ info("StringItem")
+    }
+  }
+
+  describe("testing new idea") {
+
+    val t1 = IntKey("test1")
+    it("should allow setting a single value") {
+      val i1 = t1.set(1)
+      assert(i1.values == Vector(1))
+      assert(i1.units == NoUnits)
+      assert(i1(0) == 1)
+    }
+    it("should allow setting several") {
+      val i1 = t1.set(1, 3, 5, 7)
+      assert(i1.values == Vector(1, 3, 5, 7))
+      assert(i1.units == NoUnits)
+      assert(i1(1) == 3)
+
+      val i2 = t1.set(Vector(10, 30, 50, 70)).withUnits(Deg)
+      assert(i2.values == Vector(10, 30, 50, 70))
+      assert(i2.units == Deg)
+      assert(i2(1) == 30)
+      assert(i2(3) == 70)
+    }
+    it("should also allow setting with sequence") {
+      val s1 = Vector(2, 4, 6, 8)
+      val i1 = t1.set(s1).withUnits(Meters)
+      assert(i1.values == s1)
+      assert(i1.values.size == s1.size)
+      assert(i1.units == Meters)
+      assert(i1(2) == 6)
+    }
+  }
 }

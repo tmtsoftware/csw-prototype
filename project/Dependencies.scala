@@ -6,8 +6,8 @@ object Dependencies {
 
   val scalaVersion = "2.11.8"
 
-  val akkaVersion = "2.4.6"
-  val akkaStreamsVersion = "2.4.6"
+  val akkaVersion = "2.4.7"
+  val akkaStreamsVersion = "2.4.7"
 
   val hornetqVersion = "2.4.7.Final"
 
@@ -22,7 +22,7 @@ object Dependencies {
   val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion
   val akkaHttp = "com.typesafe.akka" %% "akka-http-experimental" % akkaStreamsVersion
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaStreamsVersion
-  val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core-experimental" % akkaStreamsVersion
+  val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaStreamsVersion
 
   val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.5.0" // ApacheV2
   val akkaKryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.1" // ApacheV2

@@ -1,6 +1,6 @@
-package csw.util.config3
+package csw.util.config
 
-import csw.util.config3.Configurations.SetupConfig
+import csw.util.config.Configurations.SetupConfig
 import org.scalatest.FunSpec
 import spray.json._
 import ConfigJSON._
