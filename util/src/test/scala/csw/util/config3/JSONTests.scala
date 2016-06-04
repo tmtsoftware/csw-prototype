@@ -118,7 +118,7 @@ class JSONTests extends FunSpec {
       val i1 = k1.set(true, false).withUnits(UnitsOfMeasure.NoUnits)
 
       val j1 = i1.toJson
-//      info("j1: " + j1)
+      //      info("j1: " + j1)
       val in1 = j1.convertTo[BooleanItem]
       assert(in1 == i1)
 
@@ -181,7 +181,7 @@ class JSONTests extends FunSpec {
       assert(sc1.size == 7)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
-//      info("1: sc1out: " + sc1out.prettyPrint)
+      //      info("1: sc1out: " + sc1out.prettyPrint)
       val sc1in = ConfigJSON.readConfig(sc1out)
     }
   }
@@ -199,7 +199,7 @@ class JSONTests extends FunSpec {
       assert(sc1.get(k1).get.units == UnitsOfMeasure.Meters)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
-//      info("2: sc1out: " + sc1out.prettyPrint)
+      //      info("2: sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig(sc1out)
       assert(sc1.equals(sc1in))
@@ -211,52 +211,70 @@ class JSONTests extends FunSpec {
       val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.Meters, d1, d2)
       assert(sc2 == sc1)
     }
+  }
 
-    describe("Test Custom RaDecItem") {
-      it("Should allow cutom RaDecItem") {
-        val k1 = GenericKey[RaDec]("RaDec", "coords")
-        val c1 = RaDec(7.3, 12.1)
-        val c2 = RaDec(9.1, 2.9)
-        val i1 = k1.set(c1, c2)
-        val sc1 = SetupConfig(ck).add(i1)
-        assert(sc1.get(k1).get.values.size == 2)
-        assert(sc1.get(k1).get.values(0) == c1)
-        assert(sc1.get(k1).get.values(1) == c2)
+  describe("Test Custom RaDecItem") {
+    it("Should allow cutom RaDecItem") {
+      val k1 = GenericKey[RaDec]("RaDec", "coords")
+      val c1 = RaDec(7.3, 12.1)
+      val c2 = RaDec(9.1, 2.9)
+      val i1 = k1.set(c1, c2)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1.get(k1).get.values.size == 2)
+      assert(sc1.get(k1).get.values(0) == c1)
+      assert(sc1.get(k1).get.values(1) == c2)
 
-        val sc1out = ConfigJSON.writeConfig(sc1)
-//        info("sc1out: " + sc1out.prettyPrint)
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      //        info("sc1out: " + sc1out.prettyPrint)
 
-        val sc1in = ConfigJSON.readConfig(sc1out)
-        assert(sc1.equals(sc1in))
-        assert(sc1in.get(k1).get.values.size == 2)
-        assert(sc1in.get(k1).get.values(0) == c1)
-        assert(sc1in.get(k1).get.values(1) == c2)
+      val sc1in = ConfigJSON.readConfig(sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in.get(k1).get.values.size == 2)
+      assert(sc1in.get(k1).get.values(0) == c1)
+      assert(sc1in.get(k1).get.values(1) == c2)
 
-        val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.NoUnits, c1, c2)
-        assert(sc2 == sc1)
-      }
+      val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.NoUnits, c1, c2)
+      assert(sc2 == sc1)
     }
+  }
 
-    describe("Test Matrix items") {
-      it("Should allow matrix values") {
-        val k1 = GenericKey[DoubleMatrix](DoubleMatrix.typeName, "myMatrix")
-        val m1 = DoubleMatrix(Vector(Vector(1.0, 2.0, 3.0), Vector(4.1, 5.1, 6.1), Vector(7.2, 8.2, 9.2)))
-        val i1 = k1.set(m1)
-        val sc1 = SetupConfig(ck).add(i1)
-        assert(sc1.get(k1).size == 1)
-        assert(sc1.value(k1) == m1)
+  describe("Test Double Matrix items") {
+    it("Should allow double matrix values") {
+      val k1 = DoubleMatrixKey("myMatrix")
+      val m1 = DoubleMatrix(Vector(Vector(1.0, 2.0, 3.0), Vector(4.1, 5.1, 6.1), Vector(7.2, 8.2, 9.2)))
+      val i1 = k1.set(m1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1.value(k1) == m1)
 
-        val sc1out = ConfigJSON.writeConfig(sc1)
-//        info("3: sc1out: " + sc1out.prettyPrint)
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      //      info("sc1out: " + sc1out.prettyPrint)
 
-        val sc1in = ConfigJSON.readConfig(sc1out)
-        assert(sc1.equals(sc1in))
-        assert(sc1in.get(k1).size == 1)
-        assert(sc1in.value(k1) == m1)
+      val sc1in = ConfigJSON.readConfig(sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in.value(k1) == m1)
 
-        val sc2 = SetupConfig(ck).set(k1, m1)
-        assert(sc2 == sc1)
-      }
+      val sc2 = SetupConfig(ck).set(k1, m1)
+      assert(sc2 == sc1)
+    }
+  }
+
+  describe("Test Double Vector items") {
+    it("Should allow double vector values") {
+      val k1 = DoubleVectorKey("myVector")
+      val m1 = DoubleVector(Vector(1.0, 2.0, 3.0))
+      val i1 = k1.set(m1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1.value(k1) == m1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      //      info("sc1out: " + sc1out.prettyPrint)
+
+      val sc1in = ConfigJSON.readConfig(sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in.value(k1) == m1)
+
+      val sc2 = SetupConfig(ck).set(k1, m1)
+      assert(sc2 == sc1)
     }
   }
 }

@@ -47,7 +47,7 @@ object GenericItem {
  * @param values    the value for the key
  * @param units    the units of the value
  */
-sealed case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values: Vector[S], units: Units) extends Item[S, S] {
+case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values: Vector[S], units: Units) extends Item[S, S] {
 
   /**
    * @return a JsValue representing this item

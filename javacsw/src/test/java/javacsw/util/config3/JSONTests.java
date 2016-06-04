@@ -5,6 +5,8 @@ import csw.util.config3.Configurations.SetupConfig;
 import org.junit.Test;
 import spray.json.JsValue;
 
+import java.util.Arrays;
+
 import static javacsw.util.config3.JUnitsOfMeasure.*;
 
 /**
@@ -166,5 +168,26 @@ public class JSONTests {
             SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
             assert (sc1.equals(sc1in));
         }
+    }
+
+    @Test
+    public void TestDoubleMatrixItem() {
+        // Should allow matrix values
+        DoubleMatrixKey k1 = new DoubleMatrixKey("myMatrix");
+        JDoubleMatrix m1 = new JDoubleMatrix(Arrays.asList(
+                Arrays.asList(1.0, 2.0, 3.0),
+                Arrays.asList(4.1, 5.1, 6.1),
+                Arrays.asList(7.2, 8.2, 9.2)));
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assert (sc1.size() == 1);
+        assert (sc1.jvalue(k1).equals(m1));
+        assert(sc1.jvalue(k1).value().get(1).equals(Arrays.asList(4.1, 5.1, 6.1)));
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assert (sc1.equals(sc1in));
+        assert (sc1in.jvalue(k1).equals(m1));
     }
 }
