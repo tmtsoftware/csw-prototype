@@ -3,7 +3,7 @@ package csw.util.config3
 import java.util
 import java.util.Optional
 
-import csw.util.config3.UnitsOfMeasure.{ NoUnits, Units }
+import csw.util.config3.UnitsOfMeasure.{NoUnits, Units}
 
 import scala.annotation.varargs
 import scala.compat.java8.OptionConverters._
@@ -300,7 +300,7 @@ object Configurations {
       val f = getByKeyname(keyname)
       f match {
         case Some(item) ⇒ create(items.-(item))
-        case None ⇒ this
+        case None       ⇒ this
       }
     }
 
