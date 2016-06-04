@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static javacsw.util.config3.JUnitsOfMeasure.NoUnits;
+import static javacsw.util.config3.JUnitsOfMeasure.*;
 
 /**
  * Tests the Java API to the config classes
@@ -128,83 +128,81 @@ public class JConfig3Tests {
             assert (v1.equals(Collections.singletonList(22)));
             assert (v2.equals(Collections.singletonList(44)));
         }
+
+        // should update for the same key with set
+        {
+            SetupConfig sc1 = new SetupConfig(ck1);
+            sc1 = sc1.jset(k2, NoUnits, 22);
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 22);
+
+            sc1 = sc1.jset(k2, NoUnits, 33);
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 33);
+        }
+
+        // should update for the same key with add
+        {
+            SetupConfig sc1 = new SetupConfig(ck1);
+            sc1 = sc1.add(k2.jset(22).withUnits(NoUnits));
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 22);
+
+            sc1 = sc1.add(k2.jset(33).withUnits(NoUnits));
+            assert (sc1.exists(k2));
+            assert (sc1.jvalue(k2) == 33);
+        }
     }
 
+    @Test
+    public void scTest2() {
+        // should update for the same key with set
+        IntKey k1 = new IntKey("encoder");
+        StringKey k2 = new StringKey("windspeed");
 
-//    it("should update for the same key with set") {
-//      var sc1 = SetupConfig(ck1)
-//      sc1 = sc1.set(k2, NoUnits, 22)
-//      assert(sc1.exists(k2))
-//      assert(sc1(k2) == Vector(22))
-//
-//      sc1 = sc1.set(k2, NoUnits, 33)
-//      assert(sc1.exists(k2))
-//      assert(sc1(k2) == Vector(33))
-//    }
-//
-//    it("should update for the same key with add") {
-//      var sc1 = SetupConfig(ck1)
-//      sc1 = sc1.add(k2.set(22).withUnits(NoUnits))
-//      assert(sc1.exists(k2))
-//      assert(sc1(k2) == Vector(22))
-//
-//      sc1 = sc1.add(k2.set(33).withUnits(NoUnits))
-//      assert(sc1.exists(k2))
-//      assert(sc1(k2) == Vector(33))
-//    }
-//
-//  }
-//
-//  it("should update for the same key with set") {
-//    val k1 = IntKey("encoder")
-//    val k2 = StringKey("windspeed")
-//
-//    var sc1 = SetupConfig(ck1)
-//    sc1 = sc1.set(k1, NoUnits, 22)
-//    assert(sc1.exists(k1))
-//    assert(sc1(k1) == Vector(22))
-//
-//    sc1 = sc1.set(k2, NoUnits, "bob")
-//    assert(sc1.exists(k2))
-//    assert(sc1(k2) == Vector("bob"))
-//
-//    sc1.items.foreach {
-//      case _: IntItem    ⇒ info("IntItem")
-//      case _: StringItem ⇒ info("StringItem")
-//    }
-//  }
-//
-//  describe("testing new idea") {
-//
-//    val t1 = IntKey("test1")
-//    it("should allow setting a single value") {
-//      val i1 = t1.set(1)
-//      assert(i1.values == Vector(1))
-//      assert(i1.units == NoUnits)
-//      assert(i1(0) == 1)
-//    }
-//    it("should allow setting several") {
-//      val i1 = t1.set(1, 3, 5, 7)
-//      assert(i1.values == Vector(1, 3, 5, 7))
-//      assert(i1.units == NoUnits)
-//      assert(i1(1) == 3)
-//
-//      val i2 = t1.set(Vector(10, 30, 50, 70)).withUnits(Deg)
-//      assert(i2.values == Vector(10, 30, 50, 70))
-//      assert(i2.units == Deg)
-//      assert(i2(1) == 30)
-//      assert(i2(3) == 70)
-//    }
-//    it("should also allow setting with sequence") {
-//      val s1 = Vector(2, 4, 6, 8)
-//      val i1 = t1.set(s1).withUnits(Meters)
-//      assert(i1.values == s1)
-//      assert(i1.values.size == s1.size)
-//      assert(i1.units == Meters)
-//      assert(i1(2) == 6)
-//    }
-//  }
+        SetupConfig sc1 = new SetupConfig(ck1);
+        sc1 = sc1.jset(k1, NoUnits, 22);
+        assert (sc1.exists(k1));
+        assert (sc1.jvalue(k1) == 22);
 
+        sc1 = sc1.jset(k2, NoUnits, "bob");
+        assert (sc1.exists(k2));
+        assert (Objects.equals(sc1.jvalue(k2), "bob"));
+        assert(sc1.size() == 2);
+    }
 
+    @Test
+    public void testingNewIdea() {
+        IntKey t1 = new IntKey("test1");
+        // should allow setting a single value
+        {
+            IntItem i1 = t1.jset(1);
+            assert (i1.jvalue() == 1);
+            assert (i1.units() == NoUnits);
+            assert (i1.jvalue(0) == 1);
+        }
+        // should allow setting several
+        {
+            IntItem i1 = t1.jset(1, 3, 5, 7);
+            assert (i1.jvalues().equals(Arrays.asList(1, 3, 5, 7)));
+            assert (i1.units() == NoUnits);
+            assert (i1.jvalue(1) == 3);
+
+            IntItem i2 = t1.jset(Arrays.asList(10, 30, 50, 70)).withUnits(Deg);
+            assert (i2.jvalues().equals(Arrays.asList(10, 30, 50, 70)));
+            assert (i2.units() == Deg);
+            assert (i2.jvalue(1) == 30);
+            assert (i2.jvalue(3) == 70);
+        }
+        // should also allow setting with sequence
+        {
+            List<Integer> s1 = Arrays.asList(2, 4, 6, 8);
+            IntItem i1 = t1.jset(s1).withUnits(Meters);
+            assert (i1.jvalues().equals(s1));
+            assert (i1.size() == s1.size());
+            assert (i1.units() == Meters);
+            assert (i1.jvalue(2) == 6);
+        }
+    }
 }
 

@@ -1,5 +1,6 @@
 package csw.util.config3
 
+import java.util
 import java.util.Optional
 
 import csw.util.config3.UnitsOfMeasure.{ NoUnits, Units }
@@ -40,7 +41,7 @@ object Configurations {
   type ConfigData = Set[Item[_, _]]
 
   /**
-   * The base trait for various configuration types whether command configurations or events
+   * The base trait for various configuration types (command configurations or events)
    *
    * @tparam T the subclass of ConfigType
    */
@@ -173,7 +174,7 @@ object Configurations {
     def values[S, J](key: Key[S, J]): Vector[S] = get(key).get.values
 
     /**
-     * Java API: Returns a new instance of this item config with the values for the given key set to the given values
+     * Java API: Returns a new instance of this config with the values for the given key set to the given values
      *
      * @param key   the key to use
      * @param units the units for the values
@@ -188,7 +189,7 @@ object Configurations {
     }
 
     /**
-     * Java API: Returns a new instance of this item config with the values for the given key set to the given values
+     * Java API: Returns a new instance of this config with the values for the given key set to the given values
      *
      * @param key the key to use
      * @param v   one or more values
@@ -202,7 +203,7 @@ object Configurations {
     }
 
     /**
-     * Java API: Returns a new instance of this item config with the values for the given key set to the given values
+     * Java API: Returns a new instance of this config with the values for the given key set to the given values
      *
      * @param key   the key to use
      * @param units the units for the values
@@ -214,7 +215,7 @@ object Configurations {
     def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): T = jset(key, units, v.asScala: _*)
 
     /**
-     * Java API: Returns a new instance of this item config with the values for the given key set to the given values
+     * Java API: Returns a new instance of this config with the values for the given key set to the given values
      *
      * @param key the key to use
      * @param v   a list with the values
@@ -253,7 +254,7 @@ object Configurations {
      * @tparam J the Java value type
      * @return the first or default value for the given key
      */
-    def jvalues[S, J](key: Key[S, J]): java.util.List[J] =  get(key).get.jvalues
+    def jvalues[S, J](key: Key[S, J]): java.util.List[J] = get(key).get.jvalues
 
     /**
      * Java API: Returns the item for the key, if found, otherwise None
@@ -342,14 +343,30 @@ object Configurations {
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
-    // The following three seem to be needed by Java since Java can't handle the return type of ConfigType add/set
+    // The following overrides are needed for the javadocs
     override def add[S, J](item: Item[S, J]): SetupConfig = super.add(item)
 
     override def set[S, J](key: Key[S, J], units: Units, v: S*): SetupConfig = super.set[S, J](key, units, v: _*)
 
-    @varargs override def jset[S, J](key: Key[S, J], units: Units, v: J*): SetupConfig = super.jset(key, units, v: _*)
+    @varargs
+    override def jset[S, J](key: Key[S, J], units: Units, v: J*): SetupConfig = super.jset(key, units, v: _*)
 
-    @varargs override def jset[S, J](key: Key[S, J], v: J*): SetupConfig = super.jset(key, v: _*)
+    @varargs
+    override def jset[S, J](key: Key[S, J], v: J*): SetupConfig = super.jset(key, v: _*)
+
+    override def jset[S, J](key: Key[S, J], units: Units, v: util.List[J]): SetupConfig = super.jset(key, units, v)
+
+    override def jset[S, J](key: Key[S, J], v: util.List[J]): SetupConfig = super.jset(key, v)
+
+    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
+
+    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
+
+    override def jvalues[S, J](key: Key[S, J]): util.List[J] = super.jvalues(key)
+
+    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
+
+    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): SetupConfig = super.remove[S, J](key)
 
@@ -362,14 +379,16 @@ object Configurations {
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
-    // The following seem to be needed by Java since Java can't handle the return type of ConfigType add/set
+    // The following overrides are needed for the javadocs
     override def add[S, J](item: Item[S, J]): ObserveConfig = super.add(item)
 
     override def set[S, J](key: Key[S, J], units: Units, v: S*): ObserveConfig = super.set[S, J](key, units, v: _*)
 
-    @varargs override def jset[S, J](key: Key[S, J], units: Units, v: J*): ObserveConfig = super.jset(key, units, v: _*)
+    @varargs
+    override def jset[S, J](key: Key[S, J], units: Units, v: J*): ObserveConfig = super.jset(key, units, v: _*)
 
-    @varargs override def jset[S, J](key: Key[S, J], v: J*): ObserveConfig = super.jset(key, v: _*)
+    @varargs
+    override def jset[S, J](key: Key[S, J], v: J*): ObserveConfig = super.jset(key, v: _*)
 
     override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): ObserveConfig = super.jset(key, units, v)
 
