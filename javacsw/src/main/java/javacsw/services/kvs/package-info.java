@@ -12,7 +12,7 @@
  * The {@link javacsw.services.kvs.IKeyValueStore} class also provides factory methods to create
  * a key/value store for various event and config types, but provides a non-blocking API based on futures.
  * <p>
- * The following example shows how to create a {@link csw.util.cfg.Configurations.SetupConfig} and store it in
+ * The following example shows how to create a {@link csw.util.config.Configurations.SetupConfig} and store it in
  * the kvs:
  *
  * <pre> {@code

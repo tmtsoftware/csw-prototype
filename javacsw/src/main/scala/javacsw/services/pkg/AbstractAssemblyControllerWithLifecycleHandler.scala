@@ -2,7 +2,6 @@ package javacsw.services.pkg
 
 import java.util.Optional
 import java.util.function.BiFunction
-import javacsw.util.cfg.{JObserveConfigArg, JSetupConfigArg}
 
 import collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
@@ -14,9 +13,9 @@ import csw.services.ccs.AssemblyController.Validation
 import csw.services.loc.Connection
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.{Assembly, LifecycleHandler}
-import csw.util.cfg.Configurations.{ObserveConfigArg, SetupConfigArg}
-import csw.util.cfg.RunId
-import csw.util.cfg.StateVariable.{CurrentState, DemandState}
+import csw.util.config.Configurations.{ObserveConfigArg, SetupConfigArg}
+import csw.util.config.RunId
+import csw.util.config.StateVariable.{CurrentState, DemandState}
 
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
@@ -76,7 +75,7 @@ abstract class AbstractAssemblyControllerWithLifecycleHandler extends AbstractAc
   override def requestCurrent(): Unit = {}
 
   override def setup(locationsResolved: Boolean, configArg: SetupConfigArg, replyTo: Option[ActorRef]): Validation =
-    setup(locationsResolved, JSetupConfigArg(configArg), replyTo.asJava)
+    setup(locationsResolved, configArg, replyTo.asJava)
 
   /**
    * Called to process the setup config and reply to the given actor with the command status.
@@ -86,10 +85,10 @@ abstract class AbstractAssemblyControllerWithLifecycleHandler extends AbstractAc
    * @param replyTo           if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  def setup(locationsResolved: java.lang.Boolean, configArg: JSetupConfigArg, replyTo: Optional[ActorRef]): Validation
+  def setup(locationsResolved: java.lang.Boolean, configArg: SetupConfigArg, replyTo: Optional[ActorRef]): Validation
 
   override def observe(locationsResolved: Boolean, configArg: ObserveConfigArg, replyTo: Option[ActorRef]): Validation =
-    observe(locationsResolved, JObserveConfigArg(configArg), replyTo.asJava)
+    observe(locationsResolved, configArg, replyTo.asJava)
 
   /**
    * Called to process the observe config and reply to the given actor with the command status.
@@ -99,7 +98,7 @@ abstract class AbstractAssemblyControllerWithLifecycleHandler extends AbstractAc
    * @param replyTo           if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  def observe(locationsResolved: java.lang.Boolean, configArg: JObserveConfigArg, replyTo: Optional[ActorRef]): Validation
+  def observe(locationsResolved: java.lang.Boolean, configArg: ObserveConfigArg, replyTo: Optional[ActorRef]): Validation
 
   override def allResolved(locations: Set[Location]): Unit = allResolved(new java.util.HashSet(locations.asJavaCollection))
 

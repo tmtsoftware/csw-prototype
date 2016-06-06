@@ -1,6 +1,6 @@
 package javacsw.services.pkg;
 
-import csw.util.cfg.Configurations;
+import csw.util.config.Configurations;
 
 /**
  * Supports Java subclasses of HcdController and LifecycleHandler

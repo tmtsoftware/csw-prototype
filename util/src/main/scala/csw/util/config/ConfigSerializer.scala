@@ -1,10 +1,10 @@
-package csw.util.cfg
+package csw.util.config
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
-import csw.util.cfg.StateVariable.{DemandState, CurrentState}
-import csw.util.cfg.Configurations._
-import csw.util.cfg.Events._
+import csw.util.config.StateVariable.{DemandState, CurrentState}
+import csw.util.config.Configurations._
+import csw.util.config.Events._
 
 object ConfigSerializer {
 
@@ -140,6 +140,4 @@ object ConfigSerializer {
 
     def read(bytes: Array[Byte]): StateVariable = readObj[StateVariable](bytes)
   }
-
 }
-

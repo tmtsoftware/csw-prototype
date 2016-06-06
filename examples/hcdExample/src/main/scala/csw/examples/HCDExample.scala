@@ -9,9 +9,9 @@ import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
-import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.Events.SystemEvent
-import csw.util.cfg.Key
+import csw.util.config.Configurations.SetupConfig
+import csw.util.config.Events.SystemEvent
+import csw.util.config.{IntKey, Key}
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -27,7 +27,7 @@ object HCDExample {
   /**
    * Config key for setting the rate
    */
-  val rateKey = Key.create[Int]("rate")
+  val rateKey = IntKey("rate")
 
   // Generate position events
   protected object PosGenerator {
@@ -39,8 +39,8 @@ object HCDExample {
     case class Rate(rate: Int)
 
     // Configuration keys for az and el
-    val azKey = Key.create[Int]("az")
-    val elKey = Key.create[Int]("el")
+    val azKey = IntKey("az")
+    val elKey = IntKey("el")
 
     // Used to create the actor
     def props(prefix: String): Props = Props(classOf[PosGenerator], "Position Generator", prefix)
@@ -125,10 +125,12 @@ class HCDExample(info: HcdInfo) extends Hcd with HcdController with TimeServiceS
 
   // Process a config message
   override def process(sc: SetupConfig): Unit = {
-    sc.get(rateKey).foreach {
-      rate ⇒
-        log.info(s"Set rate to $rate")
-        posEventGenerator ! Rate(rate)
+    for {
+      rateItem ← sc.get(rateKey)
+      rate ← rateItem.get(0)
+    } {
+      log.info(s"Set rate to $rate")
+      posEventGenerator ! Rate(rate)
     }
   }
 

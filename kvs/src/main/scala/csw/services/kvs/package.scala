@@ -1,8 +1,8 @@
 package csw.services
 
 import akka.actor.ActorRefFactory
-import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.Events.StatusEvent
+import csw.util.config.Configurations.SetupConfig
+import csw.util.config.Events.StatusEvent
 
 import scala.concurrent.duration.Duration
 

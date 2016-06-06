@@ -8,11 +8,8 @@ import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
 import csw.services.event.EventService;
 import csw.services.event.EventServiceSettings;
-import csw.util.cfg.Events.ObserveEvent;
-import csw.util.cfg.Key;
-import javacsw.util.cfg.JConfigurations;
-import javacsw.util.cfg.JObserveEvent;
-import javacsw.util.cfg.JStandardKeys;
+import csw.util.config.*;
+import csw.util.config.Events.ObserveEvent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,8 +17,7 @@ import scala.PartialFunction;
 import scala.concurrent.duration.FiniteDuration;
 import scala.runtime.BoxedUnit;
 
-import java.io.Serializable;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.event.JEventPubSubTest.Msg.Publish;
@@ -49,30 +45,16 @@ public class JEventPubSubTest {
     // total number of events to publish (XXX FIXME: Seems to be some problem when using about 500 or more here...)
     static final int totalEventsToPublish = 100;
 
-    // ---
+    static final DoubleKey exposureTime = new DoubleKey("exposureTime");
 
     // Define a key for an event id
-    static final Key eventNum = Key.createIntKey("eventNum");
-
-    // A dummy class representing a message containing image data
-    @SuppressWarnings("unused")
-    static class MyImageData implements Serializable {
-        private short[] data;
-
-        public MyImageData(short[] data) {
-            this.data = data;
-        }
-
-        public short[] getData() {
-            return data;
-        }
-    }
+    static final IntKey eventNum = new IntKey("eventNum");
 
     // Define a key for image data
-    static final Key imageData = Key.<MyImageData>create("imageData");
+    static final IntVectorKey imageData = new IntVectorKey("imageData");
 
     // Dummy image data
-    static final MyImageData testImageData = new MyImageData(new short[10000]);
+    static final JIntVector testImageData = JIntVector.fromArray(new int[10000]);
 
     // Prefix to use for the event
     static final String prefix = "tcs.mobie.red.dat.exposureInfo";
@@ -174,15 +156,14 @@ public class JEventPubSubTest {
             getContext().system().terminate();
         }
 
-        private void receivedObserveEvent(ActorRef publisher, ObserveEvent e) {
-            JObserveEvent event = new JObserveEvent(e);
+        private void receivedObserveEvent(ActorRef publisher, ObserveEvent event) {
             if (startTime == 0L) startTime = System.currentTimeMillis();
-            OptionalInt numOpt = event.getAsInteger(eventNum);
+            Optional<Integer> numOpt = event.jget(eventNum, 0);
             if (!numOpt.isPresent()) {
                 log.error("Missing eventNum key");
                 getContext().system().terminate();
             } else {
-                int num = numOpt.getAsInt();
+                int num = numOpt.get();
                 if (num != count) {
                     log.error("Subscriber missed event: " + num + " != " + count);
                     getContext().system().terminate();
@@ -215,11 +196,10 @@ public class JEventPubSubTest {
 
         // Returns the next event to publish
         private ObserveEvent nextEvent(int num) {
-            return JConfigurations.createObserveEvent(prefix)
-                    .set(eventNum, num)
-                    .set(JStandardKeys.exposureTime, 1.0)
-                    .set(imageData, testImageData)
-                    .configType();
+            return new ObserveEvent(prefix)
+                    .jset(eventNum, num)
+                    .jset(exposureTime, 1.0)
+                    .jset(imageData, testImageData);
         }
 
         private void publish() {

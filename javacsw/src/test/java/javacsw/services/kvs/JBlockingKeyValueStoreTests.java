@@ -3,10 +3,10 @@ package javacsw.services.kvs;
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
 import csw.services.kvs.KvsSettings;
-import csw.util.cfg.Configurations.*;
-import csw.util.cfg.Key;
-import javacsw.util.cfg.JConfigurations;
-import javacsw.util.cfg.JSetupConfig;
+import csw.util.config.Configurations.*;
+import csw.util.config.DoubleKey;
+import csw.util.config.IntKey;
+import csw.util.config.StringKey;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,15 +14,13 @@ import scala.concurrent.duration.Duration;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
-
-import static javacsw.util.cfg.JStandardKeys.*;
 
 public class JBlockingKeyValueStoreTests {
 
     // Keys used in test
-    private static final Key infoValue = Key.createIntKey("infoValue");
-    private static final Key infoStr = Key.createStringKey("infoStr");
+    private static final IntKey infoValue = new IntKey("infoValue");
+    private static final StringKey infoStr = new StringKey("infoStr");
+    private static final DoubleKey exposureTime = new DoubleKey("exposureTime");
 
     // Amount of time to wait for Redis server to answer
     private static Duration timeout = Duration.create(5, "seconds");
@@ -47,15 +45,13 @@ public class JBlockingKeyValueStoreTests {
 
     @Test
     public void basicJavaTimeTests() throws Exception {
-        SetupConfig config1 = JConfigurations.createSetupConfig("tcs.test")
-                .set(infoValue, 1)
-                .set(infoStr, "info 1")
-                .configType();
+        SetupConfig config1 = new SetupConfig("tcs.test")
+                .jset(infoValue, 1)
+                .jset(infoStr, "info 1");
 
-        SetupConfig config2 = JConfigurations.createSetupConfig("tcs.test")
-                .set(infoValue, 2)
-                .set(infoStr, "info 2")
-                .configType();
+        SetupConfig config2 = new SetupConfig("tcs.test")
+                .jset(infoValue, 2)
+                .jset(infoStr, "info 2");
 
         kvs.set("test1", config1);
         Optional<SetupConfig> val1Opt = kvs.get("test1");
@@ -85,23 +81,23 @@ public class JBlockingKeyValueStoreTests {
 
     @Test
     public void TestSetGetAndGetHistory() throws Exception {
-        JSetupConfig config = JConfigurations.createSetupConfig("tcs.testPrefix")
-                .set(exposureTime, 2.0);
+        SetupConfig config = new SetupConfig("tcs.testPrefix")
+                .jset(exposureTime, 2.0);
 
         String key = "test";
         int n = 3;
-        kvs.set(key, config.set(exposureTime, 3.0).configType(), n);
-        kvs.set(key, config.set(exposureTime, 4.0).configType(), n);
-        kvs.set(key, config.set(exposureTime, 5.0).configType(), n);
-        kvs.set(key, config.set(exposureTime, 6.0).configType(), n);
-        kvs.set(key, config.set(exposureTime, 7.0).configType(), n);
+        kvs.set(key, config.jset(exposureTime, 3.0), n);
+        kvs.set(key, config.jset(exposureTime, 4.0), n);
+        kvs.set(key, config.jset(exposureTime, 5.0), n);
+        kvs.set(key, config.jset(exposureTime, 6.0), n);
+        kvs.set(key, config.jset(exposureTime, 7.0), n);
 
         Optional<SetupConfig> v = kvs.get(key);
         assert(v.isPresent());
-        JSetupConfig sc = new JSetupConfig(v.get());
-        OptionalDouble expTime = sc.getAsDouble(exposureTime);
+        SetupConfig sc = v.get();
+        Optional<Double> expTime = sc.jget(exposureTime, 0);
         assert(expTime.isPresent());
-        assert(expTime.getAsDouble() == 7.0);
+        assert(expTime.get() == 7.0);
 
         List<SetupConfig> h = kvs.getHistory(key, n + 1);
         assert(h.size() == n + 1);

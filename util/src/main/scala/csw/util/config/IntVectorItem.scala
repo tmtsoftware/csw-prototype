@@ -30,6 +30,10 @@ case class JIntVector(value: java.util.List[java.lang.Integer]) {
   )
 }
 
+case object JIntVector {
+  def fromArray(ar: Array[Int]): JIntVector = JIntVector(ar.toVector.map(i ⇒ i: java.lang.Integer).asJava)
+}
+
 /**
  * The type of a value for a IntVectorKey: One or more vectors of Int
  *

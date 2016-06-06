@@ -1,19 +1,24 @@
 package csw.services.kvs
 
-import csw.util.cfg.Events.StatusEvent
-import csw.util.cfg.StandardKeys.PERCENT_20
-import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.StandardKeys._
+import csw.util.config.Events.StatusEvent
+import csw.util.config.Configurations.SetupConfig
 import org.scalatest.FunSuite
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.util.config.{DoubleKey, StringKey}
 
 object EventTests {
 
+  val exposureTime = DoubleKey("exposureTime")
+  val exposureType = StringKey("exposureType")
+  val exposureClass = StringKey("exposureClass")
+  val cloudCover = StringKey("cloudCover")
+  val position = StringKey("position")
+
   val statusEvent = StatusEvent("mobie.red.dat.exposureInfo")
-    .set(exposureTime, 220)
-    .set(cloudCover, PERCENT_20)
-    .set(exposureType, FLAT)
-    .set(exposureClass, SCIENCE)
+    .set(exposureTime, 220.0)
+    .set(cloudCover, "20%")
+    .set(exposureType, "flat")
+    .set(exposureClass, "science")
 
   val setupConfig = SetupConfig("wfos.red.filter")
     .set(position, "IR2")
@@ -21,7 +26,7 @@ object EventTests {
 }
 
 /**
- * Test s
+ * Test serialization and deserialization
  */
 class EventTests extends FunSuite with LazyLogging with Implicits {
   test("Test serializing an Event to a ByteBuffer") {

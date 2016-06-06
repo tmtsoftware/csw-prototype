@@ -1,13 +1,12 @@
 package csw.util.config
 
-import java.util
 import java.util.Optional
 
 import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 
+import scala.language.implicitConversions
 import scala.annotation.varargs
 import scala.compat.java8.OptionConverters._
-import scala.language.implicitConversions
 import scala.collection.JavaConverters._
 
 /**
@@ -15,6 +14,12 @@ import scala.collection.JavaConverters._
  */
 object Configurations {
 
+  /**
+   * A top level key for a configuration: combines subsystem and the subsystem's prefix
+   *
+   * @param subsystem the subsystem that is the target of the config
+   * @param prefix    the subsystem's prefix
+   */
   case class ConfigKey(subsystem: Subsystem, prefix: String) {
     override def toString = s"[$subsystem, $prefix]"
   }
@@ -45,7 +50,7 @@ object Configurations {
    *
    * @tparam T the subclass of ConfigType
    */
-  sealed trait ConfigType[T <: ConfigType[T]] {
+  trait ConfigType[T <: ConfigType[T]] {
     self: T ⇒
 
     /**
@@ -335,15 +340,57 @@ object Configurations {
     protected def dataToString = items.mkString("(", ",", ")")
 
     protected def doToString(kind: String) = s"$kind[$subsystem, $prefix]$dataToString"
+
+    /**
+     * Returns true if the data contains the given key
+     */
+    def contains(key: Key[_, _]): Boolean = items.exists(_.keyName == key.keyName)
+
+    /**
+     * Returns a set containing the names of any of the given keys that are missing in the data
+     *
+     * @param keys one or more keys
+     */
+    def missingKeys(keys: Key[_, _]*): Set[String] = {
+      val argKeySet = keys.map(_.keyName).toSet
+      val itemsKeySet = items.map(_.keyName)
+      argKeySet.diff(itemsKeySet)
+    }
+
+    /**
+     * Returns a map based on this object where the keys and values are in string format
+     * (Could be useful for exporting in a format that other languages can read).
+     * Derived classes might want to add values to this map for fixed fields.
+     */
+    def getStringMap: Map[String, String] = items.map(i ⇒ i.keyName → i.values.map(_.toString).mkString(",")).toMap
   }
 
-  case class SetupConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]]) extends ConfigType[SetupConfig] {
+  /**
+   * Marker trait for sequence configurations
+   */
+  sealed trait SequenceConfig
+
+  /**
+   * Marker trait for control configurations
+   */
+  sealed trait ControlConfig
+
+  /**
+   * A configuration for setting telescope and instrument parameters
+   *
+   * @param configKey identifies the target subsystem
+   * @param items     an optional initial set of items (keys with values)
+   */
+  case class SetupConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+      extends ConfigType[SetupConfig] with SequenceConfig with ControlConfig {
+
     override def create(data: ConfigData) = SetupConfig(configKey, data)
 
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
-    // The following overrides are needed for the javadocs
+    // The following overrides are needed for the Java API and javadocs
+    // (Using a Java interface caused various Java compiler errors)
     override def add[S, J](item: Item[S, J]): SetupConfig = super.add(item)
 
     override def set[S, J](key: Key[S, J], units: Units, v: S*): SetupConfig = super.set[S, J](key, units, v: _*)
@@ -354,15 +401,15 @@ object Configurations {
     @varargs
     override def jset[S, J](key: Key[S, J], v: J*): SetupConfig = super.jset(key, v: _*)
 
-    override def jset[S, J](key: Key[S, J], units: Units, v: util.List[J]): SetupConfig = super.jset(key, units, v)
+    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): SetupConfig = super.jset(key, units, v)
 
-    override def jset[S, J](key: Key[S, J], v: util.List[J]): SetupConfig = super.jset(key, v)
+    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): SetupConfig = super.jset(key, v)
 
     override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
 
     override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
 
-    override def jvalues[S, J](key: Key[S, J]): util.List[J] = super.jvalues(key)
+    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
 
     override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
 
@@ -373,13 +420,22 @@ object Configurations {
     override def toString = doToString("SC")
   }
 
-  case class ObserveConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]]) extends ConfigType[ObserveConfig] {
+  /**
+   * A configuration for setting observation parameters
+   *
+   * @param configKey identifies the target subsystem
+   * @param items     an optional initial set of items (keys with values)
+   */
+  case class ObserveConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+      extends ConfigType[ObserveConfig] with SequenceConfig with ControlConfig {
+
     override def create(data: ConfigData) = ObserveConfig(configKey, data)
 
     // This is here for Java to construct with String
     def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
 
-    // The following overrides are needed for the javadocs
+    // The following overrides are needed for the Java API and javadocs
+    // (Using a Java interface caused various Java compiler errors)
     override def add[S, J](item: Item[S, J]): ObserveConfig = super.add(item)
 
     override def set[S, J](key: Key[S, J], units: Units, v: S*): ObserveConfig = super.set[S, J](key, units, v: _*)
@@ -409,4 +465,202 @@ object Configurations {
     override def toString = doToString("OC")
   }
 
+  /**
+   * A configuration indicating a pause in processing
+   *
+   * @param configKey identifies the target subsystem
+   * @param items     an optional initial set of items (keys with values)
+   */
+  case class WaitConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+      extends ConfigType[WaitConfig] with SequenceConfig {
+
+    override def create(data: ConfigData) = WaitConfig(configKey, data)
+
+    // This is here for Java to construct with String
+    def this(configKey: String) = this(ConfigKey.stringToConfigKey(configKey))
+
+    // The following overrides are needed for the Java API and javadocs
+    // (Using a Java interface caused various Java compiler errors)
+    override def add[S, J](item: Item[S, J]): WaitConfig = super.add(item)
+
+    override def set[S, J](key: Key[S, J], units: Units, v: S*): WaitConfig = super.set[S, J](key, units, v: _*)
+
+    @varargs
+    override def jset[S, J](key: Key[S, J], units: Units, v: J*): WaitConfig = super.jset(key, units, v: _*)
+
+    @varargs
+    override def jset[S, J](key: Key[S, J], v: J*): WaitConfig = super.jset(key, v: _*)
+
+    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): WaitConfig = super.jset(key, units, v)
+
+    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): WaitConfig = super.jset(key, v)
+
+    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
+
+    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
+
+    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
+
+    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
+
+    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
+
+    override def remove[S, J](key: Key[S, J]): WaitConfig = super.remove[S, J](key)
+
+    override def toString = doToString("OC")
+  }
+
+  /**
+   * Filters
+   */
+  object ConfigFilters {
+    // A filter type for various ConfigData
+    type ConfigFilter[A] = A ⇒ Boolean
+
+    def prefixes(configs: Seq[ConfigType[_]]): Set[String] = configs.map(_.prefix).toSet
+
+    def onlySetupConfigs(configs: Seq[SequenceConfig]): Seq[SetupConfig] = configs.collect { case ct: SetupConfig ⇒ ct }
+
+    def onlyObserveConfigs(configs: Seq[SequenceConfig]): Seq[ObserveConfig] = configs.collect { case ct: ObserveConfig ⇒ ct }
+
+    def onlyWaitConfigs(configs: Seq[SequenceConfig]): Seq[WaitConfig] = configs.collect { case ct: WaitConfig ⇒ ct }
+
+    val prefixStartsWithFilter: String ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.prefix.startsWith(query)
+    val prefixContainsFilter: String ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.prefix.contains(query)
+    val prefixIsSubsystem: Subsystem ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.subsystem.equals(query)
+
+    def prefixStartsWith(query: String, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixStartsWithFilter(query))
+
+    def prefixContains(query: String, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixContainsFilter(query))
+
+    def prefixIsSubsystem(query: Subsystem, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixIsSubsystem(query))
+  }
+
+  // --- Config args ---
+
+  /**
+   * This will include information related to the observation that is related to a configuration.
+   * This will grow and develop.
+   */
+  case class ConfigInfo(obsId: ObsId) {
+    /**
+     * Unique ID for this configuration
+     */
+    val runId: RunId = RunId()
+  }
+
+  object ConfigInfo {
+    implicit def apply(obsId: String): ConfigInfo = ConfigInfo(ObsId(obsId))
+  }
+
+  /**
+   * A ConfigArg is what is placed in a queue in Command Service.
+   * It can be one or more SetupConfigs, one or more ObserveConfigs or a WaitConfig
+   * Each ConfigArg includes a ConfigInfo which will contain information about the executing
+   * observation.
+   */
+  sealed trait ConfigArg extends Serializable {
+    def info: ConfigInfo
+  }
+
+  /**
+   * Marker trait for sequence config args
+   */
+  sealed trait SequenceConfigArg extends ConfigArg
+
+  /**
+   * Marker trait for control config args
+   */
+  sealed trait ControlConfigArg extends ConfigArg
+
+  /**
+   * Combines multiple SetupConfigs together with a ConfigInfo object containing the obsId and runId
+   *
+   * @param info    contains the obsId, runId
+   * @param configs one or more SetupConfigs
+   */
+  final case class SetupConfigArg(info: ConfigInfo, configs: SetupConfig*) extends SequenceConfigArg with ControlConfigArg {
+    /**
+     * Java API: Returns the list of configs
+     */
+    def jconfigs: java.util.List[SetupConfig] = configs.asJava
+  }
+
+  object SetupConfigArg {
+    /**
+     * Creates a SetupConfigArg assuming that an implicit ConfigInfo is in scope
+     *
+     * @param configs the configs to include in the object
+     * @param info the implicit config info
+     * @return a new object containing the configs and info
+     */
+    def apply(configs: SetupConfig*)(implicit info: ConfigInfo): SetupConfigArg = SetupConfigArg(info, configs: _*)
+  }
+
+  /**
+   * For the Java API
+   *
+   * @param obsId   the obs id string
+   * @param configs one or more configs
+   * @return a new SetupConfigArg containing the obsId and configs
+   */
+  @varargs
+  def createSetupConfigArg(obsId: String, configs: SetupConfig*): SetupConfigArg = SetupConfigArg(ConfigInfo(ObsId(obsId)), configs: _*)
+
+  /**
+   * Combines multiple ObserveConfigs together with a ConfigInfo object containing the obsId and runId
+   *
+   * @param info    contains the obsId, runId
+   * @param configs one or more ObserveConfigs
+   */
+  final case class ObserveConfigArg(info: ConfigInfo, configs: ObserveConfig*) extends SequenceConfigArg with ControlConfigArg {
+    /**
+     * Java API: Returns the list of configs
+     */
+    def jconfigs: java.util.List[ObserveConfig] = configs.asJava
+
+    @varargs
+    def withConfigs(configs: ObserveConfig*): ObserveConfigArg = ObserveConfigArg(info, configs: _*)
+  }
+
+  object ObserveConfigArg {
+    /**
+     * Creates an ObserveConfigArg assuming that an implicit ConfigInfo is in scope
+     *
+     * @param configs the configs to include in the object
+     * @param info the implicit config info
+     * @return a new object containing the configs and info
+     */
+    def apply(configs: ObserveConfig*)(implicit info: ConfigInfo): ObserveConfigArg = ObserveConfigArg(info, configs: _*)
+  }
+
+  /**
+   * For the Java API
+   *
+   * @param obsId   the obs id string
+   * @param configs one or more configs
+   * @return a new ObserveConfigArg containing the obsId and configs
+   */
+  @varargs
+  def createObserveConfigArg(obsId: String, configs: ObserveConfig*): ObserveConfigArg = ObserveConfigArg(ConfigInfo(ObsId(obsId)), configs: _*)
+
+  /**
+   * Combines a WaitConfig with a ConfigInfo object containing the obsId and runId
+   *
+   * @param info   contains the obsId, runId
+   * @param config the WaitConfig
+   */
+  final case class WaitConfigArg(info: ConfigInfo, config: WaitConfig) extends SequenceConfigArg
+
+  @varargs
+  object WaitConfigArg {
+    def apply(wc: WaitConfig)(implicit info: ConfigInfo): WaitConfigArg = WaitConfigArg(info, wc)
+  }
+
+  /**
+   * Contains a list of configs that can be sent to a sequencer
+   */
+  final case class ConfigArgList(configs: Seq[SequenceConfig])
+
 }
+

@@ -3,8 +3,8 @@ package javacsw.services.ccs
 import akka.actor.{ActorRef, Props}
 import akka.util.Timeout
 import csw.services.ccs.HcdStatusMatcherActor
-import csw.util.cfg.StateVariable._
-import csw.util.cfg.{RunId, StateVariable}
+import csw.util.config.StateVariable._
+import csw.util.config.{RunId, StateVariable}
 import scala.concurrent.duration._
 
 object JHcdStatusMatcherActor {

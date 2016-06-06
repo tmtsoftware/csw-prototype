@@ -1,6 +1,6 @@
 package csw.services.event
 
-import csw.util.cfg.ConfigSerializer._
+import csw.util.config.ConfigSerializer._
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client._
 import org.hornetq.core.remoting.impl.invm.{InVMConnectorFactory, InVMAcceptorFactory}

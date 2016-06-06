@@ -2,10 +2,11 @@ package csw.services.kvs
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor._
-import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.StandardKeys.exposureTime
-import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
+import csw.util.config.Configurations.SetupConfig
+import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.util.config.DoubleKey
+
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -39,12 +40,14 @@ class PubSubTests extends TestKit(ActorSystem("Test"))
 object PubSubTests {
   import Implicits._
 
+  val exposureTime = DoubleKey("exposureTime")
+
   // A test class that publishes configs
   case class TestPublisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging {
     val settings = KvsSettings(context.system)
     val kvs = KeyValueStore[SetupConfig](settings)
     val prefix = "tcs.mobie.red.dat.exposureInfo"
-    val expTime = 1
+    val expTime = 1.0
     var nextId = 0
     var done = false
 

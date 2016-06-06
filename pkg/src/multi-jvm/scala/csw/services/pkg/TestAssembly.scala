@@ -4,8 +4,8 @@ import akka.actor.ActorRef
 import csw.services.ccs.AssemblyController
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
-import csw.util.cfg.StateVariable.CurrentState
-import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
+import csw.util.config.StateVariable.CurrentState
+import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
@@ -47,7 +47,7 @@ case class TestAssembly(info: AssemblyInfo)
         && sc.configKey.prefix != TestConfig.testConfig2.configKey.prefix) {
         Invalid("Wrong prefix")
       } else {
-        val missing = sc.data.missingKeys(TestConfig.posName, TestConfig.c1, TestConfig.c2, TestConfig.equinox)
+        val missing = sc.missingKeys(TestConfig.posName, TestConfig.c1, TestConfig.c2, TestConfig.equinox)
         if (missing.nonEmpty)
           Invalid(s"Missing keys: ${missing.mkString(", ")}")
         else Valid

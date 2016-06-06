@@ -1,7 +1,7 @@
 package javacsw.services.ccs;
 
-import csw.util.cfg.Configurations;
-import csw.util.cfg.StateVariable;
+import csw.util.config.Configurations;
+import csw.util.config.StateVariable;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 

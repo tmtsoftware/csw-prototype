@@ -5,9 +5,9 @@ import akka.util.Timeout
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.LocationTrackerClientActor
 import csw.util.akka.PublisherActor
-import csw.util.cfg.StateVariable._
-import csw.util.cfg.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg}
-import csw.util.cfg.{RunId, StateVariable}
+import csw.util.config.StateVariable._
+import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg}
+import csw.util.config.{RunId, StateVariable}
 
 import scala.concurrent.duration._
 

@@ -8,7 +8,7 @@ import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
 import csw.services.pkg.Supervisor._
 import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
-import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
+import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
  * Class that implements the assembly actor
@@ -38,7 +38,7 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
       if (sc.configKey.prefix != HCDExample.prefix) {
         Invalid("Wrong prefix")
       } else {
-        val missing = sc.data.missingKeys(HCDExample.rateKey)
+        val missing = sc.missingKeys(HCDExample.rateKey)
         if (missing.nonEmpty)
           Invalid(s"Missing keys: ${missing.mkString(", ")}")
         else Valid

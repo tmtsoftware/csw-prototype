@@ -4,9 +4,9 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
-import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.StateVariable.CurrentState
-import csw.util.cfg.StandardKeys.position
+import csw.util.config.Configurations.SetupConfig
+import csw.util.config.StateVariable.CurrentState
+import csw.util.config.StringKey
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
@@ -16,6 +16,8 @@ object HcdControllerTests {
 
   val testPrefix1 = "wfos.blue.filter"
   val testPrefix2 = "wfos.red.filter"
+
+  val position = StringKey("position")
 
   object TestHcdController {
     def props(): Props = Props(classOf[TestHcdController])
@@ -74,7 +76,7 @@ object HcdControllerTests {
 
       case WorkDone(config) ⇒
         log.info(s"Done processing $config")
-        currentState = CurrentState(config.prefix, config.data)
+        currentState = CurrentState(config.prefix, config.items)
         context.parent ! currentState
 
       case x ⇒ log.error(s"Unexpected message $x")

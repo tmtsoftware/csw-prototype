@@ -1,4 +1,4 @@
-package csw.util.cfg
+package csw.util.config
 
 import scala.language.implicitConversions
 
@@ -39,17 +39,14 @@ object ObsID2 {
   val reg = """(\d{4})(A|B|E)-(C|Q)-P(\d{1,3})-O(\d{1,3})(?:-)?(\d+)?""".r
 
   implicit def create(obsId: String): ObsID2 = obsId match {
-    case reg(year, sem, kind, prog, obs, null) ⇒ {
-      println(s"Its: $year $sem with $kind and prog $prog, obs $obs")
+    case reg(year, sem, kind, prog, obs, null) ⇒
+      //      println(s"Its: $year $sem with $kind and prog $prog, obs $obs")
       ObsID2(year, sem, kind, prog, obs, None)
-    }
-    case reg(year, sem, kind, prog, obs, file) ⇒ {
-      println(s"Its: $year $sem with $kind and prog $prog, obs $obs, file $file")
+    case reg(year, sem, kind, prog, obs, file) ⇒
+      //      println(s"Its: $year $sem with $kind and prog $prog, obs $obs, file $file")
       ObsID2(year, sem, kind, prog, obs, Some(file))
-    }
-    case _ ⇒ {
+    case _ ⇒
       println("Fail")
       BAD_OBSID
-    }
   }
 }

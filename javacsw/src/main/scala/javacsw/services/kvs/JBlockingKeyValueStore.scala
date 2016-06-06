@@ -5,10 +5,10 @@ import java.util.Optional
 import akka.actor.ActorRefFactory
 import csw.services.kvs.KeyValueStore.KvsFormatter
 import csw.services.kvs.{BlockingKeyValueStore, Implicits, KvsSettings}
-import csw.util.cfg.Configurations.{ControlConfigArg, SequenceConfigArg, _}
-import csw.util.cfg.Events.{EventServiceEvent, ObserveEvent, StatusEvent, SystemEvent}
-import csw.util.cfg.StateVariable
-import csw.util.cfg.StateVariable.{CurrentState, DemandState}
+import csw.util.config.Configurations.{ControlConfigArg, SequenceConfigArg, _}
+import csw.util.config.Events.{EventServiceEvent, ObserveEvent, StatusEvent, SystemEvent}
+import csw.util.config.StateVariable
+import csw.util.config.StateVariable.{CurrentState, DemandState}
 
 import scala.concurrent.duration.Duration
 import scala.compat.java8.OptionConverters._

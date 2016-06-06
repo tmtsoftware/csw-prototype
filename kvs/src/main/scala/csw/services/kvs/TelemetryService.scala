@@ -2,7 +2,7 @@ package csw.services.kvs
 
 import akka.actor.ActorRefFactory
 import akka.util.Timeout
-import csw.util.cfg.Events.StatusEvent
+import csw.util.config.Events.StatusEvent
 import Implicits._
 
 import scala.concurrent.{Await, Future}

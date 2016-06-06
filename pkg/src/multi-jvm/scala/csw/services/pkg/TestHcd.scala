@@ -3,8 +3,8 @@ package csw.services.pkg
 import akka.actor.{Actor, ActorLogging, Props}
 import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
-import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.StateVariable.CurrentState
+import csw.util.config.Configurations.SetupConfig
+import csw.util.config.StateVariable.CurrentState
 
 import scala.concurrent.duration._
 

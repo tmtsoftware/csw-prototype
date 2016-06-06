@@ -2,9 +2,9 @@ package javacsw.services.kvs;
 
 import akka.actor.ActorRefFactory;
 import csw.services.kvs.KvsSettings;
-import csw.util.cfg.Configurations;
-import csw.util.cfg.Events;
-import csw.util.cfg.StateVariable;
+import csw.util.config.Configurations;
+import csw.util.config.Events;
+import csw.util.config.StateVariable;
 import scala.concurrent.duration.Duration;
 
 import java.util.List;

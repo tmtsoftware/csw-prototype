@@ -1,6 +1,6 @@
 package javacsw.util.config;
 
-import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.*;
 import csw.util.config.*;
 import org.junit.Test;
 
@@ -28,6 +28,8 @@ public class JConfigTests {
     @SuppressWarnings("EqualsBetweenInconvertibleTypes")
     @Test
     public void basicKeyTests() {
+        System.out.println("basicKeyTests");
+
         // Should be constructed properly
         IntKey k1 = new IntKey(s1);
         StringKey k2 = new StringKey(s2);
@@ -72,8 +74,8 @@ public class JConfigTests {
         assert (sc.jvalue(k1, 0) == 33);
 
         SetupConfig sc2 = new SetupConfig(ck1).jset(k1, 22);
-        assert(sc2.jvalue(k1) == 22);
-        assert(sc2.jvalues(k1).equals(Collections.singletonList(22)));
+        assert (sc2.jvalue(k1) == 22);
+        assert (sc2.jvalues(k1).equals(Collections.singletonList(22)));
     }
 
     @Test
@@ -155,6 +157,67 @@ public class JConfigTests {
     }
 
     @Test
+    public void ocTest() {
+        IntKey repeat = new IntKey("repeat");
+        IntKey expTime = new IntKey("expTime");
+
+        // Should allow adding keys
+        {
+            ObserveConfig oc1 = new ObserveConfig(ck3).jset(repeat, 22).jset(expTime, 44);
+            assert (oc1.size() == 2);
+            assert (oc1.exists(repeat));
+            assert (oc1.exists(expTime));
+            assert (oc1.jvalue(repeat) == 22);
+            assert (oc1.jvalue(expTime) == 44);
+        }
+
+        // Should allow setting
+        {
+            ObserveConfig oc1 = new ObserveConfig(ck1);
+            oc1 = oc1.jset(repeat, NoUnits, 22).jset(expTime, NoUnits, 44);
+            assert (oc1.size() == 2);
+            assert (oc1.exists(repeat));
+            assert (oc1.exists(expTime));
+        }
+
+        // Should allow getting values
+        {
+            ObserveConfig oc1 = new ObserveConfig(ck1);
+            oc1 = oc1.jset(repeat, NoUnits, 22).jset(expTime, NoUnits, 44);
+            List<Integer> v1 = oc1.jvalues(repeat);
+            List<Integer> v2 = oc1.jvalues(expTime);
+            assert (oc1.jget(repeat).isPresent());
+            assert (oc1.jget(expTime).isPresent());
+            assert (v1.equals(Collections.singletonList(22)));
+            assert (v2.equals(Collections.singletonList(44)));
+        }
+
+        // should update for the same key with set
+        {
+            ObserveConfig oc1 = new ObserveConfig(ck1);
+            oc1 = oc1.jset(expTime, NoUnits, 22);
+            assert (oc1.exists(expTime));
+            assert (oc1.jvalue(expTime) == 22);
+
+            oc1 = oc1.jset(expTime, NoUnits, 33);
+            assert (oc1.exists(expTime));
+            assert (oc1.jvalue(expTime) == 33);
+        }
+
+        // should update for the same key with add
+        {
+            ObserveConfig oc1 = new ObserveConfig(ck1);
+            oc1 = oc1.add(expTime.jset(22).withUnits(NoUnits));
+            assert (oc1.exists(expTime));
+            assert (oc1.jvalue(expTime) == 22);
+
+            oc1 = oc1.add(expTime.jset(33).withUnits(NoUnits));
+            assert (oc1.exists(expTime));
+            assert (oc1.jvalue(expTime) == 33);
+        }
+    }
+
+    @Test
     public void scTest2() {
         // should update for the same key with set
         IntKey k1 = new IntKey("encoder");
@@ -168,11 +231,11 @@ public class JConfigTests {
         sc1 = sc1.jset(k2, NoUnits, "bob");
         assert (sc1.exists(k2));
         assert (Objects.equals(sc1.jvalue(k2), "bob"));
-        assert(sc1.size() == 2);
+        assert (sc1.size() == 2);
     }
 
     @Test
-    public void testingNewIdea() {
+    public void testSettingMultipleValues() {
         IntKey t1 = new IntKey("test1");
         // should allow setting a single value
         {
@@ -204,5 +267,36 @@ public class JConfigTests {
             assert (i1.jvalue(2) == 6);
         }
     }
+
+    @Test
+    public void testSetupConfigArgs() {
+        IntKey encoder1 = new IntKey("encoder1");
+        IntKey encoder2 = new IntKey("encoder2");
+        IntKey xOffset = new IntKey("xOffset");
+        IntKey yOffset = new IntKey("yOffset");
+        String obsId = "Obs001";
+
+        SetupConfig sc1 = new SetupConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
+        SetupConfig sc2 = new SetupConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
+        SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
+        assert (configArg.info().obsId().obsId().equals(obsId));
+        assert (configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
+    }
+
+    @Test
+    public void testObserveConfigArgs() {
+        IntKey encoder1 = new IntKey("encoder1");
+        IntKey encoder2 = new IntKey("encoder2");
+        IntKey xOffset = new IntKey("xOffset");
+        IntKey yOffset = new IntKey("yOffset");
+        String obsId = "Obs001";
+
+        ObserveConfig sc1 = new ObserveConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
+        ObserveConfig sc2 = new ObserveConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
+        ObserveConfigArg configArg = Configurations.createObserveConfigArg(obsId, sc1, sc2);
+        assert (configArg.info().obsId().obsId().equals(obsId));
+        assert (configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
+    }
+
 }
 

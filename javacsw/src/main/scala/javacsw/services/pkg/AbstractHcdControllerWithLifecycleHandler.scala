@@ -1,21 +1,10 @@
 package javacsw.services.pkg
 
-import java.util.Optional
-import java.util.function.BiFunction
-
-import collection.JavaConverters._
-import scala.compat.java8.OptionConverters._
-import scala.compat.java8.FunctionConverters._
-import akka.actor.{AbstractActor, ActorLogging, ActorRef}
-import akka.util.Timeout
-import csw.services.ccs.{AssemblyController, HcdController}
-import csw.services.ccs.AssemblyController.Validation
-import csw.services.loc.Connection
-import csw.services.loc.LocationService.Location
-import csw.services.pkg.{Assembly, Hcd, LifecycleHandler}
-import csw.util.cfg.Configurations.{ObserveConfigArg, SetupConfig, SetupConfigArg}
-import csw.util.cfg.RunId
-import csw.util.cfg.StateVariable.{CurrentState, DemandState}
+import akka.actor.{AbstractActor, ActorLogging}
+import csw.services.ccs.HcdController
+import csw.services.pkg.{Hcd, LifecycleHandler}
+import csw.util.config.Configurations.SetupConfig
+import csw.util.config.StateVariable.CurrentState
 
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler

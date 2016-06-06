@@ -4,10 +4,10 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.event.EventPubSubTest._
-import csw.util.cfg.Events.ObserveEvent
-import csw.util.cfg.Key
-import csw.util.cfg.StandardKeys._
-import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
+import csw.util.config.Events.ObserveEvent
+import csw.util.config._
+import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, FunSuiteLike}
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
@@ -36,13 +36,15 @@ object EventPubSubTest {
   // ---
 
   // Define a key for an event id
-  val eventNum = Key.create[Int]("eventNum")
+  val eventNum = IntKey("eventNum")
+
+  val exposureTime = DoubleKey("exposureTime")
 
   // Define a key for image data
-  val imageData = Key.create[Array[Short]]("imageData")
+  val imageData = IntVectorKey("imageData")
 
   // Dummy image data
-  val testImageData = Array.ofDim[Short](10000)
+  val testImageData = IntVector(Array.ofDim[Int](10000).toVector)
 
   val prefix = "tcs.mobie.red.dat.exposureInfo"
 
@@ -99,7 +101,7 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
   def working(publisher: ActorRef): Receive = {
     case event: ObserveEvent ⇒
       if (startTime == 0L) startTime = System.currentTimeMillis()
-      val num = event.get(eventNum).get
+      val num = event.value(eventNum)
       if (num != count) {
         log.error(s"Subscriber missed event: $num != $count")
         context.system.terminate()

@@ -1,18 +1,22 @@
 package csw.util.config
 
-import csw.util.config.Configurations.SetupConfig
+import csw.util.config.Configurations._
 import csw.util.config.UnitsOfMeasure._
 import org.scalatest.FunSpec
 import spray.json.DefaultJsonProtocol
 
 object ConfigTests {
+
   import DefaultJsonProtocol._
+
   case class MyData(i: Int, f: Float, d: Double, s: String)
+
   implicit val MyDataFormat = jsonFormat4(MyData.apply)
 }
 
 //noinspection ComparingUnrelatedTypes,ScalaUnusedSymbol
 class ConfigTests extends FunSpec {
+
   import ConfigTests._
 
   private val s1: String = "encoder"
@@ -55,6 +59,7 @@ class ConfigTests extends FunSpec {
   }
 
   describe("Generic key tests") {
+    // Note: It is recommended to use the standard keys, such as IntKey, StringKey, DoubleKey, etc.
     val k1 = GenericKey[MyData]("MyData", "atest")
     val d1 = MyData(1, 2.0f, 3.0, "4")
     val d2 = MyData(10, 20.0f, 30.0, "40")
@@ -109,6 +114,8 @@ class ConfigTests extends FunSpec {
 
     val k1 = IntKey("encoder")
     val k2 = IntKey("windspeed")
+    val k3 = IntKey("notUsed")
+
     it("Should allow adding keys") {
       var sc1 = SetupConfig(ck3).set(k1, 22).set(k2, 44)
       assert(sc1.size == 2)
@@ -116,6 +123,7 @@ class ConfigTests extends FunSpec {
       assert(sc1.exists(k2))
       assert(sc1.value(k1) == 22)
       assert(sc1.value(k2) == 44)
+      assert(sc1.missingKeys(k1, k2, k3) == Set(k3.keyName))
     }
 
     it("Should allow setting") {
@@ -148,18 +156,62 @@ class ConfigTests extends FunSpec {
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(33))
     }
+  }
 
-    it("should update for the same key with add") {
-      var sc1 = SetupConfig(ck1)
-      sc1 = sc1.add(k2.set(22).withUnits(NoUnits))
-      assert(sc1.exists(k2))
-      assert(sc1(k2) == Vector(22))
+  describe("OC Test") {
 
-      sc1 = sc1.add(k2.set(33).withUnits(NoUnits))
-      assert(sc1.exists(k2))
-      assert(sc1(k2) == Vector(33))
+    val k1 = IntKey("repeat")
+    val k2 = IntKey("expTime")
+    it("Should allow adding keys") {
+      var oc1 = ObserveConfig(ck3).set(k1, 22).set(k2, 44)
+      assert(oc1.size == 2)
+      assert(oc1.exists(k1))
+      assert(oc1.exists(k2))
+      assert(oc1.value(k1) == 22)
+      assert(oc1.value(k2) == 44)
     }
 
+    it("Should allow setting") {
+      var oc1 = ObserveConfig(ck1)
+      oc1 = oc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
+      assert(oc1.size == 2)
+      assert(oc1.exists(k1))
+      assert(oc1.exists(k2))
+    }
+
+    it("Should allow apply") {
+      var oc1 = ObserveConfig(ck1)
+      oc1 = oc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
+
+      val v1 = oc1(k1)
+      val v2 = oc1(k2)
+      assert(oc1.get(k1).isDefined)
+      assert(oc1.get(k2).isDefined)
+      assert(v1 == Vector(22))
+      assert(v2 == Vector(44))
+    }
+
+    it("should update for the same key with set") {
+      var oc1 = ObserveConfig(ck1)
+      oc1 = oc1.set(k2, NoUnits, 22)
+      assert(oc1.exists(k2))
+      assert(oc1(k2) == Vector(22))
+
+      oc1 = oc1.set(k2, NoUnits, 33)
+      assert(oc1.exists(k2))
+      assert(oc1(k2) == Vector(33))
+    }
+
+    it("should update for the same key with add") {
+      var oc1 = ObserveConfig(ck1)
+      oc1 = oc1.add(k2.set(22).withUnits(NoUnits))
+      assert(oc1.exists(k2))
+      assert(oc1(k2) == Vector(22))
+
+      oc1 = oc1.add(k2.set(33).withUnits(NoUnits))
+      assert(oc1.exists(k2))
+      assert(oc1(k2) == Vector(33))
+    }
   }
 
   it("should update for the same key with set") {
@@ -181,7 +233,7 @@ class ConfigTests extends FunSpec {
     }
   }
 
-  describe("testing new idea") {
+  describe("test setting multiple values") {
 
     val t1 = IntKey("test1")
     it("should allow setting a single value") {
@@ -210,5 +262,33 @@ class ConfigTests extends FunSpec {
       assert(i1.units == Meters)
       assert(i1(2) == 6)
     }
+  }
+
+  describe("test SetupConfigArg") {
+    val encoder1 = IntKey("encoder1")
+    val encoder2 = IntKey("encoder2")
+    val xOffset = IntKey("xOffset")
+    val yOffset = IntKey("yOffset")
+    val obsId = "Obs001"
+
+    val sc1 = SetupConfig(ck1).set(encoder1, 22).set(encoder2, 33)
+    val sc2 = SetupConfig(ck1).set(xOffset, 1).set(yOffset, 2)
+    val configArg = SetupConfigArg(obsId, sc1, sc2)
+    assert(configArg.info.obsId.obsId == obsId)
+    assert(configArg.configs.toList == List(sc1, sc2))
+  }
+
+  describe("test ObserveConfigArg") {
+    val encoder1 = IntKey("encoder1")
+    val encoder2 = IntKey("encoder2")
+    val xOffset = IntKey("xOffset")
+    val yOffset = IntKey("yOffset")
+    val obsId = "Obs001"
+
+    val sc1 = ObserveConfig(ck1).set(encoder1, 22).set(encoder2, 33)
+    val sc2 = ObserveConfig(ck1).set(xOffset, 1).set(yOffset, 2)
+    val configArg = ObserveConfigArg(obsId, sc1, sc2)
+    assert(configArg.info.obsId.obsId equals obsId)
+    assert(configArg.configs.toList == List(sc1, sc2))
   }
 }

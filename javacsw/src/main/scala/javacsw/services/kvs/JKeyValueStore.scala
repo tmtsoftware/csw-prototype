@@ -6,10 +6,10 @@ import java.util.concurrent.CompletableFuture
 import akka.actor.ActorRefFactory
 import csw.services.kvs.KeyValueStore.KvsFormatter
 import csw.services.kvs.{Implicits, KeyValueStore, KvsSettings}
-import csw.util.cfg.Configurations._
-import csw.util.cfg.Events._
-import csw.util.cfg.StateVariable
-import csw.util.cfg.StateVariable._
+import csw.util.config.Configurations._
+import csw.util.config.Events._
+import csw.util.config.StateVariable
+import csw.util.config.StateVariable._
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._

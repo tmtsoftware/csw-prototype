@@ -1,4 +1,4 @@
-package csw.util.cfg
+package csw.util.config
 
 import org.scalatest.FunSpec
 

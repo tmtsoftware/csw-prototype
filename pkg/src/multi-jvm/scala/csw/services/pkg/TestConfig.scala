@@ -1,17 +1,17 @@
 package csw.services.pkg
 
-import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
-import csw.util.cfg.Key
+import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
+import csw.util.config.{Key, StringKey}
 
 // XXX TODO: This class is left over from previous versions
 object TestConfig {
 
   val obsId = "TMT-2021A-C-2-1"
 
-  val posName = Key.create[String]("posName")
-  val c1 = Key.create[String]("c1")
-  val c2 = Key.create[String]("c2")
-  val equinox = Key.create[String]("equinox")
+  val posName = StringKey("posName")
+  val c1 = StringKey("c1")
+  val c2 = StringKey("c2")
+  val equinox = StringKey("equinox")
 
   // Configs to use for testing
   val testConfig1 = SetupConfig("tcs.base.pos")

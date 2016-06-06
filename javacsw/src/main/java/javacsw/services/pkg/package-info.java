@@ -92,8 +92,8 @@
  }
  * } </pre>
  * The HCDs can publish their current state by calling <em>notifySubscribers()</em> with a
- * {@link csw.util.cfg.StateVariable.CurrentState} object, or
- * by receiving a {@link csw.util.cfg.StateVariable.CurrentState}  actor message
+ * {@link csw.util.config.StateVariable.CurrentState} object, or
+ * by receiving a {@link csw.util.config.StateVariable.CurrentState}  actor message
  * (from a worker actor), which is automatically handled by the parent trait.
  * <p>
  * For a working example, see the <a href="https://github.com/tmtsoftware/javacsw-pkg-demo">javacsw-pkg-demo</a>

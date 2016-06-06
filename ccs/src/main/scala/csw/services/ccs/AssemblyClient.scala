@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
 import csw.services.kvs.{KvsSettings, StateVariableStore}
-import csw.util.cfg.Configurations.{SetupConfig, SetupConfigArg}
+import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success}
@@ -127,7 +127,7 @@ private class ConfigGetActor extends Actor with ActorLogging {
     val svs = StateVariableStore(settings)
     Future.sequence(configArg.configs.map(c ⇒ svs.get(c.prefix))).onComplete {
       case Success(seq) ⇒
-        val configs = seq.flatten.map(s ⇒ SetupConfig(s.configKey, s.data))
+        val configs = seq.flatten.map(s ⇒ SetupConfig(s.configKey, s.items))
         replyTo ! SetupConfigArg(configArg.info, configs: _*)
         context.stop(self)
       case Failure(ex) ⇒

@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import csw.util.cfg.RunId
+import csw.util.config.RunId
 
 /**
  * The status of a running command

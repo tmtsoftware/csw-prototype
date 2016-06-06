@@ -7,8 +7,8 @@ import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import java.io.StringReader
 import csw.services.ccs._
-import csw.util.cfg.StandardKeys._
-import csw.util.cfg.Configurations.{ SetupConfig, SetupConfigArg }
+import csw.util.config.StandardKeys._
+import csw.util.config.Configurations.{ SetupConfig, SetupConfigArg }
 import scala.concurrent.{Await, Future}
 import akka.pattern.ask
 import scala.concurrent.duration._

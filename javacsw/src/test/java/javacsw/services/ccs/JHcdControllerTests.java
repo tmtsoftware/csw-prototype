@@ -9,11 +9,11 @@ import akka.testkit.JavaTestKit;
 import akka.util.Timeout;
 import csw.services.ccs.CommandStatus;
 import csw.services.ccs.HcdController.Submit;
-import csw.util.cfg.Configurations.SetupConfig;
-import csw.util.cfg.RunId;
-import csw.util.cfg.StateVariable.CurrentState;
-import csw.util.cfg.StateVariable.DemandState;
-import javacsw.util.cfg.JConfigurations;
+import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.RunId;
+import csw.util.config.StateVariable.CurrentState;
+import csw.util.config.StateVariable.DemandState;
+import csw.util.config.StringKey;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,8 +25,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
-import static javacsw.util.cfg.JStandardKeys.position;
-
 /**
  * Tests the java API of HcdController.
  */
@@ -34,6 +32,7 @@ public class JHcdControllerTests {
 
     static final String testPrefix1 = "wfos.blue.filter";
     static final String testPrefix2 = "wfos.red.filter";
+    static final StringKey position = new StringKey("position");
 
     private static ActorSystem system;
 
@@ -50,7 +49,7 @@ public class JHcdControllerTests {
 
     static class TestHcdController extends JHcdController {
         ActorRef worker = getContext().actorOf(TestWorker.props());
-        LoggingAdapter log = Logging.getLogger(system, this);
+//        LoggingAdapter log = Logging.getLogger(system, this);
 
         // Used to create the TestHcdController actor
         public static Props props() {
@@ -89,7 +88,7 @@ public class JHcdControllerTests {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
         // Simulate getting the initial state from the device
-        CurrentState initialState = JConfigurations.createCurrentState(testPrefix1).set(position, "None").configType();
+        CurrentState initialState = new CurrentState(testPrefix1).jset(position, "None");
 
         // Simulated current state
         CurrentState currentState = initialState;
@@ -142,7 +141,7 @@ public class JHcdControllerTests {
 
         private void handleWorkDone(SetupConfig config) {
             log.info("Done processing " + config);
-            currentState = JConfigurations.createCurrentState(config).configType();
+            currentState = new CurrentState(config);
             getContext().parent().tell(currentState, self());
         }
     }
@@ -160,12 +159,12 @@ public class JHcdControllerTests {
                 LoggingAdapter log = Logging.getLogger(system, this);
                 ActorRef hcdController = system.actorOf(TestHcdController.props());
                 // Send a setup config to the HCD
-                SetupConfig config = JConfigurations.createSetupConfig(testPrefix2).set(position, "IR3").configType();
+                SetupConfig config = new SetupConfig(testPrefix2).jset(position, "IR3");
                 hcdController.tell(new Submit(config), getRef());
-                DemandState demand = JConfigurations.createDemandState(config).configType();
+                DemandState demand = new DemandState(config);
 
                 // Create an actor to subscribe and wait for the HCD to get to the demand state
-                BiFunction<DemandState, CurrentState, Boolean> matcher = (d, c) -> Objects.equals(d.prefix(), c.prefix()) && Objects.equals(d.data(), c.data());
+                BiFunction<DemandState, CurrentState, Boolean> matcher = (d, c) -> Objects.equals(d.prefix(), c.prefix()) && Objects.equals(d.items(), c.items());
                 JHcdStatusMatcherActorFactory.getHcdStatusMatcherActor(
                         system, Collections.singletonList(demand), Collections.singleton(hcdController), getRef(),
                         RunId.create(), new Timeout(5, TimeUnit.SECONDS), matcher);

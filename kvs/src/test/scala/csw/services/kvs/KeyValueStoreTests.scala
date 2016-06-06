@@ -2,22 +2,24 @@ package csw.services.kvs
 
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
-import csw.util.cfg.Configurations.SetupConfig
-import csw.util.cfg.Key
-import csw.util.cfg.StandardKeys._
-import org.scalatest.{DoNotDiscover, BeforeAndAfterAll, FunSuiteLike}
+import csw.util.config.Configurations.SetupConfig
+import csw.util.config._
+import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object KeyValueStoreTests {
 
   // Define keys for testing
-  val infoValue = Key.create[Int]("infoValue")
+  val infoValue = IntKey("infoValue")
 
-  val infoStr = Key.create[String]("infoStr")
+  val infoStr = StringKey("infoStr")
 
-  val boolValue = Key.create[Boolean]("boolValue")
+  val boolValue = BooleanKey("boolValue")
+
+  val exposureTime = DoubleKey("exposureTime")
 }
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
@@ -53,14 +55,14 @@ class KeyValueStoreTests
       res5 ← kvs.get(prefix2)
       res6 ← kvs.delete(prefix1, prefix2)
       res7 ← kvs.hmset("tcs.testx", config1.getStringMap)
-      res8 ← kvs.hmget("tcs.testx", infoValue.name)
-      res9 ← kvs.hmget("tcs.testx", infoStr.name)
+      res8 ← kvs.hmget("tcs.testx", infoValue.keyName)
+      res9 ← kvs.hmget("tcs.testx", infoStr.keyName)
     } yield {
       assert(val1.exists(_.prefix == prefix1))
-      assert(val1.exists(_.get(infoValue).contains(1)))
-      assert(val1.exists(_.get(infoStr).contains("info 1")))
-      assert(val2.exists(_.get(infoValue).contains(2)))
-      assert(val2.exists(_.get(infoStr).contains("info 2")))
+      assert(val1.exists(_.value(infoValue) == 1))
+      assert(val1.exists(_.value(infoStr) == "info 1"))
+      assert(val2.exists(_.value(infoValue) == 2))
+      assert(val2.exists(_.value(infoStr) == "info 2"))
       assert(res3 == 2)
       assert(res4.isEmpty)
       assert(res5.isEmpty)
@@ -74,22 +76,22 @@ class KeyValueStoreTests
 
   test("Test set, get and getHistory") {
     val prefix = "tcs.test2"
-    val config = SetupConfig(prefix).set(exposureTime, 2)
+    val config = SetupConfig(prefix).set(exposureTime, 2.0)
     //    val testKey = "testKey"
     val n = 3
 
     val f = for {
-      _ ← kvs.set(prefix, config.set(exposureTime, 3), n)
-      _ ← kvs.set(prefix, config.set(exposureTime, 4), n)
-      _ ← kvs.set(prefix, config.set(exposureTime, 5), n)
-      _ ← kvs.set(prefix, config.set(exposureTime, 6), n)
-      _ ← kvs.set(prefix, config.set(exposureTime, 7), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 3.0), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 4.0), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 5.0), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 6.0), n)
+      _ ← kvs.set(prefix, config.set(exposureTime, 7.0), n)
       v ← kvs.get(prefix)
       h ← kvs.getHistory(prefix, n + 1)
       _ ← kvs.delete(prefix)
     } yield {
       assert(v.isDefined)
-      assert(v.get.get(exposureTime).get == 7.0)
+      assert(v.get.value(exposureTime) == 7.0)
       assert(h.size == n + 1)
       for (i ← 0 to n) {
         logger.info(s"History: $i: ${h(i)}")
@@ -109,9 +111,9 @@ class KeyValueStoreTests
       case _ ⇒
         kvs.get(prefix).onSuccess {
           case Some(setupConfig) ⇒
-            assert(setupConfig.get(infoValue).get == 2)
-            assert(setupConfig.get(infoStr).get == "info 2")
-            assert(setupConfig.get(boolValue).get)
+            assert(setupConfig.value(infoValue) == 2)
+            assert(setupConfig.value(infoStr) == "info 2")
+            assert(setupConfig.value(boolValue))
             setupConfig
         }
     }
