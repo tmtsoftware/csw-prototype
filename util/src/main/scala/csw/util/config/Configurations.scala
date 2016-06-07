@@ -54,6 +54,12 @@ object Configurations {
     self: T ⇒
 
     /**
+     * A name identifying the type of config, such as "setup", "observe".
+     * This is used in the JSON and toString output.
+     */
+    def typeName: String = getClass.getSimpleName
+
+    /**
      * Returns an object providing the subsystem and prefix for the config
      */
     def configKey: ConfigKey
@@ -61,7 +67,7 @@ object Configurations {
     /**
      * Holds the items for this config
      */
-    protected def items: ConfigData
+    def items: ConfigData
 
     /**
      * The number of items in this configuration
@@ -145,7 +151,7 @@ object Configurations {
      * @tparam S the Scala value type
      * @tparam J the Java value type
      */
-    def get[S, J](key: Key[S, J], index: Int): Option[S] = get(key).get.get(index)
+    def get[S, J](key: Key[S, J], index: Int): Option[S] = get(key).flatMap(_.get(index))
 
     /**
      * Returns the first or default value for the given key, throwing an exception if the key is not present
@@ -279,7 +285,9 @@ object Configurations {
      * @tparam S the Scala value type
      * @tparam J the Java value type
      */
-    def jget[S, J](key: Key[S, J], index: Int): Optional[J] = (if (index >= 0 && index < size) Some(jvalue(key, index)) else None).asJava
+    def jget[S, J](key: Key[S, J], index: Int): Optional[J] = {
+      (if (exists(key) && index >= 0 && index < size) Some(jvalue(key, index)) else None).asJava
+    }
 
     /**
      * Returns true if the key exists in the config
@@ -339,7 +347,7 @@ object Configurations {
 
     protected def dataToString = items.mkString("(", ",", ")")
 
-    protected def doToString(kind: String) = s"$kind[$subsystem, $prefix]$dataToString"
+    override def toString = s"$typeName[$subsystem, $prefix]$dataToString"
 
     /**
      * Returns true if the data contains the given key
@@ -416,8 +424,6 @@ object Configurations {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): SetupConfig = super.remove[S, J](key)
-
-    override def toString = doToString("SC")
   }
 
   /**
@@ -461,8 +467,6 @@ object Configurations {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): ObserveConfig = super.remove[S, J](key)
-
-    override def toString = doToString("OC")
   }
 
   /**
@@ -506,8 +510,6 @@ object Configurations {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): WaitConfig = super.remove[S, J](key)
-
-    override def toString = doToString("OC")
   }
 
   /**

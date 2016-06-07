@@ -287,6 +287,10 @@ class ConfigTests extends FunSpec {
 
     val sc1 = ObserveConfig(ck1).set(encoder1, 22).set(encoder2, 33)
     val sc2 = ObserveConfig(ck1).set(xOffset, 1).set(yOffset, 2)
+    assert(sc1.get(xOffset).isEmpty)
+    assert(sc1.get(xOffset, 0).isEmpty)
+    assert(sc2.get(xOffset).isDefined)
+    assert(sc2.get(xOffset, 0).isDefined)
     val configArg = ObserveConfigArg(obsId, sc1, sc2)
     assert(configArg.info.obsId.obsId equals obsId)
     assert(configArg.configs.toList == List(sc1, sc2))

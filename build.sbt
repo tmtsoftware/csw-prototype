@@ -124,7 +124,6 @@ lazy val ts = project
 // Java APIs
 lazy val javacsw = project
   .settings(defaultSettings: _*)
-  .settings(crossPaths := false) // important for running Java junit tests!
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(akkaTestKit, junit, junitInterface, scalaJava8Compat)

@@ -293,6 +293,11 @@ public class JConfigTests {
 
         ObserveConfig sc1 = new ObserveConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
         ObserveConfig sc2 = new ObserveConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
+        assert(!sc1.jget(xOffset).isPresent());
+        assert(!sc1.jget(xOffset, 0).isPresent());
+        assert(sc2.jget(xOffset).isPresent());
+        assert(sc2.jget(xOffset, 0).isPresent());
+
         ObserveConfigArg configArg = Configurations.createObserveConfigArg(obsId, sc1, sc2);
         assert (configArg.info().obsId().obsId().equals(obsId));
         assert (configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));

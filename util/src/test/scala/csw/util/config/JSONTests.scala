@@ -1,9 +1,11 @@
 package csw.util.config
 
-import csw.util.config.Configurations.SetupConfig
+import csw.util.config.Configurations.{ObserveConfig, SetupConfig, WaitConfig}
 import org.scalatest.FunSpec
 import spray.json._
 import ConfigJSON._
+import csw.util.config.Events.{ObserveEvent, StatusEvent, SystemEvent}
+import csw.util.config.StateVariable.{CurrentState, DemandState}
 
 object JSONTests extends DefaultJsonProtocol {
 
@@ -176,13 +178,76 @@ class JSONTests extends FunSpec {
     val i6 = k6.set(false)
     val i7 = k7.set("GG495").withUnits(UnitsOfMeasure.Deg)
 
-    it("Should encode/decode a setupconfig") {
-      val sc1 = SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
-      assert(sc1.size == 7)
+    it("Should encode/decode a SetupConfig") {
+      val c1 = SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(c1.size == 7)
+      val c1out = ConfigJSON.writeConfig(c1)
+      val c1in = ConfigJSON.readConfig[SetupConfig](c1out)
+      assert(c1in.value(k3) == 1234L)
+      assert(c1in == c1)
+    }
 
-      val sc1out = ConfigJSON.writeConfig(sc1)
-      //      info("1: sc1out: " + sc1out.prettyPrint)
-      val sc1in = ConfigJSON.readConfig(sc1out)
+    it("Should encode/decode an ObserveConfig") {
+      val c1 = ObserveConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(c1.size == 7)
+      val c1out = ConfigJSON.writeConfig(c1)
+      val c1in = ConfigJSON.readConfig[ObserveConfig](c1out)
+      assert(c1in.value(k3) == 1234L)
+      assert(c1in == c1)
+    }
+
+    it("Should encode/decode an StatusEvent") {
+      val e1 = StatusEvent(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(e1.size == 7)
+      val e1out = ConfigJSON.writeEvent(e1)
+      val e1in = ConfigJSON.readEvent[StatusEvent](e1out)
+      assert(e1in.value(k3) == 1234L)
+      assert(e1in == e1)
+    }
+
+    it("Should encode/decode an ObserveEvent") {
+      val e1 = ObserveEvent(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(e1.size == 7)
+      val e1out = ConfigJSON.writeEvent(e1)
+      val e1in = ConfigJSON.readEvent[ObserveEvent](e1out)
+      assert(e1in.value(k3) == 1234L)
+      assert(e1in == e1)
+    }
+
+    it("Should encode/decode an SystemEvent") {
+      val e1 = SystemEvent(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(e1.size == 7)
+      val e1out = ConfigJSON.writeEvent(e1)
+      val e1in = ConfigJSON.readEvent[SystemEvent](e1out)
+      assert(e1in.value(k3) == 1234L)
+      assert(e1in == e1)
+    }
+
+    it("Should encode/decode an CurrentState") {
+      val c1 = CurrentState(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(c1.size == 7)
+      val c1out = ConfigJSON.writeConfig(c1)
+      val c1in = ConfigJSON.readConfig[CurrentState](c1out)
+      assert(c1in.value(k3) == 1234L)
+      assert(c1in == c1)
+    }
+
+    it("Should encode/decode an DemandState") {
+      val c1 = DemandState(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(c1.size == 7)
+      val c1out = ConfigJSON.writeConfig(c1)
+      val c1in = ConfigJSON.readConfig[DemandState](c1out)
+      assert(c1in.value(k3) == 1234L)
+      assert(c1in == c1)
+    }
+
+    it("Should encode/decode an WaitConfig") {
+      val c1 = WaitConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
+      assert(c1.size == 7)
+      val c1out = ConfigJSON.writeConfig(c1)
+      val c1in = ConfigJSON.readConfig[WaitConfig](c1out)
+      assert(c1in.value(k3) == 1234L)
+      assert(c1in == c1)
     }
   }
 
@@ -201,7 +266,7 @@ class JSONTests extends FunSpec {
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("2: sc1out: " + sc1out.prettyPrint)
 
-      val sc1in = ConfigJSON.readConfig(sc1out)
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in.get(k1).get.values.size == 2)
       assert(sc1in.get(k1).get.values(0) == d1)
@@ -227,7 +292,7 @@ class JSONTests extends FunSpec {
       val sc1out = ConfigJSON.writeConfig(sc1)
       //        info("sc1out: " + sc1out.prettyPrint)
 
-      val sc1in = ConfigJSON.readConfig(sc1out)
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in.get(k1).get.values.size == 2)
       assert(sc1in.get(k1).get.values(0) == c1)
@@ -249,7 +314,7 @@ class JSONTests extends FunSpec {
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
-      val sc1in = ConfigJSON.readConfig(sc1out)
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in.value(k1) == m1)
 
@@ -269,7 +334,7 @@ class JSONTests extends FunSpec {
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
-      val sc1in = ConfigJSON.readConfig(sc1out)
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in.value(k1) == m1)
 
@@ -289,7 +354,7 @@ class JSONTests extends FunSpec {
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
-      val sc1in = ConfigJSON.readConfig(sc1out)
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in.value(k1) == m1)
 
@@ -309,7 +374,7 @@ class JSONTests extends FunSpec {
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
-      val sc1in = ConfigJSON.readConfig(sc1out)
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
       assert(sc1in.value(k1) == m1)
 

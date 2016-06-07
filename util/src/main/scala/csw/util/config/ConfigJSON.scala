@@ -1,6 +1,8 @@
 package csw.util.config
 
-import csw.util.config.Configurations.{ConfigData, ConfigKey, SetupConfig}
+import csw.util.config.Configurations._
+import csw.util.config.Events._
+import csw.util.config.StateVariable._
 import csw.util.config.UnitsOfMeasure.Units
 import spray.json._
 
@@ -10,6 +12,7 @@ import spray.json._
 object ConfigJSON extends DefaultJsonProtocol {
   implicit val unitsFormat = jsonFormat1(Units.apply)
 
+  // JSON formats
   implicit val charItemFormat = jsonFormat3(CharItem.apply)
   implicit val shortItemFormat = jsonFormat3(ShortItem.apply)
   implicit val intItemFormat = jsonFormat3(IntItem.apply)
@@ -23,20 +26,6 @@ object ConfigJSON extends DefaultJsonProtocol {
   implicit val intMatrixItemFormat = jsonFormat3(IntMatrixItem.apply)
   implicit val intVectorItemFormat = jsonFormat3(IntVectorItem.apply)
 
-  private val charTpe = "CharItem"
-  // Could be classTag[CharItem].toString
-  private val shortTpe = "ShortItem"
-  private val integerTpe = "IntItem"
-  private val longTpe = "LongItem"
-  private val floatTpe = "FloatItem"
-  private val doubleTpe = "DoubleItem"
-  private val booleanTpe = "BooleanItem"
-  private val stringTpe = "StringItem"
-  private val doubleMatrixTpe = "DoubleMatrixItem"
-  private val doubleVectorTpe = "DoubleVectorItem"
-  private val intMatrixTpe = "IntMatrixItem"
-  private val intVectorTpe = "IntVectorItem"
-
   implicit def subsystemFormat: JsonFormat[Subsystem] = new JsonFormat[Subsystem] {
     def write(obj: Subsystem) = JsString(obj.name)
 
@@ -44,7 +33,7 @@ object ConfigJSON extends DefaultJsonProtocol {
       value match {
         case JsString(subsystemStr) ⇒ Subsystem.lookup(subsystemStr) match {
           case Some(subsystem) ⇒ subsystem
-          case None            ⇒ Subsystem.BAD
+          case None ⇒ Subsystem.BAD
         }
         // With malformed JSON, return BAD
         case _ ⇒ Subsystem.BAD
@@ -52,22 +41,62 @@ object ConfigJSON extends DefaultJsonProtocol {
     }
   }
 
+  implicit def itemsFormat: JsonFormat[ConfigData] = new JsonFormat[ConfigData] {
+    def write(items: ConfigData) = JsArray(items.map(writeItem(_)).toList: _*)
+
+    def read(json: JsValue) = json match {
+      case a: JsArray ⇒ a.elements.map((el: JsValue) ⇒ readItemAndType(el)).toSet
+      case _ ⇒ unexpectedJsValueError(json)
+    }
+  }
+
+  implicit val configKeyFormat = jsonFormat2(ConfigKey.apply)
+  implicit val obsIdFormat = jsonFormat1(ObsId.apply)
+  implicit val eventTimeFormat = jsonFormat1(EventTime.apply)
+  implicit val eventInfoFormat = jsonFormat4(EventInfo.apply)
+
+  // JSON type tags
+  private val charType = classOf[CharItem].getSimpleName
+  private val shortType = classOf[ShortItem].getSimpleName
+  private val integerType = classOf[IntItem].getSimpleName
+  private val longType = classOf[LongItem].getSimpleName
+  private val floatType = classOf[FloatItem].getSimpleName
+  private val doubleType = classOf[DoubleItem].getSimpleName
+  private val booleanType = classOf[BooleanItem].getSimpleName
+  private val stringType = classOf[StringItem].getSimpleName
+  private val doubleMatrixType = classOf[DoubleMatrixItem].getSimpleName
+  private val doubleVectorType = classOf[DoubleVectorItem].getSimpleName
+  private val intMatrixType = classOf[IntMatrixItem].getSimpleName
+  private val intVectorType = classOf[IntVectorItem].getSimpleName
+
+  // config and event type JSON tags
+  private val setupConfigType = classOf[SetupConfig].getSimpleName
+  private val observeConfigType = classOf[ObserveConfig].getSimpleName
+  private val waitConfigType = classOf[WaitConfig].getSimpleName
+  private val statusEventType = classOf[StatusEvent].getSimpleName
+  private val observeEventType = classOf[ObserveEvent].getSimpleName
+  private val systemEventType = classOf[SystemEvent].getSimpleName
+  private val curentStateType = classOf[CurrentState].getSimpleName
+  private val demandStateType = classOf[DemandState].getSimpleName
+
+  private def unexpectedJsValueError(x: JsValue) = deserializationError(s"Unexpected JsValue: $x")
+
   // XXX TODO Use JNumber?
   def writeItem[S, J](item: Item[S, J]): JsValue = {
     val result: (JsString, JsValue) = item match {
-      case ci: CharItem         ⇒ (JsString(charTpe), charItemFormat.write(ci))
-      case si: ShortItem        ⇒ (JsString(shortTpe), shortItemFormat.write(si))
-      case ii: IntItem          ⇒ (JsString(integerTpe), intItemFormat.write(ii))
-      case li: LongItem         ⇒ (JsString(longTpe), longItemFormat.write(li))
-      case fi: FloatItem        ⇒ (JsString(floatTpe), floatItemFormat.write(fi))
-      case di: DoubleItem       ⇒ (JsString(doubleTpe), doubleItemFormat.write(di))
-      case bi: BooleanItem      ⇒ (JsString(booleanTpe), booleanItemFormat.write(bi))
-      case si: StringItem       ⇒ (JsString(stringTpe), stringItemFormat.write(si))
-      case di: DoubleMatrixItem ⇒ (JsString(doubleMatrixTpe), doubleMatrixItemFormat.write(di))
-      case di: DoubleVectorItem ⇒ (JsString(doubleVectorTpe), doubleVectorItemFormat.write(di))
-      case di: IntMatrixItem    ⇒ (JsString(intMatrixTpe), intMatrixItemFormat.write(di))
-      case di: IntVectorItem    ⇒ (JsString(intVectorTpe), intVectorItemFormat.write(di))
-      case gi: GenericItem[S]   ⇒ (JsString(gi.typeName), gi.toJson)
+      case ci: CharItem ⇒ (JsString(charType), charItemFormat.write(ci))
+      case si: ShortItem ⇒ (JsString(shortType), shortItemFormat.write(si))
+      case ii: IntItem ⇒ (JsString(integerType), intItemFormat.write(ii))
+      case li: LongItem ⇒ (JsString(longType), longItemFormat.write(li))
+      case fi: FloatItem ⇒ (JsString(floatType), floatItemFormat.write(fi))
+      case di: DoubleItem ⇒ (JsString(doubleType), doubleItemFormat.write(di))
+      case bi: BooleanItem ⇒ (JsString(booleanType), booleanItemFormat.write(bi))
+      case si: StringItem ⇒ (JsString(stringType), stringItemFormat.write(si))
+      case di: DoubleMatrixItem ⇒ (JsString(doubleMatrixType), doubleMatrixItemFormat.write(di))
+      case di: DoubleVectorItem ⇒ (JsString(doubleVectorType), doubleVectorItemFormat.write(di))
+      case di: IntMatrixItem ⇒ (JsString(intMatrixType), intMatrixItemFormat.write(di))
+      case di: IntVectorItem ⇒ (JsString(intVectorType), intVectorItemFormat.write(di))
+      case gi: GenericItem[S] ⇒ (JsString(gi.typeName), gi.toJson)
     }
     JsObject("itemType" → result._1, "item" → result._2)
   }
@@ -75,72 +104,106 @@ object ConfigJSON extends DefaultJsonProtocol {
   def readItemAndType(json: JsValue): Item[_, _] = json match {
     case JsObject(fields) ⇒
       (fields("itemType"), fields("item")) match {
-        case (JsString(`charTpe`), item)         ⇒ charItemFormat.read(item)
-        case (JsString(`shortTpe`), item)        ⇒ shortItemFormat.read(item)
-        case (JsString(`integerTpe`), item)      ⇒ intItemFormat.read(item)
-        case (JsString(`longTpe`), item)         ⇒ longItemFormat.read(item)
-        case (JsString(`floatTpe`), item)        ⇒ floatItemFormat.read(item)
-        case (JsString(`doubleTpe`), item)       ⇒ doubleItemFormat.read(item)
-        case (JsString(`booleanTpe`), item)      ⇒ booleanItemFormat.read(item)
-        case (JsString(`stringTpe`), item)       ⇒ stringItemFormat.read(item)
-        case (JsString(`doubleMatrixTpe`), item) ⇒ doubleMatrixItemFormat.read(item)
-        case (JsString(`doubleVectorTpe`), item) ⇒ doubleVectorItemFormat.read(item)
-        case (JsString(`intMatrixTpe`), item)    ⇒ intMatrixItemFormat.read(item)
-        case (JsString(`intVectorTpe`), item)    ⇒ intVectorItemFormat.read(item)
+        case (JsString(`charType`), item) ⇒ charItemFormat.read(item)
+        case (JsString(`shortType`), item) ⇒ shortItemFormat.read(item)
+        case (JsString(`integerType`), item) ⇒ intItemFormat.read(item)
+        case (JsString(`longType`), item) ⇒ longItemFormat.read(item)
+        case (JsString(`floatType`), item) ⇒ floatItemFormat.read(item)
+        case (JsString(`doubleType`), item) ⇒ doubleItemFormat.read(item)
+        case (JsString(`booleanType`), item) ⇒ booleanItemFormat.read(item)
+        case (JsString(`stringType`), item) ⇒ stringItemFormat.read(item)
+        case (JsString(`doubleMatrixType`), item) ⇒ doubleMatrixItemFormat.read(item)
+        case (JsString(`doubleVectorType`), item) ⇒ doubleVectorItemFormat.read(item)
+        case (JsString(`intMatrixType`), item) ⇒ intMatrixItemFormat.read(item)
+        case (JsString(`intVectorType`), item) ⇒ intVectorItemFormat.read(item)
         case (JsString(typeTag), item) ⇒
           GenericItem.lookup(typeTag) match {
             case Some(jsonReaderFunc) ⇒ jsonReaderFunc(item)
-            case None                 ⇒ ConfigJsonFormats.unexpectedJsValueError(item)
+            case None ⇒ unexpectedJsValueError(item)
           }
-        case _ ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
+        case _ ⇒ unexpectedJsValueError(json)
       }
-    case _ ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
+    case _ ⇒ unexpectedJsValueError(json)
   }
 
-  implicit def itemsFormat: JsonFormat[ConfigData] = new JsonFormat[ConfigData] {
-    def write(items: ConfigData) = JsArray(items.map(writeItem(_)).toList: _*)
+  /**
+   * Writes a config or event to JSON
+   *
+   * @param config any instance of ConfigType
+   * @tparam A the type of the config (implied)
+   * @return a JsValue object representing the config
+   */
+  def writeConfig[A <: ConfigType[_]](config: A): JsValue = {
+    JsObject(
+      "configType" → JsString(config.typeName),
+      "configKey" → configKeyFormat.write(config.configKey),
+      "items" → config.items.toJson)
+  }
 
-    def read(json: JsValue) = json match {
-      case a: JsArray ⇒ a.elements.map((el: JsValue) ⇒ readItemAndType(el)).toSet
-      case _          ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
+  /**
+   * Writes an event to JSON
+   *
+   * @param event any instance of EventType
+   * @tparam A the type of the event (implied)
+   * @return a JsValue object representing the event
+   */
+  def writeEvent[A <: EventType[_]](event: A): JsValue = {
+    JsObject(
+      "eventType" → JsString(event.typeName),
+      "eventInfo" → eventInfoFormat.write(event.info),
+      "items" → event.items.toJson)
+  }
+
+  /**
+   * Reads a config back from JSON
+   *
+   * @param json the parsed JSON
+   * @tparam A the type of the config (use Any and match on the type if you don't know)
+   * @return an instance of the given config type, or an exception if the JSON is not valid for that type
+   */
+  def readConfig[A <: ConfigType[_]](json: JsValue): A = {
+    json match {
+      case JsObject(fields) ⇒
+        (fields("configType"), fields("configKey"), fields("items")) match {
+          case (JsString(typeName), configKey, items) ⇒
+            val ck = configKey.convertTo[ConfigKey]
+            typeName match {
+              case `setupConfigType` ⇒ SetupConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `observeConfigType` ⇒ ObserveConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `waitConfigType` ⇒ WaitConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `curentStateType` ⇒ CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `demandStateType` ⇒ DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case _ ⇒ unexpectedJsValueError(json)
+            }
+          case _ ⇒ unexpectedJsValueError(json)
+        }
+      case _ ⇒ unexpectedJsValueError(json)
     }
   }
 
-  implicit val configKeyFormat = jsonFormat2(ConfigKey.apply)
-
-  def writeConfig[A](cfg: A): JsValue = cfg match {
-    case sc: SetupConfig ⇒
-      JsObject(
-        "configType" → JsString(ConfigJsonFormats.SETUP),
-        "configKey" → configKeyFormat.write(sc.configKey),
-        "items" → sc.items.toJson
-      )
-  }
-
-  def readConfig[A](json: JsValue): SetupConfig = json match {
-    case JsObject(fields) ⇒
-      (fields("configType"), fields("configKey"), fields("items")) match {
-        case (JsString(ConfigJsonFormats.SETUP), configKey, items) ⇒
-          val ck = configKey.convertTo[ConfigKey]
-          SetupConfig(ck, itemsFormat.read(items))
-        case _ ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
-      }
-    case _ ⇒ ConfigJsonFormats.unexpectedJsValueError(json)
+  /**
+   * Reads an event back from JSON
+   *
+   * @param json the parsed JSON
+   * @tparam A the type of the event (use Any and match on the type if you don't know)
+   * @return an instance of the given event type, or an exception if the JSON is not valid for that type
+   */
+  def readEvent[A <: EventType[_]](json: JsValue): A = {
+    json match {
+      case JsObject(fields) ⇒
+        (fields("eventType"), fields("eventInfo"), fields("items")) match {
+          case (JsString(typeName), eventInfo, items) ⇒
+            val info = eventInfo.convertTo[EventInfo]
+            typeName match {
+              case `statusEventType` ⇒ StatusEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case `observeEventType` ⇒ ObserveEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case `systemEventType` ⇒ SystemEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case _ ⇒ unexpectedJsValueError(json)
+            }
+          case _ ⇒ unexpectedJsValueError(json)
+        }
+      case _ ⇒ unexpectedJsValueError(json)
+    }
   }
 }
 
-// Common functions
-private object ConfigJsonFormats {
-  // roots
-  val SETUP = "setup"
-  val OBSERVE = "observe"
-  val WAIT = "wait"
-  val CONFIGS = "configs"
-
-  // Reserved keys
-  val OBS_ID = "obsId"
-
-  val reserved = Set(OBS_ID)
-
-  def unexpectedJsValueError(x: JsValue) = deserializationError(s"Unexpected JsValue: $x")
-}

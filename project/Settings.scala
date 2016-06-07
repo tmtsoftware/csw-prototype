@@ -46,7 +46,7 @@ object Settings {
     javaOptions in (Test, run) ++= Seq("-Djava.net.preferIPv4Stack=true"),  // For location service
     jvmOptions in MultiJvm := Seq("-Djava.net.preferIPv4Stack=true"),
     testOptions in Test += Tests.Argument("-oI"),
-    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
+    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"))
   )
 
   // For standalone applications

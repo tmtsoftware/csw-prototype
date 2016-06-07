@@ -78,8 +78,6 @@ object StateVariable {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): DemandState = super.remove[S, J](key)
-
-    override def toString = doToString("demand")
   }
 
   object DemandState {
@@ -137,7 +135,6 @@ object StateVariable {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): CurrentState = super.remove[S, J](key)
-    override def toString = doToString("current")
   }
 
   object CurrentState {

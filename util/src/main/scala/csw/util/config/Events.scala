@@ -27,14 +27,13 @@ object Events {
   /**
    * This will include information related to the observation that is related to a configuration.
    * This will grow and develop.
+   *
+   * @param source the source subsystem and prefix for the component
+   * @param time time of the event
+   * @param obsId optional observation id
+   * @param eventId automatically generated unique event id
    */
-  case class EventInfo(source: ConfigKey, time: EventTime, obsId: Option[ObsId]) {
-
-    /**
-     * Unique ID for this event set
-     */
-    val eventId: UUID = UUID.randomUUID()
-
+  case class EventInfo(source: ConfigKey, time: EventTime, obsId: Option[ObsId], eventId: String = UUID.randomUUID().toString) {
     override def toString = s"$source: eId: $eventId, time: $time, obsId: $obsId"
   }
 
@@ -86,7 +85,7 @@ object Events {
     /**
      * The event id
      */
-    def eventId: UUID = info.eventId
+    def eventId: String = info.eventId
 
     /**
      * The observation ID
@@ -145,8 +144,6 @@ object Events {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): StatusEvent = super.remove[S, J](key)
-
-    override def toString = doToString("StatusEvent")
   }
 
   object StatusEvent {
@@ -196,8 +193,6 @@ object Events {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): ObserveEvent = super.remove[S, J](key)
-
-    override def toString = doToString("ObserveEvent")
   }
 
   object ObserveEvent {
@@ -244,8 +239,6 @@ object Events {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): SystemEvent = super.remove[S, J](key)
-
-    override def toString = doToString("SystemEvent")
   }
 
   object SystemEvent {
