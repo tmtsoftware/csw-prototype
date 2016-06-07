@@ -1,7 +1,8 @@
 package javacsw.util.config;
 
 import csw.util.config.*;
-import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.*;
+import csw.util.config.Events.*;
 import org.junit.Test;
 import spray.json.JsValue;
 
@@ -158,15 +159,50 @@ public class JSONTests {
         BooleanItem i6 = k6.jset(false);
         StringItem i7 = k7.jset("GG495").withUnits(Deg);
 
-        // Should encode/decode a setupconfig
+        // Should encode/decode a SetupConfig
         {
-            SetupConfig sc1 = new SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
-            assert (sc1.size() == 7);
-
-            JsValue sc1out = ConfigJSON.writeConfig(sc1);
-//            System.out.println("sc1out: " + sc1out.prettyPrint());
-            SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
-            assert (sc1.equals(sc1in));
+            SetupConfig c1 = new SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
+            assert (c1.size() == 7);
+            JsValue c1out = ConfigJSON.writeConfig(c1);
+            SetupConfig c1in = ConfigJSON.readConfig(c1out);
+            assert(c1in.jvalue(k3) == 1234L);
+            assert (c1.equals(c1in));
+        }
+        // Should encode/decode a ObserveConfig
+        {
+            ObserveConfig c1 = new ObserveConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
+            assert (c1.size() == 7);
+            JsValue c1out = ConfigJSON.writeConfig(c1);
+            ObserveConfig c1in = ConfigJSON.readConfig(c1out);
+            assert(c1in.jvalue(k3) == 1234L);
+            assert (c1.equals(c1in));
+        }
+        // Should encode/decode a StatusEvent
+        {
+            StatusEvent e1 = new StatusEvent("wfos.test").add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
+            assert (e1.size() == 7);
+            JsValue e1out = ConfigJSON.writeEvent(e1);
+            StatusEvent e1in = ConfigJSON.readEvent(e1out);
+            assert(e1in.jvalue(k3) == 1234L);
+            assert (e1.equals(e1in));
+        }
+        // Should encode/decode a ObserveEvent
+        {
+            ObserveEvent e1 = new ObserveEvent("wfos.test").add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
+            assert (e1.size() == 7);
+            JsValue e1out = ConfigJSON.writeEvent(e1);
+            ObserveEvent e1in = ConfigJSON.readEvent(e1out);
+            assert(e1in.jvalue(k3) == 1234L);
+            assert (e1.equals(e1in));
+        }
+        // Should encode/decode a SystemEvent
+        {
+            SystemEvent e1 = new SystemEvent("wfos.test").add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7);
+            assert (e1.size() == 7);
+            JsValue e1out = ConfigJSON.writeEvent(e1);
+            SystemEvent e1in = ConfigJSON.readEvent(e1out);
+            assert(e1in.jvalue(k3) == 1234L);
+            assert (e1.equals(e1in));
         }
     }
 

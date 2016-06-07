@@ -210,6 +210,9 @@ object Events {
   case class SystemEvent(info: EventInfo, items: ConfigData = Set.empty[Item[_, _]])
       extends EventType[SystemEvent] with EventServiceEvent {
 
+    // Java API
+    def this(prefix: String) = this(EventInfo(prefix))
+
     override def create(data: ConfigData) = SystemEvent(info, data)
 
     // The following overrides are needed for the Java API and javadocs
