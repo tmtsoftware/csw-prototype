@@ -33,7 +33,7 @@ object ConfigJSON extends DefaultJsonProtocol {
       value match {
         case JsString(subsystemStr) ⇒ Subsystem.lookup(subsystemStr) match {
           case Some(subsystem) ⇒ subsystem
-          case None ⇒ Subsystem.BAD
+          case None            ⇒ Subsystem.BAD
         }
         // With malformed JSON, return BAD
         case _ ⇒ Subsystem.BAD
@@ -46,7 +46,7 @@ object ConfigJSON extends DefaultJsonProtocol {
 
     def read(json: JsValue) = json match {
       case a: JsArray ⇒ a.elements.map((el: JsValue) ⇒ readItemAndType(el)).toSet
-      case _ ⇒ unexpectedJsValueError(json)
+      case _          ⇒ unexpectedJsValueError(json)
     }
   }
 
@@ -84,19 +84,19 @@ object ConfigJSON extends DefaultJsonProtocol {
   // XXX TODO Use JNumber?
   def writeItem[S, J](item: Item[S, J]): JsValue = {
     val result: (JsString, JsValue) = item match {
-      case ci: CharItem ⇒ (JsString(charType), charItemFormat.write(ci))
-      case si: ShortItem ⇒ (JsString(shortType), shortItemFormat.write(si))
-      case ii: IntItem ⇒ (JsString(integerType), intItemFormat.write(ii))
-      case li: LongItem ⇒ (JsString(longType), longItemFormat.write(li))
-      case fi: FloatItem ⇒ (JsString(floatType), floatItemFormat.write(fi))
-      case di: DoubleItem ⇒ (JsString(doubleType), doubleItemFormat.write(di))
-      case bi: BooleanItem ⇒ (JsString(booleanType), booleanItemFormat.write(bi))
-      case si: StringItem ⇒ (JsString(stringType), stringItemFormat.write(si))
+      case ci: CharItem         ⇒ (JsString(charType), charItemFormat.write(ci))
+      case si: ShortItem        ⇒ (JsString(shortType), shortItemFormat.write(si))
+      case ii: IntItem          ⇒ (JsString(integerType), intItemFormat.write(ii))
+      case li: LongItem         ⇒ (JsString(longType), longItemFormat.write(li))
+      case fi: FloatItem        ⇒ (JsString(floatType), floatItemFormat.write(fi))
+      case di: DoubleItem       ⇒ (JsString(doubleType), doubleItemFormat.write(di))
+      case bi: BooleanItem      ⇒ (JsString(booleanType), booleanItemFormat.write(bi))
+      case si: StringItem       ⇒ (JsString(stringType), stringItemFormat.write(si))
       case di: DoubleMatrixItem ⇒ (JsString(doubleMatrixType), doubleMatrixItemFormat.write(di))
       case di: DoubleVectorItem ⇒ (JsString(doubleVectorType), doubleVectorItemFormat.write(di))
-      case di: IntMatrixItem ⇒ (JsString(intMatrixType), intMatrixItemFormat.write(di))
-      case di: IntVectorItem ⇒ (JsString(intVectorType), intVectorItemFormat.write(di))
-      case gi: GenericItem[S] ⇒ (JsString(gi.typeName), gi.toJson)
+      case di: IntMatrixItem    ⇒ (JsString(intMatrixType), intMatrixItemFormat.write(di))
+      case di: IntVectorItem    ⇒ (JsString(intVectorType), intVectorItemFormat.write(di))
+      case gi: GenericItem[S]   ⇒ (JsString(gi.typeName), gi.toJson)
     }
     JsObject("itemType" → result._1, "item" → result._2)
   }
@@ -104,22 +104,22 @@ object ConfigJSON extends DefaultJsonProtocol {
   def readItemAndType(json: JsValue): Item[_, _] = json match {
     case JsObject(fields) ⇒
       (fields("itemType"), fields("item")) match {
-        case (JsString(`charType`), item) ⇒ charItemFormat.read(item)
-        case (JsString(`shortType`), item) ⇒ shortItemFormat.read(item)
-        case (JsString(`integerType`), item) ⇒ intItemFormat.read(item)
-        case (JsString(`longType`), item) ⇒ longItemFormat.read(item)
-        case (JsString(`floatType`), item) ⇒ floatItemFormat.read(item)
-        case (JsString(`doubleType`), item) ⇒ doubleItemFormat.read(item)
-        case (JsString(`booleanType`), item) ⇒ booleanItemFormat.read(item)
-        case (JsString(`stringType`), item) ⇒ stringItemFormat.read(item)
+        case (JsString(`charType`), item)         ⇒ charItemFormat.read(item)
+        case (JsString(`shortType`), item)        ⇒ shortItemFormat.read(item)
+        case (JsString(`integerType`), item)      ⇒ intItemFormat.read(item)
+        case (JsString(`longType`), item)         ⇒ longItemFormat.read(item)
+        case (JsString(`floatType`), item)        ⇒ floatItemFormat.read(item)
+        case (JsString(`doubleType`), item)       ⇒ doubleItemFormat.read(item)
+        case (JsString(`booleanType`), item)      ⇒ booleanItemFormat.read(item)
+        case (JsString(`stringType`), item)       ⇒ stringItemFormat.read(item)
         case (JsString(`doubleMatrixType`), item) ⇒ doubleMatrixItemFormat.read(item)
         case (JsString(`doubleVectorType`), item) ⇒ doubleVectorItemFormat.read(item)
-        case (JsString(`intMatrixType`), item) ⇒ intMatrixItemFormat.read(item)
-        case (JsString(`intVectorType`), item) ⇒ intVectorItemFormat.read(item)
+        case (JsString(`intMatrixType`), item)    ⇒ intMatrixItemFormat.read(item)
+        case (JsString(`intVectorType`), item)    ⇒ intVectorItemFormat.read(item)
         case (JsString(typeTag), item) ⇒
           GenericItem.lookup(typeTag) match {
             case Some(jsonReaderFunc) ⇒ jsonReaderFunc(item)
-            case None ⇒ unexpectedJsValueError(item)
+            case None                 ⇒ unexpectedJsValueError(item)
           }
         case _ ⇒ unexpectedJsValueError(json)
       }
@@ -137,7 +137,8 @@ object ConfigJSON extends DefaultJsonProtocol {
     JsObject(
       "configType" → JsString(config.typeName),
       "configKey" → configKeyFormat.write(config.configKey),
-      "items" → config.items.toJson)
+      "items" → config.items.toJson
+    )
   }
 
   /**
@@ -151,7 +152,8 @@ object ConfigJSON extends DefaultJsonProtocol {
     JsObject(
       "eventType" → JsString(event.typeName),
       "eventInfo" → eventInfoFormat.write(event.info),
-      "items" → event.items.toJson)
+      "items" → event.items.toJson
+    )
   }
 
   /**
@@ -168,12 +170,12 @@ object ConfigJSON extends DefaultJsonProtocol {
           case (JsString(typeName), configKey, items) ⇒
             val ck = configKey.convertTo[ConfigKey]
             typeName match {
-              case `setupConfigType` ⇒ SetupConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `setupConfigType`   ⇒ SetupConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
               case `observeConfigType` ⇒ ObserveConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `waitConfigType` ⇒ WaitConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `curentStateType` ⇒ CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `demandStateType` ⇒ DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case _ ⇒ unexpectedJsValueError(json)
+              case `waitConfigType`    ⇒ WaitConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `curentStateType`   ⇒ CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `demandStateType`   ⇒ DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case _                   ⇒ unexpectedJsValueError(json)
             }
           case _ ⇒ unexpectedJsValueError(json)
         }
@@ -195,10 +197,10 @@ object ConfigJSON extends DefaultJsonProtocol {
           case (JsString(typeName), eventInfo, items) ⇒
             val info = eventInfo.convertTo[EventInfo]
             typeName match {
-              case `statusEventType` ⇒ StatusEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case `statusEventType`  ⇒ StatusEvent(info, itemsFormat.read(items)).asInstanceOf[A]
               case `observeEventType` ⇒ ObserveEvent(info, itemsFormat.read(items)).asInstanceOf[A]
-              case `systemEventType` ⇒ SystemEvent(info, itemsFormat.read(items)).asInstanceOf[A]
-              case _ ⇒ unexpectedJsValueError(json)
+              case `systemEventType`  ⇒ SystemEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case _                  ⇒ unexpectedJsValueError(json)
             }
           case _ ⇒ unexpectedJsValueError(json)
         }
