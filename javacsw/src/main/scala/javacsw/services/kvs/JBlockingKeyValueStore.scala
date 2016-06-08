@@ -7,8 +7,7 @@ import csw.services.kvs.KeyValueStore.KvsFormatter
 import csw.services.kvs.{BlockingKeyValueStore, Implicits, KvsSettings}
 import csw.util.config.Configurations.{ControlConfigArg, SequenceConfigArg, _}
 import csw.util.config.Events.{EventServiceEvent, ObserveEvent, StatusEvent, SystemEvent}
-import csw.util.config.StateVariable
-import csw.util.config.StateVariable.{CurrentState, DemandState}
+import csw.util.config.StateVariable._
 
 import scala.concurrent.duration.Duration
 import scala.compat.java8.OptionConverters._

@@ -155,7 +155,7 @@ public interface IKeyValueStore<T> {
      * @param system   Akka env required by RedisClient
      * @return a new KeyValueStore for StateVariable objects
      */
-    static IKeyValueStore<StateVariable> getStateVariableStore(KvsSettings settings, ActorRefFactory system) {
+    static IKeyValueStore<StateVariable.StateVariable> getStateVariableStore(KvsSettings settings, ActorRefFactory system) {
         return JKeyValueStore.getStateVariableStore(settings, system);
     }
 

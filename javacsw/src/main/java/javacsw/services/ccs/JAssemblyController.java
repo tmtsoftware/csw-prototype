@@ -37,7 +37,7 @@ abstract public class JAssemblyController extends AbstractAssemblyController {
      * by calling notifySubscribers().
      */
     @Override
-    public /*protected*/ void requestCurrent() {};
+    public /*protected*/ void requestCurrent() {}
 
     /**
      * This should be used by the implementer actor's receive method.
@@ -52,7 +52,7 @@ abstract public class JAssemblyController extends AbstractAssemblyController {
     /**
      * Notifies all subscribers with the given value (Need to override to keep java happy)
      */
-    public /*protected*/ void notifySubscribers(StateVariable.CurrentState a) {
+    public /*protected*/ void notifySubscribers(StateVariable.CurrentStates a) {
         super.notifySubscribers(a);
     }
 

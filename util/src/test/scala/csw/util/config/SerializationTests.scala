@@ -2,6 +2,7 @@ package csw.util.config
 
 import csw.util.config.Configurations._
 import csw.util.config.Events.{EventServiceEvent, SystemEvent}
+import csw.util.config.StateVariable._
 import org.scalatest.FunSuite
 
 class SerializationTests extends FunSuite {
@@ -22,6 +23,12 @@ class SerializationTests extends FunSuite {
   val test = IntKey("test")
 
   val sc1 = SetupConfig("tcs.pos")
+    .set(ra, "12:32:11")
+    .set(dec, "30:22:22")
+    .set(epoch, 1950.0)
+    .set(test, 1) //.second
+
+  val cs1 = CurrentState("tcs.pos")
     .set(ra, "12:32:11")
     .set(dec, "30:22:22")
     .set(epoch, 1950.0)
@@ -56,6 +63,11 @@ class SerializationTests extends FunSuite {
     val bytes2 = write(wc1)
     val wout = read[WaitConfig](bytes2)
     assert(wout == wc1)
+
+    // Test current state Java serialization
+    val bytes3 = write(cs1)
+    val csout = read[CurrentState](bytes3)
+    assert(csout == cs1)
   }
 
   test("SetupConfigArg Java serialization") {
@@ -108,6 +120,16 @@ class SerializationTests extends FunSuite {
 
     val out1 = read[EventServiceEvent](bytes1)
     assert(out1 == event)
+  }
+
+  test("CurrentStates Java serialization") {
+    import ConfigSerializer._
+
+    val sca1 = CurrentStates(List(cs1))
+    val bytes1 = write(sca1)
+
+    val sout1 = read[CurrentStates](bytes1)
+    assert(sout1 == sca1)
   }
 
 }

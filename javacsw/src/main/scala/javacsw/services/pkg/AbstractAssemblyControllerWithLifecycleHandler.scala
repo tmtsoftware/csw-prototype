@@ -15,7 +15,7 @@ import csw.services.loc.LocationService.Location
 import csw.services.pkg.{Assembly, LifecycleHandler}
 import csw.util.config.Configurations.{ObserveConfigArg, SetupConfigArg}
 import csw.util.config.RunId
-import csw.util.config.StateVariable.{CurrentState, DemandState}
+import csw.util.config.StateVariable.{CurrentState, CurrentStates, DemandState}
 
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
@@ -110,7 +110,7 @@ abstract class AbstractAssemblyControllerWithLifecycleHandler extends AbstractAc
 
   // -- These can be called from Java based subclasses
 
-  override protected def notifySubscribers(a: CurrentState): Unit = super.notifySubscribers(a)
+  override protected def notifySubscribers(a: CurrentStates): Unit = super.notifySubscribers(a)
 
   protected def distributeSetupConfigs(locationsResolved: Boolean, configArg: SetupConfigArg,
                                        replyTo: Optional[ActorRef]): Validation =

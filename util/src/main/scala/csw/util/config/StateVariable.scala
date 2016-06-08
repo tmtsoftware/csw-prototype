@@ -8,12 +8,12 @@ import scala.annotation.varargs
 import java.util.Optional
 import scala.collection.JavaConverters._
 
-/**
- * Base trait for state variables
- */
-sealed trait StateVariable
-
 object StateVariable {
+
+  /**
+   * Base trait for state variables
+   */
+  sealed trait StateVariable extends Serializable
 
   /**
    * Type of a function that returns true if two state variables (demand and current)
@@ -155,10 +155,29 @@ object StateVariable {
    *
    * @param states one or more CurrentStates
    */
-  final case class CurrentStates(states: CurrentState*) {
+  final case class CurrentStates(states: Seq[CurrentState]) {
+
     /**
      * Java API: Returns the list of CurrentState objects
      */
     def jstates: java.util.List[CurrentState] = states.asJava
   }
+
+  /**
+   * For the Java API
+   *
+   * @param states one or more CurrentState objects
+   * @return a new CurrentStates object containing all the given CurrentState objects
+   */
+  @varargs
+  def createCurrentStates(states: CurrentState*): CurrentStates = CurrentStates(states)
+
+  /**
+   * For the Java API
+   *
+   * @param states one or more CurrentState objects
+   * @return a new CurrentStates object containing all the given CurrentState objects
+   */
+  def createCurrentStates(states: java.util.List[CurrentState]): CurrentStates = CurrentStates(states.asScala)
+
 }

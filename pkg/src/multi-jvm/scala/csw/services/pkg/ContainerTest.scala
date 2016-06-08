@@ -11,8 +11,6 @@ import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}
 import csw.services.pkg.ContainerComponent.Stop
-import csw.services.pkg.LifecycleManager.{Running, Startup}
-import csw.services.pkg.Supervisor.LifecycleStateChanged
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

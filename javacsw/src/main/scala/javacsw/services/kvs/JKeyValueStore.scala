@@ -8,7 +8,6 @@ import csw.services.kvs.KeyValueStore.KvsFormatter
 import csw.services.kvs.{Implicits, KeyValueStore, KvsSettings}
 import csw.util.config.Configurations._
 import csw.util.config.Events._
-import csw.util.config.StateVariable
 import csw.util.config.StateVariable._
 
 import scala.collection.JavaConverters._

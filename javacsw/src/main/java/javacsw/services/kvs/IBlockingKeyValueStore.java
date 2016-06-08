@@ -144,7 +144,7 @@ public interface IBlockingKeyValueStore<T> {
      * @param system   Akka env required by RedisClient
      * @return a new KeyValueStore for StateVariable objects
      */
-    static IBlockingKeyValueStore<StateVariable> getStateVariableStore(Duration timeout, KvsSettings settings, ActorRefFactory system) {
+    static IBlockingKeyValueStore<StateVariable.StateVariable> getStateVariableStore(Duration timeout, KvsSettings settings, ActorRefFactory system) {
         return JBlockingKeyValueStore.getStateVariableStore(timeout, settings, system);
     }
 

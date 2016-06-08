@@ -64,9 +64,8 @@ object AssemblyController {
 
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
- * XXX TODO: CurrentState only allows one prefix. Should it be a list or a different object?
  */
-trait AssemblyController extends LocationTrackerClientActor with PublisherActor[CurrentState] {
+trait AssemblyController extends LocationTrackerClientActor with PublisherActor[CurrentStates] {
   this: Actor with ActorLogging ⇒
 
   import AssemblyController._
