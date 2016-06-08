@@ -138,7 +138,7 @@ public class JSONTests {
 
     @Test
     public void testingItems() {
-        // Note: Skipping this test, since ConfigType.items is protected and would not be used from Java code
+        // TODO (Is this needed from Java code?)
     }
 
     @Test
