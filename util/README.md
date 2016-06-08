@@ -93,7 +93,7 @@ Example:
 
   // ...
 
-  ObserveEvent(prefix)
+  val config = SetupConfig(prefix)
       .set(eventNum, num)
       .set(exposureTime, 1.0)
       .set(imageData, testImageData)
@@ -118,7 +118,7 @@ Java Example:
 
     // ...
 
-       return new ObserveEvent(prefix)
+    SetupConfig config = new SetupConfig(prefix)
            .jset(eventNum, num)
            .jset(exposureTime, 1.0)
            .jset(imageData, testImageData);
@@ -137,9 +137,9 @@ In some cases you may need to wrap multiple configs, for example to pass to an a
     val yOffset = IntKey("yOffset")
     val obsId = "Obs001"
 
-    val sc1 = ObserveConfig(ck1).set(encoder1, 22).set(encoder2, 33)
-    val sc2 = ObserveConfig(ck1).set(xOffset, 1).set(yOffset, 2)
-    val configArg = ObserveConfigArg(obsId, sc1, sc2)
+    val sc1 = SetupConfig(ck1).set(encoder1, 22).set(encoder2, 33)
+    val sc2 = SetupConfig(ck1).set(xOffset, 1).set(yOffset, 2)
+    val configArg = SetupConfigArg(obsId, sc1, sc2)
 ```
 
 Java API:
@@ -151,7 +151,7 @@ Java API:
     IntKey yOffset = new IntKey("yOffset");
     String obsId = "Obs001";
 
-    ObserveConfig sc1 = new ObserveConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
-    ObserveConfig sc2 = new ObserveConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
-    ObserveConfigArg configArg = Configurations.createObserveConfigArg(obsId, sc1, sc2);
+    SetupConfig sc1 = new SetupConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
+    SetupConfig sc2 = new SetupConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
+    SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
 ```
