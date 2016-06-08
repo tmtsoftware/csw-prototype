@@ -144,11 +144,11 @@ Scala Example:
 Java Example:
 
 ```
-        IntMatrixKey k1 = new IntMatrixKey("myMatrix");
-        JIntMatrix m1 = new JIntMatrix(Arrays.asList(
-                Arrays.asList(1, 2, 3),
-                Arrays.asList(4, 5, 6),
-                Arrays.asList(7, 8, 9)));
+        DoubleMatrixKey k1 = new DoubleMatrixKey("myMatrix");
+        JDoubleMatrix m1 = new JDoubleMatrix(Arrays.asList(
+                Arrays.asList(1.0, 2.0, 3.0),
+                Arrays.asList(4.1, 5.1, 6.1),
+                Arrays.asList(7.2, 8.2, 9.2)));
         SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
         assert (sc1.jvalue(k1).equals(m1));
 ```
