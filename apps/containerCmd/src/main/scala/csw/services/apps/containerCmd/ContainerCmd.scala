@@ -96,7 +96,7 @@ case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
       ContainerComponent.create(config)
     }
     f.onComplete {
-      case Success(_)  ⇒ logger.info(s"XXX Created container based on $file")
+      case Success(_)  ⇒ logger.info(s"Created container based on $file")
       case Failure(ex) ⇒ logger.error(s"Error getting $file from config service", ex)
     }
   }
