@@ -150,16 +150,15 @@ object StateVariable {
     def fromSetupConfig(config: SetupConfig): CurrentState = CurrentState(config.prefix, config.items)
   }
 
-
   /**
-    * Combines multiple CurrentState objects together
-    *
-    * @param states one or more CurrentStates
-    */
+   * Combines multiple CurrentState objects together
+   *
+   * @param states one or more CurrentStates
+   */
   final case class CurrentStates(states: CurrentState*) {
     /**
-      * Java API: Returns the list of CurrentState objects
-      */
+     * Java API: Returns the list of CurrentState objects
+     */
     def jstates: java.util.List[CurrentState] = states.asJava
   }
 }

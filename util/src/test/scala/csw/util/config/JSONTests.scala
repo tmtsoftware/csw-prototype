@@ -306,9 +306,12 @@ class JSONTests extends FunSpec {
   describe("Test Double Matrix items") {
     it("Should allow double matrix values") {
       val k1 = DoubleMatrixKey("myMatrix")
-      val m1 = DoubleMatrix(Vector(Vector(1.0, 2.0, 3.0), Vector(4.1, 5.1, 6.1), Vector(7.2, 8.2, 9.2)))
-      val i1 = k1.set(m1)
-      val sc1 = SetupConfig(ck).add(i1)
+      val m1 = DoubleMatrix(Vector(
+        Vector(1.0, 2.0, 3.0),
+        Vector(4.1, 5.1, 6.1),
+        Vector(7.2, 8.2, 9.2)
+      ))
+      val sc1 = SetupConfig(ck).set(k1, m1)
       assert(sc1.value(k1) == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
