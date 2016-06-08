@@ -56,7 +56,7 @@ the contents of the Seq object.
     s: csw.services.ccs.CommandStatus = Completed(RunId(7044dd4c-33b2-4006-ad13-0d8d2a1e6d5a))
     
     // Get the current values from the assembly
-    seq> a1.configGet(configArg)
+    seq> a1.configGet()
     res3: csw.util.cfg.Configurations.SetupConfigArg = SetupConfigArg(ConfigInfo(ObsId(obs001)),ArrayBuffer(SC[TCS, tcs.mobie.blue.filter](filter -> Y_G0323)))
     
     // Set the filter to None

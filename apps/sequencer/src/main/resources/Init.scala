@@ -7,8 +7,9 @@ import scala.collection.JavaConverters._
 import scala.collection.JavaConversions._
 import java.io.StringReader
 import csw.services.ccs._
-import csw.util.config.StandardKeys._
-import csw.util.config.Configurations.{ SetupConfig, SetupConfigArg }
+import csw.util.config._
+import csw.util.config.Configurations._
+import csw.util.config.Events._
 import scala.concurrent.{Await, Future}
 import akka.pattern.ask
 import scala.concurrent.duration._
@@ -16,8 +17,8 @@ import scala.util.{Try, Success, Failure}
 
 // Utility functions, shortcuts
 
-import csw.services.apps.sequencer.Seq
-import Seq._
+import csw.services.apps.sequencer.SequencerEnv
+import SequencerEnv._
 
 // force loading of Seq class on startup
 system.name

@@ -4,8 +4,9 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
-import csw.services.kvs.{KvsSettings, StateVariableStore}
-import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
+import csw.util.akka.PublisherActor.RequestCurrent
+import csw.util.config.Configurations.SetupConfigArg
+import csw.util.config.StateVariable.CurrentState
 
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success}
@@ -27,15 +28,10 @@ case class AssemblyClient(assemblyController: ActorRef)(implicit val timeout: Ti
   }
 
   /**
-   * Returns the given config with the values updated to reflect the actual
-   * settings in the assembly.
-   *
-   * @param config sample config, the values are ignored, only the keys are important here
-   * @return the config, with current values from the assembly (on error, an empty config is returned)
+   * Returns a future object containing the current state of the assembly.
    */
-  def configGet(config: SetupConfigArg): Future[SetupConfigArg] = {
-    val wrapper = context.actorOf(ConfigGetActor.props())
-    (wrapper ? config).mapTo[SetupConfigArg]
+  def configGet(): Future[CurrentState] = {
+    (assemblyController ? RequestCurrent).mapTo[CurrentState]
   }
 }
 
@@ -53,14 +49,10 @@ case class BlockingAssemblyClient(client: AssemblyClient)(implicit val timeout: 
   }
 
   /**
-   * Returns the given config with the values updated to reflect the actual
-   * settings in the assembly.
-   *
-   * @param config a sample config (only the prefixes are important)
-   * @return the config, with current values from the assembly (on error, an empty config is returned)
+   * Returns an object containing the current state of the assembly
    */
-  def configGet(config: SetupConfigArg): SetupConfigArg = {
-    Await.result(client.configGet(config), timeout.duration)
+  def configGet(): CurrentState = {
+    Await.result(client.configGet(), timeout.duration)
   }
 
 }
@@ -78,64 +70,22 @@ private object AssemblyWrapper {
  */
 private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorLogging {
 
-  var replyTo: Option[ActorRef] = None
-  context.become(waitingForSubmit)
-
-  override def receive: Receive = Actor.emptyBehavior
-
-  def waitingForSubmit: Receive = {
+  override def receive: Receive = {
     case s: Submit ⇒
-      replyTo = Some(sender())
       assembly ! s
-      context.become(waitingForStatus)
+      context.become(waitingForStatus(sender()))
 
     case x ⇒ log.error(s"Received unexpected message: $x")
   }
 
-  def waitingForStatus: Receive = {
+  def waitingForStatus(replyTo: ActorRef): Receive = {
     case s: CommandStatus ⇒
       if (s.isDone) {
-        replyTo.foreach(_ ! s)
+        replyTo ! s
         context.stop(self)
       }
 
     case x ⇒ log.error(s"Received unexpected message: $x")
   }
-}
-
-// --
-
-private object ConfigGetActor {
-  def props(): Props = Props(classOf[ConfigGetActor])
-
-}
-
-// Actor that gets updated config values from the state variable store
-private class ConfigGetActor extends Actor with ActorLogging {
-  import context.dispatcher
-
-  override def receive: Receive = {
-    case s: SetupConfigArg ⇒ submit(sender(), s)
-
-    case x                 ⇒ log.error(s"Received unexpected message: $x")
-  }
-
-  // Gets the values associated with the configArg and replies to the given actor
-  // with an updated SetupConfigArg
-  def submit(replyTo: ActorRef, configArg: SetupConfigArg): Unit = {
-    val settings = KvsSettings(context.system)
-    val svs = StateVariableStore(settings)
-    Future.sequence(configArg.configs.map(c ⇒ svs.get(c.prefix))).onComplete {
-      case Success(seq) ⇒
-        val configs = seq.flatten.map(s ⇒ SetupConfig(s.configKey, s.items))
-        replyTo ! SetupConfigArg(configArg.info, configs: _*)
-        context.stop(self)
-      case Failure(ex) ⇒
-        log.error("Failed to get values from state variable store", ex)
-        replyTo ! SetupConfigArg(configArg.info)
-        context.stop(self)
-    }
-  }
-
 }
 

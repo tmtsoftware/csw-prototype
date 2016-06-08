@@ -1,10 +1,13 @@
 // Test input for sequencer for csw-pkg-demo project
 // (assumes location service and test assembly and HCDs running)
 
+import csw.util.config.StringKey
+val filterPrefix = "tcs.mobie.blue.filter"
+val filterKey = StringKey("filter")
 val a1 = resolveAssembly("Assembly-1")
-val config = SetupConfig(filterPrefix).set(filter, "Y_G0323")
+val config = SetupConfig(filterPrefix).set(filterKey, "Y_G0323")
 val obsId = "obs001" // should be actual obsId
 val configArg = SetupConfigArg(obsId, config)
 val s = a1.submit(configArg)
-val configArg2 = a1.configGet(configArg)
+val currentState = a1.configGet()
 
