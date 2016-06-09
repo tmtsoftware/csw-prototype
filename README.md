@@ -7,6 +7,8 @@ http://www.tmt.org
 
 The latest API docs can always be found at http://tmtsoftware.github.io/csw/.
 
+For a list of recent changes, see [CHANGELOG.md](CHANGELOG.md).
+
 Version History
 ---------------
 
