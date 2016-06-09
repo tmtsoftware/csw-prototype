@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
   is only one repository, rather than a local and a main repository. See [cs](cs).
 
 - Reimplemented the command service/pkg classes: New HcdController, AssemblyController traits.
-  See [ccs](ccs) and [pkg](pkg). Nolonger using the Redis based StateVariableStore to post state changes:
+  See [ccs](ccs) and [pkg](pkg). No longer using the Redis based StateVariableStore to post state changes:
   The new version inherits a PublisherActor trait. You can subscribe to state/status messages from HCDs and
   assemblies.
 
