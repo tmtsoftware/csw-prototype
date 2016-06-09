@@ -1,64 +1,66 @@
-package csw.util
-
 /**
- * == Utility Classes ==
- *
+ * <p>
+ * <strong>Utility Classes</strong>
+ * <p>
  * This project is intended to hold reusable utility classes used throughout the csw source code.
- *
- * == Configurations and Events ==
- *
+ * <p>
+ * <strong>Configurations and Events</strong>
+ * <p>
  * This package contains classes and traits used for ''configurations'' and ''events''.
  * These are all based on type-safe keys and values. Each key has a type member
  * and the key's values must be of that type.
- *
+ * <p>
+ * <strong>Note</strong>: The config classes are implemented in Scala, so the automatically generated documentation is incomplete.
+ * Please see the Scaladocs for this package for a more complete picture.
+ * <p>
  * Configurations and events are based on maps of keys and values, with some additional
  * information included, such as ids or timestamps.
- *
+ * <p>
  * The key/value store and event service make use of these classes, which need to be
  * serialized and deserialized for external storage (in Redis or Hornetq, for example).
- * The [[csw.util.config.ConfigSerializer.ConfigSerializer]] class provides support for this
+ * The {@link csw.util.config.ConfigSerializer.ConfigSerializer} class provides support for this
  * (based on java serialization).
- *
- * == Scala and Java APIs ==
- *
+ * <p>
+ * <strong>Scala and Java APIs</strong>
+ * <p>
  * All the config and event classes are immutable. In Scala, the `set` methods return a new instance of the object with a
  * new item added and the `get` methods return an Option, in case the Key is not found. There are also `value` methods
  * that return a value directly, throwing an exception if the key or value is not found.
- *
+ * <p>
  * For the Java API, replace `get`, `set` and `value` with `jget`, `jset` and `jvalue`. These versions accept and
  * return Java types.
- *
+ * <p>
  * Note that internally, the Key and Item classes take two type parameters: S and J: The Scala and Java types.
  * This makes it easier to provide generic support for both languages.
- *
- * == Key Types ==
- *
+ * <p>
+ * <strong>Key Types</strong>
+ * <p>
  * A set of standard key types and matching items are defined. Each key accepts one or more values
  * of the given type. The values are stored internally in a Vector:
- *
- * - IntKey
- * - ShortKey
- * - LongKey
- * - FloatKey
- * - DoubleKey
- * - StringKey
- * - CharKey
- * - BooleanKey
- *
+ * <ul>
+ * <li>IntKey</li>
+ * <li>ShortKey</li>
+ * <li>LongKey</li>
+ * <li>FloatKey</li>
+ * <li>DoubleKey</li>
+ * <li>StringKey</li>
+ * <li>CharKey</li>
+ * <li>BooleanKey</li>
+ * </ul>
  * The following keys support one or more values that are each one and two dimensional arrays (stored internally as Vectors):
- *
- * - DoubleVectorKey
- * - DoubleMatrixKey
- * - IntVectorKey
- * - IntMatrixKey
- *
+ * <ul>
+ * <li>DoubleVectorKey</li>
+ * <li>DoubleMatrixKey</li>
+ * <li>IntVectorKey</li>
+ * <li>IntMatrixKey</li>
+ * </ul>
  * In addition there is a GenericKey class that can be used for custom types. It is however recommended to
  * use only the standard key types, in oder to ensure that binary and JSON serialization and deserialization
  * works everywhere.
- *
+ * <p>
  * Example:
- *
- * {{{
+ * <p>
+ * <pre> {@code
  *   // Define a key for an event id
  *   val eventNum = IntKey("eventNum")
  *
@@ -78,11 +80,11 @@ package csw.util
  *       .set(eventNum, num)
  *       .set(exposureTime, 1.0)
  *       .set(imageData, testImageData)
- * }}}
- *
+ * } </pre>
+ * <p>
  * Java Example:
- *
- * {{{
+ * <p>
+ * <pre> {@code
  *     static final DoubleKey exposureTime = new DoubleKey("exposureTime");
  *
  *     // Define a key for an event id
@@ -104,13 +106,13 @@ package csw.util
  *            .jset(exposureTime, 1.0)
  *            .jset(imageData, testImageData);
  *
- * }}}
- *
- * == Two Dimensional Arrays ==
- *
+ * } </pre>
+ * <p>
+ * <strong>Two Dimensional Arrays</strong>
+ * <p>
  * Scala Example:
- *
- * {{{
+ * <p>
+ * <pre> {@code
  *       val k1 = DoubleMatrixKey("myMatrix")
  *       val m1 = DoubleMatrix(Vector(
  *         Vector(1.0, 2.0, 3.0),
@@ -119,11 +121,11 @@ package csw.util
  *       ))
  *       val sc1 = SetupConfig(ck).set(k1, m1)
  *       assert(sc1.value(k1) == m1)
- * }}}
- *
+ * } </pre>
+ * <p>
  * Java Example:
- *
- * {{{
+ * <p>
+ * <pre> {@code
  *         DoubleMatrixKey k1 = new DoubleMatrixKey("myMatrix");
  *         JDoubleMatrix m1 = new JDoubleMatrix(Arrays.asList(
  *                 Arrays.asList(1.0, 2.0, 3.0),
@@ -131,13 +133,14 @@ package csw.util
  *                 Arrays.asList(7.2, 8.2, 9.2)));
  *         SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
  *         assert (sc1.jvalue(k1).equals(m1));
- * }}}
+ * } </pre>
  *
- * == Combining Configs ==
- *
+ * <p>
+ * <strong>Combining Configs</strong>
+ * <p>
  * In some cases you may need to wrap multiple configs, for example to pass to an assembly.
- *
- * {{{
+ * <p>
+ * <pre> {@code
  *     val encoder1 = IntKey("encoder1")
  *     val encoder2 = IntKey("encoder2")
  *     val xOffset = IntKey("xOffset")
@@ -147,11 +150,11 @@ package csw.util
  *     val sc1 = ObserveConfig(ck1).set(encoder1, 22).set(encoder2, 33)
  *     val sc2 = ObserveConfig(ck1).set(xOffset, 1).set(yOffset, 2)
  *     val configArg = ObserveConfigArg(obsId, sc1, sc2)
- * }}}
- *
+ * } </pre>
+ * <p>
  * Java API:
- *
- * {{{
+ * <p>
+ * <pre> {@code
  *     IntKey encoder1 = new IntKey("encoder1");
  *     IntKey encoder2 = new IntKey("encoder2");
  *     IntKey xOffset = new IntKey("xOffset");
@@ -161,8 +164,6 @@ package csw.util
  *     ObserveConfig sc1 = new ObserveConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
  *     ObserveConfig sc2 = new ObserveConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
  *     ObserveConfigArg configArg = Configurations.createObserveConfigArg(obsId, sc1, sc2);
- * }}}
+ * } </pre>
  */
-package object config {
-
-}
+package csw.util.config;
