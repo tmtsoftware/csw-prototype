@@ -10,13 +10,16 @@ All notable changes to this project will be documented in this file.
 
 - Changes the install.sh script to generate Scala and Java docs in the ../install/doc/{java,scala} directories
 
-- Changed the configuration service to use svn internally by default instead of git. In the svn implementation there
-  is only one repository, rather than a local and a main repository. See [cs](cs).
+- Changed the [Configuration Service](cs) to use svn internally by default instead of git. In the svn implementation there
+  is only one repository, rather than a local and a main repository..
 
-- Reimplemented the command service/pkg classes: New HcdController, AssemblyController traits.
-  See [ccs](ccs) and [pkg](pkg). No longer using the Redis based StateVariableStore to post state changes:
+- Reimplemented the [Command and Control Service](ccs) and [component packaging](pkg) classes:
+  New HcdController, AssemblyController traits.
+  No longer using the Redis based StateVariableStore to post state changes:
   The new version inherits a PublisherActor trait. You can subscribe to state/status messages from HCDs and
   assemblies.
+
+- Changed the [Location Service](loc) APIs.
 
 ## [CSW v0.2-PDR] - 2015-11-19
 
