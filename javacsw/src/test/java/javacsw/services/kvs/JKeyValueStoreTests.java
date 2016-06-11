@@ -14,6 +14,8 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Optional;
 
+import static junit.framework.TestCase.assertTrue;
+
 public class JKeyValueStoreTests {
 
     // Keys used in test
@@ -54,28 +56,28 @@ public class JKeyValueStoreTests {
 
         kvs.set("test1", config1).get();
         Optional<SetupConfig> val1Opt = kvs.get("test1").get();
-        assert(val1Opt.isPresent());
+        assertTrue(val1Opt.isPresent());
         SetupConfig val1 = val1Opt.get();
-        assert(val1.prefix().equals("tcs.test"));
-        assert(val1.get(infoValue).contains(1));
-        assert(val1.get(infoStr).contains("info 1"));
+        assertTrue(val1.prefix().equals("tcs.test"));
+        assertTrue(val1.jvalue(infoValue) == 1);
+        assertTrue(val1.jvalue(infoStr).equals("info 1"));
 
         kvs.set("test2", config2).get();
         Optional<SetupConfig> val2Opt = kvs.get("test2").get();
-        assert(val2Opt.isPresent());
+        assertTrue(val2Opt.isPresent());
         SetupConfig val2 = val2Opt.get();
-        assert(val2.prefix().equals("tcs.test"));
-        assert(val2.get(infoValue).contains(2));
-        assert(val2.get(infoStr).contains("info 2"));
+        assertTrue(val2.prefix().equals("tcs.test"));
+        assertTrue(val2.jvalue(infoValue) == 2);
+        assertTrue(val2.jvalue(infoStr).equals("info 2"));
 
-        assert(kvs.delete("test1").get());
-        assert(kvs.delete("test2").get());
+        assertTrue(kvs.delete("test1").get());
+        assertTrue(kvs.delete("test2").get());
 
-        assert(!kvs.get("test1").get().isPresent());
-        assert(!kvs.get("test2").get().isPresent());
+        assertTrue(!kvs.get("test1").get().isPresent());
+        assertTrue(!kvs.get("test2").get().isPresent());
 
-        assert(!kvs.delete("test1").get());
-        assert(!kvs.delete("test2").get());
+        assertTrue(!kvs.delete("test1").get());
+        assertTrue(!kvs.delete("test2").get());
     }
 
     @Test
@@ -92,14 +94,14 @@ public class JKeyValueStoreTests {
         kvs.set(key, config.jset(exposureTime, 7.0), n).get();
 
         Optional<SetupConfig> v = kvs.get(key).get();
-        assert(v.isPresent());
+        assertTrue(v.isPresent());
         SetupConfig sc = v.get();
         Optional<Double> expTime = sc.jget(exposureTime, 0);
-        assert(expTime.isPresent());
-        assert(expTime.get() == 7.0);
+        assertTrue(expTime.isPresent());
+        assertTrue(expTime.get() == 7.0);
 
         List<SetupConfig> h = kvs.getHistory(key, n + 1).get();
-        assert(h.size() == n + 1);
+        assertTrue(h.size() == n + 1);
         for (int i = 0; i < n; i++) {
             System.out.println("History: " + i + ": " + h.get(i));
         }
