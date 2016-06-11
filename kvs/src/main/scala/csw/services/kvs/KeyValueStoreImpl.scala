@@ -8,7 +8,6 @@ import csw.services.kvs.KeyValueStore._
 
 /**
  * An implementation of the KeyValueStore trait based on Redis.
- * The host and port can be configured in resources/reference.conf.
  *
  * @tparam T the type of items being stored
  * @param host    the Redis server host
