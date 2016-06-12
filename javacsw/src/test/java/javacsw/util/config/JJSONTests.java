@@ -247,6 +247,45 @@ public class JJSONTests {
     }
 
     @Test
+    public void TestFloatMatrixItem() {
+        // Should allow matrix values
+        FloatMatrixKey k1 = new FloatMatrixKey("myMatrix");
+        JFloatMatrix m1 = new JFloatMatrix(Arrays.asList(
+                Arrays.asList(1.0f, 2.0f, 3.0f),
+                Arrays.asList(4.1f, 5.1f, 6.1f),
+                Arrays.asList(7.2f, 8.2f, 9.2f)));
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assertTrue(sc1.size() == 1);
+        assertTrue(sc1.jvalue(k1).equals(m1));
+        assertTrue(sc1.jvalue(k1).value().get(1).equals(Arrays.asList(4.1f, 5.1f, 6.1f)));
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assertTrue(sc1.equals(sc1in));
+        assertTrue(sc1in.jvalue(k1).equals(m1));
+    }
+
+    @Test
+    public void TestFloatVectorItem() {
+        // Should allow vector values
+        FloatVectorKey k1 = new FloatVectorKey("myVector");
+        JFloatVector m1 = JFloatVector.fromArray(new float[]{1.0f, 2.0f, 3.0f});
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assertTrue(sc1.size() == 1);
+        assertTrue(sc1.jvalue(k1).equals(m1));
+        assertTrue(sc1.jvalue(k1).value().equals(Arrays.asList(1.0f, 2.0f, 3.0f)));
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assertTrue(sc1.equals(sc1in));
+        assertTrue(sc1in.jvalue(k1).equals(m1));
+    }
+
+    @Test
     public void TestIntMatrixItem() {
         // Should allow matrix values
         IntMatrixKey k1 = new IntMatrixKey("myMatrix");
@@ -324,4 +363,86 @@ public class JJSONTests {
         assertTrue(sc1.equals(sc1in));
         assertTrue(sc1in.jvalue(k1).equals(m1));
     }
+
+    @Test
+    public void TestShortMatrixItem() {
+        // Should allow matrix values
+        ShortMatrixKey k1 = new ShortMatrixKey("myMatrix");
+        JShortMatrix m1 = JShortMatrix.fromArray(new short[][]{
+                {1, 2, 3},
+                {4, 5, 6},
+                {7, 8, 9}});
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assertTrue(sc1.size() == 1);
+        assertTrue(sc1.jvalue(k1).equals(m1));
+        assertTrue(sc1.jvalue(k1).value().get(1).equals(Arrays.asList((short)4, (short)5, (short)6)));
+        assertTrue(sc1.jvalue(k1).value().get(2).get(2) == 9);
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assertTrue(sc1.equals(sc1in));
+        assertTrue(sc1in.jvalue(k1).equals(m1));
+    }
+
+    @Test
+    public void TestShortVectorItem() {
+        // Should allow vector values
+        ShortVectorKey k1 = new ShortVectorKey("myVector");
+        JShortVector m1 = JShortVector.fromArray(new short[]{1, 2, 3});
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assertTrue(sc1.size() == 1);
+        assertTrue(sc1.jvalue(k1).equals(m1));
+        assertTrue(sc1.jvalue(k1).value().equals(Arrays.asList((short) 1, (short) 2, (short) 3)));
+        assertTrue(sc1.jvalue(k1).value().get(2) == 3);
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assertTrue(sc1.equals(sc1in));
+        assertTrue(sc1in.jvalue(k1).equals(m1));
+    }
+
+
+    @Test
+    public void TestLongMatrixItem() {
+        // Should allow matrix values
+        LongMatrixKey k1 = new LongMatrixKey("myMatrix");
+        JLongMatrix m1 = JLongMatrix.fromArray(new long[][]{
+                {1, 2, 3},
+                {4, 5, 6},
+                {7, 8, 9}});
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assertTrue(sc1.size() == 1);
+        assertTrue(sc1.jvalue(k1).equals(m1));
+        assertTrue(sc1.jvalue(k1).value().get(1).equals(Arrays.asList((long)4, (long)5, (long)6)));
+        assertTrue(sc1.jvalue(k1).value().get(2).get(2) == 9);
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assertTrue(sc1.equals(sc1in));
+        assertTrue(sc1in.jvalue(k1).equals(m1));
+    }
+
+    @Test
+    public void TestLongVectorItem() {
+        // Should allow vector values
+        LongVectorKey k1 = new LongVectorKey("myVector");
+        JLongVector m1 = JLongVector.fromArray(new long[]{1, 2, 3});
+        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
+        assertTrue(sc1.size() == 1);
+        assertTrue(sc1.jvalue(k1).equals(m1));
+        assertTrue(sc1.jvalue(k1).value().equals(Arrays.asList((long) 1, (long) 2, (long) 3)));
+        assertTrue(sc1.jvalue(k1).value().get(2) == 3);
+
+        JsValue sc1out = ConfigJSON.writeConfig(sc1);
+//        System.out.println("sc1out: " + sc1out.prettyPrint());
+
+        SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
+        assertTrue(sc1.equals(sc1in));
+        assertTrue(sc1in.jvalue(k1).equals(m1));
+    }
+
 }

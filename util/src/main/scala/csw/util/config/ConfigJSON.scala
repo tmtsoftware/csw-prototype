@@ -23,10 +23,16 @@ object ConfigJSON extends DefaultJsonProtocol {
   implicit val stringItemFormat = jsonFormat3(StringItem.apply)
   implicit val doubleMatrixItemFormat = jsonFormat3(DoubleMatrixItem.apply)
   implicit val doubleVectorItemFormat = jsonFormat3(DoubleVectorItem.apply)
+  implicit val floatMatrixItemFormat = jsonFormat3(FloatMatrixItem.apply)
+  implicit val floatVectorItemFormat = jsonFormat3(FloatVectorItem.apply)
   implicit val intMatrixItemFormat = jsonFormat3(IntMatrixItem.apply)
   implicit val intVectorItemFormat = jsonFormat3(IntVectorItem.apply)
   implicit val byteMatrixItemFormat = jsonFormat3(ByteMatrixItem.apply)
   implicit val byteVectorItemFormat = jsonFormat3(ByteVectorItem.apply)
+  implicit val shortMatrixItemFormat = jsonFormat3(ShortMatrixItem.apply)
+  implicit val shortVectorItemFormat = jsonFormat3(ShortVectorItem.apply)
+  implicit val longMatrixItemFormat = jsonFormat3(LongMatrixItem.apply)
+  implicit val longVectorItemFormat = jsonFormat3(LongVectorItem.apply)
 
   implicit def subsystemFormat: JsonFormat[Subsystem] = new JsonFormat[Subsystem] {
     def write(obj: Subsystem) = JsString(obj.name)
@@ -68,10 +74,16 @@ object ConfigJSON extends DefaultJsonProtocol {
   private val stringType = classOf[StringItem].getSimpleName
   private val doubleMatrixType = classOf[DoubleMatrixItem].getSimpleName
   private val doubleVectorType = classOf[DoubleVectorItem].getSimpleName
+  private val floatMatrixType = classOf[FloatMatrixItem].getSimpleName
+  private val floatVectorType = classOf[FloatVectorItem].getSimpleName
   private val intMatrixType = classOf[IntMatrixItem].getSimpleName
   private val intVectorType = classOf[IntVectorItem].getSimpleName
   private val byteMatrixType = classOf[ByteMatrixItem].getSimpleName
   private val byteVectorType = classOf[ByteVectorItem].getSimpleName
+  private val shortMatrixType = classOf[ShortMatrixItem].getSimpleName
+  private val shortVectorType = classOf[ShortVectorItem].getSimpleName
+  private val longMatrixType = classOf[LongMatrixItem].getSimpleName
+  private val longVectorType = classOf[LongVectorItem].getSimpleName
 
   // config and event type JSON tags
   private val setupConfigType = classOf[SetupConfig].getSimpleName
@@ -98,10 +110,16 @@ object ConfigJSON extends DefaultJsonProtocol {
       case si: StringItem       ⇒ (JsString(stringType), stringItemFormat.write(si))
       case di: DoubleMatrixItem ⇒ (JsString(doubleMatrixType), doubleMatrixItemFormat.write(di))
       case di: DoubleVectorItem ⇒ (JsString(doubleVectorType), doubleVectorItemFormat.write(di))
+      case di: FloatMatrixItem  ⇒ (JsString(floatMatrixType), floatMatrixItemFormat.write(di))
+      case di: FloatVectorItem  ⇒ (JsString(floatVectorType), floatVectorItemFormat.write(di))
       case di: IntMatrixItem    ⇒ (JsString(intMatrixType), intMatrixItemFormat.write(di))
       case di: IntVectorItem    ⇒ (JsString(intVectorType), intVectorItemFormat.write(di))
       case di: ByteMatrixItem   ⇒ (JsString(byteMatrixType), byteMatrixItemFormat.write(di))
       case di: ByteVectorItem   ⇒ (JsString(byteVectorType), byteVectorItemFormat.write(di))
+      case di: ShortMatrixItem  ⇒ (JsString(shortMatrixType), shortMatrixItemFormat.write(di))
+      case di: ShortVectorItem  ⇒ (JsString(shortVectorType), shortVectorItemFormat.write(di))
+      case di: LongMatrixItem   ⇒ (JsString(longMatrixType), longMatrixItemFormat.write(di))
+      case di: LongVectorItem   ⇒ (JsString(longVectorType), longVectorItemFormat.write(di))
       case gi: GenericItem[S]   ⇒ (JsString(gi.typeName), gi.toJson)
     }
     JsObject("itemType" → result._1, "item" → result._2)
@@ -120,10 +138,16 @@ object ConfigJSON extends DefaultJsonProtocol {
         case (JsString(`stringType`), item)       ⇒ stringItemFormat.read(item)
         case (JsString(`doubleMatrixType`), item) ⇒ doubleMatrixItemFormat.read(item)
         case (JsString(`doubleVectorType`), item) ⇒ doubleVectorItemFormat.read(item)
+        case (JsString(`floatMatrixType`), item)  ⇒ floatMatrixItemFormat.read(item)
+        case (JsString(`floatVectorType`), item)  ⇒ floatVectorItemFormat.read(item)
         case (JsString(`intMatrixType`), item)    ⇒ intMatrixItemFormat.read(item)
         case (JsString(`intVectorType`), item)    ⇒ intVectorItemFormat.read(item)
         case (JsString(`byteMatrixType`), item)   ⇒ byteMatrixItemFormat.read(item)
         case (JsString(`byteVectorType`), item)   ⇒ byteVectorItemFormat.read(item)
+        case (JsString(`shortMatrixType`), item)  ⇒ shortMatrixItemFormat.read(item)
+        case (JsString(`shortVectorType`), item)  ⇒ shortVectorItemFormat.read(item)
+        case (JsString(`longMatrixType`), item)   ⇒ longMatrixItemFormat.read(item)
+        case (JsString(`longVectorType`), item)   ⇒ longVectorItemFormat.read(item)
         case (JsString(typeTag), item) ⇒
           GenericItem.lookup(typeTag) match {
             case Some(jsonReaderFunc) ⇒ jsonReaderFunc(item)

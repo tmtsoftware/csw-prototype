@@ -424,5 +424,84 @@ class JSONTests extends FunSpec {
       assert(sc2 == sc1)
     }
   }
+
+  describe("Test Short Matrix items") {
+    it("Should allow short matrix values") {
+      val k1 = ShortMatrixKey("myMatrix")
+      val m1 = ShortMatrix(Vector(Vector(1, 2, 3), Vector(4, 5, 6), Vector(7, 8, 9)))
+      val i1 = k1.set(m1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1.value(k1) == m1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in.value(k1) == m1)
+
+      val sc2 = SetupConfig(ck).set(k1, m1)
+      assert(sc2 == sc1)
+    }
+  }
+
+  describe("Test Short Vector items") {
+    it("Should allow short vector values") {
+      val k1 = ShortVectorKey("myVector")
+      val m1 = ShortVector(Vector(1, 2, 3))
+      val i1 = k1.set(m1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1.value(k1) == m1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      //      info("sc1out: " + sc1out.prettyPrint)
+
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in.value(k1) == m1)
+
+      val sc2 = SetupConfig(ck).set(k1, m1)
+      assert(sc2 == sc1)
+    }
+  }
+
+  describe("Test Long Matrix items") {
+    it("Should allow long matrix values") {
+      val k1 = LongMatrixKey("myMatrix")
+      val m1 = LongMatrix(Vector(Vector(1, 2, 3), Vector(4, 5, 6), Vector(7, 8, 9)))
+      val i1 = k1.set(m1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1.value(k1) == m1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in.value(k1) == m1)
+
+      val sc2 = SetupConfig(ck).set(k1, m1)
+      assert(sc2 == sc1)
+    }
+  }
+
+  describe("Test Long Vector items") {
+    it("Should allow long vector values") {
+      val k1 = LongVectorKey("myVector")
+      val m1 = LongVector(Vector(1, 2, 3))
+      val i1 = k1.set(m1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1.value(k1) == m1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      //      info("sc1out: " + sc1out.prettyPrint)
+
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in.value(k1) == m1)
+
+      val sc2 = SetupConfig(ck).set(k1, m1)
+      assert(sc2 == sc1)
+    }
+  }
+
 }
 

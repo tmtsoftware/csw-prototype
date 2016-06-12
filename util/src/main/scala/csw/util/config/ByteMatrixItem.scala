@@ -22,7 +22,7 @@ case object ByteMatrix extends DefaultJsonProtocol {
 }
 
 /**
- * A Java equivalent of a 2d array of Doubles
+ * A Java equivalent of a 2d array of bytes
  */
 case class JByteMatrix(value: java.util.List[java.util.List[java.lang.Byte]]) {
   def toScala: ByteMatrix = ByteMatrix(
@@ -32,7 +32,7 @@ case class JByteMatrix(value: java.util.List[java.util.List[java.lang.Byte]]) {
 
 case object JByteMatrix {
   /**
-   * Initialize from an array of arrays of bytes
+   * Java API: Initialize from an array of arrays of bytes
    */
   def fromArray(ar: Array[Array[Byte]]): JByteMatrix = JByteMatrix(ar.toVector.map(a ⇒ a.toVector.map(i ⇒ i: java.lang.Byte).asJava).asJava)
 }

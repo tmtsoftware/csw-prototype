@@ -32,7 +32,7 @@ case class JDoubleVector(value: java.util.List[java.lang.Double]) {
 
 case object JDoubleVector {
   /**
-   * Initialize from an array of doubles
+   * Java API: Initialize from an array of doubles
    */
   def fromArray(ar: Array[Double]): JDoubleVector = JDoubleVector(ar.toVector.map(i ⇒ i: java.lang.Double).asJava)
 }

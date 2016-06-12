@@ -32,7 +32,7 @@ case class JByteVector(value: java.util.List[java.lang.Byte]) {
 
 case object JByteVector {
   /**
-   * Initialize from an array of bytes
+   * Java API: Initialize from an array of bytes
    */
   def fromArray(ar: Array[Byte]): JByteVector = JByteVector(ar.toVector.map(i ⇒ i: java.lang.Byte).asJava)
 }
