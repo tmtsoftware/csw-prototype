@@ -23,10 +23,10 @@ object ContainerCmd {
    * @param csConfig optional config file to use for config service settings, if needed
    * @param file optional container config file to override the default
    */
-  case class Config(csConfig: Option[File] = None, file: Option[File] = None)
+  private case class Config(csConfig: Option[File] = None, file: Option[File] = None)
 
-  val parser = new scopt.OptionParser[Config]("scopt") {
-    head("csclient", System.getProperty("CSW_VERSION"))
+  private def parser(name: String): scopt.OptionParser[Config] = new scopt.OptionParser[Config](name) {
+    head(name, System.getProperty("CSW_VERSION"))
 
     opt[File]('c', "config") action { (x, c) ⇒
       c.copy(csConfig = Some(x))
@@ -37,7 +37,7 @@ object ContainerCmd {
     } text "optional container config file to override the default"
   }
 
-  def parse(args: Seq[String]): Option[Config] = parser.parse(args, Config())
+  private def parse(name: String, args: Seq[String]): Option[Config] = parser(name).parse(args, Config())
 }
 
 /**
@@ -46,13 +46,14 @@ object ContainerCmd {
  * a local file, or a file checked out from the config service.
  * Note that all the dependencies for the created components must already be in the classpath.
  *
+ * @param name the name of the application
  * @param args the command line arguments
  * @param resource optional name of default config file (under src/main/resources)
  */
-case class ContainerCmd(args: Array[String], resource: Option[String] = None) {
+case class ContainerCmd(name: String, args: Array[String], resource: Option[String] = None) {
   val logger = Logger(LoggerFactory.getLogger("ContainerCmd"))
 
-  ContainerCmd.parse(args) match {
+  ContainerCmd.parse(name, args) match {
     case Some(options) ⇒ run(options)
     case None          ⇒ System.exit(1)
   }

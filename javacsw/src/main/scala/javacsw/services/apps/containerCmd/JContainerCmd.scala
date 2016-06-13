@@ -9,7 +9,7 @@ import csw.services.apps.containerCmd.ContainerCmd
  * Java API to ContainerCmd, used to create CSW container
  */
 object JContainerCmd {
-  def createContainerCmd(args: Array[String], resource: Optional[String]): ContainerCmd = {
-    ContainerCmd(args, resource.asScala)
+  def createContainerCmd(name: String, args: Array[String], resource: Optional[String]): ContainerCmd = {
+    ContainerCmd(name, args, resource.asScala)
   }
 }

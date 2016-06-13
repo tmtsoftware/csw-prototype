@@ -67,10 +67,10 @@ object Scaladoc extends AutoPlugin {
       }
     }
 
-    // if we have generated scaladoc and none of the files have a diagram then fail
-    if (file.exists() && !findHTMLFileWithDiagram(List(file)))
-      sys.error("ScalaDoc diagrams not generated!")
-    else
+//    // if we have generated scaladoc and none of the files have a diagram then fail
+//    if (file.exists() && !findHTMLFileWithDiagram(List(file)))
+//      sys.error("ScalaDoc diagrams not generated!")
+//    else
       file
   }
 }
