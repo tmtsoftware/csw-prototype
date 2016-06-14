@@ -5,9 +5,9 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.util.Timeout
 
-import com.typesafe.config.{ Config, ConfigFactory, ConfigResolveOptions }
-import csw.services.cs.akka.{ ConfigServiceClient, ConfigServiceSettings }
-import csw.services.loc.{ ComponentId, ComponentType, LocationService }
+import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
+import csw.services.cs.akka.{ConfigServiceClient, ConfigServiceSettings}
+import csw.services.loc.{ComponentId, ComponentType, LocationService}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -31,12 +31,13 @@ object TrackLocation extends App {
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    name: Option[String] = None,
-    csConfigFile: Option[File] = None,
-    command: Option[String] = None,
-    port: Option[Int] = None,
-    appConfigFile: Option[File] = None,
-    noExit: Boolean = false)
+    name:          Option[String] = None,
+    csConfigFile:  Option[File]   = None,
+    command:       Option[String] = None,
+    port:          Option[Int]    = None,
+    appConfigFile: Option[File]   = None,
+    noExit:        Boolean        = false
+  )
 
   // Parses the command line options
   private val parser = new scopt.OptionParser[Options]("trackLocation") {
@@ -103,7 +104,7 @@ object TrackLocation extends App {
   private def getFromConfigService(file: File, csConfig: Option[File]): Config = {
     val settings = csConfig match {
       case Some(csConfigFile) ⇒ ConfigServiceSettings(ConfigFactory.parseFile(csConfigFile))
-      case None ⇒ ConfigServiceSettings(system)
+      case None               ⇒ ConfigServiceSettings(system)
     }
 
     try {
