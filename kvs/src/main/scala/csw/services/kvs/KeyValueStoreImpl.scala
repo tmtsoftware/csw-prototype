@@ -91,6 +91,10 @@ case class KeyValueStoreImpl[T: KvsFormatter](host: String = "127.0.0.1", port: 
 
   def disconnect(): Future[Unit] = redis.quit().map(_ ⇒ ())
 
-  def shutdown(): Future[Unit] = redis.shutdown().map(_ ⇒ ())
+  def shutdown(): Future[Unit] = {
+    val f = redis.shutdown().map(_ ⇒ ())
+    redis.stop()
+    f
+  }
 }
 
