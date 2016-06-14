@@ -9,18 +9,19 @@ Usage: trackLocation [options] [<app-config>]
 
   --name <name>
         Required: The name used to register the application (also root name in config file)
-  --cs-config <value>
-        optional config file to use for the Config Service (to enable fetching the application config file)
+  --cs-name <value>
+        optional name of the config service to use (for fetching the application config file)
   -c <name> | --command <name>
         The command that starts the target application (default: use $name.command from config file: Required)
   -p <number> | --port <number>
         Port number the application listens on (default: use value of $name.port from config file. Required.)
   <app-config>
         optional config file in HOCON format (Options specified as: $name.command, $name.port, etc. Fetched from config service if path does not exist)
+  --no-exit <value>
+        for testing: prevents application from exiting after running command
   --help
-        prints this message
+
   --version
-        prints the version of this application
  ```
 
 Example Usage
@@ -48,30 +49,9 @@ If the config file is stored in the Config Service under test/redisTest.conf, yo
     tracklocation --name redisTest test/redisTest.conf
 
 If the path name is not found locally, it is searched for with the config service.
-You can pass another config file to specify the config service to use. For example,
-if the file cs.conf contains this:
+You can specify the name of the config service to use (if other than the default) with the --cs-name option:
 
-```
-csw.services.cs {
+    tracklocation --name redisTest --cs-name myConfigService test/redisTest.conf
 
-  // Name of this config service
-  name = "Test Config Service"
-
-  // The URI of the main git or svn repository used by the Config Service.
-  main-repository = "file:///tmp/CsTestMainRepo/"
-
-  // If this section is missing, the config service http server will not be started
-  http {
-    // Host to listen to for config service http server (can also use "0.0.0.0")
-    interface = localhost
-
-    // Port to listen on for config service http server (use 0 to get a random port assigned)
-    port = 8542
-  }
-
-  // Timeout for ask messages
-  timeout = 5000 milliseconds
-}
-
-```
-
+This assumes that a config service application is running and is registered with the location
+service under the name `myConfigService`.
