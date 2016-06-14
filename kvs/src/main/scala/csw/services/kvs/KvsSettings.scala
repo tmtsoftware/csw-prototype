@@ -1,14 +1,16 @@
 package csw.services.kvs
 
-import akka.actor.{ActorSystem, Extension, ExtensionKey}
+import akka.actor._
+import com.typesafe.config.Config
 
-object KvsSettings extends ExtensionKey[KvsSettings]
+object KvsSettings extends ExtensionId[KvsSettings] with ExtensionIdProvider {
+  override def lookup(): KvsSettings.type = KvsSettings
 
-/**
- * The configuration settings for the kvs
- */
-case class KvsSettings(system: ActorSystem) extends Extension {
-  val redisHostname: String = system.settings.config.getString("csw.redis.hostname")
-  val redisPort: Int = system.settings.config.getInt("csw.redis.port")
+  override def createExtension(system: ExtendedActorSystem): KvsSettings = new KvsSettings(system.settings.config)
+
+  def getKvsSettings(system: ActorSystem): KvsSettings = KvsSettings(system)
 }
 
+case class KvsSettings(redisHostname: String, redisPort: Int) extends Extension {
+  def this(config: Config) = this(config.getString("csw.redis.hostname"), config.getInt("csw.redis.port"))
+}

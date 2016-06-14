@@ -93,7 +93,7 @@ public interface IKeyValueStore<T> {
      * @return an object containing the kvs settings
      */
     static KvsSettings getKvsSettings(ActorSystem system) {
-        return new KvsSettings(system);
+        return KvsSettings.getKvsSettings(system);
     }
 
     /**

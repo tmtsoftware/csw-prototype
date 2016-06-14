@@ -103,6 +103,11 @@ case class StateVariableStore(settings: KvsSettings)(implicit _system: ActorRefF
   /**
    * Disconnects from the key/value store server
    */
-  def disconnect(): Unit = kvs.disconnect()
+  def disconnect(): Future[Unit] = kvs.disconnect()
+
+  /**
+   * Shuts the key/value store server down
+   */
+  def shutdown(): Future[Unit] = kvs.shutdown()
 
 }

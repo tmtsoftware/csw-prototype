@@ -162,7 +162,7 @@ lazy val trackLocation = Project(id = "trackLocation", base = file("apps/trackLo
   .settings(libraryDependencies ++=
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(loc, log, cs % "test->test;compile->compile")
+  ) dependsOn(loc, log, cs % "test->test;compile->compile", kvs % "test->test")
 
 // Build the config service annex application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))

@@ -11,8 +11,8 @@ import csw.services.loc.LocationService
 import csw.services.pkg.ContainerComponent
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 object ContainerCmd {
   LocationService.initInterface()
@@ -81,7 +81,7 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
   }
 
   // Gets the named config file from the config service and uses it to initialize the container
-  private def initFromConfigService(file: File, csConfig: Option[File]): Unit = {
+  private def initFromConfigService(file: File, csConfig: Option[File]): Future[Unit] = {
     implicit val system = ActorSystem()
     import system.dispatcher
 
@@ -92,14 +92,16 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
     }
 
     val f = for {
-      config ← ConfigServiceClient.getConfigFromConfigService(settings, file)
+      configOpt ← ConfigServiceClient.getConfigFromConfigService(settings.name, file)
     } yield {
-      ContainerComponent.create(config)
+      if (configOpt.isEmpty) logger.error(s"$file not found in config service")
+      configOpt.map(ContainerComponent.create)
     }
-    f.onComplete {
-      case Success(_)  ⇒ logger.info(s"Created container based on $file")
-      case Failure(ex) ⇒ logger.error(s"Error getting $file from config service", ex)
+    f.onSuccess {
+      case _ ⇒ logger.info(s"Created container based on $file")
     }
+    f.map(_ ⇒ ())
   }
+
 }
 

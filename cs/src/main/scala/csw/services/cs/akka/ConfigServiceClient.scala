@@ -17,14 +17,43 @@ object ConfigServiceClient {
    * by first looking up the config service with the location service and
    * then fetching the contents of the file using a config service client.
    * (Use only for small files.)
+   *
+   * @param csName the name of the config service (the name it was registered with, from it's config file)
+   * @param path the path of the file in the config service
+   * @param id optional id of a specific version of the file
+   * @param system actor system needed to access config service
+   * @param timeout time to wait for a reply
+   * @return the future contents of the file as a ConfigData object, if found
    */
-  def getStringFromConfigService(settings: ConfigServiceSettings, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[String] = {
+  def getFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[ConfigData]] = {
     import system.dispatcher
     for {
-      cs ← locateConfigService(settings.name)
-      configDataOpt ← ConfigServiceClient(cs, settings.name).get(path, id)
-      s ← configDataOpt.get.toFutureString
-    } yield s
+      cs ← locateConfigService(csName)
+      configDataOpt ← ConfigServiceClient(cs, csName).get(path, id)
+    } yield configDataOpt
+  }
+
+  /**
+   * Convenience method that gets the contents of the given file from the config service
+   * by first looking up the config service with the location service and
+   * then fetching the contents of the file using a config service client.
+   * (Use only for small files.)
+   *
+   * @param csName the name of the config service (the name it was registered with, from it's config file)
+   * @param path the path of the file in the config service
+   * @param id optional id of a specific version of the file
+   * @param system actor system needed to access config service
+   * @param timeout time to wait for a reply
+   * @return the future contents of the file as a string, if the file was found
+   */
+  def getStringFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[String]] = {
+    import system.dispatcher
+    getFromConfigService(csName, path, id).flatMap { configDataOpt ⇒
+      if (configDataOpt.isDefined)
+        configDataOpt.get.toFutureString.map(Some(_))
+      else
+        Future(None)
+    }
   }
 
   /**
@@ -33,12 +62,19 @@ object ConfigServiceClient {
    * then fetching the contents of the given file using a config service client.
    * Finally, the file contents is parsed as a Typesafe config file and the
    * Config object returned.
+   *
+   * @param csName the name of the config service (the name it was registered with, from it's config file)
+   * @param path the path of the file in the config service
+   * @param id optional id of a specific version of the file
+   * @param system actor system needed to access config service
+   * @param timeout time to wait for a reply
+   * @return the future config, parsed from the file
    */
-  def getConfigFromConfigService(settings: ConfigServiceSettings, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Config] = {
+  def getConfigFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[Config]] = {
     import system.dispatcher
     for {
-      s ← getStringFromConfigService(settings, path, id)
-    } yield ConfigFactory.parseString(s).resolve(ConfigResolveOptions.noSystem())
+      s ← getStringFromConfigService(csName, path, id)
+    } yield s.map(ConfigFactory.parseString(_).resolve(ConfigResolveOptions.noSystem()))
   }
 }
 

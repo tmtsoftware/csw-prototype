@@ -1,6 +1,7 @@
 package csw.util.config
 
 import csw.util.config.Configurations._
+import csw.util.config.Events.StatusEvent
 import csw.util.config.UnitsOfMeasure._
 import org.scalatest.FunSpec
 import spray.json.DefaultJsonProtocol
@@ -148,6 +149,54 @@ class ConfigTests extends FunSpec {
 
     it("should update for the same key with set") {
       var sc1 = SetupConfig(ck1)
+      sc1 = sc1.set(k2, NoUnits, 22)
+      assert(sc1.exists(k2))
+      assert(sc1(k2) == Vector(22))
+
+      sc1 = sc1.set(k2, NoUnits, 33)
+      assert(sc1.exists(k2))
+      assert(sc1(k2) == Vector(33))
+    }
+  }
+
+  describe("StatusEvent Test") {
+
+    val k1 = IntKey("encoder")
+    val k2 = IntKey("windspeed")
+    val k3 = IntKey("notUsed")
+
+    it("Should allow adding keys") {
+      var sc1 = StatusEvent(ck3).set(k1, 22).set(k2, 44)
+      assert(sc1.size == 2)
+      assert(sc1.exists(k1))
+      assert(sc1.exists(k2))
+      assert(sc1.value(k1) == 22)
+      assert(sc1.value(k2) == 44)
+      assert(sc1.missingKeys(k1, k2, k3) == Set(k3.keyName))
+    }
+
+    it("Should allow setting") {
+      var sc1 = StatusEvent(ck1)
+      sc1 = sc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
+      assert(sc1.size == 2)
+      assert(sc1.exists(k1))
+      assert(sc1.exists(k2))
+    }
+
+    it("Should allow apply") {
+      var sc1 = StatusEvent(ck1)
+      sc1 = sc1.set(k1, NoUnits, 22).set(k2, NoUnits, 44)
+
+      val v1 = sc1(k1)
+      val v2 = sc1(k2)
+      assert(sc1.get(k1).isDefined)
+      assert(sc1.get(k2).isDefined)
+      assert(v1 == Vector(22))
+      assert(v2 == Vector(44))
+    }
+
+    it("should update for the same key with set") {
+      var sc1 = StatusEvent(ck1)
       sc1 = sc1.set(k2, NoUnits, 22)
       assert(sc1.exists(k2))
       assert(sc1(k2) == Vector(22))

@@ -24,7 +24,12 @@ object Settings {
     version := Version,
     scalaVersion := Dependencies.scalaVersion,
     crossPaths := true,
+    // Note: This doesn't seem to prevent parallel execution when all tests are run, which can be a problem in some cases
     parallelExecution in Test := false,
+    // See http://stackoverflow.com/questions/11899723/how-to-turn-off-parallel-execution-of-tests-for-multi-project-builds
+    parallelExecution in ThisBuild := false,
+    // See https://github.com/sbt/sbt/issues/1886
+    concurrentRestrictions in Global += Tags.limit(Tags.Test, 1),
     fork := true,
     autoAPIMappings := true,
     resolvers += Resolver.typesafeRepo("releases"),

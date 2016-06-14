@@ -22,8 +22,6 @@ object TrackLocation extends App {
   // Needed for use with Futures
   implicit val system = ActorSystem()
 
-  import system.dispatcher
-
   implicit val timeout = Timeout(10.seconds)
 
   /**
@@ -32,7 +30,7 @@ object TrackLocation extends App {
    */
   private case class Options(
     name:          Option[String] = None,
-    csConfigFile:  Option[File]   = None,
+    csName:        Option[String] = None,
     command:       Option[String] = None,
     port:          Option[Int]    = None,
     appConfigFile: Option[File]   = None,
@@ -47,9 +45,9 @@ object TrackLocation extends App {
       c.copy(name = Some(x))
     } text "Required: The name used to register the application (also root name in config file)"
 
-    opt[File]("cs-config") action { (x, c) ⇒
-      c.copy(csConfigFile = Some(x))
-    } text "optional config file to use for the Config Service (to enable fetching the application config file)"
+    opt[String]("cs-name") action { (x, c) ⇒
+      c.copy(csName = Some(x))
+    } text "optional name of the config service to use (for fetching the application config file)"
 
     opt[String]('c', "command") valueName "<name>" action { (x, c) ⇒
       c.copy(command = Some(x))
@@ -92,29 +90,25 @@ object TrackLocation extends App {
 
   // Gets the application config from the file, if it exists, or from the config service, if it exists there.
   // If neither exist, an error is reported.
-  private def getAppConfig(file: File, csConfig: Option[File]): Config = {
+  private def getAppConfig(file: File, csName: Option[String]): Config = {
     if (file.exists())
       ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem())
     else
-      getFromConfigService(file, csConfig)
+      getFromConfigService(file, csName)
   }
 
   // Gets the named config file from the config service or reports an error if it does not exist.
-  // Uses the given csConfig to configure the config service, if not empty.
-  private def getFromConfigService(file: File, csConfig: Option[File]): Config = {
-    val settings = csConfig match {
-      case Some(csConfigFile) ⇒ ConfigServiceSettings(ConfigFactory.parseFile(csConfigFile))
-      case None               ⇒ ConfigServiceSettings(system)
+  // Uses the given config service name to find the config service, if not empty.
+  private def getFromConfigService(file: File, csName: Option[String]): Config = {
+    val name = csName match {
+      case Some(s) ⇒ s
+      case None    ⇒ ConfigServiceSettings(system).name
     }
 
-    try {
-      Await.result(ConfigServiceClient.getConfigFromConfigService(settings, file), timeout.duration)
-    } catch {
-      case e: Exception ⇒
-        e.printStackTrace() // temp
-        error(s"$file not found locally or from the config service")
-        null // not reached
-    }
+    val configOpt = Await.result(ConfigServiceClient.getConfigFromConfigService(name, file), timeout.duration)
+    if (configOpt.isEmpty)
+      error(s"$file not found locally or from the config service")
+    configOpt.get
   }
 
   // Run the application
@@ -123,7 +117,7 @@ object TrackLocation extends App {
     val name = options.name.get
 
     //. Get the app config file, if given
-    val appConfig = options.appConfigFile.map(getAppConfig(_, options.csConfigFile))
+    val appConfig = options.appConfigFile.map(getAppConfig(_, options.csName))
 
     // Gets the String value of an option from the command line or the app's config file, or None if not found
     def getStringOpt(opt: String, arg: Option[String] = None, required: Boolean = true): Option[String] = {
@@ -160,6 +154,8 @@ object TrackLocation extends App {
 
     // Run the command and wait for it to exit
     val exitCode = command.!
+
+    println(s"$command exited with exit code $exitCode")
 
     // Unregister from the location service and exit
     val registration = Await.result(f, timeout.duration)

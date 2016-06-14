@@ -20,6 +20,7 @@ import scala.util._
 import scala.concurrent.{Await, Future}
 
 object TrackLocationTest {
+  println("\nTrackLocationTest:\n")
   LocationService.initInterface()
   private val system = ActorSystem("Test")
 }
