@@ -130,4 +130,13 @@ case class JBlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: 
    */
   def hmget(key: String, field: String): Optional[String] = kvs.hmget(key, field).asJava
 
+  /**
+   * Disconnects from the key/value store server
+   */
+  def disconnect(): Unit = kvs.disconnect()
+
+  /**
+   * Shuts the key/value store server down
+   */
+  def shutdown(): Unit = kvs.shutdown()
 }

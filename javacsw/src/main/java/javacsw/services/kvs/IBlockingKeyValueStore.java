@@ -83,6 +83,17 @@ public interface IBlockingKeyValueStore<T> {
      */
     Optional<String> hmget(String key, String field);
 
+    /**
+     * Disconnects from the key/value store server
+     */
+    void  disconnect();
+
+    /**
+     * Shuts the key/value store server down
+     */
+    void shutdown();
+
+
     // --- factory methods ---
     
     /**

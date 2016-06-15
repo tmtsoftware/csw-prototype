@@ -85,7 +85,17 @@ public interface IKeyValueStore<T> {
      */
     CompletableFuture<Optional<String>> hmget(String key, String field);
 
-    
+    /**
+     * Disconnects from the key/value store server
+     */
+    CompletableFuture<Unit>  disconnect();
+
+    /**
+     * Shuts the key/value store server down
+     */
+    CompletableFuture<Unit> shutdown();
+
+
     // --- static factory methods ---
     
     /**

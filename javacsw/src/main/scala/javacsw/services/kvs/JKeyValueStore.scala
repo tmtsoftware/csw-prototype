@@ -61,7 +61,7 @@ object JKeyValueStore {
 }
 
 /**
- * A wrapper API for a KVS that waits for operations to complete before returing.
+ * A Java wrapper API for a key/value store
  *
  * @param settings Redis server settings
  * @param system Akka env required by RedisClient
@@ -136,4 +136,13 @@ case class JKeyValueStore[T: KvsFormatter](settings: KvsSettings, system: ActorR
    */
   def hmget(key: String, field: String): CompletableFuture[Optional[String]] = kvs.hmget(key, field).map(_.asJava).toJava.toCompletableFuture
 
+  /**
+   * Disconnects from the key/value store server
+   */
+  def disconnect: CompletableFuture[Unit] = kvs.disconnect().toJava.toCompletableFuture
+
+  /**
+   * Shuts the key/value store server down
+   */
+  def shutdown: CompletableFuture[Unit] = kvs.shutdown().toJava.toCompletableFuture
 }

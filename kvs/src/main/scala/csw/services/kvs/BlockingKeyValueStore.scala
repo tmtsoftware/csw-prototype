@@ -69,5 +69,14 @@ case class BlockingKeyValueStore[T: KvsFormatter](timeout: Duration, settings: K
   def hmget(key: String, field: String): Option[String] =
     Await.result[Option[String]](kvs.hmget(key, field), timeout)
 
+  /**
+   * Disconnects from the key/value store server
+   */
+  def disconnect(): Unit = Await.ready(kvs.disconnect(), timeout)
+
+  /**
+   * Shuts the key/value store server down
+   */
+  def shutdown(): Unit = Await.ready(kvs.shutdown(), timeout)
 }
 

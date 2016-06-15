@@ -26,16 +26,6 @@ case class TelemetryService(settings: KvsSettings)(implicit _system: ActorRefFac
   private val kvs = KeyValueStore[StatusEvent](settings)
 
   /**
-   * Disconnects from the key/value store server
-   */
-  def disconnect(): Future[Unit] = kvs.disconnect()
-
-  /**
-   * Shuts the key/value store server down
-   */
-  def shutdown(): Future[Unit] = kvs.shutdown()
-
-  /**
    * Sets the value for the status event (key is based on the event's prefix)
    *
    * @param status the value to store
@@ -69,6 +59,15 @@ case class TelemetryService(settings: KvsSettings)(implicit _system: ActorRefFac
    */
   def delete(prefix: String): Future[Unit] = kvs.delete(telemetryPrefix(prefix)).map(_ ⇒ ())
 
+  /**
+   * Disconnects from the key/value store server
+   */
+  def disconnect(): Future[Unit] = kvs.disconnect()
+
+  /**
+   * Shuts the key/value store server down
+   */
+  def shutdown(): Future[Unit] = kvs.shutdown()
 }
 
 /**

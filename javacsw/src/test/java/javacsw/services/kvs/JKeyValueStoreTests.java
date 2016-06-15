@@ -45,7 +45,7 @@ public class JKeyValueStoreTests {
     // In a real application, you could use other methods...
 
     @Test
-    public void basicJavaTimeTests() throws Exception {
+    public void basicJavaTests() throws Exception {
         SetupConfig config1 = new SetupConfig("tcs.test")
                 .jset(infoValue, 1)
                 .jset(infoStr, "info 1");
