@@ -86,7 +86,7 @@ object PubSubTests {
         if (count % 10000 == 0)
           log.info(s"Received $count configs so far: $config")
 
-      case "done" ⇒ sender ! count
+      case "done" ⇒ sender() ! count
       case x      ⇒ log.error(s"Unexpected message $x")
     }
   }

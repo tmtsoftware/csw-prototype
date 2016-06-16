@@ -1,12 +1,15 @@
 package csw.services.kvs
 
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import akka.actor.{AbstractActor, Actor, ActorLogging, ActorRef, Props}
 import csw.services.kvs.KeyValueStore.KvsFormatter
 import redis.actors.{DecodeReplies, RedisWorkerIO}
 import java.net.InetSocketAddress
+
 import redis.api.pubsub._
 import akka.util.ByteString
 import redis.protocol.{MultiBulk, RedisReply}
+
+import scala.annotation.varargs
 
 /**
  * Adds the ability to subscribe to objects of type T.
@@ -16,7 +19,7 @@ abstract class Subscriber[T: KvsFormatter] extends Actor with ActorLogging {
 
   private val settings = KvsSettings(context.system)
 
-  lazy val redis = context.actorOf(SubscribeActor.props[T](self, settings.redisHostname, settings.redisPort)
+  private lazy val redis = context.actorOf(SubscribeActor.props[T](self, settings.redisHostname, settings.redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
 
   /**
@@ -44,6 +47,44 @@ abstract class Subscriber[T: KvsFormatter] extends Actor with ActorLogging {
   }
 }
 
+/**
+ * Helper class For Java API: Adds the ability to subscribe to objects of type T.
+ * The subscribed actor will receive messages of type T for the given keys.
+ */
+abstract class JAbstractSubscriber[T: KvsFormatter] extends AbstractActor {
+
+  private val settings = KvsSettings(context.system)
+
+  private lazy val redis = context.actorOf(SubscribeActor.props[T](self, settings.redisHostname, settings.redisPort)
+    .withDispatcher(SubscribeActor.dispatcherName))
+
+  /**
+   * Subscribes this actor to values with the given keys.
+   * Each key may be followed by a '*' wildcard to subscribe to all matching events.
+   *
+   * @param keys the top level keys for the events you want to subscribe to.
+   */
+  @varargs
+  def subscribe(keys: String*): Unit = {
+    val (patterns, channels) = keys.partition(_.endsWith("*"))
+    if (patterns.nonEmpty) redis ! PSUBSCRIBE(patterns: _*)
+    if (channels.nonEmpty) redis ! SUBSCRIBE(channels: _*)
+  }
+
+  /**
+   * Unsubscribes this actor from values with the given keys.
+   * Each key may be followed by a '*' wildcard to unsubscribe to all matching values.
+   *
+   * @param keys the top level keys for the events you want to unsubscribe from.
+   */
+  @varargs
+  def unsubscribe(keys: String*): Unit = {
+    val (patterns, channels) = keys.partition(_.endsWith("*"))
+    if (patterns.nonEmpty) redis ! PUNSUBSCRIBE(patterns: _*)
+    if (channels.nonEmpty) redis ! UNSUBSCRIBE(channels: _*)
+  }
+}
+
 // -- Implementation --
 
 private object SubscribeActor {
@@ -51,11 +92,6 @@ private object SubscribeActor {
     Props(new SubscribeActor[T](subscriber, redisHost, redisPort))
 
   val dispatcherName = "rediscala.rediscala-client-worker-dispatcher"
-
-  case class RedisMessage(channel: String, data: ByteString)
-
-  case class RedisPMessage(patternMatched: String, channel: String, data: ByteString)
-
 }
 
 // The actor that receives the messages from Redis.

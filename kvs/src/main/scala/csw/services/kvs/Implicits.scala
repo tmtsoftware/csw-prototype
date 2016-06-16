@@ -61,6 +61,18 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
+  implicit val observeConfigKvsFormatter = new KvsFormatter[ObserveConfig] {
+    def serialize(e: ObserveConfig): ByteString = {
+      ByteString(write(e))
+    }
+
+    def deserialize(bs: ByteString): ObserveConfig = {
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      read[ObserveConfig](ar)
+    }
+  }
+
   implicit val currentStateKvsFormatter = new KvsFormatter[CurrentState] {
     def serialize(e: CurrentState): ByteString = {
       ByteString(write(e))
@@ -106,6 +118,18 @@ trait Implicits extends ByteStringDeserializerDefault {
       val ar = Array.ofDim[Byte](bs.length)
       bs.asByteBuffer.get(ar)
       read[SetupConfigArg](ar)
+    }
+  }
+
+  implicit val observeConfigArgKvsFormatter = new KvsFormatter[ObserveConfigArg] {
+    def serialize(e: ObserveConfigArg): ByteString = {
+      ByteString(write(e))
+    }
+
+    def deserialize(bs: ByteString): ObserveConfigArg = {
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      read[ObserveConfigArg](ar)
     }
   }
 
