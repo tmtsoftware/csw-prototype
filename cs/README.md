@@ -8,8 +8,73 @@ Config Service API
 ------------------
 
 The config service can be accessed by sending messages to the config service actor,
-however the ConfigServiceClient wrapper class implements the ConfigManager trait
+however the ConfigServiceClient wrapper class implements a
+[ConfigManager](src/main/scala/csw/services/cs/core/ConfigManager.scala) trait
 and provides a somewhat simpler API.
+
+The ConfigManager API is non-blocking (returns future values). If this is inconvenient,
+you can always wrap the calls in Await.result(...). The Java API also contains a blocking API.
+
+The data for the files being stored in the config service is passed as a
+[ConfigData](src/main/scala/csw/services/cs/core/ConfigManager.scala) object,
+which is based on Akka streams, but can also be accessed using files or strings.
+
+Example using Scala asynchronous API with for comprehension:
+
+```
+  def runTests(manager: ConfigManager, oversize: Boolean)(implicit system: ActorSystem): Future[Unit] = {
+    import system.dispatcher
+    val result = for {
+
+      // Add, then update the file twice
+      createId1 ← manager.create(path1, ConfigData(contents1), oversize, comment1)
+      createId2 ← manager.createOrUpdate(path2, ConfigData(contents1), oversize, comment1)
+      updateId1 ← manager.update(path1, ConfigData(contents2), comment2)
+      updateId2 ← manager.createOrUpdate(path1, ConfigData(contents3), oversize, comment3)
+
+      // Check that we can access each version
+      result1 ← manager.get(path1).flatMap(_.get.toFutureString)
+      result2 ← manager.get(path1, Some(createId1)).flatMap(_.get.toFutureString)
+      result3 ← manager.get(path1, Some(updateId1)).flatMap(_.get.toFutureString)
+      result4 ← manager.get(path1, Some(updateId2)).flatMap(_.get.toFutureString)
+      result5 ← manager.get(path2).flatMap(_.get.toFutureString)
+      result6 ← manager.get(path2, Some(createId2)).flatMap(_.get.toFutureString)
+
+      historyList1 ← manager.history(path1)
+      historyList2 ← manager.history(path2)
+
+      // Test default file features
+      default1 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.setDefault(path1, Some(updateId1))
+      default2 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.resetDefault(path1)
+      default3 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ ← manager.setDefault(path1, Some(updateId2))
+
+      // list the files being managed
+      list ← manager.list()
+
+    } yield {
+      // At this point all of the above Futures have completed
+      assert(result1 == contents3)
+      ...
+  }
+
+```
+
+Convenience Methods
+-------------------
+
+If there is a config service actor running already and you just want to get the latest version of
+a config file (in HOCON format), there is a convenience method:
+
+```
+    val configOpt = Await.result(ConfigServiceClient.getConfigFromConfigService(csName, file), timeout.duration)
+    if (configOpt.isEmpty) ...
+```
+
+This looks up the config service that was registered with the name `csName` in the location service and then
+gets the contents of the given file, returning an Option[Config], if successful.
 
 
 Config Service Application
@@ -171,18 +236,13 @@ The contents of the files are exchanged using [Akka reactive streams](http://www
 No concurrent access to local repository
 ----------------------------------------
 
-Note that if using Git, each instance of the config service should manage its own local Git repository.
-All of the local repositories may reference a common central repository, however it is probably not
-safe to allow concurrent access to the local Git repository, which reads and writes files
-in the Git working directory.
-
-Having copies of the files in the Git working directory has the advantage of being a kind of *cache*,
-so that the files do not have to be pulled from the server each time they are needed.
-However care needs to be taken not to allow different threads to potentially read and write the
-same files at once.
-
-When using svn (the default setting) this should not be a problem, since no local repository or working 
+When using svn (the default setting) concurrent access should not be a problem, since no local repository or working
 directory is used.
+
+If using Git, each instance of the config service should manage its own local Git repository.
+All of the local repositories may reference a common central repository, however it is probably not
+safe to allow concurrent access by more than one config service actor to the local Git repository,
+which reads and writes files in the Git working directory.
 
 Running the tests
 -----------------
