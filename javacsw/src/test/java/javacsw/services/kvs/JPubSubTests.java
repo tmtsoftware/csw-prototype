@@ -18,7 +18,7 @@ import akka.japi.Creator;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests Java API to subscribe to the key/value store
+ * Tests Java API to subscribe to the key/value store.
  */
 public class JPubSubTests {
     static final DoubleKey exposureTime = new DoubleKey("exposureTime");
@@ -43,14 +43,10 @@ public class JPubSubTests {
         system = null;
     }
 
-    /**
-     * Starts the test by creating the subscriber and publisher actors and sending a Publish
-     * message to the publisher.
-     *
-     * @throws Exception
-     */
+    // Test runs for numSecs seconds, continuously publishing SetupConfig objects and
+    // receiving them in the subscriber.
     @Test
-    public void testEventService() throws Exception {
+    public void testJavaKeyValueStore() throws Exception {
         new JavaTestKit(system) {
             {
                 LoggingAdapter log = Logging.getLogger(system, this);

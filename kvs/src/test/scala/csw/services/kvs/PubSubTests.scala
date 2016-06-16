@@ -22,6 +22,8 @@ class PubSubTests extends TestKit(ActorSystem("Test"))
   val subscriber = system.actorOf(Props(classOf[TestSubscriber], "Subscriber-1"))
   val publisher = system.actorOf(Props(classOf[TestPublisher], self, numSecs))
 
+  // Test runs for numSecs seconds, continuously publishing SetupConfig objects and
+  // receiving them in the subscriber.
   test("Test subscriber") {
     within(numSecs + 2 seconds) {
       expectMsg("done")

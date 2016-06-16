@@ -102,40 +102,4 @@ public class JTelemetryServiceTest {
         }
         ts.delete(config.prefix()).get();
     }
-
-//    }
-//
-//    // Test subscriber actor for telemetry
-//    object MySubscriber {
-//        def props(prefix1: String, prefix2: String): Props = Props(classOf[MySubscriber], prefix1, prefix2)
-//
-//        case object GetResults
-//            case class Results(count1: Int, count2: Int)
-//    }
-//
-//    class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber {
-//        import MySubscriber._
-//        import TelemetryServiceTests._
-//
-//        var count1 = 0
-//        var count2 = 0
-//
-//        subscribe(prefix1, prefix2)
-//
-//        def receive: Receive = {
-//        case event: StatusEvent if event.prefix == prefix1 ⇒
-//            count1 = count1 + 1
-//            assert(event.value(infoValue) == count1)
-//            assert(event.value(infoStr) == "info 1")
-//
-//        case event: StatusEvent if event.prefix == prefix2 ⇒
-//            count2 = count2 + 1
-//            assert(event.value(infoValue) == count2)
-//            assert(event.value(infoStr) == "info 2")
-//
-//        case GetResults ⇒
-//            sender() ! Results(count1, count2)
-//            }
-//    }
-
 }
