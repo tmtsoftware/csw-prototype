@@ -31,7 +31,7 @@ val csw = (project in file("."))
     "DOCROOT" -> "latest/api/index.html"
   )
 ).aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
-  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, javacsw)
+  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, sysControl, javacsw)
 
 // Utility classes
 lazy val util = project
@@ -163,6 +163,15 @@ lazy val trackLocation = Project(id = "trackLocation", base = file("apps/trackLo
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(loc, log, cs % "test->test;compile->compile", kvs % "test->test")
+
+// Track the location of an external application
+lazy val sysControl = Project(id = "sysControl", base = file("apps/sysControl"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(packageSettings("sysControl", "System remote control for CSW services", "System Remote Control"): _*)
+  .settings(libraryDependencies ++=
+    compile(scopt, akkaActor) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(loc, log, pkg, cs % "test->test;compile->compile")
 
 // Build the config service annex application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
