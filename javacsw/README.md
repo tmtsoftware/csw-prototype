@@ -19,7 +19,7 @@ Scala and Java types. Java APIs are provided for all the CSW subprojects:
 
 * [Time Service (ts)](README.ts.md)
 
-* [Utilities (util)](README.util.md)
+* [Utilities (util)](../util/README.md)
 
 
 See the generated Java documentation for more details. After running the csw install.sh script, the Java API docs

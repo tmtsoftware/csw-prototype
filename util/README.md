@@ -66,10 +66,11 @@ of the given type. The values are stored internally in a Vector:
 
 The following keys support one or more values that are each one and two dimensional arrays (stored internally as Vectors):
 
-* DoubleVectorKey
-* DoubleMatrixKey
-* IntVectorKey
-* IntMatrixKey
+* IntVectorKey, IntMatrixKey
+* ShortVectorKey, ShortMatrixKey
+* LongVectorKey, LongMatrixKey
+* FloatVectorKey, FloatMatrixKey
+* DoubleVectorKey, DoubleMatrixKey
 
 In addition there is a GenericKey class that can be used for custom types. It is however recommended to
 use only the standard key types, in oder to ensure that binary and JSON serialization and deserialization
