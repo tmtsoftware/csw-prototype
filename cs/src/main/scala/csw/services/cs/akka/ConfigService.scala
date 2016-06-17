@@ -5,7 +5,6 @@ import java.io.File
 import akka.actor._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.cs.akka.ConfigServiceActor.RegisterWithLocationService
 import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.svn.SvnConfigManager
 import csw.services.loc.LocationService
@@ -105,10 +104,7 @@ object ConfigService extends App {
     }
 
     val configManager = settings.getConfigManager
-    val configServiceActor = system.actorOf(ConfigServiceActor.props(configManager), "ConfigServiceActor")
-
-    if (!options.noregister)
-      configServiceActor ! RegisterWithLocationService
+    val configServiceActor = system.actorOf(ConfigServiceActor.props(configManager, !options.noregister), "ConfigServiceActor")
 
     system.actorOf(Props(classOf[Terminator], configServiceActor), "terminator")
 

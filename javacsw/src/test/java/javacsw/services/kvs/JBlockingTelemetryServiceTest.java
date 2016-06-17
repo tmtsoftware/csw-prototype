@@ -224,11 +224,11 @@ public class JBlockingTelemetryServiceTest {
             if (Objects.equals(event.prefix(), prefix1)) {
                 count1++;
                 assertTrue(event.jvalue(infoValue).equals(count1));
-                assert (Objects.equals(event.jvalue(infoStr), "info 1"));
+                assertTrue(Objects.equals(event.jvalue(infoStr), "info 1"));
             } else if (Objects.equals(event.prefix(), prefix2)) {
                 count2++;
                 assertTrue(event.jvalue(infoValue).equals(count2));
-                assert (Objects.equals(event.jvalue(infoStr), "info 2"));
+                assertTrue(Objects.equals(event.jvalue(infoStr), "info 2"));
             }
         }
 

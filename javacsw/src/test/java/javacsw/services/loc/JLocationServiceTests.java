@@ -11,10 +11,10 @@ import csw.services.loc.LocationService.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 import static javacsw.services.loc.JComponentType.Assembly;
 
@@ -53,7 +53,7 @@ public class JLocationServiceTests {
         AkkaRegistration akkaRegister = JLocationService.getAkkaRegistration(akkaConnection, actorTestProbe.ref(), "test.prefix1");
         ActorRef tracker = system.actorOf(JRegistrationTracker.props(Collections.singleton(akkaRegister), trackerResponseProbe.ref()));
         ComponentRegistered m1 = trackerResponseProbe.expectMsgClass(t, ComponentRegistered.class);
-        assert(m1.connection().equals(akkaConnection));
+        assertTrue(m1.connection().equals(akkaConnection));
         m1.result().unregister();
         system.stop(tracker);
     }
@@ -72,38 +72,24 @@ public class JLocationServiceTests {
         List<ComponentRegistered> m1 = Arrays.asList(
                 trackerResponseProbe.expectMsgClass(t, ComponentRegistered.class),
                 trackerResponseProbe.expectMsgClass(t, ComponentRegistered.class));
-        assert(m1.size() == 2);
-        assert(m1.stream().anyMatch(r -> r.connection().equals(akkaConnection)));
-        assert(m1.stream().anyMatch(r -> r.connection().equals(httpConnection)));
+        assertTrue(m1.size() == 2);
+        assertTrue(m1.stream().anyMatch(r -> r.connection().equals(akkaConnection)));
+        assertTrue(m1.stream().anyMatch(r -> r.connection().equals(httpConnection)));
         m1.stream().forEach(r -> r.result().unregister());
         system.stop(tracker);
     }
 
 
-    @Test
-    public void TestTrackerWithOneAkkaComponent() throws Exception {
-        ComponentId componentId = JComponentId.componentId("TestAss3b", Assembly);
-        TestProbe testProbe = new TestProbe(system);
-        TestProbe actorTestProbe = new TestProbe(system);
-        CompletableFuture<RegistrationResult> f = JLocationService.registerAkkaConnection(componentId, actorTestProbe.ref(), "test.prefix3", system);
-
-    }
-//        val tracker = system.actorOf(LocationTracker.props(Some(testProbe.ref)), "LocationTracker!")
-//
-//        val ac = AkkaConnection(componentId)
-//
-//        tracker ! TrackConnection(ac)
-//
-//        testProbe.expectMsg(t, Unresolved(ac))
-//
-//        val ready = testProbe.expectMsgClass(10.seconds, classOf[ResolvedAkkaLocation])
-//        assert(ready.connection == ac)
-//        //    expectNoMsg(5.seconds)
-//
-//        val result = Await.result(f, 1.second)
-//        result.unregister()
-//        system.stop(tracker)
+//    @Test
+//    public void TestTrackerWithOneAkkaComponent() throws Exception {
+//        ComponentId componentId = JComponentId.componentId("TestAss3b", Assembly);
+//        TestProbe testProbe = new TestProbe(system);
+//        TestProbe actorTestProbe = new TestProbe(system);
+//        CompletableFuture<RegistrationResult> f = JLocationService.registerAkkaConnection(componentId, actorTestProbe.ref(), "test.prefix3", system);
+//  XXX TODO
 //    }
+
+
 //
 //        test("Test tracker with one Akka component - try to add twice") {
 //        import LocationService._

@@ -19,6 +19,7 @@
  * <p>
  * Scala based components can extend the {@link csw.services.pkg.LifecycleHandler} trait to be notified
  * about lifecycle changes, such as when the component is initialized, started and stopped.
+ * <p>
  * Java based components should extend an abstract actor based class that includes that trait, such as
  * {@link javacsw.services.pkg.JAssemblyControllerWithLifecycleHandler} for assemblies or
  * {@link javacsw.services.pkg.JHcdControllerWithLifecycleHandler} for HCDs and then override
@@ -60,7 +61,7 @@
  * }
  * } </pre>
  * Below is an example config file for the container with the HCDs referenced in the above example.
- * In this case, `HCD-2A` and `HCD-2B` are both implemented by the [TestHcd](src/multi-jvm/scala/csw/services/pkg/TestHcd.scala) class.
+ * In this case, `HCD-2A` and `HCD-2B` are both implemented by the TestHcd class.
  * <pre> {@code
  * container {
  *   name = "Container-2"

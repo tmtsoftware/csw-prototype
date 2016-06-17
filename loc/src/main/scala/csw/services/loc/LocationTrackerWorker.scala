@@ -28,7 +28,7 @@ private class LocationTrackerWorker(replyTo: Option[ActorRef]) extends Actor wit
   import LocationTrackerWorker._
 
   // Create a tracker for this set of connections
-  val tracker = context.actorOf(LocationTracker.props(Some(context.self)))
+  val tracker = context.actorOf(LocationTracker.props(Some(self)))
 
   // And a client for watching the answers
   var trackerClient = LocationTrackerClient(tracker)

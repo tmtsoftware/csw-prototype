@@ -17,10 +17,38 @@
  * which allows writing the data to a file or output stream or returning it as a String (assuming the data is not binary).
  * The interface also provides static factory methods to create instances to pass to the config service methods.
  * <p>
+ *  Here is an example of how to use the Java blocking API to create, update and get files:
+ * <pre> {@code
+ *  // Lookup already running default config service with the location service
+ *  JBlockingConfigServiceClient client = JConfigServiceFactory.getBlockingConfigServiceClient(system, timeout);
+ *  Boolean oversize = false; // Set to true to for special handling of large files
+ *
+ *  // Add, then update the file twice
+ *  ConfigId createId1 = manager.create(path1, JConfigData.create(contents1), oversize, comment1);
+ *  ConfigId createId2 = manager.create(path2, JConfigData.create(contents1), oversize, comment1);
+ *  ConfigId updateId1 = manager.update(path1, JConfigData.create(contents2), comment2);
+ *  ConfigId updateId2 = manager.update(path1, JConfigData.create(contents3), comment3);
+ *
+ *  // Check that we can access each version
+ *  JBlockingConfigData data1 = manager.get(path1).get();
+ *  JBlockingConfigData data2 = manager.get(path1, createId1).get();
+ *  JBlockingConfigData data3 = manager.get(path1, updateId1).get();
+ *  JBlockingConfigData data4 = manager.get(path1, updateId2).get();
+ *  JBlockingConfigData data5 = manager.get(path2).get();
+ *  JBlockingConfigData data6 = manager.get(path2, createId2).get();
+ *
+ *  // Get the file history()
+ *  List<ConfigFileHistory> historyList1 = manager.history(path1);
+ *  List<ConfigFileHistory> historyList2 = manager.history(path2);
+ *
+ *  // Get a list of all the files in the config service
+ *  List<ConfigFileInfo> list = manager.list();
+ * }</pre>
+ * <p>
  * <strong> Config Service Application </strong>
  * <p>
  * Before starting the config service, the ''config service annex server'' should  be running.
- * You can start the config service with the `cs` command (found under target/universal/stage/bin).
+ * You can start the config service with the `cs` command (found under target/universal/stage/bin, or in the install/bin dir).
  * The default config service name and the location of the git or svn repository is defined in resources/reference.conf.
  * Alternatively you can specify a different config file on the command line in the same format.
  * You can also override the values with system properties. For example:

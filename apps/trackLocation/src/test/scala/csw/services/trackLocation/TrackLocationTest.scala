@@ -96,8 +96,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     // create a test repository and use it to create the actor
     val settings = ConfigServiceSettings(system)
     val manager = TestRepo.getTestRepoConfigManager(settings)
-    val csActor = system.actorOf(ConfigServiceActor.props(manager), name = "configService")
-    csActor ! ConfigServiceActor.RegisterWithLocationService
+    val csActor = system.actorOf(ConfigServiceActor.props(manager, registerWithLocationService = true), name = "configService")
     val csClient = ConfigServiceClient(csActor, settings.name)
     val appConfigStr =
       s"""

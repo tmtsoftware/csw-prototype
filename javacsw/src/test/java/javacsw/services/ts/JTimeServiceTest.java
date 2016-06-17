@@ -6,6 +6,7 @@ import akka.testkit.JavaTestKit;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.time.*;
 
@@ -37,12 +38,12 @@ public class JTimeServiceTest {
         LocalTime now = JTimeService.localTimeNow();
 
         // Try to determine that we have Hawaii time
-        assert (!hwNow.equals(now)); // Not the same, good
+        assertTrue(!hwNow.equals(now)); // Not the same, good
 
         LocalTime utcNow = JTimeService.UTCTimeNow();
         LocalTime taiNow = JTimeService.TAITimeNow();
 
-        assert (taiNow.isAfter(utcNow));
+        assertTrue(taiNow.isAfter(utcNow));
     }
 
     @Test
@@ -75,7 +76,7 @@ public class JTimeServiceTest {
                         logger.info("Received cancellable: " + cancellable);
                         int count = expectMsgClass(Integer.class);
                         logger.info("Executed " + count + " scheduled messages");
-                        assert (count == 5);
+                        assertTrue(count == 5);
                         cancellable.cancel();
                     }
                 };

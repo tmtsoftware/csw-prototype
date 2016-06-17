@@ -111,9 +111,7 @@
  * dns-sd -L TestAkkaService-assembly-akka _csw._tcp
  * } </pre>
  * will list information about the application with the DNS name `TestAkkaService-assembly-akka` (not case sensitive).
- * <pre> {@code
  * `_csw._tcp` is the mDNS type used for all CSW services. The default domain is `local.`.
- * } </pre>
  * The CSW/mDNS application names here are in the format: *name-serviceType-accessType*,
  * where *serviceType* is assembly, hcd, etc. and *accessType* is `http` or `akka`.
  */

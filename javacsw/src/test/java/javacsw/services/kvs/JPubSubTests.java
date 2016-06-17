@@ -54,7 +54,7 @@ public class JPubSubTests {
                 system.actorOf(JPubSubTests.TestPublisher.props(getRef(), numSecs));
                 log.info("Waiting for Done message...");
 
-                new Within(Duration.create(numSecs + 2, TimeUnit.SECONDS)) {
+                new Within(Duration.create(numSecs + 10, TimeUnit.SECONDS)) {
                     protected void run() {
                         expectMsgEquals("done");
                         subscriber.tell("done", getRef());
