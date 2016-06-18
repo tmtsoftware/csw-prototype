@@ -9,27 +9,33 @@ object CsClientOpts {
 
   /**
    * Command line options
-   * @param config optional config service config file
-   * @param subcmd subcommand (create, update, etc.)
-   * @param path path in the git repo
-   * @param inputFile file to read data from
+   *
+   * @param csName     optional name of the config service to use (as registered with the location service)
+   * @param subcmd     subcommand (create, update, etc.)
+   * @param path       path in the the repo
+   * @param inputFile  file to read data from
    * @param outputFile file to write data to
-   * @param id optional file version id
-   * @param oversize set to true to use large/binary file handling
-   * @param comment optional create or update comment
+   * @param id         optional file version id
+   * @param oversize   set to true to use large/binary file handling
+   * @param comment    optional create or update comment
    */
-  case class Config(
-    config: Option[File] = None,
-    subcmd: String       = "", path: File = null, inputFile: File = null, outputFile: File = null,
-    id: Option[String] = None, oversize: Boolean = false, comment: String = ""
+  case class Options(
+    csName:     Option[String] = None,
+    subcmd:     String         = "",
+    path:       File           = null,
+    inputFile:  File           = null,
+    outputFile: File           = null,
+    id:         Option[String] = None,
+    oversize:   Boolean        = false,
+    comment:    String         = ""
   )
 
-  private val parser = new scopt.OptionParser[Config]("scopt") {
+  private val parser = new scopt.OptionParser[Options]("csclient") {
     head("csclient", System.getProperty("CSW_VERSION"))
 
-    opt[File]("config") action { (x, c) ⇒
-      c.copy(config = Some(x))
-    } text "optional config file to use for config service settings"
+    opt[String]("cs-name") action { (x, c) ⇒
+      c.copy(csName = Some(x))
+    } text "optional name of the config service to use (as registered with the location service)"
 
     cmd("get") action { (_, c) ⇒
       c.copy(subcmd = "get")
@@ -37,7 +43,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository",
+      } text "path name in the repository",
 
       opt[File]('o', "out") required () valueName "<outputFile>" action { (x, c) ⇒
         c.copy(outputFile = x)
@@ -54,7 +60,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository"
+      } text "path name in the repository"
     )
 
     cmd("create") action { (_, c) ⇒
@@ -63,7 +69,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository",
+      } text "path name in the repository",
 
       opt[File]('i', "in") required () valueName "<inputFile>" action { (x, c) ⇒
         c.copy(inputFile = x)
@@ -84,7 +90,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository",
+      } text "path name in the repository",
 
       opt[File]('i', "in") required () valueName "<inputFile>" action { (x, c) ⇒
         c.copy(inputFile = x)
@@ -101,7 +107,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository",
+      } text "path name in the repository",
 
       opt[File]('i', "in") required () valueName "<inputFile>" action { (x, c) ⇒
         c.copy(inputFile = x)
@@ -126,7 +132,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository"
+      } text "path name in the repository"
     )
 
     cmd("setDefault") action { (_, c) ⇒
@@ -135,7 +141,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository",
+      } text "path name in the repository",
 
       opt[String]("id") action { (x, c) ⇒
         c.copy(id = Some(x))
@@ -148,7 +154,7 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository"
+      } text "path name in the repository"
     )
 
     cmd("getDefault") action { (_, c) ⇒
@@ -157,12 +163,16 @@ object CsClientOpts {
 
       arg[File]("<path>") action { (x, c) ⇒
         c.copy(path = x)
-      } text "path name in Git repository",
+      } text "path name in the repository",
 
       opt[File]('o', "out") required () valueName "<outputFile>" action { (x, c) ⇒
         c.copy(outputFile = x)
       } text "output file"
     )
+
+    help("help")
+
+    version("version")
 
     checkConfig { c ⇒
       if (c.subcmd.isEmpty) failure("Please specify one (get, create, update, list, history)") else success
@@ -171,8 +181,9 @@ object CsClientOpts {
 
   /**
    * Parses the command line arguments and returns a value if they are valid.
+   *
    * @param args the command line arguments
    * @return an object containing the parsed values of the command line arguments
    */
-  def parse(args: Seq[String]): Option[Config] = parser.parse(args, Config())
+  def parse(args: Seq[String]): Option[Options] = parser.parse(args, Options())
 }

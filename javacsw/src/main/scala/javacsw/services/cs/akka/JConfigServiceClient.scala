@@ -24,7 +24,7 @@ class JConfigServiceClient(client: ConfigServiceClient)(implicit context: ActorR
 class JBlockingConfigServiceClient(client: ConfigServiceClient)(implicit context: ActorRefFactory) extends JBlockingConfigManagerImpl(client)
 
 /**
- * Contains Java API helper methods related to the Scala [[csw.services.cs.akka.ConfigServiceActor]] class
+ * Contains Java API helper methods related to the Scala ConfigServiceActor class
  */
 object JConfigService {
   val timeout = 60.seconds
