@@ -92,10 +92,12 @@ The following standalone applications are installed here:
 
 The following applications are defined under ../apps:
 
-* [configServiceAnnex](configServiceAnnex) - an http server used to store and retrieve large files, used by the config service
-* [containerCmd](containerCmd) - used to start containers of HCDs or assemblies, based on a given config file (This is not an application, but us used to simplify creating such applications)
-* [sequencer](sequencer) - implements the command line sequencer application, which is a Scala REPL shell
-* [csClient](csClient) - a command line client to the config service (used in some test scripts)
+* [configServiceAnnex](apps/configServiceAnnex) - an http server used to store and retrieve large files, used by the config service
+* [containerCmd](apps/containerCmd) - used to start containers of HCDs or assemblies, based on a given config file (This is not an application, but us used to simplify creating such applications)
+* [csClient](apps/csClient) - a command line client to the config service (used in some test scripts)
+* [sequencer](apps/sequencer) - implements the command line sequencer application, which is a Scala REPL shell
+* [sysControl](apps/sysControl) - A command line app for setting the log level of running components, sending lifecycle commands, etc.
+* [trackLocation](apps/trackLocation) - a command line app that wraps an external (non csw) application for the purpose of registering it with the location service and unregistering it when it exits
 
 
 Publishing the API Documentation
