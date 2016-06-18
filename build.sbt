@@ -1,6 +1,5 @@
 import com.typesafe.sbt.SbtMultiJvm
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
-import com.typesafe.sbt.SbtSite.site
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import sbt.Keys._
 import sbt._
@@ -39,7 +38,7 @@ lazy val util = project
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaHttpSprayJson, scalaReflect, upickle) ++
     test(scalaTest, junit)
-  )
+  ) dependsOn(log)
 
 // Supporting classes
 lazy val support = project

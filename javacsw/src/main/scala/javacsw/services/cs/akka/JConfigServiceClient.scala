@@ -7,7 +7,6 @@ import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import csw.services.cs.akka.{ConfigServiceActor, ConfigServiceClient}
 
 import scala.compat.java8.FutureConverters._
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 /**
@@ -25,7 +24,7 @@ class JConfigServiceClient(client: ConfigServiceClient)(implicit context: ActorR
 class JBlockingConfigServiceClient(client: ConfigServiceClient)(implicit context: ActorRefFactory) extends JBlockingConfigManagerImpl(client)
 
 /**
- * Contains Java API helper methods related to the Scala [[ConfigServiceActor]] class
+ * Contains Java API helper methods related to the Scala [[csw.services.cs.akka.ConfigServiceActor]] class
  */
 object JConfigService {
   val timeout = 60.seconds

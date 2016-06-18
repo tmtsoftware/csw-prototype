@@ -6,6 +6,7 @@ import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation, Resolve
 import csw.services.loc._
 import csw.services.pkg.LifecycleManager
 import csw.services.pkg.LifecycleManager.LifecycleCommand
+import csw.util.akka.SetLogLevelActor.SetLogLevel
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -26,30 +27,31 @@ object SysControl extends App {
 
   private val componentTypes = Set("Container", "HCD", "Assembly", "Service")
   private val connectionTypes = Set("akka", "http")
-  private val logLevels = Set("ERROR", "WARN", "INFO", "DEBUG")
+  private val logLevels = Set("OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", "ALL")
 
   private val lifecycleCommands: Map[String, LifecycleCommand] = Map(
-    "Load" -> LifecycleManager.Load,
-    "Initialize" ->   LifecycleManager.Initialize,
-    "Startup" ->  LifecycleManager.Startup,
-    "Shutdown" ->  LifecycleManager.Shutdown,
-    "Uninitialize" ->  LifecycleManager.Uninitialize,
-    "Remove" ->  LifecycleManager.Uninitialize,
-    "Heartbeat" ->  LifecycleManager.Heartbeat)
-
+    "Load" → LifecycleManager.Load,
+    "Initialize" → LifecycleManager.Initialize,
+    "Startup" → LifecycleManager.Startup,
+    "Shutdown" → LifecycleManager.Shutdown,
+    "Uninitialize" → LifecycleManager.Uninitialize,
+    "Remove" → LifecycleManager.Uninitialize,
+    "Heartbeat" → LifecycleManager.Heartbeat
+  )
 
   /**
    * Command line options ("sysControl --help" prints a usage message with descriptions of all the options)
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    name: Option[String] = None,
-    componentType: Option[String] = None,
-    connectionType: String = "akka",
-    rootPackage: String = "csw",
-    logLevel: Option[String] = None,
+    name:             Option[String] = None,
+    componentType:    Option[String] = None,
+    connectionType:   String         = "akka",
+    rootPackage:      String         = "csw",
+    logLevel:         Option[String] = None,
     lifecycleCommand: Option[String] = None,
-    noExit: Boolean = false)
+    noExit:           Boolean        = false
+  )
 
   // Parses the command line options
   private val parser = new scopt.OptionParser[Options]("sysControl") {
@@ -77,7 +79,7 @@ object SysControl extends App {
 
     opt[String]("lifecycle") valueName "<command>" action { (x, c) ⇒
       c.copy(lifecycleCommand = Some(x))
-    } text s"A lifecycle command to send to the target component: One of ${lifecycleCommands.mkString(", ")}"
+    } text s"A lifecycle command to send to the target component: One of ${lifecycleCommands.keySet.mkString(", ")}"
 
     opt[Boolean]("no-exit") action { (x, c) ⇒
       c.copy(noExit = x)
@@ -123,26 +125,26 @@ object SysControl extends App {
     // Logging options
     val rootPackage = options.rootPackage
 
-    options.logLevel.foreach {l =>
+    options.logLevel.foreach { l ⇒
       if (!logLevels.contains(l)) error(s"Unsupported log level: $l")
     }
 
     // lifecycle
-    options.lifecycleCommand.foreach {l =>
+    options.lifecycleCommand.foreach { l ⇒
       if (!lifecycleCommands.contains(l)) error(s"Unsupported lifecycle command: $l")
     }
 
     // Lookup with location service
     val f = LocationService.resolve(Set(connection))
     f.onComplete {
-      case Success(locationsReady) =>
-        options.logLevel.foreach { logLevel =>
+      case Success(locationsReady) ⇒
+        options.logLevel.foreach { logLevel ⇒
           setLogLevel(locationsReady.locations.head, logLevel, rootPackage)
         }
-        options.lifecycleCommand.foreach { lifecycleCommand =>
+        options.lifecycleCommand.foreach { lifecycleCommand ⇒
           sendLifecycleCommand(locationsReady.locations.head, lifecycleCommands(lifecycleCommand))
         }
-        case Failure(ex) => error(s"Failed to locate $name ($connection): $ex")
+      case Failure(ex) ⇒ error(s"Failed to locate $name ($connection): $ex")
     }
 
     Await.ready(f, timeout.duration)
@@ -152,23 +154,23 @@ object SysControl extends App {
   // Sets the log level on the component using the given location
   private def setLogLevel(location: Location, logLevel: String, rootPackage: String): Unit = {
     location match {
-      case a: ResolvedAkkaLocation => a.actorRef.foreach(setLogLevel(_, logLevel, rootPackage))
-      case h: ResolvedHttpLocation => error("HTTP target components not yet supported") // XXX TODO
-      case _ => error(s"Received unexpected location info: $location")
+      case a: ResolvedAkkaLocation ⇒ a.actorRef.foreach(setLogLevel(_, logLevel, rootPackage))
+      case h: ResolvedHttpLocation ⇒ error("HTTP target components not yet supported") // XXX TODO
+      case _                       ⇒ error(s"Received unexpected location info: $location")
     }
   }
 
   // Sets the log level on the component using the given actorRef
   private def setLogLevel(actorRef: ActorRef, logLevel: String, rootPackage: String): Unit = {
-      // actorRef ! SetLogLevel(rootPackage, logLevel)
+    actorRef ! SetLogLevel(rootPackage, logLevel)
   }
 
   // Sends the given lifecycle command to the component
   private def sendLifecycleCommand(location: Location, lifecycleCommand: LifecycleCommand): Unit = {
     location match {
-      case a: ResolvedAkkaLocation => a.actorRef.foreach(sendLifecycleCommand(_, lifecycleCommand))
-      case h: ResolvedHttpLocation => error("HTTP target components not yet supported") // XXX TODO
-      case _ => error(s"Received unexpected location info: $location")
+      case a: ResolvedAkkaLocation ⇒ a.actorRef.foreach(sendLifecycleCommand(_, lifecycleCommand))
+      case h: ResolvedHttpLocation ⇒ error("HTTP target components not yet supported") // XXX TODO
+      case _                       ⇒ error(s"Received unexpected location info: $location")
     }
   }
 

@@ -8,7 +8,7 @@ import csw.services.loc.ComponentType.{Assembly, HCD}
 import csw.services.loc.{ComponentId, LocationService}
 import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 import csw.services.pkg.LifecycleManager._
-import csw.util.akka.PublisherActor
+import csw.util.akka.{PublisherActor, SetLogLevelActor}
 
 import scala.util.{Failure, Success}
 
@@ -101,7 +101,7 @@ object Supervisor {
  * (see props() for argument descriptions).
  */
 private final class Supervisor(val componentInfo: ComponentInfo)
-    extends Actor with ActorLogging {
+    extends Actor with ActorLogging with SetLogLevelActor {
 
   import Supervisor._
 
@@ -117,7 +117,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
   private val lifecycleManager = context.actorOf(LifecycleManager.props(component, name), "lifecycleManager")
   lifecycleManager ! SubscribeTransitionCallBack(self)
 
-  private def commonMessageReceive: Receive = {
+  private def commonMessageReceive: Receive = logLevelReceive orElse {
     case SubscribeLifecycleCallback(actorRef) ⇒
       addListener(actorRef)
     case UnsubscribeLifecycleCallback(actorRef) ⇒
