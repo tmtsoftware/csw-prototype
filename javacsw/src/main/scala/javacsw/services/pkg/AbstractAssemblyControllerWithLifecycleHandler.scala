@@ -1,6 +1,7 @@
 package javacsw.services.pkg
 
 import java.util.Optional
+import java.util.concurrent.CompletableFuture
 import java.util.function.BiFunction
 
 import collection.JavaConverters._
@@ -12,10 +13,15 @@ import csw.services.ccs.AssemblyController
 import csw.services.loc.Connection
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.{Assembly, LifecycleHandler}
-import csw.util.config.Configurations.{ObserveConfigArg, SetupConfigArg}
+import csw.util.config.Configurations.{ObserveConfigArg, SetupConfig, SetupConfigArg}
 import csw.util.config.RunId
 import csw.util.config.StateVariable.{CurrentState, CurrentStates, DemandState}
-import csw.services.ccs.AssemblyController.Validation
+import csw.services.ccs.AssemblyController.{RequestFailed, RequestResult, Validation}
+
+import scala.collection.JavaConverters._
+import scala.compat.java8.FutureConverters._
+import scala.compat.java8.OptionConverters._
+import scala.concurrent.Future
 
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
@@ -100,10 +106,27 @@ abstract class AbstractAssemblyControllerWithLifecycleHandler extends AbstractAc
    */
   def observe(locationsResolved: java.lang.Boolean, configArg: ObserveConfigArg, replyTo: Optional[ActorRef]): Validation
 
+  override def request(locationsResolved: Boolean, config: SetupConfig): Future[RequestResult] =
+    jrequest(locationsResolved, config).toScala
+
+  /**
+   * Java API: Called for Request messages. Derived Java classes should override this method (instead of the [[request]] method) to handle
+   * Request messages. the default is to return an error response.
+   *
+   * @param locationsResolved indicates if all the Assemblies connections are resolved
+   * @param config            the request
+   * @return a future result, which will be sent to the sender of the request when completed
+   */
+  def jrequest(locationsResolved: java.lang.Boolean, config: SetupConfig): CompletableFuture[RequestResult] = {
+    // The default returns an error so that derived classes are not forced to implement this if they don't use the request feature...
+    Future.successful(RequestResult(RequestFailed("Assembly controller 'request' method not implemented"), None)).toJava.toCompletableFuture
+  }
+
   override def allResolved(locations: Set[Location]): Unit = allResolved(new java.util.HashSet(locations.asJavaCollection))
 
   /**
    * Called when all locations are resolved
+   *
    * @param locations the resolved locations (of HCDs, etc.)
    */
   def allResolved(locations: java.util.Set[Location]): Unit

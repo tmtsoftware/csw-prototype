@@ -1,7 +1,10 @@
 package javacsw.services.pkg;
 
 import akka.actor.ActorRef;
+import csw.services.ccs.AssemblyController;
+import csw.util.config.Configurations;
 import csw.util.config.Configurations.*;
+import scala.concurrent.Future;
 
 import java.util.Optional;
 
@@ -16,4 +19,7 @@ public abstract class JAssemblyControllerWithLifecycleHandler extends AbstractAs
 
     @Override
     public abstract Validation observe(Boolean locationsResolved, ObserveConfigArg configArg, Optional<ActorRef> replyTo);
+
+    @Override
+    public abstract Future<RequestResult> request(boolean locationsResolved, SetupConfig config);
 }

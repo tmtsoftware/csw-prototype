@@ -5,7 +5,7 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import csw.services.ccs.{AssemblyClient, CommandStatus}
+import csw.services.ccs.{AssemblyClient, BlockingAssemblyClient, CommandStatus}
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
@@ -60,11 +60,6 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           assert(components.size == 1)
           for(comp <- components) {
             val assembly1 = comp.supervisor
-//            assembly1 ! Supervisor.SubscribeLifecycleCallback(self)
-//            while(expectMsgType[LifecycleStateChanged].state != Running) {
-//              log.info("Waiting for running state")
-//            }
-
             // Make sure the HCDs are ready before sending the test config
             val connections: Set[Connection] = Set(
               AkkaConnection(ComponentId("HCD-2A", HCD)),
@@ -81,6 +76,12 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             // Use client wrapper
             val client = AssemblyClient(assembly1)
             assert(Await.result(client.submit(TestConfig.testConfigArg), timeout.duration).isSuccess)
+
+            // Test dummy request and blocking client
+            val blockingClient = BlockingAssemblyClient(client)
+            val result = blockingClient.request(TestConfig.testConfig1)
+            assert(result.status.isSuccess)
+            assert(result.resp.get == TestConfig.testConfig2)
           }
         }
         println("\nContainer1 tests passed\n")
@@ -93,13 +94,6 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
         container ! ContainerComponent.GetComponents
         val components = expectMsgType[ContainerComponent.Components].components
         assert(components.size == 2)
-//        for (comp <- components) {
-//          val hcd = comp.supervisor
-//          hcd ! Supervisor.SubscribeLifecycleCallback(self)
-//          while(expectMsgType[LifecycleStateChanged](10.seconds).state != Running) {
-//            log.info("Waiting for running state")
-//          }
-//        }
         println("\nContainer2 tests passed\n")
         enterBarrier("deployed")
         enterBarrier("done")

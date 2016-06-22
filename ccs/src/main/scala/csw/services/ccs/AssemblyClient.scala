@@ -5,11 +5,10 @@ import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
 import csw.util.akka.PublisherActor.RequestCurrent
-import csw.util.config.Configurations.SetupConfigArg
+import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 import csw.util.config.StateVariable.CurrentState
 
 import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success}
 
 /**
  * A client API for assemblies that hides the actor API.
@@ -33,6 +32,15 @@ case class AssemblyClient(assemblyController: ActorRef)(implicit val timeout: Ti
   def configGet(): Future[CurrentState] = {
     (assemblyController ? RequestCurrent).mapTo[CurrentState]
   }
+
+  /**
+   * Makes a request of the assembly and returns the result
+   * @param config describes the request
+   * @return the future result returned from the assembly
+   */
+  def request(config: SetupConfig): Future[RequestResult] = {
+    (assemblyController ? Request(config)).mapTo[RequestResult]
+  }
 }
 
 // --
@@ -55,6 +63,14 @@ case class BlockingAssemblyClient(client: AssemblyClient)(implicit val timeout: 
     Await.result(client.configGet(), timeout.duration)
   }
 
+  /**
+   * Makes a request of the assembly and returns the result
+   * @param config describes the request
+   * @return the future result returned from the assembly
+   */
+  def request(config: SetupConfig): RequestResult = {
+    Await.result(client.request(config), timeout.duration)
+  }
 }
 
 // --
