@@ -6,7 +6,6 @@ import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
-
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
   *

@@ -31,7 +31,7 @@ object HcdControllerTests {
 
     // Send the config to the worker for processing
     override protected def process(config: SetupConfig): Unit = {
-      worker ! config
+      worker ! TestWorker.Work(config)
     }
 
     // Ask the worker actor to send us the current state (handled by parent trait)
@@ -45,6 +45,9 @@ object HcdControllerTests {
   // -- Test worker actor that simulates doing some work --
   object TestWorker {
     def props(): Props = Props(classOf[TestWorker])
+
+    // Work to do
+    case class Work(config: SetupConfig)
 
     // Message sent to self to simulate work done
     case class WorkDone(config: SetupConfig)
@@ -65,7 +68,7 @@ object HcdControllerTests {
     var currentState = initialState
 
     def receive: Receive = {
-      case config: SetupConfig ⇒
+      case Work(config) ⇒
         // Simulate doing work
         log.info(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))

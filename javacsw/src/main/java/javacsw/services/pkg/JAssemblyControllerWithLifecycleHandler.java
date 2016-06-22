@@ -2,7 +2,6 @@ package javacsw.services.pkg;
 
 import akka.actor.ActorRef;
 import csw.util.config.Configurations.*;
-import csw.services.ccs.AssemblyController.Validation;
 
 import java.util.Optional;
 

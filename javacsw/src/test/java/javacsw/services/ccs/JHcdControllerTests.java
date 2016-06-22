@@ -64,7 +64,6 @@ public class JHcdControllerTests {
         }
 
         // Send the config to the worker for processing
-        // XXX has to be public, since inheriting from scala protected...
         @Override
         public void process(SetupConfig config) {
             worker.tell(config, self());

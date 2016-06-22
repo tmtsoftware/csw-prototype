@@ -9,13 +9,13 @@ import scala.compat.java8.FunctionConverters._
 import akka.actor.{AbstractActor, ActorLogging, ActorRef}
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController
-import csw.services.ccs.AssemblyController.Validation
 import csw.services.loc.Connection
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.{Assembly, LifecycleHandler}
 import csw.util.config.Configurations.{ObserveConfigArg, SetupConfigArg}
 import csw.util.config.RunId
 import csw.util.config.StateVariable.{CurrentState, CurrentStates, DemandState}
+import csw.services.ccs.AssemblyController.Validation
 
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
