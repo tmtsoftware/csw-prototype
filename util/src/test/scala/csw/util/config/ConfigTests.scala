@@ -327,6 +327,13 @@ class ConfigTests extends FunSpec {
     assert(configArg.configs.toList == List(sc1, sc2))
   }
 
+  describe("testing for getting typed items") {
+    val t1:IntKey = IntKey("test1")
+    val sc1 = SetupConfig(ck1).set(t1, 22)
+
+    val item:Option[IntItem] = sc1.get(t1)
+  }
+
   describe("test ObserveConfigArg") {
     val encoder1 = IntKey("encoder1")
     val encoder2 = IntKey("encoder2")

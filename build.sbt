@@ -194,3 +194,8 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
   .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
   .dependsOn(pkg, ts, hcdExample)
 
+// EndToEnd Example project
+lazy val endToEndExample = Project(id = "endToEndExample", base = file("examples/endToEndExample"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(packageSettings("endToEndExample", "End To End Example", "More complicated example showing CSW features"): _*)
+  .dependsOn(pkg, cs, ccs, loc, ts, kvs, event, util)

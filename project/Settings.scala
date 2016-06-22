@@ -46,6 +46,7 @@ object Settings {
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
     resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven",
+    resolvers += Resolver.jcenterRepo,
     resolvers += sbtResolver.value
   )
 

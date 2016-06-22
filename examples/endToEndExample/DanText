@@ -1,0 +1,42 @@
+Hi Kim,
+
+Attached are draft model files for the LGS trombone assembly.
+There are still in a very rough-draft state but should give you an idea of what we are thinking.
+
+As far as the block diagram: The AOSQ will specify an initial estimated for the sodium layer elevation (green arrow)
+via a command. The assembly computes sodium layer range distance based on the current elevation
+estimate and the telescope zenith angle from the TCS. Focus measurements from the RTC
+modify the current range distance estimate is to create a new range distance estimate. This new range
+distance is used to position the LGS trombone stage. The new range distance (and new corresponding elevation)
+is published for the AOSEW  (i.e. AOSQ to update the LGS WFS trigger pulse delay and the RPG to update
+reconstruction parameters). Finally the new elevation estimate is store as the current elevation for the next cycle.
+
+We do not have any simulations or code for this yet.
+
+‘theta’ is the telescope zenith angle, published by the TCS, used to compute the range distance
+(i.e. the total distance to the sodium layer). If the telescope was pointed directly up (i.e. theta = 0)
+the range distance and elevation would be equal.
+
+‘g’ is a control gain used to scale the focus errors from the RTC. If g is too large the loop goes unstable,
+if g is too small correction will be slow and lag.  g will be set based on the assembly’s discrete loop rate,
+response time of the LGS trombone stage and accuracy of the RTC’s focus measurement. This is like a PID
+loop where the proportional and derivative gains are zero and the integral gain is equal to g.
+
+z-1 or 1/z (see z-transform) is a discrete-time unit delay. This acts as the integrator,
+resulting in: elevation(t+1) =  cos(theta(t))*(elevation(t)/cos(theta(t)) + g*focusRangeDistanceError(t)),
+where t is discrete time
+
+The state.nss flag/switch is a special case. When the NFIRAOS Source Simulator (NSS) is
+active, internal calibrations sources are inserted into the NFIRAOS optical path. The calibration LGS
+sources slide on a track along the optical axis to simulate changes in the sodium layer elevation.
+The TCS has no knowledge of the position these sources and the pointing of the telescope is irrelevant
+in this case. Therefore when the LGS NSS is enabled the LGS Trombone assembly will ignore the zenith angle
+stream from the TCS. Instead, for simplicity, the assembly assumes a zenith angle of zero, making the range
+distance and elevation equal. The calibration LGS sources will be moved along the optical axis, as a result
+the RTC will measure a focus error, and the LGS Trombone assembly control system will move the trombone according
+to track the motion of the calibration sources. Note that if the zenith angle is set incorrectly the RTC
+feedback loop will eventually compensate for that error. The zenith angle from the TCS is really only to speed
+up the control process, compensating for focus shifts the assembly expects to see based on telescope pointing.
+
+Let me know if you have any more question.
+Dan
