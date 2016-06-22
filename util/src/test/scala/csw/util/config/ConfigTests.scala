@@ -347,10 +347,11 @@ class ConfigTests extends FunSpec {
 
   describe("testing for getting typed items") {
     val t1 = IntKey("test1")
-    val sc1 = SetupConfig(ck1).set(t1, 22)
+    val sc1 = SetupConfig(ck1).set(t1, UnitsOfMeasure.Deg, 22)
 
     //    val item: Option[IntItem] = sc1.get(t1)  // Doesn't work since sc1.get(t1) returns an Option[Item[Int, Integer]]
     val item = sc1.get(t1).get
+    assert(item.units == UnitsOfMeasure.Deg)
     val i = item.get(0).get
     assert(i == 22)
     val i2 = item.value
