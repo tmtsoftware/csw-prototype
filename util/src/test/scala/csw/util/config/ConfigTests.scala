@@ -344,4 +344,18 @@ class ConfigTests extends FunSpec {
     assert(configArg.info.obsId.obsId equals obsId)
     assert(configArg.configs.toList == List(sc1, sc2))
   }
+
+  describe("testing for getting typed items") {
+    val t1 = IntKey("test1")
+    val sc1 = SetupConfig(ck1).set(t1, 22)
+
+    //    val item: Option[IntItem] = sc1.get(t1)  // Doesn't work since sc1.get(t1) returns an Option[Item[Int, Integer]]
+    val item = sc1.get(t1).get
+    val i = item.get(0).get
+    assert(i == 22)
+    val i2 = item.value
+    assert(i2 == i)
+    val i3 = sc1.value(t1)
+    assert(i3 == i)
+  }
 }
