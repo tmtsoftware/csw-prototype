@@ -15,20 +15,19 @@ class CsClientOptsTests extends FunSuite {
     val id = "myId"
     val comment = "some text"
 
-    CsClientOpts.parse(Array("get", path.toString, "-o", file.toString, "--id", id, "--config", file.toString)) match {
+    CsClientOpts.parse(Array("get", path.toString, "-o", file.toString, "--id", id, "--cs-name", "My Config Service")) match {
       case Some(c) ⇒
         assert(c.subcmd == "get")
         assert(c.path == path)
         assert(c.outputFile == file)
         assert(c.id.contains(id))
-        assert(c.config.contains(file))
+        assert(c.csName.contains("My Config Service"))
       case None ⇒
         fail()
     }
 
     CsClientOpts.parse(Array("get", path.toString, "-o", file.toString)) match {
       case Some(c) ⇒
-        assert(c.config.isEmpty)
         assert(c.subcmd == "get")
         assert(c.path == path)
         assert(c.outputFile == file)

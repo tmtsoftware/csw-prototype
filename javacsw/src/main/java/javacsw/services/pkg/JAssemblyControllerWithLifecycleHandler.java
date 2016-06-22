@@ -1,12 +1,12 @@
 package javacsw.services.pkg;
 
+import javacsw.services.pkg.AbstractAssemblyControllerWithLifecycleHandler;
+import csw.services.ccs.AssemblyController.*;
 import akka.actor.ActorRef;
-import csw.services.ccs.AssemblyController;
 import csw.util.config.Configurations;
-import csw.util.config.Configurations.*;
-import scala.concurrent.Future;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
@@ -15,11 +15,13 @@ import java.util.Optional;
 public abstract class JAssemblyControllerWithLifecycleHandler extends AbstractAssemblyControllerWithLifecycleHandler {
 
     @Override
-    public abstract Validation setup(Boolean locationsResolved, SetupConfigArg configArg, Optional<ActorRef> replyTo);
+    public abstract Validation setup(Boolean locationsResolved, Configurations.SetupConfigArg configArg, Optional<ActorRef> replyTo);
 
     @Override
-    public abstract Validation observe(Boolean locationsResolved, ObserveConfigArg configArg, Optional<ActorRef> replyTo);
+    public abstract Validation observe(Boolean locationsResolved, Configurations.ObserveConfigArg configArg, Optional<ActorRef> replyTo);
 
     @Override
-    public abstract Future<RequestResult> request(boolean locationsResolved, SetupConfig config);
+    public CompletableFuture<RequestResult> jrequest(Boolean locationsResolved, Configurations.SetupConfig config) {
+        return super.jrequest(locationsResolved, config);
+    }
 }
