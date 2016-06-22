@@ -7,6 +7,7 @@ import csw.services.pkg.Component.AssemblyInfo
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
+import scala.concurrent.Future
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
   *
@@ -66,5 +67,11 @@ case class TestAssembly(info: AssemblyInfo)
       distributeSetupConfigs(locationsResolved, configArg, replyTo)
     } else valid
   }
+
+  // Implement the request feature to return dummy data
+  override protected def request(locationsResolved: Boolean, config: SetupConfig): Future[RequestResult] = {
+    Future.successful(RequestResult(RequestOK, Some(TestConfig.testConfig2)))
+  }
+
 }
 

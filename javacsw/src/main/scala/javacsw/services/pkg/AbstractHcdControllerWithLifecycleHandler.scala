@@ -28,9 +28,11 @@ abstract class AbstractHcdControllerWithLifecycleHandler extends AbstractActor
   override def requestCurrent(): Unit = {}
 
   /**
-   * Derived classes should process the given config and eventually either call
+   * A derived class should process the given config and either call
    * notifySubscribers() or send a CurrentState message to itself
    * (possibly from a worker actor) to indicate changes in the current HCD state.
+   *
+   * @param config            the config received
    */
   override def process(config: SetupConfig): Unit
 

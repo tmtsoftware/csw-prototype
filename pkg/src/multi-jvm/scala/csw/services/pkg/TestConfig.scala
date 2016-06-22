@@ -21,6 +21,7 @@ object TestConfig {
     .set(equinox, "J2000")
 
   val testConfig2 = SetupConfig("tcs.ao.pos.one")
+    .set(posName, "NGC738B")
     .set(c1, "22:36:01.066")
     .set(c2, "33:58:21.69")
     .set(equinox, "J2000")
