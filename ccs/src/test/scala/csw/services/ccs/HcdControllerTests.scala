@@ -88,7 +88,7 @@ object HcdControllerTests {
 
 }
 
-// Tests sending a DemandState to a test HCD, then starting a matcher actor to subscribe
+// Tests sending a SetupConfig to a test HCD, then starting a matcher actor to subscribe
 // to the current state (a state variable updated by the HCD). When the current state matches
 // the demand state, the matcher actor replies with a message (containing the current state).
 
