@@ -177,7 +177,7 @@ lazy val asConsole = Project(id = "asConsole", base = file("apps/asConsole"))
   .settings(libraryDependencies ++=
     compile(scopt, akkaActor, ficus) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(loc, log, alarms, cs % "test->test;compile->compile")
+  ) dependsOn(loc, log, alarms, trackLocation % "test->test")
 
 // Track the location of an external application
 lazy val sysControl = Project(id = "sysControl", base = file("apps/sysControl"))

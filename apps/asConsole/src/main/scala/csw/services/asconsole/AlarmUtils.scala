@@ -59,7 +59,11 @@ object AlarmUtils {
    * @param nameOpt   if defined, return only alarms matching the given name, which may contain Redis wildcards
    * @return a future sequence of alarm model objects
    */
-  def getAlarms(redisClient: RedisClient, subsystemOpt: Option[String], componentOpt: Option[String], nameOpt: Option[String])(implicit ec: ExecutionContext): Future[Seq[AlarmModel]] = {
+  def getAlarms(redisClient: RedisClient,
+                subsystemOpt: Option[String] = None,
+                componentOpt: Option[String] = None,
+                nameOpt: Option[String] = None)
+               (implicit ec: ExecutionContext): Future[Seq[AlarmModel]] = {
     val pattern = AlarmModel.makeKeyPattern(subsystemOpt, componentOpt, nameOpt)
     redisClient.keys(pattern).flatMap { keys ⇒
       val f2 = keys.map(getAlarm(redisClient, _))
