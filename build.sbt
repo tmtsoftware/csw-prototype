@@ -29,7 +29,7 @@ val csw = (project in file("."))
     "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
     "DOCROOT" -> "latest/api/index.html"
   )
-).aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
+).aggregate(util, support, log, kvs, alarms, loc, ccs, cs, pkg, event, ts,
   containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, sysControl, javacsw)
 
 // Utility classes
@@ -38,7 +38,7 @@ lazy val util = project
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaHttpSprayJson, scalaReflect, upickle) ++
     test(scalaTest, junit)
-  ) dependsOn(log)
+  ) dependsOn log
 
 // Supporting classes
 lazy val support = project
@@ -62,6 +62,13 @@ lazy val kvs = project
       test(scalaTest, akkaTestKit)
   ) dependsOn(util, log)
 
+// Alarm Service
+lazy val alarms = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor, redisScala, jsonSchemaValidator) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(util, log)
 
 // Location Service
 lazy val loc = project
@@ -162,6 +169,15 @@ lazy val trackLocation = Project(id = "trackLocation", base = file("apps/trackLo
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(loc, log, cs % "test->test;compile->compile", kvs % "test->test")
+
+// Track the location of an external application
+lazy val asConsole = Project(id = "asConsole", base = file("apps/asConsole"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(packageSettings("asConsole", "Alarm Service Console application", "Alarm Service Console"): _*)
+  .settings(libraryDependencies ++=
+    compile(scopt, akkaActor, ficus) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(loc, log, alarms, cs % "test->test;compile->compile")
 
 // Track the location of an external application
 lazy val sysControl = Project(id = "sysControl", base = file("apps/sysControl"))
