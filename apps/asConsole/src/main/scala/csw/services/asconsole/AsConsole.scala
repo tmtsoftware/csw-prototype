@@ -18,9 +18,9 @@ import scala.concurrent.duration._
  * and performs tasks based on the command line options, such as initialize or display the list of alarms.
  */
 object AsConsole extends App {
-  // Don't want too much (any?) logging in command line app
-  LoggerFactory.getLogger("root").asInstanceOf[Logger].setLevel(Level.ERROR)
-  LoggerFactory.getLogger("csw").asInstanceOf[Logger].setLevel(Level.ERROR)
+  // Don't want any logging in command line app
+  LoggerFactory.getLogger("root").asInstanceOf[Logger].setLevel(Level.OFF)
+  LoggerFactory.getLogger("csw").asInstanceOf[Logger].setLevel(Level.OFF)
 
   LocationService.initInterface()
 
@@ -41,7 +41,8 @@ object AsConsole extends App {
     shutdown:   Boolean        = false,
     subsystem:  Option[String] = None,
     component:  Option[String] = None,
-    name:       Option[String] = None // Alarm name (with wildcards)
+    name:       Option[String] = None, // Alarm name (with wildcards)
+    noExit:     Boolean        = false
   )
 
   // XXX TODO: Add options for --list output format: pdf, html, json, config, text?
@@ -77,6 +78,10 @@ object AsConsole extends App {
     opt[String]('s', "name") valueName "<name>" action { (x, c) ⇒
       c.copy(name = Some(x))
     } text "Limits the alarms returned by --list to those whose name field matches the given value (may contain Redis wildcards)"
+
+    opt[Unit]("no-exit") action { (x, c) ⇒
+      c.copy(noExit = true)
+    } text "for testing: prevents application from exiting the JVM"
 
     help("help")
     version("version")
@@ -123,8 +128,10 @@ object AsConsole extends App {
     }
 
     // Shutdown and exit
-    system.terminate()
-    System.exit(0)
+    if (!options.noExit) {
+      system.terminate()
+      System.exit(0)
+    }
   }
 }
 

@@ -281,7 +281,8 @@ private case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: A
   }
 
   override def shutdown(): Unit = {
-    Await.ready(redisClient.shutdown(), timeout.duration)
-    //    redisClient.stop()
+    val f = redisClient.shutdown()
+    Await.ready(f, timeout.duration)
+    redisClient.stop()
   }
 }

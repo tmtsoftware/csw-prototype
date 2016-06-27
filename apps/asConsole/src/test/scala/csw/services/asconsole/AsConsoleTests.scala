@@ -12,7 +12,6 @@ import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.{Success, Failure}
 
 object AsConsoleTests {
   LocationService.initInterface()
@@ -27,7 +26,7 @@ class AsConsoleTests extends TestKit(AsConsoleTests.system) with FunSuiteLike wi
 
   import system.dispatcher
 
-  implicit val timeout = Timeout(60.seconds)
+  //  implicit val timeout = Timeout(60.seconds)
 
   // Get the test alarm service config file (ascf)
   val url = getClass.getResource("/test-alarms.conf")
@@ -40,11 +39,10 @@ class AsConsoleTests extends TestKit(AsConsoleTests.system) with FunSuiteLike wi
     val asName = "Alarm Service Test"
     val port = 7777
     Future {
-      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --port $port", "--port", port.toString))
+      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --port $port", "--port", port.toString, "--no-exit"))
     }
 
     // Later, in another JVM, run the asconsole command to initialize the Redis database from the alarm service config file.
-    AsConsole.main(Array("--as-name", asName, "--init", ascf.getAbsolutePath, "--list", "--shutdown"))
-    system.terminate()
+    AsConsole.main(Array("--as-name", asName, "--init", ascf.getAbsolutePath, "--list", "--no-exit", "--shutdown"))
   }
 }
