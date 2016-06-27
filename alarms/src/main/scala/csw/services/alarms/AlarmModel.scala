@@ -1,4 +1,4 @@
-package csw.services.asconsole
+package csw.services.alarms
 
 import akka.util.ByteString
 import com.typesafe.config.Config
@@ -23,9 +23,14 @@ case class AlarmModel(
 ) {
 
   /**
-   * @return the unique key to use to store this alarm in a database
+   * @return the unique key to use to store the static data for this alarm in the database
    */
   def key(): String = AlarmModel.makeKey(subsystem, component, name)
+
+  /**
+   * @return the unique key to use to store the severity for this alarm in the database
+   */
+  def severityKey(): String = s"${key()}.severity"
 
   /**
    * @return The contents of this object as a map

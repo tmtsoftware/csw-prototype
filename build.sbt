@@ -30,7 +30,7 @@ val csw = (project in file("."))
     "DOCROOT" -> "latest/api/index.html"
   )
 ).aggregate(util, support, log, kvs, alarms, loc, ccs, cs, pkg, event, ts,
-  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, sysControl, javacsw)
+  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, asConsole, sysControl, javacsw)
 
 // Utility classes
 lazy val util = project
@@ -66,9 +66,9 @@ lazy val kvs = project
 lazy val alarms = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, redisScala, jsonSchemaValidator) ++
+    compile(akkaActor, redisScala, jsonSchemaValidator, ficus) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(util, log)
+  ) dependsOn(util, log, loc, trackLocation % "test->test")
 
 // Location Service
 lazy val loc = project
@@ -175,7 +175,7 @@ lazy val asConsole = Project(id = "asConsole", base = file("apps/asConsole"))
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("asConsole", "Alarm Service Console application", "Alarm Service Console"): _*)
   .settings(libraryDependencies ++=
-    compile(scopt, akkaActor, ficus) ++
+    compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(loc, log, alarms, trackLocation % "test->test")
 

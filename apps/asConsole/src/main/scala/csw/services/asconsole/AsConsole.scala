@@ -4,27 +4,28 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import csw.services.loc.Connection.HttpConnection
-import csw.services.loc.LocationService.ResolvedHttpLocation
-import csw.services.loc.{ComponentId, ComponentType, LocationService}
-import redis.RedisClient
+import ch.qos.logback.classic.Logger
+import csw.services.loc.LocationService
+import ch.qos.logback.classic._
+import csw.services.alarms.AlarmService
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 
 /**
  * A command line application that locates the Redis instance used for the Alarm Service (using the Location Service)
  * and performs tasks based on the command line options, such as initialize or display the list of alarms.
  */
 object AsConsole extends App {
+  // Don't want too much (any?) logging in command line app
+  LoggerFactory.getLogger("root").asInstanceOf[Logger].setLevel(Level.ERROR)
+  LoggerFactory.getLogger("csw").asInstanceOf[Logger].setLevel(Level.ERROR)
+
   LocationService.initInterface()
 
   // Needed for use with Futures
-  implicit val system = ActorSystem()
-
-  // Needed for (implicit ec: ExecutionContext) args
-  import system.dispatcher
+  implicit val system = ActorSystem("AsConsole")
 
   // Timeout when waiting for a future
   implicit val timeout = Timeout(60.seconds)
@@ -34,15 +35,18 @@ object AsConsole extends App {
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    asName:     Option[String] = None,
-    ascf:       Option[File]   = None,
+    asName:     Option[String] = None, // Alarm Service name
+    ascf:       Option[File]   = None, // Alarm Service Config File (ASCF)
     listAlarms: Boolean        = false,
+    shutdown:   Boolean        = false,
     subsystem:  Option[String] = None,
     component:  Option[String] = None,
-    name:       Option[String] = None
+    name:       Option[String] = None // Alarm name (with wildcards)
   )
 
   // XXX TODO: Add options for --list output format: pdf, html, json, config, text?
+
+  // XXX TODO: Add option to set/display severity for an alarm
 
   // Parses the command line options
   private val parser = new scopt.OptionParser[Options]("asconsole") {
@@ -58,6 +62,9 @@ object AsConsole extends App {
 
     opt[Unit]("list").action((_, c) ⇒
       c.copy(listAlarms = true)).text("Prints a list of all alarms (See other options to filter what is printed)")
+
+    opt[Unit]("shutdown").action((_, c) ⇒
+      c.copy(shutdown = true)).text("Shuts down the Alarm Service Redis instance")
 
     opt[String]('c', "component") valueName "<name>" action { (x, c) ⇒
       c.copy(component = Some(x))
@@ -88,47 +95,36 @@ object AsConsole extends App {
     case None ⇒ System.exit(1)
   }
 
-  // Report error and exit
-  private def error(msg: String): Unit = {
-    println(msg)
-    System.exit(1)
-  }
-
-  // Finds the Alarm Service Redis instance and acts on the command line options
-  private def run(options: Options): Unit = {
-    val asName = options.asName.getOrElse("Alarm Service")
-
-    locateAlarmService(asName) match {
-      case Success(redisClient) ⇒ run(redisClient, options)
-      case Failure(ex)          ⇒ error(s"Could not locate the alarm service: $ex")
-    }
-  }
-
   // Uses the given Alarm Service Redis instance to act on the command line options
-  private def run(redisClient: RedisClient, options: Options): Unit = {
-    import AlarmUtils.Problem
+  private def run(options: Options): Unit = {
+    import AlarmService.Problem
 
+    val alarmService = Await.result(AlarmService(options.asName), timeout.duration)
+
+    // Handle the --init option
     options.ascf foreach { file ⇒
-      val problems = Await.result(AlarmUtils.initAlarms(redisClient, file), timeout.duration)
+      val problems = Await.result(alarmService.initAlarms(file), timeout.duration)
       Problem.printProblems(problems)
       if (Problem.errorCount(problems) != 0) System.exit(1)
     }
 
+    // Handle the --list option
     if (options.listAlarms) {
-      val alarms = Await.result(AlarmUtils.getAlarms(redisClient, options.subsystem, options.component, options.name), timeout.duration)
+      val alarms = Await.result(alarmService.getAlarms(options.subsystem, options.component, options.name), timeout.duration)
       alarms.foreach { alarm ⇒
         // XXX TODO: add format options
-        println(alarm)
+        println(s"Alarm: $alarm")
       }
     }
-  }
 
-  // Lookup the alarm service redis instance with the location service
-  private def locateAlarmService(asName: String = ""): Try[RedisClient] = Try {
-    val connection = HttpConnection(ComponentId(asName, ComponentType.Service))
-    val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    val uri = locationsReady.locations.head.asInstanceOf[ResolvedHttpLocation].uri
-    RedisClient(uri.getHost, uri.getPort)
+    if (options.shutdown) {
+      println(s"Shutting down the alarm service")
+      alarmService.shutdown()
+    }
+
+    // Shutdown and exit
+    system.terminate()
+    System.exit(0)
   }
 }
 

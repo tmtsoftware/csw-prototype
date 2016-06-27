@@ -20,7 +20,7 @@ object TrackLocation extends App {
   LocationService.initInterface()
 
   // Needed for use with Futures
-  implicit val system = ActorSystem()
+  implicit val system = ActorSystem("TrackLocation")
 
   implicit val timeout = Timeout(10.seconds)
 
