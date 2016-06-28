@@ -71,6 +71,7 @@ object Settings {
     rpmGroup := Some("CSW"),
     packageSummary := summary,
     packageDescription := desc,
+    bashScriptExtraDefines ++= Seq("addJava -Djava.net.preferIPv4Stack=true"),
     bashScriptExtraDefines ++= Seq(s"addJava -DCSW_VERSION=$Version"),
     bashScriptExtraDefines ++= Seq(s"addJava -Dapplication-name=$name")
   )

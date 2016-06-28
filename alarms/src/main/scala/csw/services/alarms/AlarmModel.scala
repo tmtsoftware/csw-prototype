@@ -30,7 +30,7 @@ case class AlarmModel(
   /**
    * @return the unique key to use to store the severity for this alarm in the database
    */
-  def severityKey(): String = s"${key()}.severity"
+  def severityKey(): String = AlarmModel.makeSeverityKey(subsystem, component, name)
 
   /**
    * @return The contents of this object as a map
@@ -73,12 +73,13 @@ object AlarmModel extends ByteStringDeserializerDefault {
 
     case object Critical extends SeverityLevel
 
-    def apply(name: String): SeverityLevel = name match {
-      case "Indeterminate" ⇒ Indeterminate
-      case "Okay"          ⇒ Okay
-      case "Warning"       ⇒ Warning
-      case "Major"         ⇒ Major
-      case "Critical"      ⇒ Critical
+    def apply(name: String): Option[SeverityLevel] = name match {
+      case "Indeterminate" ⇒ Some(Indeterminate)
+      case "Okay"          ⇒ Some(Okay)
+      case "Warning"       ⇒ Some(Warning)
+      case "Major"         ⇒ Some(Major)
+      case "Critical"      ⇒ Some(Critical)
+      case _               ⇒ None
     }
   }
 
@@ -154,6 +155,18 @@ object AlarmModel extends ByteStringDeserializerDefault {
   }
 
   /**
+   * Builds the key used to store and lookup alarm data
+   *
+   * @param subsystem alarm's subsystem
+   * @param component alarm's component
+   * @param name      alarm's name
+   * @return the key
+   */
+  def makeSeverityKey(subsystem: String, component: String, name: String): String = {
+    "severity:" + makeKey(subsystem, component, name)
+  }
+
+  /**
    * Given a key, return the subsystem, component and name
    *
    * @param key the key used to store the alarm data in Redis
@@ -178,7 +191,7 @@ object AlarmModel extends ByteStringDeserializerDefault {
       description = config.as[String]("description"),
       location = config.as[String]("location"),
       alarmType = AlarmType(config.as[String]("alarmType")),
-      severityLevels = config.as[List[String]]("severityLevels").map(SeverityLevel(_)),
+      severityLevels = config.as[List[String]]("severityLevels").map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate)),
       probableCause = config.as[String]("probableCause"),
       operatorResponse = config.as[String]("operatorResponse"),
       acknowledge = config.as[Boolean]("acknowledge"),
@@ -201,7 +214,7 @@ object AlarmModel extends ByteStringDeserializerDefault {
     val description = formatter.deserialize(map("description"))
     val location = formatter.deserialize(map("location"))
     val alarmType = AlarmType(formatter.deserialize(map("alarmType")))
-    val severityLevels = formatter.deserialize(map("severityLevels")).split(":").toList.map(SeverityLevel(_))
+    val severityLevels = formatter.deserialize(map("severityLevels")).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate))
     val probableCause = formatter.deserialize(map("probableCause"))
     val operatorResponse = formatter.deserialize(map("operatorResponse"))
     val acknowledge = formatter.deserialize(map("acknowledge")).toBoolean

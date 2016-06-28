@@ -4,13 +4,11 @@ import java.nio.file.Paths
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.loc.LocationService
 import csw.services.trackLocation.TrackLocation
 import org.scalatest.FunSuiteLike
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
 
 object AsConsoleTests {
