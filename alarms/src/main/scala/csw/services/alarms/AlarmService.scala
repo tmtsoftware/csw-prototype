@@ -1,9 +1,9 @@
 package csw.services.alarms
 
 import java.io._
-import java.net.{InetSocketAddress, URI}
+import java.net.URI
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill}
+import akka.actor.{ActorRef, ActorRefFactory, PoisonPill}
 import akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jackson.JsonLoader
@@ -13,12 +13,11 @@ import com.github.fge.jsonschema.core.report.{ProcessingMessage, ProcessingRepor
 import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
 import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.alarms.AlarmModel.SeverityLevel
+import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.HttpConnection
 import csw.services.loc.LocationService.ResolvedHttpLocation
 import org.slf4j.LoggerFactory
-import redis.api.pubsub.{Message, PMessage}
 import redis._
 
 import scala.concurrent.{Await, Future}
@@ -30,13 +29,14 @@ object AlarmService {
   private val jsonOptions = ConfigRenderOptions.defaults().setComments(false).setOriginComments(false)
   private val cfg = LoadingConfiguration.newBuilder.addScheme("config", ConfigDownloader).freeze
   private val factory = JsonSchemaFactory.newBuilder.setLoadingConfiguration(cfg).freeze
+  private[alarms] val logger = Logger(LoggerFactory.getLogger("AlarmService"))
+  private[alarms] val alarmKeyPrefix = "alarm:"
+  private[alarms] val severityKeyPrefix = "severity:"
 
   val defaultName = "Alarm Service"
-  //  val alarmExpireSecs = 15L
-  val alarmExpireSecs = 1L
 
   // Lookup the alarm service redis instance with the location service
-  private def locateAlarmService(asName: String = "")(implicit system: ActorSystem, timeout: Timeout): Future[RedisClient] = {
+  private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
     val connection = HttpConnection(ComponentId(asName, ComponentType.Service))
     LocationService.resolve(Set(connection)).map {
@@ -56,25 +56,75 @@ object AlarmService {
    * @param asName name used to register the Redis instance with the Location Service (default: "Alarm Service")
    * @return a new AlarmService instance
    */
-  def apply(asName: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[AlarmService] = {
+  def apply(asName: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
     import system.dispatcher
-    locateAlarmService(asName).map(AlarmServiceImpl(_))
+    for {
+      redisClient ← locateAlarmService(asName)
+      ok ← redisClient.configSet("notify-keyspace-events", "Ex")
+    } yield {
+      if (!ok) logger.error("redis configSet notify-keyspace-events Ex failed")
+      AlarmServiceImpl(redisClient)
+    }
   }
 
   /**
-   * Looks up the Redis instance for the Alarm Service with the Location Service
-   * and then returns an AlarmService instance using it.
+   * Builds a Redis key pattern to use to lookup alarm data
    *
-   * Note: Applications using the Location Service should call LocationService.initialize() once before
-   * accessing any Akka or Location Service methods.
-   *
-   * @param asName optional name used to register the Redis instance with the Location Service (default: "Alarm Service")
-   * @return a new AlarmService instance
+   * @param subsystemOpt optional subsystem (default: any)
+   * @param componentOpt optional component (default: any)
+   * @param nameOpt      optional alarm name (default: any)
+   * @return the key
    */
-  def apply(asName: Option[String])(implicit system: ActorSystem, timeout: Timeout): Future[AlarmService] = {
-    import system.dispatcher
-    locateAlarmService(asName.getOrElse(defaultName)).map(AlarmServiceImpl(_))
+  def makeKeyPattern(subsystemOpt: Option[String], componentOpt: Option[String], nameOpt: Option[String]): String = {
+    val subsystem = subsystemOpt.getOrElse("*")
+    val component = componentOpt.getOrElse("*")
+    val name = nameOpt.getOrElse("*")
+    makeKey(subsystem, component, name)
   }
+
+  /**
+   * Builds the key used to store and lookup alarm data
+   *
+   * @param subsystem alarm's subsystem
+   * @param component alarm's component
+   * @param name      alarm's name
+   * @return the key
+   */
+  def makeKey(subsystem: String, component: String, name: String): String = {
+    s"$alarmKeyPrefix$subsystem.$component.$name"
+  }
+
+  /**
+   * Returns the key used to store and lookup alarm data.
+   *
+   * @param severityKey a key as returned from [[makeSeverityKey]]
+   * @return the key
+   */
+  def makeKey(severityKey: String): String = {
+    severityKey.substring(severityKeyPrefix.length)
+  }
+
+  /**
+   * Builds the key used to store and lookup alarm data
+   *
+   * @param subsystem alarm's subsystem
+   * @param component alarm's component
+   * @param name      alarm's name
+   * @return the key
+   */
+  def makeSeverityKey(subsystem: String, component: String, name: String): String = {
+    severityKeyPrefix + makeKey(subsystem, component, name)
+  }
+
+  /**
+   * @return the unique key to use to store the static data for the given alarm
+   */
+  def key(alarm: AlarmModel): String = makeKey(alarm.subsystem, alarm.component, alarm.name)
+
+  /**
+   * @return the unique key to use to publish the severity for this alarm
+   */
+  def severityKey(alarm: AlarmModel): String = makeSeverityKey(alarm.subsystem, alarm.component, alarm.name)
 
   /**
    * Describes any validation problems found
@@ -116,8 +166,6 @@ object AlarmService {
       actorRef ! PoisonPill
     }
   }
-
-  // ----
 
   /**
    * Returns a string with the contents of the given config, converted to JSON.
@@ -216,6 +264,9 @@ object AlarmService {
   }
 }
 
+/**
+ * Defines the public API to the Alarm Service
+ */
 trait AlarmService {
 
   import AlarmService._
@@ -229,7 +280,7 @@ trait AlarmService {
   def initAlarms(inputFile: File): Future[List[Problem]]
 
   /**
-   * Gets the alarm information from Redis
+   * Gets the alarm information from Redis for any matching alarms
    *
    * @param subsystemOpt if defined, return only alarms for this subsystem
    * @param componentOpt if defined, return only alarms for this component
@@ -239,15 +290,26 @@ trait AlarmService {
   def getAlarms(subsystemOpt: Option[String] = None, componentOpt: Option[String] = None, nameOpt: Option[String] = None): Future[Seq[AlarmModel]]
 
   /**
+   * Gets the alarm information from Redis for the matching Alarm
+   *
+   * @param subsystem the alarm'ssubsystem
+   * @param component the alarm's component
+   * @param name      the alarm's name
+   * @return a future sequence of alarm model objects
+   */
+  def getAlarm(subsystem: String, component: String, name: String): Future[AlarmModel]
+
+  /**
    * Sets and publishes the severity level for the given alarm
    *
-   * @param subsystem the subsystem to which the alarm belongs
-   * @param component the component to which the alarm belongs
-   * @param name      the name of the alarm
-   * @param severity  the new value of the severity
+   * @param subsystem       the subsystem to which the alarm belongs
+   * @param component       the component to which the alarm belongs
+   * @param name            the name of the alarm
+   * @param severity        the new value of the severity
+   * @param alarmExpireSecs number of seconds before an alarm expires (default: 15)
    * @return a future indicating when the operation has completed
    */
-  def setSeverity(subsystem: String, component: String, name: String, severity: SeverityLevel): Future[Unit]
+  def setSeverity(subsystem: String, component: String, name: String, severity: SeverityLevel, alarmExpireSecs: Int = 15): Future[Unit]
 
   /**
    * Gets the severity level for the given alarm
@@ -265,9 +327,12 @@ trait AlarmService {
    * @param subsystemOpt if defined, monitor only alarms for this subsystem
    * @param componentOpt if defined, monitor only alarms for this component
    * @param nameOpt      if defined, monitor only alarms matching the given name, which may contain Redis wildcards
+   * @param subscriberOpt   if defined, an actor that will receive an AlarmStatus message whenever the severity of an alarm changes
+   * @param notifyOpt       if defined, a function that will be called with an AlarmStatus object whenever the severity of an alarm changes
    * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
    */
-  def monitorAlarms(subsystemOpt: Option[String] = None, componentOpt: Option[String] = None, nameOpt: Option[String] = None): AlarmMonitor
+  def monitorAlarms(subsystemOpt: Option[String] = None, componentOpt: Option[String] = None, nameOpt: Option[String] = None,
+                    subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor
 
   /**
    * Shuts down the Redis server (For use in test cases that started Redis themselves)
@@ -280,14 +345,12 @@ trait AlarmService {
  *
  * @param redisClient used to access the Redis instance used by the Alarm Service
  */
-private case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: ActorSystem, timeout: Timeout)
+private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: ActorRefFactory, timeout: Timeout)
     extends AlarmService with ByteStringSerializerLowPriority {
 
   import AlarmService._
 
   import system.dispatcher
-
-  private val logger = Logger(LoggerFactory.getLogger("AlarmUtils"))
 
   override def initAlarms(inputFile: File): Future[List[Problem]] = {
     import net.ceedubs.ficus.Ficus._
@@ -305,7 +368,7 @@ private case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: A
         logger.info(s"Adding alarm: subsystem: ${alarm.subsystem}, component: ${alarm.component}, ${alarm.name}")
         for {
           _ ← setSeverity(alarm.subsystem, alarm.component, alarm.name, SeverityLevel.Indeterminate)
-          result ← redisClient.hmset(alarm.key(), alarm.map())
+          result ← redisClient.hmset(key(alarm), alarm.map())
         } yield result
       }
       Future.sequence(f).map { results ⇒
@@ -315,11 +378,16 @@ private case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: A
   }
 
   override def getAlarms(subsystemOpt: Option[String] = None, componentOpt: Option[String] = None, nameOpt: Option[String] = None): Future[Seq[AlarmModel]] = {
-    val pattern = AlarmModel.makeKeyPattern(subsystemOpt, componentOpt, nameOpt)
+    val pattern = makeKeyPattern(subsystemOpt, componentOpt, nameOpt)
     redisClient.keys(pattern).flatMap { keys ⇒
       val f2 = keys.map(getAlarm)
       Future.sequence(f2)
     }
+  }
+
+  override def getAlarm(subsystem: String, component: String, name: String): Future[AlarmModel] = {
+    val key = makeKey(subsystem, component, name)
+    getAlarm(key)
   }
 
   /**
@@ -328,12 +396,12 @@ private case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: A
    * @param key the key for the alarm in redis
    * @return the alarm model object
    */
-  private def getAlarm(key: String): Future[AlarmModel] = {
+  private[alarms] def getAlarm(key: String): Future[AlarmModel] = {
     redisClient.hgetall(key).map(AlarmModel(_))
   }
 
-  override def setSeverity(subsystem: String, component: String, name: String, severity: SeverityLevel): Future[Unit] = {
-    val key = AlarmModel.makeSeverityKey(subsystem, component, name)
+  override def setSeverity(subsystem: String, component: String, name: String, severity: SeverityLevel, alarmExpireSecs: Int = 15): Future[Unit] = {
+    val key = makeSeverityKey(subsystem, component, name)
     for {
       _ ← redisClient.set(key, severity.toString, exSeconds = Some(alarmExpireSecs)).map(_ ⇒ ())
       result ← redisClient.publish(key, severity.toString).map(_ ⇒ ())
@@ -341,7 +409,7 @@ private case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: A
   }
 
   override def getSeverity(subsystem: String, component: String, name: String): Future[SeverityLevel] = {
-    val key = AlarmModel.makeSeverityKey(subsystem, component, name)
+    val key = makeSeverityKey(subsystem, component, name)
     val f = redisClient.exists(key).flatMap { exists ⇒
       if (exists)
         redisClient.get[String](key).map(s ⇒ s.flatMap(SeverityLevel(_)))
@@ -351,29 +419,14 @@ private case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: A
     f.map(_.getOrElse(SeverityLevel.Indeterminate))
   }
 
-  override def monitorAlarms(subsystemOpt: Option[String] = None, componentOpt: Option[String] = None, nameOpt: Option[String] = None): AlarmMonitor = {
+  override def monitorAlarms(subsystemOpt: Option[String] = None, componentOpt: Option[String] = None, nameOpt: Option[String] = None,
+                             subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor = {
     val subsystem = subsystemOpt.getOrElse("*")
     val component = componentOpt.getOrElse("*")
     val name = nameOpt.getOrElse("*")
-    val key = AlarmModel.makeSeverityKey(subsystem, component, name)
+    val key = makeSeverityKey(subsystem, component, name)
 
-    //    val redisPubSub = RedisPubSub(
-    //      host = redisClient.host,
-    //      port = redisClient.port,
-    //      channels = Seq(key),
-    //      patterns = Seq(key),
-    //      onMessage = (m: Message) ⇒ { println(s"XXX Message: $m") },
-    //      onPMessage = (m: PMessage) ⇒ { println(s"XXX PMessage: $m") },
-    //      name = redisClient.name
-    //    )
-    //    // XXX FIXME
-    //    AlarmMonitorImpl(redisPubSub.redisConnection)
-
-    // XXX change system to base trait/context
-    val addr = new InetSocketAddress(redisClient.host, redisClient.port)
-    val channels = Seq(key)
-    val patterns = Seq(key)
-    val actorRef = system.actorOf(AlarmSubscriberActor.props(addr, channels, patterns, (b: Boolean) ⇒ println(s"XXX connect $b"))
+    val actorRef = system.actorOf(AlarmSubscriberActor.props(this, List(key), subscriberOpt, notifyOpt)
       .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))
     AlarmMonitorImpl(actorRef)
   }

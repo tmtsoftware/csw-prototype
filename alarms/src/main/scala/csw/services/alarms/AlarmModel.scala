@@ -23,16 +23,6 @@ case class AlarmModel(
 ) {
 
   /**
-   * @return the unique key to use to store the static data for this alarm in the database
-   */
-  def key(): String = AlarmModel.makeKey(subsystem, component, name)
-
-  /**
-   * @return the unique key to use to store the severity for this alarm in the database
-   */
-  def severityKey(): String = AlarmModel.makeSeverityKey(subsystem, component, name)
-
-  /**
    * @return The contents of this object as a map
    */
   def map(): Map[String, String] = {
@@ -128,54 +118,11 @@ object AlarmModel extends ByteStringDeserializerDefault {
   }
 
   /**
-   * Builds a Redis key pattern to use to lookup alarm data
-   *
-   * @param subsystemOpt optional subsystem (default: any)
-   * @param componentOpt optional component (default: any)
-   * @param nameOpt      optional alarm name (default: any)
-   * @return the key
+   * Combines the static alarm model with the current severity level for the alarm
+   * @param alarm the static alarm data
+   * @param severity the current alarm severity level
    */
-  def makeKeyPattern(subsystemOpt: Option[String], componentOpt: Option[String], nameOpt: Option[String]): String = {
-    val subsystem = subsystemOpt.getOrElse("*")
-    val component = componentOpt.getOrElse("*")
-    val name = nameOpt.getOrElse("*")
-    makeKey(subsystem, component, name)
-  }
-
-  /**
-   * Builds the key used to store and lookup alarm data
-   *
-   * @param subsystem alarm's subsystem
-   * @param component alarm's component
-   * @param name      alarm's name
-   * @return the key
-   */
-  def makeKey(subsystem: String, component: String, name: String): String = {
-    s"alarm:$subsystem.$component.$name"
-  }
-
-  /**
-   * Builds the key used to store and lookup alarm data
-   *
-   * @param subsystem alarm's subsystem
-   * @param component alarm's component
-   * @param name      alarm's name
-   * @return the key
-   */
-  def makeSeverityKey(subsystem: String, component: String, name: String): String = {
-    "severity:" + makeKey(subsystem, component, name)
-  }
-
-  /**
-   * Given a key, return the subsystem, component and name
-   *
-   * @param key the key used to store the alarm data in Redis
-   * @return (subsystem, component, name)
-   */
-  def parseKey(key: String): (String, String, String) = {
-    val t = key.split(':')(1).split('.')
-    (t(0), t(1), t(2))
-  }
+  case class AlarmStatus(alarm: AlarmModel, severity: SeverityLevel)
 
   /**
    * Initializes an AlarmModel from the given Config

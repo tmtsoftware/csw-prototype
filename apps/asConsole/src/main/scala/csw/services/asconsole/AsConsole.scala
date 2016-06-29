@@ -7,7 +7,7 @@ import akka.util.Timeout
 import ch.qos.logback.classic.Logger
 import csw.services.loc.LocationService
 import ch.qos.logback.classic._
-import csw.services.alarms.AlarmModel.SeverityLevel
+import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
 import csw.services.alarms.AlarmService
 import org.slf4j.LoggerFactory
 import AlarmService.Problem
@@ -121,7 +121,7 @@ object AsConsole extends App {
   // Uses the given Alarm Service Redis instance to act on the command line options
   private def run(options: Options): Unit = {
 
-    val alarmService = Await.result(AlarmService(options.asName), timeout.duration)
+    val alarmService = Await.result(AlarmService(options.asName.getOrElse(AlarmService.defaultName)), timeout.duration)
 
     options.asConfig foreach (init(alarmService, _))
     options.severity.foreach(setSeverity(alarmService, _, options))
@@ -166,10 +166,14 @@ object AsConsole extends App {
     }
   }
 
+  private def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
+    // XXX TODO: pretty print, formats?
+    println(s"Alarm Status: ${alarmStatus.alarm.name}: $alarmStatus")
+  }
+
   // Handle the --monitor option
   private def monitorAlarms(alarmService: AlarmService, options: Options): Unit = {
-    // XXX TODO: FIXME
-    alarmService.monitorAlarms(options.subsystem, options.component, options.name)
+    alarmService.monitorAlarms(options.subsystem, options.component, options.name, None, Some(printAlarmStatus _))
   }
 }
 

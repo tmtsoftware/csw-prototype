@@ -233,7 +233,7 @@ object LocationService {
    * @param path        the path part of the URI (default: empty)
    * @return an object that can be used to close the connection and unregister the service
    */
-  def registerHttpConnection(componentId: ComponentId, port: Int, path: String = "")(implicit system: ActorSystem): Future[RegistrationResult] = {
+  def registerHttpConnection(componentId: ComponentId, port: Int, path: String = "")(implicit system: ActorRefFactory): Future[RegistrationResult] = {
     import system.dispatcher
     val connection = HttpConnection(componentId)
     Future {
@@ -277,7 +277,7 @@ object LocationService {
    * @param system      the caller's actor system
    * @return a future object describing the services found
    */
-  def resolve(connections: Set[Connection])(implicit system: ActorSystem, timeout: Timeout): Future[LocationsReady] = {
+  def resolve(connections: Set[Connection])(implicit system: ActorRefFactory, timeout: Timeout): Future[LocationsReady] = {
     import akka.pattern.ask
     val actorRef = system.actorOf(LocationTrackerWorker.props(None))
     (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]

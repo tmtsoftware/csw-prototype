@@ -7,7 +7,7 @@ import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import AlarmService.Problem
-import csw.services.alarms.AlarmModel.SeverityLevel
+import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
 import csw.services.loc.LocationService
 import csw.services.trackLocation.TrackLocation
 import org.scalatest.FunSuiteLike
@@ -59,31 +59,41 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
 
       // List the alarms that were written to Redis
       val alarms = Await.result(alarmService.getAlarms(), timeout.duration)
-      println("XXX 1")
       alarms.foreach { alarm ⇒
         // XXX TODO: compare results
-        println(s"XXX List Alarm: $alarm")
+        logger.info(s"List Alarm: $alarm")
       }
-      println("XXX 2")
+
+      // For testing callback
+      var callbackSev: SeverityLevel = SeverityLevel.Indeterminate
+
+      // Called when alarm severity changes
+      def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
+        logger.info(s"Alarm Status: ${alarmStatus.alarm.name}: $alarmStatus")
+        callbackSev = alarmStatus.severity
+      }
 
       // Test setting and monitoring the alarm severity level
-      // XXX --subsystem TCS --component tcsPk --name cpuExceededAlarm
-      alarmService.monitorAlarms(Some("TCS"), Some("tcsPk"), Some("cpuExceededAlarm"))
-      println("XXX Monitoring  --subsystem TCS --component tcsPk --name cpuExceededAlarm ")
+      alarmService.monitorAlarms(Some("TCS"), Some("tcsPk"), Some("cpuExceededAlarm"), None, Some(printAlarmStatus _))
       Thread.sleep(2000)
-      println("wakeup: Setting Critical")
-      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Critical)
+      logger.info("Setting severity to Critical")
+      val expireSecs = 1
+      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Critical, expireSecs)
       Thread.sleep(2000)
-      val x1 = Await.result(alarmService.getSeverity("TCS", "tcsPk", "cpuExceededAlarm"), timeout.duration)
-      println(s"wakeup: was Critical, now it is $x1")
-      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Warning)
+      val sev1 = Await.result(alarmService.getSeverity("TCS", "tcsPk", "cpuExceededAlarm"), timeout.duration)
+      logger.info(s"Severity was Critical, now it is $sev1")
+      assert(sev1 == SeverityLevel.Indeterminate)
+      assert(callbackSev == SeverityLevel.Indeterminate)
+
+      logger.info("Setting severity to Warning")
+      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Warning, expireSecs)
+      Thread.sleep(200)
+      val sev2 = Await.result(alarmService.getSeverity("TCS", "tcsPk", "cpuExceededAlarm"), timeout.duration)
+      logger.info(s"Severity was Critical, now it is $sev2")
+      assert(sev2 == SeverityLevel.Warning)
+      assert(callbackSev == SeverityLevel.Warning)
       Thread.sleep(2000)
-      println("wakeup")
-      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Major)
-      Thread.sleep(2000)
-      println("wakeup")
-      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Okay)
-      println("done")
+      assert(callbackSev == SeverityLevel.Indeterminate)
     } catch {
       case e: Exception ⇒ e.printStackTrace()
     } finally {
