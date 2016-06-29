@@ -45,6 +45,7 @@ object AsConsole extends App {
     component:     Option[String] = None,
     name:          Option[String] = None, // Alarm name (with wildcards)
     severity:      Option[String] = None,
+    expire:        Option[Int]    = Some(15),
     monitorAlarms: Boolean        = false,
     noExit:        Boolean        = false
   )
@@ -90,6 +91,10 @@ object AsConsole extends App {
     opt[Unit]("monitor") action { (x, c) ⇒
       c.copy(monitorAlarms = true)
     } text "Starts monitoring changes in the severity of alarm(s) given by (subsystem, component, name)"
+
+    opt[Int]("expire") action { (x, c) ⇒
+      c.copy(expire = Some(x))
+    } text "Number of secs before a key's severity expires (default 15)"
 
     opt[Unit]("no-exit") action { (x, c) ⇒
       c.copy(noExit = true)
@@ -154,7 +159,7 @@ object AsConsole extends App {
     if (options.subsystem.isEmpty) error("Missing required --subsystem option")
     if (options.component.isEmpty) error("Missing required --component option")
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
-    alarmService.setSeverity(options.subsystem.get, options.component.get, options.name.get, severity.get)
+    alarmService.setSeverity(options.subsystem.get, options.component.get, options.name.get, severity.get, options.expire.get)
   }
 
   // Handle the --list option
@@ -167,8 +172,8 @@ object AsConsole extends App {
   }
 
   private def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
-    // XXX TODO: pretty print, formats?
-    println(s"Alarm Status: ${alarmStatus.alarm.name}: $alarmStatus")
+    val a = alarmStatus.alarm
+    println(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
   }
 
   // Handle the --monitor option

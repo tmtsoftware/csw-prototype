@@ -69,27 +69,23 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
 
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
-        logger.info(s"Alarm Status: ${alarmStatus.alarm.name}: $alarmStatus")
+        val a = alarmStatus.alarm
+        logger.info(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
         callbackSev = alarmStatus.severity
       }
 
       // Test setting and monitoring the alarm severity level
       alarmService.monitorAlarms(Some("TCS"), Some("tcsPk"), Some("cpuExceededAlarm"), None, Some(printAlarmStatus _))
       Thread.sleep(2000)
-      logger.info("Setting severity to Critical")
       val expireSecs = 1
       alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Critical, expireSecs)
       Thread.sleep(2000)
       val sev1 = Await.result(alarmService.getSeverity("TCS", "tcsPk", "cpuExceededAlarm"), timeout.duration)
-      logger.info(s"Severity was Critical, now it is $sev1")
       assert(sev1 == SeverityLevel.Indeterminate)
       assert(callbackSev == SeverityLevel.Indeterminate)
-
-      logger.info("Setting severity to Warning")
       alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Warning, expireSecs)
       Thread.sleep(200)
       val sev2 = Await.result(alarmService.getSeverity("TCS", "tcsPk", "cpuExceededAlarm"), timeout.duration)
-      logger.info(s"Severity was Critical, now it is $sev2")
       assert(sev2 == SeverityLevel.Warning)
       assert(callbackSev == SeverityLevel.Warning)
       Thread.sleep(2000)
