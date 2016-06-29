@@ -57,8 +57,7 @@ object Settings {
     javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
     javaOptions in (Test, run) ++= Seq("-Djava.net.preferIPv4Stack=true"),  // For location service
     jvmOptions in MultiJvm := Seq("-Djava.net.preferIPv4Stack=true"),
-    testOptions in Test += Tests.Argument("-oI"),
-    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"))
+    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"), Tests.Argument("-oI"), Tests.Argument("-Djava.net.preferIPv4Stack=true"))
   )
 
   // For standalone applications

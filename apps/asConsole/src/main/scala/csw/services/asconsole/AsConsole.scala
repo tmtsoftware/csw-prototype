@@ -8,7 +8,7 @@ import ch.qos.logback.classic.Logger
 import csw.services.loc.LocationService
 import ch.qos.logback.classic._
 import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
-import csw.services.alarms.AlarmService
+import csw.services.alarms.{AlarmKey, AlarmService, AlarmServiceSetSeverityActor}
 import org.slf4j.LoggerFactory
 import AlarmService.Problem
 
@@ -37,18 +37,18 @@ object AsConsole extends App {
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    asName:        Option[String] = None, // Alarm Service name
-    asConfig:      Option[File]   = None, // Alarm Service Config File (ASCF)
-    listAlarms:    Boolean        = false,
-    shutdown:      Boolean        = false,
-    subsystem:     Option[String] = None,
-    component:     Option[String] = None,
-    name:          Option[String] = None, // Alarm name (with wildcards)
-    severity:      Option[String] = None,
-    expire:        Option[Int]    = Some(15),
-    monitorAlarms: Boolean        = false,
-    noExit:        Boolean        = false
-  )
+    asName: Option[String] = None, // Alarm Service name
+    asConfig: Option[File] = None, // Alarm Service Config File (ASCF)
+    listAlarms: Boolean = false,
+    shutdown: Boolean = false,
+    subsystem: Option[String] = None,
+    component: Option[String] = None,
+    name: Option[String] = None, // Alarm name (with wildcards)
+    severity: Option[String] = None,
+    expire: Option[Int] = Some(15),
+    refreshSeverity: Boolean = false,
+    monitorAlarms: Boolean = false,
+    noExit: Boolean = false)
 
   // XXX TODO: Add options for --list output format: pdf, html, json, config, text?
 
@@ -86,11 +86,15 @@ object AsConsole extends App {
 
     opt[String]("severity") valueName "<severity>" action { (x, c) ⇒
       c.copy(severity = Some(x))
-    } text "Sets the severity level for the alarm given by (subsystem, component, name) to the given level (Alarm must be unique)"
+    } text "Sets the severity level for the alarm given by (--subsystem, --component, --name) to the given level (Alarm must be unique)"
 
     opt[Unit]("monitor") action { (x, c) ⇒
       c.copy(monitorAlarms = true)
     } text "Starts monitoring changes in the severity of alarm(s) given by (subsystem, component, name)"
+
+    opt[Unit]("refresh") action { (x, c) ⇒
+      c.copy(refreshSeverity = true)
+    } text "Continually refresh the given alarm's severity before it expires (use together with --subsystem, --component, --name, --severity)"
 
     opt[Int]("expire") action { (x, c) ⇒
       c.copy(expire = Some(x))
@@ -130,6 +134,7 @@ object AsConsole extends App {
 
     options.asConfig foreach (init(alarmService, _))
     options.severity.foreach(setSeverity(alarmService, _, options))
+    if (options.refreshSeverity) refreshSeverity(alarmService, options)
     if (options.listAlarms) list(alarmService, options)
     if (options.monitorAlarms) monitorAlarms(alarmService, options)
 
@@ -159,12 +164,25 @@ object AsConsole extends App {
     if (options.subsystem.isEmpty) error("Missing required --subsystem option")
     if (options.component.isEmpty) error("Missing required --component option")
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
-    alarmService.setSeverity(options.subsystem.get, options.component.get, options.name.get, severity.get, options.expire.get)
+    alarmService.setSeverity(AlarmKey(options.subsystem.get, options.component.get, options.name.get), severity.get, options.expire.get)
+  }
+
+  // Handle --refresh option (start an actor to continually refresh the selected alarm severity)
+  private def refreshSeverity(alarmService: AlarmService, sev: String, options: Options): Unit = {
+    val severity = options.severity.flatMap(SeverityLevel(_))
+    if (severity.isEmpty) error(s"Invalid severity level: $severity")
+    if (options.subsystem.isEmpty) error("Missing required --subsystem option")
+    if (options.component.isEmpty) error("Missing required --component option")
+    if (options.name.isEmpty) error("Missing required --name option (alarm name)")
+
+    val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
+    val map = Map(key -> severity.get)
+    system.actorOf(AlarmServiceSetSeverityActor.props(alarmService, map))
   }
 
   // Handle the --list option
   private def list(alarmService: AlarmService, options: Options): Unit = {
-    val alarms = Await.result(alarmService.getAlarms(options.subsystem, options.component, options.name), timeout.duration)
+    val alarms = Await.result(alarmService.getAlarms(AlarmKey(options.subsystem, options.component, options.name)), timeout.duration)
     alarms.foreach { alarm ⇒
       // XXX TODO: add format options
       println(s"Alarm: $alarm")
@@ -178,7 +196,7 @@ object AsConsole extends App {
 
   // Handle the --monitor option
   private def monitorAlarms(alarmService: AlarmService, options: Options): Unit = {
-    alarmService.monitorAlarms(options.subsystem, options.component, options.name, None, Some(printAlarmStatus _))
+    alarmService.monitorAlarms(AlarmKey(options.subsystem, options.component, options.name), None, Some(printAlarmStatus _))
   }
 }
 

@@ -57,8 +57,8 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       Problem.printProblems(problems)
       assert(Problem.errorCount(problems) == 0)
 
-      // List the alarms that were written to Redis
-      val alarms = Await.result(alarmService.getAlarms(), timeout.duration)
+      // List all the alarms that were written to Redis
+      val alarms = Await.result(alarmService.getAlarms(AlarmKey()), timeout.duration)
       alarms.foreach { alarm ⇒
         // XXX TODO: compare results
         logger.info(s"List Alarm: $alarm")
@@ -75,21 +75,23 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       }
 
       // Test setting and monitoring the alarm severity level
-      alarmService.monitorAlarms(Some("TCS"), Some("tcsPk"), Some("cpuExceededAlarm"), None, Some(printAlarmStatus _))
+      val key = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
+      val alarmMonitor = alarmService.monitorAlarms(key, None, Some(printAlarmStatus _))
       Thread.sleep(2000)
       val expireSecs = 1
-      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Critical, expireSecs)
+      alarmService.setSeverity(key, SeverityLevel.Critical, expireSecs)
       Thread.sleep(2000)
-      val sev1 = Await.result(alarmService.getSeverity("TCS", "tcsPk", "cpuExceededAlarm"), timeout.duration)
+      val sev1 = Await.result(alarmService.getSeverity(key), timeout.duration)
       assert(sev1 == SeverityLevel.Indeterminate)
       assert(callbackSev == SeverityLevel.Indeterminate)
-      alarmService.setSeverity("TCS", "tcsPk", "cpuExceededAlarm", SeverityLevel.Warning, expireSecs)
+      alarmService.setSeverity(key, SeverityLevel.Warning, expireSecs)
       Thread.sleep(200)
-      val sev2 = Await.result(alarmService.getSeverity("TCS", "tcsPk", "cpuExceededAlarm"), timeout.duration)
+      val sev2 = Await.result(alarmService.getSeverity(key), timeout.duration)
       assert(sev2 == SeverityLevel.Warning)
       assert(callbackSev == SeverityLevel.Warning)
       Thread.sleep(2000)
       assert(callbackSev == SeverityLevel.Indeterminate)
+      alarmMonitor.stop()
     } catch {
       case e: Exception ⇒ e.printStackTrace()
     } finally {
