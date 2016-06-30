@@ -40,7 +40,7 @@ object AlarmKey {
     val k = if (key.startsWith(severityKeyPrefix))
       key.substring(severityKeyPrefix.length)
     else key
-    val subsystem :: component :: name :: _ = k.substring(alarmKeyPrefix.length).split('.').toList
+    val subsystem :: component :: name :: _ = k.substring(alarmKeyPrefix.length).split(':').toList
     AlarmKey(subsystem, component, name)
   }
 }
@@ -52,6 +52,6 @@ case class AlarmKey(subsystem: String, component: String, name: String) {
 
   import AlarmKey._
 
-  val key = s"$alarmKeyPrefix$subsystem.$component.$name"
+  val key = s"$alarmKeyPrefix$subsystem:$component:$name"
   val severityKey = severityKeyPrefix + key
 }
