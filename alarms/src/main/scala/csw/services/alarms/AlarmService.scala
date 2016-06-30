@@ -36,10 +36,18 @@ object AlarmService {
    */
   val defaultName = "Alarm Service"
 
+  // XXX TODO: Reverse the roles below: change refreshFactor to refreshSecs (5) and defaultExpireSecs to defaultExpireFactor (3)?
+
   /**
    * The default number of seconds before an alarm severity level expires and becomes Indeterminate
    */
   val defaultExpireSecs = 15
+
+  /**
+   * An alarm's severity should be refreshed every (defaultExpireSecs/refreshFactor) seconds
+   * to make sure it does not expire and become "Indeterminate"
+   */
+  val refreshFactor = 3
 
   // Lookup the alarm service redis instance with the location service
   private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
@@ -339,11 +347,12 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit s
     }
   }
 
-  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, alarmExpireSecs: Int = defaultExpireSecs): Future[Unit] = {
+  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, alarmExpireSecs: Int): Future[Unit] = {
     val key = alarmKey.severityKey
+    val secs = math.max(alarmExpireSecs, refreshFactor)
     logger.debug(s"Setting severity for $alarmKey to $severity")
     for {
-      result ← redisClient.set(key, severity.toString, exSeconds = Some(alarmExpireSecs)).map(_ ⇒ ())
+      result ← redisClient.set(key, severity.toString, exSeconds = Some(secs)).map(_ ⇒ ())
     } yield result
   }
 

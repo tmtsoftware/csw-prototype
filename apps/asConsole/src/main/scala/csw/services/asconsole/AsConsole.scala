@@ -95,7 +95,7 @@ object AsConsole extends App {
 
     opt[Int]("expire") action { (x, c) ⇒
       c.copy(expire = Some(x))
-    } text "Number of secs before a key's severity expires (default 15)"
+    } text "Number of secs before a key's severity expires (default 15, must be >= 3)"
 
     opt[Unit]("no-exit") action { (x, c) ⇒
       c.copy(noExit = true)

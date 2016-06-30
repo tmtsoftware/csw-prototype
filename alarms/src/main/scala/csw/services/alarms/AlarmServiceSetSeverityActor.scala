@@ -32,8 +32,10 @@ object AlarmServiceSetSeverityActor {
    * @param expireSecs the amount of time in seconds before the alarm severity expires (defaults to 15 sec)
    * @return the actorRef
    */
-  def props(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel], expireSecs: Int = AlarmService.defaultExpireSecs): Props =
-    Props(classOf[AlarmServiceSetSeverityActor], alarmService, initialMap, expireSecs)
+  def props(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel], expireSecs: Int = AlarmService.defaultExpireSecs): Props = {
+    val secs = math.max(expireSecs, AlarmService.refreshFactor)
+    Props(classOf[AlarmServiceSetSeverityActor], alarmService, initialMap, secs)
+  }
 }
 
 private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel], expireSecs: Int)
@@ -42,8 +44,7 @@ private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMa
   import AlarmServiceSetSeverityActor._
   import context.dispatcher
 
-  // Update the key 5 seconds before it expires
-  val delay = max(expireSecs - 5, 1).seconds
+  val delay = max(expireSecs / AlarmService.refreshFactor, 1).seconds
   context.system.scheduler.schedule(delay, delay, self, Publish)
 
   def receive: Receive = working(initialMap)

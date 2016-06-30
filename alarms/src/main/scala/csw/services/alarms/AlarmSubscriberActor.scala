@@ -43,17 +43,16 @@ private class AlarmSubscriberActor(alarmService: AlarmServiceImpl, keys: List[Al
 
   override def onPMessage(pm: PMessage) = {
     val formatter = implicitly[ByteStringDeserializer[String]]
-    val data = formatter.deserialize(pm.data)
 
     if (pm.channel.startsWith("__keyevent@0__:expired")) {
-      // Key expired, data is the severity key name
-      val key = AlarmKey(data)
+      // Key expired, data is the severity key name: Set level to Indeterminate
+      val key = AlarmKey(formatter.deserialize(pm.data))
       log.debug(s"key expired: $key")
       val sev = SeverityLevel.Indeterminate
       notifyListeners(key, sev)
     } else if (pm.channel.startsWith("__keyevent@0__:set")) {
       // Key was set, data is the severity key name
-      val key = AlarmKey(data)
+      val key = AlarmKey(formatter.deserialize(pm.data))
       log.debug(s"key was set: $key")
       alarmService.getSeverity(key).onComplete {
         case Success(sev) ⇒ notifyListeners(key, sev)
