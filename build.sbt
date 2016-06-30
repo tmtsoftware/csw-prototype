@@ -36,7 +36,7 @@ val csw = (project in file("."))
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaHttpSprayJson, scalaReflect, upickle) ++
+    compile(akkaActor, akkaHttpSprayJson, scalaReflect) ++
     test(scalaTest, junit)
   ) dependsOn log
 
@@ -66,7 +66,7 @@ lazy val kvs = project
 lazy val alarms = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, redisScala, jsonSchemaValidator, ficus) ++
+    compile(akkaActor, akkaHttpSprayJson, redisScala, jsonSchemaValidator, ficus) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(util, log, loc, trackLocation % "test->test")
 

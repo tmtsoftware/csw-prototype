@@ -4,11 +4,10 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import ch.qos.logback.classic.Logger
 import csw.services.loc.LocationService
 import ch.qos.logback.classic._
 import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
-import csw.services.alarms.{AlarmKey, AlarmService, AlarmServiceSetSeverityActor}
+import csw.services.alarms.{AlarmJson, AlarmKey, AlarmService, AlarmServiceSetSeverityActor}
 import org.slf4j.LoggerFactory
 import AlarmService.Problem
 
@@ -20,10 +19,6 @@ import scala.concurrent.duration._
  * and performs tasks based on the command line options, such as initialize or display the list of alarms.
  */
 object AsConsole extends App {
-  // Don't want any logging in command line app
-  //  LoggerFactory.getLogger("root").asInstanceOf[Logger].setLevel(Level.OFF)
-  //  LoggerFactory.getLogger("csw").asInstanceOf[Logger].setLevel(Level.OFF)
-
   LocationService.initInterface()
 
   // Needed for use with Futures
@@ -48,6 +43,7 @@ object AsConsole extends App {
     expire:          Option[Int]    = Some(15),
     refreshSeverity: Boolean        = false,
     monitorAlarms:   Boolean        = false,
+    logLevel:        Option[String] = Some("OFF"),
     noExit:          Boolean        = false
   )
 
@@ -103,7 +99,11 @@ object AsConsole extends App {
 
     opt[Unit]("no-exit") action { (x, c) ⇒
       c.copy(noExit = true)
-    } text "for testing: prevents application from exiting the JVM"
+    } text "For testing: prevents application from exiting the JVM"
+
+    opt[String]("log") valueName "<log-level>" action { (x, c) ⇒
+      c.copy(logLevel = Some(x))
+    } text "For testing: Sets the log level (default: OFF, choices: TRACE, DEBUG, INFO, WARN, ERROR, OFF)"
 
     help("help")
     version("version")
@@ -130,6 +130,7 @@ object AsConsole extends App {
 
   // Uses the given Alarm Service Redis instance to act on the command line options
   private def run(options: Options): Unit = {
+    options.logLevel.foreach(setLogLevel)
 
     val alarmService = Await.result(AlarmService(options.asName.getOrElse(AlarmService.defaultName)), timeout.duration)
 
@@ -151,6 +152,14 @@ object AsConsole extends App {
     }
   }
 
+  private def setLogLevel(level: String): Unit = {
+    import ch.qos.logback.classic.Logger
+    val l = Level.toLevel(level, Level.OFF)
+    println(s"Setting log level to $level ($l)")
+    LoggerFactory.getLogger("root").asInstanceOf[Logger].setLevel(l)
+    LoggerFactory.getLogger("csw").asInstanceOf[Logger].setLevel(l)
+  }
+
   // Handle the --init option
   private def init(alarmService: AlarmService, file: File): Unit = {
     val problems = Await.result(alarmService.initAlarms(file), timeout.duration)
@@ -165,7 +174,8 @@ object AsConsole extends App {
     if (options.subsystem.isEmpty) error("Missing required --subsystem option")
     if (options.component.isEmpty) error("Missing required --component option")
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
-    alarmService.setSeverity(AlarmKey(options.subsystem.get, options.component.get, options.name.get), severity.get, options.expire.get)
+    val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
+    Await.ready(alarmService.setSeverity(key, severity.get, options.expire.get), timeout.duration)
   }
 
   // Handle --refresh option (start an actor to continually refresh the selected alarm severity)
@@ -179,15 +189,15 @@ object AsConsole extends App {
 
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
     val map = Map(key → severity.get)
-    system.actorOf(AlarmServiceSetSeverityActor.props(alarmService, map))
+    system.actorOf(AlarmServiceSetSeverityActor.props(alarmService, map, options.expire.get))
   }
 
   // Handle the --list option
   private def list(alarmService: AlarmService, options: Options): Unit = {
     val alarms = Await.result(alarmService.getAlarms(AlarmKey(options.subsystem, options.component, options.name)), timeout.duration)
     alarms.foreach { alarm ⇒
-      // XXX TODO: add format options
-      println(s"Alarm: $alarm")
+      // XXX TODO: add format options?
+      println(AlarmJson.toJson(alarm).prettyPrint)
     }
   }
 

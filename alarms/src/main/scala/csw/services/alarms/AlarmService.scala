@@ -66,9 +66,9 @@ object AlarmService {
     import system.dispatcher
     for {
       redisClient ← locateAlarmService(asName)
-      ok ← redisClient.configSet("notify-keyspace-events", "Ex")
+      ok ← redisClient.configSet("notify-keyspace-events", "KEA")
     } yield {
-      if (!ok) logger.error("redis configSet notify-keyspace-events Ex failed")
+      if (!ok) logger.error("redis configSet notify-keyspace-events failed")
       AlarmServiceImpl(redisClient)
     }
   }
@@ -333,14 +333,17 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit s
    */
   private[alarms] def getAlarm(key: String): Future[AlarmModel] = {
     // XXX could cache this!
-    redisClient.hgetall(key).map(AlarmModel(_))
+    redisClient.hgetall(key).map { map ⇒
+      if (map.isEmpty) throw new RuntimeException(s"Date for $key not found.")
+      AlarmModel(map)
+    }
   }
 
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, alarmExpireSecs: Int = defaultExpireSecs): Future[Unit] = {
     val key = alarmKey.severityKey
+    logger.debug(s"Setting severity for $alarmKey to $severity")
     for {
-      _ ← redisClient.set(key, severity.toString, exSeconds = Some(alarmExpireSecs)).map(_ ⇒ ())
-      result ← redisClient.publish(key, severity.toString).map(_ ⇒ ())
+      result ← redisClient.set(key, severity.toString, exSeconds = Some(alarmExpireSecs)).map(_ ⇒ ())
     } yield result
   }
 

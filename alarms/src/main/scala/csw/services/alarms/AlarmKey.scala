@@ -32,37 +32,16 @@ object AlarmKey {
   }
 
   /**
-   * Builds the key used to store and lookup alarm data
-   *
-   * @param subsystem alarm's subsystem
-   * @param component alarm's component
-   * @param name      alarm's name
-   * @return the key
+   * Creates an AlarmKey fom the string representation of either key or severityKey.
+   * @param key the value returned for key or severityKey
+   * @return the AlarmKey instance
    */
-  private def makeKey(subsystem: String, component: String, name: String): String = {
-    s"$alarmKeyPrefix$subsystem.$component.$name"
-  }
-
-  /**
-   * Returns the key used to store and lookup alarm data.
-   *
-   * @param severityKey a key as returned from [[makeSeverityKey]]
-   * @return the key
-   */
-  private[alarms] def makeKey(severityKey: String): String = {
-    severityKey.substring(severityKeyPrefix.length)
-  }
-
-  /**
-   * Builds the key used to store and lookup alarm data
-   *
-   * @param subsystem alarm's subsystem
-   * @param component alarm's component
-   * @param name      alarm's name
-   * @return the key
-   */
-  private def makeSeverityKey(subsystem: String, component: String, name: String): String = {
-    severityKeyPrefix + makeKey(subsystem, component, name)
+  def apply(key: String): AlarmKey = {
+    val k = if (key.startsWith(severityKeyPrefix))
+      key.substring(severityKeyPrefix.length)
+    else key
+    val subsystem :: component :: name :: _ = k.substring(alarmKeyPrefix.length).split('.').toList
+    AlarmKey(subsystem, component, name)
   }
 }
 
@@ -73,6 +52,6 @@ case class AlarmKey(subsystem: String, component: String, name: String) {
 
   import AlarmKey._
 
-  val key = makeKey(subsystem, component, name)
-  val severityKey = makeSeverityKey(subsystem, component, name)
+  val key = s"$alarmKeyPrefix$subsystem.$component.$name"
+  val severityKey = severityKeyPrefix + key
 }

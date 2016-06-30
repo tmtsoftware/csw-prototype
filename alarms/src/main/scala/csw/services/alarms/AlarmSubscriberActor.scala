@@ -46,20 +46,30 @@ private class AlarmSubscriberActor(alarmService: AlarmServiceImpl, keys: List[Al
     val data = formatter.deserialize(pm.data)
 
     if (pm.channel.startsWith("__keyevent@0__:expired")) {
-      // Key expired, data is the severity key name, publish value as Indeterminate (default when key is not defined)
-      log.debug(s"Alarm: $data expired")
-      alarmService.redisClient.publish(data, SeverityLevel.Indeterminate.toString)
-    } else if (pm.channel.startsWith(AlarmKey.severityKeyPrefix)) {
-      // An alarm's severity was published
-      val key = AlarmKey.makeKey(pm.channel)
-      val sev = SeverityLevel(data).getOrElse(SeverityLevel.Indeterminate)
-      alarmService.getAlarm(key).onComplete {
-        case Success(alarmModel) ⇒
-          val status = AlarmStatus(alarmModel, sev)
-          subscriber.foreach(_ ! status)
-          notify.foreach(_(status))
-        case Failure(ex) ⇒ log.error(ex, s"Failed to get alarm for key $key")
+      // Key expired, data is the severity key name
+      val key = AlarmKey(data)
+      log.debug(s"key expired: $key")
+      val sev = SeverityLevel.Indeterminate
+      notifyListeners(key, sev)
+    } else if (pm.channel.startsWith("__keyevent@0__:set")) {
+      // Key was set, data is the severity key name
+      val key = AlarmKey(data)
+      log.debug(s"key was set: $key")
+      alarmService.getSeverity(key).onComplete {
+        case Success(sev) ⇒ notifyListeners(key, sev)
+        case Failure(ex)  ⇒ log.error(ex, s"Failed to get severity for key: $key")
       }
+    }
+  }
+
+  // Notify the subscribers of a change in the severity of the alarm
+  private def notifyListeners(key: AlarmKey, severity: SeverityLevel): Unit = {
+    alarmService.getAlarm(key).onComplete {
+      case Success(alarmModel) ⇒
+        val status = AlarmStatus(alarmModel, severity)
+        subscriber.foreach(_ ! status)
+        notify.foreach(_(status))
+      case Failure(ex) ⇒ log.error(ex, s"Failed to get alarm for key $key")
     }
   }
 }
