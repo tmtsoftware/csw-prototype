@@ -25,20 +25,20 @@ object AlarmServiceSetSeverityActor {
   case object Publish
 
   /**
-    * Used to start the actor.
-    *
-    * @param alarmService Alarm Service to use to set the severity
-    * @param initialMap a map of alarm keys to the initial severity values (which can be updated later by sending a [[ChangeSeverity]] message)
-    * @param publishIntervalSecs publish the alarm's severity every this number of seconds (default: less than the expire time)
-    * @return the actorRef
-    */
+   * Used to start the actor.
+   *
+   * @param alarmService Alarm Service to use to set the severity
+   * @param initialMap a map of alarm keys to the initial severity values (which can be updated later by sending a [[ChangeSeverity]] message)
+   * @param publishIntervalSecs publish the alarm's severity every this number of seconds (default: less than the expire time)
+   * @return the actorRef
+   */
   def props(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel],
             publishIntervalSecs: Int = max(AlarmService.defaultExpireSecs - 2, 1)): Props =
     Props(classOf[AlarmServiceSetSeverityActor], alarmService, initialMap, publishIntervalSecs)
 }
 
 private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel], publishIntervalSecs: Int)
-  extends Actor with ActorLogging {
+    extends Actor with ActorLogging {
 
   import AlarmServiceSetSeverityActor._
   import context.dispatcher

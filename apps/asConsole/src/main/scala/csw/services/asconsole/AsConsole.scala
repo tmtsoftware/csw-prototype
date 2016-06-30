@@ -37,18 +37,19 @@ object AsConsole extends App {
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    asName: Option[String] = None, // Alarm Service name
-    asConfig: Option[File] = None, // Alarm Service Config File (ASCF)
-    listAlarms: Boolean = false,
-    shutdown: Boolean = false,
-    subsystem: Option[String] = None,
-    component: Option[String] = None,
-    name: Option[String] = None, // Alarm name (with wildcards)
-    severity: Option[String] = None,
-    expire: Option[Int] = Some(15),
-    refreshSeverity: Boolean = false,
-    monitorAlarms: Boolean = false,
-    noExit: Boolean = false)
+    asName:          Option[String] = None, // Alarm Service name
+    asConfig:        Option[File]   = None, // Alarm Service Config File (ASCF)
+    listAlarms:      Boolean        = false,
+    shutdown:        Boolean        = false,
+    subsystem:       Option[String] = None,
+    component:       Option[String] = None,
+    name:            Option[String] = None, // Alarm name (with wildcards)
+    severity:        Option[String] = None,
+    expire:          Option[Int]    = Some(15),
+    refreshSeverity: Boolean        = false,
+    monitorAlarms:   Boolean        = false,
+    noExit:          Boolean        = false
+  )
 
   // XXX TODO: Add options for --list output format: pdf, html, json, config, text?
 
@@ -144,7 +145,7 @@ object AsConsole extends App {
     }
 
     // Shutdown and exit
-    if (!options.noExit && !options.monitorAlarms) {
+    if (!options.noExit && !options.monitorAlarms && !options.refreshSeverity) {
       system.terminate()
       System.exit(0)
     }
@@ -168,7 +169,8 @@ object AsConsole extends App {
   }
 
   // Handle --refresh option (start an actor to continually refresh the selected alarm severity)
-  private def refreshSeverity(alarmService: AlarmService, sev: String, options: Options): Unit = {
+  private def refreshSeverity(alarmService: AlarmService, options: Options): Unit = {
+    if (options.severity.isEmpty) error(s"Missing required --severity option")
     val severity = options.severity.flatMap(SeverityLevel(_))
     if (severity.isEmpty) error(s"Invalid severity level: $severity")
     if (options.subsystem.isEmpty) error("Missing required --subsystem option")
@@ -176,7 +178,7 @@ object AsConsole extends App {
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
 
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
-    val map = Map(key -> severity.get)
+    val map = Map(key → severity.get)
     system.actorOf(AlarmServiceSetSeverityActor.props(alarmService, map))
   }
 
