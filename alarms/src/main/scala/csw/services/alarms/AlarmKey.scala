@@ -4,8 +4,14 @@ package csw.services.alarms
  * Methods to create keys used to store alarm data and publish the severity.
  */
 object AlarmKey {
-  private[alarms] val alarmKeyPrefix = "alarm:"
-  private[alarms] val severityKeyPrefix = "severity:"
+  // Prefix for the static alarm data (See AlarmModel)
+  private val alarmKeyPrefix = "alarm:"
+
+  // Prefix for storing the alarm's severity level
+  private val severityKeyPrefix = "severity:"
+
+  // Prefix for storing the alarm's state (latched, acknowledged, etc.)
+  private val alarmStateKeyPrefix = "astate:"
 
   /**
    * Creates an alarm key from the information in the model
