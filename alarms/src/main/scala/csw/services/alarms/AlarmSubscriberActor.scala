@@ -15,6 +15,8 @@ import scala.util.{Failure, Success}
  * send an AlarmStatus message to an actor or calls a method to notifiy of a change.
  */
 object AlarmSubscriberActor {
+  private val keyEventPrefix = "__keyevent@0__:"
+
   /**
    * Subscribes to changes in alarm's severity level
    *
@@ -36,6 +38,7 @@ private class AlarmSubscriberActor(alarmService: AlarmServiceImpl, keys: List[Al
     with ByteStringSerializerLowPriority {
 
   import context.dispatcher
+  import AlarmSubscriberActor._
 
   override def onMessage(m: Message) = {
     log.error(s"Unexpected call to onMessage with message: $m")
@@ -44,16 +47,11 @@ private class AlarmSubscriberActor(alarmService: AlarmServiceImpl, keys: List[Al
   override def onPMessage(pm: PMessage) = {
     val formatter = implicitly[ByteStringDeserializer[String]]
 
-    if (pm.channel.startsWith("__keyevent@0__:expired")) {
-      // Key expired, data is the severity key name: Set level to Indeterminate
-      val key = AlarmKey(formatter.deserialize(pm.data))
-      log.debug(s"key expired: $key")
-      val sev = SeverityLevel.Indeterminate
-      notifyListeners(key, sev)
-    } else if (pm.channel.startsWith("__keyevent@0__:set")) {
+    if (pm.channel.startsWith(s"${keyEventPrefix}expired") || pm.channel.startsWith(s"${keyEventPrefix}set")) {
       // Key was set, data is the severity key name
       val key = AlarmKey(formatter.deserialize(pm.data))
-      log.debug(s"key was set: $key")
+      val s = pm.channel.substring(keyEventPrefix.length)
+      log.debug(s"key was set: $s")
       alarmService.getSeverity(key).onComplete {
         case Success(sev) ⇒ notifyListeners(key, sev)
         case Failure(ex)  ⇒ log.error(ex, s"Failed to get severity for key: $key")

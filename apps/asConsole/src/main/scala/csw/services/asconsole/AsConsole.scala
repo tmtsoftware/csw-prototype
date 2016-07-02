@@ -43,6 +43,7 @@ object AsConsole extends App {
     expire:          Option[Int]    = Some(15),
     refreshSeverity: Boolean        = false,
     monitorAlarms:   Boolean        = false,
+    acknowledge:     Boolean        = false,
     logLevel:        Option[String] = Some("OFF"),
     noExit:          Boolean        = false
   )
@@ -79,7 +80,7 @@ object AsConsole extends App {
 
     opt[String]("name") valueName "<name>" action { (x, c) ⇒
       c.copy(name = Some(x))
-    } text "Limits the alarms returned by --list to those whose name field matches the given value (may contain Redis wildcards)"
+    } text "Limits the alarms returned by --list to those whose name matches the given value (may contain Redis wildcards)"
 
     opt[String]("severity") valueName "<severity>" action { (x, c) ⇒
       c.copy(severity = Some(x))
@@ -87,7 +88,11 @@ object AsConsole extends App {
 
     opt[Unit]("monitor") action { (x, c) ⇒
       c.copy(monitorAlarms = true)
-    } text "Starts monitoring changes in the severity of alarm(s) given by (subsystem, component, name)"
+    } text "Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name) (may contain Redis wildcards)"
+
+    opt[Unit]("acknowledge") action { (x, c) ⇒
+      c.copy(acknowledge = true)
+    } text "Acknowledge the alarm given by (--subsystem, --component, --name) (Alarm must be unique)"
 
     opt[Unit]("refresh") action { (x, c) ⇒
       c.copy(refreshSeverity = true)
@@ -134,11 +139,12 @@ object AsConsole extends App {
 
     val alarmService = Await.result(AlarmService(options.asName.getOrElse(AlarmService.defaultName)), timeout.duration)
 
-    options.asConfig foreach (init(alarmService, _))
+    options.asConfig foreach (init(alarmService, _, options))
     options.severity.foreach(setSeverity(alarmService, _, options))
     if (options.refreshSeverity) refreshSeverity(alarmService, options)
     if (options.listAlarms) list(alarmService, options)
     if (options.monitorAlarms) monitorAlarms(alarmService, options)
+    if (options.acknowledge) acknowledgeAlarm(alarmService, options)
 
     if (options.shutdown) {
       println(s"Shutting down the alarm service")
@@ -161,8 +167,8 @@ object AsConsole extends App {
   }
 
   // Handle the --init option
-  private def init(alarmService: AlarmService, file: File): Unit = {
-    val problems = Await.result(alarmService.initAlarms(file), timeout.duration)
+  private def init(alarmService: AlarmService, file: File, options: Options): Unit = {
+    val problems = Await.result(alarmService.initAlarms(file, options.expire.get), timeout.duration)
     Problem.printProblems(problems)
     if (Problem.errorCount(problems) != 0) error(s"Failed to initialize Alarm Service with $file")
   }
@@ -209,6 +215,11 @@ object AsConsole extends App {
   // Handle the --monitor option
   private def monitorAlarms(alarmService: AlarmService, options: Options): Unit = {
     alarmService.monitorAlarms(AlarmKey(options.subsystem, options.component, options.name), None, Some(printAlarmStatus _))
+  }
+
+  // Handle the --acknowledge option
+  private def acknowledgeAlarm(alarmService: AlarmService, options: Options): Unit = {
+    alarmService.acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name), options.expire.get)
   }
 }
 

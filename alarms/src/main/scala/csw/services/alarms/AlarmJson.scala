@@ -8,7 +8,7 @@ import spray.json._
  */
 object AlarmJson extends DefaultJsonProtocol {
 
-  def toJson(a: AlarmModel): JsValue = a.map().toJson
+  def toJson(a: AlarmModel): JsValue = a.asMap().toJson
 
   def fromJson(json: JsValue): AlarmModel = {
     val map = mapFormat[String, String].read(json)

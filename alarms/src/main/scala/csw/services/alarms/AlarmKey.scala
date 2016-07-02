@@ -60,4 +60,5 @@ case class AlarmKey(subsystem: String, component: String, name: String) {
 
   val key = s"$alarmKeyPrefix$subsystem:$component:$name"
   val severityKey = severityKeyPrefix + key
+  val stateKey = alarmStateKeyPrefix + key
 }

@@ -25,7 +25,7 @@ case class AlarmModel(
   /**
    * @return The contents of this object as a map
    */
-  def map(): Map[String, String] = {
+  def asMap(): Map[String, String] = {
     Map(
       "subsystem" → subsystem,
       "component" → component,
@@ -49,27 +49,48 @@ object AlarmModel extends ByteStringDeserializerDefault {
   /**
    * Base trait for severity levels
    */
-  sealed trait SeverityLevel
+  sealed trait SeverityLevel {
+    /**
+     * A numeric level for the severity.
+     * Higher values are more critical.
+     * Anything greater than 0 is not OK.
+     */
+    val level: Int
+
+    /**
+     * Returns true if the value represents an alarm condition (i.e.: its not Okay or Indeterminate)
+     */
+    def isAlarm: Boolean = level > 0
+
+    /**
+     * String representation
+     */
+    def name: String
+
+    override def toString = name
+  }
 
   object SeverityLevel {
 
-    case object Indeterminate extends SeverityLevel
+    abstract class SeverityLevelBase(override val level: Int, override val name: String) extends SeverityLevel
 
-    case object Okay extends SeverityLevel
+    case object Indeterminate extends SeverityLevelBase(-1, "Indeterminate")
 
-    case object Warning extends SeverityLevel
+    case object Okay extends SeverityLevelBase(0, "Okay")
 
-    case object Major extends SeverityLevel
+    case object Warning extends SeverityLevelBase(1, "Warning")
 
-    case object Critical extends SeverityLevel
+    case object Major extends SeverityLevelBase(2, "Major")
+
+    case object Critical extends SeverityLevelBase(3, "Critical")
 
     def apply(name: String): Option[SeverityLevel] = name match {
-      case "Indeterminate" ⇒ Some(Indeterminate)
-      case "Okay"          ⇒ Some(Okay)
-      case "Warning"       ⇒ Some(Warning)
-      case "Major"         ⇒ Some(Major)
-      case "Critical"      ⇒ Some(Critical)
-      case _               ⇒ None
+      case Indeterminate.name ⇒ Some(Indeterminate)
+      case Okay.name          ⇒ Some(Okay)
+      case Warning.name       ⇒ Some(Warning)
+      case Major.name         ⇒ Some(Major)
+      case Critical.name      ⇒ Some(Critical)
+      case _                  ⇒ None
     }
   }
 
@@ -119,6 +140,7 @@ object AlarmModel extends ByteStringDeserializerDefault {
 
   /**
    * Combines the static alarm model with the current severity level for the alarm
+   *
    * @param alarm the static alarm data
    * @param severity the current alarm severity level
    */
