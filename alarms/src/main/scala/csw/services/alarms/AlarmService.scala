@@ -42,15 +42,16 @@ object AlarmService {
   // XXX TODO: Move alarmExpireSecs param to AlarmService class (instead of passing it as an arg to some methods)
 
   /**
-   * The default number of seconds before an alarm severity level expires and becomes Indeterminate
+   * An alarm's severity should be refreshed every defaultRefreshSecs seconds
+   * to make sure it does not expire and become "Indeterminate" (after maxMissedRefresh missed refreshes)
    */
-  val defaultExpireSecs = 15
+  val defaultRefreshSecs = 5
 
   /**
-   * An alarm's severity should be refreshed every (defaultExpireSecs/refreshFactor) seconds
-   * to make sure it does not expire and become "Indeterminate"
+   * The default number of refreshes that may be missed before an alarm's severity is expired
+   * and becomes "Indeterminate"
    */
-  val refreshFactor = 3
+  val maxMissedRefresh = 3
 
   // Lookup the alarm service redis instance with the location service
   private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
@@ -70,17 +71,19 @@ object AlarmService {
    * Note: Applications using the Location Service should call LocationService.initialize() once before
    * accessing any Akka or Location Service methods.
    *
-   * @param asName name used to register the Redis instance with the Location Service (default: "Alarm Service")
+   * @param asName      name used to register the Redis instance with the Location Service (default: "Alarm Service")
+   * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
+   *                    to "Indeterminate" (after three missed refreshes)
    * @return a new AlarmService instance
    */
-  def apply(asName: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
+  def apply(asName: String = defaultName, refreshSecs: Int = defaultRefreshSecs)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
     import system.dispatcher
     for {
       redisClient ← locateAlarmService(asName)
       ok ← redisClient.configSet("notify-keyspace-events", "KEA")
     } yield {
       if (!ok) logger.error("redis configSet notify-keyspace-events failed")
-      AlarmServiceImpl(redisClient)
+      AlarmServiceImpl(redisClient, refreshSecs)
     }
   }
 
@@ -230,13 +233,17 @@ trait AlarmService {
   import AlarmService._
 
   /**
+   * Alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
+   */
+  def refreshSecs: Int
+
+  /**
    * Initialize the alarm data in the Redis instance using the given file
    *
    * @param inputFile       the alarm service config file containing info about all the alarms
-   * @param alarmExpireSecs number of seconds before an alarm expires (default: 15)
    * @return a future list of problems that occurred while validating the config file or ingesting the data into Redis
    */
-  def initAlarms(inputFile: File, alarmExpireSecs: Int = defaultExpireSecs): Future[List[Problem]]
+  def initAlarms(inputFile: File): Future[List[Problem]]
 
   /**
    * Gets the alarm information from Redis for any matching alarms
@@ -267,10 +274,9 @@ trait AlarmService {
    *
    * @param alarmKey        the key for the alarm
    * @param severity        the new value of the severity
-   * @param alarmExpireSecs number of seconds before an alarm expires (default: 15)
    * @return a future indicating when the operation has completed
    */
-  def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, alarmExpireSecs: Int = defaultExpireSecs): Future[Unit]
+  def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit]
 
   /**
    * Gets the severity level for the given alarm
@@ -284,10 +290,9 @@ trait AlarmService {
    * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
    *
    * @param alarmKey        the key for the alarm
-   * @param alarmExpireSecs number of seconds before an alarm expires (default: 15) (Used when resetting the alarm's severity to Okay)
    * @return a future indicating when the operation has completed
    */
-  def acknowledgeAlarm(alarmKey: AlarmKey, alarmExpireSecs: Int = defaultExpireSecs): Future[Unit]
+  def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit]
 
   /**
    * Starts monitoring the severity levels of the alarm(s) matching by the given key
@@ -309,14 +314,15 @@ trait AlarmService {
  * Provides methods for working with the Alarm Service database.
  *
  * @param redisClient used to access the Redis instance used by the Alarm Service
+ * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
  */
-private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit system: ActorRefFactory, timeout: Timeout)
+private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSecs: Int)(implicit system: ActorRefFactory, timeout: Timeout)
     extends AlarmService with ByteStringSerializerLowPriority {
 
   import AlarmService._
   import system.dispatcher
 
-  override def initAlarms(inputFile: File, alarmExpireSecs: Int): Future[List[Problem]] = {
+  override def initAlarms(inputFile: File): Future[List[Problem]] = {
     import net.ceedubs.ficus.Ficus._
     // Use JSON schema to validate the file
     val inputConfig = ConfigFactory.parseFile(inputFile).resolve(ConfigResolveOptions.noSystem())
@@ -335,7 +341,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit s
         for {
           _ ← redisClient.hmset(alarmKey.key, alarm.asMap())
           _ ← redisClient.hmset(alarmKey.stateKey, AlarmState().asMap())
-          _ ← setSeverity(alarmKey, SeverityLevel.Indeterminate, alarmExpireSecs) // XXX could simplify this on init and do simple set?
+          _ ← setSeverity(alarmKey, SeverityLevel.Indeterminate) // XXX could simplify this on init and do simple set?
         } yield ()
       }
       Future.sequence(fList).map(_ ⇒ Nil) // Nil means No problems...
@@ -394,19 +400,18 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit s
     }
   }
 
-  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, alarmExpireSecs: Int): Future[Unit] = {
+  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit] = {
     for {
       alarm ← getAlarm(alarmKey)
       alarmState ← getAlarmState(alarmKey)
       currentSeverity ← getSeverity(alarmKey)
-      result ← setSeverity(alarmKey, alarm, alarmState, severity, currentSeverity, alarmExpireSecs)
+      result ← setSeverity(alarmKey, alarm, alarmState, severity, currentSeverity)
     } yield result
   }
 
   // Sets the severity of the alarm, if allowed based on the alarm state
   private def setSeverity(alarmKey: AlarmKey, alarm: AlarmModel, alarmState: AlarmState,
-                          severity: SeverityLevel, currentSeverity: SeverityLevel,
-                          alarmExpireSecs: Int): Future[Unit] = {
+                          severity: SeverityLevel, currentSeverity: SeverityLevel): Future[Unit] = {
 
     // Is the alarm latched?
     val newSeverity = if (alarm.latched) {
@@ -416,15 +421,15 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit s
         else currentSeverity
       }
     } else severity
-    // Do we need to update the latchedState?
-    val updateLatchedState = alarm.latched && severity.isAlarm && alarmState.latchedState == LatchedState.Normal
 
-    val secs = math.max(alarmExpireSecs, refreshFactor)
+    // Do we need to update the latched state or the acknowledge state?
+    val updateLatchedState = alarm.latched && severity.isAlarm && alarmState.latchedState == LatchedState.Normal
+    val updateAckState = alarm.acknowledge && severity.isAlarm && alarmState.acknowledgedState == AcknowledgedState.Normal
 
     val redisTransaction = redisClient.transaction()
     logger.debug(s"Setting severity for $alarmKey to $newSeverity")
 
-    val f1 = redisTransaction.set(alarmKey.severityKey, newSeverity.name, exSeconds = Some(secs))
+    val f1 = redisTransaction.set(alarmKey.severityKey, newSeverity.name, exSeconds = Some(refreshSecs * maxMissedRefresh))
 
     val f2 = if (updateLatchedState) {
       logger.debug(s"Setting latched state for $alarmKey to NeedsReset")
@@ -434,9 +439,14 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit s
       ))
     } else Future.successful(true)
 
-    val f3 = redisTransaction.exec()
+    val f3 = if (updateAckState) {
+      logger.debug(s"Setting acknowledged state for $alarmKey to NeedsAcknowledge")
+      redisTransaction.hset(alarmKey.stateKey, AlarmState.acknowledgedStateField, AcknowledgedState.NeedsAcknowledge.name)
+    } else Future.successful(true)
 
-    Future.sequence(List(f1, f2, f3)).map(_ ⇒ ())
+    val f4 = redisTransaction.exec()
+
+    Future.sequence(List(f1, f2, f3, f4)).map(_ ⇒ ())
   }
 
   override def getSeverity(alarmKey: AlarmKey): Future[SeverityLevel] = {
@@ -460,24 +470,23 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient)(implicit s
     f.map(_.getOrElse(SeverityLevel.Indeterminate))
   }
 
-  override def acknowledgeAlarm(alarmKey: AlarmKey, alarmExpireSecs: Int): Future[Unit] = {
+  override def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit] = {
     for {
       alarmState ← getAlarmState(alarmKey)
       currentSeverity ← getSeverity(alarmKey)
-      result ← acknowledgeAlarm(alarmKey, alarmState, alarmExpireSecs)
+      result ← acknowledgeAlarm(alarmKey, alarmState)
     } yield result
   }
 
   // acknowledge the given alarm and update the alarm state and severity if needed
-  private def acknowledgeAlarm(alarmKey: AlarmKey, alarmState: AlarmState, alarmExpireSecs: Int): Future[Unit] = {
+  private def acknowledgeAlarm(alarmKey: AlarmKey, alarmState: AlarmState): Future[Unit] = {
     val redisTransaction = redisClient.transaction()
 
     val f1 = if (alarmState.acknowledgedState == AcknowledgedState.NeedsAcknowledge) {
       logger.debug(s"Acknowledging alarm: $alarmKey and resetting to Okay")
-      val secs = math.max(alarmExpireSecs, refreshFactor)
       Future.sequence(List(
         redisTransaction.hset(alarmKey.stateKey, AlarmState.acknowledgedStateField, AcknowledgedState.Normal.name),
-        redisTransaction.set(alarmKey.severityKey, SeverityLevel.Okay.name, exSeconds = Some(secs))
+        redisTransaction.set(alarmKey.severityKey, SeverityLevel.Okay.name, exSeconds = Some(refreshSecs * maxMissedRefresh))
       ))
     } else Future.successful(true)
 

@@ -40,7 +40,7 @@ object AsConsole extends App {
     component:       Option[String] = None,
     name:            Option[String] = None, // Alarm name (with wildcards)
     severity:        Option[String] = None,
-    expire:          Option[Int]    = Some(15),
+    refreshSecs:     Option[Int]    = Some(5),
     refreshSeverity: Boolean        = false,
     monitorAlarms:   Boolean        = false,
     acknowledge:     Boolean        = false,
@@ -98,9 +98,9 @@ object AsConsole extends App {
       c.copy(refreshSeverity = true)
     } text "Continually refresh the given alarm's severity before it expires (use together with --subsystem, --component, --name, --severity)"
 
-    opt[Int]("expire") action { (x, c) ⇒
-      c.copy(expire = Some(x))
-    } text "Number of secs before a key's severity expires (default 15, must be >= 3)"
+    opt[Int]("refresh-secs") action { (x, c) ⇒
+      c.copy(refreshSecs = Some(x))
+    } text "When --refresh was specified, the number of seconds between refreshes of the alarm's severity"
 
     opt[Unit]("no-exit") action { (x, c) ⇒
       c.copy(noExit = true)
@@ -137,6 +137,7 @@ object AsConsole extends App {
   private def run(options: Options): Unit = {
     options.logLevel.foreach(setLogLevel)
 
+    val refreshSecs = options.refreshSecs.getOrElse(AlarmService.defaultRefreshSecs)
     val alarmService = Await.result(AlarmService(options.asName.getOrElse(AlarmService.defaultName)), timeout.duration)
 
     options.asConfig foreach (init(alarmService, _, options))
@@ -168,7 +169,7 @@ object AsConsole extends App {
 
   // Handle the --init option
   private def init(alarmService: AlarmService, file: File, options: Options): Unit = {
-    val problems = Await.result(alarmService.initAlarms(file, options.expire.get), timeout.duration)
+    val problems = Await.result(alarmService.initAlarms(file), timeout.duration)
     Problem.printProblems(problems)
     if (Problem.errorCount(problems) != 0) error(s"Failed to initialize Alarm Service with $file")
   }
@@ -181,7 +182,7 @@ object AsConsole extends App {
     if (options.component.isEmpty) error("Missing required --component option")
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
-    Await.ready(alarmService.setSeverity(key, severity.get, options.expire.get), timeout.duration)
+    Await.ready(alarmService.setSeverity(key, severity.get), timeout.duration)
   }
 
   // Handle --refresh option (start an actor to continually refresh the selected alarm severity)
@@ -195,7 +196,7 @@ object AsConsole extends App {
 
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
     val map = Map(key → severity.get)
-    system.actorOf(AlarmServiceSetSeverityActor.props(alarmService, map, options.expire.get))
+    system.actorOf(AlarmServiceSetSeverityActor.props(alarmService, map))
   }
 
   // Handle the --list option
@@ -220,7 +221,7 @@ object AsConsole extends App {
   // Handle the --acknowledge option
   private def acknowledgeAlarm(alarmService: AlarmService, options: Options): Unit = {
     Await.ready(
-      alarmService.acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name), options.expire.get),
+      alarmService.acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name)),
       timeout.duration
     )
   }

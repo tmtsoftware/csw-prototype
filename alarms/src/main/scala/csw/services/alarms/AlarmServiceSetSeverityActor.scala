@@ -3,7 +3,6 @@ package csw.services.alarms
 import akka.actor.{Actor, ActorLogging, Props}
 import csw.services.alarms.AlarmModel.SeverityLevel
 
-import math._
 import scala.concurrent.duration._
 
 /**
@@ -29,12 +28,10 @@ object AlarmServiceSetSeverityActor {
    *
    * @param alarmService Alarm Service to use to set the severity
    * @param initialMap a map of alarm keys to the initial severity values (which can be updated later by sending a ChangeSeverity message)
-   * @param expireSecs the amount of time in seconds before the alarm severity expires (defaults to 15 sec)
    * @return the actorRef
    */
-  def props(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel], expireSecs: Int = AlarmService.defaultExpireSecs): Props = {
-    val secs = math.max(expireSecs, AlarmService.refreshFactor)
-    Props(classOf[AlarmServiceSetSeverityActor], alarmService, initialMap, secs)
+  def props(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel]): Props = {
+    Props(classOf[AlarmServiceSetSeverityActor], alarmService, initialMap)
   }
 }
 
@@ -44,7 +41,7 @@ private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMa
   import AlarmServiceSetSeverityActor._
   import context.dispatcher
 
-  val delay = max(expireSecs / AlarmService.refreshFactor, 1).seconds
+  val delay = alarmService.refreshSecs.seconds
   context.system.scheduler.schedule(delay, delay, self, Publish)
 
   def receive: Receive = working(initialMap)
@@ -55,7 +52,7 @@ private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMa
 
     case Publish ⇒
       for ((a, s) ← map) {
-        alarmService.setSeverity(a, s, expireSecs)
+        alarmService.setSeverity(a, s)
       }
 
     case x ⇒ log.error(s"Received unexpected message: $x")

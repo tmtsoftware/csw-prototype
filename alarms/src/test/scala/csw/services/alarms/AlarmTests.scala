@@ -17,7 +17,7 @@ import scala.concurrent.{Await, Future}
 
 object AlarmTests {
   LocationService.initInterface()
-  private val system = ActorSystem("Test")
+  val system = ActorSystem("Test")
 }
 
 /**
@@ -50,8 +50,17 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       TrackLocation.main(Array("--name", asName, "--command", s"redis-server --port $port", "--port", port.toString))
     }
 
-    // Later, in another JVM, initialize the list of alarms in Redis
-    val alarmService = Await.result(AlarmService(asName), timeout.duration)
+    // Set a low refresh rate for the test
+    val refreshSecs = 1
+
+    // Time until alarm severity expires
+    val expireSecs = refreshSecs * AlarmService.maxMissedRefresh
+
+    // Time of ms to wait to see if an alarm severity expired
+    val delayMs = expireSecs*1000+500
+
+    // Later, in another JVM, initialize the list of alarms in Redis (using a small value for refreshSecs for testing)
+    val alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)
     try {
       val problems = Await.result(alarmService.initAlarms(ascf), timeout.duration)
       Problem.printProblems(problems)
@@ -77,23 +86,26 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       // Test setting and monitoring the alarm severity level
       val key = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
       val alarmMonitor = alarmService.monitorAlarms(key, None, Some(printAlarmStatus _))
-      Thread.sleep(2000)
-      val expireSecs = 1
-      alarmService.setSeverity(key, SeverityLevel.Critical, expireSecs)
-      Thread.sleep(2000)
+      Thread.sleep(1000) // make sure actor has started
+      Await.ready(alarmService.setSeverity(key, SeverityLevel.Critical), timeout.duration)
+      Thread.sleep(delayMs) // wait for severity to expire
       val sev1 = Await.result(alarmService.getSeverity(key), timeout.duration)
-      assert(sev1 == SeverityLevel.Indeterminate)
-      assert(callbackSev == SeverityLevel.Indeterminate)
-      alarmService.setSeverity(key, SeverityLevel.Warning, expireSecs)
-      Thread.sleep(200)
+      assert(sev1 == SeverityLevel.Critical) // alarm is latched, so stays at critical
+      assert(callbackSev == SeverityLevel.Critical)
+      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
       val sev2 = Await.result(alarmService.getSeverity(key), timeout.duration)
-      assert(sev2 == SeverityLevel.Warning)
-      assert(callbackSev == SeverityLevel.Warning)
-      Thread.sleep(2000)
+      assert(sev2 == SeverityLevel.Critical) // alarm is latched, so stays at critical
+      assert(callbackSev == SeverityLevel.Critical)
+      Await.ready(alarmService.acknowledgeAlarm(key), timeout.duration)
+      Thread.sleep(200)
+      val sev3 = Await.result(alarmService.getSeverity(key), timeout.duration)
+      assert(sev3 == SeverityLevel.Okay) // alarm was cleared
+      assert(callbackSev == SeverityLevel.Okay)
+      Thread.sleep(delayMs) // wait for severity to expire
+      val sev4 = Await.result(alarmService.getSeverity(key), timeout.duration)
+      assert(sev4 == SeverityLevel.Indeterminate) // alarm severity key expired
       assert(callbackSev == SeverityLevel.Indeterminate)
       alarmMonitor.stop()
-    } catch {
-      case e: Exception ⇒ e.printStackTrace()
     } finally {
       // Shutdown Redis
       alarmService.shutdown()
