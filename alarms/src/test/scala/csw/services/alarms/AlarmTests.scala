@@ -87,24 +87,33 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       val key = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
       val alarmMonitor = alarmService.monitorAlarms(key, None, Some(printAlarmStatus _))
       Thread.sleep(1000) // make sure actor has started
+
       Await.ready(alarmService.setSeverity(key, SeverityLevel.Critical), timeout.duration)
       Thread.sleep(delayMs) // wait for severity to expire
+
       val sev1 = Await.result(alarmService.getSeverity(key), timeout.duration)
       assert(sev1 == SeverityLevel.Critical) // alarm is latched, so stays at critical
       assert(callbackSev == SeverityLevel.Critical)
+
       Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
       val sev2 = Await.result(alarmService.getSeverity(key), timeout.duration)
       assert(sev2 == SeverityLevel.Critical) // alarm is latched, so stays at critical
       assert(callbackSev == SeverityLevel.Critical)
+
+      // Acknowledge the alarm, which clears it, resets it back to Okay
       Await.ready(alarmService.acknowledgeAlarm(key), timeout.duration)
-      Thread.sleep(200)
+
+      Thread.sleep(500) // Give redis time to notify the callback, so the test below passes
       val sev3 = Await.result(alarmService.getSeverity(key), timeout.duration)
       assert(sev3 == SeverityLevel.Okay) // alarm was cleared
       assert(callbackSev == SeverityLevel.Okay)
-      Thread.sleep(delayMs) // wait for severity to expire
+
+      Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
       val sev4 = Await.result(alarmService.getSeverity(key), timeout.duration)
       assert(sev4 == SeverityLevel.Indeterminate) // alarm severity key expired
       assert(callbackSev == SeverityLevel.Indeterminate)
+
+      // Stop the actor monitoring the alarm
       alarmMonitor.stop()
     } finally {
       // Shutdown Redis

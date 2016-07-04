@@ -42,5 +42,7 @@ class AsConsoleTests extends TestKit(AsConsoleTests.system) with FunSuiteLike wi
 
     // Later, in another JVM, run the asconsole command to initialize the Redis database from the alarm service config file.
     AsConsole.main(Array("--as-name", asName, "--init", ascf.getAbsolutePath, "--list", "--no-exit", "--shutdown"))
+
+    // XXX TODO: Test the options
   }
 }
