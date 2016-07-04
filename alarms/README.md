@@ -51,7 +51,7 @@ Wildcards in Alarm Keys
 -----------------------
 
 Some Alarm Service methods allow Alarm keys to contain wildcards. The AlarmKey class lets you
-leave out anay of the parameters, defaulting them to "*", which matches any subsystem, component or alarm name.
+leave out any of the parameters, defaulting them to "*", which matches any subsystem, component or alarm name.
 For example, to get a list all alarms in the TCS subsystem:
 
 ```scala
@@ -232,7 +232,7 @@ trait AlarmService {
   def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit]
 
   /**
-   * Starts monitoring the severity levels of the alarm(s) matching by the given key
+   * Starts monitoring the severity levels of the alarm(s) matching the given key
    *
    * @param alarmKey      the key for the alarm
    * @param subscriberOpt if defined, an actor that will receive an AlarmStatus message whenever the severity of an alarm changes

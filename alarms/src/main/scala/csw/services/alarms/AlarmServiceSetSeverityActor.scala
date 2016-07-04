@@ -35,7 +35,7 @@ object AlarmServiceSetSeverityActor {
   }
 }
 
-private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel], expireSecs: Int)
+private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel])
     extends Actor with ActorLogging {
 
   import AlarmServiceSetSeverityActor._
