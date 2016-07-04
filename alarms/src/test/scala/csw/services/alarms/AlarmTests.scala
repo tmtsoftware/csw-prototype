@@ -40,7 +40,7 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
     assert(Problem.errorCount(problems) == 0)
   }
 
-  test("Test initializing the alarm service and then listing the alarms") {
+  test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
     // Start redis and register it with the location service on port 7777.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port 7777" --port 7777

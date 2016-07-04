@@ -233,7 +233,7 @@ object LocationService {
    * @param path        the path part of the URI (default: empty)
    * @return an object that can be used to close the connection and unregister the service
    */
-  def registerHttpConnection(componentId: ComponentId, port: Int, path: String = "")(implicit system: ActorRefFactory): Future[RegistrationResult] = {
+  def registerHttpConnection(componentId: ComponentId, port: Int, path: String = "")(implicit system: ActorSystem): Future[RegistrationResult] = {
     import system.dispatcher
     val connection = HttpConnection(componentId)
     Future {

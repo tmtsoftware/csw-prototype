@@ -219,7 +219,10 @@ object AsConsole extends App {
 
   // Handle the --acknowledge option
   private def acknowledgeAlarm(alarmService: AlarmService, options: Options): Unit = {
-    alarmService.acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name), options.expire.get)
+    Await.ready(
+      alarmService.acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name), options.expire.get),
+      timeout.duration
+    )
   }
 }
 
