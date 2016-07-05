@@ -8,7 +8,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import AlarmService.Problem
 import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
-import csw.services.alarms.AlarmState.ShelvedState
+import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.loc.LocationService
 import csw.services.trackLocation.TrackLocation
 import org.scalatest.FunSuiteLike
@@ -116,6 +116,21 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
       assert(callbackSev == SeverityLevel.Indeterminate)
       Await.ready(alarmService.setShelvedState(key, ShelvedState.Normal), timeout.duration)
+      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(500) // Give redis time to notify the callback
+      assert(callbackSev == SeverityLevel.Warning)
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
+
+      // Test alarm in deactivated state
+      Await.ready(alarmService.acknowledgeAlarm(key), timeout.duration)
+      Await.ready(alarmService.setSeverity(key, SeverityLevel.Okay), timeout.duration)
+      Thread.sleep(500) // Give redis time to notify the callback
+      Await.ready(alarmService.setActivationState(key, ActivationState.OutOfService), timeout.duration)
+      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(500) // Give redis time to notify the callback
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
+      assert(callbackSev == SeverityLevel.Okay)
+      Await.ready(alarmService.setActivationState(key, ActivationState.Normal), timeout.duration)
       Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
       Thread.sleep(500) // Give redis time to notify the callback
       assert(callbackSev == SeverityLevel.Warning)
