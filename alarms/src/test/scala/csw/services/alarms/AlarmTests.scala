@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import AlarmService.Problem
 import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
+import csw.services.alarms.AlarmState.ShelvedState
 import csw.services.loc.LocationService
 import csw.services.trackLocation.TrackLocation
 import org.scalatest.FunSuiteLike
@@ -91,27 +92,34 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       Await.ready(alarmService.setSeverity(key, SeverityLevel.Critical), timeout.duration)
       Thread.sleep(delayMs) // wait for severity to expire
 
-      val sev1 = Await.result(alarmService.getSeverity(key), timeout.duration)
-      assert(sev1 == SeverityLevel.Critical) // alarm is latched, so stays at critical
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Critical) // alarm is latched, so stays at critical
       assert(callbackSev == SeverityLevel.Critical)
 
       Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
-      val sev2 = Await.result(alarmService.getSeverity(key), timeout.duration)
-      assert(sev2 == SeverityLevel.Critical) // alarm is latched, so stays at critical
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Critical) // alarm is latched, so stays at critical
       assert(callbackSev == SeverityLevel.Critical)
 
       // Acknowledge the alarm, which clears it, resets it back to Okay
       Await.ready(alarmService.acknowledgeAlarm(key), timeout.duration)
-
       Thread.sleep(500) // Give redis time to notify the callback, so the test below passes
-      val sev3 = Await.result(alarmService.getSeverity(key), timeout.duration)
-      assert(sev3 == SeverityLevel.Okay) // alarm was cleared
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Okay) // alarm was cleared
       assert(callbackSev == SeverityLevel.Okay)
 
       Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
-      val sev4 = Await.result(alarmService.getSeverity(key), timeout.duration)
-      assert(sev4 == SeverityLevel.Indeterminate) // alarm severity key expired
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Indeterminate) // alarm severity key expired
       assert(callbackSev == SeverityLevel.Indeterminate)
+
+      // Test alarm in shelved state
+      Await.ready(alarmService.setShelvedState(key, ShelvedState.Shelved), timeout.duration)
+      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(500) // Give redis time to notify the callback
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
+      assert(callbackSev == SeverityLevel.Indeterminate)
+      Await.ready(alarmService.setShelvedState(key, ShelvedState.Normal), timeout.duration)
+      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(500) // Give redis time to notify the callback
+      assert(callbackSev == SeverityLevel.Warning)
+      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
 
       // Stop the actor monitoring the alarm
       alarmMonitor.stop()
