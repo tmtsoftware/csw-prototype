@@ -34,6 +34,7 @@ object AsConsole extends App {
   private case class Options(
     asName:          Option[String] = None, // Alarm Service name
     asConfig:        Option[File]   = None, // Alarm Service Config File (ASCF)
+    reset:           Boolean        = false,
     listAlarms:      Boolean        = false,
     shutdown:        Boolean        = false,
     subsystem:       Option[String] = None,
@@ -63,6 +64,10 @@ object AsConsole extends App {
     opt[File]("init") valueName "<alarm-service-config-file>" action { (x, c) ⇒
       c.copy(asConfig = Some(x))
     } text "Initialize the set of available alarms from the given Alarm Service Config File (ASCF)"
+
+    opt[Unit]("reset") action { (x, c) ⇒
+      c.copy(reset = true)
+    } text "When used with --init, deletes the existing alarm data before importing"
 
     opt[Unit]("list").action((_, c) ⇒
       c.copy(listAlarms = true)).text("Prints a list of all alarms (See other options to filter what is printed)")
@@ -169,7 +174,7 @@ object AsConsole extends App {
 
   // Handle the --init option
   private def init(alarmService: AlarmService, file: File, options: Options): Unit = {
-    val problems = Await.result(alarmService.initAlarms(file), timeout.duration)
+    val problems = Await.result(alarmService.initAlarms(file, options.reset), timeout.duration)
     Problem.printProblems(problems)
     if (Problem.errorCount(problems) != 0) error(s"Failed to initialize Alarm Service with $file")
   }

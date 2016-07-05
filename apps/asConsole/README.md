@@ -12,6 +12,8 @@ Usage: asconsole [options]
         The name that was used to register the Alarm Service Redis instance (Default: 'Alarm Service')
   --init <alarm-service-config-file>
         Initialize the set of available alarms from the given Alarm Service Config File (ASCF)
+  --reset
+        When used with --init, deletes the existing alarm data before importing
   --list
         Prints a list of all alarms (See other options to filter what is printed)
   --shutdown

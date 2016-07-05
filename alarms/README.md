@@ -124,43 +124,8 @@ Command Line Application: asconsole
 -----------------------------------
 
 The [asconsole application](../apps/asConsole) can be used from the command line to work with and test the Alarm Service.
+It can be used to initialize the alarm data, set and get an alarm's severity, monitor alarms, etc.
 
-```
-asconsole 0.2-SNAPSHOT
-Usage: asconsole [options]
-
-  --as-name <name>
-        The name that was used to register the Alarm Service Redis instance (Default: 'Alarm Service')
-  --init <alarm-service-config-file>
-        Initialize the set of available alarms from the given Alarm Service Config File (ASCF)
-  --list
-        Prints a list of all alarms (See other options to filter what is printed)
-  --shutdown
-        Shuts down the Alarm Service Redis instance
-  --subsystem <subsystem>
-        Limits the alarms returned by --list to the given subsystem
-  --component <name>
-        Limits the alarms returned by --list to the given component (subsystem must also be specified)
-  --name <name>
-        Limits the alarms returned by --list to those whose name matches the given value (may contain Redis wildcards)
-  --severity <severity>
-        Sets the severity level for the alarm given by (--subsystem, --component, --name) to the given level (Alarm must be unique)
-  --monitor
-        Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name) (may contain Redis wildcards)
-  --acknowledge
-        Acknowledge the alarm given by (--subsystem, --component, --name) (Alarm must be unique)
-  --refresh
-        Continually refresh the given alarm's severity before it expires (use together with --subsystem, --component, --name, --severity)
-  --refresh-secs <value>
-        When --refresh was specified, the number of seconds between refreshes of the alarm's severity
-  --no-exit
-        For testing: prevents application from exiting the JVM
-  --log <log-level>
-        For testing: Sets the log level (default: OFF, choices: TRACE, DEBUG, INFO, WARN, ERROR, OFF)
-  --help
-
-  --version
-```
 
 Alarm Scala API
 ---------------
@@ -169,6 +134,9 @@ The Alarm Service Scala API is defined in the [AlarmService](src/main/scala/csw/
 
 ```scala
 trait AlarmService {
+
+  import AlarmService._
+
   /**
    * Alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
    */
@@ -178,9 +146,10 @@ trait AlarmService {
    * Initialize the alarm data in the Redis instance using the given file
    *
    * @param inputFile       the alarm service config file containing info about all the alarms
+   * @param reset           if true, delete the current alarms before importing (default: false)
    * @return a future list of problems that occurred while validating the config file or ingesting the data into Redis
    */
-  def initAlarms(inputFile: File): Future[List[Problem]]
+  def initAlarms(inputFile: File, reset: Boolean = false): Future[List[Problem]]
 
   /**
    * Gets the alarm information from Redis for any matching alarms
@@ -246,5 +215,4 @@ trait AlarmService {
    */
   def shutdown(): Unit
 }
-
 ```

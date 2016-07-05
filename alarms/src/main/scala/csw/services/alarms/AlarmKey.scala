@@ -5,13 +5,13 @@ package csw.services.alarms
  */
 object AlarmKey {
   // Prefix for the static alarm data (See AlarmModel)
-  private val alarmKeyPrefix = "alarm:"
+  private[alarms] val alarmKeyPrefix = "alarm:"
 
   // Prefix for storing the alarm's severity level
-  private val severityKeyPrefix = "severity:"
+  private[alarms] val severityKeyPrefix = "severity:"
 
   // Prefix for storing the alarm's state (latched, acknowledged, etc.)
-  private val alarmStateKeyPrefix = "astate:"
+  private[alarms] val alarmStateKeyPrefix = "astate:"
 
   /**
    * Creates an alarm key from the information in the model

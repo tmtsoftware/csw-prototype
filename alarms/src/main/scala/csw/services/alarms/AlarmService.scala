@@ -241,9 +241,10 @@ trait AlarmService {
    * Initialize the alarm data in the Redis instance using the given file
    *
    * @param inputFile       the alarm service config file containing info about all the alarms
+   * @param reset           if true, delete the current alarms before importing (default: false)
    * @return a future list of problems that occurred while validating the config file or ingesting the data into Redis
    */
-  def initAlarms(inputFile: File): Future[List[Problem]]
+  def initAlarms(inputFile: File, reset: Boolean = false): Future[List[Problem]]
 
   /**
    * Gets the alarm information from Redis for any matching alarms
@@ -322,7 +323,24 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   import AlarmService._
   import system.dispatcher
 
-  override def initAlarms(inputFile: File): Future[List[Problem]] = {
+  // If reset is true, deletes all alarm data in Redis. (Note: DEL does not take wildcards!)
+  private def checkReset(reset: Boolean): Future[Unit] = {
+    def deleteKeys(keys: Seq[String]): Future[Unit] = {
+      if (keys.nonEmpty) redisClient.del(keys: _*).map(_ ⇒ ()) else Future.successful(())
+    }
+
+    if (reset) {
+      val pattern1 = s"${AlarmKey.alarmKeyPrefix}*"
+      val pattern2 = s"${AlarmKey.severityKeyPrefix}*"
+      val pattern3 = s"${AlarmKey.alarmStateKeyPrefix}*"
+      val f1 = redisClient.keys(pattern1).flatMap(deleteKeys)
+      val f2 = redisClient.keys(pattern2).flatMap(deleteKeys)
+      val f3 = redisClient.keys(pattern3).flatMap(deleteKeys)
+      Future.sequence(List(f1, f2, f3)).map(_ ⇒ ())
+    } else Future.successful(())
+  }
+
+  override def initAlarms(inputFile: File, reset: Boolean): Future[List[Problem]] = {
     import net.ceedubs.ficus.Ficus._
     // Use JSON schema to validate the file
     val inputConfig = ConfigFactory.parseFile(inputFile).resolve(ConfigResolveOptions.noSystem())
@@ -333,19 +351,24 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     } else {
       val alarmConfigs = inputConfig.as[List[Config]]("alarms")
       val alarms = alarmConfigs.map(AlarmModel(_))
-
-      val fList = alarms.map { alarm ⇒
-        val alarmKey = AlarmKey(alarm)
-        logger.info(s"Adding alarm: subsystem: ${alarm.subsystem}, component: ${alarm.component}, ${alarm.name}")
-        // store the static alarm data, alarm state, and the initial severity in redis
-        for {
-          _ ← redisClient.hmset(alarmKey.key, alarm.asMap())
-          _ ← redisClient.hmset(alarmKey.stateKey, AlarmState().asMap())
-          _ ← setSeverity(alarmKey, SeverityLevel.Indeterminate) // XXX could simplify this on init and do simple set?
-        } yield ()
-      }
-      Future.sequence(fList).map(_ ⇒ Nil) // Nil means No problems...
+      // Reset the db if requested, then initialize the alarm db (Nil means return No problems...)
+      checkReset(reset).flatMap(_ ⇒ initAlarms(alarms).map(_ ⇒ Nil))
     }
+  }
+
+  // Initialize the Redis db with the given list of alarms
+  private def initAlarms(alarms: List[AlarmModel]): Future[Unit] = {
+    val fList = alarms.map { alarm ⇒
+      val alarmKey = AlarmKey(alarm)
+      logger.info(s"Adding alarm: subsystem: ${alarm.subsystem}, component: ${alarm.component}, ${alarm.name}")
+      // store the static alarm data, alarm state, and the initial severity in redis
+      for {
+        _ ← redisClient.hmset(alarmKey.key, alarm.asMap())
+        _ ← redisClient.hmset(alarmKey.stateKey, AlarmState().asMap())
+        _ ← setSeverity(alarmKey, SeverityLevel.Indeterminate) // XXX could simplify this on init and do simple set?
+      } yield ()
+    }
+    Future.sequence(fList).map(_ ⇒ ())
   }
 
   override def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]] = {
