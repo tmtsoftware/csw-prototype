@@ -144,10 +144,10 @@ case class AlarmState(
    * @return The contents of this object as a map
    */
   def asMap(): Map[String, String] = Map(
-    acknowledgedStateField → acknowledgedState.toString,
-    latchedStateField → latchedState.toString,
-    latchedSeverityField → latchedSeverity.toString,
-    shelvedStateField → shelvedState.toString,
-    activationStateField → activationState.toString
+    acknowledgedStateField → acknowledgedState.name,
+    latchedStateField → latchedState.name,
+    latchedSeverityField → latchedSeverity.name,
+    shelvedStateField → shelvedState.name,
+    activationStateField → activationState.name
   )
 }
