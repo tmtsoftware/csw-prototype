@@ -143,8 +143,9 @@ object AlarmModel extends ByteStringDeserializerDefault {
    *
    * @param alarm the static alarm data
    * @param severity the current alarm severity level
+   * @param state the current alarm state (indicates if the alarm needs acknowledgement, etc.)
    */
-  case class AlarmStatus(alarm: AlarmModel, severity: SeverityLevel)
+  case class AlarmStatus(alarm: AlarmModel, severity: SeverityLevel, state: AlarmState)
 
   /**
    * Initializes an AlarmModel from the given Config

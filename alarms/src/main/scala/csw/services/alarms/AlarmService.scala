@@ -14,7 +14,7 @@ import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
 import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
-import csw.services.alarms.AlarmState.{AcknowledgedState, LatchedState}
+import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.HttpConnection
 import csw.services.loc.LocationService.ResolvedHttpLocation
@@ -240,8 +240,8 @@ trait AlarmService {
   /**
    * Initialize the alarm data in the Redis instance using the given file
    *
-   * @param inputFile       the alarm service config file containing info about all the alarms
-   * @param reset           if true, delete the current alarms before importing (default: false)
+   * @param inputFile the alarm service config file containing info about all the alarms
+   * @param reset     if true, delete the current alarms before importing (default: false)
    * @return a future list of problems that occurred while validating the config file or ingesting the data into Redis
    */
   def initAlarms(inputFile: File, reset: Boolean = false): Future[List[Problem]]
@@ -273,8 +273,8 @@ trait AlarmService {
   /**
    * Sets and publishes the severity level for the given alarm
    *
-   * @param alarmKey        the key for the alarm
-   * @param severity        the new value of the severity
+   * @param alarmKey the key for the alarm
+   * @param severity the new value of the severity
    * @return a future indicating when the operation has completed
    */
   def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit]
@@ -290,10 +290,28 @@ trait AlarmService {
   /**
    * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
    *
-   * @param alarmKey        the key for the alarm
+   * @param alarmKey the key for the alarm
    * @return a future indicating when the operation has completed
    */
   def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit]
+
+  /**
+   * Sets the shelved state of the alarm
+   *
+   * @param alarmKey     the key for the alarm
+   * @param shelvedState the shelved state
+   * @return a future indicating when the operation has completed
+   */
+  def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): Future[Unit]
+
+  /**
+   * Sets the activation state of the alarm
+   *
+   * @param alarmKey        the key for the alarm
+   * @param activationState the activation state
+   * @return a future indicating when the operation has completed
+   */
+  def setActivationState(alarmKey: AlarmKey, activationState: ActivationState): Future[Unit]
 
   /**
    * Starts monitoring the severity levels of the alarm(s) matching the given key
@@ -522,6 +540,14 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     val f3 = redisTransaction.exec()
 
     Future.sequence(List(f1, f2, f3)).map(_ ⇒ ())
+  }
+
+  override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): Future[Unit] = {
+    redisClient.hset(alarmKey.stateKey, AlarmState.shelvedStateField, shelvedState.name).map(_ ⇒ ())
+  }
+
+  override def setActivationState(alarmKey: AlarmKey, activationState: ActivationState): Future[Unit] = {
+    redisClient.hset(alarmKey.stateKey, AlarmState.activationStateField, activationState.name).map(_ ⇒ ())
   }
 
   override def monitorAlarms(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor = {

@@ -10,6 +10,7 @@ import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
 import csw.services.alarms.{AlarmJson, AlarmKey, AlarmService, AlarmServiceSetSeverityActor}
 import org.slf4j.LoggerFactory
 import AlarmService.Problem
+import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -32,21 +33,23 @@ object AsConsole extends App {
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    asName:          Option[String] = None, // Alarm Service name
-    asConfig:        Option[File]   = None, // Alarm Service Config File (ASCF)
-    reset:           Boolean        = false,
-    listAlarms:      Boolean        = false,
-    shutdown:        Boolean        = false,
-    subsystem:       Option[String] = None,
-    component:       Option[String] = None,
-    name:            Option[String] = None, // Alarm name (with wildcards)
-    severity:        Option[String] = None,
-    refreshSecs:     Option[Int]    = Some(5),
-    refreshSeverity: Boolean        = false,
-    monitorAlarms:   Boolean        = false,
-    acknowledge:     Boolean        = false,
-    logLevel:        Option[String] = Some("OFF"),
-    noExit:          Boolean        = false
+    asName:          Option[String]  = None, // Alarm Service name
+    asConfig:        Option[File]    = None, // Alarm Service Config File (ASCF)
+    reset:           Boolean         = false,
+    listAlarms:      Boolean         = false,
+    shutdown:        Boolean         = false,
+    subsystem:       Option[String]  = None,
+    component:       Option[String]  = None,
+    name:            Option[String]  = None, // Alarm name (with wildcards)
+    severity:        Option[String]  = None,
+    refreshSecs:     Option[Int]     = Some(5),
+    refreshSeverity: Boolean         = false,
+    monitorAlarms:   Boolean         = false,
+    acknowledge:     Boolean         = false,
+    shelved:         Option[Boolean] = None,
+    activated:       Option[Boolean] = None,
+    logLevel:        Option[String]  = Some("OFF"),
+    noExit:          Boolean         = false
   )
 
   // XXX TODO: Add options for --list output format: pdf, html, json, config, text?
@@ -99,6 +102,14 @@ object AsConsole extends App {
       c.copy(acknowledge = true)
     } text "Acknowledge the alarm given by (--subsystem, --component, --name) (Alarm must be unique)"
 
+    opt[Boolean]("shelved") action { (x, c) ⇒
+      c.copy(shelved = Some(x))
+    } text "Set the shelved state of the alarm to true (shelved), or false (normal)"
+
+    opt[Boolean]("activated") action { (x, c) ⇒
+      c.copy(activated = Some(x))
+    } text "Set the activated state of the alarm to true (activated), or false (normal)"
+
     opt[Unit]("refresh") action { (x, c) ⇒
       c.copy(refreshSeverity = true)
     } text "Continually refresh the given alarm's severity before it expires (use together with --subsystem, --component, --name, --severity)"
@@ -147,6 +158,8 @@ object AsConsole extends App {
 
     options.asConfig foreach (init(alarmService, _, options))
     options.severity.foreach(setSeverity(alarmService, _, options))
+    options.shelved.foreach(setShelved(alarmService, _, options))
+    options.activated.foreach(setActivated(alarmService, _, options))
     if (options.refreshSeverity) refreshSeverity(alarmService, options)
     if (options.listAlarms) list(alarmService, options)
     if (options.monitorAlarms) monitorAlarms(alarmService, options)
@@ -188,6 +201,26 @@ object AsConsole extends App {
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
     Await.ready(alarmService.setSeverity(key, severity.get), timeout.duration)
+  }
+
+  // Handle --shelved option (set selected alarm's shelved state)
+  private def setShelved(alarmService: AlarmService, shelved: Boolean, options: Options): Unit = {
+    val shelvedState = if (shelved) ShelvedState.Shelved else ShelvedState.Normal
+    if (options.subsystem.isEmpty) error("Missing required --subsystem option")
+    if (options.component.isEmpty) error("Missing required --component option")
+    if (options.name.isEmpty) error("Missing required --name option (alarm name)")
+    val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
+    Await.ready(alarmService.setShelvedState(key, shelvedState), timeout.duration)
+  }
+
+  // Handle --activated option (set selected alarm's activated state)
+  private def setActivated(alarmService: AlarmService, activated: Boolean, options: Options): Unit = {
+    val activatedState = if (activated) ActivationState.Normal else ActivationState.OutOfService
+    if (options.subsystem.isEmpty) error("Missing required --subsystem option")
+    if (options.component.isEmpty) error("Missing required --component option")
+    if (options.name.isEmpty) error("Missing required --name option (alarm name)")
+    val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
+    Await.ready(alarmService.setActivationState(key, activatedState), timeout.duration)
   }
 
   // Handle --refresh option (start an actor to continually refresh the selected alarm severity)
