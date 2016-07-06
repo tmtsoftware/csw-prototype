@@ -37,10 +37,6 @@ object AlarmService {
    */
   val defaultName = "Alarm Service"
 
-  // XXX TODO: Reverse the roles below: change refreshFactor to refreshSecs (5) and defaultExpireSecs to defaultExpireFactor (3)?
-
-  // XXX TODO: Move alarmExpireSecs param to AlarmService class (instead of passing it as an arg to some methods)
-
   /**
    * An alarm's severity should be refreshed every defaultRefreshSecs seconds
    * to make sure it does not expire and become "Indeterminate" (after maxMissedRefresh missed refreshes)
@@ -586,6 +582,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   private[alarms] def getHealth(alarmMap: Map[AlarmKey, HealthInfo]): Health = {
     def active(h: HealthInfo): Boolean = h.alarmState.shelvedState == ShelvedState.Normal && h.alarmState.activationState == ActivationState.Normal
     val severityLevels = alarmMap.values.filter(active).map(_.severityLevel).toList
+
     if (severityLevels.contains(SeverityLevel.Critical) || severityLevels.contains(SeverityLevel.Indeterminate))
       Health.Bad
     else if (severityLevels.contains(SeverityLevel.Major))

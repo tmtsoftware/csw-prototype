@@ -7,7 +7,7 @@ import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import AlarmService.Problem
-import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
+import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.loc.LocationService
 import csw.services.trackLocation.TrackLocation
@@ -57,8 +57,11 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
     // Time until alarm severity expires
     val expireSecs = refreshSecs * AlarmService.maxMissedRefresh
 
-    // Time of ms to wait to see if an alarm severity expired
-    val delayMs = expireSecs * 1000 + 500
+    // Time in ms to wait for a Redis callback
+    val shortDelayMs = 500
+
+    // Time in ms to wait to see if an alarm severity expired
+    val delayMs = expireSecs * 1000 + shortDelayMs
 
     // Later, in another JVM, initialize the list of alarms in Redis (using a small value for refreshSecs for testing)
     val alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)
@@ -74,8 +77,18 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
         logger.info(s"List Alarm: $alarm")
       }
 
+      // Test internal function
+      val map1 = Await.result(alarmService.asInstanceOf[AlarmServiceImpl].getHealthInfoMap(AlarmKey()), timeout.duration)
+      println(s"Total map: $map1")
+      assert(map1.size == 3)
+
+      val map2 = Await.result(alarmService.asInstanceOf[AlarmServiceImpl].getHealthInfoMap(AlarmKey(Some("NFIRAOS"))), timeout.duration)
+      println(s"NFIRAOS map: $map2")
+      assert(map2.size == 2)
+
       // For testing callback
       var callbackSev: SeverityLevel = SeverityLevel.Indeterminate
+      var callbackHealth: Option[Health] = None
 
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
@@ -84,60 +97,99 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
         callbackSev = alarmStatus.severity
       }
 
-      // Test setting and monitoring the alarm severity level
-      val key = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
-      val alarmMonitor = alarmService.monitorAlarms(key, None, Some(printAlarmStatus _))
-      Thread.sleep(1000) // make sure actor has started
+      // Called when the health status changes
+      def printHealthStatus(healthStatus: HealthStatus): Unit = {
+        val a = healthStatus.key
+        logger.info(s"Health Status: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
+        callbackHealth = Some(healthStatus.health)
+      }
 
-      Await.ready(alarmService.setSeverity(key, SeverityLevel.Critical), timeout.duration)
+      // Test working with an alarm and monitoring the alarm severity level
+      val key1 = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
+      val key2 = AlarmKey("NFIRAOS", "envCtrl", "minTemperature")
+      val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
+
+      val alarmMonitor = alarmService.monitorAlarms(key1, None, Some(printAlarmStatus _))
+      Thread.sleep(shortDelayMs) // make sure actor has started
+
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Critical), timeout.duration)
       Thread.sleep(delayMs) // wait for severity to expire
 
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Critical) // alarm is latched, so stays at critical
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Critical) // alarm is latched, so stays at critical
       assert(callbackSev == SeverityLevel.Critical)
 
-      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Critical) // alarm is latched, so stays at critical
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Warning), timeout.duration)
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Critical) // alarm is latched, so stays at critical
       assert(callbackSev == SeverityLevel.Critical)
 
       // Acknowledge the alarm, which clears it, resets it back to Okay
-      Await.ready(alarmService.acknowledgeAlarm(key), timeout.duration)
-      Thread.sleep(500) // Give redis time to notify the callback, so the test below passes
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Okay) // alarm was cleared
+      Await.ready(alarmService.acknowledgeAlarm(key1), timeout.duration)
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback, so the test below passes
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Okay) // alarm was cleared
       assert(callbackSev == SeverityLevel.Okay)
 
       Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Indeterminate) // alarm severity key expired
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Indeterminate) // alarm severity key expired
       assert(callbackSev == SeverityLevel.Indeterminate)
 
       // Test alarm in shelved state
-      Await.ready(alarmService.setShelvedState(key, ShelvedState.Shelved), timeout.duration)
-      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
-      Thread.sleep(500) // Give redis time to notify the callback
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
+      Await.ready(alarmService.setShelvedState(key1, ShelvedState.Shelved), timeout.duration)
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Warning)
       assert(callbackSev == SeverityLevel.Indeterminate)
-      Await.ready(alarmService.setShelvedState(key, ShelvedState.Normal), timeout.duration)
-      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
-      Thread.sleep(500) // Give redis time to notify the callback
+      Await.ready(alarmService.setShelvedState(key1, ShelvedState.Normal), timeout.duration)
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(callbackSev == SeverityLevel.Warning)
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Warning)
 
       // Test alarm in deactivated state
-      Await.ready(alarmService.acknowledgeAlarm(key), timeout.duration)
-      Await.ready(alarmService.setSeverity(key, SeverityLevel.Okay), timeout.duration)
-      Thread.sleep(500) // Give redis time to notify the callback
-      Await.ready(alarmService.setActivationState(key, ActivationState.OutOfService), timeout.duration)
-      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
-      Thread.sleep(500) // Give redis time to notify the callback
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
+      Await.ready(alarmService.acknowledgeAlarm(key1), timeout.duration)
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Okay), timeout.duration)
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback
+      Await.ready(alarmService.setActivationState(key1, ActivationState.OutOfService), timeout.duration)
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Warning)
       assert(callbackSev == SeverityLevel.Okay)
-      Await.ready(alarmService.setActivationState(key, ActivationState.Normal), timeout.duration)
-      Await.ready(alarmService.setSeverity(key, SeverityLevel.Warning), timeout.duration)
-      Thread.sleep(500) // Give redis time to notify the callback
+      Await.ready(alarmService.setActivationState(key1, ActivationState.Normal), timeout.duration)
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Warning), timeout.duration)
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(callbackSev == SeverityLevel.Warning)
-      assert(Await.result(alarmService.getSeverity(key), timeout.duration) == SeverityLevel.Warning)
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Warning)
 
-      // Stop the actor monitoring the alarm
+      // Test health monitor
+      val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
+      Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
+      Await.ready(alarmService.setSeverity(key3, SeverityLevel.Okay), timeout.duration)
+      val healthMonitor = alarmService.monitorHealth(nfKey, None, Some(printHealthStatus _))
+      Thread.sleep(shortDelayMs) // make sure actor has started
+      assert(callbackHealth.contains(Health.Good))
+      assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Good)
+
+      Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
+      assert(callbackHealth.contains(Health.Bad))
+      assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Bad)
+      assert(Await.result(alarmService.getHealth(AlarmKey()), timeout.duration) == Health.Bad)
+
+      Await.ready(alarmService.setSeverity(key2, SeverityLevel.Major), timeout.duration)
+      Await.ready(alarmService.setSeverity(key3, SeverityLevel.Okay), timeout.duration)
+
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback
+      assert(callbackHealth.contains(Health.Ill))
+      assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Ill)
+      Await.ready(alarmService.acknowledgeAlarm(key2), timeout.duration)
+
+      Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
+      Await.ready(alarmService.setSeverity(key3, SeverityLevel.Critical), timeout.duration)
+      Thread.sleep(shortDelayMs) // Give redis time to notify the callback
+      assert(callbackHealth.contains(Health.Bad))
+      assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Bad)
+
+      // Stop the actors monitoring the alarm and health
       alarmMonitor.stop()
+      healthMonitor.stop()
     } finally {
       // Shutdown Redis
       alarmService.shutdown()

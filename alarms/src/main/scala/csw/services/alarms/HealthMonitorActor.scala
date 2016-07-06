@@ -142,10 +142,14 @@ private class HealthMonitorWorkorActor(
   // expect updates to the alarm severity or state, then calculate the new health value
   private def working(alarmMap: Map[AlarmKey, HealthInfo]): Receive = {
     case h @ HealthInfo(alarmKey, severityLevel, alarmState) ⇒
-      val healthInfo = alarmMap(alarmKey)
-      if (healthInfo.severityLevel != h.severityLevel || healthInfo.alarmState != h.alarmState) {
-        context.become(working(alarmMap + (alarmKey → h)))
-        updateHealth(alarmMap)
+      val update = if (alarmMap.contains(alarmKey)) {
+        val healthInfo = alarmMap(alarmKey)
+        healthInfo.severityLevel != h.severityLevel || healthInfo.alarmState != h.alarmState
+      } else false
+      if (update) {
+        val newMap = alarmMap + (alarmKey → h)
+        context.become(working(newMap))
+        updateHealth(newMap)
       }
   }
 

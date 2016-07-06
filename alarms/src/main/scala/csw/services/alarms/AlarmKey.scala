@@ -5,13 +5,16 @@ package csw.services.alarms
  */
 object AlarmKey {
   // Prefix for the static alarm data (See AlarmModel)
-  private[alarms] val alarmKeyPrefix = "alarm:"
+  private[alarms] val alarmKeyPrefix = "alarm::"
 
   // Prefix for storing the alarm's severity level
-  private[alarms] val severityKeyPrefix = "severity:"
+  private[alarms] val severityKeyPrefix = "severity::"
 
   // Prefix for storing the alarm's state (latched, acknowledged, etc.)
-  private[alarms] val alarmStateKeyPrefix = "astate:"
+  private[alarms] val alarmStateKeyPrefix = "astate::"
+
+  // Separator for subsystem, component, name in alarm key
+  private val sep = ':'
 
   /**
    * Creates an alarm key from the information in the model
@@ -44,8 +47,8 @@ object AlarmKey {
    * @return the AlarmKey instance
    */
   def apply(key: String): AlarmKey = {
-    val k = if (key.contains(':')) key.substring(key.indexOf(':') + 1) else key
-    val subsystem :: component :: name :: _ = k.substring(alarmKeyPrefix.length).split(':').toList
+    val k = if (key.contains("::")) key.substring(key.indexOf("::") + 2) else key
+    val subsystem :: component :: name :: _ = k.split(sep).toList
     AlarmKey(subsystem, component, name)
   }
 }
@@ -54,10 +57,10 @@ object AlarmKey {
  * Represents a key used to store alarm data and publish the severity.
  */
 case class AlarmKey(subsystem: String, component: String, name: String) {
-
   import AlarmKey._
+  private val k = s"$subsystem$sep$component$sep$name"
 
-  val key = s"$alarmKeyPrefix$subsystem:$component:$name"
-  val severityKey = severityKeyPrefix + key
-  val stateKey = alarmStateKeyPrefix + key
+  val key = alarmKeyPrefix + k
+  val severityKey = severityKeyPrefix + k
+  val stateKey = alarmStateKeyPrefix + k
 }
