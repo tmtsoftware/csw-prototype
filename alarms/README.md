@@ -124,6 +124,8 @@ alarms = [
 ]
 ```
 
+The allowed values for *alarmType* and *severityLevels* are defined in the [AlarmModel](src/main/scala/csw/services/alarms/AlarmModel.scala) class.
+
 Command Line Application: asconsole
 -----------------------------------
 

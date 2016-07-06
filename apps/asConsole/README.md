@@ -9,7 +9,8 @@ asconsole 0.2-SNAPSHOT
 Usage: asconsole [options]
 
   --as-name <name>
-        The name that was used to register the Alarm Service Redis instance (Default: 'Alarm Service')
+        The name that was used to register the Alarm Service Redis instance
+        (Default: 'Alarm Service')
   --init <alarm-service-config-file>
         Initialize the set of available alarms from the given Alarm Service Config File (ASCF)
   --reset
@@ -21,11 +22,14 @@ Usage: asconsole [options]
   --subsystem <subsystem>
         Limits the selected alarms to those belonging to the given subsystem
   --component <name>
-        Limits the selected alarms to those belonging to the given component (subsystem should also be specified)
+        Limits the selected alarms to those belonging to the given component
+        (subsystem should also be specified)
   --name <name>
-        Limits the selected alarms to those whose name matches the given value (may contain Redis wildcards)
+        Limits the selected alarms to those whose name matches the given value
+        (may contain Redis wildcards)
   --severity <severity>
-        Sets the severity level for the alarm given by (--subsystem, --component, --name) to the given level (Alarm must be unique)
+        Sets the severity level for the alarm given by (--subsystem, --component, --name)
+        to the given level (Alarm must be unique)
   --monitor-alarms <shell-command>
         Starts monitoring changes in the severity of alarm(s) given by
         (--subsystem, --component, --name) and calls the shell command with args:
@@ -40,7 +44,8 @@ Usage: asconsole [options]
   --activated <value>
         Set the activated state of the alarm to true (activated), or false (normal)
   --refresh
-        Continually refresh the given alarm's severity before it expires (use together with --subsystem, --component, --name, --severity)
+        Continually refresh the given alarm's severity before it expires
+        (use together with --subsystem, --component, --name, --severity)
   --refresh-secs <value>
         When --refresh was specified, the number of seconds between refreshes of the alarm's severity
   --no-exit
