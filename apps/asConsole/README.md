@@ -19,17 +19,26 @@ Usage: asconsole [options]
   --shutdown
         Shuts down the Alarm Service Redis instance
   --subsystem <subsystem>
-        Limits the alarms returned by --list to the given subsystem
+        Limits the selected alarms to those belonging to the given subsystem
   --component <name>
-        Limits the alarms returned by --list to the given component (subsystem must also be specified)
+        Limits the selected alarms to those belonging to the given component (subsystem should also be specified)
   --name <name>
-        Limits the alarms returned by --list to those whose name matches the given value (may contain Redis wildcards)
+        Limits the selected alarms to those whose name matches the given value (may contain Redis wildcards)
   --severity <severity>
         Sets the severity level for the alarm given by (--subsystem, --component, --name) to the given level (Alarm must be unique)
-  --monitor
-        Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name) (may contain Redis wildcards)
+  --monitor-alarms <shell-command>
+        Starts monitoring changes in the severity of alarm(s) given by
+        (--subsystem, --component, --name) and calls the shell command with args:
+        (subsystem, component, name, severity)
+  --monitor-health <shell-command>
+        Starts monitoring the health of the subsystems or components given by
+        (--subsystem, --component, --name) and calls the shell command with one arg: Good, Ill or Bad
   --acknowledge
         Acknowledge the alarm given by (--subsystem, --component, --name) (Alarm must be unique)
+  --shelved <value>
+        Set the shelved state of the alarm to true (shelved), or false (normal)
+  --activated <value>
+        Set the activated state of the alarm to true (activated), or false (normal)
   --refresh
         Continually refresh the given alarm's severity before it expires (use together with --subsystem, --component, --name, --severity)
   --refresh-secs <value>
@@ -67,10 +76,17 @@ Load the alarm information from the config file (Alarm Service Config File):
 
 Once this command completes, you can start monitoring changes in an alarm's severity with this command:
 
-    asconsole --subsystem TCS --component tcsPk --name cpuExceededAlarm --monitor --log DEBUG
+    asconsole --subsystem TCS --component tcsPk --name cpuExceededAlarm --monitor-alarms "echo ALARM: " --monitor-health "echo HEALTH: "
 
-In this example we are monitoring changes in an alarm in the `TCS` subsystem, component `tcsPk`, with the name `cpuExceededAlarm`.
-This command does not exit. It continues to run and prints out any changes in the alarm's severity.
+In this example we are monitoring changes in alarms in the `TCS` subsystem, component `tcsPk`, with the name `cpuExceededAlarm`.
+If you leave off the --name option, all alarms in the component are monitored. If the --component option is missing,
+all alarms in the subsystem are monitored. If --subsystem is missing, all alarms in all subsystems are monitored.
+This command does not exit. It continues to run and executes the given shell command whenever there are changes in the
+alarm's severity or the health value.
+
+In the above example, the "echo" shell command was passed to print out the alarm's severity or the health value.
+You can pass any shell command here. The --monitor-alarms option takes four arguments: *subsystem component name severity*.
+The --monitor-health option is a script that takes just one option: the health value: _Good, Ill or Bad_.
 
 To change the severity of the alarm to Critical, use this command:
 

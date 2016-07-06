@@ -44,8 +44,8 @@ object AsConsole extends App {
     severity:        Option[String]  = None,
     refreshSecs:     Option[Int]     = Some(5),
     refreshSeverity: Boolean         = false,
-    monitorAlarms:   Boolean         = false,
-    monitorHealth:   Boolean         = false,
+    monitorAlarms:   Option[String]  = None,
+    monitorHealth:   Option[String]  = None,
     acknowledge:     Boolean         = false,
     shelved:         Option[Boolean] = None,
     activated:       Option[Boolean] = None,
@@ -95,13 +95,13 @@ object AsConsole extends App {
       c.copy(severity = Some(x))
     } text "Sets the severity level for the alarm given by (--subsystem, --component, --name) to the given level (Alarm must be unique)"
 
-    opt[Unit]("monitor-alarms") action { (x, c) ⇒
-      c.copy(monitorAlarms = true)
-    } text "Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name)"
+    opt[String]("monitor-alarms") valueName "<shell-command>" action { (x, c) ⇒
+      c.copy(monitorAlarms = Some(x))
+    } text "Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name) and calls the shell command with args: (subsystem, component, name, severity)"
 
-    opt[Unit]("monitor-health") action { (x, c) ⇒
-      c.copy(monitorHealth = true)
-    } text "Starts monitoring the health of the subsystems or components given by (--subsystem, --component, --name)"
+    opt[String]("monitor-health") valueName "<shell-command>" action { (x, c) ⇒
+      c.copy(monitorHealth = Some(x))
+    } text "Starts monitoring the health of the subsystems or components given by (--subsystem, --component, --name) and calls the shell command with one arg: Good, Ill or Bad"
 
     opt[Unit]("acknowledge") action { (x, c) ⇒
       c.copy(acknowledge = true)
@@ -167,7 +167,7 @@ object AsConsole extends App {
     options.activated.foreach(setActivated(alarmService, _, options))
     if (options.refreshSeverity) refreshSeverity(alarmService, options)
     if (options.listAlarms) list(alarmService, options)
-    if (options.monitorAlarms) monitorAlarms(alarmService, options)
+    if (options.monitorAlarms.isDefined || options.monitorHealth.isDefined) monitor(alarmService, options)
     if (options.acknowledge) acknowledgeAlarm(alarmService, options)
 
     if (options.shutdown) {
@@ -175,8 +175,8 @@ object AsConsole extends App {
       alarmService.shutdown()
     }
 
-    // Shutdown and exit
-    if (!options.noExit && !options.monitorAlarms && !options.refreshSeverity) {
+    // Shutdown and exit, unless an option was given that indicates keep running
+    if (!options.noExit && options.monitorAlarms.isEmpty && options.monitorHealth.isEmpty && !options.refreshSeverity) {
       system.terminate()
       System.exit(0)
     }
@@ -252,19 +252,28 @@ object AsConsole extends App {
   }
 
   // XXX TODO: make option execute a shell command
-  private def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
+  private def alarmStatusCallback(cmd: String)(alarmStatus: AlarmStatus): Unit = {
+    import scala.sys.process._
     val a = alarmStatus.alarmKey
-    println(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
+    //    println(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
+    s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.severity}".run()
   }
 
   // XXX TODO: make option execute a shell command
-  private def printHealthStatus(healthStatus: HealthStatus): Unit = {
-    println(s"Health for ${healthStatus.key}: ${healthStatus.health}")
+  private def healthStatusCallback(cmd: String)(healthStatus: HealthStatus): Unit = {
+    import scala.sys.process._
+    //    println(s"Health for ${healthStatus.key}: ${healthStatus.health}")
+    s"$cmd ${healthStatus.health}".run()
   }
 
-  // Handle the --monitor option
-  private def monitorAlarms(alarmService: AlarmService, options: Options): Unit = {
-    alarmService.monitorHealth(AlarmKey(options.subsystem, options.component, options.name), None, Some(printAlarmStatus _), Some(printHealthStatus _))
+  // Handle the --monitor* options
+  private def monitor(alarmService: AlarmService, options: Options): Unit = {
+    alarmService.monitorHealth(
+      AlarmKey(options.subsystem, options.component, options.name),
+      None,
+      options.monitorAlarms.map(alarmStatusCallback(_) _),
+      options.monitorHealth.map(healthStatusCallback(_) _)
+    )
   }
 
   // Handle the --acknowledge option

@@ -31,10 +31,11 @@ object HealthMonitorActor {
    */
   def props(
     alarmService: AlarmService,
-    alarmKey: AlarmKey,
-    subscriber: Option[ActorRef] = None,
-    notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
-    notifyHealth: Option[HealthStatus ⇒ Unit] = None): Props = {
+    alarmKey:     AlarmKey,
+    subscriber:   Option[ActorRef]            = None,
+    notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
+    notifyHealth: Option[HealthStatus ⇒ Unit] = None
+  ): Props = {
     Props(classOf[HealthMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber, notifyAlarm, notifyHealth)
   }
 }
@@ -43,17 +44,19 @@ object HealthMonitorActor {
 // changes in health
 private class HealthMonitorActor(
   alarmService: AlarmServiceImpl,
-  alarmKey: AlarmKey,
-  subscriber: Option[ActorRef],
-  notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
-  notifyHealth: Option[HealthStatus ⇒ Unit])
-  extends RedisSubscriberActor(
-    address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
-    channels = Seq.empty,
-    patterns = List("__key*__:*", alarmKey.severityKey),
-    authPassword = None,
-    onConnectStatus = (b: Boolean) ⇒ {})
-  with ByteStringSerializerLowPriority {
+  alarmKey:     AlarmKey,
+  subscriber:   Option[ActorRef],
+  notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
+  notifyHealth: Option[HealthStatus ⇒ Unit]
+)
+    extends RedisSubscriberActor(
+      address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
+      channels = Seq.empty,
+      patterns = List("__key*__:*", alarmKey.severityKey),
+      authPassword = None,
+      onConnectStatus = (b: Boolean) ⇒ {}
+    )
+    with ByteStringSerializerLowPriority {
 
   import context.dispatcher
 
@@ -89,7 +92,7 @@ private class HealthMonitorActor(
   // This gets the complete list of keys (Note that static keys always exist, but severity keys may expire).
   def initAlarmMap(): Unit = {
     alarmService.getHealthInfoMap(alarmKey).onComplete {
-      case Success(m) ⇒ worker ! InitialMap(m)
+      case Success(m)  ⇒ worker ! InitialMap(m)
       case Failure(ex) ⇒ log.error("Failed to initialize health from alarm severity and state", ex)
     }
   }
@@ -111,10 +114,11 @@ private object HealthMonitorWorkorActor {
    */
   def props(
     alarmService: AlarmServiceImpl,
-    alarmKey: AlarmKey,
-    subscriber: Option[ActorRef] = None,
-    notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
-    notifyHealth: Option[HealthStatus ⇒ Unit] = None): Props = {
+    alarmKey:     AlarmKey,
+    subscriber:   Option[ActorRef]            = None,
+    notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
+    notifyHealth: Option[HealthStatus ⇒ Unit] = None
+  ): Props = {
     Props(classOf[HealthMonitorWorkorActor], alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth)
   }
 }
@@ -122,11 +126,12 @@ private object HealthMonitorWorkorActor {
 // Manages a map of alarm severity and state, calculates health when something changes
 // and notifies the listeners when the health value changes
 private class HealthMonitorWorkorActor(
-  alarmService: AlarmServiceImpl,
-  alarmKeyPattern: AlarmKey,
-  subscriber: Option[ActorRef],
-  notifyAlarm: Option[AlarmStatus ⇒ Unit],
-  notifyHealth: Option[HealthStatus ⇒ Unit]) extends Actor with ActorLogging {
+    alarmService:    AlarmServiceImpl,
+    alarmKeyPattern: AlarmKey,
+    subscriber:      Option[ActorRef],
+    notifyAlarm:     Option[AlarmStatus ⇒ Unit],
+    notifyHealth:    Option[HealthStatus ⇒ Unit]
+) extends Actor with ActorLogging {
 
   var healthOpt: Option[Health] = None
 
