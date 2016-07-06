@@ -86,7 +86,9 @@ Once this command completes, you can start monitoring changes in an alarm's seve
 In this example we are monitoring changes in alarms in the `TCS` subsystem, component `tcsPk`, with the name `cpuExceededAlarm`.
 If you leave off the --name option, all alarms in the component are monitored. If the --component option is missing,
 all alarms in the subsystem are monitored. If --subsystem is missing, all alarms in all subsystems are monitored.
-This command does not exit. It continues to run and executes the given shell command whenever there are changes in the
+
+When one of the --monitor options is given, the asconsole command does not exit.
+It continues to run and executes the given shell command whenever there are changes in the
 alarm's severity or the health value.
 
 In the above example, the "echo" shell command was passed to print out the alarm's severity or the health value.
