@@ -3,7 +3,7 @@ package csw.services.alarms
 import java.net.InetSocketAddress
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import csw.services.alarms.AlarmModel.{Health, HealthStatus}
+import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus}
 import redis.{ByteStringDeserializer, ByteStringSerializerLowPriority}
 import redis.actors.RedisSubscriberActor
 import redis.api.pubsub.{Message, PMessage}
@@ -12,6 +12,7 @@ import scala.util.{Failure, Success}
 import HealthMonitorActor._
 import HealthMonitorWorkorActor._
 import csw.services.alarms.AlarmService.HealthInfo
+import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 
 /**
  * An actor that monitors selected subsystem or component health and notifies a method or
@@ -25,16 +26,16 @@ object HealthMonitorActor {
    *
    * @param alarmService used to get an alarm's severity and state
    * @param alarmKey     key matching all the alarms for a subsystem or component, etc.
-   * @param subscriber   an optional actor that will receive HealthStatus messages
-   * @param notify       an optional function that will be called with HealthStatus messages
+   * @param subscriber   an optional actor that will receive HealthStatus and AlarmStatus messages
+   * @param notifyHealth an optional function that will be called with HealthStatus messages
    */
   def props(
     alarmService: AlarmService,
-    alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]            = None,
-    notify:       Option[HealthStatus ⇒ Unit] = None
-  ): Props = {
-    Props(classOf[HealthMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber, notify)
+    alarmKey: AlarmKey,
+    subscriber: Option[ActorRef] = None,
+    notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
+    notifyHealth: Option[HealthStatus ⇒ Unit] = None): Props = {
+    Props(classOf[HealthMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber, notifyAlarm, notifyHealth)
   }
 }
 
@@ -42,23 +43,22 @@ object HealthMonitorActor {
 // changes in health
 private class HealthMonitorActor(
   alarmService: AlarmServiceImpl,
-  alarmKey:     AlarmKey,
-  subscriber:   Option[ActorRef],
-  notify:       Option[HealthStatus ⇒ Unit]
-)
-    extends RedisSubscriberActor(
-      address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
-      channels = Seq.empty,
-      patterns = List("__key*__:*", alarmKey.severityKey),
-      authPassword = None,
-      onConnectStatus = (b: Boolean) ⇒ {}
-    )
-    with ByteStringSerializerLowPriority {
+  alarmKey: AlarmKey,
+  subscriber: Option[ActorRef],
+  notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
+  notifyHealth: Option[HealthStatus ⇒ Unit])
+  extends RedisSubscriberActor(
+    address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
+    channels = Seq.empty,
+    patterns = List("__key*__:*", alarmKey.severityKey),
+    authPassword = None,
+    onConnectStatus = (b: Boolean) ⇒ {})
+  with ByteStringSerializerLowPriority {
 
   import context.dispatcher
 
   // Use a worker actor to keep track of the alarm severities and states, calculate health and notify listeners
-  var worker = context.actorOf(HealthMonitorWorkorActor.props(alarmService, alarmKey, subscriber, notify))
+  var worker = context.actorOf(HealthMonitorWorkorActor.props(alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth))
 
   // Initialize the complete map once at startup, and then keep it up to date by subscribing to the Redis key pattern
   initAlarmMap()
@@ -89,7 +89,7 @@ private class HealthMonitorActor(
   // This gets the complete list of keys (Note that static keys always exist, but severity keys may expire).
   def initAlarmMap(): Unit = {
     alarmService.getHealthInfoMap(alarmKey).onComplete {
-      case Success(m)  ⇒ worker ! InitialMap(m)
+      case Success(m) ⇒ worker ! InitialMap(m)
       case Failure(ex) ⇒ log.error("Failed to initialize health from alarm severity and state", ex)
     }
   }
@@ -107,26 +107,26 @@ private object HealthMonitorWorkorActor {
    * @param alarmService reference to alarm service instance
    * @param alarmKey     key matching all the alarms for a subsystem or component, etc.
    * @param subscriber   an optional actor that will receive HealthStatus messages
-   * @param notify       an optional function that will be called with HealthStatus messages
+   * @param notifyHealth       an optional function that will be called with HealthStatus messages
    */
   def props(
     alarmService: AlarmServiceImpl,
-    alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]            = None,
-    notify:       Option[HealthStatus ⇒ Unit] = None
-  ): Props = {
-    Props(classOf[HealthMonitorWorkorActor], alarmService, alarmKey, subscriber, notify)
+    alarmKey: AlarmKey,
+    subscriber: Option[ActorRef] = None,
+    notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
+    notifyHealth: Option[HealthStatus ⇒ Unit] = None): Props = {
+    Props(classOf[HealthMonitorWorkorActor], alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth)
   }
 }
 
 // Manages a map of alarm severity and state, calculates health when something changes
 // and notifies the listeners when the health value changes
 private class HealthMonitorWorkorActor(
-  alarmService:    AlarmServiceImpl,
+  alarmService: AlarmServiceImpl,
   alarmKeyPattern: AlarmKey,
-  subscriber:      Option[ActorRef],
-  notify:          Option[HealthStatus ⇒ Unit]
-) extends Actor with ActorLogging {
+  subscriber: Option[ActorRef],
+  notifyAlarm: Option[AlarmStatus ⇒ Unit],
+  notifyHealth: Option[HealthStatus ⇒ Unit]) extends Actor with ActorLogging {
 
   var healthOpt: Option[Health] = None
 
@@ -150,6 +150,8 @@ private class HealthMonitorWorkorActor(
         val newMap = alarmMap + (alarmKey → h)
         context.become(working(newMap))
         updateHealth(newMap)
+        if (alarmState.shelvedState == ShelvedState.Normal && alarmState.activationState == ActivationState.Normal)
+          notifyListeners(AlarmStatus(alarmKey, severityLevel, alarmState))
       }
   }
 
@@ -164,10 +166,16 @@ private class HealthMonitorWorkorActor(
     }
   }
 
-  // Notify the subscribers of a change in the severity of the alarm
+  // Notify the subscribers of a change in the health
   private def notifyListeners(healthStatus: HealthStatus): Unit = {
     subscriber.foreach(_ ! healthStatus)
-    notify.foreach(_(healthStatus))
+    notifyHealth.foreach(_(healthStatus))
+  }
+
+  // Notify the subscribers of a change in the severity of an alarm
+  private def notifyListeners(alarmStatus: AlarmStatus): Unit = {
+    subscriber.foreach(_ ! alarmStatus)
+    notifyAlarm.foreach(_(alarmStatus))
   }
 }
 

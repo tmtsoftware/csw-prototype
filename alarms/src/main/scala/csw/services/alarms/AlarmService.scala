@@ -3,25 +3,25 @@ package csw.services.alarms
 import java.io._
 import java.net.URI
 
-import akka.actor.{ActorRef, ActorRefFactory, PoisonPill}
+import akka.actor.{ ActorRef, ActorRefFactory, PoisonPill }
 import akka.util.Timeout
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration
 import com.github.fge.jsonschema.core.load.download.URIDownloader
-import com.github.fge.jsonschema.core.report.{ProcessingMessage, ProcessingReport}
-import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
-import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigResolveOptions}
+import com.github.fge.jsonschema.core.report.{ ProcessingMessage, ProcessingReport }
+import com.github.fge.jsonschema.main.{ JsonSchema, JsonSchemaFactory }
+import com.typesafe.config.{ Config, ConfigFactory, ConfigRenderOptions, ConfigResolveOptions }
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
-import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
-import csw.services.loc.{ComponentId, ComponentType, LocationService}
+import csw.services.alarms.AlarmModel.{ AlarmStatus, Health, HealthStatus, SeverityLevel }
+import csw.services.alarms.AlarmState.{ AcknowledgedState, ActivationState, LatchedState, ShelvedState }
+import csw.services.loc.{ ComponentId, ComponentType, LocationService }
 import csw.services.loc.Connection.HttpConnection
 import csw.services.loc.LocationService.ResolvedHttpLocation
 import org.slf4j.LoggerFactory
 import redis._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 
 /**
  * Static definitions for the Alarm Service
@@ -312,15 +312,15 @@ trait AlarmService {
    */
   def setActivationState(alarmKey: AlarmKey, activationState: ActivationState): Future[Unit]
 
-  /**
-   * Starts monitoring the severity levels of the alarm(s) matching the given key
-   *
-   * @param alarmKey      the key for the alarm
-   * @param subscriberOpt if defined, an actor that will receive an AlarmStatus message whenever the severity of an alarm changes
-   * @param notifyOpt     if defined, a function that will be called with an AlarmStatus object whenever the severity of an alarm changes
-   * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
-   */
-  def monitorAlarms(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor
+  //  /**
+  //   * Starts monitoring the severity levels of the alarm(s) matching the given key
+  //   *
+  //   * @param alarmKey      the key for the alarm
+  //   * @param subscriberOpt if defined, an actor that will receive an AlarmStatus message whenever the severity of an alarm changes
+  //   * @param notifyOpt     if defined, a function that will be called with an AlarmStatus object whenever the severity of an alarm changes
+  //   * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
+  //   */
+  //  def monitorAlarms(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor
 
   /**
    * Gets the health of the system, subsystem or component, based on the given alarm key.
@@ -334,13 +334,17 @@ trait AlarmService {
   /**
    * Starts monitoring the health of the system, subsystem or component
    *
-   * @param alarmKey an AlarmKey matching the set of alarms for a component, subsystem or all subsystems, etc. (Note
-   *                 that each of the AlarmKey fields may be specified as None, which is then converted to a wildcard "*")
-   * @param subscriberOpt if defined, an actor that will receive a HealthStatus message whenever the health for the given key changes
-   * @param notifyOpt     if defined, a function that will be called with a HealthStatus object whenever the the health for the given key changes
+   * @param alarmKey     an AlarmKey matching the set of alarms for a component, subsystem or all subsystems, etc. (Note
+   *                     that each of the AlarmKey fields may be specified as None, which is then converted to a wildcard "*")
+   * @param subscriber   if defined, an actor that will receive a HealthStatus message whenever the health for the given key changes
+   * @param notifyAlarm  if defined, a function that will be called with an AlarmStatus object whenever the severity of an alarm changes
+   * @param notifyHealth if defined, a function that will be called with a HealthStatus object whenever the total health for key pattern changes
    * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
    */
-  def monitorHealth(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[HealthStatus ⇒ Unit] = None): AlarmMonitor
+  def monitorHealth(alarmKey: AlarmKey,
+    subscriber: Option[ActorRef] = None,
+    notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
+    notifyHealth: Option[HealthStatus ⇒ Unit] = None): AlarmMonitor
 
   /**
    * Shuts down the Redis server (For use in test cases that started Redis themselves)
@@ -355,7 +359,7 @@ trait AlarmService {
  * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
  */
 private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSecs: Int)(implicit system: ActorRefFactory, timeout: Timeout)
-    extends AlarmService with ByteStringSerializerLowPriority {
+  extends AlarmService with ByteStringSerializerLowPriority {
 
   import AlarmService._
   import system.dispatcher
@@ -450,7 +454,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   // Sets the severity of the alarm, if allowed based on the alarm state
   private def setSeverity(alarmKey: AlarmKey, alarm: AlarmModel, alarmState: AlarmState,
-                          severity: SeverityLevel, currentSeverity: SeverityLevel): Future[Unit] = {
+    severity: SeverityLevel, currentSeverity: SeverityLevel): Future[Unit] = {
 
     // Is the alarm latched?
     val newSeverity = if (alarm.latched) {
@@ -474,8 +478,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
       logger.debug(s"Setting latched state for $alarmKey to NeedsReset")
       Future.sequence(List(
         redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedStateField, LatchedState.NeedsReset.name),
-        redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedSeverityField, newSeverity.name)
-      ))
+        redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedSeverityField, newSeverity.name)))
     } else Future.successful(true)
 
     val f3 = if (updateAckState) {
@@ -525,8 +528,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
       logger.debug(s"Acknowledging alarm: $alarmKey and resetting to Okay")
       Future.sequence(List(
         redisTransaction.hset(alarmKey.stateKey, AlarmState.acknowledgedStateField, AcknowledgedState.Normal.name),
-        redisTransaction.set(alarmKey.severityKey, SeverityLevel.Okay.name, exSeconds = Some(refreshSecs * maxMissedRefresh))
-      ))
+        redisTransaction.set(alarmKey.severityKey, SeverityLevel.Okay.name, exSeconds = Some(refreshSecs * maxMissedRefresh))))
     } else Future.successful(true)
 
     val f2 = if (alarmState.latchedState == LatchedState.NeedsReset) {
@@ -548,11 +550,11 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     redisClient.hset(alarmKey.stateKey, AlarmState.activationStateField, activationState.name).map(_ ⇒ ())
   }
 
-  override def monitorAlarms(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor = {
-    val actorRef = system.actorOf(AlarmSubscriberActor.props(this, List(alarmKey), subscriberOpt, notifyOpt)
-      .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))
-    AlarmMonitorImpl(actorRef)
-  }
+  //  override def monitorAlarms(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor = {
+  //    val actorRef = system.actorOf(HealthMonitorActor.props(this, alarmKey, subscriberOpt, notifyOpt, None) // XXX FIXME
+  //      .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))
+  //    AlarmMonitorImpl(actorRef)
+  //  }
 
   override def getHealth(alarmKey: AlarmKey): Future[Health] = {
     getHealthInfoMap(alarmKey).map(getHealth)
@@ -590,12 +592,11 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     else Health.Good
   }
 
-  override def monitorHealth(
-    alarmKey:      AlarmKey,
-    subscriberOpt: Option[ActorRef]            = None,
-    notifyOpt:     Option[HealthStatus ⇒ Unit] = None
-  ): AlarmMonitor = {
-    val actorRef = system.actorOf(HealthMonitorActor.props(this, alarmKey, subscriberOpt, notifyOpt)
+  override def monitorHealth(alarmKey: AlarmKey,
+    subscriberOpt: Option[ActorRef] = None,
+    notifyAlarm: Option[AlarmStatus ⇒ Unit] = None,
+    notifyOpt: Option[HealthStatus ⇒ Unit] = None): AlarmMonitor = {
+    val actorRef = system.actorOf(HealthMonitorActor.props(this, alarmKey, subscriberOpt, notifyAlarm, notifyOpt)
       .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))
     AlarmMonitorImpl(actorRef)
   }

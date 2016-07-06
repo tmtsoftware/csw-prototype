@@ -6,8 +6,8 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import csw.services.loc.LocationService
 import ch.qos.logback.classic._
-import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
-import csw.services.alarms.{AlarmJson, AlarmKey, AlarmService, AlarmServiceSetSeverityActor}
+import csw.services.alarms.AlarmModel.{AlarmStatus, HealthStatus, SeverityLevel}
+import csw.services.alarms.{AlarmJson, AlarmKey, AlarmService, AlarmRefreshActor}
 import org.slf4j.LoggerFactory
 import AlarmService.Problem
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
@@ -239,7 +239,7 @@ object AsConsole extends App {
 
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
     val map = Map(key → severity.get)
-    system.actorOf(AlarmServiceSetSeverityActor.props(alarmService, map))
+    system.actorOf(AlarmRefreshActor.props(alarmService, map))
   }
 
   // Handle the --list option
@@ -251,14 +251,20 @@ object AsConsole extends App {
     }
   }
 
+  // XXX TODO: make option execute a shell command
   private def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
-    val a = alarmStatus.alarm
+    val a = alarmStatus.alarmKey
     println(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
+  }
+
+  // XXX TODO: make option execute a shell command
+  private def printHealthStatus(healthStatus: HealthStatus): Unit = {
+    println(s"Health for ${healthStatus.key}: ${healthStatus.health}")
   }
 
   // Handle the --monitor option
   private def monitorAlarms(alarmService: AlarmService, options: Options): Unit = {
-    alarmService.monitorAlarms(AlarmKey(options.subsystem, options.component, options.name), None, Some(printAlarmStatus _))
+    alarmService.monitorHealth(AlarmKey(options.subsystem, options.component, options.name), None, Some(printAlarmStatus _), Some(printHealthStatus _))
   }
 
   // Handle the --acknowledge option

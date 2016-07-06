@@ -154,13 +154,13 @@ object AlarmModel extends ByteStringDeserializerDefault {
   }
 
   /**
-   * Combines the static alarm model with the current severity level for the alarm
+   * Combines an alarm key with the current severity level and state for the alarm
    *
-   * @param alarm    the static alarm data
+   * @param alarmKey  the unique key for the alarm
    * @param severity the current alarm severity level
    * @param state    the current alarm state (indicates if the alarm needs acknowledgement, etc.)
    */
-  case class AlarmStatus(alarm: AlarmModel, severity: SeverityLevel, state: AlarmState)
+  case class AlarmStatus(alarmKey: AlarmKey, severity: SeverityLevel, state: AlarmState)
 
   /**
    * Combines an alarm key (which may use wildcards to match a system, subsystem or component)

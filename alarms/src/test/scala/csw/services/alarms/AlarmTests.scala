@@ -92,7 +92,7 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
 
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
-        val a = alarmStatus.alarm
+        val a = alarmStatus.alarmKey
         logger.info(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
         callbackSev = alarmStatus.severity
       }
@@ -109,7 +109,7 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       val key2 = AlarmKey("NFIRAOS", "envCtrl", "minTemperature")
       val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
 
-      val alarmMonitor = alarmService.monitorAlarms(key1, None, Some(printAlarmStatus _))
+      val alarmMonitor = alarmService.monitorHealth(key1, None, Some(printAlarmStatus _), Some(printHealthStatus _))
       Thread.sleep(shortDelayMs) // make sure actor has started
 
       Await.ready(alarmService.setSeverity(key1, SeverityLevel.Critical), timeout.duration)
@@ -160,10 +160,11 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Warning)
 
       // Test health monitor
+      alarmMonitor.stop()
       val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
+      val healthMonitor = alarmService.monitorHealth(nfKey, None, Some(printAlarmStatus _), Some(printHealthStatus _))
       Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
       Await.ready(alarmService.setSeverity(key3, SeverityLevel.Okay), timeout.duration)
-      val healthMonitor = alarmService.monitorHealth(nfKey, None, Some(printHealthStatus _))
       Thread.sleep(shortDelayMs) // make sure actor has started
       assert(callbackHealth.contains(Health.Good))
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Good)
@@ -188,7 +189,6 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Bad)
 
       // Stop the actors monitoring the alarm and health
-      alarmMonitor.stop()
       healthMonitor.stop()
     } finally {
       // Shutdown Redis

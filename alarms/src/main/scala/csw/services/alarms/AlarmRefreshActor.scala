@@ -9,7 +9,7 @@ import scala.concurrent.duration._
  * An actor that continuously sets the severity of an alarm to a given value,
  * to keep the value from expiring in the database
  */
-object AlarmServiceSetSeverityActor {
+object AlarmRefreshActor {
 
   /**
    * Actor message to change the severity level of selected alarms (only the ones contained in the map)
@@ -31,14 +31,14 @@ object AlarmServiceSetSeverityActor {
    * @return the actorRef
    */
   def props(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel]): Props = {
-    Props(classOf[AlarmServiceSetSeverityActor], alarmService, initialMap)
+    Props(classOf[AlarmRefreshActor], alarmService, initialMap)
   }
 }
 
-private class AlarmServiceSetSeverityActor(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel])
+private class AlarmRefreshActor(alarmService: AlarmService, initialMap: Map[AlarmKey, SeverityLevel])
     extends Actor with ActorLogging {
 
-  import AlarmServiceSetSeverityActor._
+  import AlarmRefreshActor._
   import context.dispatcher
 
   val delay = alarmService.refreshSecs.seconds
