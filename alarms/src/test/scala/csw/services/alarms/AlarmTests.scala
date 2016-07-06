@@ -58,7 +58,7 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
     val expireSecs = refreshSecs * AlarmService.maxMissedRefresh
 
     // Time of ms to wait to see if an alarm severity expired
-    val delayMs = expireSecs*1000+500
+    val delayMs = expireSecs * 1000 + 500
 
     // Later, in another JVM, initialize the list of alarms in Redis (using a small value for refreshSecs for testing)
     val alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)

@@ -13,7 +13,7 @@ import com.github.fge.jsonschema.core.report.{ProcessingMessage, ProcessingRepor
 import com.github.fge.jsonschema.main.{JsonSchema, JsonSchemaFactory}
 import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.alarms.AlarmModel.{AlarmStatus, SeverityLevel}
+import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.HttpConnection
@@ -113,11 +113,11 @@ object AlarmService {
   }
 
   /**
-   * Type of return value from the monitorAlarms method
+   * Type of return value from the monitorAlarms or monitorHealth methods
    */
   trait AlarmMonitor {
     /**
-     * Stops the monitoring of the alarms
+     * Stops the monitoring actor
      */
     def stop(): Unit
   }
@@ -127,6 +127,9 @@ object AlarmService {
       actorRef ! PoisonPill
     }
   }
+
+  // Information needed about each alarm in order to calculate the health
+  private[alarms] case class HealthInfo(alarmKey: AlarmKey, severityLevel: SeverityLevel, alarmState: AlarmState)
 
   /**
    * Returns a string with the contents of the given config, converted to JSON.
@@ -324,6 +327,26 @@ trait AlarmService {
   def monitorAlarms(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor
 
   /**
+   * Gets the health of the system, subsystem or component, based on the given alarm key.
+   *
+   * @param alarmKey an AlarmKey matching the set of alarms for a component, subsystem or all subsystems, etc. (Note
+   *                 that each of the AlarmKey fields may be specified as None, which is then converted to a wildcard "*")
+   * @return the future health value (good, ill, bad)
+   */
+  def getHealth(alarmKey: AlarmKey): Future[Health]
+
+  /**
+   * Starts monitoring the health of the system, subsystem or component
+   *
+   * @param alarmKey an AlarmKey matching the set of alarms for a component, subsystem or all subsystems, etc. (Note
+   *                 that each of the AlarmKey fields may be specified as None, which is then converted to a wildcard "*")
+   * @param subscriberOpt if defined, an actor that will receive a HealthStatus message whenever the health for the given key changes
+   * @param notifyOpt     if defined, a function that will be called with a HealthStatus object whenever the the health for the given key changes
+   * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
+   */
+  def monitorHealth(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[HealthStatus ⇒ Unit] = None): AlarmMonitor
+
+  /**
    * Shuts down the Redis server (For use in test cases that started Redis themselves)
    */
   def shutdown(): Unit
@@ -392,34 +415,13 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   override def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]] = {
     val pattern = alarmKey.key
     redisClient.keys(pattern).flatMap { keys ⇒
-      val f2 = keys.map(getAlarm)
-      Future.sequence(f2)
+      Future.sequence(keys.map(getAlarm))
     }
   }
 
   override def getAlarm(key: AlarmKey): Future[AlarmModel] = {
     getAlarm(key.key)
   }
-
-  // XXX TODO: Does it make sense to cache the static data (Problem: Someone could update the database and change it...)
-  //  // Cache of previously accessed static alarm data to avoid having to get it from Redis each time
-  //  private var staticAlarmData = Map[String, AlarmModel]()
-  //
-  //  /**
-  //   * Gets the alarm object matching the given key from Redis
-  //   *
-  //   * @param key the key for the alarm in redis
-  //   * @return the alarm model object
-  //   */
-  //  private[alarms] def getAlarm(key: String): Future[AlarmModel] = {
-  //    if (staticAlarmData.contains(key)) Future.successful(staticAlarmData(key))
-  //    else redisClient.hgetall(key).map { map ⇒
-  //      if (map.isEmpty) throw new RuntimeException(s"Date for $key not found.")
-  //      val alarm = AlarmModel(map)
-  //      staticAlarmData = staticAlarmData + (key -> alarm)
-  //      alarm
-  //    }
-  //  }
 
   /**
    * Gets the alarm object matching the given key from Redis
@@ -552,6 +554,51 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   override def monitorAlarms(alarmKey: AlarmKey, subscriberOpt: Option[ActorRef] = None, notifyOpt: Option[AlarmStatus ⇒ Unit] = None): AlarmMonitor = {
     val actorRef = system.actorOf(AlarmSubscriberActor.props(this, List(alarmKey), subscriberOpt, notifyOpt)
+      .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))
+    AlarmMonitorImpl(actorRef)
+  }
+
+  override def getHealth(alarmKey: AlarmKey): Future[Health] = {
+    getHealthInfoMap(alarmKey).map(getHealth)
+  }
+
+  // Returns a future map from alarm key to health info for each alarm key matching the given alarm key pattern
+  private[alarms] def getHealthInfoMap(alarmKey: AlarmKey): Future[Map[AlarmKey, HealthInfo]] = {
+    val pattern = alarmKey.key
+    redisClient.keys(pattern).map(_.map(AlarmKey(_))).flatMap { alarmKeys ⇒
+      val fs = alarmKeys.map { k ⇒
+        for {
+          sev ← getSeverity(k)
+          state ← getAlarmState(k)
+        } yield {
+          k → HealthInfo(k, sev, state)
+        }
+      }
+      Future.sequence(fs).map(_.toMap)
+    }
+  }
+
+  // Gets the health value, given a map with the alarm severity and state for all the relevant alarms.
+  // Health is good if a component’s alarms all have Normal or Warning severity. If the component has at
+  // least one alarm with Major severity, it’s health is Ill. If the component has at least one alarm with
+  // Critical severity, it’s health is Bad. Additionally, if the component’s severity is Disconnected or
+  // Indeterminate, it’s health is also Bad.
+  private[alarms] def getHealth(alarmMap: Map[AlarmKey, HealthInfo]): Health = {
+    def active(h: HealthInfo): Boolean = h.alarmState.shelvedState == ShelvedState.Normal && h.alarmState.activationState == ActivationState.Normal
+    val severityLevels = alarmMap.values.filter(active).map(_.severityLevel).toList
+    if (severityLevels.contains(SeverityLevel.Critical) || severityLevels.contains(SeverityLevel.Indeterminate))
+      Health.Bad
+    else if (severityLevels.contains(SeverityLevel.Major))
+      Health.Ill
+    else Health.Good
+  }
+
+  override def monitorHealth(
+    alarmKey:      AlarmKey,
+    subscriberOpt: Option[ActorRef]            = None,
+    notifyOpt:     Option[HealthStatus ⇒ Unit] = None
+  ): AlarmMonitor = {
+    val actorRef = system.actorOf(HealthMonitorActor.props(this, alarmKey, subscriberOpt, notifyOpt)
       .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))
     AlarmMonitorImpl(actorRef)
   }

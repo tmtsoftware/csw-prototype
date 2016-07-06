@@ -13,22 +13,34 @@ import scala.util.{Failure, Success}
 
 /**
  * An actor that subscribes to changes in the severity of one or more alarms and optionally
- * send an AlarmStatus message to an actor or calls a method to notifiy of a change.
+ * sends an AlarmStatus message to an actor or calls a method to notifiy of a change.
  */
 object AlarmSubscriberActor {
   private val keyEventPrefix = "__keyevent@0__:"
 
   /**
-   * Subscribes to changes in alarm's severity level
+   * Subscribes to changes in severity level for alarms matching keys
    *
    * @param alarmService used to republish expired keys and lookup alarms from key names
-   * @param keys        list of alarm keys to subscribe to
+   * @param keys         list of alarm keys to subscribe to
+   * @param subscriber   an optional actor that will receive AlarmStatus messages when an alarm's severity changes
+   * @param notify       an optional function that will be called with AlarmStatus messages when an alarm's severity changes
    */
-  def props(alarmService: AlarmService, keys: List[AlarmKey], subscriber: Option[ActorRef] = None, notify: Option[AlarmStatus ⇒ Unit] = None): Props =
+  def props(
+    alarmService: AlarmService,
+    keys:         List[AlarmKey],
+    subscriber:   Option[ActorRef]           = None,
+    notify:       Option[AlarmStatus ⇒ Unit] = None
+  ): Props =
     Props(classOf[AlarmSubscriberActor], alarmService.asInstanceOf[AlarmServiceImpl], keys, subscriber, notify)
 }
 
-private class AlarmSubscriberActor(alarmService: AlarmServiceImpl, keys: List[AlarmKey], subscriber: Option[ActorRef], notify: Option[AlarmStatus ⇒ Unit])
+private class AlarmSubscriberActor(
+  alarmService: AlarmServiceImpl,
+  keys:         List[AlarmKey],
+  subscriber:   Option[ActorRef],
+  notify:       Option[AlarmStatus ⇒ Unit]
+)
     extends RedisSubscriberActor(
       address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
       channels = Seq.empty,
@@ -57,6 +69,7 @@ private class AlarmSubscriberActor(alarmService: AlarmServiceImpl, keys: List[Al
         sev ← alarmService.getSeverity(key)
         state ← alarmService.getAlarmState(key)
       } yield {
+        // XXX move "if" to for comprehension above?
         if (state.shelvedState == ShelvedState.Normal && state.activationState == ActivationState.Normal)
           notifyListeners(key, sev, state)
       }

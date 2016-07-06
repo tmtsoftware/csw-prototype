@@ -38,14 +38,13 @@ object AlarmKey {
   }
 
   /**
-   * Creates an AlarmKey fom the string representation of either key or severityKey.
-   * @param key the value returned for key or severityKey
+   * Creates an AlarmKey from the string representation.
+   *
+   * @param key one of the string values for key (key,severityKey, stateKey)
    * @return the AlarmKey instance
    */
   def apply(key: String): AlarmKey = {
-    val k = if (key.startsWith(severityKeyPrefix))
-      key.substring(severityKeyPrefix.length)
-    else key
+    val k = if (key.contains(':')) key.substring(key.indexOf(':') + 1) else key
     val subsystem :: component :: name :: _ = k.substring(alarmKeyPrefix.length).split(':').toList
     AlarmKey(subsystem, component, name)
   }

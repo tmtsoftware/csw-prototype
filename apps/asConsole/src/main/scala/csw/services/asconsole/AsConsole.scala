@@ -45,6 +45,7 @@ object AsConsole extends App {
     refreshSecs:     Option[Int]     = Some(5),
     refreshSeverity: Boolean         = false,
     monitorAlarms:   Boolean         = false,
+    monitorHealth:   Boolean         = false,
     acknowledge:     Boolean         = false,
     shelved:         Option[Boolean] = None,
     activated:       Option[Boolean] = None,
@@ -80,23 +81,27 @@ object AsConsole extends App {
 
     opt[String]("subsystem") valueName "<subsystem>" action { (x, c) ⇒
       c.copy(subsystem = Some(x))
-    } text "Limits the alarms returned by --list to the given subsystem"
+    } text "Limits the selected alarms to those belonging to the given subsystem"
 
     opt[String]("component") valueName "<name>" action { (x, c) ⇒
       c.copy(component = Some(x))
-    } text "Limits the alarms returned by --list to the given component (subsystem must also be specified)"
+    } text "Limits the selected alarms to those belonging to the given component (subsystem should also be specified)"
 
     opt[String]("name") valueName "<name>" action { (x, c) ⇒
       c.copy(name = Some(x))
-    } text "Limits the alarms returned by --list to those whose name matches the given value (may contain Redis wildcards)"
+    } text "Limits the selected alarms to those whose name matches the given value (may contain Redis wildcards)"
 
     opt[String]("severity") valueName "<severity>" action { (x, c) ⇒
       c.copy(severity = Some(x))
     } text "Sets the severity level for the alarm given by (--subsystem, --component, --name) to the given level (Alarm must be unique)"
 
-    opt[Unit]("monitor") action { (x, c) ⇒
+    opt[Unit]("monitor-alarms") action { (x, c) ⇒
       c.copy(monitorAlarms = true)
-    } text "Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name) (may contain Redis wildcards)"
+    } text "Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name)"
+
+    opt[Unit]("monitor-health") action { (x, c) ⇒
+      c.copy(monitorHealth = true)
+    } text "Starts monitoring the health of the subsystems or components given by (--subsystem, --component, --name)"
 
     opt[Unit]("acknowledge") action { (x, c) ⇒
       c.copy(acknowledge = true)

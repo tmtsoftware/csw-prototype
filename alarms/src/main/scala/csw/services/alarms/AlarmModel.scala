@@ -139,13 +139,37 @@ object AlarmModel extends ByteStringDeserializerDefault {
   }
 
   /**
+   * Base trait for health types
+   */
+  sealed trait Health
+
+  case object Health {
+
+    case object Good extends Health
+
+    case object Bad extends Health
+
+    case object Ill extends Health
+
+  }
+
+  /**
    * Combines the static alarm model with the current severity level for the alarm
    *
-   * @param alarm the static alarm data
+   * @param alarm    the static alarm data
    * @param severity the current alarm severity level
-   * @param state the current alarm state (indicates if the alarm needs acknowledgement, etc.)
+   * @param state    the current alarm state (indicates if the alarm needs acknowledgement, etc.)
    */
   case class AlarmStatus(alarm: AlarmModel, severity: SeverityLevel, state: AlarmState)
+
+  /**
+   * Combines an alarm key (which may use wildcards to match a system, subsystem or component)
+   * with a health value, which is calculated from all the alarms matching the given alarm key.
+   *
+   * @param key    an alarm key matching all alarms for the system, a subsystem or component
+   * @param health the total health, calculated from the severity values of all the alarms matching the key
+   */
+  case class HealthStatus(key: AlarmKey, health: Health)
 
   /**
    * Initializes an AlarmModel from the given Config
