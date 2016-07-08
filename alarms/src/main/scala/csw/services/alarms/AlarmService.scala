@@ -96,10 +96,16 @@ object AlarmService {
   }
 
   object Problem {
+    /**
+     * Returns the number of problems in the list with a severity or ERROR or FATAL
+     */
     def errorCount(problems: List[Problem]): Int = {
       problems.count(p ⇒ p.severity == "error" || p.severity == "fatal")
     }
 
+    /**
+     * Prints the list of problems to stdout
+     */
     def printProblems(problems: List[Problem]): List[Problem] = {
       for (problem ← problems) {
         println(s"${problem.severity}: ${problem.message}")
@@ -237,16 +243,16 @@ trait AlarmService {
   def refreshSecs: Int
 
   /**
-   * Initialize the alarm data in the Redis instance using the given file
+   * Initialize the alarm data in the database using the given file
    *
    * @param inputFile the alarm service config file containing info about all the alarms
    * @param reset     if true, delete the current alarms before importing (default: false)
-   * @return a future list of problems that occurred while validating the config file or ingesting the data into Redis
+   * @return a future list of problems that occurred while validating the config file or ingesting the data into the database
    */
   def initAlarms(inputFile: File, reset: Boolean = false): Future[List[Problem]]
 
   /**
-   * Gets the alarm information from Redis for any matching alarms
+   * Gets the alarm information from the database for any matching alarms
    *
    * @param alarmKey a key that may match multiple alarms (via wildcards, see AlarmKey.apply())
    * @return a future sequence of alarm model objects
@@ -254,7 +260,7 @@ trait AlarmService {
   def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]]
 
   /**
-   * Gets the alarm information from Redis for the matching Alarm
+   * Gets the alarm information from the database for the matching Alarm
    *
    * @param key the key for the alarm
    * @return a future alarm model object
@@ -262,7 +268,7 @@ trait AlarmService {
   def getAlarm(key: AlarmKey): Future[AlarmModel]
 
   /**
-   * Gets the alarm state from Redis for the matching Alarm
+   * Gets the alarm state from the database for the matching Alarm
    *
    * @param key the key for the alarm
    * @return a future alarm state object
@@ -339,7 +345,7 @@ trait AlarmService {
   ): AlarmMonitor
 
   /**
-   * Shuts down the Redis server (For use in test cases that started Redis themselves)
+   * Shuts down the the database server (For use in test cases that started the database themselves)
    */
   def shutdown(): Unit
 }

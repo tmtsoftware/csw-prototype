@@ -24,12 +24,12 @@ val csw = (project in file("."))
   .settings(defaultSettings: _*)
   .settings(siteSettings: _*)
   .settings(
-  name := "CSW - TMT Common Software",
-  preprocessVars := Map(
-    "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
-    "DOCROOT" -> "latest/api/index.html"
-  )
-).aggregate(util, support, log, kvs, alarms, loc, ccs, cs, pkg, event, ts,
+    name := "CSW - TMT Common Software",
+    preprocessVars := Map(
+      "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
+      "DOCROOT" -> "latest/api/index.html"
+    )
+  ).aggregate(util, support, log, kvs, alarms, loc, ccs, cs, pkg, event, ts,
   containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, asConsole, sysControl, javacsw)
 
 // Utility classes
@@ -37,7 +37,7 @@ lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaHttpSprayJson, scalaReflect) ++
-    test(scalaTest, junit)
+      test(scalaTest, junit)
   ) dependsOn log
 
 // Supporting classes
@@ -131,8 +131,8 @@ lazy val javacsw = project
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(akkaTestKit, junit, junitInterface, scalaJava8Compat)
-  ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts, containerCmd)
-
+  ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts, containerCmd,
+  kvs % "test->test", alarms % "test->test;compile->compile", trackLocation % "test->test")
 
 // -- Apps --
 

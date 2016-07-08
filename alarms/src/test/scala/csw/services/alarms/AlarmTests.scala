@@ -42,6 +42,7 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
   }
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
+    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on port 7777.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port 7777" --port 7777
@@ -63,9 +64,13 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
     // Time in ms to wait to see if an alarm severity expired
     val delayMs = expireSecs * 1000 + shortDelayMs
 
-    // Later, in another JVM, initialize the list of alarms in Redis (using a small value for refreshSecs for testing)
+    // Later, in another JVM...,
+    // Get the alarm service by looking up the name with the location service.
+    // (using a small value for refreshSecs for testing)
     val alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)
+
     try {
+      // initialize the list of alarms in Redis
       val problems = Await.result(alarmService.initAlarms(ascf), timeout.duration)
       Problem.printProblems(problems)
       assert(Problem.errorCount(problems) == 0)

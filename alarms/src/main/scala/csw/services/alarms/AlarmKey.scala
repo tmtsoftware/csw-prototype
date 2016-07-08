@@ -55,6 +55,10 @@ object AlarmKey {
 
 /**
  * Represents a key used to store alarm data and publish the severity.
+ *
+ * @param subsystem the subsystem for the component
+ * @param component the component for the alarm
+ * @param name the alarm name
  */
 case class AlarmKey(subsystem: String, component: String, name: String) {
   import AlarmKey._
