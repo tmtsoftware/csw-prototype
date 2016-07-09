@@ -7,7 +7,8 @@
  *  <strong>Based on Redis</strong>
  * <p>
  *  There is no Alarm Service executable. The Alarm Service consists of an instance of Redis
- *  that is registered with the [CSW Location Service](../loc) using the [trackLocation application](../apps/trackLocation).
+ *  that is registered with the CSW Location Service ({@link csw.services.loc.LocationService})
+ *  using the <em>trackLocation application</em> ({@Link csw.services.trackLocation.TrackLocation}).
  *  For example, the following command could be used to start a dedicated Redis instance for the Alarm Service on port 7777:
  * <p>
  * <pre> {@code
@@ -24,7 +25,7 @@
  *  <li> The static Alarm data, which is imported from a config file, is stored in a Redis Hash.
  *
  *  <li> The Alarm's severity is stored in a separate Key and monitored for changes
- *  using [Redis Keyspace Notifications](http://redis.io/topics/notifications).
+ *  using <a href="http://redis.io/topics/notifications">Redis Keyspace Notifications</a>.
  *
  *  <li> The current state of an alarm is stored in a separate Redis hash that includes the
  *  latched and acknowledged state as well as the shelved and activation states of an alarm.
@@ -66,8 +67,8 @@
  *  <strong>Alarm State</strong>
  * <p>
  *  The {@link javacsw.services.alarms.JAlarmState} class represents the runtime
- *  internal state for an alarm. For example, this is where you can determine if an alarm is currently *latched*
- *  or *activated*.
+ *  internal state for an alarm. For example, this is where you can determine if an alarm is currently <em>latched</em>
+ *  or <em>activated</em>.
  * <p>
  *  <strong>Alarm Java API</strong>
  * <p>
