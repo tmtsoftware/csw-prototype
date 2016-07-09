@@ -95,7 +95,7 @@ public interface IBlockingKeyValueStore<T> {
 
 
     // --- factory methods ---
-    
+
     /**
      * @param settings Redis server settings
      * @param system   Akka env required by RedisClient

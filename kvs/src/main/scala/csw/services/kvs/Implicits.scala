@@ -9,6 +9,7 @@ import redis.ByteStringDeserializerDefault
 import csw.util.config.ConfigSerializer._
 import csw.util.config.StateVariable._
 
+
 /**
  * Defines the automatic conversion to a ByteString and back again for commonly used value types
  */

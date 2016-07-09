@@ -37,7 +37,7 @@ object StateVariable {
    * @param configKey identifies the target subsystem
    * @param items     an optional initial set of items (keys with values)
    */
-  case class DemandState(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+  case class DemandState(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
       extends ConfigType[DemandState] with StateVariable {
 
     override def create(data: ConfigData) = DemandState(configKey, data)
@@ -54,6 +54,7 @@ object StateVariable {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
+    /*
     override def add[S, J](item: Item[S, J]): DemandState = super.add(item)
 
     override def set[S, J](key: Key[S, J], units: Units, v: S*): DemandState = super.set[S, J](key, units, v: _*)
@@ -79,6 +80,7 @@ object StateVariable {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): DemandState = super.remove[S, J](key)
+    */
   }
 
   object DemandState {
@@ -94,7 +96,7 @@ object StateVariable {
    * @param configKey identifies the target subsystem
    * @param items     an optional initial set of items (keys with values)
    */
-  case class CurrentState(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+  case class CurrentState(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
       extends ConfigType[CurrentState] with StateVariable {
 
     override def create(data: ConfigData) = CurrentState(configKey, data)
@@ -111,6 +113,7 @@ object StateVariable {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
+    /*
     override def add[S, J](item: Item[S, J]): CurrentState = super.add(item)
 
     override def set[S, J](key: Key[S, J], units: Units, v: S*): CurrentState = super.set[S, J](key, units, v: _*)
@@ -136,6 +139,7 @@ object StateVariable {
     override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
 
     override def remove[S, J](key: Key[S, J]): CurrentState = super.remove[S, J](key)
+    */
   }
 
   object CurrentState {

@@ -1,15 +1,15 @@
 package javacsw.util.config;
 
-import csw.util.config.Configurations.*;
 import csw.util.config.*;
+import csw.util.config.Configurations.ObserveConfig;
+import csw.util.config.Configurations.SetupConfig;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
-import static javacsw.util.config.JUnitsOfMeasure.*;
+import static javacsw.util.config.JItems.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 /**
@@ -17,146 +17,196 @@ import static junit.framework.TestCase.assertTrue;
  */
 @SuppressWarnings({"OptionalGetWithoutIsPresent", "unused"})
 public class JConfigTests {
-    private static final String s1 = "encoder";
-    private static final String s2 = "filter";
-    private static final String s3 = "detectorTemp";
+  private static final String s1 = "encoder";
+  private static final String s2 = "filter";
+  private static final String s3 = "detectorTemp";
 
-    private static final String ck = "wfos.blue.filter";
-    private static final String ck1 = "wfos.prog.cloudcover";
-    private static final String ck2 = "wfos.red.filter";
-    private static final String ck3 = "wfos.red.detector";
+  private static final String ck = "wfos.blue.filter";
+  private static final String ck1 = "wfos.prog.cloudcover";
+  private static final String ck2 = "wfos.red.filter";
+  private static final String ck3 = "wfos.red.detector";
 
-    @SuppressWarnings("EqualsBetweenInconvertibleTypes")
-    @Test
-    public void basicKeyTests() {
-        System.out.println("basicKeyTests");
+  // @SuppressWarnings("EqualsBetweenInconvertibleTypes")
 
-        // Should be constructed properly
-        IntKey k1 = new IntKey(s1);
-        StringKey k2 = new StringKey(s2);
-        assertTrue(Objects.equals(k1.keyName(), s1));
+  @Test
+  public void testJMAdd() {
+    SetupConfig sc1 = SetupConfig(ck3);
+    IntKey k1 = IntKey("encoder");
+    IntKey k2 = IntKey("windspeed");
 
-        // Should use set properly
-        IntItem i = k1.jset(22);
-        assertTrue(Objects.equals(i.keyName(), s1));
-        assertTrue(i.jvalue() == 22);
-        assertTrue(i.jvalue(0) == 22);
-        assertTrue(i.jget(0).get() == 22);
-        assertTrue(i.units() == NoUnits);
+    sc1 = jadd(sc1, jset(k1, 22), jset(k2, 44));
+    assertTrue(sc1.size() == 2);
+    assertTrue(sc1.exists(k1));
+    assertTrue(sc1.exists(k2));
+    assertTrue(jvalue(jitem(sc1, k1)).equals(22));
+    assertEquals(jvalues(jitem(sc1, k2)), Arrays.asList(44));
+  }
 
-        assertTrue(Objects.equals(k2.keyName(), s2));
-        StringItem j = k2.jset("Bob");
-        assertTrue(Objects.equals(j.jvalue(0), "Bob"));
+  @Test
+  public void testJGetItem() {
+    SetupConfig sc1 = SetupConfig(ck3);
+    IntKey k1 = IntKey("encoder");
+    IntKey k2 = IntKey("windspeed");
+    StringKey k3 = StringKey("notpresent");
 
-        // Should support equality of keys
-        IntKey k3 = new IntKey(s1);
-        assertTrue(k3.equals(k1));
-        assertTrue(!k3.equals(k2));
-        assertTrue(!k1.equals(k2));
+    sc1 = jadd(sc1, jset(k1, 22), jset(k2, 44));
+    assertEquals(sc1.size(), 2);
+
+    // Check for two present and one not present
+    assertTrue(jgetItem(sc1, k1).isPresent());
+    assertTrue(jgetItem(sc1, k2).isPresent());
+    assertFalse(jgetItem(sc1, k3).isPresent());
+  }
+
+  @Test
+  public void testJItem() {
+    SetupConfig sc1 = SetupConfig(ck3);
+    IntKey k1 = IntKey("encoder");
+    IntKey k2 = IntKey("windspeed");
+    StringKey k3 = StringKey("notpresent");
+
+    IntItem i1 = jset(k1, 22).withUnits(JUnitsOfMeasure.Deg);
+    IntItem i2 = jset(k2, 44);
+    StringItem i3 = jset(k3, "Really Not Present");
+
+    sc1 = jadd(sc1, i1, i2);
+    assertTrue(sc1.size() == 2);
+
+    assertTrue(jitem(sc1, k1).equals(i1));
+    assertTrue(jitem(sc1, k2).equals(i2));
+
+    // Test for exception thrown for non present lookup
+    boolean exFlag = false;
+    try {
+      StringItem si = jitem(sc1, k3);
+    } catch (NoSuchElementException ex) {
+      exFlag = true;
     }
 
+    assertTrue(exFlag);
+  }
 
-    @Test
-    public void CheckingKeyUpdates() {
-        IntKey k1 = new IntKey("atest");
+  @Test
+  public void testJGetFunction() {
+    SetupConfig sc1 = SetupConfig(ck3);
+    IntKey k1 = IntKey("encoder");
+    DoubleKey k2 = DoubleKey("windspeed");
+    IntKey k3 = IntKey("NotPresent");
 
-        // Should allow updates
-        IntItem i1 = k1.jset(22);
-        assertTrue(i1.jvalue() == 22);
-        assertTrue(i1.jvalue(0) == 22);
-        assertTrue(i1.units() == NoUnits);
-        IntItem i2 = k1.jset(33);
-        assertTrue(i2.jvalue() == 33);
-        assertTrue(i2.units() == NoUnits);
+    sc1 = jadd(sc1, jset(k1, 22, 44, 66), jset(k2, 1., 2., 3., 4.));
+    assertTrue(jget(sc1, k1, 0).isPresent() && jvalue(jitem(sc1, k1), 0).equals(22));
+    assertTrue(jget(sc1, k2, 1).isPresent() && jvalue(jitem(sc1, k2), 1).equals(2.));
+    assertFalse(jget(sc1, k3, 2).isPresent());
+  }
 
-        SetupConfig sc = new SetupConfig(ck1).add(i1);
-        assertTrue(sc.jvalue(k1, 0) == 22);
-        sc = sc.add(i2);
-        assertTrue(sc.jvalue(k1, 0) == 33);
+  @Test
+  public void testJGetonConfig() {
+    SetupConfig sc1 = SetupConfig(ck3);
+    IntKey k1 = IntKey("encoder");
+    DoubleKey k2 = DoubleKey("windspeed");
+    IntKey k3 = IntKey("NotPresent");
 
-        SetupConfig sc2 = new SetupConfig(ck1).jset(k1, 22);
-        assertTrue(sc2.jvalue(k1) == 22);
-        assertTrue(sc2.jvalues(k1).equals(Collections.singletonList(22)));
+    sc1 = jadd(sc1, jset(k1, 22, 44, 66), jset(k2, 1., 2., 3., 4.));
+    Optional<IntItem> i1 = sc1.jget(k1);
+    Optional<DoubleItem> i2 = sc1.jget(k2);
+    assertTrue(i1.isPresent() && jvalue(i1.get(), 0).equals(22));
+    assertTrue(i2.isPresent() && jvalue(i2.get(), 1).equals(2.));
+    assertFalse(sc1.jget(k3).isPresent());
+  }
+
+  @Test
+  public void scTest() {
+    IntKey k1 = IntKey("encoder");
+    IntKey k2 = IntKey("windspeed");
+
+    // It "Should allow adding keys")
+    {
+      SetupConfig sc1 = SetupConfig(ck3);
+      sc1 = sc1.add(jset(k1, 22)).add(jset(k2, 44));
+      assertTrue(sc1.size() == 2);
+      assertTrue(sc1.exists(k1));
+      assertTrue(sc1.exists(k2));
+      assertTrue(jvalue(jitem(sc1, k1)).equals(22));
+      int xx = jvalue(jitem(sc1, k2));
+      assertTrue(xx == 44);
     }
 
-    @Test
-    public void TestLong() {
-        // should allow setting from Long
-        long tval = 1234L;
-        LongKey k1 = new LongKey(s1);
-        LongItem i1 = k1.jset(tval);
-        assertTrue(i1.jvalues().equals(Collections.singletonList(tval)));
-        assertTrue(i1.jvalue() == tval);
-        assertTrue(i1.jget(0).get() == tval);
-
-        long tval2 = 4567L;
-        LongKey k2 = new LongKey(s1);
-        LongItem i2 = k2.jset(tval2);
-        assertTrue(i2.jvalue().equals(tval2));
-        assertTrue(i2.jvalues().equals(Collections.singletonList(tval2)));
+    // it("Should allow setting")
+    {
+      SetupConfig sc1 = new SetupConfig(ck1);
+      sc1 = sc1.add(jset(k1, 22)).add(jset(k2, 44));
+      assertTrue(sc1.size() == 2);
+      assertTrue(sc1.exists(k1));
+      assertTrue(sc1.exists(k2));
     }
 
-    @Test
-    public void scTest() {
-        IntKey k1 = new IntKey("encoder");
-        IntKey k2 = new IntKey("windspeed");
+    // Should allow getting values
+    {
+      SetupConfig sc1 = new SetupConfig(ck1);
+      //sc1 = sc1.jset(k1, NoUnits, 22).jset(k2, NoUnits, 44);
+      sc1 = jadd(sc1, jset(k1, 22));
+      sc1 = jadd(sc1, jset(k2, 44));
+      List<Integer> v1 = jvalues(jitem(sc1, k1));
+      List<Integer> v2 = jvalues(jitem(sc1, k2));
+      System.out.println("V1: " + v1);
+      System.out.println("V2: " + v2);
+      assertTrue(sc1.jget(k1).isPresent());
+      assertTrue(sc1.jget(k2).isPresent());
+      assertTrue(v1.equals(Collections.singletonList(22)));
+      assertTrue(v2.equals(Collections.singletonList(44)));
+    }
+/*
+    // should update for the same key with set
+    {
+      SetupConfig sc1 = new SetupConfig(ck1);
+      sc1 = sc1.jset(k2, NoUnits, 22);
+      assertTrue(sc1.exists(k2));
+      assertTrue(sc1.jvalue(k2) == 22);
 
-        // Should allow adding keys
-        {
-            SetupConfig sc1 = new SetupConfig(ck3).jset(k1, 22).jset(k2, 44);
-            assertTrue(sc1.size() == 2);
-            assertTrue(sc1.exists(k1));
-            assertTrue(sc1.exists(k2));
-            assertTrue(sc1.jvalue(k1) == 22);
-            assertTrue(sc1.jvalue(k2) == 44);
-        }
-
-        // Should allow setting
-        {
-            SetupConfig sc1 = new SetupConfig(ck1);
-            sc1 = sc1.jset(k1, NoUnits, 22).jset(k2, NoUnits, 44);
-            assertTrue(sc1.size() == 2);
-            assertTrue(sc1.exists(k1));
-            assertTrue(sc1.exists(k2));
-        }
-
-        // Should allow getting values
-        {
-            SetupConfig sc1 = new SetupConfig(ck1);
-            sc1 = sc1.jset(k1, NoUnits, 22).jset(k2, NoUnits, 44);
-            List<Integer> v1 = sc1.jvalues(k1);
-            List<Integer> v2 = sc1.jvalues(k2);
-            assertTrue(sc1.jget(k1).isPresent());
-            assertTrue(sc1.jget(k2).isPresent());
-            assertTrue(v1.equals(Collections.singletonList(22)));
-            assertTrue(v2.equals(Collections.singletonList(44)));
-        }
-
-        // should update for the same key with set
-        {
-            SetupConfig sc1 = new SetupConfig(ck1);
-            sc1 = sc1.jset(k2, NoUnits, 22);
-            assertTrue(sc1.exists(k2));
-            assertTrue(sc1.jvalue(k2) == 22);
-
-            sc1 = sc1.jset(k2, NoUnits, 33);
-            assertTrue(sc1.exists(k2));
-            assertTrue(sc1.jvalue(k2) == 33);
-        }
-
-        // should update for the same key with add
-        {
-            SetupConfig sc1 = new SetupConfig(ck1);
-            sc1 = sc1.add(k2.jset(22).withUnits(NoUnits));
-            assertTrue(sc1.exists(k2));
-            assertTrue(sc1.jvalue(k2) == 22);
-
-            sc1 = sc1.add(k2.jset(33).withUnits(NoUnits));
-            assertTrue(sc1.exists(k2));
-            assertTrue(sc1.jvalue(k2) == 33);
-        }
+      sc1 = sc1.jset(k2, NoUnits, 33);
+      assertTrue(sc1.exists(k2));
+      assertTrue(sc1.jvalue(k2) == 33);
     }
 
+    // should update for the same key with add
+    {
+      SetupConfig sc1 = new SetupConfig(ck1);
+      sc1 = sc1.add(k2.jset(22).withUnits(NoUnits));
+      assertTrue(sc1.exists(k2));
+      assertTrue(sc1.jvalue(k2) == 22);
+
+      sc1 = sc1.add(k2.jset(33).withUnits(NoUnits));
+      assertTrue(sc1.exists(k2));
+      assertTrue(sc1.jvalue(k2) == 33);
+    }
+    */
+  }
+
+  /*
+      @Test
+      public void CheckingKeyUpdates() {
+          IntKey k1 = new IntKey("atest");
+
+          // Should allow updates
+          IntItem i1 = k1.jset(22);
+          assertTrue(i1.jvalue() == 22);
+          assertTrue(i1.jvalue(0) == 22);
+          assertTrue(i1.units() == NoUnits);
+          IntItem i2 = k1.jset(33);
+          assertTrue(i2.jvalue() == 33);
+          assertTrue(i2.units() == NoUnits);
+
+          SetupConfig sc = new SetupConfig(ck1).add(i1);
+          assertTrue(sc.jvalue(k1, 0) == 22);
+          sc = sc.add(i2);
+          assertTrue(sc.jvalue(k1, 0) == 33);
+
+          SetupConfig sc2 = new SetupConfig(ck1).jset(k1, 22);
+          assertTrue(sc2.jvalue(k1) == 22);
+          assertTrue(sc2.jvalues(k1).equals(Collections.singletonList(22)));
+      }
+  */
+/*
     @Test
     public void ocTest() {
         IntKey repeat = new IntKey("repeat");
@@ -238,7 +288,7 @@ public class JConfigTests {
     @Test
     public void testSettingMultipleValues() {
         IntKey t1 = new IntKey("test1");
-        // should allow setting a single value
+        // should allow setting a single head
         {
             IntItem i1 = t1.jset(1);
             assertTrue(i1.jvalue() == 1);
@@ -268,41 +318,128 @@ public class JConfigTests {
             assertTrue(i1.jvalue(2) == 6);
         }
     }
+*/
+  @Test
+  public void testSetupConfigArgs() {
+    IntKey encoder1 = IntKey("encoder1");
+    IntKey encoder2 = IntKey("encoder2");
+    IntKey xOffset = IntKey("xOffset");
+    IntKey yOffset = IntKey("yOffset");
+    String obsId = "Obs001";
 
-    @Test
-    public void testSetupConfigArgs() {
-        IntKey encoder1 = new IntKey("encoder1");
-        IntKey encoder2 = new IntKey("encoder2");
-        IntKey xOffset = new IntKey("xOffset");
-        IntKey yOffset = new IntKey("yOffset");
-        String obsId = "Obs001";
+    // SetupConfig sc1 = SetupConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
+    //SetupConfig sc2 = SetupConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
+    //      SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
+//        assertTrue(configArg.info().obsId().obsId().equals(obsId));
+//        assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
+  }
 
-        SetupConfig sc1 = new SetupConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
-        SetupConfig sc2 = new SetupConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
-        SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
-        assertTrue(configArg.info().obsId().obsId().equals(obsId));
-        assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
-    }
+  @Test
+  public void testObserveConfigArgs() {
+    IntKey encoder1 = new IntKey("encoder1");
+    IntKey encoder2 = new IntKey("encoder2");
+    IntKey xOffset = new IntKey("xOffset");
+    IntKey yOffset = new IntKey("yOffset");
+    String obsId = "Obs001";
 
-    @Test
-    public void testObserveConfigArgs() {
-        IntKey encoder1 = new IntKey("encoder1");
-        IntKey encoder2 = new IntKey("encoder2");
-        IntKey xOffset = new IntKey("xOffset");
-        IntKey yOffset = new IntKey("yOffset");
-        String obsId = "Obs001";
-
-        ObserveConfig sc1 = new ObserveConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
-        ObserveConfig sc2 = new ObserveConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
-        assertTrue(!sc1.jget(xOffset).isPresent());
-        assertTrue(!sc1.jget(xOffset, 0).isPresent());
-        assertTrue(sc2.jget(xOffset).isPresent());
-        assertTrue(sc2.jget(xOffset, 0).isPresent());
-
+    ObserveConfig sc1 = ObserveConfig(ck1);
+    sc1 = jadd(sc1, jset(encoder1, 22), jset(encoder2, 33));
+    ObserveConfig sc2 = ObserveConfig(ck1);
+    sc2 = jadd(sc2, jset(xOffset, 1), jset(yOffset, 2));
+    assertTrue(!jgetItem(sc1, xOffset).isPresent());
+    assertTrue(!jget(sc1, xOffset, 0).isPresent());
+    assertTrue(jgetItem(sc2, xOffset).isPresent());
+    assertTrue(jget(sc2, xOffset, 0).isPresent());
+/*  Kim READD
         ObserveConfigArg configArg = Configurations.createObserveConfigArg(obsId, sc1, sc2);
         assertTrue(configArg.info().obsId().obsId().equals(obsId));
         assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
-    }
+        */
+  }
 
+
+  @Test
+  public void testStaticSCMethods() {
+    IntKey encoder = new IntKey("encoder");
+    StringKey filter = new StringKey("filter");
+
+    SetupConfig sc1 = new SetupConfig(ck1);
+    sc1 = JItems.jadd(sc1, jset(encoder, Arrays.asList(100, 200)));
+
+    assertTrue(jvalue(jitem(sc1, encoder)).equals(100));
+    System.out.println("ONE: " + jget(sc1, encoder, 0));
+    assertTrue(jget(sc1, encoder, 0).equals(Optional.of(100)));
+    assertTrue(jget(sc1, encoder, 1).equals(Optional.of(200)));
+
+    sc1 = JItems.jadd(sc1, jset(encoder, 100, 1000, 1000));
+    System.out.println("SC1: " + sc1);
+
+    List<Integer> x1 = jvalues(jitem(sc1, encoder));
+    System.out.println("X1: " + x1);
+  }
+
+  @Test
+  public void testMultiItemAdd() {
+    IntKey encoder = IntKey("encoder");
+    StringKey filter = StringKey("filter");
+    IntItem iitem = jset(encoder, Arrays.asList(1, 2, 3));
+    StringItem sitem = jset(filter, Arrays.asList("A", "B", "C"));
+
+    SetupConfig sc1 = SetupConfig(ck1);
+    sc1 = jadd(sc1, iitem, sitem);
+    assertTrue(sc1.size() == 2);
+    assertTrue(sc1.exists(encoder));
+    assertTrue(sc1.exists(filter));
+
+    SetupConfig sc2 = new SetupConfig(ck2);
+    sc2 = jadd(sc2, jset(encoder, 1), jset(filter, "blue"));
+    System.out.println("SC2: " + sc2);
+  }
+
+  @Test
+  public void testConfigJGet() {
+    IntKey encoder = new IntKey("encoder");
+    StringKey filter = new StringKey("filter");
+    IntKey notpresent = new IntKey("notpresent");
+
+    IntItem iitem = JItems.jset(encoder, Arrays.asList(1, 2, 3));
+    StringItem sitem = JItems.jset(filter, Arrays.asList("A", "B", "C"));
+
+    // Add two items, but not the third
+    SetupConfig sc1 = new SetupConfig(ck1);
+    sc1 = sc1.add(iitem).add(sitem);
+    //sc1 = sc1.madd(iitem, sitem);
+    assertTrue(sc1.size() == 2);
+
+    Optional<IntItem> a = sc1.jget(encoder);
+
+    // Two should be present, but the last is not
+    assertTrue(jgetItem(sc1, encoder).get().equals(iitem));
+    assertTrue(jgetItem(sc1, filter).get().equals(sitem));
+    assertTrue(jgetItem(sc1, notpresent).equals(Optional.empty()));
+
+    assertTrue(jvalue(jitem(sc1, encoder), 1).equals(2));
+  }
+
+  @Test
+  public void testJavaRemove() {
+    IntKey encoder = new IntKey("encoder");
+    StringKey filter = new StringKey("filter");
+    IntKey notpresent = new IntKey("notpresent");
+    SetupConfig sc1 = new SetupConfig(ck1);
+
+    StringItem siIn = jset(filter, "green");
+
+    sc1 = sc1.add(jset(encoder, Arrays.asList(1, 2, 3), JUnitsOfMeasure.Deg)).add(siIn);
+    assertTrue(sc1.size() == 2);
+
+    sc1 = sc1.remove(encoder);
+    System.out.println("Remove: " + sc1);
+    assertTrue(sc1.size() == 1);
+
+    sc1 = JItems.jremove(sc1, filter);
+    System.out.println("Remove2: " + sc1);
+    assertTrue(sc1.size() == 0);
+  }
 }
 

@@ -3,20 +3,20 @@
 //import scala.collection.immutable.Vector
 //
 ///**
-// * TYpe of an enum value
+// * TYpe of an enum head
 // */
 //trait EnumValue {
-//  def value: String
+//  def head: String
 //
 //  def name: String
 //
 //  def description: String
 //}
 //
-//case class OneEnum(name: String, value: String, description: String = "") extends EnumValue
+//case class OneEnum(name: String, head: String, description: String = "") extends EnumValue
 //
 ///**
-// * A key for an enum value
+// * A key for an enum head
 // * @param nm the name of the key
 // * @param possibles the available values
 // */

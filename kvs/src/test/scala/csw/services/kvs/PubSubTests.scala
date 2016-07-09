@@ -67,7 +67,7 @@ object PubSubTests {
 
     def nextConfig(): SetupConfig = {
       nextId = nextId + 1
-      SetupConfig(prefix).set(exposureTime, expTime) // XXX change to be a Duration
+      SetupConfig(prefix).add(exposureTime.set(expTime)) // XXX change to be a Duration
     }
 
     override def receive: Receive = {

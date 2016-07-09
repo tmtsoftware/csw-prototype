@@ -43,7 +43,7 @@ public class JKeyValueStoreTests {
 
     // Note: In the tests below we just call .get() on the future results for simplicity.
     // In a real application, you could use other methods...
-
+/*
     @Test
     public void basicJavaTests() throws Exception {
         SetupConfig config1 = new SetupConfig("tcs.test")
@@ -107,4 +107,5 @@ public class JKeyValueStoreTests {
         }
         kvs.delete(key).get();
     }
+    */
 }

@@ -42,7 +42,7 @@ public class JTelemetryServiceTest {
 
     // Note: In the tests below we just call .get() on the future results for simplicity.
     // In a real application, you could use other methods...
-
+/*
     @Test
     public void basicJavaTests() throws Exception {
         StatusEvent config1 = new StatusEvent("tcs.test")
@@ -102,4 +102,5 @@ public class JTelemetryServiceTest {
         }
         ts.delete(config.prefix()).get();
     }
+    */
 }

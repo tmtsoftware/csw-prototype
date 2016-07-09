@@ -60,7 +60,7 @@ object PeriodicHcdControllerTests {
     val position = StringKey("position")
 
     // Simulate getting the initial state from the device and publishing to the kvs
-    val initialState = SetupConfig(testPrefix1).set(position, "None")
+    val initialState = SetupConfig(testPrefix1).add(position.set("None"))
     svs.set(initialState)
 
     def receive: Receive = {
@@ -99,7 +99,7 @@ class PeriodicHcdControllerTests extends TestKit(PeriodicHcdControllerTests.syst
     hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix1).set(position, "IR2")
+    val config = SetupConfig(testPrefix1).add(position.set("IR2"))
     hcdController ! Submit(config)
     system.actorOf(StateVariableMatcherActor.props(List(config), self))
     within(10.seconds) {

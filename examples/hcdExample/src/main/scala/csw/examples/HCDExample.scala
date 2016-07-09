@@ -5,13 +5,13 @@ import csw.services.ccs.HcdController
 import csw.services.event.{EventService, EventServiceSettings, EventSubscriber}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
-import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
+import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.Events.SystemEvent
-import csw.util.config.{IntKey, Key}
+import csw.util.config.IntKey
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -50,6 +50,7 @@ object HCDExample {
   protected class PosGenerator(name: String, prefix: String) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
 
     import java.time._
+
     import PosGenerator._
     import TimeService._
 
@@ -73,7 +74,7 @@ object HCDExample {
 
       case Tick ⇒
         val (az, el) = genPair(rand)
-        val event = SystemEvent(prefix).set(azKey, az).set(elKey, el)
+        val event = SystemEvent(prefix).add(azKey.set(az)).add(elKey.set(el))
         eventService.publish(event)
     }
 
@@ -97,8 +98,8 @@ object HCDExample {
 
     def receive: Receive = {
       case event: SystemEvent ⇒
-        val az = event.get(azKey).get
-        val el = event.get(elKey).get
+        val az = event(azKey).head
+        val el = event.get(elKey).get.head
         log.info(s"Coords: az: $az, el: $el")
 
         count = count + 1
@@ -112,9 +113,9 @@ object HCDExample {
 
 class HCDExample(info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
   import HCDExample._
-  import Supervisor._
   import PosGenerator._
   import HCDExample._
+  import Supervisor._
 
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")

@@ -46,6 +46,7 @@ public class JBlockingKeyValueStoreTests {
         system = null;
     }
 
+    /*
     @Test
     public void basicJavaTests() throws Exception {
         SetupConfig config1 = new SetupConfig("tcs.test")
@@ -109,4 +110,5 @@ public class JBlockingKeyValueStoreTests {
         }
         kvs.delete(key);
     }
+    */
 }

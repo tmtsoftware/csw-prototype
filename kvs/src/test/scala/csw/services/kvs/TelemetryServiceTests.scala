@@ -41,26 +41,27 @@ class TelemetryServiceTests
   test("Test simplified API with blocking set and get") {
     val prefix = "tcs.test"
     val event1 = StatusEvent(prefix)
-      .set(infoValue, 1)
-      .set(infoStr, "info 1")
+      .add(infoValue.set(1))
+      .add(infoStr.set("info 1"))
 
     val event2 = StatusEvent(prefix)
-      .set(infoValue, 2)
-      .set(infoStr, "info 2")
+      .add(infoValue.set(2))
+      .add(infoStr.set("info 2"))
 
     bts.set(event1)
     assert(bts.get(prefix).isDefined)
-    val val1 = bts.get(prefix).get
+    val val1:StatusEvent = bts.get(prefix).get
+
     assert(val1.prefix == prefix)
     assert(val1.get(infoValue).isDefined)
-    assert(val1.value(infoValue) == 1)
-    assert(val1.value(infoStr) == "info 1")
+    assert(val1(infoValue).head == 1)
+    assert(val1(infoStr).head == "info 1")
 
     bts.set(event2)
     assert(bts.get(prefix).isDefined)
-    val val2 = bts.get(prefix).get
-    assert(val2.value(infoValue) == 2)
-    assert(val2.value(infoStr) == "info 2")
+    val val2:StatusEvent = bts.get(prefix).get
+    assert(val2(infoValue).head == 2)
+    assert(val2(infoStr).head == "info 2")
 
     bts.delete(prefix)
     assert(bts.get(prefix).isEmpty)
@@ -70,20 +71,20 @@ class TelemetryServiceTests
 
   test("Test blocking set, get and getHistory") {
     val prefix = "tcs.test2"
-    val event = StatusEvent(prefix).set(exposureTime, 2.0)
+    val event = StatusEvent(prefix).add(exposureTime.set(2.0))
     val n = 3
 
-    bts.set(event.set(exposureTime, 3.0), n)
-    bts.set(event.set(exposureTime, 4.0), n)
-    bts.set(event.set(exposureTime, 5.0), n)
-    bts.set(event.set(exposureTime, 6.0), n)
-    bts.set(event.set(exposureTime, 7.0), n)
+    bts.set(event.add(exposureTime.set(3.0)), n)
+    bts.set(event.add(exposureTime.set(4.0)), n)
+    bts.set(event.add(exposureTime.set(5.0)), n)
+    bts.set(event.add(exposureTime.set(6.0)), n)
+    bts.set(event.add(exposureTime.set(7.0)), n)
     assert(bts.get(prefix).isDefined)
     val v = bts.get(prefix).get
     val h = bts.getHistory(prefix, n + 1)
     bts.delete(prefix)
     assert(v.get(exposureTime).isDefined)
-    assert(v.value(exposureTime) == 7.0)
+    assert(v(exposureTime).head == 7.0)
     assert(h.size == n + 1)
     for (i ← 0 to n) {
       logger.info(s"History: $i: ${h(i)}")
@@ -95,12 +96,12 @@ class TelemetryServiceTests
   test("Test async set and get") {
     val prefix = "tcs.test"
     val event1 = StatusEvent(prefix)
-      .set(infoValue, 1)
-      .set(infoStr, "info 1")
+      .add(infoValue.set(1))
+      .add(infoStr.set("info 1"))
 
     val event2 = StatusEvent(prefix)
-      .set(infoValue, 2)
-      .set(infoStr, "info 2")
+      .add(infoValue.set(2))
+      .add(infoStr.set("info 2"))
 
     for {
       res1 ← ts.set(event1)
@@ -112,31 +113,31 @@ class TelemetryServiceTests
       res4 ← ts.delete(prefix)
     } yield {
       assert(val1.exists(_.prefix == prefix))
-      assert(val1.exists(_.value(infoValue) == 1))
-      assert(val1.exists(_.value(infoStr) == "info 1"))
-      assert(val2.exists(_.value(infoValue) == 2))
-      assert(val2.exists(_.value(infoStr) == "info 2"))
+      assert(val1.exists(_(infoValue).head == 1))
+      assert(val1.exists(_(infoStr).head == "info 1"))
+      assert(val2.exists(_(infoValue).head == 2))
+      assert(val2.exists(_(infoStr).head == "info 2"))
       assert(res3.isEmpty)
     }
   }
 
   test("Test async set, get and getHistory") {
     val prefix = "tcs.test2"
-    val event = StatusEvent(prefix).set(exposureTime, 2.0)
+    val event = StatusEvent(prefix).add(exposureTime.set(2.0))
     val n = 3
 
     val f = for {
-      _ ← ts.set(event.set(exposureTime, 3.0), n)
-      _ ← ts.set(event.set(exposureTime, 4.0), n)
-      _ ← ts.set(event.set(exposureTime, 5.0), n)
-      _ ← ts.set(event.set(exposureTime, 6.0), n)
-      _ ← ts.set(event.set(exposureTime, 7.0), n)
+      _ ← ts.set(event.add(exposureTime.set(3.0)), n)
+      _ ← ts.set(event.add(exposureTime.set(4.0)), n)
+      _ ← ts.set(event.add(exposureTime.set(5.0)), n)
+      _ ← ts.set(event.add(exposureTime.set(6.0)), n)
+      _ ← ts.set(event.add(exposureTime.set(7.0)), n)
       v ← ts.get(prefix)
       h ← ts.getHistory(prefix, n + 1)
       _ ← ts.delete(prefix)
     } yield {
       assert(v.isDefined)
-      assert(v.get.value(exposureTime) == 7.0)
+      assert(v.get(exposureTime).head == 7.0)
       assert(h.size == n + 1)
       for (i ← 0 to n) {
         logger.info(s"History: $i: ${h(i)}")
@@ -152,12 +153,12 @@ class TelemetryServiceTests
     val prefix2 = "tcs.test2"
 
     val event1 = StatusEvent(prefix1)
-      .set(infoValue, 1)
-      .set(infoStr, "info 1")
+      .add(infoValue.set(1))
+      .add(infoStr.set("info 1"))
 
     val event2 = StatusEvent(prefix2)
-      .set(infoValue, 1)
-      .set(infoStr, "info 2")
+      .add(infoValue.set(1))
+      .add(infoStr.set("info 2"))
 
     // See below for actor class
     val mySubscriber = system.actorOf(MySubscriber.props(prefix1, prefix2))
@@ -166,11 +167,11 @@ class TelemetryServiceTests
     Thread.sleep(1000)
 
     bts.set(event1)
-    bts.set(event1.set(infoValue, 2))
+    bts.set(event1.add(infoValue.set(2)))
 
     bts.set(event2)
-    bts.set(event2.set(infoValue, 2))
-    bts.set(event2.set(infoValue, 3))
+    bts.set(event2.add(infoValue.set(2)))
+    bts.set(event2.add(infoValue.set(3)))
 
     // Make sure subscriber actor has received all events before proceeding
     Thread.sleep(1000)
@@ -201,13 +202,13 @@ class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber
   def receive: Receive = {
     case event: StatusEvent if event.prefix == prefix1 ⇒
       count1 = count1 + 1
-      assert(event.value(infoValue) == count1)
-      assert(event.value(infoStr) == "info 1")
+      assert(event(infoValue).head == count1)
+      assert(event(infoStr).head == "info 1")
 
     case event: StatusEvent if event.prefix == prefix2 ⇒
       count2 = count2 + 1
-      assert(event.value(infoValue) == count2)
-      assert(event.value(infoStr) == "info 2")
+      assert(event(infoValue).head == count2)
+      assert(event(infoStr).head == "info 2")
 
     case GetResults ⇒
       sender() ! Results(count1, count2)
