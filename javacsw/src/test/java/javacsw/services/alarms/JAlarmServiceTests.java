@@ -6,6 +6,7 @@ import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.util.Timeout;
 import csw.services.alarms.AlarmKey;
+import csw.services.alarms.AscfValidation;
 import javacsw.services.alarms.JAlarmModel.*;
 import javacsw.services.alarms.JAlarmState.*;
 import csw.services.alarms.AlarmModel;
@@ -122,7 +123,7 @@ public class JAlarmServiceTests {
         File ascf = Paths.get(url.toURI()).toFile();
 
         // initialize the list of alarms in Redis
-        List<AlarmService.Problem> problems = alarmService.initAlarms(ascf, false).get();
+        List<AscfValidation.Problem> problems = alarmService.initAlarms(ascf, false).get();
         JProblem.printProblems(problems);
         assertTrue(JProblem.errorCount(problems) == 0);
 

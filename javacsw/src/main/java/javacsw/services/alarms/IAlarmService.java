@@ -31,7 +31,7 @@ public interface IAlarmService {
      * @param reset     if true, delete the current alarms before importing (default: false)
      * @return a future list of problems that occurred while validating the config file or ingesting the data into the database
      */
-    CompletableFuture<List<Problem>> initAlarms(File inputFile, boolean reset);
+    CompletableFuture<List<AscfValidation.Problem>> initAlarms(File inputFile, boolean reset);
 
     /**
      * Gets the alarm information from the database for any matching alarms

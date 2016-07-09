@@ -9,9 +9,10 @@ import javacsw.services.alarms.IAlarmService.{AlarmHandler, HealthHandler}
 import akka.actor.{ActorRef, ActorRefFactory}
 import akka.util.Timeout
 import csw.services.alarms.AlarmModel.{AlarmStatus, AlarmType, Health, HealthStatus, SeverityLevel}
-import csw.services.alarms.AlarmService.{AlarmMonitor, Problem}
+import csw.services.alarms.AlarmService.AlarmMonitor
 import csw.services.alarms.{AlarmKey, AlarmModel, AlarmService, AlarmState}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
+import csw.services.alarms.AscfValidation.Problem
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._

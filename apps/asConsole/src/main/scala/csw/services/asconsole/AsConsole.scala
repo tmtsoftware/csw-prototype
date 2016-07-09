@@ -7,10 +7,10 @@ import akka.util.Timeout
 import csw.services.loc.LocationService
 import ch.qos.logback.classic._
 import csw.services.alarms.AlarmModel.{AlarmStatus, HealthStatus, SeverityLevel}
-import csw.services.alarms.{AlarmJson, AlarmKey, AlarmService, AlarmRefreshActor}
+import csw.services.alarms.{AlarmJson, AlarmKey, AlarmRefreshActor, AlarmService}
 import org.slf4j.LoggerFactory
-import AlarmService.Problem
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
+import csw.services.alarms.AscfValidation.Problem
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

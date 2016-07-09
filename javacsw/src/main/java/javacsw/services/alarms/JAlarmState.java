@@ -7,6 +7,7 @@ import csw.services.alarms.AlarmState.ShelvedState;
 /**
  * Java access to AlarmState values
  */
+@SuppressWarnings("unused")
 public class JAlarmState {
 
     /**

@@ -21,6 +21,7 @@ public class JAlarmModel {
     /**
      * Java access to AlarmType values
      */
+    @SuppressWarnings("unused")
     public static class JAlarmType {
         public static final AlarmModel.AlarmType Absolute = JAlarmService.JAlarmTypeSup$.MODULE$.Absolute();
         public static final AlarmModel.AlarmType BitPattern = JAlarmService.JAlarmTypeSup$.MODULE$.BitPattern();

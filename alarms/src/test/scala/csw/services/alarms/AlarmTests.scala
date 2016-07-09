@@ -6,9 +6,9 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import AlarmService.Problem
 import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
+import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.LocationService
 import csw.services.trackLocation.TrackLocation
 import org.scalatest.FunSuiteLike
@@ -34,12 +34,6 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
   // Get the test alarm service config file (ascf)
   val url = getClass.getResource("/test-alarms.conf")
   val ascf = Paths.get(url.toURI).toFile
-
-  test("Test validating the alarm service config file") {
-    val problems = AlarmService.validate(ascf)
-    problems.foreach(p ⇒ println(p.toString))
-    assert(Problem.errorCount(problems) == 0)
-  }
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
@@ -170,7 +164,7 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       val healthMonitor = alarmService.monitorHealth(nfKey, None, Some(printAlarmStatus _), Some(printHealthStatus _))
       Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
       Await.ready(alarmService.setSeverity(key3, SeverityLevel.Okay), timeout.duration)
-      Thread.sleep(shortDelayMs) // make sure actor has started
+      Thread.sleep(shortDelayMs * 2) // make sure actor has started
       assert(callbackHealth.contains(Health.Good))
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Good)
 
