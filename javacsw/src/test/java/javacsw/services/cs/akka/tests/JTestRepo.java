@@ -1,4 +1,4 @@
-package javacsw.services.cs.akka;
+package javacsw.services.cs.akka.tests;
 
 
 import akka.actor.ActorSystem;

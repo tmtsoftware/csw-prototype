@@ -1,4 +1,4 @@
-package javacsw.services.ccs;
+package javacsw.services.ccs.tests;
 
 import akka.actor.*;
 import akka.event.Logging;
@@ -14,6 +14,8 @@ import csw.util.config.RunId;
 import csw.util.config.StateVariable.CurrentState;
 import csw.util.config.StateVariable.DemandState;
 import csw.util.config.StringKey;
+import javacsw.services.ccs.JHcdController;
+import javacsw.services.ccs.JHcdStatusMatcherActorFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

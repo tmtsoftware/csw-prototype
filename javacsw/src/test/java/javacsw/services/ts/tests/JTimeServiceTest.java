@@ -1,8 +1,10 @@
-package javacsw.services.ts;
+package javacsw.services.ts.tests;
 
 import akka.actor.*;
 import akka.japi.Creator;
 import akka.testkit.JavaTestKit;
+import javacsw.services.ts.JTimeService;
+import javacsw.services.ts.JTimeServiceScheduler;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

@@ -18,5 +18,5 @@ public abstract class JTimeServiceScheduler extends JavaTimeServiceScheduler {
     /**
      * Reference to the actor's logger
      */
-    LoggingAdapter log = log();
+    public LoggingAdapter log = log();
 }

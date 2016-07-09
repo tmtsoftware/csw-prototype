@@ -1,11 +1,13 @@
-package javacsw.services.kvs;
+package javacsw.services.kvs.tests;
 
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
+import csw.services.kvs.KvsSettings;
+import csw.util.config.Configurations.*;
 import csw.util.config.DoubleKey;
-import csw.util.config.Events.StatusEvent;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
+import javacsw.services.kvs.IKeyValueStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,10 +17,9 @@ import java.util.Optional;
 
 import static junit.framework.TestCase.assertTrue;
 
-/**
- * Tests the Java API to the telemetry service
- */
-public class JTelemetryServiceTest {
+public class JKeyValueStoreTests {
+
+    // Keys used in test
     private static final IntKey infoValue = new IntKey("infoValue");
     private static final StringKey infoStr = new StringKey("infoStr");
     private static final DoubleKey exposureTime = new DoubleKey("exposureTime");
@@ -26,12 +27,13 @@ public class JTelemetryServiceTest {
     private static ActorSystem system;
 
     // The target for this test
-    private static ITelemetryService ts;
+    private static IKeyValueStore<SetupConfig> kvs;
 
     @BeforeClass
     public static void setup() {
         system = ActorSystem.create();
-        ts = ITelemetryService.getTelemetryService(system);
+        KvsSettings settings = IKeyValueStore.getKvsSettings(system);
+        kvs = IKeyValueStore.getSetupConfigStore(settings, system);
     }
 
     @AfterClass
@@ -45,61 +47,65 @@ public class JTelemetryServiceTest {
 
     @Test
     public void basicJavaTests() throws Exception {
-        StatusEvent config1 = new StatusEvent("tcs.test")
+        SetupConfig config1 = new SetupConfig("tcs.test")
                 .jset(infoValue, 1)
                 .jset(infoStr, "info 1");
 
-        StatusEvent config2 = new StatusEvent("tcs.test")
+        SetupConfig config2 = new SetupConfig("tcs.test")
                 .jset(infoValue, 2)
                 .jset(infoStr, "info 2");
 
-        ts.set(config1).get();
-        Optional<StatusEvent> val1Opt = ts.get(config1.prefix()).get();
+        kvs.set("test1", config1).get();
+        Optional<SetupConfig> val1Opt = kvs.get("test1").get();
         assertTrue(val1Opt.isPresent());
-        StatusEvent val1 = val1Opt.get();
-        assertTrue(val1.prefix().equals(config1.prefix()));
+        SetupConfig val1 = val1Opt.get();
+        assertTrue(val1.prefix().equals("tcs.test"));
         assertTrue(val1.jvalue(infoValue) == 1);
         assertTrue(val1.jvalue(infoStr).equals("info 1"));
 
-        ts.set(config2).get();
-        Optional<StatusEvent> val2Opt = ts.get(config2.prefix()).get();
+        kvs.set("test2", config2).get();
+        Optional<SetupConfig> val2Opt = kvs.get("test2").get();
         assertTrue(val2Opt.isPresent());
-        StatusEvent val2 = val2Opt.get();
-        assertTrue(val2.prefix().equals(config2.prefix()));
+        SetupConfig val2 = val2Opt.get();
+        assertTrue(val2.prefix().equals("tcs.test"));
         assertTrue(val2.jvalue(infoValue) == 2);
         assertTrue(val2.jvalue(infoStr).equals("info 2"));
 
-       ts.delete(config1.prefix()).get();
-        ts.delete(config2.prefix()).get();
+        assertTrue(kvs.delete("test1").get());
+        assertTrue(kvs.delete("test2").get());
 
-        assertTrue(!ts.get(config1.prefix()).get().isPresent());
-        assertTrue(!ts.get(config2.prefix()).get().isPresent());
+        assertTrue(!kvs.get("test1").get().isPresent());
+        assertTrue(!kvs.get("test2").get().isPresent());
+
+        assertTrue(!kvs.delete("test1").get());
+        assertTrue(!kvs.delete("test2").get());
     }
 
     @Test
     public void TestSetGetAndGetHistory() throws Exception {
-        StatusEvent config = new StatusEvent("tcs.testPrefix")
+        SetupConfig config = new SetupConfig("tcs.testPrefix")
                 .jset(exposureTime, 2.0);
 
+        String key = "test";
         int n = 3;
-        ts.set(config.jset(exposureTime, 3.0), n).get();
-        ts.set(config.jset(exposureTime, 4.0), n).get();
-        ts.set(config.jset(exposureTime, 5.0), n).get();
-        ts.set(config.jset(exposureTime, 6.0), n).get();
-        ts.set(config.jset(exposureTime, 7.0), n).get();
+        kvs.set(key, config.jset(exposureTime, 3.0), n).get();
+        kvs.set(key, config.jset(exposureTime, 4.0), n).get();
+        kvs.set(key, config.jset(exposureTime, 5.0), n).get();
+        kvs.set(key, config.jset(exposureTime, 6.0), n).get();
+        kvs.set(key, config.jset(exposureTime, 7.0), n).get();
 
-        Optional<StatusEvent> v = ts.get(config.prefix()).get();
+        Optional<SetupConfig> v = kvs.get(key).get();
         assertTrue(v.isPresent());
-        StatusEvent sc = v.get();
+        SetupConfig sc = v.get();
         Optional<Double> expTime = sc.jget(exposureTime, 0);
         assertTrue(expTime.isPresent());
         assertTrue(expTime.get() == 7.0);
 
-        List<StatusEvent> h = ts.getHistory(config.prefix(), n + 1).get();
+        List<SetupConfig> h = kvs.getHistory(key, n + 1).get();
         assertTrue(h.size() == n + 1);
         for (int i = 0; i < n; i++) {
             System.out.println("History: " + i + ": " + h.get(i));
         }
-        ts.delete(config.prefix()).get();
+        kvs.delete(key).get();
     }
 }

@@ -1,10 +1,10 @@
-package javacsw.services.cs.core;
+package javacsw.services.cs.core.tests;
 
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import javacsw.services.cs.JBlockingConfigManager;
-import javacsw.services.cs.akka.JTestRepo;
+import javacsw.services.cs.akka.tests.JTestRepo;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

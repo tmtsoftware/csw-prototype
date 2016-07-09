@@ -1,4 +1,4 @@
-package javacsw.services.kvs;
+package javacsw.services.kvs.tests;
 
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
@@ -7,6 +7,8 @@ import csw.util.config.Configurations.*;
 import csw.util.config.DoubleKey;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
+import javacsw.services.kvs.IBlockingKeyValueStore;
+import javacsw.services.kvs.IKeyValueStore;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

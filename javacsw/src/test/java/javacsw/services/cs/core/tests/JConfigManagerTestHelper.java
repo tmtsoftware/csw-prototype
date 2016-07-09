@@ -1,4 +1,4 @@
-package javacsw.services.cs.core;
+package javacsw.services.cs.core.tests;
 
 import csw.services.cs.core.ConfigFileHistory;
 import csw.services.cs.core.ConfigFileInfo;

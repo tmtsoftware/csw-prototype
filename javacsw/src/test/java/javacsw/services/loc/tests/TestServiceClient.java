@@ -1,4 +1,4 @@
-package javacsw.services.loc;
+package javacsw.services.loc.tests;
 
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -7,6 +7,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import csw.services.loc.LocationService;
+import javacsw.services.loc.AbstractLocationTrackerClientActor;
 
 import java.util.ArrayList;
 import java.util.List;

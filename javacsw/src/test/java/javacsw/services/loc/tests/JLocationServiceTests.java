@@ -1,4 +1,4 @@
-package javacsw.services.loc;
+package javacsw.services.loc.tests;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -8,6 +8,10 @@ import csw.services.loc.ComponentId;
 import csw.services.loc.Connection.*;
 import csw.services.loc.LocationService;
 import csw.services.loc.LocationService.*;
+import javacsw.services.loc.JComponentId;
+import javacsw.services.loc.JConnection;
+import javacsw.services.loc.JLocationService;
+import javacsw.services.loc.JRegistrationTracker;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -75,7 +79,7 @@ public class JLocationServiceTests {
         assertTrue(m1.size() == 2);
         assertTrue(m1.stream().anyMatch(r -> r.connection().equals(akkaConnection)));
         assertTrue(m1.stream().anyMatch(r -> r.connection().equals(httpConnection)));
-        m1.stream().forEach(r -> r.result().unregister());
+        m1.forEach(r -> r.result().unregister());
         system.stop(tracker);
     }
 

@@ -1,4 +1,4 @@
-package javacsw.util.config;
+package javacsw.util.config.tests;
 
 import csw.util.config.Configurations.*;
 import csw.util.config.*;

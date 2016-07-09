@@ -1,4 +1,4 @@
-package javacsw.services.alarms;
+package javacsw.services.alarms.tests;
 
 import akka.actor.ActorSystem;
 import akka.event.Logging;
@@ -7,14 +7,16 @@ import akka.testkit.JavaTestKit;
 import akka.util.Timeout;
 import csw.services.alarms.AlarmKey;
 import csw.services.alarms.AscfValidation;
+import javacsw.services.alarms.IAlarmService;
+import javacsw.services.alarms.JAlarmKey;
 import javacsw.services.alarms.JAlarmModel.*;
 import javacsw.services.alarms.JAlarmState.*;
 import csw.services.alarms.AlarmModel;
 import csw.services.alarms.AlarmModel.*;
-import csw.services.alarms.AlarmService;
 import csw.services.alarms.AlarmService.*;
 import csw.services.loc.LocationService;
 import csw.services.trackLocation.TrackLocation;
+import javacsw.services.alarms.JProblem;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -84,7 +86,6 @@ public class JAlarmServiceTests {
 
     @AfterClass
     public static void teardown() {
-        logger.info("XXX In Teardown!");
         alarmService.shutdown();
         JavaTestKit.shutdownActorSystem(system);
         system = null;

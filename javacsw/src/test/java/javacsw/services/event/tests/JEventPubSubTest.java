@@ -1,4 +1,4 @@
-package javacsw.services.event;
+package javacsw.services.event.tests;
 
 import akka.actor.*;
 import akka.event.Logging;
@@ -10,6 +10,8 @@ import csw.services.event.EventService;
 import csw.services.event.EventServiceSettings;
 import csw.util.config.*;
 import csw.util.config.Events.ObserveEvent;
+import javacsw.services.event.JEventService;
+import javacsw.services.event.JEventSubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,9 +22,9 @@ import scala.runtime.BoxedUnit;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static javacsw.services.event.JEventPubSubTest.Msg.Publish;
-import static javacsw.services.event.JEventPubSubTest.Msg.PublisherInfo;
-import static javacsw.services.event.JEventPubSubTest.Msg.SubscriberAck;
+import static javacsw.services.event.tests.JEventPubSubTest.Msg.Publish;
+import static javacsw.services.event.tests.JEventPubSubTest.Msg.PublisherInfo;
+import static javacsw.services.event.tests.JEventPubSubTest.Msg.SubscriberAck;
 
 /**
  * Java test for event service
@@ -91,8 +93,6 @@ public class JEventPubSubTest {
     /**
      * Starts the test by creating the subscriber and publisher actors and sending a Publish
      * message to the publisher.
-     *
-     * @throws Exception
      */
     @Test
     public void testEventService() throws Exception {

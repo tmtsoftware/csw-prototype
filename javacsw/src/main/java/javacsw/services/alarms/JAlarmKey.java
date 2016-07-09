@@ -10,14 +10,14 @@ import java.util.Optional;
  * Java API for creating AlarmKey instances
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
-class JAlarmKey {
+public class JAlarmKey {
     /**
      * Creates an alarm key from the information in the model
      *
      * @param a the alarm model
      * @return the alarm key
      */
-    static AlarmKey create(AlarmModel a) {
+    public static AlarmKey create(AlarmModel a) {
         return AlarmKey$.MODULE$.apply(a);
     }
 
@@ -30,7 +30,7 @@ class JAlarmKey {
      * @param nameOpt      optional alarm name (default: any)
      * @return the alarm key
      */
-    static AlarmKey create(Optional<String> subsystemOpt, Optional<String> componentOpt, Optional<String> nameOpt) {
+    public static AlarmKey create(Optional<String> subsystemOpt, Optional<String> componentOpt, Optional<String> nameOpt) {
         return JAlarmService.JAlarmKeySup$.MODULE$.create(subsystemOpt, componentOpt, nameOpt);
     }
 
@@ -42,7 +42,7 @@ class JAlarmKey {
      * @param componentOpt optional component (default: any)
      * @return the alarm key
      */
-    static AlarmKey create(Optional<String> subsystemOpt, Optional<String> componentOpt) {
+    public static AlarmKey create(Optional<String> subsystemOpt, Optional<String> componentOpt) {
         return JAlarmService.JAlarmKeySup$.MODULE$.create(subsystemOpt, componentOpt, Optional.empty());
     }
 
@@ -53,7 +53,7 @@ class JAlarmKey {
      * @param subsystemOpt optional subsystem (default: any)
      * @return the alarm key
      */
-    static AlarmKey create(Optional<String> subsystemOpt) {
+    public static AlarmKey create(Optional<String> subsystemOpt) {
         return JAlarmService.JAlarmKeySup$.MODULE$.create(subsystemOpt, Optional.empty(), Optional.empty());
     }
 
@@ -63,7 +63,7 @@ class JAlarmKey {
      *
      * @return the alarm key
      */
-    static AlarmKey create() {
+    public static AlarmKey create() {
         return JAlarmService.JAlarmKeySup$.MODULE$.create( Optional.empty(), Optional.empty(), Optional.empty());
     }
 
@@ -73,7 +73,7 @@ class JAlarmKey {
      * @param key one of the string values for key (key,severityKey, stateKey)
      * @return the AlarmKey instance
      */
-    static AlarmKey create(String key) {
+    public static AlarmKey create(String key) {
         return AlarmKey$.MODULE$.apply(key);
     }
 
@@ -85,7 +85,7 @@ class JAlarmKey {
      * @param name the alarm name
      * @return the AlarmKey instance
      */
-    static AlarmKey create(String subsystem, String component, String name) {
+    public static AlarmKey create(String subsystem, String component, String name) {
         return new AlarmKey(subsystem, component, name);
     }
 }

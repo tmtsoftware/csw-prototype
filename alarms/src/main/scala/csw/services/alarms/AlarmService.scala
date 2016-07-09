@@ -82,6 +82,12 @@ object AlarmService {
      * Stops the monitoring actor
      */
     def stop(): Unit
+
+    /**
+     * A reference to the monitoring actor (could be used to watch the actor to detect if it stops for some reason)
+     * @return
+     */
+    def actorRef: ActorRef
   }
 
   private[alarms] case class AlarmMonitorImpl(actorRef: ActorRef) extends AlarmMonitor {

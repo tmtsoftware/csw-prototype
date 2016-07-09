@@ -1,8 +1,10 @@
-package javacsw.util.config;
+package javacsw.util.config.tests;
 
 import csw.util.config.*;
 import csw.util.config.Configurations.*;
 import csw.util.config.Events.*;
+import javacsw.util.config.JSubsystem;
+import javacsw.util.config.JUnitsOfMeasure;
 import org.junit.Test;
 import spray.json.JsValue;
 

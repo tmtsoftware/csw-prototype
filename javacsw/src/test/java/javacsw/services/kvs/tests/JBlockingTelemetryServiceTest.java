@@ -1,4 +1,4 @@
-package javacsw.services.kvs;
+package javacsw.services.kvs.tests;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -13,6 +13,9 @@ import csw.util.config.DoubleKey;
 import csw.util.config.Events.StatusEvent;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
+import javacsw.services.kvs.IBlockingTelemetryService;
+import javacsw.services.kvs.IKeyValueStore;
+import javacsw.services.kvs.JTelemetrySubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

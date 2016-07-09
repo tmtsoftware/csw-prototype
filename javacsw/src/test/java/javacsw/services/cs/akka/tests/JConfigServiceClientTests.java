@@ -1,4 +1,4 @@
-package javacsw.services.cs.akka;
+package javacsw.services.cs.akka.tests;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -8,7 +8,10 @@ import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import csw.services.cs.akka.ConfigServiceActor;
 import csw.services.loc.LocationService;
 import javacsw.services.cs.JConfigManager;
-import javacsw.services.cs.core.JConfigManagerTestHelper;
+import javacsw.services.cs.akka.JBlockingConfigServiceClient;
+import javacsw.services.cs.akka.JConfigServiceClient;
+import javacsw.services.cs.akka.JConfigServiceFactory;
+import javacsw.services.cs.core.tests.JConfigManagerTestHelper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
