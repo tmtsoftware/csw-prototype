@@ -53,6 +53,7 @@ object Settings {
     // compile options ScalaUnidoc, unidoc
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
+    scalacOptions in(Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
     javacOptions in Compile ++= Seq("-source", "1.8"),
     javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
     javaOptions in (Test, run) ++= Seq("-Djava.net.preferIPv4Stack=true"),  // For location service

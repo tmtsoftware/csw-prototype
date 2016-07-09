@@ -1,6 +1,8 @@
 Java API for the Location Service
 =================================
 
+See the [loc](../loc) project for an overview.
+
 The Location Service helps you to find out the hostname and port number for a service,
 as well as other information for determining the correct URI to use, such as the path,
 the actor system name and the config prefix.
