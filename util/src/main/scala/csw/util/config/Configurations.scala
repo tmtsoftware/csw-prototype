@@ -1,12 +1,7 @@
 package csw.util.config
 
-import java.util.Optional
-
-import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
-
 import scala.annotation.varargs
 import scala.collection.JavaConverters._
-import scala.compat.java8.OptionConverters._
 import scala.language.implicitConversions
 
 /**
@@ -80,15 +75,14 @@ object Configurations {
       * Adds an item to the config
       *
       * @param item the item to add
-      * @tparam S the Scala head type
-      * @tparam J the Java head type
+      * @tparam I the Item type
       * @return a new instance of this config with the given item added
       */
     def add[I <: Item[_]](item: I): T = doAdd(this, item)
 
     private def doAdd[I <: Item[_]](c: T, item: I): T = {
       val configRemoved: T = removeByKeyname(c, item.keyName)
-      create(configRemoved.items + item).asInstanceOf[T]
+      create(configRemoved.items + item)
     }
 
     /**
@@ -129,16 +123,6 @@ object Configurations {
       * @return the item associated with the key or a NoSuchElementException if the key does not exist
       */
     final def item[S, I <: Item[S]](key: Key[S, I]): I = get(key).get
-
-    /**
-      * Java API: Returns the item for the key, if found, otherwise None
-      *
-      * @param key the Key to be used for lookup
-      * @return the item for the key, if found
-      * @tparam S the Scala head type
-      * @tparam I the Item type
-      */
-    def jget[S, I <: Item[S]](key: Key[S, I]): Optional[I] = get(key).asJava
 
     /**
       * Returns true if the key exists in the config
@@ -186,12 +170,12 @@ object Configurations {
     /**
       * Function removes an item from the config c based on item content
       * @param c the config to remove from
-      * @param item the item that should be removed
+      * @param itemIn the item that should be removed
       * @tparam I the Item type
       * @return a new T, where T is a ConfigType child with the item removed or identical if the item is not presen
       */
-    private def removeByItem[I <:Item[_]](c: ConfigType[T], item: I): T = {
-      val f: Option[I] = getByItem(c.items, item)
+    private def removeByItem[I <:Item[_]](c: ConfigType[T], itemIn: I): T = {
+      val f: Option[I] = getByItem(c.items, itemIn)
       f match {
         case Some(item) => create(c.items.-(item))
         case None => c.asInstanceOf[T]
@@ -318,9 +302,9 @@ case class WaitConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_
 
   // The following overrides are needed for the Java API and javadocs
   // (Using a Java interface caused various Java compiler errors)
-  //override def add[S, J](item: Item[S, J]): WaitConfig = super.add(item)
+  override def add[I <: Item[_]](item: I): WaitConfig = super.add(item)
 
-  //override def remove[S, J](key: Key[S, J]): WaitConfig = super.remove[S, J](key)
+  override def remove[S, I <:Item[S]](key: Key[S, I]): WaitConfig = super.remove(key)
 }
 
 /**

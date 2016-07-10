@@ -39,7 +39,7 @@ public class JConfigTests {
     assertTrue(sc1.exists(k1));
     assertTrue(sc1.exists(k2));
     assertTrue(jvalue(jitem(sc1, k1)).equals(22));
-    assertEquals(jvalues(jitem(sc1, k2)), Arrays.asList(44));
+    assertEquals(jvalues(jitem(sc1, k2)), Collections.singletonList(44));
   }
 
   @Test
@@ -100,21 +100,6 @@ public class JConfigTests {
   }
 
   @Test
-  public void testJGetonConfig() {
-    SetupConfig sc1 = SetupConfig(ck3);
-    IntKey k1 = IntKey("encoder");
-    DoubleKey k2 = DoubleKey("windspeed");
-    IntKey k3 = IntKey("NotPresent");
-
-    sc1 = jadd(sc1, jset(k1, 22, 44, 66), jset(k2, 1., 2., 3., 4.));
-    Optional<IntItem> i1 = sc1.jget(k1);
-    Optional<DoubleItem> i2 = sc1.jget(k2);
-    assertTrue(i1.isPresent() && jvalue(i1.get(), 0).equals(22));
-    assertTrue(i2.isPresent() && jvalue(i2.get(), 1).equals(2.));
-    assertFalse(sc1.jget(k3).isPresent());
-  }
-
-  @Test
   public void scTest() {
     IntKey k1 = IntKey("encoder");
     IntKey k2 = IntKey("windspeed");
@@ -150,8 +135,6 @@ public class JConfigTests {
       List<Integer> v2 = jvalues(jitem(sc1, k2));
       System.out.println("V1: " + v1);
       System.out.println("V2: " + v2);
-      assertTrue(sc1.jget(k1).isPresent());
-      assertTrue(sc1.jget(k2).isPresent());
       assertTrue(v1.equals(Collections.singletonList(22)));
       assertTrue(v2.equals(Collections.singletonList(44)));
     }
@@ -410,8 +393,6 @@ public class JConfigTests {
     sc1 = sc1.add(iitem).add(sitem);
     //sc1 = sc1.madd(iitem, sitem);
     assertTrue(sc1.size() == 2);
-
-    Optional<IntItem> a = sc1.jget(encoder);
 
     // Two should be present, but the last is not
     assertTrue(jgetItem(sc1, encoder).get().equals(iitem));
