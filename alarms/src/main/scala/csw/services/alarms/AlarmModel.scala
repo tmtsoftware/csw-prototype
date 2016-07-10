@@ -2,11 +2,24 @@ package csw.services.alarms
 
 import akka.util.ByteString
 import com.typesafe.config.Config
+import csw.services.alarms.AlarmModel.SeverityLevel
 import redis.{ByteStringDeserializer, ByteStringDeserializerDefault}
 
 /**
  * Basic model for an Alarm.
  * This information is read from the Alarm Service Config File and stored in Redis
+ *
+ * @param subsystem The alarm belongs to this subsystem
+ * @param component The alarm belongs to this component
+ * @param name the name of the alarm
+ * @param description a description of the alarm
+ * @param location A text description of where the alarming condition is located
+ * @param alarmType The general category for the alarm (e.g., limit alarm)
+ * @param severityLevels Severity levels implemented by the component alarm
+ * @param probableCause The probable cause for each level or for all levels
+ * @param operatorResponse Instructions or information to help the operator respond to the alarm.
+ * @param acknowledge Does this alarm require an acknowledge by the operator?
+ * @param latched Should this alarm be latched?
  */
 case class AlarmModel(
     subsystem:        String,
@@ -218,6 +231,26 @@ object AlarmModel extends ByteStringDeserializerDefault {
       Some(AlarmModel(subsystem, component, name, description, location, alarmType, severityLevels, probableCause,
         operatorResponse, acknowledge, latched))
     }
+  }
+}
+
+/**
+ * An abbreviated alarm model that only contains the fields needed internally to calculate the severity, etc..
+ *
+ * @param severityLevels Severity levels implemented by the component alarm
+ * @param acknowledge Does this alarm require an acknowledge by the operator?
+ * @param latched Should this alarm be latched?
+ */
+private[alarms] case class AlarmModelSmall(severityLevels: List[AlarmModel.SeverityLevel], acknowledge: Boolean, latched: Boolean)
+
+private[alarms] object AlarmModelSmall {
+  def apply(seq: Seq[Option[ByteString]]): Option[AlarmModelSmall] = {
+    val formatter = implicitly[ByteStringDeserializer[String]]
+    for {
+      severityLevels ← seq.head.map(formatter.deserialize(_).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate)))
+      acknowledge ← seq(1).map(formatter.deserialize(_).toBoolean)
+      latched ← seq(2).map(formatter.deserialize(_).toBoolean)
+    } yield AlarmModelSmall(severityLevels, acknowledge, latched)
   }
 }
 

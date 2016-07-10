@@ -297,6 +297,15 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     }
   }
 
+  // Gets the abbreviated alarm model for the given key
+  private def getAlarmSmall(key: AlarmKey): Future[AlarmModelSmall] = {
+    redisClient.hmget(key.key, "severityLevels", "acknowledge", "latched").map(AlarmModelSmall(_)).map { opt ⇒
+      if (opt.isEmpty) {
+        throw new RuntimeException(s"No alarm was found for key $key")
+      } else opt.get
+    }
+  }
+
   /**
    * Gets the alarm object matching the given key from Redis
    *
@@ -316,7 +325,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit] = {
     for {
-      alarm ← getAlarm(alarmKey)
+      alarm ← getAlarmSmall(alarmKey)
       alarmState ← getAlarmState(alarmKey)
       currentSeverity ← getSeverity(alarmKey)
       result ← setSeverity(alarmKey, alarm, alarmState, severity, currentSeverity)
@@ -324,8 +333,12 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   }
 
   // Sets the severity of the alarm, if allowed based on the alarm state
-  private def setSeverity(alarmKey: AlarmKey, alarm: AlarmModel, alarmState: AlarmState,
+  private def setSeverity(alarmKey: AlarmKey, alarm: AlarmModelSmall, alarmState: AlarmState,
                           severity: SeverityLevel, currentSeverity: SeverityLevel): Future[Unit] = {
+
+    // Check that the severity is listed in the spec (XXX Should this throw an exception?)
+    if (!alarm.severityLevels.contains(severity))
+      logger.warn(s"Alarm $alarmKey is not listed as supporting severity level $severity")
 
     // Is the alarm latched?
     val newSeverity = if (alarm.latched) {

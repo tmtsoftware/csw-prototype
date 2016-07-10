@@ -163,14 +163,15 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
 
       // Test health monitor
       alarmMonitor.stop()
-      Thread.sleep(shortDelayMs) // make sure actor has started
+      Thread.sleep(shortDelayMs)
       val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
       val healthMonitor = alarmService.monitorHealth(nfKey, None, Some(printAlarmStatus _), Some(printHealthStatus _))
+      Thread.sleep(shortDelayMs) // make sure actor has started
       Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
       Await.ready(alarmService.setSeverity(key3, SeverityLevel.Okay), timeout.duration)
-      Thread.sleep(shortDelayMs) // make sure actor has started
-      assert(callbackHealth.contains(Health.Good))
+      Thread.sleep(shortDelayMs)
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Good)
+      assert(callbackHealth.contains(Health.Good))
 
       Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
       assert(callbackHealth.contains(Health.Bad))
