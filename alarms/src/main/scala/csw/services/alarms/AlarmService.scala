@@ -85,6 +85,7 @@ object AlarmService {
 
     /**
      * A reference to the monitoring actor (could be used to watch the actor to detect if it stops for some reason)
+     *
      * @return
      */
     def actorRef: ActorRef
@@ -284,25 +285,26 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   override def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]] = {
     val pattern = alarmKey.key
     redisClient.keys(pattern).flatMap { keys ⇒
-      Future.sequence(keys.map(getAlarm))
+      Future.sequence(keys.map(getAlarm)).map(_.flatten)
     }
   }
 
   override def getAlarm(key: AlarmKey): Future[AlarmModel] = {
-    getAlarm(key.key)
+    getAlarm(key.key).map { opt ⇒
+      if (opt.isEmpty) {
+        throw new RuntimeException(s"No alarm was found for key $key")
+      } else opt.get
+    }
   }
 
   /**
    * Gets the alarm object matching the given key from Redis
    *
    * @param key the key for the alarm in redis
-   * @return the alarm model object
+   * @return the alarm model object, if found
    */
-  private[alarms] def getAlarm(key: String): Future[AlarmModel] = {
-    redisClient.hgetall(key).map { map ⇒
-      if (map.isEmpty) throw new RuntimeException(s"Alarm model data for $key not found.")
-      AlarmModel(map)
-    }
+  private[alarms] def getAlarm(key: String): Future[Option[AlarmModel]] = {
+    redisClient.hgetall(key).map(AlarmModel(_))
   }
 
   override def getAlarmState(key: AlarmKey): Future[AlarmState] = {
@@ -414,11 +416,26 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   }
 
   override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): Future[Unit] = {
-    redisClient.hset(alarmKey.stateKey, AlarmState.shelvedStateField, shelvedState.name).map(_ ⇒ ())
+    for {
+      exists ← redisClient.exists(alarmKey.stateKey)
+      if exists
+      result ← redisClient.hset(alarmKey.stateKey, AlarmState.shelvedStateField, shelvedState.name).map(_ ⇒ ())
+    } yield {
+      if (!exists) throw new RuntimeException(s"Can't set shelved state for unknown key: $alarmKey")
+      result
+    }
   }
 
   override def setActivationState(alarmKey: AlarmKey, activationState: ActivationState): Future[Unit] = {
-    redisClient.hset(alarmKey.stateKey, AlarmState.activationStateField, activationState.name).map(_ ⇒ ())
+
+    for {
+      exists ← redisClient.exists(alarmKey.stateKey)
+      if exists
+      result ← redisClient.hset(alarmKey.stateKey, AlarmState.activationStateField, activationState.name).map(_ ⇒ ())
+    } yield {
+      if (!exists) throw new RuntimeException(s"Can't set activation state for unknown key: $alarmKey")
+      result
+    }
   }
 
   override def getHealth(alarmKey: AlarmKey): Future[Health] = {
@@ -429,6 +446,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   private[alarms] def getHealthInfoMap(alarmKey: AlarmKey): Future[Map[AlarmKey, HealthInfo]] = {
     val pattern = alarmKey.key
     redisClient.keys(pattern).map(_.map(AlarmKey(_))).flatMap { alarmKeys ⇒
+      if (alarmKeys.isEmpty) throw new RuntimeException("Can't get health information: No alarms matched $alarmKey")
       val fs = alarmKeys.map { k ⇒
         for {
           sev ← getSeverity(k)

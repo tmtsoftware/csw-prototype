@@ -15,6 +15,7 @@ import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.util.Try
 
 object AlarmTests {
   LocationService.initInterface()
@@ -48,15 +49,16 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
 
     // Set a low refresh rate for the test
     val refreshSecs = 1
+//    val refreshSecs = 5
 
     // Time until alarm severity expires
     val expireSecs = refreshSecs * AlarmService.maxMissedRefresh
 
     // Time in ms to wait for a Redis callback
-    val shortDelayMs = 500
+    val shortDelayMs = 500*refreshSecs
 
     // Time in ms to wait to see if an alarm severity expired
-    val delayMs = expireSecs * 1000 + shortDelayMs
+    val delayMs = expireSecs * 1000*refreshSecs + shortDelayMs
 
     // Later, in another JVM...,
     // Get the alarm service by looking up the name with the location service.
@@ -107,6 +109,7 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       val key1 = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
       val key2 = AlarmKey("NFIRAOS", "envCtrl", "minTemperature")
       val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
+      val badKey = AlarmKey("XXX", "xxx", "xxx")
 
       val alarmMonitor = alarmService.monitorHealth(key1, None, Some(printAlarmStatus _), Some(printHealthStatus _))
       Thread.sleep(shortDelayMs) // make sure actor has started
@@ -160,11 +163,12 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
 
       // Test health monitor
       alarmMonitor.stop()
+      Thread.sleep(shortDelayMs) // make sure actor has started
       val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
       val healthMonitor = alarmService.monitorHealth(nfKey, None, Some(printAlarmStatus _), Some(printHealthStatus _))
       Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
       Await.ready(alarmService.setSeverity(key3, SeverityLevel.Okay), timeout.duration)
-      Thread.sleep(shortDelayMs * 2) // make sure actor has started
+      Thread.sleep(shortDelayMs) // make sure actor has started
       assert(callbackHealth.contains(Health.Good))
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Good)
 
@@ -186,6 +190,16 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(callbackHealth.contains(Health.Bad))
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Bad)
+
+      // Test error conditions: Try to set an alarm that does not exist
+      assert(Try(Await.result(alarmService.getAlarm(badKey), timeout.duration)).isFailure)
+      assert(Try(Await.result(alarmService.setSeverity(badKey, SeverityLevel.Critical), timeout.duration)).isFailure)
+      assert(Try(Await.result(alarmService.getSeverity(badKey), timeout.duration)).isFailure)
+      assert(Try(Await.result(alarmService.acknowledgeAlarm(badKey), timeout.duration)).isFailure)
+      assert(Try(Await.result(alarmService.getHealth(badKey), timeout.duration)).isFailure)
+      assert(Try(Await.result(alarmService.setShelvedState(badKey, ShelvedState.Normal), timeout.duration)).isFailure)
+      assert(Try(Await.result(alarmService.setActivationState(badKey, ActivationState.Normal), timeout.duration)).isFailure)
+
 
       // Stop the actors monitoring the alarm and health
       healthMonitor.stop()

@@ -197,25 +197,27 @@ object AlarmModel extends ByteStringDeserializerDefault {
    * Initializes an AlarmModel from the given map
    *
    * @param map a map, as returned from Redis hgetall
-   * @return the alarm model
+   * @return the alarm model, if found
    */
-  def apply(map: Map[String, ByteString]): AlarmModel = {
-    val formatter = implicitly[ByteStringDeserializer[String]]
+  def apply(map: Map[String, ByteString]): Option[AlarmModel] = {
+    if (map.isEmpty) None else {
+      val formatter = implicitly[ByteStringDeserializer[String]]
 
-    val subsystem = formatter.deserialize(map("subsystem"))
-    val component = formatter.deserialize(map("component"))
-    val name = formatter.deserialize(map("name"))
-    val description = formatter.deserialize(map("description"))
-    val location = formatter.deserialize(map("location"))
-    val alarmType = AlarmType(formatter.deserialize(map("alarmType")))
-    val severityLevels = formatter.deserialize(map("severityLevels")).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate))
-    val probableCause = formatter.deserialize(map("probableCause"))
-    val operatorResponse = formatter.deserialize(map("operatorResponse"))
-    val acknowledge = formatter.deserialize(map("acknowledge")).toBoolean
-    val latched = formatter.deserialize(map("latched")).toBoolean
+      val subsystem = formatter.deserialize(map("subsystem"))
+      val component = formatter.deserialize(map("component"))
+      val name = formatter.deserialize(map("name"))
+      val description = formatter.deserialize(map("description"))
+      val location = formatter.deserialize(map("location"))
+      val alarmType = AlarmType(formatter.deserialize(map("alarmType")))
+      val severityLevels = formatter.deserialize(map("severityLevels")).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate))
+      val probableCause = formatter.deserialize(map("probableCause"))
+      val operatorResponse = formatter.deserialize(map("operatorResponse"))
+      val acknowledge = formatter.deserialize(map("acknowledge")).toBoolean
+      val latched = formatter.deserialize(map("latched")).toBoolean
 
-    AlarmModel(subsystem, component, name, description, location, alarmType, severityLevels, probableCause,
-      operatorResponse, acknowledge, latched)
+      Some(AlarmModel(subsystem, component, name, description, location, alarmType, severityLevels, probableCause,
+        operatorResponse, acknowledge, latched))
+    }
   }
 }
 
