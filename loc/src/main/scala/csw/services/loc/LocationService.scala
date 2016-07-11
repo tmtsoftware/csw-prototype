@@ -277,7 +277,7 @@ object LocationService {
    * @param system      the caller's actor system
    * @return a future object describing the services found
    */
-  def resolve(connections: Set[Connection])(implicit system: ActorSystem, timeout: Timeout): Future[LocationsReady] = {
+  def resolve(connections: Set[Connection])(implicit system: ActorRefFactory, timeout: Timeout): Future[LocationsReady] = {
     import akka.pattern.ask
     val actorRef = system.actorOf(LocationTrackerWorker.props(None))
     (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]

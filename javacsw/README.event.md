@@ -1,6 +1,8 @@
 Event Service Java API
 ======================
 
+See the [event](../event) project for an overview.
+
 This project implements an event service based on Akka and HornetQ.
 
 Event Publisher

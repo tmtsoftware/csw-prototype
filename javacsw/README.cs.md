@@ -1,6 +1,8 @@
 Java API for the Config Service
 ===============================
 
+See the [cs](../cs) project for an overview.
+
 The Java API for the config service provides synchronous/blocking and asynchronous/non-blocking versions.
 
 Here is an example of how to use the Java blocking API to create, update and get files:

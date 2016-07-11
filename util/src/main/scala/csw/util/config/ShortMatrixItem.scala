@@ -1,40 +1,47 @@
 package csw.util.config
 
-import scala.annotation.varargs
-import scala.collection.JavaConverters._
-import scala.collection.immutable.Vector
-import scala.language.implicitConversions
 import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 import spray.json.DefaultJsonProtocol
 
-import scala.compat.java8.OptionConverters._
+import scala.collection.immutable.Vector
+import scala.language.implicitConversions
 
 /**
  * A Scala equivalent of a 2d array of Shorts
  */
-case class ShortMatrix(value: Vector[Vector[Short]]) {
-  def toJava: JShortMatrix = JShortMatrix(
-    value.map(v ⇒ v.map(i ⇒ i: java.lang.Short).asJava).asJava
-  )
+case class ShortMatrix(value: Array[Array[Short]]) {
+  import ArrayAndMatrixEquality._
+
+  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+
+  def apply(row: Int, col: Int) = value(row)(col)
+
+  override def canEqual(other: Any) = other.isInstanceOf[ShortMatrix]
+
+  override def equals(other: Any) = other match {
+    case that: ShortMatrix ⇒
+      this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
+    case _ ⇒ false
+  }
 }
+
+//case class ShortMatrix(value Vec)
 case object ShortMatrix extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(ShortMatrix.apply)
+
+  implicit def create(value: Array[Array[Short]]): ShortMatrix = ShortMatrix(value)
 }
 
 /**
- * A Java equivalent of a 2d array of shorts
+ * A key for ShortMatrix values
+ *
+ * @param nameIn the name of the key
  */
-case class JShortMatrix(value: java.util.List[java.util.List[java.lang.Short]]) {
-  def toScala: ShortMatrix = ShortMatrix(
-    value.asScala.toVector.map(l ⇒ l.asScala.toVector.map(i ⇒ i: Short))
-  )
-}
+final case class ShortMatrixKey(nameIn: String) extends Key[ShortMatrix, ShortMatrixItem](nameIn) {
 
-case object JShortMatrix {
-  /**
-   * Java API: Initialize from an array of arrays of shorts
-   */
-  def fromArray(ar: Array[Array[Short]]): JShortMatrix = JShortMatrix(ar.toVector.map(a ⇒ a.toVector.map(i ⇒ i: java.lang.Short).asJava).asJava)
+  override def set(v: Vector[ShortMatrix], units: Units = NoUnits) = ShortMatrixItem(keyName, v, units)
+
+  override def set(v: ShortMatrix*) = ShortMatrixItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 }
 
 /**
@@ -44,33 +51,6 @@ case object JShortMatrix {
  * @param values   the value for the key
  * @param units   the units of the value
  */
-final case class ShortMatrixItem(keyName: String, values: Vector[ShortMatrix], units: Units) extends Item[ShortMatrix, JShortMatrix] {
-
-  override def jvalues: java.util.List[JShortMatrix] = values.map(_.toJava).asJava
-
-  override def jvalue(index: Int): JShortMatrix = values(index).toJava
-
-  override def jget(index: Int): java.util.Optional[JShortMatrix] = get(index).map(_.toJava).asJava
-
-  override def jvalue: JShortMatrix = values(0).toJava
-
+final case class ShortMatrixItem(keyName: String, values: Vector[ShortMatrix], units: Units) extends Item[ShortMatrix] {
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }
-
-/**
- * A key for ShortMatrix values
- *
- * @param nameIn the name of the key
- */
-final case class ShortMatrixKey(nameIn: String) extends Key[ShortMatrix, JShortMatrix](nameIn) {
-
-  override def set(v: Vector[ShortMatrix], units: Units = NoUnits) = ShortMatrixItem(keyName, v, units)
-
-  override def set(v: ShortMatrix*) = ShortMatrixItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
-
-  override def jset(v: java.util.List[JShortMatrix]): ShortMatrixItem = ShortMatrixItem(keyName, v.asScala.toVector.map(_.toScala), NoUnits)
-
-  @varargs
-  override def jset(v: JShortMatrix*) = ShortMatrixItem(keyName, v.map(_.toScala).toVector, units = UnitsOfMeasure.NoUnits)
-}
-

@@ -109,7 +109,7 @@ object Events {
    * @param info event related information
    * @param items an optional initial set of items (keys with values)
    */
-  case class StatusEvent(info: EventInfo, items: ConfigData = Set.empty[Item[_, _]])
+  case class StatusEvent(info: EventInfo, items: ConfigData = Set.empty[Item[_]])
       extends EventType[StatusEvent] with EventServiceEvent {
 
     // Java API
@@ -119,31 +119,9 @@ object Events {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[S, J](item: Item[S, J]): StatusEvent = super.add(item)
+    override def add[I <: Item[_]](item: I): StatusEvent = super.add(item)
 
-    override def set[S, J](key: Key[S, J], units: Units, v: S*): StatusEvent = super.set[S, J](key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], units: Units, v: J*): StatusEvent = super.jset(key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], v: J*): StatusEvent = super.jset(key, v: _*)
-
-    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): StatusEvent = super.jset(key, units, v)
-
-    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): StatusEvent = super.jset(key, v)
-
-    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
-
-    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
-
-    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
-
-    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
-
-    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
-
-    override def remove[S, J](key: Key[S, J]): StatusEvent = super.remove[S, J](key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): StatusEvent = super.remove(key)
   }
 
   object StatusEvent {
@@ -158,7 +136,7 @@ object Events {
    * @param info event related information
    * @param items an optional initial set of items (keys with values)
    */
-  case class ObserveEvent(info: EventInfo, items: ConfigData = Set.empty[Item[_, _]])
+  case class ObserveEvent(info: EventInfo, items: ConfigData = Set.empty[Item[_]])
       extends EventType[ObserveEvent] with EventServiceEvent {
 
     // Java API
@@ -168,31 +146,9 @@ object Events {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[S, J](item: Item[S, J]): ObserveEvent = super.add(item)
+    override def add[I <: Item[_]](item: I): ObserveEvent = super.add(item)
 
-    override def set[S, J](key: Key[S, J], units: Units, v: S*): ObserveEvent = super.set[S, J](key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], units: Units, v: J*): ObserveEvent = super.jset(key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], v: J*): ObserveEvent = super.jset(key, v: _*)
-
-    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): ObserveEvent = super.jset(key, units, v)
-
-    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): ObserveEvent = super.jset(key, v)
-
-    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
-
-    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
-
-    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
-
-    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
-
-    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
-
-    override def remove[S, J](key: Key[S, J]): ObserveEvent = super.remove[S, J](key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): ObserveEvent = super.remove(key)
   }
 
   object ObserveEvent {
@@ -207,7 +163,7 @@ object Events {
    * @param info event related information
    * @param items an optional initial set of items (keys with values)
    */
-  case class SystemEvent(info: EventInfo, items: ConfigData = Set.empty[Item[_, _]])
+  case class SystemEvent(info: EventInfo, items: ConfigData = Set.empty[Item[_]])
       extends EventType[SystemEvent] with EventServiceEvent {
 
     // Java API
@@ -217,31 +173,9 @@ object Events {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[S, J](item: Item[S, J]): SystemEvent = super.add(item)
+    override def add[I <: Item[_]](item: I): SystemEvent = super.add(item)
 
-    override def set[S, J](key: Key[S, J], units: Units, v: S*): SystemEvent = super.set[S, J](key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], units: Units, v: J*): SystemEvent = super.jset(key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], v: J*): SystemEvent = super.jset(key, v: _*)
-
-    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): SystemEvent = super.jset(key, units, v)
-
-    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): SystemEvent = super.jset(key, v)
-
-    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
-
-    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
-
-    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
-
-    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
-
-    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
-
-    override def remove[S, J](key: Key[S, J]): SystemEvent = super.remove[S, J](key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): SystemEvent = super.remove(key)
   }
 
   object SystemEvent {

@@ -20,7 +20,7 @@ object TrackLocation extends App {
   LocationService.initInterface()
 
   // Needed for use with Futures
-  implicit val system = ActorSystem()
+  implicit val system = ActorSystem("TrackLocation")
 
   implicit val timeout = Timeout(10.seconds)
 
@@ -61,8 +61,8 @@ object TrackLocation extends App {
       c.copy(appConfigFile = Some(x))
     } text "optional config file in HOCON format (Options specified as: $name.command, $name.port, etc. Fetched from config service if path does not exist)"
 
-    opt[Boolean]("no-exit") action { (x, c) ⇒
-      c.copy(noExit = x)
+    opt[Unit]("no-exit") action { (x, c) ⇒
+      c.copy(noExit = true)
     } text "for testing: prevents application from exiting after running command"
 
     help("help")

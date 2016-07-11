@@ -68,7 +68,7 @@ package csw.util
  *   val imageData = IntVectorKey("imageData")
  *
  *   // Dummy image data
- *   val testImageData = IntVector(Array.ofDim[Int](10000).toVector)
+ *   val testImageData = IntArray(Array.ofDim[Int](10000).toVector)
  *
  *   val prefix = "tcs.mobie.red.dat.exposureInfo"
  *

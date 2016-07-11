@@ -11,7 +11,7 @@ import csw.util.config.Configurations._
 object HcdController {
 
   /**
-   * Base trait of messages sent or received
+   * Base trait of messages received by HcdController
    */
   sealed trait HcdControllerMessage
 
@@ -23,11 +23,11 @@ object HcdController {
   case class Submit(config: SetupConfig) extends HcdControllerMessage
 
   //  /**
-  //    * Message to submit a oneway config to the HCD.
-  //    * There will be no messages on completion.
-  //    *
-  //    * @param config the configuration to execute
-  //    */
+  //   * Message to submit a oneway config to the HCD.
+  //   * There will be no messages on completion.
+  //   *
+  //   * @param config the configuration to execute
+  //   */
   //  case class OneWay(config: SetupConfig) extends HcdControllerMessage
 }
 
@@ -45,16 +45,19 @@ trait HcdController extends PublisherActor[CurrentState] {
    */
   protected def controllerReceive: Receive = publisherReceive orElse {
     case Submit(config)  ⇒ process(config)
-    //    case OneWay(config)  ⇒ process(config)
+
+    //    case OneWay(config) ⇒ process(config, oneway = true)
 
     // Can be used by related actors to post the current status
     case s: CurrentState ⇒ notifySubscribers(s)
   }
 
   /**
-   * Derived classes should process the given config and eventually either call
+   * A derived class should process the given config and, if oneway is false, either call
    * notifySubscribers() or send a CurrentState message to itself
    * (possibly from a worker actor) to indicate changes in the current HCD state.
+   *
+   * @param config            the config received
    */
   protected def process(config: SetupConfig): Unit
 }

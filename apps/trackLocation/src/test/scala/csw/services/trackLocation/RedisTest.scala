@@ -60,13 +60,13 @@ class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLog
     val kvsSettings = KvsSettings(redisHostname = httpLoc.uri.getHost, redisPort = httpLoc.uri.getPort)
     val telemetryService = BlockingTelemetryService(TelemetryService(kvsSettings))
     val key = StringKey("testKey")
-    val e1 = StatusEvent("test").set(key, "Test Passed")
+    val e1 = StatusEvent("test").add(key.set("Test Passed"))
     telemetryService.set(e1)
     val e2Opt = telemetryService.get("test")
     assert(e2Opt.isDefined)
     assert(e1 == e2Opt.get)
 
-    println(e2Opt.get.value(key))
+    println(e2Opt.get(key))
     Await.ready(telemetryService.shutdown(), timeout.duration)
     println("Redis shutdown completed")
   }

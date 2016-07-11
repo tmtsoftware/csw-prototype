@@ -14,14 +14,15 @@ object EventTests {
   val cloudCover = StringKey("cloudCover")
   val position = StringKey("position")
 
-  val statusEvent = StatusEvent("mobie.red.dat.exposureInfo")
-    .set(exposureTime, 220.0)
-    .set(cloudCover, "20%")
-    .set(exposureType, "flat")
-    .set(exposureClass, "science")
+  val statusEvent = StatusEvent("mobie.red.dat.exposureInfo").madd(
+    exposureTime.set(220.0),
+    cloudCover.set("20%"),
+    exposureType.set("flat"),
+    exposureClass.set("science")
+  )
 
   val setupConfig = SetupConfig("wfos.red.filter")
-    .set(position, "IR2")
+    .add(position.set("IR2"))
 
 }
 

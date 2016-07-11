@@ -4,6 +4,7 @@ import csw.services.ccs.AssemblyController;
 import csw.util.config.StateVariable;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
+import csw.services.ccs.AssemblyController.Validation;
 
 /**
  * Parent class of assembly controllers implemented in Java.
@@ -29,7 +30,7 @@ abstract public class JAssemblyController extends AbstractAssemblyController {
      * @return the Invalid object
      */
     public static Validation Invalid(String reason) {
-        return new AssemblyController.Invalid(reason);
+        return new Invalid(reason);
     }
 
     /**

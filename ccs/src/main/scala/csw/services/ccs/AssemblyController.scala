@@ -6,10 +6,12 @@ import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.LocationTrackerClientActor
 import csw.util.akka.PublisherActor
 import csw.util.config.StateVariable._
-import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg}
+import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfig, SetupConfigArg}
 import csw.util.config.{RunId, StateVariable}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object AssemblyController {
 
@@ -40,19 +42,35 @@ object AssemblyController {
   case class OneWay(config: ControlConfigArg) extends AssemblyControllerMessage
 
   /**
-   * Return value for validate method
+   * Message to make a request of the assembly.
+   * The assembly should reply with a Response(SetupConfig) containing the reply to the request.
+   *
+   * @param config describes the request
+   */
+  case class Request(config: SetupConfig) extends AssemblyControllerMessage
+
+  /**
+   * Response to a Request message.
+   *
+   * @param status set to the completion status of the request (Invalid, RequestFaild, RequestCompleted)
+   * @param resp if valid, the body of the response to the Request message
+   */
+  case class RequestResult(status: RequestStatus, resp: Option[SetupConfig])
+
+  /**
+   * Base trait for the results of validating incoming configs
    */
   sealed trait Validation {
     def isValid: Boolean = true
   }
 
   /**
-   * Indicates a valid config
+   * Indicates a valid input config
    */
   case object Valid extends Validation
 
   /**
-   * Indicates an invalid config
+   * Indicates an invalid input config
    *
    * @param reason a description of why the config is invalid
    */
@@ -60,6 +78,26 @@ object AssemblyController {
     override def isValid: Boolean = false
   }
 
+  /**
+   * The completion status of a request
+   */
+  sealed trait RequestStatus {
+    def isSuccess: Boolean = true
+  }
+
+  /**
+   * The request completed successfully
+   */
+  case object RequestOK extends RequestStatus
+
+  /**
+   * The request failed
+   *
+   * @param reason the reason for the failure
+   */
+  case class RequestFailed(reason: String) extends RequestStatus {
+    override def isSuccess: Boolean = false
+  }
 }
 
 /**
@@ -69,6 +107,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
   this: Actor with ActorLogging ⇒
 
   import AssemblyController._
+  import context.dispatcher
 
   // Optional actor waiting for current HCD states to match demand states
   private var stateMatcherActor: Option[ActorRef] = None
@@ -77,9 +116,19 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
    * Receive actor messages
    */
   protected def controllerReceive: Receive = publisherReceive orElse trackerClientReceive orElse {
-    case Submit(config) ⇒ submit(allResolved, config, oneway = false, sender())
+    case Submit(configArg) ⇒ submit(allResolved, configArg, oneway = false, sender())
 
-    case OneWay(config) ⇒ submit(allResolved, config, oneway = true, sender())
+    case OneWay(configArg) ⇒ submit(allResolved, configArg, oneway = true, sender())
+
+    case Request(config) ⇒
+      val replyTo = sender()
+      request(allResolved, config).onComplete {
+        case Success(resp) ⇒
+          replyTo ! resp
+        case Failure(ex) ⇒
+          log.error("Request failed", ex)
+          replyTo ! RequestResult(RequestFailed(ex.toString), None)
+      }
   }
 
   /**
@@ -198,4 +247,15 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
     hcds.foreach(_ ! PublisherActor.Subscribe)
   }
 
+  /**
+   * Called for Request messages. Derived classes should override this method to handle
+   * Request messages. the default is to return an error response.
+   *
+   * @param locationsResolved indicates if all the Assemblies connections are resolved
+   * @param config            the request
+   * @return a future response, which will be sent to the sender of the request
+   */
+  protected def request(locationsResolved: Boolean, config: SetupConfig): Future[RequestResult] = {
+    Future.successful(RequestResult(RequestFailed("Assembly controller 'request' method not implemented"), None))
+  }
 }

@@ -24,21 +24,21 @@ val csw = (project in file("."))
   .settings(defaultSettings: _*)
   .settings(siteSettings: _*)
   .settings(
-  name := "CSW - TMT Common Software",
-  preprocessVars := Map(
-    "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
-    "DOCROOT" -> "latest/api/index.html"
-  )
-).aggregate(util, support, log, kvs, loc, ccs, cs, pkg, event, ts,
-  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, sysControl, javacsw)
+    name := "CSW - TMT Common Software",
+    preprocessVars := Map(
+      "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
+      "DOCROOT" -> "latest/api/index.html"
+    )
+  ).aggregate(util, support, log, kvs, alarms, loc, ccs, cs, pkg, event, ts,
+  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, asConsole, sysControl, javacsw)
 
 // Utility classes
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaHttpSprayJson, scalaReflect, upickle) ++
-    test(scalaTest, junit)
-  ) dependsOn(log)
+    compile(akkaActor, akkaHttpSprayJson, scalaReflect) ++
+      test(scalaTest, junit)
+  ) dependsOn log
 
 // Supporting classes
 lazy val support = project
@@ -62,6 +62,13 @@ lazy val kvs = project
       test(scalaTest, akkaTestKit)
   ) dependsOn(util, log)
 
+// Alarm Service
+lazy val alarms = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor, akkaHttpSprayJson, redisScala, jsonSchemaValidator, ficus) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(util, log, loc, trackLocation % "test->test")
 
 // Location Service
 lazy val loc = project
@@ -124,8 +131,8 @@ lazy val javacsw = project
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(akkaTestKit, junit, junitInterface, scalaJava8Compat)
-  ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts, containerCmd)
-
+  ) dependsOn(util, support, log, kvs, loc, ccs, cs, pkg, event, ts, containerCmd,
+  kvs % "test->test", alarms % "test->test;compile->compile", trackLocation % "test->test")
 
 // -- Apps --
 
@@ -162,6 +169,15 @@ lazy val trackLocation = Project(id = "trackLocation", base = file("apps/trackLo
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(loc, log, cs % "test->test;compile->compile", kvs % "test->test")
+
+// Track the location of an external application
+lazy val asConsole = Project(id = "asConsole", base = file("apps/asConsole"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(packageSettings("asConsole", "Alarm Service Console application", "Alarm Service Console"): _*)
+  .settings(libraryDependencies ++=
+    compile(scopt, akkaActor) ++
+      test(scalaTest, akkaTestKit)
+  ) dependsOn(loc, log, alarms, trackLocation % "test->test")
 
 // Track the location of an external application
 lazy val sysControl = Project(id = "sysControl", base = file("apps/sysControl"))

@@ -31,7 +31,7 @@ object HcdControllerTests {
 
     // Send the config to the worker for processing
     override protected def process(config: SetupConfig): Unit = {
-      worker ! config
+      worker ! TestWorker.Work(config)
     }
 
     // Ask the worker actor to send us the current state (handled by parent trait)
@@ -46,6 +46,9 @@ object HcdControllerTests {
   object TestWorker {
     def props(): Props = Props(classOf[TestWorker])
 
+    // Work to do
+    case class Work(config: SetupConfig)
+
     // Message sent to self to simulate work done
     case class WorkDone(config: SetupConfig)
 
@@ -59,13 +62,13 @@ object HcdControllerTests {
     import context.dispatcher
 
     // Simulate getting the initial state from the device
-    val initialState = CurrentState(testPrefix1).set(position, "None")
+    val initialState = CurrentState(testPrefix1).add(position.set("None"))
 
     // Simulated current state
     var currentState = initialState
 
     def receive: Receive = {
-      case config: SetupConfig ⇒
+      case Work(config) ⇒
         // Simulate doing work
         log.info(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
@@ -85,7 +88,7 @@ object HcdControllerTests {
 
 }
 
-// Tests sending a DemandState to a test HCD, then starting a matcher actor to subscribe
+// Tests sending a SetupConfig to a test HCD, then starting a matcher actor to subscribe
 // to the current state (a state variable updated by the HCD). When the current state matches
 // the demand state, the matcher actor replies with a message (containing the current state).
 
@@ -100,7 +103,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix2).set(position, "IR3")
+    val config = SetupConfig(testPrefix2).add(position.set("IR3"))
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {

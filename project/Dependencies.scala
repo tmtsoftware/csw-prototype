@@ -50,6 +50,7 @@ object Dependencies {
   val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.6.1" // New BSD license
 
   val scopt = "com.github.scopt" %% "scopt" % "3.3.0"//  MIT License
+  val jsonSchemaValidator = "com.github.fge" % "json-schema-validator" % "2.2.6"  // LGPL/ASL
 
   val jmdns = "javax.jmdns" % "jmdns" % "3.4.1" // ApacheV2
 

@@ -1,6 +1,8 @@
 Java API for the Key Value Store
 ================================
 
+See the [kvs](../kvs) project for an overview.
+
 Provides key/value store and publish/subscribe features based on Redis (http://redis.io/).
 An event of configuration object can be set or published on a channel and subscribers
 can receive the events. The last n events are always saved for reference (where n is an optional argument).

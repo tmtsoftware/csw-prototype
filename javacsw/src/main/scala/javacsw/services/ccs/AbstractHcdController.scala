@@ -1,6 +1,6 @@
 package javacsw.services.ccs
 
-import akka.actor.{AbstractActor, Actor, ActorLogging}
+import akka.actor.{AbstractActor, ActorLogging}
 import csw.services.ccs.HcdController
 import csw.util.config.StateVariable.CurrentState
 

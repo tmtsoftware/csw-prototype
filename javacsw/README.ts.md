@@ -1,6 +1,8 @@
 Java API for the Time Service
 =============================
 
+See the [ts](../ts) project for an overview.
+
 This project implements the CSW Time Service based on Java 8 java.time and Akka.
 
 Time Service provides basic time access and a neutral API around the Akka scheduling routines.

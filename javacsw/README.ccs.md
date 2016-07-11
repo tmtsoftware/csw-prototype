@@ -1,6 +1,8 @@
 Java APIs for ccs (Command and Control Service)
 -----------------------------------------------
 
+See the [ccs](../ccs) project for an overview.
+
 * [JAssemblyController](src/main/java/javacsw/services/ccs/JAssemblyController.java) - parent class
                         for an Assembly actor that accepts configurations and communicates with
                         one or more HCDs or other assemblies before replying with a command status.

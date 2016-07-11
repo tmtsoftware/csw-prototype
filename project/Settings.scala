@@ -54,12 +54,12 @@ object Settings {
     // compile options ScalaUnidoc, unidoc
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
+    scalacOptions in(Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
     javacOptions in Compile ++= Seq("-source", "1.8"),
     javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
     javaOptions in (Test, run) ++= Seq("-Djava.net.preferIPv4Stack=true"),  // For location service
     jvmOptions in MultiJvm := Seq("-Djava.net.preferIPv4Stack=true"),
-    testOptions in Test += Tests.Argument("-oI"),
-    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"))
+    testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"), Tests.Argument("-oI"), Tests.Argument("-Djava.net.preferIPv4Stack=true"))
   )
 
   // For standalone applications
@@ -72,6 +72,7 @@ object Settings {
     rpmGroup := Some("CSW"),
     packageSummary := summary,
     packageDescription := desc,
+    bashScriptExtraDefines ++= Seq("addJava -Djava.net.preferIPv4Stack=true"),
     bashScriptExtraDefines ++= Seq(s"addJava -DCSW_VERSION=$Version"),
     bashScriptExtraDefines ++= Seq(s"addJava -Dapplication-name=$name")
   )

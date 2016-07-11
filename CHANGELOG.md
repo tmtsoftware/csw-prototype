@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 ### Added
+- Added new [Alarm Service](alarms) and [command line app](apps/asConsole).
+  An Alarm Service [Java API](javacsw/README.alarms.md) is also available.
+
+### Added
+- Added a *Request* message to [AssemblyController](ccs/src/main/scala/csw/services/ccs/AssemblyController.scala) that
+does something based on the contents of the configuration argument and returns a status and optional value (also a SetupConfig).
+The main difference between Request and Submit is that Request can return a value, while Submit only returns a status.
+
+### Added
 - Added Java APIs for most services (See the [javacsw](javacsw) and  [util](util) subprojects)
 
 ### Changed

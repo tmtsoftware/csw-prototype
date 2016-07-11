@@ -1,3 +1,8 @@
+Java APIs for Component (Container, HCD, Assembly) Packaging (pkg)
+==================================================================
+
+See the [pkg](../pkg) project for an overview.
+
 The pkg project deals with the packaging of components, such as Containers, HCDs and Assemblies.
 
 See *OSW TN009 - "TMT CSW PACKAGING SOFTWARE DESIGN DOCUMENT"* for the background information.

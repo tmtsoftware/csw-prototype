@@ -16,7 +16,6 @@ import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
-import scala.util._
 import scala.concurrent.{Await, Future}
 
 object TrackLocationTest {
@@ -44,7 +43,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
         "--name", name,
         "--command", "sleep 10",
         "--port", port.toString,
-        "--no-exit", "true"
+        "--no-exit"
       ))
     }
 
@@ -70,7 +69,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     val configFile = Paths.get(url.toURI).toFile.getAbsolutePath
 
     Future {
-      TrackLocation.main(Array("--name", name, configFile))
+      TrackLocation.main(Array("--name", name, "--no-exit", configFile))
     }
 
     val connection = HttpConnection(ComponentId(name, ComponentType.Service))
@@ -108,7 +107,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     Await.ready(csClient.create(new File(path), ConfigData(appConfigStr), oversize = false, "test"), timeout.duration)
 
     Future {
-      TrackLocation.main(Array("--name", name, path))
+      TrackLocation.main(Array("--name", name, "--no-exit", path))
     }
 
     val connection = HttpConnection(ComponentId(name, ComponentType.Service))

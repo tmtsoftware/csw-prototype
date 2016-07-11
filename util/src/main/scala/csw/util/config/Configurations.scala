@@ -1,13 +1,8 @@
 package csw.util.config
 
-import java.util.Optional
-
-import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
-
-import scala.language.implicitConversions
 import scala.annotation.varargs
-import scala.compat.java8.OptionConverters._
 import scala.collection.JavaConverters._
+import scala.language.implicitConversions
 
 /**
  * TMT Source Code: 5/22/16.
@@ -43,7 +38,7 @@ object Configurations {
     private def subsystem(keyText: String): Subsystem = Subsystem.lookup(keyText.splitAt(keyText.indexOf(SEPARATOR))._1).getOrElse(Subsystem.BAD)
   }
 
-  type ConfigData = Set[Item[_, _]]
+  type ConfigData = Set[Item[_]]
 
   /**
    * The base trait for various configuration types (command configurations or events)
@@ -80,214 +75,54 @@ object Configurations {
      * Adds an item to the config
      *
      * @param item the item to add
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
+     * @tparam I the Item type
      * @return a new instance of this config with the given item added
      */
-    def add[S, J](item: Item[S, J]): T = {
-      val configRemoved: T = removeByKeyname(item.keyName)
+    def add[I <: Item[_]](item: I): T = doAdd(this, item)
+
+    private def doAdd[I <: Item[_]](c: T, item: I): T = {
+      val configRemoved: T = removeByKeyname(c, item.keyName)
       create(configRemoved.items + item)
     }
 
     /**
-     * Sets the given key to the given values
+     * Adds several items to the config
      *
-     * @param key   the key, which also contains the value type
-     * @param units the units for the values
-     * @param v     one or more values
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return a new instance of this object with the key set to the given values
+     * @param itemsToAdd the list of items to add to the configuration
+     * @tparam I must be a subclass of Item
+     * @return a new instance of this config with the given item added
      */
-    def set[S, J](key: Key[S, J], units: Units, v: S*): T = {
-      val newItem = key.set(v: _*).withUnits(units)
-      add(newItem)
-    }
+    def madd[I <: Item[_]](itemsToAdd: I*): T = itemsToAdd.foldLeft(this)((c, item) ⇒ doAdd(c, item))
 
     /**
-     * Sets the given key to the given values
-     *
-     * @param key the key, which also contains the value type
-     * @param v   one or more values
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return a new instance of this object with the key set to the given values
-     */
-    def set[S, J](key: Key[S, J], v: S*): T = {
-      val newItem = key.set(v: _*)
-      add(newItem)
-    }
-
-    /**
-     * Sets the given key to the given values
-     *
-     * @param key   the key, which also contains the value type
-     * @param v     a vector with the values
-     * @param units the units for the values
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return a new instance of this object with the key set to the given values
-     */
-    def set[S, J](key: Key[S, J], v: Vector[S], units: Units = NoUnits): T = {
-      val newItem = key.set(v).withUnits(units)
-      add(newItem)
-    }
-
-    /**
-     * Returns the item for the key, if found, otherwise None
+     * Returns an Option with the item for the key if found, otherwise None
      *
      * @param key the Key to be used for lookup
-     * @return the item for the key, if found
+     * @return the item for the key, if foundx
      * @tparam S the Scala value type
-     * @tparam J the Java value type
+     * @tparam I the item type for the Scala value S
      */
-    def get[S, J](key: Key[S, J]): Option[Item[S, J]] = getByKeyname[S, J](key.keyName)
+    def get[S, I <: Item[S]](key: Key[S, I]): Option[I] = getByKeyname[I](items, key.keyName)
 
     /**
-     * Returns the value for the key, if found, otherwise None
+     * Return the item associated with a Key rather than an Option
      *
      * @param key the Key to be used for lookup
-     * @return the value for the key, if found
      * @tparam S the Scala value type
-     * @tparam J the Java value type
+     * @tparam I the Item type associated with S
+     * @return the item associated with the Key or a NoSuchElementException if the key does not exist
      */
-    def get[S, J](key: Key[S, J], index: Int): Option[S] = get(key).flatMap(_.get(index))
+    final def apply[S, I <: Item[S]](key: Key[S, I]): I = get(key).get
 
     /**
-     * Returns the first or default value for the given key, throwing an exception if the key is not present
-     *
-     * @param key the key to be used for lookup
-     * @return the first or default value for the given key
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     */
-    def value[S, J](key: Key[S, J]): S = get(key).get.value
-
-    /**
-     * Returns the value for the given key at the given index, throwing an exception if the key or value is not present
-     *
-     * @param key   the key to use
-     * @param index the index in the key's values
-     * @return the value for the given key at the given index
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     */
-    def value[S, J](key: Key[S, J], index: Int): S = get(key).get.value(index)
-
-    /**
-     * Returns the values for the given key, throwing an exception if the key is not present
-     *
-     * @param key the key to be used for lookup
-     * @return the values for the given key
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     */
-    def values[S, J](key: Key[S, J]): Vector[S] = get(key).get.values
-
-    /**
-     * Java API: Returns a new instance of this config with the values for the given key set to the given values
-     *
-     * @param key   the key to use
-     * @param units the units for the values
-     * @param v     one or more values
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return a new instance of this object with the key set to the given value
-     */
-    def jset[S, J](key: Key[S, J], units: Units, v: J*): T = {
-      val newItem = key.jset(v: _*).withUnits(units)
-      add(newItem)
-    }
-
-    /**
-     * Java API: Returns a new instance of this config with the values for the given key set to the given values
-     *
-     * @param key the key to use
-     * @param v   one or more values
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return a new instance of this object with the key set to the given value
-     */
-    def jset[S, J](key: Key[S, J], v: J*): T = {
-      val newItem = key.jset(v: _*)
-      add(newItem)
-    }
-
-    /**
-     * Java API: Returns a new instance of this config with the values for the given key set to the given values
-     *
-     * @param key   the key to use
-     * @param units the units for the values
-     * @param v     a list with the values
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return a new instance of this object with the key set to the given value
-     */
-    def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): T = jset(key, units, v.asScala: _*)
-
-    /**
-     * Java API: Returns a new instance of this config with the values for the given key set to the given values
-     *
-     * @param key the key to use
-     * @param v   a list with the values
-     * @return a new instance of this object with the key set to the given value
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     */
-    def jset[S, J](key: Key[S, J], v: java.util.List[J]): T = jset(key, v.asScala: _*)
-
-    /**
-     * Java API: Returns the value for the given key at the given index, throwing an exception if the key or value is not present
-     *
-     * @param key   the key to use
-     * @param index the index in the key's values
-     * @return the value for the given key at the given index
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     */
-    def jvalue[S, J](key: Key[S, J], index: Int): J = get(key).get.jvalue(index)
-
-    /**
-     * Java API: Returns the first or default value for the given key, throwing an exception if the key is not present
-     *
-     * @param key the key to use
-     * @return the first or default value for the given key
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     */
-    def jvalue[S, J](key: Key[S, J]): J = get(key).get.jvalue
-
-    /**
-     * Java API: Returns the first or default value for the given key, throwing an exception if the key is not present
-     *
-     * @param key the key to use
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return the first or default value for the given key
-     */
-    def jvalues[S, J](key: Key[S, J]): java.util.List[J] = get(key).get.jvalues
-
-    /**
-     * Java API: Returns the item for the key, if found, otherwise None
+     * Returns the actual item associated with a key
      *
      * @param key the Key to be used for lookup
-     * @return the item for the key, if found
      * @tparam S the Scala value type
-     * @tparam J the Java value type
+     * @tparam I the Item type associated with S
+     * @return the item associated with the key or a NoSuchElementException if the key does not exist
      */
-    def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = get(key).asJava
-
-    /**
-     * Returns the value for the key, if found, otherwise None
-     *
-     * @param key the Key to use
-     * @return the value for the key, if found
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     */
-    def jget[S, J](key: Key[S, J], index: Int): Optional[J] = {
-      (if (exists(key) && index >= 0 && index < size) Some(jvalue(key, index)) else None).asJava
-    }
+    final def item[S, I <: Item[S]](key: Key[S, I]): I = get(key).get
 
     /**
      * Returns true if the key exists in the config
@@ -295,40 +130,65 @@ object Configurations {
      * @param key the key to check for
      * @return true if the key is found
      * @tparam S the Scala value type
-     * @tparam J the Java value type
+     * @tparam I the type of the Item associated with the key
      */
-    def exists[S, J](key: Key[S, J]): Boolean = get(key).isDefined
+    def exists[S, I <: Item[S]](key: Key[S, I]): Boolean = get(key).isDefined
 
     /**
-     * Remove a Key from the Map and return a new Map
+     * Remove an item from the config by key
      *
      * @param key the Key to be used for removal
      * @tparam S the Scala value type
-     * @tparam J the Java value type
+     * @tparam I the item type used with Scala type S
      * @return a new T, where T is a ConfigType child with the key removed or identical if the key is not present
      */
-    def remove[S, J](key: Key[S, J]): T = removeByKeyname(key.keyName)
+    def remove[S, I <: Item[S]](key: Key[S, I]): T = removeByKeyname(this, key.keyName) //doRemove(this, key)
 
-    private def removeByKeyname(keyname: String): T = {
-      val f = getByKeyname(keyname)
+    /**
+     * Removes an item based on the item
+     * @param item to be removed from the config
+     * @tparam I the type of the item to be removed
+     * @return a new T, where T is a ConfigType child with the item removed or identical if the item is not present
+     */
+    def remove[I <: Item[_]](item: I): T = removeByItem(this, item)
+
+    /**
+     * Function removes an item from the config c based on keyname
+     * @param c the config to remove from
+     * @param keyname the key name of the item to remove
+     * @tparam I the Item type
+     * @return a new T, where T is a ConfigType child with the item removed or identical if the item is not present
+     */
+    private def removeByKeyname[I <: Item[_]](c: ConfigType[T], keyname: String): T = {
+      val f: Option[I] = getByKeyname(c.items, keyname)
       f match {
-        case Some(item) ⇒ create(items.-(item))
-        case None       ⇒ this
+        case Some(item) ⇒ create(c.items.-(item))
+        case None       ⇒ c.asInstanceOf[T] //create(c.items) also works
       }
     }
 
-    private def getByKeyname[S, J](keyname: String): Option[Item[S, J]] =
-      items.find(_.keyName == keyname).asInstanceOf[Option[Item[S, J]]]
-
     /**
-     * Return the value associated with a Key rather than an Option
-     *
-     * @param key the Key to be used for lookup
-     * @tparam S the Scala value type
-     * @tparam J the Java value type
-     * @return the item associated with the Key or a NoSuchElementException if the key does not exist
+     * Function removes an item from the config c based on item content
+     * @param c the config to remove from
+     * @param itemIn the item that should be removed
+     * @tparam I the Item type
+     * @return a new T, where T is a ConfigType child with the item removed or identical if the item is not presen
      */
-    final def apply[S, J](key: Key[S, J]): Seq[S] = get[S, J](key).get.values
+    private def removeByItem[I <: Item[_]](c: ConfigType[T], itemIn: I): T = {
+      val f: Option[I] = getByItem(c.items, itemIn)
+      f match {
+        case Some(item) ⇒ create(c.items.-(item))
+        case None       ⇒ c.asInstanceOf[T]
+      }
+    }
+
+    // Function to find an item by keyname
+    private def getByKeyname[I](xitems: ConfigData, keyname: String): Option[I] =
+      xitems.find(_.keyName == keyname).asInstanceOf[Option[I]]
+
+    // Function to find an item by item
+    private def getByItem[I](xitems: ConfigData, item: Item[_]): Option[I] =
+      xitems.find(_ == item).asInstanceOf[Option[I]]
 
     /**
      * The subsystem for the config
@@ -389,7 +249,7 @@ object Configurations {
    * @param configKey identifies the target subsystem
    * @param items     an optional initial set of items (keys with values)
    */
-  case class SetupConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+  case class SetupConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
       extends ConfigType[SetupConfig] with SequenceConfig with ControlConfig {
 
     override def create(data: ConfigData) = SetupConfig(configKey, data)
@@ -399,31 +259,9 @@ object Configurations {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[S, J](item: Item[S, J]): SetupConfig = super.add(item)
+    override def add[I <: Item[_]](item: I): SetupConfig = super.add(item)
 
-    override def set[S, J](key: Key[S, J], units: Units, v: S*): SetupConfig = super.set[S, J](key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], units: Units, v: J*): SetupConfig = super.jset(key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], v: J*): SetupConfig = super.jset(key, v: _*)
-
-    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): SetupConfig = super.jset(key, units, v)
-
-    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): SetupConfig = super.jset(key, v)
-
-    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
-
-    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
-
-    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
-
-    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
-
-    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
-
-    override def remove[S, J](key: Key[S, J]): SetupConfig = super.remove[S, J](key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): SetupConfig = super.remove(key)
   }
 
   /**
@@ -432,7 +270,7 @@ object Configurations {
    * @param configKey identifies the target subsystem
    * @param items     an optional initial set of items (keys with values)
    */
-  case class ObserveConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+  case class ObserveConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
       extends ConfigType[ObserveConfig] with SequenceConfig with ControlConfig {
 
     override def create(data: ConfigData) = ObserveConfig(configKey, data)
@@ -442,31 +280,9 @@ object Configurations {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[S, J](item: Item[S, J]): ObserveConfig = super.add(item)
+    override def add[I <: Item[_]](item: I): ObserveConfig = super.add(item)
 
-    override def set[S, J](key: Key[S, J], units: Units, v: S*): ObserveConfig = super.set[S, J](key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], units: Units, v: J*): ObserveConfig = super.jset(key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], v: J*): ObserveConfig = super.jset(key, v: _*)
-
-    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): ObserveConfig = super.jset(key, units, v)
-
-    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): ObserveConfig = super.jset(key, v)
-
-    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
-
-    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
-
-    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
-
-    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
-
-    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
-
-    override def remove[S, J](key: Key[S, J]): ObserveConfig = super.remove[S, J](key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): ObserveConfig = super.remove(key)
   }
 
   /**
@@ -475,7 +291,7 @@ object Configurations {
    * @param configKey identifies the target subsystem
    * @param items     an optional initial set of items (keys with values)
    */
-  case class WaitConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_, _]])
+  case class WaitConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
       extends ConfigType[WaitConfig] with SequenceConfig {
 
     override def create(data: ConfigData) = WaitConfig(configKey, data)
@@ -485,31 +301,9 @@ object Configurations {
 
     // The following overrides are needed for the Java API and javadocs
     // (Using a Java interface caused various Java compiler errors)
-    override def add[S, J](item: Item[S, J]): WaitConfig = super.add(item)
+    override def add[I <: Item[_]](item: I): WaitConfig = super.add(item)
 
-    override def set[S, J](key: Key[S, J], units: Units, v: S*): WaitConfig = super.set[S, J](key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], units: Units, v: J*): WaitConfig = super.jset(key, units, v: _*)
-
-    @varargs
-    override def jset[S, J](key: Key[S, J], v: J*): WaitConfig = super.jset(key, v: _*)
-
-    override def jset[S, J](key: Key[S, J], units: Units, v: java.util.List[J]): WaitConfig = super.jset(key, units, v)
-
-    override def jset[S, J](key: Key[S, J], v: java.util.List[J]): WaitConfig = super.jset(key, v)
-
-    override def jvalue[S, J](key: Key[S, J], index: Int): J = super.jvalue(key, index)
-
-    override def jvalue[S, J](key: Key[S, J]): J = super.jvalue(key)
-
-    override def jvalues[S, J](key: Key[S, J]): java.util.List[J] = super.jvalues(key)
-
-    override def jget[S, J](key: Key[S, J]): Optional[Item[S, J]] = super.jget(key)
-
-    override def jget[S, J](key: Key[S, J], index: Int): Optional[J] = super.jget(key, index)
-
-    override def remove[S, J](key: Key[S, J]): WaitConfig = super.remove[S, J](key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): WaitConfig = super.remove(key)
   }
 
   /**
@@ -593,7 +387,7 @@ object Configurations {
      * Creates a SetupConfigArg assuming that an implicit ConfigInfo is in scope
      *
      * @param configs the configs to include in the object
-     * @param info the implicit config info
+     * @param info    the implicit config info
      * @return a new object containing the configs and info
      */
     def apply(configs: SetupConfig*)(implicit info: ConfigInfo): SetupConfigArg = SetupConfigArg(info, configs: _*)
@@ -615,6 +409,7 @@ object Configurations {
    * @param info    contains the obsId, runId
    * @param configs one or more ObserveConfigs
    */
+
   final case class ObserveConfigArg(info: ConfigInfo, configs: ObserveConfig*) extends SequenceConfigArg with ControlConfigArg {
     /**
      * Java API: Returns the list of configs
@@ -630,7 +425,7 @@ object Configurations {
      * Creates an ObserveConfigArg assuming that an implicit ConfigInfo is in scope
      *
      * @param configs the configs to include in the object
-     * @param info the implicit config info
+     * @param info    the implicit config info
      * @return a new object containing the configs and info
      */
     def apply(configs: ObserveConfig*)(implicit info: ConfigInfo): ObserveConfigArg = ObserveConfigArg(info, configs: _*)
@@ -665,4 +460,3 @@ object Configurations {
   final case class ConfigArgList(configs: Seq[SequenceConfig])
 
 }
-
