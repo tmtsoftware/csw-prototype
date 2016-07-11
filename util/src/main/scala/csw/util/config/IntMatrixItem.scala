@@ -31,11 +31,11 @@ case object IntMatrix extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for an IntMatrixKey: One or more 2d arrays (implemented as IntMatrix)
+ * The type of a value for an IntMatrixKey: One or more 2d arrays (implemented as IntMatrix)
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class IntMatrixItem(keyName: String, values: Vector[IntMatrix], units: Units) extends Item[IntMatrix] {
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)

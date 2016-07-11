@@ -32,11 +32,11 @@ case object FloatMatrix extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a FloatMatrixKey: One or more 2d arrays (implemented as FloatMatrix)
+ * The type of a value for a FloatMatrixKey: One or more 2d arrays (implemented as FloatMatrix)
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class FloatMatrixItem(keyName: String, values: Vector[FloatMatrix], units: Units) extends Item[FloatMatrix] {
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)

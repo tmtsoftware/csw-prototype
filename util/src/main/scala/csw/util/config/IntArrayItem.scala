@@ -32,11 +32,11 @@ case object IntArray extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a IntArrayKey: One or more arrays of Int
+ * The type of a value for a IntArrayKey: One or more arrays of Int
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class IntArrayItem(keyName: String, values: Vector[IntArray], units: Units) extends Item[IntArray] {
 

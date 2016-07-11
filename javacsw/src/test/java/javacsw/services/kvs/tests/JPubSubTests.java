@@ -20,7 +20,7 @@ import akka.japi.Creator;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests Java API to subscribe to the key/head store.
+ * Tests Java API to subscribe to the key/value store.
  */
 public class JPubSubTests {
     static final DoubleKey exposureTime = new DoubleKey("exposureTime");

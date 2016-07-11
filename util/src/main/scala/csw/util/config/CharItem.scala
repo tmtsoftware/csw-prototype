@@ -6,11 +6,11 @@ import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 
 /**
- * The type of a head for an CharKey
+ * The type of a value for an CharKey
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class CharItem(keyName: String, values: Vector[Char], units: Units) extends Item[Char] {
 

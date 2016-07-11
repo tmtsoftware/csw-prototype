@@ -8,11 +8,11 @@ import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 import scala.compat.java8.OptionConverters._
 
 /**
- * The type of a head for an FloatKey
+ * The type of a value for an FloatKey
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class FloatItem(keyName: String, values: Vector[Float], units: Units) extends Item[Float /*, java.lang.Float*/ ] {
 

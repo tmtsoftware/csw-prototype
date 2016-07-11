@@ -99,8 +99,8 @@ object Configurations {
      *
      * @param key the Key to be used for lookup
      * @return the item for the key, if foundx
-     * @tparam S the Scala head type
-     * @tparam I the item type for the Scala head S
+     * @tparam S the Scala value type
+     * @tparam I the item type for the Scala value S
      */
     def get[S, I <: Item[S]](key: Key[S, I]): Option[I] = getByKeyname[I](items, key.keyName)
 
@@ -108,7 +108,7 @@ object Configurations {
      * Return the item associated with a Key rather than an Option
      *
      * @param key the Key to be used for lookup
-     * @tparam S the Scala head type
+     * @tparam S the Scala value type
      * @tparam I the Item type associated with S
      * @return the item associated with the Key or a NoSuchElementException if the key does not exist
      */
@@ -118,7 +118,7 @@ object Configurations {
      * Returns the actual item associated with a key
      *
      * @param key the Key to be used for lookup
-     * @tparam S the Scala head type
+     * @tparam S the Scala value type
      * @tparam I the Item type associated with S
      * @return the item associated with the key or a NoSuchElementException if the key does not exist
      */
@@ -129,7 +129,7 @@ object Configurations {
      *
      * @param key the key to check for
      * @return true if the key is found
-     * @tparam S the Scala head type
+     * @tparam S the Scala value type
      * @tparam I the type of the Item associated with the key
      */
     def exists[S, I <: Item[S]](key: Key[S, I]): Boolean = get(key).isDefined
@@ -138,7 +138,7 @@ object Configurations {
      * Remove an item from the config by key
      *
      * @param key the Key to be used for removal
-     * @tparam S the Scala head type
+     * @tparam S the Scala value type
      * @tparam I the item type used with Scala type S
      * @return a new T, where T is a ConfigType child with the key removed or identical if the key is not present
      */

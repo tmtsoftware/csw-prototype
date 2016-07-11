@@ -32,11 +32,11 @@ case object LongArray extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a LongArrayKey: One or more arrays of Long
+ * The type of a value for a LongArrayKey: One or more arrays of Long
  *
  * @param keyName the name of the key
- * @param values  the head for the key
- * @param units   the units of the head
+ * @param values  the value for the key
+ * @param units   the units of the value
  */
 final case class LongArrayItem(keyName: String, values: Vector[LongArray], units: Units) extends Item[LongArray] {
 

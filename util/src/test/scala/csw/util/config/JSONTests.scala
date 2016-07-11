@@ -18,9 +18,9 @@ object JSONTests extends DefaultJsonProtocol {
     // JSON read/write for MyData2
     implicit val myData2Format = jsonFormat4(MyData2.apply)
 
-    // Creates a GenericItem[MyData2] from a JSON head (This didn't work with the jsonFormat3 method)
+    // Creates a GenericItem[MyData2] from a JSON value (This didn't work with the jsonFormat3 method)
     def reader(json: JsValue): GenericItem[MyData2] = {
-      json.asJsObject.getFields("keyName", "head", "units") match {
+      json.asJsObject.getFields("keyName", "value", "units") match {
         case Seq(JsString(keyName), JsArray(v), u) ⇒
           val units = ConfigJSON.unitsFormat.read(u)
           val value = v.map(MyData2.myData2Format.read)

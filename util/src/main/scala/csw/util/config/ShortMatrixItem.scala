@@ -25,7 +25,7 @@ case class ShortMatrix(value: Array[Array[Short]]) {
   }
 }
 
-//case class ShortMatrix(head Vec)
+//case class ShortMatrix(value Vec)
 case object ShortMatrix extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(ShortMatrix.apply)
 
@@ -45,11 +45,11 @@ final case class ShortMatrixKey(nameIn: String) extends Key[ShortMatrix, ShortMa
 }
 
 /**
- * The type of a head for an ShortMatrixKey: One or more 2d arrays (implemented as ShortMatrix)
+ * The type of a value for an ShortMatrixKey: One or more 2d arrays (implemented as ShortMatrix)
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class ShortMatrixItem(keyName: String, values: Vector[ShortMatrix], units: Units) extends Item[ShortMatrix] {
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)

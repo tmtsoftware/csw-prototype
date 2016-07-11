@@ -40,12 +40,12 @@ object GenericItem {
 }
 
 /**
- * The type of a head for an GenericKey
+ * The type of a value for an GenericKey
  *
  * @param typeName the name of the type S (for JSON serialization)
  * @param keyName  the name of the key
- * @param values    the head for the key
- * @param units    the units of the head
+ * @param values    the value for the key
+ * @param units    the units of the value
  */
 case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values: Vector[S], units: Units) extends Item[S] {
 
@@ -57,7 +57,7 @@ case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values:
     val unitsFormat = ConfigJSON.unitsFormat
     JsObject(
       "keyName" → JsString(keyName),
-      "head" → JsArray(values.map(valueFormat.write)),
+      "value" → JsArray(values.map(valueFormat.write)),
       "units" → unitsFormat.write(units)
     )
   }

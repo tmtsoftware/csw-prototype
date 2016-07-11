@@ -6,11 +6,11 @@ import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 
 /**
- * The type of a head for an DoubleKey
+ * The type of a value for an DoubleKey
  *
  * @param keyName the name of the key
- * @param values  the head for the key
- * @param units   the units of the head
+ * @param values  the value for the key
+ * @param units   the units of the value
  */
 final case class DoubleItem(keyName: String, values: Vector[Double], units: Units) extends Item[Double] {
 

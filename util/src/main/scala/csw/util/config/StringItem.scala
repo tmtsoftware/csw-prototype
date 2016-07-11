@@ -8,11 +8,11 @@ import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 import scala.compat.java8.OptionConverters._
 
 /**
- * The type of a head for an StringKey
+ * The type of a value for an StringKey
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class StringItem(keyName: String, values: Vector[String], units: Units) extends Item[String /*, java.lang.String*/ ] {
   //override def jvalues: java.util.List[java.lang.String] = values.map(i ⇒ i: java.lang.String).asJava

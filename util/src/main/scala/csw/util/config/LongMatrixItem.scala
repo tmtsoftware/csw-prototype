@@ -34,11 +34,11 @@ case object LongMatrix extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for an LongMatrixKey: One or more 2d arrays (implemented as LongMatrix)
+ * The type of a value for an LongMatrixKey: One or more 2d arrays (implemented as LongMatrix)
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class LongMatrixItem(keyName: String, values: Vector[LongMatrix], units: Units) extends Item[LongMatrix] {
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)

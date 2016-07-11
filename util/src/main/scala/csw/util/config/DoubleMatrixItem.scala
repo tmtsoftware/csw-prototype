@@ -32,11 +32,11 @@ case object DoubleMatrix extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a DoubleMatrixKey: One or more 2d arrays (implemented as DoubleMatrix)
+ * The type of a value for a DoubleMatrixKey: One or more 2d arrays (implemented as DoubleMatrix)
  *
  * @param keyName the name of the key
- * @param values  the head for the key
- * @param units   the units of the head
+ * @param values  the value for the key
+ * @param units   the units of the value
  */
 final case class DoubleMatrixItem(keyName: String, values: Vector[DoubleMatrix], units: Units) extends Item[DoubleMatrix] {
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)

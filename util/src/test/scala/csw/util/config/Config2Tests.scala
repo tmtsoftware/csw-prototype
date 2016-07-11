@@ -27,7 +27,7 @@
 //  /**
 //   * Tests for ValueData
 //   */
-//  describe("Basic key head tests") {
+//  describe("Basic key value tests") {
 //
 //    val ck = "wfos.blue.filter"
 //    val ck1 = "wfos.prog.cloudcover"
@@ -39,10 +39,10 @@
 //    it("should have size 1") {
 //      assert(sc1.size === 1)
 //    }
-//    it("should have the Some head") {
+//    it("should have the Some value") {
 //      assert(sc1.get(position) === Some("GG484"))
 //    }
-//    it("should have None head") {
+//    it("should have None value") {
 //      assert(sc1.get(exposureClass) === None)
 //    }
 //
@@ -79,10 +79,10 @@
 //    it("should allow keys with sequences") {
 //      val arrayKey = Key.create[Seq[Int]]("arrayKey")
 //
-//      val head = Seq(1, 2, 3, 4)
-//      val sc1 = SetupConfig(ck1).set(arrayKey, head)
+//      val value = Seq(1, 2, 3, 4)
+//      val sc1 = SetupConfig(ck1).set(arrayKey, value)
 //      assert(sc1.size == 1)
-//      assert(sc1(arrayKey) === head)
+//      assert(sc1(arrayKey) === value)
 //    }
 //  }
 //
@@ -179,7 +179,7 @@
 //    }
 //  }
 //
-//  describe("Basic key head removal tests") {
+//  describe("Basic key value removal tests") {
 //
 //    val ck = "wfos.blue.detector"
 //

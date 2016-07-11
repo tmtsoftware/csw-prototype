@@ -8,11 +8,11 @@ import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 import scala.compat.java8.OptionConverters._
 
 /**
- * The type of a head for an ShortKey
+ * The type of a value for an ShortKey
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class ShortItem(keyName: String, values: Vector[Short], units: Units) extends Item[Short /*, java.lang.Short*/ ] {
 

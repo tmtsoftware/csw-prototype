@@ -41,7 +41,7 @@ class ConfigTests extends FunSpec {
 
     it("Should use set properly") {
       val i: IntItem = k1.set(22)
-      // Check that name and head are set
+      // Check that name and value are set
       assert(i.keyName eq s1)
       assert(i.values == Vector(22))
       assert(i.head == 22)
@@ -279,7 +279,7 @@ class ConfigTests extends FunSpec {
 
   describe("test setting multiple values") {
     val t1 = IntKey("test1")
-    it("should allow setting a single head") {
+    it("should allow setting a single value") {
       val i1 = t1.set(1)
       assert(i1.values == Vector(1))
       assert(i1.units == NoUnits)
@@ -574,7 +574,7 @@ class ConfigTests extends FunSpec {
     val k1 = LongMatrixKey("myMatrix")
     val m1 = LongMatrix(Array(Array(1, 2, 3), Array(2, 3, 6), Array(4, 6, 12)))
     val m2 = LongMatrix(Array(Array(1, 2, 3), Array(2, 3, 6), Array(4, 6, 12)))
-    val m3 = LongMatrix(Array(Array(1, 2, 3), Array(2, 3, 6), Array(0, 6, 12))) // Note one head different
+    val m3 = LongMatrix(Array(Array(1, 2, 3), Array(2, 3, 6), Array(0, 6, 12))) // Note one value different
     val m4 = LongMatrix(Array(Array(1, 0, 0), Array(0, 1, 0), Array(0, 0, 1)))
     val i1 = k1.set(m1)
     val i2 = k1.set(m2)
@@ -632,7 +632,7 @@ class ConfigTests extends FunSpec {
     val k1 = ByteMatrixKey("myMatrix")
     val m1 = ByteMatrix(Array(Array[Byte](1, 2, 3), Array[Byte](2, 3, 6), Array[Byte](4, 6, 12)))
     val m2 = ByteMatrix(Array(Array[Byte](1, 2, 3), Array[Byte](2, 3, 6), Array[Byte](4, 6, 12)))
-    val m3 = ByteMatrix(Array(Array[Byte](1, 2, 3), Array[Byte](2, 3, 6), Array[Byte](0, 6, 12))) // Note one head different
+    val m3 = ByteMatrix(Array(Array[Byte](1, 2, 3), Array[Byte](2, 3, 6), Array[Byte](0, 6, 12))) // Note one value different
     val m4 = ByteMatrix(Array(Array[Byte](1, 0, 0), Array[Byte](0, 1, 0), Array[Byte](0, 0, 1)))
     val i1 = k1.set(m1)
     val i2 = k1.set(m2)
@@ -690,7 +690,7 @@ class ConfigTests extends FunSpec {
     val k1 = DoubleMatrixKey("myMatrix")
     val m1 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12)))
     val m2 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12)))
-    val m3 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](0, 6, 12))) // Note one head different
+    val m3 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](0, 6, 12))) // Note one value different
     val m4 = DoubleMatrix(Array(Array[Double](1, 0, 0), Array[Double](0, 1, 0), Array[Double](0, 0, 1)))
     val i1 = k1.set(m1)
     val i2 = k1.set(m2)
@@ -748,7 +748,7 @@ class ConfigTests extends FunSpec {
     val k1 = FloatMatrixKey("myMatrix")
     val m1 = FloatMatrix(Array(Array[Float](1, 2, 3), Array[Float](2, 3, 6), Array[Float](4, 6, 12)))
     val m2 = FloatMatrix(Array(Array[Float](1, 2, 3), Array[Float](2, 3, 6), Array[Float](4, 6, 12)))
-    val m3 = FloatMatrix(Array(Array[Float](1, 2, 3), Array[Float](2, 3, 6), Array[Float](0, 6, 12))) // Note one head different
+    val m3 = FloatMatrix(Array(Array[Float](1, 2, 3), Array[Float](2, 3, 6), Array[Float](0, 6, 12))) // Note one value different
     val m4 = FloatMatrix(Array(Array[Float](1, 0, 0), Array[Float](0, 1, 0), Array[Float](0, 0, 1)))
     val i1 = k1.set(m1)
     val i2 = k1.set(m2)
@@ -806,7 +806,7 @@ class ConfigTests extends FunSpec {
     val k1 = IntMatrixKey("myMatrix")
     val m1 = IntMatrix(Array(Array[Int](1, 2, 3), Array[Int](2, 3, 6), Array[Int](4, 6, 12)))
     val m2 = IntMatrix(Array(Array[Int](1, 2, 3), Array[Int](2, 3, 6), Array[Int](4, 6, 12)))
-    val m3 = IntMatrix(Array(Array[Int](1, 2, 3), Array[Int](2, 3, 6), Array[Int](0, 6, 12))) // Note one head different
+    val m3 = IntMatrix(Array(Array[Int](1, 2, 3), Array[Int](2, 3, 6), Array[Int](0, 6, 12))) // Note one value different
     val m4 = IntMatrix(Array(Array[Int](1, 0, 0), Array[Int](0, 1, 0), Array[Int](0, 0, 1)))
     val i1 = k1.set(m1)
     val i2 = k1.set(m2)
@@ -864,7 +864,7 @@ class ConfigTests extends FunSpec {
     val k1 = ShortMatrixKey("myMatrix")
     val m1 = ShortMatrix(Array(Array[Short](1, 2, 3), Array[Short](2, 3, 6), Array[Short](4, 6, 12)))
     val m2 = ShortMatrix(Array(Array[Short](1, 2, 3), Array[Short](2, 3, 6), Array[Short](4, 6, 12)))
-    val m3 = ShortMatrix(Array(Array[Short](1, 2, 3), Array[Short](2, 3, 6), Array[Short](0, 6, 12))) // Note one head different
+    val m3 = ShortMatrix(Array(Array[Short](1, 2, 3), Array[Short](2, 3, 6), Array[Short](0, 6, 12))) // Note one value different
     val m4 = ShortMatrix(Array(Array[Short](1, 0, 0), Array[Short](0, 1, 0), Array[Short](0, 0, 1)))
     val i1 = k1.set(m1)
     val i2 = k1.set(m2)

@@ -34,11 +34,11 @@ case object ShortArray extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a ShortArrayKey: One or more arrays of Short
+ * The type of a value for a ShortArrayKey: One or more arrays of Short
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class ShortArrayItem(keyName: String, values: Vector[ShortArray], units: Units) extends Item[ShortArray] {
 

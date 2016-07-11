@@ -32,11 +32,11 @@ case object FloatArray extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a FloatVectorKey: One or more vectors of Float
+ * The type of a value for a FloatVectorKey: One or more vectors of Float
  *
  * @param keyName the name of the key
- * @param values  the head for the key
- * @param units   the units of the head
+ * @param values  the value for the key
+ * @param units   the units of the value
  */
 final case class FloatArrayItem(keyName: String, values: Vector[FloatArray], units: Units) extends Item[FloatArray] {
 

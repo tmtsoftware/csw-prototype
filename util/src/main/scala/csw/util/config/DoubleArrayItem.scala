@@ -32,11 +32,11 @@ case object DoubleArray extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a DoubleVectorKey: One or more vectors of Double
+ * The type of a value for a DoubleVectorKey: One or more vectors of Double
  *
  * @param keyName the name of the key
- * @param values  the head for the key
- * @param units   the units of the head
+ * @param values  the value for the key
+ * @param units   the units of the value
  */
 final case class DoubleArrayItem(keyName: String, values: Vector[DoubleArray], units: Units) extends Item[DoubleArray] {
 

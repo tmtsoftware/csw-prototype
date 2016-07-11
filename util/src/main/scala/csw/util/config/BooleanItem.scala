@@ -6,11 +6,11 @@ import scala.collection.immutable.Vector
 import scala.language.implicitConversions
 
 /**
- * The type of a head for an BooleanKey
+ * The type of a value for an BooleanKey
  *
  * @param keyName the name of the key
- * @param values  the head for the key
- * @param units   the units of the head
+ * @param values  the value for the key
+ * @param units   the units of the value
  */
 final case class BooleanItem(keyName: String, values: Vector[Boolean], units: Units) extends Item[Boolean] {
 

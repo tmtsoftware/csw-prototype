@@ -21,10 +21,10 @@ case object RaDec extends DefaultJsonProtocol {
   implicit val raDecFormat = jsonFormat2(RaDec.apply)
 
   /**
-   * Creates a GenericItem[RaDec] from a JSON head (This didn't work with the jsonFormat3 method)
+   * Creates a GenericItem[RaDec] from a JSON value (This didn't work with the jsonFormat3 method)
    */
   def reader(json: JsValue): GenericItem[RaDec] = {
-    json.asJsObject.getFields("keyName", "head", "units") match {
+    json.asJsObject.getFields("keyName", "value", "units") match {
       case Seq(JsString(keyName), JsArray(v), u) ⇒
         val units = ConfigJSON.unitsFormat.read(u)
         val value = v.map(RaDec.raDecFormat.read)

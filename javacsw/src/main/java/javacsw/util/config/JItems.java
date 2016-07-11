@@ -901,7 +901,7 @@ public class JItems {
    * jgetItem returns an Item as an Optional.  The Optional is empty if the item is not present.
    * @param sc The configuration to use to search for the item
    * @param key The key for the item to be located
-   * @param <S> The Scala type of the head
+   * @param <S> The Scala type of the value
    * @param <I> The item type assocated with the Scala type
    * @param <T> The type of the configuration sc
    * @return Optional item

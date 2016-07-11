@@ -32,11 +32,11 @@ case object ByteArray extends DefaultJsonProtocol {
 }
 
 /**
- * The type of a head for a ByteArrayKey: One or more arrays of Byte
+ * The type of a value for a ByteArrayKey: One or more arrays of Byte
  *
  * @param keyName the name of the key
- * @param values  the head for the key
- * @param units   the units of the head
+ * @param values  the value for the key
+ * @param units   the units of the value
  */
 final case class ByteArrayItem(keyName: String, values: Vector[ByteArray], units: Units) extends Item[ByteArray] {
 

@@ -273,7 +273,7 @@ public class JConfigTests {
     @Test
     public void testSettingMultipleValues() {
         IntKey t1 = new IntKey("test1");
-        // should allow setting a single head
+        // should allow setting a single value
         {
             IntItem i1 = t1.jset(1);
             assertTrue(i1.jvalue() == 1);

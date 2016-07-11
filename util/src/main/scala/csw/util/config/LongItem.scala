@@ -8,11 +8,11 @@ import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 import scala.compat.java8.OptionConverters._
 
 /**
- * The type of a head for an LongKey
+ * The type of a value for an LongKey
  *
  * @param keyName the name of the key
- * @param values   the head for the key
- * @param units   the units of the head
+ * @param values   the value for the key
+ * @param units   the units of the value
  */
 final case class LongItem(keyName: String, values: Vector[Long], units: Units) extends Item[Long /*, java.lang.Long*/ ] {
   //override def jvalues: java.util.List[java.lang.Long] = values.map(i ⇒ i: java.lang.Long).asJava
