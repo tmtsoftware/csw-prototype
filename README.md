@@ -73,6 +73,7 @@ depends on an external Hornetq server running (http://hornetq.jboss.org/).
 Projects and Directories
 ------------------------
 
+* [alarms](alarms) - the Alarm Service (for setting and subscribing to alarms and system health)
 * [apps](apps) - contains some standalone applications
 * [ccs](ccs) - the Command and Control Service (for sending configurations to HCDs and Assemblies)
 * [cs](cs) - the Configuration Service (manages configuration files in Git repos)
@@ -92,6 +93,7 @@ The following standalone applications are installed here:
 
 The following applications are defined under ../apps:
 
+* [asConsole](apps/asConsole) - Alarm Service Console: a command line application for working with alarms
 * [configServiceAnnex](apps/configServiceAnnex) - an http server used to store and retrieve large files, used by the config service
 * [containerCmd](apps/containerCmd) - used to start containers of HCDs or assemblies, based on a given config file (This is not an application, but us used to simplify creating such applications)
 * [csClient](apps/csClient) - a command line client to the config service (used in some test scripts)
