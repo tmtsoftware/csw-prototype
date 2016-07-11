@@ -70,7 +70,7 @@
  *   val imageData = IntVectorKey("imageData")
  *
  *   // Dummy image data
- *   val testImageData = IntVector(Array.ofDim[Int](10000).toVector)
+ *   val testImageData = IntArray(Array.ofDim[Int](10000).toVector)
  *
  *   val prefix = "tcs.mobie.red.dat.exposureInfo"
  *
@@ -120,7 +120,7 @@
  *         Vector(7.2, 8.2, 9.2)
  *       ))
  *       val sc1 = SetupConfig(ck).set(k1, m1)
- *       assert(sc1.value(k1) == m1)
+ *       assert(jvalue(jitem(sc1, k1)) == m1)
  * } </pre>
  * <p>
  * Java Example:

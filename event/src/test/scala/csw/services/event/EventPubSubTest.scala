@@ -41,10 +41,10 @@ object EventPubSubTest {
   val exposureTime = DoubleKey("exposureTime")
 
   // Define a key for image data
-  val imageData = IntVectorKey("imageData")
+  val imageData = IntArrayKey("imageData")
 
   // Dummy image data
-  val testImageData = IntVector(Array.ofDim[Int](10000).toVector)
+  val testImageData = IntArray(Array.ofDim[Int](10000))
 
   val prefix = "tcs.mobie.red.dat.exposureInfo"
 
@@ -101,7 +101,7 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
   def working(publisher: ActorRef): Receive = {
     case event: ObserveEvent ⇒
       if (startTime == 0L) startTime = System.currentTimeMillis()
-      val num = event.value(eventNum)
+      val num = event(eventNum).head
       if (num != count) {
         log.error(s"Subscriber missed event: $num != $count")
         context.system.terminate()
@@ -137,9 +137,9 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
   // Returns the next event to publish
   def nextEvent(num: Int): Event = {
     ObserveEvent(prefix)
-      .set(eventNum, num)
-      .set(exposureTime, 1.0)
-      .set(imageData, testImageData)
+      .add(eventNum.set(num))
+      .add(exposureTime.set(1.0))
+      .add(imageData.set(testImageData))
   }
 
   def publish(): Unit = {

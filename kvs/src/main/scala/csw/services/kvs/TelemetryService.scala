@@ -19,9 +19,9 @@ object TelemetryService {
  * @param _system Akka environment needed by the implementation
  */
 case class TelemetryService(settings: KvsSettings)(implicit _system: ActorRefFactory) {
-  import _system.dispatcher
-  import TelemetryService._
   import Implicits._
+  import TelemetryService._
+  import _system.dispatcher
 
   private val kvs = KeyValueStore[StatusEvent](settings)
 
@@ -94,7 +94,6 @@ abstract class TelemetrySubscriber extends Subscriber[StatusEvent] {
  * @param context environment needed for futures
  */
 case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: Timeout, context: ActorRefFactory) {
-  import context.dispatcher
 
   /**
    * Disconnects from the key/value store server

@@ -97,7 +97,7 @@ public interface IKeyValueStore<T> {
 
 
     // --- static factory methods ---
-    
+
     /**
      * @param system the actor system used to access the akka config file containing the kvs settings
      * @return an object containing the kvs settings

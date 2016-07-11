@@ -14,17 +14,17 @@ object TestConfig {
   val equinox = StringKey("equinox")
 
   // Configs to use for testing
-  val testConfig1 = SetupConfig("tcs.base.pos")
-    .set(posName, "NGC738B")
-    .set(c1, "22:35:58.530")
-    .set(c2, "33:57:55.40")
-    .set(equinox, "J2000")
+  val testConfig1 = SetupConfig("tcs.base.pos").madd(
+    posName.set("NGC738B"),
+    c1.set("22:35:58.530"),
+    c2.set("33:57:55.40"),
+    equinox.set("J2000"))
 
   val testConfig2 = SetupConfig("tcs.ao.pos.one")
-    .set(posName, "NGC738B")
-    .set(c1, "22:36:01.066")
-    .set(c2, "33:58:21.69")
-    .set(equinox, "J2000")
+    .add(posName.set("NGC738B"))
+    .add(c1.set("22:36:01.066"))
+    .add(c2.set("33:58:21.69"))
+    .add(equinox.set("J2000"))
 
   val testConfigArg = SetupConfigArg("obs0001", testConfig1, testConfig2)
 }

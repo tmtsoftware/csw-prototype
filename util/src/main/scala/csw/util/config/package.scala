@@ -14,7 +14,7 @@ package csw.util
  * Configurations and events are based on maps of keys and values, with some additional
  * information included, such as ids or timestamps.
  *
- * The key/value store and event service make use of these classes, which need to be
+ * The key/head store and event service make use of these classes, which need to be
  * serialized and deserialized for external storage (in Redis or Hornetq, for example).
  * The [[csw.util.config.ConfigSerializer.ConfigSerializer]] class provides support for this
  * (based on java serialization).
@@ -22,10 +22,10 @@ package csw.util
  * == Scala and Java APIs ==
  *
  * All the config and event classes are immutable. In Scala, the `set` methods return a new instance of the object with a
- * new item added and the `get` methods return an Option, in case the Key is not found. There are also `value` methods
- * that return a value directly, throwing an exception if the key or value is not found.
+ * new item added and the `get` methods return an Option, in case the Key is not found. There are also `head` methods
+ * that return a head directly, throwing an exception if the key or head is not found.
  *
- * For the Java API, replace `get`, `set` and `value` with `jget`, `jset` and `jvalue`. These versions accept and
+ * For the Java API, replace `get`, `set` and `head` with `jget`, `jset` and `jvalue`. These versions accept and
  * return Java types.
  *
  * Note that internally, the Key and Item classes take two type parameters: S and J: The Scala and Java types.
@@ -68,7 +68,7 @@ package csw.util
  *   val imageData = IntVectorKey("imageData")
  *
  *   // Dummy image data
- *   val testImageData = IntVector(Array.ofDim[Int](10000).toVector)
+ *   val testImageData = IntArray(Array.ofDim[Int](10000).toVector)
  *
  *   val prefix = "tcs.mobie.red.dat.exposureInfo"
  *
@@ -118,7 +118,7 @@ package csw.util
  *         Vector(7.2, 8.2, 9.2)
  *       ))
  *       val sc1 = SetupConfig(ck).set(k1, m1)
- *       assert(sc1.value(k1) == m1)
+ *       assert(sc1.head(k1) == m1)
  * }}}
  *
  * Java Example:

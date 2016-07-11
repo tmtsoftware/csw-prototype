@@ -6,6 +6,7 @@ import spray.json._
 import ConfigJSON._
 import csw.util.config.Events.{ObserveEvent, StatusEvent, SystemEvent}
 import csw.util.config.StateVariable.{CurrentState, DemandState}
+import csw.util.config.UnitsOfMeasure.Meters
 
 object JSONTests extends DefaultJsonProtocol {
 
@@ -17,9 +18,9 @@ object JSONTests extends DefaultJsonProtocol {
     // JSON read/write for MyData2
     implicit val myData2Format = jsonFormat4(MyData2.apply)
 
-    // Creates a GenericItem[MyData2] from a JSON value (This didn't work with the jsonFormat3 method)
+    // Creates a GenericItem[MyData2] from a JSON head (This didn't work with the jsonFormat3 method)
     def reader(json: JsValue): GenericItem[MyData2] = {
-      json.asJsObject.getFields("keyName", "value", "units") match {
+      json.asJsObject.getFields("keyName", "head", "units") match {
         case Seq(JsString(keyName), JsArray(v), u) ⇒
           val units = ConfigJSON.unitsFormat.read(u)
           val value = v.map(MyData2.myData2Format.read)
@@ -30,7 +31,6 @@ object JSONTests extends DefaultJsonProtocol {
 
     GenericItem.register("MyData2", reader)
   }
-
 }
 
 //noinspection ScalaUnusedSymbol
@@ -183,7 +183,7 @@ class JSONTests extends FunSpec {
       assert(c1.size == 7)
       val c1out = ConfigJSON.writeConfig(c1)
       val c1in = ConfigJSON.readConfig[SetupConfig](c1out)
-      assert(c1in.value(k3) == 1234L)
+      assert(c1in(k3).head == 1234L)
       assert(c1in == c1)
     }
 
@@ -192,7 +192,7 @@ class JSONTests extends FunSpec {
       assert(c1.size == 7)
       val c1out = ConfigJSON.writeConfig(c1)
       val c1in = ConfigJSON.readConfig[ObserveConfig](c1out)
-      assert(c1in.value(k3) == 1234L)
+      assert(c1in(k3).head == 1234L)
       assert(c1in == c1)
     }
 
@@ -201,7 +201,7 @@ class JSONTests extends FunSpec {
       assert(e1.size == 7)
       val e1out = ConfigJSON.writeEvent(e1)
       val e1in = ConfigJSON.readEvent[StatusEvent](e1out)
-      assert(e1in.value(k3) == 1234L)
+      assert(e1in(k3).head == 1234L)
       assert(e1in == e1)
     }
 
@@ -210,7 +210,7 @@ class JSONTests extends FunSpec {
       assert(e1.size == 7)
       val e1out = ConfigJSON.writeEvent(e1)
       val e1in = ConfigJSON.readEvent[ObserveEvent](e1out)
-      assert(e1in.value(k3) == 1234L)
+      assert(e1in(k3).head == 1234L)
       assert(e1in == e1)
     }
 
@@ -219,7 +219,7 @@ class JSONTests extends FunSpec {
       assert(e1.size == 7)
       val e1out = ConfigJSON.writeEvent(e1)
       val e1in = ConfigJSON.readEvent[SystemEvent](e1out)
-      assert(e1in.value(k3) == 1234L)
+      assert(e1in(k3).head == 1234L)
       assert(e1in == e1)
     }
 
@@ -228,7 +228,7 @@ class JSONTests extends FunSpec {
       assert(c1.size == 7)
       val c1out = ConfigJSON.writeConfig(c1)
       val c1in = ConfigJSON.readConfig[CurrentState](c1out)
-      assert(c1in.value(k3) == 1234L)
+      assert(c1in(k3).head == 1234L)
       assert(c1in == c1)
     }
 
@@ -237,7 +237,7 @@ class JSONTests extends FunSpec {
       assert(c1.size == 7)
       val c1out = ConfigJSON.writeConfig(c1)
       val c1in = ConfigJSON.readConfig[DemandState](c1out)
-      assert(c1in.value(k3) == 1234L)
+      assert(c1in(k3).head == 1234L)
       assert(c1in == c1)
     }
 
@@ -246,7 +246,7 @@ class JSONTests extends FunSpec {
       assert(c1.size == 7)
       val c1out = ConfigJSON.writeConfig(c1)
       val c1in = ConfigJSON.readConfig[WaitConfig](c1out)
-      assert(c1in.value(k3) == 1234L)
+      assert(c1in(k3).head == 1234L)
       assert(c1in == c1)
     }
   }
@@ -273,7 +273,7 @@ class JSONTests extends FunSpec {
       assert(sc1in.get(k1).get.values(1) == d2)
       assert(sc1in.get(k1).get.units == UnitsOfMeasure.Meters)
 
-      val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.Meters, d1, d2)
+      val sc2 = SetupConfig(ck).add(k1.set(d1, d2).withUnits(Meters))
       assert(sc2 == sc1)
     }
   }
@@ -298,7 +298,7 @@ class JSONTests extends FunSpec {
       assert(sc1in.get(k1).get.values(0) == c1)
       assert(sc1in.get(k1).get.values(1) == c2)
 
-      val sc2 = SetupConfig(ck).set(k1, UnitsOfMeasure.NoUnits, c1, c2)
+      val sc2 = SetupConfig(ck).add(k1.set(c1, c2))
       assert(sc2 == sc1)
     }
   }
@@ -306,42 +306,42 @@ class JSONTests extends FunSpec {
   describe("Test Double Matrix items") {
     it("Should allow double matrix values") {
       val k1 = DoubleMatrixKey("myMatrix")
-      val m1 = DoubleMatrix(Vector(
-        Vector(1.0, 2.0, 3.0),
-        Vector(4.1, 5.1, 6.1),
-        Vector(7.2, 8.2, 9.2)
+      val m1 = DoubleMatrix(Array(
+        Array(1.0, 2.0, 3.0),
+        Array(4.1, 5.1, 6.1),
+        Array(7.2, 8.2, 9.2)
       ))
-      val sc1 = SetupConfig(ck).set(k1, m1)
-      assert(sc1.value(k1) == m1)
+      val sc1 = SetupConfig(ck).add(k1.set(m1))
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
 
-  describe("Test Double Vector items") {
-    it("Should allow double vector values") {
-      val k1 = DoubleVectorKey("myVector")
-      val m1 = DoubleVector(Vector(1.0, 2.0, 3.0))
+  describe("Test Double Array items") {
+    it("Should allow double array values") {
+      val k1 = DoubleArrayKey("myArray")
+      val m1 = DoubleArray(Array(1.0, 2.0, 3.0))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
@@ -349,39 +349,39 @@ class JSONTests extends FunSpec {
   describe("Test Int Matrix items") {
     it("Should allow int matrix values") {
       val k1 = IntMatrixKey("myMatrix")
-      val m1 = IntMatrix(Vector(Vector(1, 2, 3), Vector(4, 5, 6), Vector(7, 8, 9)))
+      val m1 = IntMatrix(Array(Array(1, 2, 3), Array(4, 5, 6), Array(7, 8, 9)))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
-      //      info("sc1out: " + sc1out.prettyPrint)
+      //info("sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
 
-  describe("Test Int Vector items") {
-    it("Should allow int vector values") {
-      val k1 = IntVectorKey("myVector")
-      val m1 = IntVector(Vector(1, 2, 3))
+  describe("Test Int Array items") {
+    it("Should allow int array values") {
+      val k1 = IntArrayKey("myArray")
+      val m1 = IntArray(Array(1, 2, 3))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
-      //      info("sc1out: " + sc1out.prettyPrint)
+      //info("sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
@@ -389,38 +389,38 @@ class JSONTests extends FunSpec {
   describe("Test Byte Matrix items") {
     it("Should allow byte matrix values") {
       val k1 = ByteMatrixKey("myMatrix")
-      val m1 = ByteMatrix(Vector(Vector(1, 2, 3), Vector(4, 5, 6), Vector(7, 8, 9)))
+      val m1 = ByteMatrix(Array(Array[Byte](1, 2, 3), Array[Byte](4, 5, 6), Array[Byte](7, 8, 9)))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
 
-  describe("Test Byte Vector items") {
-    it("Should allow byte vector values") {
-      val k1 = ByteVectorKey("myVector")
-      val m1 = ByteVector(Vector(1, 2, 3))
+  describe("Test Byte Array items") {
+    it("Should allow byte array values") {
+      val k1 = ByteArrayKey("myArray")
+      val m1 = ByteArray(Array[Byte](1, 2, 3))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
@@ -428,38 +428,39 @@ class JSONTests extends FunSpec {
   describe("Test Short Matrix items") {
     it("Should allow short matrix values") {
       val k1 = ShortMatrixKey("myMatrix")
-      val m1 = ShortMatrix(Vector(Vector(1, 2, 3), Vector(4, 5, 6), Vector(7, 8, 9)))
+      val m1 = ShortMatrix(Array.ofDim[Short](3, 3))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
-      assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      assert(sc1.equals(sc1in))
+      assert(sc1in(k1).head == m1)
+
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
 
-  describe("Test Short Vector items") {
-    it("Should allow short vector values") {
-      val k1 = ShortVectorKey("myVector")
-      val m1 = ShortVector(Vector(1, 2, 3))
+  describe("Test Short Array items") {
+    it("Should allow short array values") {
+      val k1 = ShortArrayKey("myArray")
+      val m1 = ShortArray(Array[Short](1, 2, 3))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
@@ -467,41 +468,40 @@ class JSONTests extends FunSpec {
   describe("Test Long Matrix items") {
     it("Should allow long matrix values") {
       val k1 = LongMatrixKey("myMatrix")
-      val m1 = LongMatrix(Vector(Vector(1, 2, 3), Vector(4, 5, 6), Vector(7, 8, 9)))
+      val m1 = LongMatrix(Array(Array(1, 2, 3), Array(4, 5, 6), Array(7, 8, 9)))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
 
-  describe("Test Long Vector items") {
-    it("Should allow long vector values") {
-      val k1 = LongVectorKey("myVector")
-      val m1 = LongVector(Vector(1, 2, 3))
+  describe("Test Long Array items") {
+    it("Should allow long array values") {
+      val k1 = LongArrayKey("myArray")
+      val m1 = LongArray(Array(1, 2, 3))
       val i1 = k1.set(m1)
       val sc1 = SetupConfig(ck).add(i1)
-      assert(sc1.value(k1) == m1)
+      assert(sc1(k1).head == m1)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
-      assert(sc1in.value(k1) == m1)
+      assert(sc1in(k1).head == m1)
 
-      val sc2 = SetupConfig(ck).set(k1, m1)
+      val sc2 = SetupConfig(ck).add(k1.set(m1))
       assert(sc2 == sc1)
     }
   }
 
 }
-

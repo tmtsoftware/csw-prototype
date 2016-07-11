@@ -48,7 +48,7 @@ public class JHcdControllerTests {
         JavaTestKit.shutdownActorSystem(system);
         system = null;
     }
-
+/*
     static class TestHcdController extends JHcdController {
         ActorRef worker = getContext().actorOf(TestWorker.props());
 //        LoggingAdapter log = Logging.getLogger(system, this);
@@ -82,8 +82,8 @@ public class JHcdControllerTests {
             return controllerReceive();
         }
     }
-
-
+*/
+/*
     // -- Test worker actor that simulates doing some work --
     static class TestWorker extends AbstractActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
@@ -146,6 +146,7 @@ public class JHcdControllerTests {
             getContext().parent().tell(currentState, self());
         }
     }
+    */
 
 
     // Tests sending a DemandState to a test HCD, then starting a matcher actor to subscribe
@@ -153,6 +154,7 @@ public class JHcdControllerTests {
     // the demand state, the matcher actor replies with a message (containing the current state).
     //
     // Note: Test requires that Redis is running externally
+  /*
     @Test
     public void testHcdController() throws Exception {
         new JavaTestKit(system) {
@@ -179,5 +181,5 @@ public class JHcdControllerTests {
             }
         };
     }
-
+*/
 }
