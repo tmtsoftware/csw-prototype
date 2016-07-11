@@ -14,7 +14,7 @@ import scala.compat.java8.OptionConverters._
  * @param values   the head for the key
  * @param units   the units of the head
  */
-final case class IntItem(keyName: String, values: Vector[Int], units: Units) extends Item[Int /*, java.lang.Integer*/] {
+final case class IntItem(keyName: String, values: Vector[Int], units: Units) extends Item[Int /*, java.lang.Integer*/ ] {
   //override def jvalues: java.util.List[java.lang.Integer] = values.map(i ⇒ i: java.lang.Integer).asJava
 
   //override def jvalue(index: Int): java.lang.Integer = values(index)
@@ -31,7 +31,7 @@ final case class IntItem(keyName: String, values: Vector[Int], units: Units) ext
  *
  * @param nameIn the name of the key
  */
-final case class IntKey(nameIn: String) extends Key[Int, IntItem /*java.lang.Integer*/](nameIn) {
+final case class IntKey(nameIn: String) extends Key[Int, IntItem /*java.lang.Integer*/ ](nameIn) {
 
   override def set(v: Vector[Int], units: Units = NoUnits) = IntItem(keyName, v, units)
 

@@ -26,13 +26,15 @@ class SerializationTests extends FunSuite {
     ra.set("12:32:11"),
     dec.set("30:22:22"),
     epoch.set(1950.0),
-    test.set(1)) //.second
+    test.set(1)
+  ) //.second
 
   val cs1 = CurrentState("tcs.pos").madd(
     ra.set("12:32:11"),
     dec.set("30:22:22"),
     epoch.set(1950.0),
-    test.set(1)) //.second
+    test.set(1)
+  ) //.second
 
   val disperser = StringKey("disperser")
   val filter1 = StringKey("filter1")

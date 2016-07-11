@@ -4,8 +4,8 @@ import csw.util.config.UnitsOfMeasure.{Deg, Meters, Seconds}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
-  * TMT Source Code: 7/7/16.
-  */
+ * TMT Source Code: 7/7/16.
+ */
 class ItemsTests extends FunSpec with ShouldMatchers {
 
   private val s1: String = "encoder"
@@ -15,7 +15,6 @@ class ItemsTests extends FunSpec with ShouldMatchers {
   private val ck1: String = "wfos.prog.cloudcover"
   private val ck2: String = "wfos.red.filter"
   private val ck3: String = "wfos.red.detector"
-
 
   describe("basic key tests") {
     val k1: IntKey = IntKey(s1)
@@ -147,7 +146,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     }
 
     it("work with one matrix without and with units") {
-      var di = dk.set(m1)  // This is an implicit
+      var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
       di = dk.set(m1).withUnits(Deg)
       di.units should be theSameInstanceAs Deg
@@ -198,7 +197,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
   }
 
   describe("test doubleItem") {
-    val tval:Double = 123.456
+    val tval: Double = 123.456
     val lk = DoubleKey(s1)
 
     it("should allow single val") {
@@ -311,7 +310,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     }
 
     it("work with one matrix without and with units") {
-      var di = dk.set(m1)  // This is an implicit
+      var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
       di = dk.set(m1).withUnits(Deg)
       di.units should be theSameInstanceAs Deg
@@ -334,7 +333,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
   }
 
   describe("test floatItem") {
-    val tval:Float = 123.456f
+    val tval: Float = 123.456f
     val lk = FloatKey(s1)
 
     it("should allow single val") {
@@ -447,7 +446,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     }
 
     it("work with one matrix without and with units") {
-      var di = dk.set(m1)  // This is an implicit
+      var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
       di = dk.set(m1).withUnits(Deg)
       di.units should be theSameInstanceAs Deg
@@ -470,7 +469,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
   }
 
   describe("test IntItem") {
-    val tval:Int = 1234
+    val tval: Int = 1234
     val lk = IntKey(s1)
 
     it("should allow single val") {
@@ -584,7 +583,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     }
 
     it("work with one matrix without and with units") {
-      var di = dk.set(m1)  // This is an implicit
+      var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
       di = dk.set(m1).withUnits(Deg)
       di.units should be theSameInstanceAs Deg
@@ -608,7 +607,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
 
   describe("test longKey") {
     val lval = 1234L
-    val lk:LongKey = LongKey(s1)
+    val lk: LongKey = LongKey(s1)
 
     it("should allow single val") {
       val li = lk.set(lval)
@@ -719,7 +718,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     }
 
     it("work with one matrix without and with units") {
-      var di = dk.set(m1)  // This is an implicit
+      var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
       di = dk.set(m1).withUnits(Deg)
       di.units should be theSameInstanceAs Deg
@@ -742,7 +741,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
   }
 
   describe("test ShortItem") {
-    val tval:Short = 1234
+    val tval: Short = 1234
     val lk = ShortKey(s1)
 
     it("should allow single val") {
@@ -856,7 +855,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     }
 
     it("work with one matrix without and with units") {
-      var di = dk.set(m1)  // This is an implicit
+      var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
       di = dk.set(m1).withUnits(Deg)
       di.units should be theSameInstanceAs Deg

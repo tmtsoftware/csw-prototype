@@ -19,16 +19,16 @@ case class IntArray(value: Array[Int]) {
   override def canEqual(other: Any) = other.isInstanceOf[IntArray]
 
   override def equals(other: Any) = other match {
-    case that: IntArray =>
+    case that: IntArray ⇒
       this.canEqual(that) && deepArrayEquals(this.value, that.value)
-    case _ => false
+    case _ ⇒ false
   }
 }
 
 case object IntArray extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(IntArray.apply)
 
-  implicit def create(value: Array[Int]):IntArray = IntArray(value)
+  implicit def create(value: Array[Int]): IntArray = IntArray(value)
 }
 
 /**

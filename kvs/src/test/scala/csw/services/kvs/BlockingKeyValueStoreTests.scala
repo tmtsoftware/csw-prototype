@@ -42,14 +42,14 @@ class BlockingKeyValueStoreTests
 
     kvs.set("test1", config1)
 
-    val val1:SetupConfig = kvs.get("test1").get
+    val val1: SetupConfig = kvs.get("test1").get
     assert(val1.prefix == "tcs.test")
     assert(val1(infoValue).head == 1)
     assert(val1(infoStr).head == "info 1")
 
     kvs.set("test2", config2)
 
-    val val2:Option[SetupConfig] = kvs.get("test2")
+    val val2: Option[SetupConfig] = kvs.get("test2")
     assert(val2.exists(_(infoValue).head == 2))
     assert(val2.exists(_(infoStr).head == "info 2"))
 
@@ -72,7 +72,7 @@ class BlockingKeyValueStoreTests
     kvs.set(key, config.add(exposureTime.set(6.0)), n)
     kvs.set(key, config.add(exposureTime.set(7.0)), n)
 
-    val v:Option[SetupConfig] = kvs.get(key)
+    val v: Option[SetupConfig] = kvs.get(key)
     assert(v.isDefined)
     assert(v.get(exposureTime).head == 7.0)
 

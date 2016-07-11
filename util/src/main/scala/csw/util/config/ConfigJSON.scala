@@ -98,7 +98,7 @@ object ConfigJSON extends DefaultJsonProtocol {
   private def unexpectedJsValueError(x: JsValue) = deserializationError(s"Unexpected JsValue: $x")
 
   // XXX TODO Use JNumber?
-  def writeItem[S, I /*, J */](item: Item[S /*, J */]): JsValue = {
+  def writeItem[S, I /*, J */ ](item: Item[S /*, J */ ]): JsValue = {
     val result: (JsString, JsValue) = item match {
       case ci: CharItem         ⇒ (JsString(charType), charItemFormat.write(ci))
       case si: ShortItem        ⇒ (JsString(shortType), shortItemFormat.write(si))
@@ -125,7 +125,7 @@ object ConfigJSON extends DefaultJsonProtocol {
     JsObject("itemType" → result._1, "item" → result._2)
   }
 
-  def readItemAndType(json: JsValue): Item[_ /*, _ */] = json match {
+  def readItemAndType(json: JsValue): Item[_ /*, _ */ ] = json match {
     case JsObject(fields) ⇒
       (fields("itemType"), fields("item")) match {
         case (JsString(`charType`), item)         ⇒ charItemFormat.read(item)

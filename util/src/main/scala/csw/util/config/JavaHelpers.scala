@@ -7,10 +7,9 @@ import scala.annotation.varargs
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 
-
 /**
-  * TMT Source Code: 6/23/16.
-  */
+ * TMT Source Code: 6/23/16.
+ */
 private[config] object JavaHelpers {
 
   // BooleanItem
@@ -20,9 +19,9 @@ private[config] object JavaHelpers {
 
   def jvalues(item: BooleanItem): java.util.List[java.lang.Boolean] = item.values.map(i ⇒ i: java.lang.Boolean).asJava
 
-  def jget(item: BooleanItem, index: Int): java.util.Optional[java.lang.Boolean] = item.get(index).map(i => i: java.lang.Boolean).asJava
+  def jget(item: BooleanItem, index: Int): java.util.Optional[java.lang.Boolean] = item.get(index).map(i ⇒ i: java.lang.Boolean).asJava
 
-  def jset(key: BooleanKey, v: java.util.List[java.lang.Boolean], units: Units): BooleanItem = BooleanItem(key.keyName, v.asScala.toVector.map(i => i: Boolean), units)
+  def jset(key: BooleanKey, v: java.util.List[java.lang.Boolean], units: Units): BooleanItem = BooleanItem(key.keyName, v.asScala.toVector.map(i ⇒ i: Boolean), units)
 
   @varargs
   def jset(key: BooleanKey, v: java.lang.Boolean*) = BooleanItem(key.keyName, v.map(i ⇒ i: Boolean).toVector, units = UnitsOfMeasure.NoUnits)
@@ -62,9 +61,9 @@ private[config] object JavaHelpers {
 
   def jvalues(item: CharItem): java.util.List[java.lang.Character] = item.values.map(i ⇒ i: java.lang.Character).asJava
 
-  def jget(item: CharItem, index: Int): java.util.Optional[java.lang.Character] = item.get(index).map(i => i: java.lang.Character).asJava
+  def jget(item: CharItem, index: Int): java.util.Optional[java.lang.Character] = item.get(index).map(i ⇒ i: java.lang.Character).asJava
 
-  def jset(key: CharKey, v: java.util.List[java.lang.Character], units: Units): CharItem = CharItem(key.keyName, v.asScala.toVector.map(i => i: Char), units)
+  def jset(key: CharKey, v: java.util.List[java.lang.Character], units: Units): CharItem = CharItem(key.keyName, v.asScala.toVector.map(i ⇒ i: Char), units)
 
   @varargs
   def jset(key: CharKey, v: java.lang.Character*) = CharItem(key.keyName, v.map(i ⇒ i: Char).toVector, units = UnitsOfMeasure.NoUnits)
@@ -76,9 +75,9 @@ private[config] object JavaHelpers {
 
   def jvalues(item: DoubleItem): java.util.List[java.lang.Double] = item.values.map(i ⇒ i: java.lang.Double).asJava
 
-  def jget(item: DoubleItem, index: Int): java.util.Optional[java.lang.Double] = item.get(index).map(i => i: java.lang.Double).asJava
+  def jget(item: DoubleItem, index: Int): java.util.Optional[java.lang.Double] = item.get(index).map(i ⇒ i: java.lang.Double).asJava
 
-  def jset(key: DoubleKey, v: java.util.List[java.lang.Double], units: Units): DoubleItem = DoubleItem(key.keyName, v.asScala.toVector.map(i => i: Double), units)
+  def jset(key: DoubleKey, v: java.util.List[java.lang.Double], units: Units): DoubleItem = DoubleItem(key.keyName, v.asScala.toVector.map(i ⇒ i: Double), units)
 
   @varargs
   def jset(key: DoubleKey, v: java.lang.Double*) = DoubleItem(key.keyName, v.map(i ⇒ i: Double).toVector, units = UnitsOfMeasure.NoUnits)
@@ -118,9 +117,9 @@ private[config] object JavaHelpers {
 
   def jvalues(item: FloatItem): java.util.List[java.lang.Float] = item.values.map(i ⇒ i: java.lang.Float).asJava
 
-  def jget(item: FloatItem, index: Int): java.util.Optional[java.lang.Float] = item.get(index).map(i => i: java.lang.Float).asJava
+  def jget(item: FloatItem, index: Int): java.util.Optional[java.lang.Float] = item.get(index).map(i ⇒ i: java.lang.Float).asJava
 
-  def jset(key: FloatKey, v: java.util.List[java.lang.Float], units: Units): FloatItem = FloatItem(key.keyName, v.asScala.toVector.map(i => i: Float), units)
+  def jset(key: FloatKey, v: java.util.List[java.lang.Float], units: Units): FloatItem = FloatItem(key.keyName, v.asScala.toVector.map(i ⇒ i: Float), units)
 
   @varargs
   def jset(key: FloatKey, v: java.lang.Float*) = FloatItem(key.keyName, v.map(i ⇒ i: Float).toVector, units = UnitsOfMeasure.NoUnits)
@@ -160,9 +159,9 @@ private[config] object JavaHelpers {
 
   def jvalues(item: IntItem): java.util.List[java.lang.Integer] = item.values.map(i ⇒ i: java.lang.Integer).asJava
 
-  def jget(item: IntItem, index: Int): java.util.Optional[java.lang.Integer] = item.get(index).map(i => i: java.lang.Integer).asJava
+  def jget(item: IntItem, index: Int): java.util.Optional[java.lang.Integer] = item.get(index).map(i ⇒ i: java.lang.Integer).asJava
 
-  def jset(key: IntKey, v: java.util.List[java.lang.Integer], units: Units): IntItem = IntItem(key.keyName, v.asScala.toVector.map(i => i: Int), units)
+  def jset(key: IntKey, v: java.util.List[java.lang.Integer], units: Units): IntItem = IntItem(key.keyName, v.asScala.toVector.map(i ⇒ i: Int), units)
 
   @varargs
   def jset(key: IntKey, v: java.lang.Integer*) = IntItem(key.keyName, v.map(i ⇒ i: Int).toVector, units = UnitsOfMeasure.NoUnits)
@@ -202,9 +201,9 @@ private[config] object JavaHelpers {
 
   def jvalues(item: LongItem): java.util.List[java.lang.Long] = item.values.map(i ⇒ i: java.lang.Long).asJava
 
-  def jget(item: LongItem, index: Int): java.util.Optional[java.lang.Long] = item.get(index).map(i => i: java.lang.Long).asJava
+  def jget(item: LongItem, index: Int): java.util.Optional[java.lang.Long] = item.get(index).map(i ⇒ i: java.lang.Long).asJava
 
-  def jset(key: LongKey, v: java.util.List[java.lang.Long], units: Units): LongItem = LongItem(key.keyName, v.asScala.toVector.map(i => i: Long), units)
+  def jset(key: LongKey, v: java.util.List[java.lang.Long], units: Units): LongItem = LongItem(key.keyName, v.asScala.toVector.map(i ⇒ i: Long), units)
 
   @varargs
   def jset(key: LongKey, v: java.lang.Long*) = LongItem(key.keyName, v.map(i ⇒ i: Long).toVector, units = UnitsOfMeasure.NoUnits)
@@ -244,9 +243,9 @@ private[config] object JavaHelpers {
 
   def jvalues(item: ShortItem): java.util.List[java.lang.Short] = item.values.map(i ⇒ i: java.lang.Short).asJava
 
-  def jget(item: ShortItem, index: Int): java.util.Optional[java.lang.Short] = item.get(index).map(i => i: java.lang.Short).asJava
+  def jget(item: ShortItem, index: Int): java.util.Optional[java.lang.Short] = item.get(index).map(i ⇒ i: java.lang.Short).asJava
 
-  def jset(key: ShortKey, v: java.util.List[java.lang.Short], units: Units): ShortItem = ShortItem(key.keyName, v.asScala.toVector.map(i => i: Short), units)
+  def jset(key: ShortKey, v: java.util.List[java.lang.Short], units: Units): ShortItem = ShortItem(key.keyName, v.asScala.toVector.map(i ⇒ i: Short), units)
 
   @varargs
   def jset(key: ShortKey, v: java.lang.Short*) = ShortItem(key.keyName, v.map(i ⇒ i: Short).toVector, units = UnitsOfMeasure.NoUnits)
@@ -279,7 +278,6 @@ private[config] object JavaHelpers {
   @varargs
   def jset(key: ShortMatrixKey, v: ShortMatrix*) = ShortMatrixItem(key.keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
 
-
   // StringItem
   def jvalue(item: StringItem): java.lang.String = item.values(0)
 
@@ -289,38 +287,38 @@ private[config] object JavaHelpers {
 
   def jget(item: StringItem, index: Int): java.util.Optional[java.lang.String] = item.get(index).map(i ⇒ i: java.lang.String).asJava
 
-  def jset(key: StringKey, v: java.util.List[java.lang.String], units: Units): StringItem = StringItem(key.keyName, v.asScala.toVector.map(i => i: String), units)
+  def jset(key: StringKey, v: java.util.List[java.lang.String], units: Units): StringItem = StringItem(key.keyName, v.asScala.toVector.map(i ⇒ i: String), units)
 
   @varargs
   def jset(key: StringKey, v: java.lang.String*) = StringItem(key.keyName, v.map(i ⇒ i: String).toVector, units = UnitsOfMeasure.NoUnits)
 
   def jadd[I <: Item[_], T <: ConfigType[T]](sc: T, items: java.util.List[I]): T = {
     val x = items.asScala
-    x.foldLeft(sc)((r, i) => r.add(i))
+    x.foldLeft(sc)((r, i) ⇒ r.add(i))
   }
 
   def jget[S, I <: Item[S], T <: ConfigType[T]](sc: T, key: Key[S, I]): java.util.Optional[I] = sc.get(key).asJava
 
   def jget[S, I <: Item[S], T <: ConfigType[T], J](sc: T, key: Key[S, I], index: Int): java.util.Optional[J] = {
     sc.get(key) match {
-      case Some(item) => (if (index >= 0 && index < item.size) Some(jvalue(sc, key, index)) else None).asJava
-      case None => None.asJava
+      case Some(item) ⇒ (if (index >= 0 && index < item.size) Some(jvalue(sc, key, index)) else None).asJava
+      case None       ⇒ None.asJava
     }
   }
 
   def jvalue[S, I <: Item[S], T <: ConfigType[T], J](sc: T, key: Key[S, I], index: Int): J = {
     val item = sc.get(key)
     item match {
-      case Some(x) => x.values(index).asInstanceOf[J]
-      case None => throw new NoSuchElementException(s"Item: $key not found")
+      case Some(x) ⇒ x.values(index).asInstanceOf[J]
+      case None    ⇒ throw new NoSuchElementException(s"Item: $key not found")
     }
   }
 
   def jvalues[S, I <: Item[S], T <: ConfigType[T], J](sc: T, key: Key[S, I]): java.util.List[J] = {
     val item = sc.get(key)
     item match {
-      case Some(x) => x.values.map(i => i.asInstanceOf[J]).asJava
-      case None => throw new NoSuchElementException(s"Item: $key not found")
+      case Some(x) ⇒ x.values.map(i ⇒ i.asInstanceOf[J]).asJava
+      case None    ⇒ throw new NoSuchElementException(s"Item: $key not found")
     }
   }
 

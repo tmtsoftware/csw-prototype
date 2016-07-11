@@ -18,7 +18,8 @@ object EventTests {
     exposureTime.set(220.0),
     cloudCover.set("20%"),
     exposureType.set("flat"),
-    exposureClass.set("science"))
+    exposureClass.set("science")
+  )
 
   val setupConfig = SetupConfig("wfos.red.filter")
     .add(position.set("IR2"))

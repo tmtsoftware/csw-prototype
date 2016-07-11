@@ -12,16 +12,16 @@ import scala.language.implicitConversions
 case class ShortMatrix(value: Array[Array[Short]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l <- value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   def apply(row: Int, col: Int) = value(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[ShortMatrix]
 
   override def equals(other: Any) = other match {
-    case that: ShortMatrix =>
+    case that: ShortMatrix ⇒
       this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
-    case _ => false
+    case _ ⇒ false
   }
 }
 
@@ -29,7 +29,7 @@ case class ShortMatrix(value: Array[Array[Short]]) {
 case object ShortMatrix extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(ShortMatrix.apply)
 
-  implicit def create(value: Array[Array[Short]]):ShortMatrix = ShortMatrix(value)
+  implicit def create(value: Array[Array[Short]]): ShortMatrix = ShortMatrix(value)
 }
 
 /**
@@ -45,12 +45,12 @@ final case class ShortMatrixKey(nameIn: String) extends Key[ShortMatrix, ShortMa
 }
 
 /**
-  * The type of a head for an ShortMatrixKey: One or more 2d arrays (implemented as ShortMatrix)
-  *
-  * @param keyName the name of the key
-  * @param values   the head for the key
-  * @param units   the units of the head
-  */
+ * The type of a head for an ShortMatrixKey: One or more 2d arrays (implemented as ShortMatrix)
+ *
+ * @param keyName the name of the key
+ * @param values   the head for the key
+ * @param units   the units of the head
+ */
 final case class ShortMatrixItem(keyName: String, values: Vector[ShortMatrix], units: Units) extends Item[ShortMatrix] {
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }

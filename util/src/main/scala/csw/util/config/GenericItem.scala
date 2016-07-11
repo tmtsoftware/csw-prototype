@@ -62,13 +62,13 @@ case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values:
     )
   }
 
-//  override def jvalue(index: Int): S = values(index)
+  //  override def jvalue(index: Int): S = values(index)
 
-//  override def jget(index: Int): java.util.Optional[S] = get(index).asJava
+  //  override def jget(index: Int): java.util.Optional[S] = get(index).asJava
 
-//  override def jvalue: S = values(0)
+  //  override def jvalue: S = values(0)
 
-  override def withUnits(unitsIn: Units): Item[S /*, S*/] = copy(units = unitsIn)
+  override def withUnits(unitsIn: Units): Item[S /*, S*/ ] = copy(units = unitsIn)
 
   //override def jvalues: util.List[S] = values.asJava
 }
@@ -81,16 +81,16 @@ case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values:
  */
 case class GenericKey[S: JsonFormat](typeName: String, nameIn: String) extends Key[S, GenericItem[S]](nameIn) {
 
-  override def set(v: Vector[S], units: Units = NoUnits):GenericItem[S] = GenericItem(typeName, keyName, v, units)
+  override def set(v: Vector[S], units: Units = NoUnits): GenericItem[S] = GenericItem(typeName, keyName, v, units)
 
-  override def set(v: S*): GenericItem[S /*, S*/] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
-/*
+  override def set(v: S*): GenericItem[S /*, S*/ ] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
+  /*
   override def jset(v: java.util.List[S]) = {
     import scala.collection.JavaConverters._
     GenericItem(typeName, keyName, v.asScala.toVector, NoUnits)
   }
 */
-//  @varargs
-//  override def jset(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
+  //  @varargs
+  //  override def jset(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
 }
 

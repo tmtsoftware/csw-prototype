@@ -6,8 +6,8 @@ import csw.util.config.Configurations.SetupConfig
 import csw.util.config.UnitsOfMeasure.{Deg, NoUnits}
 
 /**
-  * TMT Source Code: 7/9/16.
-  */
+ * TMT Source Code: 7/9/16.
+ */
 class ConfigDSLTests extends FunSpec with ShouldMatchers {
   private val s1: String = "encoder"
   private val s2: String = "filter"
@@ -16,7 +16,6 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
   private val ck1: String = "wfos.prog.cloudcover"
   private val ck2: String = "wfos.red.filter"
   private val ck3: String = "wfos.red.detector"
-
 
   describe("creating items") {
     val k1 = IntKey(s1)
@@ -37,7 +36,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     it("should work with units too") {
       val i1 = set(detectorTemp, 100.0).withUnits(Deg)
       i1 shouldBe (an[DoubleItem])
-      i1.size shouldBe(1)
+      i1.size shouldBe (1)
       i1.units should be(Deg)
     }
   }
@@ -50,7 +49,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
       i1.size should equal(5)
 
       i1.values should equal(Vector(1, 2, 3, 4, 5))
-      i1.head should equal (1)
+      i1.head should equal(1)
       i1.value(0) should equal(1)
       i1.value(1) should equal(2)
       i1.value(2) should equal(3)
@@ -67,7 +66,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val k1 = LongArrayKey(s2)
 
     it("should allow setting") {
-      val m1:Array[Long] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+      val m1: Array[Long] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 
       val i1 = k1.set(m1)
       i1.size should be(1)
@@ -82,7 +81,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val k1 = LongMatrixKey(s2)
 
     it("should allow setting") {
-      val m1:Array[Array[Long]] = Array(Array(1, 2, 4), Array(2, 4, 8), Array(4, 8, 16))
+      val m1: Array[Array[Long]] = Array(Array(1, 2, 4), Array(2, 4, 8), Array(4, 8, 16))
 
       val i1 = k1.set(m1)
       i1.size should be(1)
@@ -148,7 +147,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
       item(sc1, k1) should equal(i1)
       item(sc1, k2) should equal(i2)
       item(sc1, k3) should equal(i3)
-     }
+    }
 
     it("should throw NoSuchElementException if not present") {
       var sc1 = SetupConfig(ck2)

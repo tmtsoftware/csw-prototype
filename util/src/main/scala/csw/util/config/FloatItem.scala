@@ -14,7 +14,7 @@ import scala.compat.java8.OptionConverters._
  * @param values   the head for the key
  * @param units   the units of the head
  */
-final case class FloatItem(keyName: String, values: Vector[Float], units: Units) extends Item[Float /*, java.lang.Float*/] {
+final case class FloatItem(keyName: String, values: Vector[Float], units: Units) extends Item[Float /*, java.lang.Float*/ ] {
 
   //override def jvalues: java.util.List[java.lang.Float] = values.map(i ⇒ i: java.lang.Float).asJava
 
@@ -32,7 +32,7 @@ final case class FloatItem(keyName: String, values: Vector[Float], units: Units)
  *
  * @param nameIn the name of the key
  */
-final case class FloatKey(nameIn: String) extends Key[Float, FloatItem /*java.lang.Float*/](nameIn) {
+final case class FloatKey(nameIn: String) extends Key[Float, FloatItem /*java.lang.Float*/ ](nameIn) {
 
   override def set(v: Vector[Float], units: Units = NoUnits) = FloatItem(keyName, v, units)
 

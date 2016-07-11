@@ -3,6 +3,8 @@ package javacsw.util.config.tests;
 import csw.util.config.*;
 import csw.util.config.Configurations.ObserveConfig;
 import csw.util.config.Configurations.SetupConfig;
+import javacsw.util.config.JItems;
+import javacsw.util.config.JUnitsOfMeasure;
 import org.junit.Test;
 
 import java.util.*;

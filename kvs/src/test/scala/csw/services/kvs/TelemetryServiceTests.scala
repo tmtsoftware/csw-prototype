@@ -50,7 +50,7 @@ class TelemetryServiceTests
 
     bts.set(event1)
     assert(bts.get(prefix).isDefined)
-    val val1:StatusEvent = bts.get(prefix).get
+    val val1: StatusEvent = bts.get(prefix).get
 
     assert(val1.prefix == prefix)
     assert(val1.get(infoValue).isDefined)
@@ -59,7 +59,7 @@ class TelemetryServiceTests
 
     bts.set(event2)
     assert(bts.get(prefix).isDefined)
-    val val2:StatusEvent = bts.get(prefix).get
+    val val2: StatusEvent = bts.get(prefix).get
     assert(val2(infoValue).head == 2)
     assert(val2(infoStr).head == "info 2")
 

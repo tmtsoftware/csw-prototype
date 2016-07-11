@@ -3,8 +3,8 @@ package csw.util.config
 import org.scalatest.FunSpec
 
 /**
-  * TMT Source Code: 7/7/16.
-  */
+ * TMT Source Code: 7/7/16.
+ */
 class ArrayAndMatrixEqualityTests extends FunSpec {
   import ArrayAndMatrixEquality._
 
@@ -55,7 +55,7 @@ class ArrayAndMatrixEqualityTests extends FunSpec {
     val m2 = LongArray(Array(1, 2, 3))
     val m3 = LongArray(Array(1, 2, 4))
 
-    val f = (l: LongArray) => l.value
+    val f = (l: LongArray) ⇒ l.value
     it("should notice equality for single member vectors of arrays") {
       // One member vectors, same values but different vectors, should be true
       assert(vectorEquals2(Vector(m1), Vector(m2), f))

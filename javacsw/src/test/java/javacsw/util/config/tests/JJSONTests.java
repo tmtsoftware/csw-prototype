@@ -1,4 +1,4 @@
-package javacsw.util.config;
+package javacsw.util.config.tests;
 
 import csw.util.config.*;
 import csw.util.config.Configurations.ObserveConfig;
@@ -6,6 +6,8 @@ import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.Events.ObserveEvent;
 import csw.util.config.Events.StatusEvent;
 import csw.util.config.Events.SystemEvent;
+import javacsw.util.config.JSubsystem;
+import javacsw.util.config.JUnitsOfMeasure;
 import org.junit.Test;
 import spray.json.JsValue;
 

@@ -12,22 +12,22 @@ import scala.language.implicitConversions
 case class IntMatrix(value: Array[Array[Int]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l <- value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   def apply(row: Int, col: Int) = value(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[IntMatrix]
 
   override def equals(other: Any) = other match {
-    case that: IntMatrix =>
+    case that: IntMatrix ⇒
       this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
-    case _ => false
+    case _ ⇒ false
   }
 }
 case object IntMatrix extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(IntMatrix.apply)
 
-  implicit def create(value: Array[Array[Int]]):IntMatrix = IntMatrix(value)
+  implicit def create(value: Array[Array[Int]]): IntMatrix = IntMatrix(value)
 }
 
 /**

@@ -12,23 +12,23 @@ import scala.language.implicitConversions
 case class FloatMatrix(value: Array[Array[Float]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l <- value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   def apply(row: Int, col: Int) = value(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[FloatMatrix]
 
   override def equals(other: Any) = other match {
-    case that: FloatMatrix =>
+    case that: FloatMatrix ⇒
       this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
-    case _ => false
+    case _ ⇒ false
   }
 }
 
 case object FloatMatrix extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(FloatMatrix.apply)
 
-  implicit def create(value: Array[Array[Float]]):FloatMatrix = FloatMatrix(value)
+  implicit def create(value: Array[Array[Float]]): FloatMatrix = FloatMatrix(value)
 }
 
 /**

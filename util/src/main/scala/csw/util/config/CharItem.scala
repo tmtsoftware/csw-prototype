@@ -22,7 +22,7 @@ final case class CharItem(keyName: String, values: Vector[Char], units: Units) e
  *
  * @param nameIn the name of the key
  */
-final case class CharKey(nameIn: String) extends Key[Char, CharItem /*Character*/](nameIn) {
+final case class CharKey(nameIn: String) extends Key[Char, CharItem /*Character*/ ](nameIn) {
 
   override def set(v: Vector[Char], units: Units = NoUnits) = CharItem(keyName, v, units)
 

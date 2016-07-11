@@ -49,16 +49,16 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
 
     // Set a low refresh rate for the test
     val refreshSecs = 1
-//    val refreshSecs = 5
+    //    val refreshSecs = 5
 
     // Time until alarm severity expires
     val expireSecs = refreshSecs * AlarmService.maxMissedRefresh
 
     // Time in ms to wait for a Redis callback
-    val shortDelayMs = 500*refreshSecs
+    val shortDelayMs = 500 * refreshSecs
 
     // Time in ms to wait to see if an alarm severity expired
-    val delayMs = expireSecs * 1000*refreshSecs + shortDelayMs
+    val delayMs = expireSecs * 1000 * refreshSecs + shortDelayMs
 
     // Later, in another JVM...,
     // Get the alarm service by looking up the name with the location service.
@@ -200,7 +200,6 @@ class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyL
       assert(Try(Await.result(alarmService.getHealth(badKey), timeout.duration)).isFailure)
       assert(Try(Await.result(alarmService.setShelvedState(badKey, ShelvedState.Normal), timeout.duration)).isFailure)
       assert(Try(Await.result(alarmService.setActivationState(badKey, ActivationState.Normal), timeout.duration)).isFailure)
-
 
       // Stop the actors monitoring the alarm and health
       healthMonitor.stop()

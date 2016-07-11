@@ -121,7 +121,7 @@ object Events {
     // (Using a Java interface caused various Java compiler errors)
     override def add[I <: Item[_]](item: I): StatusEvent = super.add(item)
 
-    override def remove[S, I <:Item[S]](key: Key[S, I]): StatusEvent = super.remove(key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): StatusEvent = super.remove(key)
   }
 
   object StatusEvent {
@@ -148,7 +148,7 @@ object Events {
     // (Using a Java interface caused various Java compiler errors)
     override def add[I <: Item[_]](item: I): ObserveEvent = super.add(item)
 
-    override def remove[S, I <:Item[S]](key: Key[S, I]): ObserveEvent = super.remove(key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): ObserveEvent = super.remove(key)
   }
 
   object ObserveEvent {
@@ -175,7 +175,7 @@ object Events {
     // (Using a Java interface caused various Java compiler errors)
     override def add[I <: Item[_]](item: I): SystemEvent = super.add(item)
 
-    override def remove[S, I <:Item[S]](key: Key[S, I]): SystemEvent = super.remove(key)
+    override def remove[S, I <: Item[S]](key: Key[S, I]): SystemEvent = super.remove(key)
   }
 
   object SystemEvent {

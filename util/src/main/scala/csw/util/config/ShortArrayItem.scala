@@ -22,15 +22,15 @@ case class ShortArray(value: Array[Short]) {
   override def canEqual(other: Any) = other.isInstanceOf[ShortArray]
 
   override def equals(other: Any) = other match {
-    case that: ShortArray =>
+    case that: ShortArray ⇒
       this.canEqual(that) && deepArrayEquals(this.value, that.value)
-    case _ => false
+    case _ ⇒ false
   }
 }
 case object ShortArray extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(ShortArray.apply)
 
-  implicit def create(value: Array[Short]):ShortArray = ShortArray(value)
+  implicit def create(value: Array[Short]): ShortArray = ShortArray(value)
 }
 
 /**

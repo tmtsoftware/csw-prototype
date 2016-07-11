@@ -15,22 +15,22 @@ import scala.compat.java8.OptionConverters._
 case class LongMatrix(value: Array[Array[Long]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l <- value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   def apply(row: Int, col: Int) = value(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[LongMatrix]
 
   override def equals(other: Any) = other match {
-    case that: LongMatrix =>
+    case that: LongMatrix ⇒
       this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
-    case _ => false
+    case _ ⇒ false
   }
 }
 case object LongMatrix extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(LongMatrix.apply)
 
-  implicit def create(value: Array[Array[Long]]):LongMatrix = LongMatrix(value)
+  implicit def create(value: Array[Array[Long]]): LongMatrix = LongMatrix(value)
 }
 
 /**
