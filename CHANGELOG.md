@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
   An Alarm Service [Java API](javacsw/README.alarms.md) is also available.
 
 ### Added
-- Added a *Request* message to [AssemblyController](src/main/scala/csw/services/ccs/AssemblyController.scala) that
+- Added a *Request* message to [AssemblyController](ccs/src/main/scala/csw/services/ccs/AssemblyController.scala) that
 does something based on the contents of the configuration argument and returns a status and optional value (also a SetupConfig).
 The main difference between Request and Submit is that Request can return a value, while Submit only returns a status.
 
