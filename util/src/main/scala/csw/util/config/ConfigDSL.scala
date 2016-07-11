@@ -1,6 +1,6 @@
 package csw.util.config
 
-import csw.util.config.Configurations.ConfigType
+import csw.util.config.Configurations._
 import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 
 /**
@@ -125,4 +125,48 @@ object ConfigDSL {
    */
   def set[S, I <: Item[S]](key: Key[S, I], v: S*): I = key.set(v: _*)
 
+  /**
+    * Create a SetupConfig with a number of items
+    *
+    * @param configKey ConfigKey - can be a String form - "wfos.red.filter
+    * @param items     0 or more items to be added during creation
+    * @return a new SetupConfig with the items added
+    */
+  def sc(configKey: ConfigKey, items: Item[_]*): SetupConfig = SetupConfig(configKey).madd(items: _*)
+
+  /**
+    * Create an ObserveConfig with a number of items
+    *
+    * @param configKey ConfigKey - can be a String form - "wfos.red.filter
+    * @param items     0 or more items to be added during creation
+    * @return a new ObserveConfig with the items added
+    */
+  def oc(configKey: ConfigKey, items: Item[_]*): ObserveConfig = ObserveConfig(configKey).madd(items: _*)
+
+  def sca(obsId: String, configs: SetupConfig*): SetupConfigArg = {
+    SetupConfigArg(ConfigInfo(obsId), configs: _*)
+  }
+}
+
+case class BP[S, I <: Item[S]](key: Key[S, I], v: S)
+
+case class SCBuilder(scName: String, configKey: ConfigKey, defaultItems: Item[_]*) {
+
+  private val default = SetupConfig(configKey).madd(defaultItems: _*)
+
+  def set[S, I <: Item[S]](key: Key[S, I], v: S): SetupConfig = default.add(key.set(v))
+
+  def doSet[S, I <: Item[S]](p: (Key[S, I], S)): I = {
+    val x = p._1.set(p._2)
+    x
+  }
+
+  /*
+  def set(bp: BP):SetupConfig = {
+    val item = doSet((bp.key, bp.v))
+    default.add(item)
+  }
+  */
+
+  override def toString = scName + ":" + default.toString
 }

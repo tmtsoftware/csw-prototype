@@ -1,9 +1,9 @@
 package csw.util.config
 
-import org.scalatest.{FunSpec, ShouldMatchers}
-import ConfigDSL._
+import csw.util.config.ConfigDSL._
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.UnitsOfMeasure.{Deg, NoUnits}
+import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
  * TMT Source Code: 7/9/16.
@@ -23,7 +23,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
     it("should work to set single items") {
       val i1 = set(k1, 2)
-      i1 shouldBe (an[IntItem])
+      i1 shouldBe an[IntItem]
       i1.size should equal(1)
       i1.units should be(NoUnits)
     }
@@ -35,8 +35,8 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
     it("should work with units too") {
       val i1 = set(detectorTemp, 100.0).withUnits(Deg)
-      i1 shouldBe (an[DoubleItem])
-      i1.size shouldBe (1)
+      i1 shouldBe an[DoubleItem]
+      i1.size shouldBe 1
       i1.units should be(Deg)
     }
   }
@@ -350,4 +350,55 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
       get(sc1, k4).isDefined should be(true)
     }
   }
+
+  describe("sc tests") {
+    val k1 = IntKey("itest")
+    val k2 = DoubleKey("dtest")
+    val k3 = StringKey("stest")
+    val k4 = LongArrayKey("lartest")
+
+    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.Deg)
+    val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i3 = set(k3, "A", "B", "C")
+    val i4 = set(k4, LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
+
+    it("should allow creation") {
+      val sc1 = sc(ck2, i1, i2)
+
+      sc1.size should be(2)
+      info("sc1: " + sc1)
+
+    }
+  }
+
+  describe("builder tests") {
+    val zeroPoint = IntKey("zeroPoint")
+    val filter = StringKey("filter")
+    val mode = StringKey("mode")
+
+
+    val i1 = set(mode, "Fast") // default value
+    val i2 = set(filter, "home") // default value
+    val i3 = set(zeroPoint, 1000) // Where home is
+
+    it("should create with defaults") {
+
+      val fbuilder = SCBuilder("filterDefaults", ck2, i1, i2, i3)
+
+    }
+    it("should allow override") {
+      val fbuilder = SCBuilder("filterDefaults", ck2, i1, i2, i3)
+
+      //val fc:SetupConfig = fbuilder.set(filter -> "green")
+      //item(fc, filter).head should be("green")
+      //info("fc: " + fbuilder)
+    }
+
+    it("test of new sc") {
+      val sc1 = sc(ck2, (zeroPoint := 1000) withUnits Deg)
+      info("SC: " + sc1)
+    }
+
+  }
+
 }
