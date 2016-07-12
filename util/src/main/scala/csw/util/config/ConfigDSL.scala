@@ -168,11 +168,41 @@ object ConfigDSL {
    */
   implicit def doSet[S, I <: Item[S]](p: (Key[S, I], S)): I = p._1.set(p._2)
 
+  /**
+    * Automatically convert a pair of (key, (value, units)) to an Item for use in the DSL.
+    * With this conversion yon can call [[SCBuilder.set]] like this:
+    * {{{
+    *   val setupConfig = builder.set(
+    *     key1 -> (value1, units1),
+    *     key2 -> (value2, units2)
+    *   )
+    * }}}
+    *
+    * @param p a pair of (key, value)
+    * @tparam S the scala value type
+    * @tparam I the item type
+    * @return a new Item containing the key and value
+    */
   implicit def doSetWithUnits[S, I <: Item[S]](p: (Key[S, I], (S, UnitsOfMeasure.Units))): Item[S] = {
     val units = p._2._2
     p._1.set(p._2._1).withUnits(units)
   }
 
+  /**
+    * Automatically convert a pair of (key, Vector(...)) to an Item for use in the DSL.
+    * With this conversion yon can call [[SCBuilder.set]] like this:
+    * {{{
+    *   val setupConfig = builder.set(
+    *     key1 -> Vector(...),
+    *     key2 -> Vector(...)
+    *   )
+    * }}}
+    *
+    * @param p a pair of (key, Vector(...))
+    * @tparam S the scala value type (type of values in the vector)
+    * @tparam I the item type
+    * @return a new Item containing the key and values
+    */
   implicit def doSetValues[S, I <: Item[S]](p: (Key[S, I], Vector[S])): I = p._1.set(p._2)
 
 }

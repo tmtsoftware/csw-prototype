@@ -41,7 +41,16 @@ class ConfigDSLFunctionsTests extends FunSpec {
     }
 
     it("should support key -> value syntax for building configs") {
-      //      val setupConfig = sc("test")
+      val setupConfig = sc("test",
+        k1 -> Vector(1, 2, 3),
+        k2 -> Vector(1.0, 2.0, 3.0),
+        k3 -> Vector("A", "B", "C")
+      )
+      val x = setupConfig.get(k1).get
+      x
+      assert(setupConfig.get(k1).get.values == Vector(1, 2, 3))
+      assert(setupConfig.get(k2).get.head == 1.0)
+      assert(setupConfig.get(k3).get.value(1) == "B")
     }
   }
 }
