@@ -7,7 +7,7 @@ import csw.util.config.Configurations.*;
 import java.util.*;
 
 /**
- * TMT Source Code: 6/23/16.
+ * Java API for configuration items.
  */
 public class JItems {
   // BooleanItem

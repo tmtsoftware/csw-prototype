@@ -25,7 +25,6 @@ case class ShortMatrix(value: Array[Array[Short]]) {
   }
 }
 
-//case class ShortMatrix(value Vec)
 case object ShortMatrix extends DefaultJsonProtocol {
   implicit def format = jsonFormat1(ShortMatrix.apply)
 
