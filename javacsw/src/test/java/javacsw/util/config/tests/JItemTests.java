@@ -1,6 +1,8 @@
-package javacsw.util.config;
+package javacsw.util.config.tests;
 
 import csw.util.config.*;
+import javacsw.util.config.JItems;
+import javacsw.util.config.JUnitsOfMeasure;
 import org.junit.Test;
 
 import java.util.*;
