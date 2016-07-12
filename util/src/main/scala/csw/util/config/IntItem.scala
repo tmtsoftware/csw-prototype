@@ -14,14 +14,7 @@ import scala.compat.java8.OptionConverters._
  * @param values   the value for the key
  * @param units   the units of the value
  */
-final case class IntItem(keyName: String, values: Vector[Int], units: Units) extends Item[Int /*, java.lang.Integer*/ ] {
-  //override def jvalues: java.util.List[java.lang.Integer] = values.map(i ⇒ i: java.lang.Integer).asJava
-
-  //override def jvalue(index: Int): java.lang.Integer = values(index)
-
-  //override def jget(index: Int): java.util.Optional[java.lang.Integer] = get(index).map(i ⇒ i: java.lang.Integer).asJava
-
-  //override def jvalue: java.lang.Integer = values(0)
+final case class IntItem(keyName: String, values: Vector[Int], units: Units) extends Item[Int] {
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 }
@@ -31,15 +24,10 @@ final case class IntItem(keyName: String, values: Vector[Int], units: Units) ext
  *
  * @param nameIn the name of the key
  */
-final case class IntKey(nameIn: String) extends Key[Int, IntItem /*java.lang.Integer*/ ](nameIn) {
+final case class IntKey(nameIn: String) extends Key[Int, IntItem](nameIn) {
 
   override def set(v: Vector[Int], units: Units = NoUnits) = IntItem(keyName, v, units)
 
   override def set(v: Int*) = IntItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
-
-  //override def jset(v: java.util.List[java.lang.Integer]): IntItem = IntItem(keyName, v.asScala.toVector.map(i ⇒ i: Int), NoUnits)
-
-  //@varargs
-  //override def jset(v: java.lang.Integer*) = IntItem(keyName, v.map(i ⇒ i: Int).toVector, units = UnitsOfMeasure.NoUnits)
 }
 

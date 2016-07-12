@@ -22,7 +22,7 @@ final case class DoubleItem(keyName: String, values: Vector[Double], units: Unit
  *
  * @param nameIn the name of the key
  */
-final case class DoubleKey(nameIn: String) extends Key[Double, DoubleItem /*java.lang.Double*/ ](nameIn) {
+final case class DoubleKey(nameIn: String) extends Key[Double, DoubleItem](nameIn) {
 
   override def set(v: Vector[Double], units: Units = NoUnits) = DoubleItem(keyName, v, units)
 

@@ -1,12 +1,10 @@
 package csw.util.config
 
 import csw.util.config.Configurations._
-import csw.util.config.UnitsOfMeasure.Units
 
-import scala.language.implicitConversions
 import scala.annotation.varargs
-import java.util.Optional
 import scala.collection.JavaConverters._
+import scala.language.implicitConversions
 
 object StateVariable {
 
