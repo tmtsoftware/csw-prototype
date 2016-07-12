@@ -4,8 +4,8 @@ import org.scalatest.FunSpec
 import csw.util.config.ConfigDSL._
 
 /**
-  * Created by abrighto on 12/07/16.
-  */
+ * Created by abrighto on 12/07/16.
+ */
 class ConfigDSLFunctionsTests extends FunSpec {
 
   describe("Tests DSL functions") {
@@ -32,9 +32,8 @@ class ConfigDSLFunctionsTests extends FunSpec {
       assert(value(i2, 2) == 3.0)
       assert(get(i2, 3).isEmpty)
       assert(values(i2) == Vector(1.0, 2.0, 3.0))
-      assert(i2 == set(k2, Vector(1.0, 2.0, 3.0), UnitsOfMeasure.Deg))
+      assert(i2 == set(k2, Vector(1.0, 2.0, 3.0), UnitsOfMeasure.Meters))
     }
   }
-
 
 }

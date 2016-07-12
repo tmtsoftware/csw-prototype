@@ -376,22 +376,27 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val filter = StringKey("filter")
     val mode = StringKey("mode")
 
-
     val i1 = set(mode, "Fast") // default value
     val i2 = set(filter, "home") // default value
     val i3 = set(zeroPoint, 1000) // Where home is
 
     it("should create with defaults") {
+      val fbuilder = SCBuilder(ck2, i1, i2, i3)
 
-      val fbuilder = SCBuilder("filterDefaults", ck2, i1, i2, i3)
-
+      val setupConfig = fbuilder.set(zeroPoint → 2000)
+      val intItem = setupConfig.apply(zeroPoint)
+      assert(intItem.head == 2000)
     }
-    it("should allow override") {
-      val fbuilder = SCBuilder("filterDefaults", ck2, i1, i2, i3)
 
-      //val fc:SetupConfig = fbuilder.set(filter -> "green")
-      //item(fc, filter).head should be("green")
-      //info("fc: " + fbuilder)
+    it("should allow override") {
+      val fbuilder = SCBuilder(ck2, i1, i2, i3)
+
+      val fc: SetupConfig = fbuilder.set(
+        filter → "green",
+        zeroPoint → 2500
+      )
+      item(fc, filter).head should be("green")
+      info("fc: " + fbuilder)
     }
 
     it("test of new sc") {
