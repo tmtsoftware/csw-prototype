@@ -393,9 +393,15 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
       val fc: SetupConfig = fbuilder.set(
         filter → "green",
-        zeroPoint → 2500
+        zeroPoint → (2500, UnitsOfMeasure.Deg),
+        mode → Vector("fast", "slow", "normal")
       )
       item(fc, filter).head should be("green")
+      item(fc, zeroPoint).head should be(2500)
+      item(fc, zeroPoint).units should be(UnitsOfMeasure.Deg)
+      item(fc, mode).values should be(Vector("fast", "slow", "normal"))
+      item(fc, mode).head should be("fast")
+
       info("fc: " + fbuilder)
     }
 

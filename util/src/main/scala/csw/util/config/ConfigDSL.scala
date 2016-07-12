@@ -167,6 +167,14 @@ object ConfigDSL {
    * @return a new Item containing the key and value
    */
   implicit def doSet[S, I <: Item[S]](p: (Key[S, I], S)): I = p._1.set(p._2)
+
+  implicit def doSetWithUnits[S, I <: Item[S]](p: (Key[S, I], (S, UnitsOfMeasure.Units))): Item[S] = {
+    val units = p._2._2
+    p._1.set(p._2._1).withUnits(units)
+  }
+
+  implicit def doSetValues[S, I <: Item[S]](p: (Key[S, I], Vector[S])): I = p._1.set(p._2)
+
 }
 
 /**
