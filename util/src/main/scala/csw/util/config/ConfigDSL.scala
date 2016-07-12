@@ -148,8 +148,6 @@ object ConfigDSL {
   }
 }
 
-case class BP[S, I <: Item[S]](key: Key[S, I], v: S)
-
 case class SCBuilder(scName: String, configKey: ConfigKey, defaultItems: Item[_]*) {
 
   private val default = SetupConfig(configKey).madd(defaultItems: _*)
@@ -160,13 +158,6 @@ case class SCBuilder(scName: String, configKey: ConfigKey, defaultItems: Item[_]
     val x = p._1.set(p._2)
     x
   }
-
-  /*
-  def set(bp: BP):SetupConfig = {
-    val item = doSet((bp.key, bp.v))
-    default.add(item)
-  }
-  */
 
   override def toString = scName + ":" + default.toString
 }
