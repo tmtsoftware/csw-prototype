@@ -79,7 +79,8 @@ object ConfigDSL {
    * @param item the item that contains values
    * @return The item at the front of the values
    */
-  def head[S, I <: Item[S]](item: I): S = item.head
+//  def head[S, I <: Item[S]](item: I): S = item.head
+  def head[S](item: Item[S]): S = item.head
 
   /**
    * Returns the value for an item at the index
@@ -88,7 +89,8 @@ object ConfigDSL {
    * @param index the index of the needed value
    * @return the item's index value or throws an IndexOutOfBoundsException
    */
-  def value[S, I <: Item[S]](item: I, index: Int): S = item.value(index)
+//  def value[S, I <: Item[S]](item: I, index: Int): S = item.value(index)
+  def value[S](item: Item[S], index: Int): S = item.value(index)
 
   /**
    * Returns the value for an item at the index as an Option
@@ -97,7 +99,7 @@ object ConfigDSL {
    * @param index the index of the needed value
    * @return the item's index value as an Option (i.e. Some(value)) or None if the index is inappropriate
    */
-  def get[S, I <: Item[S]](item: I, index: Int): Option[S] = item.get(index)
+  def get[S](item: Item[S], index: Int): Option[S] = item.get(index)
 
   /**
    * Returns the vector of values for the item
@@ -105,7 +107,7 @@ object ConfigDSL {
    * @param item the item with the needed values
    * @return all of the values for the item as a Vector
    */
-  def values[S, I <: Item[S]](item: I): Vector[S] = item.values
+  def values[S](item: Item[S]): Vector[S] = item.values
 
   /**
    * Create an item by setting a key with a Vector of values associated with the key
@@ -126,21 +128,21 @@ object ConfigDSL {
   def set[S, I <: Item[S]](key: Key[S, I], v: S*): I = key.set(v: _*)
 
   /**
-    * Create a SetupConfig with a number of items
-    *
-    * @param configKey ConfigKey - can be a String form - "wfos.red.filter
-    * @param items     0 or more items to be added during creation
-    * @return a new SetupConfig with the items added
-    */
+   * Create a SetupConfig with a number of items
+   *
+   * @param configKey ConfigKey - can be a String form - "wfos.red.filter
+   * @param items     0 or more items to be added during creation
+   * @return a new SetupConfig with the items added
+   */
   def sc(configKey: ConfigKey, items: Item[_]*): SetupConfig = SetupConfig(configKey).madd(items: _*)
 
   /**
-    * Create an ObserveConfig with a number of items
-    *
-    * @param configKey ConfigKey - can be a String form - "wfos.red.filter
-    * @param items     0 or more items to be added during creation
-    * @return a new ObserveConfig with the items added
-    */
+   * Create an ObserveConfig with a number of items
+   *
+   * @param configKey ConfigKey - can be a String form - "wfos.red.filter
+   * @param items     0 or more items to be added during creation
+   * @return a new ObserveConfig with the items added
+   */
   def oc(configKey: ConfigKey, items: Item[_]*): ObserveConfig = ObserveConfig(configKey).madd(items: _*)
 
   def sca(obsId: String, configs: SetupConfig*): SetupConfigArg = {
