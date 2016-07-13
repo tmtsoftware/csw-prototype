@@ -9,18 +9,18 @@ import scala.language.implicitConversions
 /**
  * A Scala Vector of Longs
  */
-case class LongArray(value: Array[Long]) {
+case class LongArray(data: Array[Long]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = value.mkString("X(", ",", ")")
+  override def toString = data.mkString("X(", ",", ")")
 
-  def apply(idx: Int) = value(idx)
+  def apply(idx: Int) = data(idx)
 
   override def canEqual(other: Any) = other.isInstanceOf[LongArray]
 
   override def equals(other: Any) = other match {
     case that: LongArray ⇒
-      this.canEqual(that) && deepArrayEquals(this.value, that.value)
+      this.canEqual(that) && deepArrayEquals(this.data, that.data)
     case _ ⇒ false
   }
 }

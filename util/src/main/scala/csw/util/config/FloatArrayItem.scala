@@ -9,18 +9,18 @@ import scala.language.implicitConversions
 /**
  * A Scala Array of Floats
  */
-case class FloatArray(value: Array[Float]) {
+case class FloatArray(data: Array[Float]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = value.mkString("(", ",", ")")
+  override def toString = data.mkString("(", ",", ")")
 
-  def apply(idx: Int) = value(idx)
+  def apply(idx: Int) = data(idx)
 
   override def canEqual(other: Any) = other.isInstanceOf[FloatArray]
 
   override def equals(other: Any) = other match {
     case that: FloatArray ⇒
-      this.canEqual(that) && deepArrayEquals(this.value, that.value)
+      this.canEqual(that) && deepArrayEquals(this.data, that.data)
     case _ ⇒ false
   }
 }

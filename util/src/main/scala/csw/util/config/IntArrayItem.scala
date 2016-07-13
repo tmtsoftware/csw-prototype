@@ -9,18 +9,18 @@ import scala.language.implicitConversions
 /**
  * A Scala Vector of Ints
  */
-case class IntArray(value: Array[Int]) {
+case class IntArray(data: Array[Int]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = value.mkString("(", ",", ")")
+  override def toString = data.mkString("(", ",", ")")
 
-  def apply(idx: Int) = value(idx)
+  def apply(idx: Int) = data(idx)
 
   override def canEqual(other: Any) = other.isInstanceOf[IntArray]
 
   override def equals(other: Any) = other match {
     case that: IntArray ⇒
-      this.canEqual(that) && deepArrayEquals(this.value, that.value)
+      this.canEqual(that) && deepArrayEquals(this.data, that.data)
     case _ ⇒ false
   }
 }

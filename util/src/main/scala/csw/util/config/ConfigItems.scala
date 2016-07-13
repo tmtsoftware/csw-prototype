@@ -98,10 +98,6 @@ abstract class Key[S, I <: Item[S]](val keyName: String) extends Serializable {
    */
   def set(v: S*): I
 
-  def :=(v: S): I = set(v)
-
-  def :=(v: Vector[S]): I = set(v)
-
   override def toString = keyName
 
   override def equals(that: Any): Boolean = {

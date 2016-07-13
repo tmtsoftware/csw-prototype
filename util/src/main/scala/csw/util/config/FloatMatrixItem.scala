@@ -9,18 +9,18 @@ import scala.language.implicitConversions
 /**
  * A Scala equivalent of a 2d array of Floats
  */
-case class FloatMatrix(value: Array[Array[Float]]) {
+case class FloatMatrix(data: Array[Array[Float]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
-  def apply(row: Int, col: Int) = value(row)(col)
+  def apply(row: Int, col: Int) = data(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[FloatMatrix]
 
   override def equals(other: Any) = other match {
     case that: FloatMatrix ⇒
-      this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
+      this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
     case _ ⇒ false
   }
 }

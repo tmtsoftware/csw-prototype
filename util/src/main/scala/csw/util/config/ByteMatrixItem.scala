@@ -9,18 +9,18 @@ import scala.language.implicitConversions
 /**
  * A Scala equivalent of a 2d array of Bytes
  */
-case class ByteMatrix(value: Array[Array[Byte]]) {
+case class ByteMatrix(data: Array[Array[Byte]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
-  def apply(row: Int, col: Int) = value(row)(col)
+  def apply(row: Int, col: Int) = data(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[ByteMatrix]
 
   override def equals(other: Any) = other match {
     case that: ByteMatrix ⇒
-      this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
+      this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
     case _ ⇒ false
   }
 }

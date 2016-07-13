@@ -12,18 +12,18 @@ import scala.compat.java8.OptionConverters._
 /**
  * A Scala equivalent of a 2d array of Longs
  */
-case class LongMatrix(value: Array[Array[Long]]) {
+case class LongMatrix(data: Array[Array[Long]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← value) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
-  def apply(row: Int, col: Int) = value(row)(col)
+  def apply(row: Int, col: Int) = data(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[LongMatrix]
 
   override def equals(other: Any) = other match {
     case that: LongMatrix ⇒
-      this.canEqual(that) && deepMatrixValueEquals(this.value, that.value)
+      this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
     case _ ⇒ false
   }
 }

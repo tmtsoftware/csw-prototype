@@ -12,18 +12,18 @@ import scala.compat.java8.OptionConverters._
 /**
  * A Scala Array of Shorts
  */
-case class ShortArray(value: Array[Short]) {
+case class ShortArray(data: Array[Short]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = value.mkString("(", ",", ")")
+  override def toString = data.mkString("(", ",", ")")
 
-  def apply(idx: Int) = value(idx)
+  def apply(idx: Int) = data(idx)
 
   override def canEqual(other: Any) = other.isInstanceOf[ShortArray]
 
   override def equals(other: Any) = other match {
     case that: ShortArray ⇒
-      this.canEqual(that) && deepArrayEquals(this.value, that.value)
+      this.canEqual(that) && deepArrayEquals(this.data, that.data)
     case _ ⇒ false
   }
 }
