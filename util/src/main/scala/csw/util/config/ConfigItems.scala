@@ -58,6 +58,7 @@ trait Item[S] {
 
   /**
    * Returns the first value as a convenience when storing a single value
+   *
    * @return the first or default value (Use this if you know there is only a single value)
    */
   def head: S = value(0)
@@ -97,6 +98,53 @@ abstract class Key[S, I <: Item[S]](val keyName: String) extends Serializable {
    * @return an item containing the key name, values (call withUnits() on the result to set the units)
    */
   def set(v: S*): I
+
+  /**
+   * Sets the values for the key
+   * This definition enables writing code like this (see [[ConfigDSL]]):
+   * {{{
+   *   val setupConfig = sc(
+   *    configKey,
+   *     key1 -> value1,
+   *     key2 -> value2
+   *   )
+   * }}}
+   *
+   * @param v the value
+   * @return an item containing the key name and one value (call withUnits() on the result to set the units)
+   */
+  def → (v: S): I = set(v)
+
+  /**
+   * Sets the value and units for the keyx
+   * This definition enables writing code like this (see [[ConfigDSL]]):
+   * {{{
+   *   val setupConfig = sc(
+   *    configKey,
+   *     key1 -> (value1, units1),
+   *     key2 -> (value2, units2)
+   *   )
+   * }}}
+   *
+   * @param v a pair containing a single value for the key and the units of the value
+   * @return an item containing the key name, values and units
+   */
+  def → (v: (S, UnitsOfMeasure.Units)): I = set(Vector(v._1), v._2)
+
+  /**
+   * Sets the values for the key as a Scala Vector
+   * This definition enables writing code like this (see [[ConfigDSL]]):
+   * {{{
+   *   val setupConfig = sc(configKey,
+   *     key1 -> Vector(...),
+   *     key2 -> Vector(...)
+   *   )
+   * }}}
+   *
+   * @param v a vector of values
+   * @return an item containing the key name and values (call withUnits() on the result to set the units)
+   */
+  def → (v: Vector[S]): I = set(v)
 
   override def toString = keyName
 

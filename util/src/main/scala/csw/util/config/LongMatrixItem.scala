@@ -17,6 +17,9 @@ case class LongMatrix(data: Array[Array[Long]]) {
 
   override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
+  /**
+   * Gets the value at the given row and column
+   */
   def apply(row: Int, col: Int) = data(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[LongMatrix]

@@ -6,7 +6,7 @@ import csw.util.config.UnitsOfMeasure.{Deg, NoUnits}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
- * TMT Source Code: 7/9/16.
+ * Tests the config DSL
  */
 class ConfigDSLTests extends FunSpec with ShouldMatchers {
   private val s1: String = "encoder"
@@ -18,7 +18,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
   private val ck3: String = "wfos.red.detector"
 
   describe("creating items") {
-    import csw.util.config.ConfigDSL.{size => ssize}
+    import csw.util.config.ConfigDSL.{size ⇒ ssize}
 
     val k1 = IntKey(s1)
     val detectorTemp = DoubleKey(s3)
@@ -44,7 +44,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
   }
 
   describe("checking simple values") {
-    import csw.util.config.ConfigDSL.{value => svalue}
+    import csw.util.config.ConfigDSL.{value ⇒ svalue}
     val k1 = IntKey(s1)
 
     it("should have value access") {
@@ -371,7 +371,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
       exists(sc1, k1) shouldBe true
       exists(sc1, k2) shouldBe true
 
-      val sc2 = sc(ck2, k1 -> 3, k2 -> 44.3)
+      val sc2 = sc(ck2, k1 → 3, k2 → 44.3)
       csize(sc2) should be(2)
       exists(sc2, k1) shouldBe true
       exists(sc2, k2) shouldBe true
@@ -390,13 +390,13 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     it("should create overriding defaults") {
       val default: SetupConfig = sc(ck2, i1, i2, i3)
 
-      val sc1 = add(default, zeroPoint.set(2000))
-      //val sc1 = add(default, zeroPoint->2000)   // Allan, why doesn't this work?
+      val sc1 = add(default, zeroPoint → 2000)
 
       val intItem = sc1(zeroPoint)
 
-      csize(sc1) shouldBe (3)
+      csize(sc1) shouldBe 3
       item(sc1, zeroPoint) should equal(intItem)
+      head(item(sc1, zeroPoint)) should equal(2000)
       item(sc1, filter) should equal(i2)
       item(sc1, mode) should equal(i1)
 
