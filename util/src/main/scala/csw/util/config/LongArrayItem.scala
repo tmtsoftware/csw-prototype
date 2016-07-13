@@ -14,6 +14,9 @@ case class LongArray(data: Array[Long]) {
 
   override def toString = data.mkString("X(", ",", ")")
 
+  /**
+   * Gets the value at the given index
+   */
   def apply(idx: Int) = data(idx)
 
   override def canEqual(other: Any) = other.isInstanceOf[LongArray]

@@ -6,10 +6,13 @@ import csw.util.config.StateVariable._
 import csw.util.config.Configurations._
 import csw.util.config.Events._
 
+/**
+ * Defines methods for serializing configs
+ */
 object ConfigSerializer {
 
   /**
-   * Typeclass to serialize
+   * Defines API to serialize to a byte array
    */
   trait ConfigSerializer[A] {
     def write(in: A): Array[Byte]
@@ -37,7 +40,7 @@ object ConfigSerializer {
   }
 
   /**
-   * Serializers using Java I/O
+   * Implicit serializers using Java I/O
    */
   implicit object SetupConfigSerializer extends ConfigSerializer[SetupConfig] {
     def write(in: SetupConfig): Array[Byte] = writeObj(in)
