@@ -226,7 +226,7 @@ public class JJSONTests {
     SetupConfig sc1 = new SetupConfig(ck).add(di);
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).value()[1], mIn[1]));
+    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], mIn[1]));
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -245,7 +245,7 @@ public class JJSONTests {
     SetupConfig sc1 = new SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertEquals(jvalue(jitem(sc1, k1)).value(), m1.value());
+    assertEquals(jvalue(jitem(sc1, k1)).data(), m1.data());
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -266,7 +266,7 @@ public class JJSONTests {
     SetupConfig sc1 = new SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).value()[1], mIn[1]));
+    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], mIn[1]));
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -285,7 +285,7 @@ public class JJSONTests {
     SetupConfig sc1 = new SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).value(), m1In));
+    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data(), m1In));
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -305,7 +305,7 @@ public class JJSONTests {
     SetupConfig sc1 = new SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).value()[1], m1In[1]));
+    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -326,15 +326,15 @@ public class JJSONTests {
     assertTrue(sc1.size() == 1);
     assertTrue(jitem(sc1, k1).size() == 2);
     //System.out.println("Its: " + jitem(sc1, k1).values());
-    assertEquals(jvalue(jitem(sc1, k1), 0).value(), m1In);
-    assertEquals(jvalue(jitem(sc1, k1), 1).value(), m2In);
+    assertEquals(jvalue(jitem(sc1, k1), 0).data(), m1In);
+    assertEquals(jvalue(jitem(sc1, k1), 1).data(), m2In);
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
 
     SetupConfig sc1in = ConfigJSON.readConfig(sc1out);
     assertEquals(sc1, sc1in);
-    assertEquals(jvalue(jitem(sc1, k1)).value(), m1In);
+    assertEquals(jvalue(jitem(sc1, k1)).data(), m1In);
   }
 
   @Test
@@ -346,8 +346,8 @@ public class JJSONTests {
     SetupConfig sc1 = new SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).value()[1], m1In[1]));
-    assertEquals(jvalue(jitem(sc1, k1)).value()[2][2], 9);
+    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
+    assertEquals(jvalue(jitem(sc1, k1)).data()[2][2], 9);
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -366,8 +366,8 @@ public class JJSONTests {
     SetupConfig sc1 = new SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).value(), m1In));
-    assertTrue(jvalue(jitem(sc1, k1)).value()[2] == 3);
+    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data(), m1In));
+    assertTrue(jvalue(jitem(sc1, k1)).data()[2] == 3);
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -386,8 +386,8 @@ public class JJSONTests {
     SetupConfig sc1 = jadd(SetupConfig(ck), jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).value()[1], m1In[1]));
-    assertTrue(jvalue(jitem(sc1, k1)).value()[2][2] == 9);
+    assertTrue(Arrays.equals(jvalue(jitem(sc1, k1)).data()[1], m1In[1]));
+    assertTrue(jvalue(jitem(sc1, k1)).data()[2][2] == 9);
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -410,8 +410,8 @@ public class JJSONTests {
     sc1 = jadd(sc1, jset(k2, m1));
     assertTrue(sc1.size() == 2);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertEquals(jvalue(jitem(sc1, k1)).value(), m1In);
-    assertTrue(jvalue(jitem(sc1, k1)).value()[2] == 3);
+    assertEquals(jvalue(jitem(sc1, k1)).data(), m1In);
+    assertTrue(jvalue(jitem(sc1, k1)).data()[2] == 3);
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -430,8 +430,8 @@ public class JJSONTests {
     SetupConfig sc1 = SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertEquals(jvalue(jitem(sc1, k1)).value()[2], m1In[2]);
-    assertTrue(jvalue(jitem(sc1, k1)).value()[2][2] == 9);
+    assertEquals(jvalue(jitem(sc1, k1)).data()[2], m1In[2]);
+    assertTrue(jvalue(jitem(sc1, k1)).data()[2][2] == 9);
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());
@@ -450,8 +450,8 @@ public class JJSONTests {
     SetupConfig sc1 = SetupConfig(ck).add(jset(k1, m1));
     assertTrue(sc1.size() == 1);
     assertEquals(jvalue(jitem(sc1, k1)), m1);
-    assertEquals(jvalue(jitem(sc1, k1)).value(), m1In);
-    assertTrue(jvalue(jitem(sc1, k1)).value()[2] == 3);
+    assertEquals(jvalue(jitem(sc1, k1)).data(), m1In);
+    assertTrue(jvalue(jitem(sc1, k1)).data()[2] == 3);
 
     JsValue sc1out = ConfigJSON.writeConfig(sc1);
     //System.out.println("sc1out: " + sc1out.prettyPrint());

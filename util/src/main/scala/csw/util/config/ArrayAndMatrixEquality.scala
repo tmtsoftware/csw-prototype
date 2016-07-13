@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.Vector
 
 /**
- * TMT Source Code: 7/7/16.
+ * Utility functions for comparing arrays and vectors
  */
 object ArrayAndMatrixEquality {
 
@@ -22,7 +22,7 @@ object ArrayAndMatrixEquality {
     one sameElements two
   }
 
-  def arraySizeEqual(one: Array[_], two: Array[_]): Boolean = one.size == two.size
+  def arraySizeEqual(one: Array[_], two: Array[_]): Boolean = one.length == two.length
 
   def deepArrayEquals[T](one: Array[T], two: Array[T]) = arraySizeEqual(one, two) && deepArrayValueEquals(one, two)
 

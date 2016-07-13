@@ -13,10 +13,10 @@ class ArrayAndMatrixEqualityTests extends FunSpec {
     val m2 = LongArray(Array(1, 2, 3))
     val m3 = LongArray(Array(1, 2, 4, 8, 16))
     it("should notice if arrays are equal length") {
-      assert(arraySizeEqual(m1.value, m2.value))
+      assert(arraySizeEqual(m1.data, m2.data))
     }
     it("should notice if they aren't equal length") {
-      assert(!arraySizeEqual(m1.value, m3.value))
+      assert(!arraySizeEqual(m1.data, m3.data))
     }
   }
 
@@ -26,10 +26,10 @@ class ArrayAndMatrixEqualityTests extends FunSpec {
     val m3 = LongArray(Array(1, 2, 4))
 
     it("should see two arrays equal") {
-      assert(deepArrayValueEquals(m1.value, m2.value))
+      assert(deepArrayValueEquals(m1.data, m2.data))
     }
     it("should see to arrays that are not equal") {
-      assert(!deepArrayValueEquals(m1.value, m3.value))
+      assert(!deepArrayValueEquals(m1.data, m3.data))
     }
   }
 
@@ -40,13 +40,13 @@ class ArrayAndMatrixEqualityTests extends FunSpec {
     val m4 = LongArray(Array(1, 2, 4, 9, 16))
 
     it("should succeed with equal lengths and values") {
-      assert(deepArrayEquals(m1.value, m2.value))
+      assert(deepArrayEquals(m1.data, m2.data))
     }
     it("should fail with different lengths") {
-      assert(!deepArrayEquals(m1.value, m3.value))
+      assert(!deepArrayEquals(m1.data, m3.data))
     }
     it("should fail with same lengths, but different values") {
-      assert(!deepArrayEquals(m2.value, m4.value))
+      assert(!deepArrayEquals(m2.data, m4.data))
     }
   }
 
@@ -55,7 +55,7 @@ class ArrayAndMatrixEqualityTests extends FunSpec {
     val m2 = LongArray(Array(1, 2, 3))
     val m3 = LongArray(Array(1, 2, 4))
 
-    val f = (l: LongArray) ⇒ l.value
+    val f = (l: LongArray) ⇒ l.data
     it("should notice equality for single member vectors of arrays") {
       // One member vectors, same values but different vectors, should be true
       assert(vectorEquals2(Vector(m1), Vector(m2), f))
@@ -85,13 +85,13 @@ class ArrayAndMatrixEqualityTests extends FunSpec {
     val i3 = k1.set(m3)
 
     it("should return true for the same matrix") {
-      assert(deepMatrixValueEquals(m1.value, m1.value))
+      assert(deepMatrixValueEquals(m1.data, m1.data))
     }
     it("should return true for two different matrices with the same values") {
-      assert(deepMatrixValueEquals(m1.value, m2.value))
+      assert(deepMatrixValueEquals(m1.data, m2.data))
     }
     it("should return false for two matrices with different values") {
-      assert(!deepMatrixValueEquals(m2.value, m3.value))
+      assert(!deepMatrixValueEquals(m2.data, m3.data))
     }
   }
 

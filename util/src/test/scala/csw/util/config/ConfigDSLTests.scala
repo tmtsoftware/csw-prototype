@@ -18,46 +18,49 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
   private val ck3: String = "wfos.red.detector"
 
   describe("creating items") {
+    import csw.util.config.ConfigDSL.{size => ssize}
+
     val k1 = IntKey(s1)
     val detectorTemp = DoubleKey(s3)
 
     it("should work to set single items") {
       val i1 = set(k1, 2)
       i1 shouldBe an[IntItem]
-      i1.size should equal(1)
-      i1.units should be(NoUnits)
+      ssize(i1) should equal(1)
+      units(i1) should be(NoUnits)
     }
 
     it("should work to set multiple items") {
       val i1 = set(k1, 1, 2, 3, 4, 5)
-      i1.size should equal(5)
+      ssize(i1) should equal(5)
     }
 
     it("should work with units too") {
       val i1 = set(detectorTemp, 100.0).withUnits(Deg)
       i1 shouldBe an[DoubleItem]
-      i1.size shouldBe 1
-      i1.units should be(Deg)
+      ssize(i1) shouldBe 1
+      units(i1) should be(Deg)
     }
   }
 
   describe("checking simple values") {
+    import csw.util.config.ConfigDSL.{value => svalue}
     val k1 = IntKey(s1)
 
     it("should have value access") {
       val i1 = set(k1, 1, 2, 3, 4, 5)
       i1.size should equal(5)
 
-      i1.values should equal(Vector(1, 2, 3, 4, 5))
-      i1.head should equal(1)
-      i1.value(0) should equal(1)
-      i1.value(1) should equal(2)
-      i1.value(2) should equal(3)
-      i1.value(3) should equal(4)
-      i1.value(4) should equal(5)
+      values(i1) should equal(Vector(1, 2, 3, 4, 5))
+      head(i1) should equal(1)
+      svalue(i1, 0) should equal(1)
+      svalue(i1, 1) should equal(2)
+      svalue(i1, 2) should equal(3)
+      svalue(i1, 3) should equal(4)
+      svalue(i1, 4) should equal(5)
 
       intercept[IndexOutOfBoundsException] {
-        i1.value(5)
+        svalue(i1, 5)
       }
     }
   }
@@ -67,13 +70,15 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
     it("should allow setting") {
       val m1: Array[Long] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+      val m2: Array[Long] = Array(100, 1000, 10000)
 
-      val i1 = k1.set(m1)
-      i1.size should be(1)
-      i1.head should equal(LongArray(m1))
-      i1.head.value should equal(m1)
-      i1.values should equal(Vector(LongArray(m1)))
-      i1.values(0) should equal(LongArray(m1))
+      val i1 = k1.set(m1, m2)
+      i1.size should be(2)
+      head(i1) should equal(LongArray(m1))
+      head(i1).data should equal(m1)
+      values(i1) should equal(Vector(LongArray(m1), LongArray(m2)))
+      values(i1)(0) should equal(LongArray(m1))
+      values(i1)(1) should equal(LongArray(m2))
     }
   }
 
@@ -82,13 +87,13 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
     it("should allow setting") {
       val m1: Array[Array[Long]] = Array(Array(1, 2, 4), Array(2, 4, 8), Array(4, 8, 16))
-
-      val i1 = k1.set(m1)
+      // Note that LongMatrix implicit doesn't work here?
+      val i1 = set(k1, LongMatrix(m1))
       i1.size should be(1)
-      i1.head should equal(LongMatrix(m1))
-      i1.head.value should equal(m1)
-      i1.values should equal(Vector(LongMatrix(m1)))
-      i1.values(0) should equal(LongMatrix(m1))
+      head(i1) should equal(LongMatrix(m1))
+      head(i1).data should equal(m1)
+      values(i1) should equal(Vector(LongMatrix(m1)))
+      values(i1)(0) should equal(LongMatrix(m1))
     }
   }
 
@@ -98,12 +103,12 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     it("should have value access") {
       val i1 = set(k1, 1, 2, 3, 4, 5)
       i1.size should equal(5)
-      i1.values should equal(Vector(1, 2, 3, 4, 5))
+      values(i1) should equal(Vector(1, 2, 3, 4, 5))
 
-      i1.get(0) should equal(Option(1))
-      i1.get(1) should equal(Option(2))
+      get(i1, 0) should equal(Option(1))
+      get(i1, 1) should equal(Option(2))
       // Out of range gives None
-      i1.get(9) should equal(None)
+      get(i1, 9) should equal(None)
     }
   }
 
@@ -124,9 +129,9 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
       sc2 = madd(sc2, set(k1, 1000), set(k2, "1000"), set(k3, 1000.0))
 
       sc2.size should be(3)
-      sc2.exists(k1) shouldBe true
-      sc2.exists(k2) shouldBe true
-      sc2.exists(k3) shouldBe true
+      exists(sc2, k1) shouldBe true
+      exists(sc2, k2) shouldBe true
+      exists(sc2, k3) shouldBe true
     }
   }
 
@@ -155,10 +160,10 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
       val k4 = FloatKey("not present")
 
-      sc1.exists(k1) shouldBe true
-      sc1.exists(k2) shouldBe true
-      sc1.exists(k3) shouldBe true
-      sc1.exists(k4) shouldBe false
+      exists(sc1, k1) shouldBe true
+      exists(sc1, k2) shouldBe true
+      exists(sc1, k3) shouldBe true
+      exists(sc1, k4) shouldBe false
 
       intercept[NoSuchElementException] {
         val i1 = item(sc1, k4)
@@ -178,7 +183,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     it("should allow accessing existing items") {
       var sc1 = SetupConfig(ck2)
       sc1 = madd(sc1, i1, i2, i3)
-      sc1.size should be(3)
+      csize(sc1) should be(3)
 
       get(sc1, k1) should equal(Option(i1))
       get(sc1, k2) should equal(Option(i2))
@@ -210,7 +215,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     it("should allow accessing existing items") {
       var sc1 = SetupConfig(ck2)
       sc1 = madd(sc1, i1, i2, i3)
-      sc1.size should be(3)
+      csize(sc1) should be(3)
 
       get(sc1, k1, 0) should be(Some(1000))
       get(sc1, k2, 1) should be(Some("2000"))
@@ -234,28 +239,28 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
     it("Should allow removing one at a time") {
       var sc1 = madd(SetupConfig(ck1), i1, i2, i3, i4)
-      sc1.size should be(4)
+      csize(sc1) should be(4)
       get(sc1, k1).isDefined should be(true)
       get(sc1, k2).isDefined should be(true)
       get(sc1, k3).isDefined should be(true)
       get(sc1, k4).isDefined should be(true)
 
       sc1 = remove(sc1, k1)
-      sc1.size should be(3)
+      csize(sc1) should be(3)
       get(sc1, k1).isDefined should be(false)
       get(sc1, k2).isDefined should be(true)
       get(sc1, k3).isDefined should be(true)
       get(sc1, k4).isDefined should be(true)
 
       sc1 = remove(sc1, k2)
-      sc1.size should be(2)
+      csize(sc1) should be(2)
       get(sc1, k1).isDefined should be(false)
       get(sc1, k2).isDefined should be(false)
       get(sc1, k3).isDefined should be(true)
       get(sc1, k4).isDefined should be(true)
 
       sc1 = remove(sc1, k3)
-      sc1.size should be(1)
+      csize(sc1) should be(1)
       get(sc1, k1).isDefined should be(false)
       get(sc1, k2).isDefined should be(false)
       get(sc1, k3).isDefined should be(false)
@@ -263,14 +268,14 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
       // Should allow removing non-existent
       sc1 = remove(sc1, k3)
-      sc1.size should be(1)
+      csize(sc1) should be(1)
       get(sc1, k1).isDefined should be(false)
       get(sc1, k2).isDefined should be(false)
       get(sc1, k3).isDefined should be(false)
       get(sc1, k4).isDefined should be(true)
 
       sc1 = remove(sc1, k4)
-      sc1.size should be(0)
+      csize(sc1) should be(0)
       get(sc1, k1).isDefined should be(false)
       get(sc1, k2).isDefined should be(false)
       get(sc1, k3).isDefined should be(false)
@@ -278,7 +283,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
       // Add allows re-adding
       sc1 = add(sc1, i4)
-      sc1.size should be(1)
+      csize(sc1) should be(1)
       get(sc1, k1).isDefined should be(false)
       get(sc1, k2).isDefined should be(false)
       get(sc1, k3).isDefined should be(false)
@@ -359,46 +364,46 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
     val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.Deg)
     val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
-    val i3 = set(k3, "A", "B", "C")
-    val i4 = set(k4, LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
 
     it("should allow creation") {
       val sc1 = sc(ck2, i1, i2)
+      csize(sc1) should be(2)
+      exists(sc1, k1) shouldBe true
+      exists(sc1, k2) shouldBe true
 
-      sc1.size should be(2)
-      info("sc1: " + sc1)
-
+      val sc2 = sc(ck2, k1 -> 3, k2 -> 44.3)
+      csize(sc2) should be(2)
+      exists(sc2, k1) shouldBe true
+      exists(sc2, k2) shouldBe true
     }
   }
 
-  describe("builder tests") {
+  describe("config as template tests") {
     val zeroPoint = IntKey("zeroPoint")
     val filter = StringKey("filter")
     val mode = StringKey("mode")
-
 
     val i1 = set(mode, "Fast") // default value
     val i2 = set(filter, "home") // default value
     val i3 = set(zeroPoint, 1000) // Where home is
 
-    it("should create with defaults") {
+    it("should create overriding defaults") {
+      val default: SetupConfig = sc(ck2, i1, i2, i3)
 
-      val fbuilder = SCBuilder("filterDefaults", ck2, i1, i2, i3)
+      val sc1 = add(default, zeroPoint.set(2000))
+      //val sc1 = add(default, zeroPoint->2000)   // Allan, why doesn't this work?
 
+      val intItem = sc1(zeroPoint)
+
+      csize(sc1) shouldBe (3)
+      item(sc1, zeroPoint) should equal(intItem)
+      item(sc1, filter) should equal(i2)
+      item(sc1, mode) should equal(i1)
+
+      // Check that default has not changed
+      item(default, zeroPoint) should equal(i3)
+      item(default, filter) should equal(i2)
+      item(default, mode) should equal(i1)
     }
-    it("should allow override") {
-      val fbuilder = SCBuilder("filterDefaults", ck2, i1, i2, i3)
-
-      //val fc:SetupConfig = fbuilder.set(filter -> "green")
-      //item(fc, filter).head should be("green")
-      //info("fc: " + fbuilder)
-    }
-
-    it("test of new sc") {
-      val sc1 = sc(ck2, (zeroPoint := 1000) withUnits Deg)
-      info("SC: " + sc1)
-    }
-
   }
-
 }

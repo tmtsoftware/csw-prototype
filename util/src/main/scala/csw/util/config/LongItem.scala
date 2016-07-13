@@ -14,16 +14,9 @@ import scala.compat.java8.OptionConverters._
  * @param values   the value for the key
  * @param units   the units of the value
  */
-final case class LongItem(keyName: String, values: Vector[Long], units: Units) extends Item[Long /*, java.lang.Long*/ ] {
-  //override def jvalues: java.util.List[java.lang.Long] = values.map(i ⇒ i: java.lang.Long).asJava
-
-  //override def jvalue(index: Int): java.lang.Long = values(index)
+final case class LongItem(keyName: String, values: Vector[Long], units: Units) extends Item[Long] {
 
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
-
-  //override def jget(index: Int): java.util.Optional[java.lang.Long] = get(index).map(i ⇒ i: java.lang.Long).asJava
-
-  //override def jvalue: java.lang.Long = values(0)
 }
 
 /**
@@ -31,15 +24,10 @@ final case class LongItem(keyName: String, values: Vector[Long], units: Units) e
  *
  * @param nameIn the name of the key
  */
-final case class LongKey(nameIn: String) extends Key[Long, LongItem /*java.lang.Long*/ ](nameIn) {
+final case class LongKey(nameIn: String) extends Key[Long, LongItem](nameIn) {
 
   override def set(v: Vector[Long], units: Units = NoUnits) = LongItem(keyName, v, units)
 
   override def set(v: Long*) = LongItem(keyName, v.toVector, units = UnitsOfMeasure.NoUnits)
-
-  //override def jset(v: java.util.List[java.lang.Long]): LongItem = LongItem(keyName, v.asScala.toVector.map(i ⇒ i: Long), NoUnits)
-
-  //@varargs
-  //override def jset(v: java.lang.Long*) = LongItem(keyName, v.map(i ⇒ i: Long).toVector, units = UnitsOfMeasure.NoUnits)
 }
 

@@ -9,18 +9,18 @@ import scala.language.implicitConversions
 /**
  * A Scala Array of Doubles
  */
-case class DoubleArray(value: Array[Double]) {
+case class DoubleArray(data: Array[Double]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = value.mkString("(", ",", ")")
+  override def toString = data.mkString("(", ",", ")")
 
-  def apply(idx: Int) = value(idx)
+  def apply(idx: Int) = data(idx)
 
   override def canEqual(other: Any) = other.isInstanceOf[DoubleArray]
 
   override def equals(other: Any) = other match {
     case that: DoubleArray ⇒
-      this.canEqual(that) && deepArrayEquals(this.value, that.value)
+      this.canEqual(that) && deepArrayEquals(this.data, that.data)
     case _ ⇒ false
   }
 }

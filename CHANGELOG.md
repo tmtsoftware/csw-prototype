@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Changed
+- Reimplemented parts of the configuration classes, adding Scala and Java DSLs (See [util](util))
+
 ### Added
 - Added new [Alarm Service](alarms) and [command line app](apps/asConsole).
   An Alarm Service [Java API](javacsw/README.alarms.md) is also available.
