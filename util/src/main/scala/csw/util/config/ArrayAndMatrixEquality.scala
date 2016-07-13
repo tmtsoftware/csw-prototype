@@ -10,7 +10,7 @@ object ArrayAndMatrixEquality {
 
   /**
    * This function compares each element of two arrays for equality.
-   * This function is used by the array items to teset for equality.
+   * This function is used by the array items to test for equality.
    * @param one first array for comparison
    * @param two second array for comparison
    * @tparam T the Scala type of the arrays

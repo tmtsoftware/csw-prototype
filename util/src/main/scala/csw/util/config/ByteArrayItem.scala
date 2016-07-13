@@ -14,6 +14,9 @@ case class ByteArray(data: Array[Byte]) {
 
   override def toString = data.mkString("(", ",", ")")
 
+  /**
+   * Gets the value at the given index
+   */
   def apply(idx: Int) = data(idx)
 
   override def canEqual(other: Any) = other.isInstanceOf[ByteArray]
