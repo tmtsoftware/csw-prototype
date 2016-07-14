@@ -11,6 +11,9 @@ import AlarmService._
 
 import scala.concurrent.Await
 
+/**
+  * A convenience wrapper for [[AlarmService]] that blocks waiting for future return values.
+  */
 object BlockingAlarmService {
   /**
     * Looks up the Redis instance for the Alarm Service with the Location Service

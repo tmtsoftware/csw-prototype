@@ -173,7 +173,7 @@ public interface IAlarmService {
      * @return a new JAlarmService instance
      */
     static CompletableFuture<IAlarmService> getAlarmService(ActorRefFactory system, Timeout timeout) {
-        return JAlarmService.lookup(AlarmService$.MODULE$.defaultName(), system, timeout);
+        return JAlarmService.lookup(defaultName, system, timeout);
     }
 
     /**
