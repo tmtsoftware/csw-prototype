@@ -116,22 +116,6 @@ abstract class Key[S, I <: Item[S]](val keyName: String) extends Serializable {
   def → (v: S): I = set(v)
 
   /**
-   * Sets the value and units for the keyx
-   * This definition enables writing code like this (see [[ConfigDSL]]):
-   * {{{
-   *   val setupConfig = sc(
-   *    configKey,
-   *     key1 -> (value1, units1),
-   *     key2 -> (value2, units2)
-   *   )
-   * }}}
-   *
-   * @param v a pair containing a single value for the key and the units of the value
-   * @return an item containing the key name, values and units
-   */
-  def → (v: (S, UnitsOfMeasure.Units)): I = set(Vector(v._1), v._2)
-
-  /**
    * Sets the values for the key as a Scala Vector
    * This definition enables writing code like this (see [[ConfigDSL]]):
    * {{{

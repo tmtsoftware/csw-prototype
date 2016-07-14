@@ -889,17 +889,24 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
-    // ---------------- Configuration level
+  // ---------------- Configuration level
 
   public static SetupConfig SetupConfig(String name) {
     return new SetupConfig(name);
   }
-  public static ObserveConfig ObserveConfig(String name) {return new ObserveConfig(name); }
-  public static WaitConfig WaitConfig(String name) { return new WaitConfig(name); }
+
+  public static ObserveConfig ObserveConfig(String name) {
+    return new ObserveConfig(name);
+  }
+
+  public static WaitConfig WaitConfig(String name) {
+    return new WaitConfig(name);
+  }
 
   /**
    * jgetItem returns an Item as an Optional.  The Optional is empty if the item is not present.
-   * @param sc The configuration to use to search for the item
+   *
+   * @param sc  The configuration to use to search for the item
    * @param key The key for the item to be located
    * @param <S> The Scala type of the value
    * @param <I> The item type assocated with the Scala type
@@ -925,7 +932,7 @@ public class JItems {
 
   // I believe it's okay to do this annotation since J is a reasonably known type based on items
   @SafeVarargs
-  public static <I extends Item<?>, T extends ConfigType<T>> T jadd(T sc, I...itemsIn) {
+  public static <I extends Item<?>, T extends ConfigType<T>> T jadd(T sc, I... itemsIn) {
     List<I> ilist = Arrays.asList(itemsIn);
     return JavaHelpers.jadd(sc, ilist);
   }
