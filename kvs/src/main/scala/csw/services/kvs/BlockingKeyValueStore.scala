@@ -7,7 +7,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 /**
- * A wrapper API for a KVS that waits for operations to complete before returing.
+ * A wrapper API for a KVS that waits for operations to complete before returning.
  *
  * @param timeout the max amount of time to wait for an operation to complete
  * @param _system Akka env required by RedisClient

@@ -17,16 +17,16 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
-object AlarmTests {
+object AlarmServiceTests {
   LocationService.initInterface()
   val system = ActorSystem("Test")
 }
 
 /**
- * Test the alarm APIs
+ * Test the Alarm Service API
  */
-class AlarmTests extends TestKit(AlarmTests.system) with FunSuiteLike with LazyLogging {
-  implicit val sys = AlarmTests.system
+class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteLike with LazyLogging {
+  implicit val sys = AlarmServiceTests.system
 
   import system.dispatcher
 
