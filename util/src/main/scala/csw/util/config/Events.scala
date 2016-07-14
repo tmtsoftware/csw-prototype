@@ -1,12 +1,9 @@
 package csw.util.config
 
-import java.util.{Optional, UUID}
+import java.time.{Clock, Instant}
+import java.util.UUID
+
 import scala.language.implicitConversions
-
-import csw.util.config.UnitsOfMeasure.Units
-
-import scala.annotation.varargs
-import scala.compat.Platform
 
 /**
  * Defines events used by the event and telemetry services
@@ -14,14 +11,14 @@ import scala.compat.Platform
 object Events {
   import Configurations._
 
-  case class EventTime(time: Long) {
+  case class EventTime(time: Instant) {
     override def toString = time.toString
   }
 
   object EventTime {
-    implicit def toEventTime(time: Long): EventTime = EventTime(time)
+    implicit def toEventTime(time: Instant): EventTime = EventTime(time)
 
-    implicit def toCurrent = EventTime(Platform.currentTime)
+    implicit def toCurrent = EventTime(Instant.now(Clock.systemUTC))
   }
 
   /**
