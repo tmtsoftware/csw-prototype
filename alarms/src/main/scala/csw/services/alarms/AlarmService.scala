@@ -30,13 +30,13 @@ object AlarmService {
 
   /**
    * An alarm's severity should be refreshed every defaultRefreshSecs seconds
-   * to make sure it does not expire and become "Indeterminate" (after maxMissedRefresh missed refreshes)
+   * to make sure it does not expire and become "Disconnected" (after maxMissedRefresh missed refreshes)
    */
   val defaultRefreshSecs = 5
 
   /**
    * The default number of refreshes that may be missed before an alarm's severity is expired
-   * and becomes "Indeterminate"
+   * and becomes "Disconnected"
    */
   val maxMissedRefresh = 3
 
@@ -60,7 +60,7 @@ object AlarmService {
    *
    * @param asName      name used to register the Redis instance with the Location Service (default: "Alarm Service")
    * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
-   *                    to "Indeterminate" (after three missed refreshes)
+   *                    to "Disconnected" (after three missed refreshes)
    * @return a new AlarmService instance
    */
   def apply(asName: String = defaultName, refreshSecs: Int = defaultRefreshSecs)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
@@ -276,7 +276,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
       for {
         _ ← redisClient.hmset(alarmKey.key, alarm.asMap())
         _ ← redisClient.hmset(alarmKey.stateKey, AlarmState().asMap())
-        _ ← setSeverity(alarmKey, SeverityLevel.Indeterminate) // XXX could simplify this on init and do simple set?
+        _ ← setSeverity(alarmKey, SeverityLevel.Disconnected) // XXX could simplify this on init and do simple set?
       } yield ()
     }
     Future.sequence(fList).map(_ ⇒ ())
@@ -337,7 +337,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
                           severity: SeverityLevel, currentSeverity: SeverityLevel): Future[Unit] = {
 
     // Check that the severity is listed in the spec (XXX Should this throw an exception?)
-    if (!alarm.severityLevels.contains(severity))
+    if (severity != SeverityLevel.Disconnected && !alarm.severityLevels.contains(severity))
       logger.warn(s"Alarm $alarmKey is not listed as supporting severity level $severity")
 
     // Is the alarm latched?
@@ -380,21 +380,21 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     val key = alarmKey.severityKey
     val f = redisClient.exists(key).flatMap { exists ⇒
       // If the key exists in Redis, get the severity string and convert it to a SeverityLevel, otherwise
-      // assume Indeterminate
+      // assume Disconnected
       if (exists)
         redisClient.get[String](key).map(_.flatMap(SeverityLevel(_)))
       else {
         // If the key doesn't exist, check if it is latched
         getAlarmState(alarmKey).map { alarmState ⇒
           if (alarmState.latchedState == LatchedState.Normal)
-            Some(SeverityLevel.Indeterminate)
+            Some(SeverityLevel.Disconnected)
           else
             Some(alarmState.latchedSeverity)
         }
       }
     }
     // The option should only be empty below if the severity string was wrong
-    f.map(_.getOrElse(SeverityLevel.Indeterminate))
+    f.map(_.getOrElse(SeverityLevel.Disconnected))
   }
 
   override def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit] = {
@@ -481,7 +481,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     def active(h: HealthInfo): Boolean = h.alarmState.shelvedState == ShelvedState.Normal && h.alarmState.activationState == ActivationState.Normal
     val severityLevels = alarmMap.values.filter(active).map(_.severityLevel).toList
 
-    if (severityLevels.contains(SeverityLevel.Critical) || severityLevels.contains(SeverityLevel.Indeterminate))
+    if (severityLevels.contains(SeverityLevel.Critical) || severityLevels.contains(SeverityLevel.Disconnected) || severityLevels.contains(SeverityLevel.Indeterminate))
       Health.Bad
     else if (severityLevels.contains(SeverityLevel.Major))
       Health.Ill

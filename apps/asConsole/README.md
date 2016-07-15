@@ -100,7 +100,7 @@ To change the severity of the alarm to Critical, use this command:
     asconsole --subsystem TCS --component tcsPk --name cpuExceededAlarm --severity Critical --refresh --log DEBUG
 
 The --refresh option will cause the command to keep running and refresh the alarm's severity every 5 seconds.
-Type Ctrl-C to kill the command. Normally the severity would change to `Indeterminate` after 15 seconds (3 * 5 secs),
+Type Ctrl-C to kill the command. Normally the severity would change to `Disconnected` after 15 seconds (3 * 5 secs),
 however, since this is a *latched* alarm, it keeps the `Critical` severity until it is acknowledged.
 To demonstrate this, enter this command to set the severity to `Okay` (It will remain `Critical` until acknowledged):
 

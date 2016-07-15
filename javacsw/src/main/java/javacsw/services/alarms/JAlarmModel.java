@@ -11,6 +11,7 @@ public class JAlarmModel {
      * Java access to SeverityLevel values
      */
     public static class JSeverityLevel {
+        public static final SeverityLevel Disconnected = JAlarmService.JSeverityLevelSup$.MODULE$.Disconnected();
         public static final SeverityLevel Indeterminate = JAlarmService.JSeverityLevelSup$.MODULE$.Indeterminate();
         public static final SeverityLevel Okay = JAlarmService.JSeverityLevelSup$.MODULE$.Okay();
         public static final SeverityLevel Warning = JAlarmService.JSeverityLevelSup$.MODULE$.Warning();

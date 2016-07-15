@@ -65,17 +65,16 @@ public class JBlockingAlarmServiceTests {
     LocationService.initInterface();
     system = ActorSystem.create();
 
-    String asName = "Alarm Service Test";
-    int port = 7777;
+    String asName = "Blocking Alarm Service Test";
 
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on port 7777.
+    // Start redis on a random port and register it with the location service.
     // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Alarm Service Test" --command "redis-server --port 7777" --port 7777
+    //   tracklocation --name "Blocking Alarm Service Test" --command "redis-server --port %port" --no-exit
     Runnable task = () -> TrackLocation.main(new String[]{
       "--name", asName,
-      "--command", "redis-server --port " + port,
-      "--port", String.valueOf(port)
+      "--command", "redis-server --port %port",
+      "--no-exit"
     });
     Thread thread = new Thread(task);
     thread.start();
@@ -93,7 +92,7 @@ public class JBlockingAlarmServiceTests {
   }
 
   // For testing callback
-  private static SeverityLevel callbackSev = JSeverityLevel.Indeterminate;
+  private static SeverityLevel callbackSev = JSeverityLevel.Disconnected;
   private static Optional<Health> callbackHealth = Optional.empty();
 
   // Called when alarm severity changes
@@ -161,16 +160,16 @@ public class JBlockingAlarmServiceTests {
     assertEquals(alarmService.getSeverity(key1), JSeverityLevel.Okay); // alarm was cleared
     assertEquals(callbackSev, JSeverityLevel.Okay);
 
-    Thread.sleep(delayMs); // wait for severity to expire and become "Indeterminate"
-    assertEquals(alarmService.getSeverity(key1), JSeverityLevel.Indeterminate); // alarm severity key expired
-    assertEquals(callbackSev, JSeverityLevel.Indeterminate);
+    Thread.sleep(delayMs); // wait for severity to expire and become "Disconnected"
+    assertEquals(alarmService.getSeverity(key1), JSeverityLevel.Disconnected); // alarm severity key expired
+    assertEquals(callbackSev, JSeverityLevel.Disconnected);
 
     // Test alarm in shelved state
     alarmService.setShelvedState(key1, JShelvedState.Shelved);
     alarmService.setSeverity(key1, JSeverityLevel.Warning);
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     assertEquals(alarmService.getSeverity(key1), JSeverityLevel.Warning);
-    assertEquals(callbackSev, JSeverityLevel.Indeterminate);
+    assertEquals(callbackSev, JSeverityLevel.Disconnected);
     alarmService.setShelvedState(key1, JShelvedState.Normal);
     alarmService.setSeverity(key1, JSeverityLevel.Warning);
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
@@ -204,7 +203,7 @@ public class JBlockingAlarmServiceTests {
     Thread.sleep(shortDelayMs);
     assertEquals(callbackHealth.get(), JHealth.Good);
 
-    Thread.sleep(delayMs); // wait for severity to expire and become "Indeterminate"
+    Thread.sleep(delayMs); // wait for severity to expire and become "Disconnected"
     assertEquals(callbackHealth.get(), JHealth.Bad);
     assertEquals(alarmService.getHealth(nfKey), JHealth.Bad);
     assertEquals(alarmService.getHealth(JAlarmKey.create()), JHealth.Bad);

@@ -50,7 +50,7 @@ private[alarms] object JAlarmService {
    *
    * @param asName name used to register the Redis instance with the Location Service (default: "Alarm Service")
    * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
-   *                    to "Indeterminate" (after three missed refreshes)
+   *                    to "Disconnected" (after three missed refreshes)
    * @param system the Akka system or context, needed for working with futures and actors
    * @param timeout amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
@@ -83,6 +83,7 @@ private[alarms] object JAlarmService {
    * Supports Java API for SeverityLevel
    */
   case object JSeverityLevelSup {
+    val Disconnected = SeverityLevel.Disconnected
     val Indeterminate = SeverityLevel.Indeterminate
     val Okay = SeverityLevel.Okay
     val Warning = SeverityLevel.Warning

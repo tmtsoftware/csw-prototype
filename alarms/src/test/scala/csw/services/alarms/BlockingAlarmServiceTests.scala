@@ -23,8 +23,8 @@ object BlockingAlarmServiceTests {
 }
 
 /**
-  * Test the blocking Alarm Service API
-  */
+ * Test the blocking Alarm Service API
+ */
 class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system) with FunSuiteLike with LazyLogging {
   implicit val sys = BlockingAlarmServiceTests.system
 
@@ -38,13 +38,12 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on port 7777.
+    // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Alarm Service Test" --command "redis-server --port 7777" --port 7777
-    val asName = "Alarm Service Test"
-    val port = 7777
+    //   tracklocation --name "Alarm Service Test" --command "redis-server"
+    val asName = "Blocking Alarm Service Test"
     Future {
-      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --port $port", "--port", port.toString))
+      TrackLocation.main(Array("--name", asName, "--command", "redis-server --port %port", "--no-exit"))
     }
 
     // Set a low refresh rate for the test
@@ -79,7 +78,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       }
 
       // For testing callback
-      var callbackSev: SeverityLevel = SeverityLevel.Indeterminate
+      var callbackSev: SeverityLevel = SeverityLevel.Disconnected
       var callbackHealth: Option[Health] = None
 
       // Called when alarm severity changes
@@ -121,16 +120,16 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(alarmService.getSeverity(key1) == SeverityLevel.Okay) // alarm was cleared
       assert(callbackSev == SeverityLevel.Okay)
 
-      Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Indeterminate) // alarm severity key expired
-      assert(callbackSev == SeverityLevel.Indeterminate)
+      Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
+      assert(alarmService.getSeverity(key1) == SeverityLevel.Disconnected) // alarm severity key expired
+      assert(callbackSev == SeverityLevel.Disconnected)
 
       // Test alarm in shelved state
       alarmService.setShelvedState(key1, ShelvedState.Shelved)
       alarmService.setSeverity(key1, SeverityLevel.Warning)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(alarmService.getSeverity(key1) == SeverityLevel.Warning)
-      assert(callbackSev == SeverityLevel.Indeterminate)
+      assert(callbackSev == SeverityLevel.Disconnected)
       alarmService.setShelvedState(key1, ShelvedState.Normal)
       alarmService.setSeverity(key1, SeverityLevel.Warning)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
@@ -164,7 +163,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(alarmService.getHealth(nfKey) == Health.Good)
       assert(callbackHealth.contains(Health.Good))
 
-      Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
+      Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
       assert(callbackHealth.contains(Health.Bad))
       assert(alarmService.getHealth(nfKey) == Health.Bad)
       assert(alarmService.getHealth(AlarmKey()) == Health.Bad)

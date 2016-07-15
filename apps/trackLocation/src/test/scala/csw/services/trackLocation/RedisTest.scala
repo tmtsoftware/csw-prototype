@@ -38,7 +38,6 @@ class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLog
     // Do the equivalent of running this from the command line (redisTest.conf is under test/resources):
     //   tracklocation --name redisTest redisTest.conf
     val name = "redisTest"
-    val port = 7777
     val url = getClass.getResource("/redisTest.conf")
     val configFile = Paths.get(url.toURI).toFile.getAbsolutePath
     Future {
@@ -55,7 +54,7 @@ class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLog
     assert(loc.connection.connectionType == HttpType)
     assert(loc.connection.componentId.name == name)
     val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
-    assert(httpLoc.uri.getPort == port)
+    //    assert(httpLoc.uri.getPort == port)
 
     val kvsSettings = KvsSettings(redisHostname = httpLoc.uri.getHost, redisPort = httpLoc.uri.getPort)
     val telemetryService = BlockingTelemetryService(TelemetryService(kvsSettings))

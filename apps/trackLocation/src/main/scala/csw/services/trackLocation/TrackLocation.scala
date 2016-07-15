@@ -1,10 +1,10 @@
 package csw.services.trackLocation
 
 import java.io.File
+import java.net.ServerSocket
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
 import csw.services.cs.akka.{ConfigServiceClient, ConfigServiceSettings}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
@@ -51,11 +51,11 @@ object TrackLocation extends App {
 
     opt[String]('c', "command") valueName "<name>" action { (x, c) ⇒
       c.copy(command = Some(x))
-    } text "The command that starts the target application (default: use $name.command from config file: Required)"
+    } text "The command that starts the target application: use %port to insert the port number (default: use $name.command from config file: Required)"
 
     opt[Int]('p', "port") valueName "<number>" action { (x, c) ⇒
       c.copy(port = Some(x))
-    } text "Port number the application listens on (default: use value of $name.port from config file. Required.)"
+    } text "Optional port number the application listens on (default: use value of $name.port from config file, or use a random, free port.)"
 
     arg[File]("<app-config>") optional () maxOccurs 1 action { (x, c) ⇒
       c.copy(appConfigFile = Some(x))
@@ -140,8 +140,19 @@ object TrackLocation extends App {
       getStringOpt(opt, arg.map(_.toString), required).map(_.toInt)
     }
 
-    val command = getStringOpt("command", options.command).get
-    val port = getIntOpt("port", options.port).get
+    // Find a random, free port to use
+    def getFreePort: Int = {
+      val sock = new ServerSocket(0)
+      val port = sock.getLocalPort
+      sock.close()
+      port
+    }
+
+    // Use the value of the --port option, or use a random, free port
+    val port = getIntOpt("port", options.port, required = false).getOrElse(getFreePort)
+
+    // Replace %port in the command
+    val command = getStringOpt("command", options.command).get.replace("%port", port.toString)
 
     startApp(name, command, port, options.noExit)
   }

@@ -5,6 +5,7 @@ This project provides a standalone application that is a simple wrapper for an e
 registers it with the location service and unregisters it when it exits.
 
 ```
+trackLocation 0.2-SNAPSHOT
 Usage: trackLocation [options] [<app-config>]
 
   --name <name>
@@ -12,12 +13,15 @@ Usage: trackLocation [options] [<app-config>]
   --cs-name <value>
         optional name of the config service to use (for fetching the application config file)
   -c <name> | --command <name>
-        The command that starts the target application (default: use $name.command from config file: Required)
+        The command that starts the target application: use %port to insert the port number
+        (default: use $name.command from config file: Required)
   -p <number> | --port <number>
-        Port number the application listens on (default: use value of $name.port from config file. Required.)
+        Optional port number the application listens on (default: use value of $name.port
+        from config file, or use a random, free port.)
   <app-config>
-        optional config file in HOCON format (Options specified as: $name.command, $name.port, etc. Fetched from config service if path does not exist)
-  --no-exit <value>
+        optional config file in HOCON format (Options specified as:
+        $name.command, $name.port, etc. Fetched from config service if path does not exist)
+  --no-exit
         for testing: prevents application from exiting after running command
   --help
 

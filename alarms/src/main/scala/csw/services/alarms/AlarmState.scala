@@ -135,7 +135,7 @@ object AlarmState {
 case class AlarmState(
     acknowledgedState: AcknowledgedState = AcknowledgedState.Normal,
     latchedState:      LatchedState      = LatchedState.Normal,
-    latchedSeverity:   SeverityLevel     = SeverityLevel.Indeterminate,
+    latchedSeverity:   SeverityLevel     = SeverityLevel.Disconnected,
     shelvedState:      ShelvedState      = ShelvedState.Normal,
     activationState:   ActivationState   = ActivationState.Normal
 ) {

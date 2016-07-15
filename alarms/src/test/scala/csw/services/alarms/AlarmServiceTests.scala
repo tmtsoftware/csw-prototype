@@ -38,13 +38,12 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on port 7777.
+    // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Alarm Service Test" --command "redis-server --port 7777" --port 7777
+    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
     val asName = "Alarm Service Test"
-    val port = 7777
     Future {
-      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --port $port", "--port", port.toString))
+      TrackLocation.main(Array("--name", asName, "--command", "redis-server --port %port", "--no-exit"))
     }
 
     // Set a low refresh rate for the test
@@ -88,7 +87,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       assert(map2.size == 2)
 
       // For testing callback
-      var callbackSev: SeverityLevel = SeverityLevel.Indeterminate
+      var callbackSev: SeverityLevel = SeverityLevel.Disconnected
       var callbackHealth: Option[Health] = None
 
       // Called when alarm severity changes
@@ -130,16 +129,16 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Okay) // alarm was cleared
       assert(callbackSev == SeverityLevel.Okay)
 
-      Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
-      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Indeterminate) // alarm severity key expired
-      assert(callbackSev == SeverityLevel.Indeterminate)
+      Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Disconnected) // alarm severity key expired
+      assert(callbackSev == SeverityLevel.Disconnected)
 
       // Test alarm in shelved state
       Await.ready(alarmService.setShelvedState(key1, ShelvedState.Shelved), timeout.duration)
       Await.ready(alarmService.setSeverity(key1, SeverityLevel.Warning), timeout.duration)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == SeverityLevel.Warning)
-      assert(callbackSev == SeverityLevel.Indeterminate)
+      assert(callbackSev == SeverityLevel.Disconnected)
       Await.ready(alarmService.setShelvedState(key1, ShelvedState.Normal), timeout.duration)
       Await.ready(alarmService.setSeverity(key1, SeverityLevel.Warning), timeout.duration)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
@@ -173,7 +172,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Good)
       assert(callbackHealth.contains(Health.Good))
 
-      Thread.sleep(delayMs) // wait for severity to expire and become "Indeterminate"
+      Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
       assert(callbackHealth.contains(Health.Bad))
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Bad)
       assert(Await.result(alarmService.getHealth(AlarmKey()), timeout.duration) == Health.Bad)

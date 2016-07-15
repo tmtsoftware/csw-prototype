@@ -4,8 +4,8 @@ import org.scalatest.FunSpec
 import csw.util.config.ConfigDSL._
 
 /**
- * Test DSL for configs
- */
+  * Test DSL for configs
+  */
 class ConfigDSL2Tests extends FunSpec {
 
   describe("Tests DSL functions") {
@@ -56,7 +56,7 @@ class ConfigDSL2Tests extends FunSpec {
       val setupConfig2 = sc(
         "test",
         k1 → 1 withUnits UnitsOfMeasure.Deg,
-        k2 → 2.0 withUnits UnitsOfMeasure.Meters,
+        k2 → (2.0, UnitsOfMeasure.Meters),
         k3 → "C"
       )
       assert(get(setupConfig2, k1).get.head == 1)

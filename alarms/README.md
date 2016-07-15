@@ -12,8 +12,11 @@ that is registered with the [CSW Location Service](../loc) using the [trackLocat
 For example, the following command could be used to start a dedicated Redis instance for the Alarm Service on port 7777:
 
 ```
-tracklocation --name "Alarm Service" --command "redis-server --port 7777" --port 7777
+tracklocation --name "Alarm Service" --command "redis-server --port %port" --port 7777
 ```
+
+The string "%port" is replaced with the actual port number. If you left off the --port option, a random, free port
+would have been chosen.
 
 The client API for the Alarm Service takes a name (default: "Alarm Service") and uses it to lookup the Redis instance
 with the Location Service.
