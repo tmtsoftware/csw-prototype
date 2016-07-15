@@ -1,7 +1,7 @@
-package csw.examples
+package csw.examples.e2e
 
 import akka.actor._
-import csw.examples.BusyFSM.{AssemblyActivity, AssemblyState}
+import csw.examples.e2e.BusyFSM.{AssemblyActivity, AssemblyState}
 import csw.services.pkg.Assembly
 
 /**
@@ -29,8 +29,6 @@ object BusyFSM {
 class BusyFSM(assembly:Assembly, name: String) extends FSM[AssemblyState, AssemblyActivity] {
 
   import BusyFSM._
-
-  import scala.concurrent.duration._
 
   startWith(Ready, Idle)
 
