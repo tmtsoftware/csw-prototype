@@ -46,17 +46,17 @@ class KeyValueStoreTests
       .add(infoStr.set("info 2"))
 
     val f = for {
-      res1 ← kvs.set(prefix1, config1)
-      val1 ← kvs.get(prefix1)
-      res2 ← kvs.set(prefix2, config2)
-      val2 ← kvs.get(prefix2)
-      res3 ← kvs.delete(prefix1, prefix2)
-      res4 ← kvs.get(prefix1)
-      res5 ← kvs.get(prefix2)
-      res6 ← kvs.delete(prefix1, prefix2)
-      res7 ← kvs.hmset("tcs.testx", config1.getStringMap)
-      res8 ← kvs.hmget("tcs.testx", infoValue.keyName)
-      res9 ← kvs.hmget("tcs.testx", infoStr.keyName)
+      res1 <- kvs.set(prefix1, config1)
+      val1 <- kvs.get(prefix1)
+      res2 <- kvs.set(prefix2, config2)
+      val2 <- kvs.get(prefix2)
+      res3 <- kvs.delete(prefix1, prefix2)
+      res4 <- kvs.get(prefix1)
+      res5 <- kvs.get(prefix2)
+      res6 <- kvs.delete(prefix1, prefix2)
+      res7 <- kvs.hmset("tcs.testx", config1.getStringMap)
+      res8 <- kvs.hmget("tcs.testx", infoValue.keyName)
+      res9 <- kvs.hmget("tcs.testx", infoStr.keyName)
     } yield {
       assert(val1.exists(_.prefix == prefix1))
       assert(val1.exists(_(infoValue).head == 1))
@@ -81,19 +81,19 @@ class KeyValueStoreTests
     val n = 3
 
     val f = for {
-      _ ← kvs.set(prefix, config.add(exposureTime.set(3.0)), n)
-      _ ← kvs.set(prefix, config.add(exposureTime.set(4.0)), n)
-      _ ← kvs.set(prefix, config.add(exposureTime.set(5.0)), n)
-      _ ← kvs.set(prefix, config.add(exposureTime.set(6.0)), n)
-      _ ← kvs.set(prefix, config.add(exposureTime.set(7.0)), n)
-      v ← kvs.get(prefix)
-      h ← kvs.getHistory(prefix, n + 1)
-      _ ← kvs.delete(prefix)
+      _ <- kvs.set(prefix, config.add(exposureTime.set(3.0)), n)
+      _ <- kvs.set(prefix, config.add(exposureTime.set(4.0)), n)
+      _ <- kvs.set(prefix, config.add(exposureTime.set(5.0)), n)
+      _ <- kvs.set(prefix, config.add(exposureTime.set(6.0)), n)
+      _ <- kvs.set(prefix, config.add(exposureTime.set(7.0)), n)
+      v <- kvs.get(prefix)
+      h <- kvs.getHistory(prefix, n + 1)
+      _ <- kvs.delete(prefix)
     } yield {
       assert(v.isDefined)
       assert(v.get(exposureTime).head == 7.0)
       assert(h.size == n + 1)
-      for (i ← 0 to n) {
+      for (i <- 0 to n) {
         logger.info(s"History: $i: ${h(i)}")
       }
     }
@@ -108,9 +108,9 @@ class KeyValueStoreTests
       .add(boolValue.set(true))
 
     kvs.set(prefix, config).onSuccess {
-      case _ ⇒
+      case _ =>
         kvs.get(prefix).onSuccess {
-          case Some(setupConfig) ⇒
+          case Some(setupConfig) =>
             assert(setupConfig(infoValue).head == 2)
             assert(setupConfig(infoStr).head == "info 2")
             assert(setupConfig(boolValue).head)

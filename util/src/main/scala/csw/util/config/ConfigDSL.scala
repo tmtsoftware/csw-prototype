@@ -105,7 +105,7 @@ object ConfigDSL {
    * @param index the index of the value needed
    * @return the index value as an Option or None if the item with key is not present or there is no value at the index
    */
-  def get[S, I <: Item[S], T <: ConfigType[T]](sc: T, key: Key[S, I], index: Int): Option[S] = sc.get(key).flatMap((i: Item[S]) ⇒ i.get(index))
+  def get[S, I <: Item[S], T <: ConfigType[T]](sc: T, key: Key[S, I], index: Int): Option[S] = sc.get(key).flatMap((i: Item[S]) => i.get(index))
 
   /**
    * Convenience function to return the first value item

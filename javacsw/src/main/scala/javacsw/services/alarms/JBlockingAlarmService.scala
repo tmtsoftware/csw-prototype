@@ -104,8 +104,8 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
   override def monitorHealth(alarmKey: AlarmKey, subscriber: Optional[ActorRef],
                              notifyAlarm: Optional[AlarmHandler], notifyHealth: Optional[HealthHandler]): AlarmMonitor = {
     alarmService.monitorHealth(alarmKey, subscriber.asScala,
-      notifyAlarm.asScala.map(f ⇒ (alarmStatus: AlarmStatus) ⇒ f.handleAlarmStatus(alarmStatus)),
-      notifyHealth.asScala.map(f ⇒ (healthStatus: HealthStatus) ⇒ f.handleHealthStatus(healthStatus)))
+      notifyAlarm.asScala.map(f => (alarmStatus: AlarmStatus) => f.handleAlarmStatus(alarmStatus)),
+      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)))
   }
 
   override def shutdown(): Unit = alarmService.shutdown()

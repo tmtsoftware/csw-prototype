@@ -46,7 +46,8 @@ object Settings {
     resolvers += "mDialog releases" at "http://mdialog.github.io/releases/",
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
     resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven",
-    resolvers += sbtResolver.value
+    resolvers += sbtResolver.value,
+    resolvers += Resolver.jcenterRepo
   )
 
   lazy val defaultSettings = buildSettings ++ formatSettings ++ Seq(
@@ -88,7 +89,7 @@ object Settings {
 
   def formattingPreferences: FormattingPreferences =
     FormattingPreferences()
-      .setPreference(RewriteArrowSymbols, true)
+      .setPreference(RewriteArrowSymbols, false)
       .setPreference(AlignParameters, true)
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)

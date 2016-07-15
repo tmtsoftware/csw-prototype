@@ -37,10 +37,10 @@ object ComponentType {
    * Returns the named component type or an UnknownComponentTypeException exception if not known
    */
   def apply(name: String): Try[ComponentType] = name.toLowerCase match {
-    case "container" ⇒ Success(Container)
-    case "assembly"  ⇒ Success(Assembly)
-    case "hcd"       ⇒ Success(HCD)
-    case "service"   ⇒ Success(Service)
-    case x           ⇒ Failure(UnknownComponentTypeException(x))
+    case "container" => Success(Container)
+    case "assembly"  => Success(Assembly)
+    case "hcd"       => Success(HCD)
+    case "service"   => Success(Service)
+    case x           => Failure(UnknownComponentTypeException(x))
   }
 }

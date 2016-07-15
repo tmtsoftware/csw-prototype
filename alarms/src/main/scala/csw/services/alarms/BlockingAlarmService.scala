@@ -143,9 +143,9 @@ case class BlockingAlarmService(alarmService: AlarmService)(implicit val timeout
    */
   def monitorHealth(
     alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]            = None,
-    notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
-    notifyHealth: Option[HealthStatus ⇒ Unit] = None
+    subscriber:   Option[ActorRef]             = None,
+    notifyAlarm:  Option[AlarmStatus => Unit]  = None,
+    notifyHealth: Option[HealthStatus => Unit] = None
   ): AlarmMonitor =
     alarmService.monitorHealth(alarmKey, subscriber, notifyAlarm, notifyHealth)
 

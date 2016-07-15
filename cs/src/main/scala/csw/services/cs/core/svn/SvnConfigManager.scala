@@ -67,7 +67,7 @@ object SvnConfigManager {
 
     if (dir.isDirectory) {
       dir.list.foreach {
-        filePath ⇒
+        filePath =>
           val file = new File(dir, filePath)
           if (file.isDirectory) {
             deleteDirectoryRecursively(file)
@@ -121,10 +121,10 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
     def createOversize(): Future[ConfigId] = {
       val file = getTempFile
       for {
-        _ ← configData.writeToFile(file)
-        sha1 ← annex.post(file)
-        _ ← deleteTempFile(file)
-        configId ← create(shaFile(path), ConfigData(sha1), oversize = false, comment)
+        _ <- configData.writeToFile(file)
+        sha1 <- annex.post(file)
+        _ <- deleteTempFile(file)
+        configId <- create(shaFile(path), ConfigData(sha1), oversize = false, comment)
       } yield configId
     }
 
@@ -141,8 +141,8 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
 
     logger.debug(s"$name: create $path")
     for {
-      present ← exists(path)
-      configId ← createImpl(present)
+      present <- exists(path)
+      configId <- createImpl(present)
     } yield configId
   }
 
@@ -158,10 +158,10 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
     def updateOversize(): Future[ConfigId] = {
       val file = getTempFile
       for {
-        _ ← configData.writeToFile(file)
-        sha1 ← annex.post(file)
-        _ ← deleteTempFile(file)
-        configId ← update(shaFile(path), ConfigData(sha1), comment)
+        _ <- configData.writeToFile(file)
+        sha1 <- annex.post(file)
+        _ <- deleteTempFile(file)
+        configId <- update(shaFile(path), ConfigData(sha1), comment)
       } yield configId
     }
 
@@ -178,15 +178,15 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
 
     logger.debug(s"$name: update $path")
     for {
-      present ← exists(path)
-      configId ← updateImpl(present)
+      present <- exists(path)
+      configId <- updateImpl(present)
     } yield configId
   }
 
   override def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] =
     for {
-      exists ← exists(path)
-      result ← if (exists) update(path, configData, comment) else create(path, configData, oversize, comment)
+      exists <- exists(path)
+      result <- if (exists) update(path, configData, comment) else create(path, configData, oversize, comment)
     } yield result
 
   override def exists(path: File): Future[Boolean] = Future(pathExists(path))
@@ -246,20 +246,20 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
     def getOversize: Future[Option[ConfigData]] = {
       val file = getTempFile
       for {
-        opt ← get(shaFile(path), id)
-        data ← getData(file, opt)
-        _ ← deleteTempFile(file)
+        opt <- get(shaFile(path), id)
+        data <- getData(file, opt)
+        _ <- deleteTempFile(file)
       } yield data
     }
 
     // Gets the actual file data using the SHA-1 value contained in the checked in file
     def getData(file: File, opt: Option[ConfigData]): Future[Option[ConfigData]] = {
       opt match {
-        case None ⇒ Future(None)
-        case Some(configData) ⇒
+        case None => Future(None)
+        case Some(configData) =>
           for {
-            sha1 ← configData.toFutureString
-            configDataOpt ← getFromAnnexServer(file, sha1)
+            sha1 <- configData.toFutureString
+            configDataOpt <- getFromAnnexServer(file, sha1)
           } yield configDataOpt
       }
     }
@@ -267,7 +267,7 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
     // If the file matches the SHA-1 hash, return a future for it, otherwise get it from the annex server
     def getFromAnnexServer(file: File, sha1: String): Future[Option[ConfigData]] = {
       annex.get(sha1, file).map {
-        _ ⇒ Some(ConfigData(file))
+        _ => Some(ConfigData(file))
       }
     }
 
@@ -297,8 +297,8 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
     // -- svn get --
     logger.debug(s"$name: get $path")
     for {
-      present ← exists(path)
-      configData ← getImpl(present)
+      present <- exists(path)
+      configData <- getImpl(present)
     } yield configData
   }
 
@@ -322,7 +322,7 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
       svnOperationFactory.dispose()
     }
     entries.filter(_.getKind == SVNNodeKind.FILE).sortWith(_.getRelativePath < _.getRelativePath)
-      .map(e ⇒ ConfigFileInfo(new File(e.getRelativePath), ConfigId(e.getRevision), e.getCommitMessage))
+      .map(e => ConfigFileInfo(new File(e.getRelativePath), ConfigId(e.getRevision), e.getCommitMessage))
   }
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
@@ -347,7 +347,7 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
       clientManager.dispose()
     }
     logEntries.sortWith(_.getRevision > _.getRevision)
-      .map(e ⇒ ConfigFileHistory(ConfigId(e.getRevision), e.getMessage, e.getDate))
+      .map(e => ConfigFileHistory(ConfigId(e.getRevision), e.getMessage, e.getDate))
   }
 
   // XXX Temp placeholder for future login name handling
@@ -420,7 +420,7 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
     logger.debug(s"$name: put $path")
     val os = new ByteArrayOutputStream()
     for {
-      _ ← configData.writeToOutputStream(os)
+      _ <- configData.writeToOutputStream(os)
     } yield {
       val data = os.toByteArray
       val commitInfo = if (update) {
@@ -435,8 +435,8 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
   // Gets the svn revision from the given id, defaulting to HEAD
   private def svnRevision(id: Option[ConfigId] = None): SVNRevision = {
     id match {
-      case Some(configId) ⇒ SVNRevision.create(configId.id.toLong)
-      case None           ⇒ SVNRevision.HEAD
+      case Some(configId) => SVNRevision.create(configId.id.toLong)
+      case None           => SVNRevision.HEAD
     }
   }
 
@@ -471,9 +471,9 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
   def setDefault(path: File, id: Option[ConfigId] = None): Future[Unit] = {
     logger.debug(s"$name: setDefault $path $id")
     (if (id.isDefined) id else getCurrentVersion(path)) match {
-      case Some(configId) ⇒
-        create(defaultFile(path), ConfigData(configId.id)).map(_ ⇒ ())
-      case None ⇒
+      case Some(configId) =>
+        create(defaultFile(path), ConfigData(configId.id)).map(_ => ())
+      case None =>
         Future.failed(new RuntimeException(s"Unknown path $path"))
     }
   }
@@ -489,9 +489,9 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
     if (currentId.isEmpty)
       Future(None)
     else for {
-      d ← get(defaultFile(path))
-      id ← if (d.isDefined) d.get.toFutureString else Future(currentId.get.id)
-      result ← get(path, Some(ConfigId(id)))
+      d <- get(defaultFile(path))
+      id <- if (d.isDefined) d.get.toFutureString else Future(currentId.get.id)
+      result <- get(path, Some(ConfigId(id)))
     } yield result
   }
 }

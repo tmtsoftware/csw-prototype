@@ -59,8 +59,8 @@ trait EventSubscriber extends Actor with ActorLogging {
    * @param prefix the prefixes for the events you want to subscribe to.
    */
   def subscribe(prefix: String*): Unit = {
-    for (channel ← prefix) {
-      map += (channel → SubscriberInfo(channel))
+    for (channel <- prefix) {
+      map += (channel -> SubscriberInfo(channel))
     }
   }
 
@@ -71,8 +71,8 @@ trait EventSubscriber extends Actor with ActorLogging {
    */
   def unsubscribe(prefix: String*): Unit = {
     for {
-      channel ← prefix
-      info ← map.get(channel)
+      channel <- prefix
+      info <- map.get(channel)
     } {
       map -= channel
       info.messageConsumer.close()
@@ -86,13 +86,13 @@ trait EventSubscriber extends Actor with ActorLogging {
 private case class EventSubscriberWorker(subscriber: ActorRef) extends Actor with ActorLogging {
   import ConfigSerializer._
   override def receive: Receive = {
-    case message: ClientMessage ⇒
+    case message: ClientMessage =>
       try {
         val ar = Array.ofDim[Byte](message.getBodySize)
         message.getBodyBuffer.readBytes(ar)
         subscriber ! read[Event](ar)
       } catch {
-        case ex: Throwable ⇒ log.error(ex, s"Error forwarding message to $subscriber: $message")
+        case ex: Throwable => log.error(ex, s"Error forwarding message to $subscriber: $message")
       }
   }
 }

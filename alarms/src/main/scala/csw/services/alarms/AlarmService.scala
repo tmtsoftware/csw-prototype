@@ -45,7 +45,7 @@ object AlarmService {
     import system.dispatcher
     val connection = HttpConnection(ComponentId(asName, ComponentType.Service))
     LocationService.resolve(Set(connection)).map {
-      case locationsReady ⇒
+      case locationsReady =>
         val uri = locationsReady.locations.head.asInstanceOf[ResolvedHttpLocation].uri
         RedisClient(uri.getHost, uri.getPort)
     }
@@ -66,8 +66,8 @@ object AlarmService {
   def apply(asName: String = defaultName, refreshSecs: Int = defaultRefreshSecs)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
     import system.dispatcher
     for {
-      redisClient ← locateAlarmService(asName)
-      ok ← redisClient.configSet("notify-keyspace-events", "KEA")
+      redisClient <- locateAlarmService(asName)
+      ok <- redisClient.configSet("notify-keyspace-events", "KEA")
     } yield {
       if (!ok) logger.error("redis configSet notify-keyspace-events failed")
       AlarmServiceImpl(redisClient, refreshSecs)
@@ -211,9 +211,9 @@ trait AlarmService {
    */
   def monitorHealth(
     alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]            = None,
-    notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
-    notifyHealth: Option[HealthStatus ⇒ Unit] = None
+    subscriber:   Option[ActorRef]             = None,
+    notifyAlarm:  Option[AlarmStatus => Unit]  = None,
+    notifyHealth: Option[HealthStatus => Unit] = None
   ): AlarmMonitor
 
   /**
@@ -237,7 +237,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   // If reset is true, deletes all alarm data in Redis. (Note: DEL does not take wildcards!)
   private def checkReset(reset: Boolean): Future[Unit] = {
     def deleteKeys(keys: Seq[String]): Future[Unit] = {
-      if (keys.nonEmpty) redisClient.del(keys: _*).map(_ ⇒ ()) else Future.successful(())
+      if (keys.nonEmpty) redisClient.del(keys: _*).map(_ => ()) else Future.successful(())
     }
 
     if (reset) {
@@ -247,7 +247,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
       val f1 = redisClient.keys(pattern1).flatMap(deleteKeys)
       val f2 = redisClient.keys(pattern2).flatMap(deleteKeys)
       val f3 = redisClient.keys(pattern3).flatMap(deleteKeys)
-      Future.sequence(List(f1, f2, f3)).map(_ ⇒ ())
+      Future.sequence(List(f1, f2, f3)).map(_ => ())
     } else Future.successful(())
   }
 
@@ -263,34 +263,34 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
       val alarmConfigs = inputConfig.as[List[Config]]("alarms")
       val alarms = alarmConfigs.map(AlarmModel(_))
       // Reset the db if requested, then initialize the alarm db (Nil means return No problems...)
-      checkReset(reset).flatMap(_ ⇒ initAlarms(alarms).map(_ ⇒ Nil))
+      checkReset(reset).flatMap(_ => initAlarms(alarms).map(_ => Nil))
     }
   }
 
   // Initialize the Redis db with the given list of alarms
   private def initAlarms(alarms: List[AlarmModel]): Future[Unit] = {
-    val fList = alarms.map { alarm ⇒
+    val fList = alarms.map { alarm =>
       val alarmKey = AlarmKey(alarm)
       logger.info(s"Adding alarm: subsystem: ${alarm.subsystem}, component: ${alarm.component}, ${alarm.name}")
       // store the static alarm data, alarm state, and the initial severity in redis
       for {
-        _ ← redisClient.hmset(alarmKey.key, alarm.asMap())
-        _ ← redisClient.hmset(alarmKey.stateKey, AlarmState().asMap())
-        _ ← setSeverity(alarmKey, SeverityLevel.Disconnected) // XXX could simplify this on init and do simple set?
+        _ <- redisClient.hmset(alarmKey.key, alarm.asMap())
+        _ <- redisClient.hmset(alarmKey.stateKey, AlarmState().asMap())
+        _ <- setSeverity(alarmKey, SeverityLevel.Disconnected) // XXX could simplify this on init and do simple set?
       } yield ()
     }
-    Future.sequence(fList).map(_ ⇒ ())
+    Future.sequence(fList).map(_ => ())
   }
 
   override def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]] = {
     val pattern = alarmKey.key
-    redisClient.keys(pattern).flatMap { keys ⇒
+    redisClient.keys(pattern).flatMap { keys =>
       Future.sequence(keys.map(getAlarm)).map(_.flatten)
     }
   }
 
   override def getAlarm(key: AlarmKey): Future[AlarmModel] = {
-    getAlarm(key.key).map { opt ⇒
+    getAlarm(key.key).map { opt =>
       if (opt.isEmpty) {
         throw new RuntimeException(s"No alarm was found for key $key")
       } else opt.get
@@ -299,7 +299,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   // Gets the abbreviated alarm model for the given key
   private def getAlarmSmall(key: AlarmKey): Future[AlarmModelSmall] = {
-    redisClient.hmget(key.key, "severityLevels", "acknowledge", "latched").map(AlarmModelSmall(_)).map { opt ⇒
+    redisClient.hmget(key.key, "severityLevels", "acknowledge", "latched").map(AlarmModelSmall(_)).map { opt =>
       if (opt.isEmpty) {
         throw new RuntimeException(s"No alarm was found for key $key")
       } else opt.get
@@ -317,7 +317,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   }
 
   override def getAlarmState(key: AlarmKey): Future[AlarmState] = {
-    redisClient.hgetall(key.stateKey).map { map ⇒
+    redisClient.hgetall(key.stateKey).map { map =>
       if (map.isEmpty) throw new RuntimeException(s"Alarm state for $key not found.")
       AlarmState(map)
     }
@@ -325,10 +325,10 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit] = {
     for {
-      alarm ← getAlarmSmall(alarmKey)
-      alarmState ← getAlarmState(alarmKey)
-      currentSeverity ← getSeverity(alarmKey)
-      result ← setSeverity(alarmKey, alarm, alarmState, severity, currentSeverity)
+      alarm <- getAlarmSmall(alarmKey)
+      alarmState <- getAlarmState(alarmKey)
+      currentSeverity <- getSeverity(alarmKey)
+      result <- setSeverity(alarmKey, alarm, alarmState, severity, currentSeverity)
     } yield result
   }
 
@@ -373,19 +373,19 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
     val f4 = redisTransaction.exec()
 
-    Future.sequence(List(f1, f2, f3, f4)).map(_ ⇒ ())
+    Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
   }
 
   override def getSeverity(alarmKey: AlarmKey): Future[SeverityLevel] = {
     val key = alarmKey.severityKey
-    val f = redisClient.exists(key).flatMap { exists ⇒
+    val f = redisClient.exists(key).flatMap { exists =>
       // If the key exists in Redis, get the severity string and convert it to a SeverityLevel, otherwise
       // assume Disconnected
       if (exists)
         redisClient.get[String](key).map(_.flatMap(SeverityLevel(_)))
       else {
         // If the key doesn't exist, check if it is latched
-        getAlarmState(alarmKey).map { alarmState ⇒
+        getAlarmState(alarmKey).map { alarmState =>
           if (alarmState.latchedState == LatchedState.Normal)
             Some(SeverityLevel.Disconnected)
           else
@@ -399,9 +399,9 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   override def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit] = {
     for {
-      alarmState ← getAlarmState(alarmKey)
-      currentSeverity ← getSeverity(alarmKey)
-      result ← acknowledgeAlarm(alarmKey, alarmState)
+      alarmState <- getAlarmState(alarmKey)
+      currentSeverity <- getSeverity(alarmKey)
+      result <- acknowledgeAlarm(alarmKey, alarmState)
     } yield result
   }
 
@@ -425,14 +425,14 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
     val f3 = redisTransaction.exec()
 
-    Future.sequence(List(f1, f2, f3)).map(_ ⇒ ())
+    Future.sequence(List(f1, f2, f3)).map(_ => ())
   }
 
   override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): Future[Unit] = {
     for {
-      exists ← redisClient.exists(alarmKey.stateKey)
+      exists <- redisClient.exists(alarmKey.stateKey)
       if exists
-      result ← redisClient.hset(alarmKey.stateKey, AlarmState.shelvedStateField, shelvedState.name).map(_ ⇒ ())
+      result <- redisClient.hset(alarmKey.stateKey, AlarmState.shelvedStateField, shelvedState.name).map(_ => ())
     } yield {
       if (!exists) throw new RuntimeException(s"Can't set shelved state for unknown key: $alarmKey")
       result
@@ -442,9 +442,9 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   override def setActivationState(alarmKey: AlarmKey, activationState: ActivationState): Future[Unit] = {
 
     for {
-      exists ← redisClient.exists(alarmKey.stateKey)
+      exists <- redisClient.exists(alarmKey.stateKey)
       if exists
-      result ← redisClient.hset(alarmKey.stateKey, AlarmState.activationStateField, activationState.name).map(_ ⇒ ())
+      result <- redisClient.hset(alarmKey.stateKey, AlarmState.activationStateField, activationState.name).map(_ => ())
     } yield {
       if (!exists) throw new RuntimeException(s"Can't set activation state for unknown key: $alarmKey")
       result
@@ -458,14 +458,14 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   // Returns a future map from alarm key to health info for each alarm key matching the given alarm key pattern
   private[alarms] def getHealthInfoMap(alarmKey: AlarmKey): Future[Map[AlarmKey, HealthInfo]] = {
     val pattern = alarmKey.key
-    redisClient.keys(pattern).map(_.map(AlarmKey(_))).flatMap { alarmKeys ⇒
+    redisClient.keys(pattern).map(_.map(AlarmKey(_))).flatMap { alarmKeys =>
       if (alarmKeys.isEmpty) throw new RuntimeException("Can't get health information: No alarms matched $alarmKey")
-      val fs = alarmKeys.map { k ⇒
+      val fs = alarmKeys.map { k =>
         for {
-          sev ← getSeverity(k)
-          state ← getAlarmState(k)
+          sev <- getSeverity(k)
+          state <- getAlarmState(k)
         } yield {
-          k → HealthInfo(k, sev, state)
+          k -> HealthInfo(k, sev, state)
         }
       }
       Future.sequence(fs).map(_.toMap)
@@ -490,9 +490,9 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   override def monitorHealth(
     alarmKey:      AlarmKey,
-    subscriberOpt: Option[ActorRef]            = None,
-    notifyAlarm:   Option[AlarmStatus ⇒ Unit]  = None,
-    notifyOpt:     Option[HealthStatus ⇒ Unit] = None
+    subscriberOpt: Option[ActorRef]             = None,
+    notifyAlarm:   Option[AlarmStatus => Unit]  = None,
+    notifyOpt:     Option[HealthStatus => Unit] = None
   ): AlarmMonitor = {
     val actorRef = system.actorOf(HealthMonitorActor.props(this, alarmKey, subscriberOpt, notifyAlarm, notifyOpt)
       .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))

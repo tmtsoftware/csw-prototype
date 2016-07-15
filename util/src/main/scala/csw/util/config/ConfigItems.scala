@@ -113,7 +113,7 @@ abstract class Key[S, I <: Item[S]](val keyName: String) extends Serializable {
    * @param v the value
    * @return an item containing the key name and one value (call withUnits() on the result to set the units)
    */
-  def → (v: S): I = set(v)
+  def -> (v: S): I = set(v)
 
   /**
    * Sets the value and units for the key
@@ -129,7 +129,7 @@ abstract class Key[S, I <: Item[S]](val keyName: String) extends Serializable {
    * @param v a pair containing a single value for the key and the units of the value
    * @return an item containing the key name, values and units
    */
-  def → (v: (S, UnitsOfMeasure.Units)): I = set(Vector(v._1), v._2)
+  def -> (v: (S, UnitsOfMeasure.Units)): I = set(Vector(v._1), v._2)
 
   /**
    * Sets the values for the key as a Scala Vector
@@ -144,14 +144,14 @@ abstract class Key[S, I <: Item[S]](val keyName: String) extends Serializable {
    * @param v a vector of values
    * @return an item containing the key name and values (call withUnits() on the result to set the units)
    */
-  def → (v: Vector[S]): I = set(v)
+  def -> (v: Vector[S]): I = set(v)
 
   override def toString = keyName
 
   override def equals(that: Any): Boolean = {
     that match {
-      case that: Key[S, I] ⇒ this.keyName == that.keyName
-      case _               ⇒ false
+      case that: Key[S, I] => this.keyName == that.keyName
+      case _               => false
     }
   }
 

@@ -22,9 +22,9 @@ case class FloatArray(data: Array[Float]) {
   override def canEqual(other: Any) = other.isInstanceOf[FloatArray]
 
   override def equals(other: Any) = other match {
-    case that: FloatArray ⇒
+    case that: FloatArray =>
       this.canEqual(that) && deepArrayEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 

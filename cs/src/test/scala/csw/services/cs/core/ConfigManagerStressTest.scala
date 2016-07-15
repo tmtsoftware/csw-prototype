@@ -41,8 +41,8 @@ object ConfigManagerStressTest extends App {
     // If of first check in
     var first = ConfigId(-1)
 
-    for (t ← 1 to nt) {
-      for (f ← 1 to nf) {
+    for (t <- 1 to nt) {
+      for (f <- 1 to nf) {
         val fname = s"$f.txt"
         val configData = ConfigData(s"hello$t")
         val configId = if (nf == f) {
@@ -63,7 +63,7 @@ object ConfigManagerStressTest extends App {
   }
 
   // Used to time operations.
-  implicit class RichElapsed[A](f: ⇒ A) {
+  implicit class RichElapsed[A](f: => A) {
     // Returns (result, timeInSeconds)
     def elapsed(): (A, Double) = {
       val start = System.nanoTime()

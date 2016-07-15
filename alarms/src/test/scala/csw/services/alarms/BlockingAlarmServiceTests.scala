@@ -72,7 +72,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
 
       // List all the alarms that were written to Redis
       val alarms = alarmService.getAlarms(AlarmKey())
-      alarms.foreach { alarm ⇒
+      alarms.foreach { alarm =>
         // XXX TODO: compare results
         logger.info(s"List Alarm: $alarm")
       }

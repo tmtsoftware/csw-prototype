@@ -21,7 +21,7 @@ object LifecycleHandler {
  * Containers and Components can override these to handle lifecycle changes.
  */
 trait LifecycleHandler {
-  this: Component ⇒
+  this: Component =>
 
   import LifecycleHandler._
   import context.dispatcher
@@ -32,63 +32,63 @@ trait LifecycleHandler {
    * This implements additional behavior (used in receive method of ccs controller actors)
    */
   def lifecycleHandlerReceive: Receive = {
-    case Initialize ⇒
+    case Initialize =>
       val manager = sender()
       for (
-        result ← Future(initialize()) recover {
-          case ex ⇒ Failure(ex.getMessage)
+        result <- Future(initialize()) recover {
+          case ex => Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ InitializeSuccess
-          case Failure(reason) ⇒ InitializeFailure(reason)
+          case Success         => InitializeSuccess
+          case Failure(reason) => InitializeFailure(reason)
         }
         manager ! msg
       }
 
-    case Startup ⇒
+    case Startup =>
       val manager = sender()
       for (
-        result ← Future(startup()) recover {
-          case ex ⇒ Failure(ex.getMessage)
+        result <- Future(startup()) recover {
+          case ex => Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ StartupSuccess
-          case Failure(reason) ⇒ StartupFailure(reason)
+          case Success         => StartupSuccess
+          case Failure(reason) => StartupFailure(reason)
         }
         manager ! msg
       }
 
-    case Shutdown ⇒
+    case Shutdown =>
       val manager = sender()
       for (
-        result ← Future(shutdown()) recover {
-          case ex ⇒ Failure(ex.getMessage)
+        result <- Future(shutdown()) recover {
+          case ex => Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ ShutdownSuccess
-          case Failure(reason) ⇒ ShutdownFailure(reason)
+          case Success         => ShutdownSuccess
+          case Failure(reason) => ShutdownFailure(reason)
         }
         manager ! msg
       }
 
-    case Uninitialize ⇒
+    case Uninitialize =>
       val manager = sender()
       for (
-        result ← Future(uninitialize()) recover {
-          case ex ⇒ Failure(ex.getMessage)
+        result <- Future(uninitialize()) recover {
+          case ex => Failure(ex.getMessage)
         }
       ) yield {
         val msg = result match {
-          case Success         ⇒ UninitializeSuccess
-          case Failure(reason) ⇒ UninitializeFailure(reason)
+          case Success         => UninitializeSuccess
+          case Failure(reason) => UninitializeFailure(reason)
         }
         manager ! msg
       }
 
-    case LifecycleFailure(state: LifecycleState, reason: String) ⇒
+    case LifecycleFailure(state: LifecycleState, reason: String) =>
       val manager = sender()
       // No result
       Future(lifecycleFailure(state, reason))

@@ -49,10 +49,10 @@ class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, r
   // Subscribe only sends us a message if the value changes. We also need to
   // check if the value already matches the demand.
   val svs = StateVariableStore(KvsSettings(context.system))
-  keys.foreach { k ⇒
+  keys.foreach { k =>
     svs.get(k).onSuccess {
-      case Some(v) ⇒ self ! v
-      case None    ⇒
+      case Some(v) => self ! v
+      case None    =>
     }
   }
 
@@ -63,9 +63,9 @@ class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, r
   // Waiting for all variables to match, which is the case when the results set contains
   // a matching current state for each demand state
   def waiting(results: Set[CurrentState]): Receive = {
-    case current: CurrentState ⇒
+    case current: CurrentState =>
       log.info(s"received current state: $current")
-      demands.find(_.prefix == current.prefix).foreach { demand ⇒
+      demands.find(_.prefix == current.prefix).foreach { demand =>
         if (matcher(demand, current)) {
           val set = results + current
           if (set.size == demands.size) {
@@ -77,12 +77,12 @@ class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, r
         }
       }
 
-    case `timeout` ⇒
+    case `timeout` =>
       log.info(s"received timeout")
       replyTo ! CommandStatus.Error(runId, "Command timed out")
       svs.disconnect()
       context.stop(self)
 
-    case x ⇒ log.error(s"Unexpected message $x")
+    case x => log.error(s"Unexpected message $x")
   }
 }

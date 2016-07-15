@@ -55,7 +55,7 @@ class ArrayAndMatrixEqualityTests extends FunSpec {
     val m2 = LongArray(Array(1, 2, 3))
     val m3 = LongArray(Array(1, 2, 4))
 
-    val f = (l: LongArray) ⇒ l.data
+    val f = (l: LongArray) => l.data
     it("should notice equality for single member vectors of arrays") {
       // One member vectors, same values but different vectors, should be true
       assert(vectorEquals2(Vector(m1), Vector(m2), f))

@@ -14,7 +14,7 @@ object LocationTrackerClient {
   private[loc] def handleLocationMessage(connectionsIn: LocationMap, loc: Location): LocationMap = {
     if (connectionsIn.contains(loc.connection)) {
       if (loc.isTracked)
-        connectionsIn + (loc.connection → loc)
+        connectionsIn + (loc.connection -> loc)
       else
         connectionsIn - loc.connection
     } else connectionsIn
@@ -43,7 +43,7 @@ case class LocationTrackerClient(tracker: ActorRef, connections: LocationMap = M
    */
   def trackConnection(connection: Connection): LocationTrackerClient = {
     tracker ! TrackConnection(connection)
-    LocationTrackerClient(tracker, connections + (connection → Unresolved(connection)))
+    LocationTrackerClient(tracker, connections + (connection -> Unresolved(connection)))
   }
 
   /**
@@ -73,7 +73,7 @@ case class LocationTrackerClient(tracker: ActorRef, connections: LocationMap = M
  * Can be used by an actor to keep track of component connections.
  */
 trait LocationTrackerClientActor {
-  this: Actor with ActorLogging ⇒
+  this: Actor with ActorLogging =>
 
   private val tracker = context.actorOf(LocationTracker.props(Some(self)))
   private var trackerClient = LocationTrackerClient(tracker)
@@ -82,15 +82,15 @@ trait LocationTrackerClientActor {
    * Handles location updates and updates the connections map (Should be called from the actor's receive method)
    */
   protected def trackerClientReceive: Receive = {
-    case loc: Location ⇒
+    case loc: Location =>
       log.info(s"Received location: $loc")
       trackerClient = trackerClient.locationUpdate(loc)
       if (allResolved) allResolved(getLocations)
 
-    case TrackConnection(connection) ⇒
+    case TrackConnection(connection) =>
       trackConnection(connection)
 
-    case UntrackConnection(connection) ⇒
+    case UntrackConnection(connection) =>
       untrackConnection(connection)
   }
 
@@ -148,7 +148,7 @@ trait LocationTrackerClientActor {
    */
   protected def getActorRefs(targetPrefix: String): Set[ActorRef] = {
     val x = getLocations.collect {
-      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) if prefix == targetPrefix ⇒ actorRefOpt
+      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) if prefix == targetPrefix => actorRefOpt
     }
     x.flatten
   }

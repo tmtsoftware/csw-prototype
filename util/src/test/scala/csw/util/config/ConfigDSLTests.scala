@@ -1,9 +1,9 @@
 package csw.util.config
 
-import csw.util.config.ConfigDSL._
-import csw.util.config.Configurations.SetupConfig
 import csw.util.config.UnitsOfMeasure.{Deg, NoUnits}
 import org.scalatest.{FunSpec, ShouldMatchers}
+import csw.util.config.ConfigDSL._
+import csw.util.config.Configurations.SetupConfig
 
 /**
  * Tests the config DSL
@@ -18,7 +18,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
   private val ck3: String = "wfos.red.detector"
 
   describe("creating items") {
-    import csw.util.config.ConfigDSL.{size ⇒ ssize}
+    import csw.util.config.ConfigDSL.{size => ssize}
 
     val k1 = IntKey(s1)
     val detectorTemp = DoubleKey(s3)
@@ -44,7 +44,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
   }
 
   describe("checking simple values") {
-    import csw.util.config.ConfigDSL.{value ⇒ svalue}
+    import csw.util.config.ConfigDSL.{value => svalue}
     val k1 = IntKey(s1)
 
     it("should have value access") {
@@ -118,15 +118,12 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val k3 = DoubleKey(s3)
 
     it("should allow adding single items") {
-      // Note sc1 is a var
-      var sc1 = SetupConfig(ck1)
-      sc1 = add(sc1, set(k1, 1000))
+      val sc1 = add(SetupConfig(ck1), set(k1, 1000))
       sc1.size should be(1)
     }
 
     it("shoudl allow adding several at once") {
-      var sc2 = SetupConfig(ck2)
-      sc2 = madd(sc2, set(k1, 1000), set(k2, "1000"), set(k3, 1000.0))
+      val sc2 = madd(SetupConfig(ck2), set(k1, 1000), set(k2, "1000"), set(k3, 1000.0))
 
       sc2.size should be(3)
       exists(sc2, k1) shouldBe true
@@ -145,8 +142,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val i3 = set(k3, 1000.0)
 
     it("should allow accessing existing items") {
-      var sc1 = SetupConfig(ck2)
-      sc1 = madd(sc1, i1, i2, i3)
+      val sc1 = madd(SetupConfig(ck2), i1, i2, i3)
       sc1.size should be(3)
 
       item(sc1, k1) should equal(i1)
@@ -155,8 +151,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     }
 
     it("should throw NoSuchElementException if not present") {
-      var sc1 = SetupConfig(ck2)
-      sc1 = madd(sc1, i1, i2, i3)
+      val sc1 = madd(SetupConfig(ck2), i1, i2, i3)
 
       val k4 = FloatKey("not present")
 
@@ -191,8 +186,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     }
 
     it("should be None if not present") {
-      var sc1 = SetupConfig(ck2)
-      sc1 = madd(sc1, i1, i2, i3)
+      val sc1 = madd(SetupConfig(ck2), i1, i2, i3)
 
       val k4 = FloatKey("not present")
       get(sc1, k1) should equal(Option(i1))
@@ -213,8 +207,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val i3 = set(k3, 1000.0, 2000.0)
 
     it("should allow accessing existing items") {
-      var sc1 = SetupConfig(ck2)
-      sc1 = madd(sc1, i1, i2, i3)
+      val sc1 = madd(SetupConfig(ck2), i1, i2, i3)
       csize(sc1) should be(3)
 
       get(sc1, k1, 0) should be(Some(1000))
@@ -373,8 +366,8 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
       val sc2 = sc(
         ck2,
-        k1 → 3 withUnits UnitsOfMeasure.Deg,
-        k2 → 44.3 withUnits UnitsOfMeasure.Meters
+        k1 -> 3 withUnits UnitsOfMeasure.Deg,
+        k2 -> 44.3 withUnits UnitsOfMeasure.Meters
       )
       csize(sc2) should be(2)
       exists(sc2, k1) shouldBe true
@@ -396,7 +389,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     it("should create overriding defaults") {
       val default: SetupConfig = sc(ck2, i1, i2, i3)
 
-      val sc1 = add(default, zeroPoint → 2000)
+      val sc1 = add(default, zeroPoint -> 2000)
 
       val intItem = sc1(zeroPoint)
 

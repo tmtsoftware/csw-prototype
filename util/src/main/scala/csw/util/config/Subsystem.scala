@@ -61,5 +61,5 @@ object Subsystem {
 
   val jSubsystems: java.util.Set[Subsystem] = subsystems.asJava
 
-  def lookup(in: String): Option[Subsystem] = subsystems.find(sub ⇒ sub.prefix.equalsIgnoreCase(in))
+  def lookup(in: String): Option[Subsystem] = subsystems.find(sub => sub.prefix.equalsIgnoreCase(in))
 }

@@ -98,7 +98,7 @@ private object SubscribeActor {
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
 private class SubscribeActor[T: KvsFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int)
-    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) ⇒ ()) with DecodeReplies {
+    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) => ()) with DecodeReplies {
 
   /**
    * Keep states of channels and actor in case of connection reset
@@ -107,13 +107,13 @@ private class SubscribeActor[T: KvsFormatter](subscriber: ActorRef, redisHost: S
   private var patternsSubscribed = Set[String]()
 
   def writing: Receive = {
-    case message: SubscribeMessage ⇒
+    case message: SubscribeMessage =>
       write(message.toByteString)
       message match {
-        case s: SUBSCRIBE     ⇒ channelsSubscribed ++= s.channel
-        case u: UNSUBSCRIBE   ⇒ channelsSubscribed --= u.channel
-        case ps: PSUBSCRIBE   ⇒ patternsSubscribed ++= ps.pattern
-        case pu: PUNSUBSCRIBE ⇒ patternsSubscribed --= pu.pattern
+        case s: SUBSCRIBE     => channelsSubscribed ++= s.channel
+        case u: UNSUBSCRIBE   => channelsSubscribed --= u.channel
+        case ps: PSUBSCRIBE   => patternsSubscribed ++= ps.pattern
+        case pu: PUNSUBSCRIBE => patternsSubscribed --= pu.pattern
       }
   }
 
@@ -133,11 +133,11 @@ private class SubscribeActor[T: KvsFormatter](subscriber: ActorRef, redisHost: S
     val formatter = implicitly[KvsFormatter[T]]
 
     reply match {
-      case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" ⇒
+      case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
         subscriber ! formatter.deserialize(list(2).toByteString)
-      case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" ⇒
+      case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" =>
         subscriber ! formatter.deserialize(list(3).toByteString)
-      case _ ⇒ // subscribe or psubscribe
+      case _ => // subscribe or psubscribe
     }
   }
 

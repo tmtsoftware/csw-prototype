@@ -72,7 +72,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
 
       // List all the alarms that were written to Redis
       val alarms = Await.result(alarmService.getAlarms(AlarmKey()), timeout.duration)
-      alarms.foreach { alarm ⇒
+      alarms.foreach { alarm =>
         // XXX TODO: compare results
         logger.info(s"List Alarm: $alarm")
       }

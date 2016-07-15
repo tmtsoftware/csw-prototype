@@ -22,9 +22,9 @@ case class DoubleArray(data: Array[Double]) {
   override def canEqual(other: Any) = other.isInstanceOf[DoubleArray]
 
   override def equals(other: Any) = other match {
-    case that: DoubleArray ⇒
+    case that: DoubleArray =>
       this.canEqual(that) && deepArrayEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 

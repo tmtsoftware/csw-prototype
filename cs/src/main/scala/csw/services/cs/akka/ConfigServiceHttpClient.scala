@@ -46,17 +46,17 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
   override val name = settings.name
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
-    val uri = makeUri("/create", "path" → path.toString, "oversize" → oversize.toString, "comment" → comment)
+    val uri = makeUri("/create", "path" -> path.toString, "oversize" -> oversize.toString, "comment" -> comment)
     createOrUpdate(POST, uri, configData, comment, create = true)
   }
 
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
-    val uri = makeUri("/update", "path" → path.toString, "comment" → comment)
+    val uri = makeUri("/update", "path" -> path.toString, "comment" -> comment)
     createOrUpdate(PUT, uri, configData, comment, create = false)
   }
 
   override def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
-    val uri = makeUri("/createOrUpdate", "path" → path.toString, "oversize" → oversize.toString, "comment" → comment)
+    val uri = makeUri("/createOrUpdate", "path" -> path.toString, "oversize" -> oversize.toString, "comment" -> comment)
     createOrUpdate(POST, uri, configData, comment, create = true)
   }
 
@@ -70,8 +70,8 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     val request = HttpRequest(method, uri = uri, entity = entity)
 
     for {
-      result ← sendRequest(request, connection)
-      json ← ConfigData(result.entity.dataBytes).toFutureString
+      result <- sendRequest(request, connection)
+      json <- ConfigData(result.entity.dataBytes).toFutureString
     } yield {
       if (result.status == StatusCodes.OK) {
         json.parseJson.convertTo[ConfigId]
@@ -85,9 +85,9 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def get(path: File, id: Option[ConfigId] = None): Future[Option[ConfigData]] = {
     val uri = if (id.isDefined)
-      makeUri("/get", "path" → path.toString, "id" → id.get.id)
+      makeUri("/get", "path" -> path.toString, "id" -> id.get.id)
     else
-      makeUri("/get", "path" → path.toString)
+      makeUri("/get", "path" -> path.toString)
     logger.info(s"$uri")
 
     implicit val materializer = ActorMaterializer()
@@ -95,7 +95,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     val request = HttpRequest(GET, uri = uri)
 
     for {
-      result ← sendRequest(request, connection)
+      result <- sendRequest(request, connection)
     } yield if (result.status == StatusCodes.OK)
       Some(ConfigData(result.entity.dataBytes))
     else None
@@ -110,12 +110,12 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     implicit val materializer = ActorMaterializer()
 
     for {
-      result ← sendRequest(request, connection)
+      result <- sendRequest(request, connection)
     } yield result.status == StatusCodes.OK
   }
 
   override def delete(path: File, comment: String): Future[Unit] = {
-    val uri = makeUri(path.toString, "comment" → comment)
+    val uri = makeUri(path.toString, "comment" -> comment)
     logger.info(s"deleting $path")
 
     val connection = Http().outgoingConnection(host, port)
@@ -123,7 +123,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     implicit val materializer = ActorMaterializer()
 
     for {
-      result ← sendRequest(request, connection)
+      result <- sendRequest(request, connection)
     } yield ()
   }
 
@@ -136,8 +136,8 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     implicit val materializer = ActorMaterializer()
 
     for {
-      result ← sendRequest(request, connection)
-      json ← ConfigData(result.entity.dataBytes).toFutureString
+      result <- sendRequest(request, connection)
+      json <- ConfigData(result.entity.dataBytes).toFutureString
     } yield {
       if (result.status == StatusCodes.OK) {
         json.parseJson.convertTo[List[ConfigFileInfo]]
@@ -150,7 +150,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
   }
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
-    val uri = makeUri("/history", "path" → path.toString, "maxResults" → maxResults.toString)
+    val uri = makeUri("/history", "path" -> path.toString, "maxResults" -> maxResults.toString)
     logger.info(s"history for $path")
 
     val connection = Http().outgoingConnection(host, port)
@@ -158,8 +158,8 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     implicit val materializer = ActorMaterializer()
 
     for {
-      result ← sendRequest(request, connection)
-      json ← ConfigData(result.entity.dataBytes).toFutureString
+      result <- sendRequest(request, connection)
+      json <- ConfigData(result.entity.dataBytes).toFutureString
     } yield {
       if (result.status == StatusCodes.OK) {
         json.parseJson.convertTo[List[ConfigFileHistory]]
@@ -173,9 +173,9 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def setDefault(path: File, id: Option[ConfigId]): Future[Unit] = {
     val uri = if (id.isDefined)
-      makeUri("/setDefault", "path" → path.toString, "id" → id.get.id)
+      makeUri("/setDefault", "path" -> path.toString, "id" -> id.get.id)
     else
-      makeUri("/setDefault", "path" → path.toString)
+      makeUri("/setDefault", "path" -> path.toString)
     logger.info(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
@@ -183,12 +183,12 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     implicit val materializer = ActorMaterializer()
 
     for {
-      _ ← sendRequest(request, connection)
+      _ <- sendRequest(request, connection)
     } yield ()
   }
 
   override def resetDefault(path: File): Future[Unit] = {
-    val uri = makeUri("/resetDefault", "path" → path.toString)
+    val uri = makeUri("/resetDefault", "path" -> path.toString)
     logger.info(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
@@ -196,12 +196,12 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     implicit val materializer = ActorMaterializer()
 
     for {
-      _ ← sendRequest(request, connection)
+      _ <- sendRequest(request, connection)
     } yield ()
   }
 
   override def getDefault(path: File): Future[Option[ConfigData]] = {
-    val uri = makeUri("/getDefault", "path" → path.toString)
+    val uri = makeUri("/getDefault", "path" -> path.toString)
     logger.info(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
@@ -209,7 +209,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
     implicit val materializer = ActorMaterializer()
 
     for {
-      result ← sendRequest(request, connection)
+      result <- sendRequest(request, connection)
     } yield if (result.status == StatusCodes.OK)
       Some(ConfigData(result.entity.dataBytes))
     else None

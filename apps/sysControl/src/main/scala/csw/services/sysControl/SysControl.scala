@@ -30,13 +30,13 @@ object SysControl extends App {
   private val logLevels = Set("OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", "ALL")
 
   private val lifecycleCommands: Map[String, LifecycleCommand] = Map(
-    "Load" → LifecycleManager.Load,
-    "Initialize" → LifecycleManager.Initialize,
-    "Startup" → LifecycleManager.Startup,
-    "Shutdown" → LifecycleManager.Shutdown,
-    "Uninitialize" → LifecycleManager.Uninitialize,
-    "Remove" → LifecycleManager.Uninitialize,
-    "Heartbeat" → LifecycleManager.Heartbeat
+    "Load" -> LifecycleManager.Load,
+    "Initialize" -> LifecycleManager.Initialize,
+    "Startup" -> LifecycleManager.Startup,
+    "Shutdown" -> LifecycleManager.Shutdown,
+    "Uninitialize" -> LifecycleManager.Uninitialize,
+    "Remove" -> LifecycleManager.Uninitialize,
+    "Heartbeat" -> LifecycleManager.Heartbeat
   )
 
   /**
@@ -57,31 +57,31 @@ object SysControl extends App {
   private val parser = new scopt.OptionParser[Options]("sysControl") {
     head("sysControl", System.getProperty("CSW_VERSION"))
 
-    opt[String]('n', "name") valueName "<name>" action { (x, c) ⇒
+    opt[String]('n', "name") valueName "<name>" action { (x, c) =>
       c.copy(name = Some(x))
     } text "Required: The name of the target component (as registered with the location service)"
 
-    opt[String]("component-type") valueName "<type>" action { (x, c) ⇒
+    opt[String]("component-type") valueName "<type>" action { (x, c) =>
       c.copy(componentType = Some(x))
     } text s"Required: component type of the target component: One of ${componentTypes.mkString(", ")}"
 
-    opt[String]("connection-type") valueName "<type>" action { (x, c) ⇒
+    opt[String]("connection-type") valueName "<type>" action { (x, c) =>
       c.copy(connectionType = x)
     } text s"optional connection type to access the component: One of ${connectionTypes.mkString(", ")} (default: akka)"
 
-    opt[String]('p', "package") valueName "<name>" action { (x, c) ⇒
+    opt[String]('p', "package") valueName "<name>" action { (x, c) =>
       c.copy(rootPackage = x)
     } text "Root package name for setting the log level (default: csw)"
 
-    opt[String]("log-level") valueName "<level>" action { (x, c) ⇒
+    opt[String]("log-level") valueName "<level>" action { (x, c) =>
       c.copy(logLevel = Some(x))
     } text s"The new log level for the given package name: One of ${logLevels.mkString(", ")}"
 
-    opt[String]("lifecycle") valueName "<command>" action { (x, c) ⇒
+    opt[String]("lifecycle") valueName "<command>" action { (x, c) =>
       c.copy(lifecycleCommand = Some(x))
     } text s"A lifecycle command to send to the target component: One of ${lifecycleCommands.keySet.mkString(", ")}"
 
-    opt[Boolean]("no-exit") action { (x, c) ⇒
+    opt[Boolean]("no-exit") action { (x, c) =>
       c.copy(noExit = x)
     } text "for testing: prevents application from exiting after running command"
 
@@ -91,15 +91,15 @@ object SysControl extends App {
 
   // Parse the command line options
   parser.parse(args, Options()) match {
-    case Some(options) ⇒
+    case Some(options) =>
       try {
         run(options)
       } catch {
-        case e: Throwable ⇒
+        case e: Throwable =>
           e.printStackTrace()
           System.exit(1)
       }
-    case None ⇒ System.exit(1)
+    case None => System.exit(1)
   }
 
   // Report error and exit
@@ -125,26 +125,26 @@ object SysControl extends App {
     // Logging options
     val rootPackage = options.rootPackage
 
-    options.logLevel.foreach { l ⇒
+    options.logLevel.foreach { l =>
       if (!logLevels.contains(l)) error(s"Unsupported log level: $l")
     }
 
     // lifecycle
-    options.lifecycleCommand.foreach { l ⇒
+    options.lifecycleCommand.foreach { l =>
       if (!lifecycleCommands.contains(l)) error(s"Unsupported lifecycle command: $l")
     }
 
     // Lookup with location service
     val f = LocationService.resolve(Set(connection))
     f.onComplete {
-      case Success(locationsReady) ⇒
-        options.logLevel.foreach { logLevel ⇒
+      case Success(locationsReady) =>
+        options.logLevel.foreach { logLevel =>
           setLogLevel(locationsReady.locations.head, logLevel, rootPackage)
         }
-        options.lifecycleCommand.foreach { lifecycleCommand ⇒
+        options.lifecycleCommand.foreach { lifecycleCommand =>
           sendLifecycleCommand(locationsReady.locations.head, lifecycleCommands(lifecycleCommand))
         }
-      case Failure(ex) ⇒ error(s"Failed to locate $name ($connection): $ex")
+      case Failure(ex) => error(s"Failed to locate $name ($connection): $ex")
     }
 
     Await.ready(f, timeout.duration)
@@ -154,9 +154,9 @@ object SysControl extends App {
   // Sets the log level on the component using the given location
   private def setLogLevel(location: Location, logLevel: String, rootPackage: String): Unit = {
     location match {
-      case a: ResolvedAkkaLocation ⇒ a.actorRef.foreach(setLogLevel(_, logLevel, rootPackage))
-      case h: ResolvedHttpLocation ⇒ error("HTTP target components not yet supported") // XXX TODO
-      case _                       ⇒ error(s"Received unexpected location info: $location")
+      case a: ResolvedAkkaLocation => a.actorRef.foreach(setLogLevel(_, logLevel, rootPackage))
+      case h: ResolvedHttpLocation => error("HTTP target components not yet supported") // XXX TODO
+      case _                       => error(s"Received unexpected location info: $location")
     }
   }
 
@@ -168,9 +168,9 @@ object SysControl extends App {
   // Sends the given lifecycle command to the component
   private def sendLifecycleCommand(location: Location, lifecycleCommand: LifecycleCommand): Unit = {
     location match {
-      case a: ResolvedAkkaLocation ⇒ a.actorRef.foreach(sendLifecycleCommand(_, lifecycleCommand))
-      case h: ResolvedHttpLocation ⇒ error("HTTP target components not yet supported") // XXX TODO
-      case _                       ⇒ error(s"Received unexpected location info: $location")
+      case a: ResolvedAkkaLocation => a.actorRef.foreach(sendLifecycleCommand(_, lifecycleCommand))
+      case h: ResolvedHttpLocation => error("HTTP target components not yet supported") // XXX TODO
+      case _                       => error(s"Received unexpected location info: $location")
     }
   }
 

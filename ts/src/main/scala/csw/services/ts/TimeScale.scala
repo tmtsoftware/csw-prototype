@@ -43,26 +43,26 @@ object TimeScale {
    * Converts the given instant to TAI time
    */
   def toTAI[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[TAI.type]] = tsi match {
-    case TsInstant(i, TAI) ⇒ Some(TsInstant(i, TAI))
-    case TsInstant(i, UTC) ⇒ Some(TsInstant(i.plusSeconds(TimeService.UTCtoTAIoffset), TAI))
-    case _                 ⇒ None
+    case TsInstant(i, TAI) => Some(TsInstant(i, TAI))
+    case TsInstant(i, UTC) => Some(TsInstant(i.plusSeconds(TimeService.UTCtoTAIoffset), TAI))
+    case _                 => None
   }
 
   /**
    * Converts the given instant to UTC time
    */
   def toUTC[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[UTC.type]] = tsi match {
-    case TsInstant(i, UTC) ⇒ Some(TsInstant(i, UTC))
-    case TsInstant(i, TAI) ⇒ Some(TsInstant[UTC.type](i.minusSeconds(TimeService.UTCtoTAIoffset), UTC))
-    case _                 ⇒ None
+    case TsInstant(i, UTC) => Some(TsInstant(i, UTC))
+    case TsInstant(i, TAI) => Some(TsInstant[UTC.type](i.minusSeconds(TimeService.UTCtoTAIoffset), UTC))
+    case _                 => None
   }
 
   /**
    * Converts the given instant to LOCAL time
    */
   def toLocalTime[A <: TimeScale](tsi: TsInstant[A]): Option[TsInstant[LOCAL.type]] = tsi match {
-    case TsInstant(i, LOCAL) ⇒ Some(TsInstant(i, LOCAL))
-    case _                   ⇒ None
+    case TsInstant(i, LOCAL) => Some(TsInstant(i, LOCAL))
+    case _                   => None
   }
 
   class TAIClock(zoneId: ZoneId) extends Clock {

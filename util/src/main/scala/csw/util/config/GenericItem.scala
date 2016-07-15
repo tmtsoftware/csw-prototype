@@ -12,7 +12,7 @@ object GenericItem {
   /**
    * type of a function that reads JSON and returns a new GenericItem
    */
-  type JsonReaderFunc = JsValue ⇒ GenericItem[_]
+  type JsonReaderFunc = JsValue => GenericItem[_]
 
   // Used to register a JsonFormat instance to use to read and write JSON for a given GenericItem subclass
   private var jsonReaderMap = Map[String, JsonReaderFunc]()
@@ -24,7 +24,7 @@ object GenericItem {
    * @param jsonReader implements creating this object from JSON
    * @tparam T the (scala) type parameter of the GenericItem
    */
-  def register[T](typeName: String, jsonReader: JsonReaderFunc): Unit = jsonReaderMap += (typeName → jsonReader)
+  def register[T](typeName: String, jsonReader: JsonReaderFunc): Unit = jsonReaderMap += (typeName -> jsonReader)
 
   /**
    * Lookup the JsonFormat for the given type name
@@ -52,9 +52,9 @@ case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values:
     val valueFormat = implicitly[JsonFormat[S]]
     val unitsFormat = ConfigJSON.unitsFormat
     JsObject(
-      "keyName" → JsString(keyName),
-      "value" → JsArray(values.map(valueFormat.write)),
-      "units" → unitsFormat.write(units)
+      "keyName" -> JsString(keyName),
+      "value" -> JsArray(values.map(valueFormat.write)),
+      "units" -> unitsFormat.write(units)
     )
   }
 

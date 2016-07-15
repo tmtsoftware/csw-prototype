@@ -25,11 +25,11 @@ case object RaDec extends DefaultJsonProtocol {
    */
   def reader(json: JsValue): GenericItem[RaDec] = {
     json.asJsObject.getFields("keyName", "value", "units") match {
-      case Seq(JsString(keyName), JsArray(v), u) ⇒
+      case Seq(JsString(keyName), JsArray(v), u) =>
         val units = ConfigJSON.unitsFormat.read(u)
         val value = v.map(RaDec.raDecFormat.read)
         GenericItem[RaDec](typeName, keyName, value, units)
-      case _ ⇒ throw new DeserializationException("Color expected")
+      case _ => throw new DeserializationException("Color expected")
     }
   }
 

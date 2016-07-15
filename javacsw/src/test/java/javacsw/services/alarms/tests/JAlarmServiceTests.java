@@ -195,11 +195,12 @@ public class JAlarmServiceTests {
     AlarmKey nfKey = JAlarmKey.create(Optional.of("NFIRAOS"));
     AlarmMonitor healthMonitor = alarmService.monitorHealth(nfKey,
       Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler));
+    Thread.sleep(shortDelayMs); // make sure actor has started
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
     alarmService.setSeverity(key3, JSeverityLevel.Okay).get();
-    Thread.sleep(shortDelayMs); // make sure actor has started
+    Thread.sleep(shortDelayMs);
     assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Good);
-    Thread.sleep(shortDelayMs); // make sure actor has started
+    Thread.sleep(shortDelayMs);
     assertEquals(callbackHealth.get(), JHealth.Good);
 
     Thread.sleep(delayMs); // wait for severity to expire and become "Disconnected"

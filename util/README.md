@@ -64,13 +64,13 @@ of the given type. The values are stored internally in a Vector:
 * CharKey
 * BooleanKey
 
-The following keys support one or more values that are each one and two dimensional arrays (stored internally as Vectors):
+The following keys support one or more values that are each one and two dimensional arrays (stored internally as Arrays):
 
-* IntVectorKey, IntMatrixKey
-* ShortVectorKey, ShortMatrixKey
-* LongVectorKey, LongMatrixKey
-* FloatVectorKey, FloatMatrixKey
-* DoubleVectorKey, DoubleMatrixKey
+* IntArrayKey, IntMatrixKey
+* ShortArrayKey, ShortMatrixKey
+* LongArrayKey, LongMatrixKey
+* FloatArrayKey, FloatMatrixKey
+* DoubleArrayKey, DoubleMatrixKey
 
 In addition there is a GenericKey class that can be used for custom types. It is however recommended to
 use only the standard key types, in oder to ensure that binary and JSON serialization and deserialization
@@ -85,19 +85,19 @@ Example:
   val exposureTime = DoubleKey("exposureTime")
 
   // Define a key for image data
-  val imageData = IntVectorKey("imageData")
+  val imageData = IntArrayKey("imageData")
 
   // Dummy image data
-  val testImageData = IntVector(Array.ofDim[Int](10000).toVector)
+  val testImageData = IntArray(Array.ofDim[Int](10000))
 
   val prefix = "tcs.mobie.red.dat.exposureInfo"
 
   // ...
 
-  val config = SetupConfig(prefix)
-      .set(eventNum, num)
-      .set(exposureTime, 1.0)
-      .set(imageData, testImageData)
+    val config = SetupConfig(prefix)
+      .add(eventNum.set(num))
+      .add(exposureTime.set(1.0))
+      .add(imageData.set(testImageData))
 ```
 
 Java Example:
@@ -109,10 +109,10 @@ Java Example:
     static final IntKey eventNum = new IntKey("eventNum");
 
     // Define a key for image data
-    static final IntVectorKey imageData = new IntVectorKey("imageData");
+    static final IntArrayKey imageData = new IntArrayKey("imageData");
 
     // Dummy image data
-    static final JIntVector testImageData = JIntVector.fromArray(new int[10000]);
+    static final JIntArray testImageData = JIntArray.fromArray(new int[10000]);
 
     // Prefix to use for the event
     static final String prefix = "tcs.mobie.red.dat.exposureInfo";

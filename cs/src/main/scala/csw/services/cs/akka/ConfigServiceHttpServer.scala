@@ -30,15 +30,15 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   implicit val materializer = ActorMaterializer()
 
   val binding = Http().bind(interface = settings.httpInterface, port = settings.httpPort)
-  binding.runForeach { c ⇒
+  binding.runForeach { c =>
     logger.info(s"${c.localAddress} accepted new connection from ${c.remoteAddress}")
     c.handleWithAsyncHandler {
-      case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
-      case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
-      case HttpRequest(PUT, uri, _, entity, _)  ⇒ httpPut(uri, entity)
-      case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
-      case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
-      case x: HttpRequest                       ⇒ unknownResource(x.toString)
+      case HttpRequest(GET, uri, _, _, _)       => httpGet(uri)
+      case HttpRequest(POST, uri, _, entity, _) => httpPost(uri, entity)
+      case HttpRequest(PUT, uri, _, entity, _)  => httpPut(uri, entity)
+      case HttpRequest(HEAD, uri, _, _, _)      => httpHead(uri)
+      case HttpRequest(DELETE, uri, _, _, _)    => httpDelete(uri)
+      case x: HttpRequest                       => unknownResource(x.toString)
     }
   }
 
@@ -78,11 +78,11 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     logger.info(s"Received GET request for $path (uri = $uri)")
 
     path match {
-      case "/get"        ⇒ get(uri)
-      case "/list"       ⇒ list()
-      case "/history"    ⇒ history(uri)
-      case "/getDefault" ⇒ getDefault(uri)
-      case _             ⇒ unknownResource(path)
+      case "/get"        => get(uri)
+      case "/list"       => list()
+      case "/history"    => history(uri)
+      case "/getDefault" => getDefault(uri)
+      case _             => unknownResource(path)
     }
   }
 
@@ -91,22 +91,22 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val pathOpt = uri.query().get("path")
     val idOpt = uri.query().get("id").map(ConfigId(_))
     pathOpt match {
-      case Some(path) ⇒
+      case Some(path) =>
         val result = for {
-          result ← client.get(new File(path), idOpt)
+          result <- client.get(new File(path), idOpt)
         } yield {
           result match {
-            case Some(configData) ⇒
+            case Some(configData) =>
               val chunks = configData.source.map(ChunkStreamPart.apply)
               HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
-            case None ⇒
+            case None =>
               HttpResponse(StatusCodes.NotFound, entity = s"Not found: $path with id $idOpt")
           }
         }
         result.recover {
-          case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+          case ex => HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
-      case None ⇒
+      case None =>
         unknownResource("")
     }
   }
@@ -114,13 +114,13 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   // Gets the list of files file from the config service
   private def list(): Future[HttpResponse] = {
     val result = for {
-      result ← client.list()
+      result <- client.list()
     } yield {
       val json = result.toJson.toString()
       HttpResponse(StatusCodes.OK, entity = HttpEntity(MediaTypes.`application/json`, json))
     }
     result.recover {
-      case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+      case ex => HttpResponse(StatusCodes.NotFound, entity = ex.toString)
     }
   }
 
@@ -129,17 +129,17 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val pathOpt = uri.query().get("path")
     val maxResults = uri.query().get("maxResults").map(_.toInt).getOrElse(Int.MaxValue)
     pathOpt match {
-      case Some(path) ⇒
+      case Some(path) =>
         val result = for {
-          result ← client.history(new File(path), maxResults)
+          result <- client.history(new File(path), maxResults)
         } yield {
           val json = result.toJson.toString()
           HttpResponse(StatusCodes.OK, entity = HttpEntity(MediaTypes.`application/json`, json))
         }
         result.recover {
-          case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+          case ex => HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
-      case None ⇒
+      case None =>
         unknownResource("")
     }
   }
@@ -148,9 +148,9 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val path = uri.path.toString()
     logger.info(s"Received POST request for $path (uri = $uri)")
     path match {
-      case "/create"         ⇒ createOrUpdate(uri, entity)
-      case "/createOrUpdate" ⇒ createOrUpdate(uri, entity)
-      case _                 ⇒ unknownResource(path)
+      case "/create"         => createOrUpdate(uri, entity)
+      case "/createOrUpdate" => createOrUpdate(uri, entity)
+      case _                 => unknownResource(path)
     }
   }
 
@@ -158,10 +158,10 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val path = uri.path.toString()
     logger.info(s"Received PUT request for $path (uri = $uri)")
     path match {
-      case "/update"       ⇒ createOrUpdate(uri, entity)
-      case "/setDefault"   ⇒ setDefault(uri)
-      case "/resetDefault" ⇒ resetDefault(uri)
-      case _               ⇒ unknownResource(path)
+      case "/update"       => createOrUpdate(uri, entity)
+      case "/setDefault"   => setDefault(uri)
+      case "/resetDefault" => resetDefault(uri)
+      case _               => unknownResource(path)
     }
   }
 
@@ -178,14 +178,14 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
       logger.info(s"$op $pathOpt comment=$comment")
 
     pathOpt match {
-      case Some(path) ⇒
+      case Some(path) =>
         val configData = ConfigData(entity.dataBytes)
         val file = new File(path)
         val result = for {
-          configId ← op match {
-            case "create" ⇒ client.create(file, configData, oversize, comment)
-            case "update" ⇒ client.update(file, configData, comment)
-            case _        ⇒ client.createOrUpdate(file, configData, oversize, comment)
+          configId <- op match {
+            case "create" => client.create(file, configData, oversize, comment)
+            case "update" => client.update(file, configData, comment)
+            case _        => client.createOrUpdate(file, configData, oversize, comment)
           }
         } yield {
           val json = configId.toJson.toString()
@@ -193,11 +193,11 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
           HttpResponse(StatusCodes.OK, entity = HttpEntity(MediaTypes.`application/json`, json))
         }
         result.recover {
-          case ex ⇒
+          case ex =>
             logger.error(s"error processing $uri", ex)
             HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
-      case None ⇒
+      case None =>
         unknownResource("")
     }
   }
@@ -205,10 +205,10 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   // Returns OK if the path exists on the server
   private def httpHead(uri: Uri): Future[HttpResponse] = {
     val result = for {
-      exists ← client.exists(new File(uri.path.toString()))
+      exists <- client.exists(new File(uri.path.toString()))
     } yield HttpResponse(if (exists) StatusCodes.OK else StatusCodes.NotFound)
     result.recover {
-      case ex ⇒ HttpResponse(StatusCodes.NotFound)
+      case ex => HttpResponse(StatusCodes.NotFound)
     }
   }
 
@@ -217,10 +217,10 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val path = new File(uri.path.toString())
     val comment = uri.query().get("comment").getOrElse("")
     val result = for {
-      _ ← client.delete(path, comment)
+      _ <- client.delete(path, comment)
     } yield HttpResponse(StatusCodes.OK)
     result.recover {
-      case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+      case ex => HttpResponse(StatusCodes.NotFound, entity = ex.toString)
     }
   }
 
@@ -228,22 +228,22 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   def getDefault(uri: Uri): Future[HttpResponse] = {
     val pathOpt = uri.query().get("path")
     pathOpt match {
-      case Some(path) ⇒
+      case Some(path) =>
         val result = for {
-          result ← client.getDefault(new File(path))
+          result <- client.getDefault(new File(path))
         } yield {
           result match {
-            case Some(configData) ⇒
+            case Some(configData) =>
               val chunks = configData.source.map(ChunkStreamPart.apply)
               HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
-            case None ⇒
+            case None =>
               HttpResponse(StatusCodes.NotFound, entity = s"Not found: $path")
           }
         }
         result.recover {
-          case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+          case ex => HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
-      case None ⇒
+      case None =>
         unknownResource("")
     }
 
@@ -254,16 +254,16 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val pathOpt = uri.query().get("path")
     val idOpt = uri.query().get("id").map(ConfigId(_))
     pathOpt match {
-      case Some(path) ⇒
+      case Some(path) =>
         val result = for {
-          configId ← client.setDefault(new File(path), idOpt)
+          configId <- client.setDefault(new File(path), idOpt)
         } yield {
           HttpResponse(StatusCodes.OK)
         }
         result.recover {
-          case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+          case ex => HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
-      case None ⇒
+      case None =>
         unknownResource("")
     }
 
@@ -273,16 +273,16 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   def resetDefault(uri: Uri): Future[HttpResponse] = {
     val pathOpt = uri.query().get("path")
     pathOpt match {
-      case Some(path) ⇒
+      case Some(path) =>
         val result = for {
-          _ ← client.resetDefault(new File(path))
+          _ <- client.resetDefault(new File(path))
         } yield {
           HttpResponse(StatusCodes.OK)
         }
         result.recover {
-          case ex ⇒ HttpResponse(StatusCodes.NotFound, entity = ex.toString)
+          case ex => HttpResponse(StatusCodes.NotFound, entity = ex.toString)
         }
-      case None ⇒
+      case None =>
         unknownResource("")
     }
   }

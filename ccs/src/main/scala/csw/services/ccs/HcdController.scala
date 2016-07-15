@@ -35,7 +35,7 @@ object HcdController {
  * Base trait for an HCD controller actor that reacts immediately to SetupConfig messages.
  */
 trait HcdController extends PublisherActor[CurrentState] {
-  this: Actor with ActorLogging ⇒
+  this: Actor with ActorLogging =>
 
   import HcdController._
 
@@ -44,12 +44,12 @@ trait HcdController extends PublisherActor[CurrentState] {
    * For example: def receive: Receive = controllerReceive orElse ...
    */
   protected def controllerReceive: Receive = publisherReceive orElse {
-    case Submit(config)  ⇒ process(config)
+    case Submit(config)  => process(config)
 
-    //    case OneWay(config) ⇒ process(config, oneway = true)
+    //    case OneWay(config) => process(config, oneway = true)
 
     // Can be used by related actors to post the current status
-    case s: CurrentState ⇒ notifySubscribers(s)
+    case s: CurrentState => notifySubscribers(s)
   }
 
   /**

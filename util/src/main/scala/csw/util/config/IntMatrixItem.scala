@@ -12,16 +12,16 @@ import scala.language.implicitConversions
 case class IntMatrix(data: Array[Array[Int]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l <- data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   def apply(row: Int, col: Int) = data(row)(col)
 
   override def canEqual(other: Any) = other.isInstanceOf[IntMatrix]
 
   override def equals(other: Any) = other match {
-    case that: IntMatrix ⇒
+    case that: IntMatrix =>
       this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 case object IntMatrix extends DefaultJsonProtocol {

@@ -196,9 +196,10 @@ public class JBlockingAlarmServiceTests {
     AlarmKey nfKey = JAlarmKey.create(Optional.of("NFIRAOS"));
     AlarmMonitor healthMonitor = alarmService.monitorHealth(nfKey,
       Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler));
+    Thread.sleep(shortDelayMs); // make sure actor has started
     alarmService.setSeverity(key2, JSeverityLevel.Okay);
     alarmService.setSeverity(key3, JSeverityLevel.Okay);
-    Thread.sleep(shortDelayMs); // make sure actor has started
+    Thread.sleep(shortDelayMs);
     assertEquals(alarmService.getHealth(nfKey), JHealth.Good);
     Thread.sleep(shortDelayMs);
     assertEquals(callbackHealth.get(), JHealth.Good);

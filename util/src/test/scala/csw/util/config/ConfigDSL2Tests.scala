@@ -2,11 +2,20 @@ package csw.util.config
 
 import org.scalatest.FunSpec
 import csw.util.config.ConfigDSL._
+import csw.util.config.Configurations.SetupConfig
 
 /**
-  * Test DSL for configs
-  */
+ * Test DSL for configs
+ */
 class ConfigDSL2Tests extends FunSpec {
+
+  describe("checking arrow notation") {
+    val zeroPoint = IntKey("zeroPoint")
+
+    it("should work with an sc") {
+      val defaultMoveSC = SetupConfig("test").add(zeroPoint -> 0)
+    }
+  }
 
   describe("Tests DSL functions") {
     val k1 = IntKey("itest")
@@ -43,9 +52,9 @@ class ConfigDSL2Tests extends FunSpec {
     it("should support key -> value syntax for building configs") {
       val setupConfig1 = sc(
         "test",
-        k1 → Vector(1, 2, 3) withUnits UnitsOfMeasure.Deg,
-        k2 → Vector(1.0, 2.0, 3.0) withUnits UnitsOfMeasure.Meters,
-        k3 → Vector("A", "B", "C")
+        k1 -> Vector(1, 2, 3) withUnits UnitsOfMeasure.Deg,
+        k2 -> Vector(1.0, 2.0, 3.0) withUnits UnitsOfMeasure.Meters,
+        k3 -> Vector("A", "B", "C")
       )
       assert(setupConfig1.get(k1).get.values == Vector(1, 2, 3))
       assert(setupConfig1.get(k1).get.units == UnitsOfMeasure.Deg)
@@ -55,9 +64,9 @@ class ConfigDSL2Tests extends FunSpec {
 
       val setupConfig2 = sc(
         "test",
-        k1 → 1 withUnits UnitsOfMeasure.Deg,
-        k2 → (2.0, UnitsOfMeasure.Meters),
-        k3 → "C"
+        k1 -> 1 withUnits UnitsOfMeasure.Deg,
+        k2 -> (2.0, UnitsOfMeasure.Meters),
+        k3 -> "C"
       )
       assert(get(setupConfig2, k1).get.head == 1)
       assert(get(setupConfig2, k1).get.units == UnitsOfMeasure.Deg)

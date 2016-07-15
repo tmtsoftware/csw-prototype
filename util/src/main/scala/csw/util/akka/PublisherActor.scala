@@ -25,7 +25,7 @@ object PublisherActor {
 }
 
 trait PublisherActor[A] {
-  this: Actor with ActorLogging ⇒
+  this: Actor with ActorLogging =>
 
   import PublisherActor._
 
@@ -37,10 +37,10 @@ trait PublisherActor[A] {
    * For example: def receive: Receive = publisherReceive orElse ...
    */
   def publisherReceive: Receive = {
-    case Subscribe            ⇒ subscribe(sender())
-    case Unsubscribe          ⇒ unsubscribe(sender())
-    case RequestCurrent       ⇒ requestCurrent()
-    case Terminated(actorRef) ⇒ unsubscribe(actorRef)
+    case Subscribe            => subscribe(sender())
+    case Unsubscribe          => unsubscribe(sender())
+    case RequestCurrent       => requestCurrent()
+    case Terminated(actorRef) => unsubscribe(actorRef)
   }
 
   // Subscribes the given actorRef

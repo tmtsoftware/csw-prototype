@@ -65,8 +65,8 @@ object LocationService {
       def getIpAddress: String = {
         import scala.collection.JavaConversions._
         val addresses = for {
-          i ← NetworkInterface.getNetworkInterfaces
-          a ← i.getInetAddresses
+          i <- NetworkInterface.getNetworkInterfaces
+          a <- i.getInetAddresses
         } yield Addr(i.getIndex, a)
         addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
       }
@@ -75,10 +75,10 @@ object LocationService {
       val mdnsKey = "net.mdns.interface"
       //    val config = ConfigFactory.load()
       val mdnsHost = Option(System.getProperty(mdnsKey))
-      mdnsHost.foreach(h ⇒ logger.info(s"Found system property for $mdnsKey: $h"))
+      mdnsHost.foreach(h => logger.info(s"Found system property for $mdnsKey: $h"))
       //    val akkaHost = if (config.hasPath(akkaKey) && config.getString(akkaKey).nonEmpty) Some(config.getString(akkaKey)) else None
       val akkaHost = Option(System.getProperty(akkaKey))
-      akkaHost.foreach(h ⇒ logger.info(s"Found system property for: $akkaKey: $h"))
+      akkaHost.foreach(h => logger.info(s"Found system property for: $akkaKey: $h"))
       val host = akkaHost.getOrElse(mdnsHost.getOrElse(getIpAddress))
       logger.info(s"Using $host as listening IP address")
       System.setProperty(akkaKey, host)
@@ -190,10 +190,10 @@ object LocationService {
    */
   def register(reg: Registration)(implicit system: ActorSystem): Future[RegistrationResult] = {
     reg match {
-      case AkkaRegistration(connection, component, prefix) ⇒
+      case AkkaRegistration(connection, component, prefix) =>
         registerAkkaConnection(connection.componentId, component, prefix)
 
-      case HttpRegistration(connection, port, path) ⇒
+      case HttpRegistration(connection, port, path) =>
         registerHttpConnection(connection.componentId, port, path)
     }
   }
@@ -213,9 +213,9 @@ object LocationService {
     Future {
       val uri = getActorUri(actorRef, system)
       val values = Map(
-        PATH_KEY → uri.getPath,
-        SYSTEM_KEY → uri.getUserInfo,
-        PREFIX_KEY → prefix
+        PATH_KEY -> uri.getPath,
+        SYSTEM_KEY -> uri.getUserInfo,
+        PREFIX_KEY -> prefix
       )
       val service = ServiceInfo.create(dnsType, connection.toString, uri.getPort, 0, 0, values.asJava)
       registry.registerService(service)
@@ -238,7 +238,7 @@ object LocationService {
     val connection = HttpConnection(componentId)
     Future {
       val values = Map(
-        PATH_KEY → path
+        PATH_KEY -> path
       )
       val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
@@ -308,15 +308,15 @@ object LocationService {
 
     val a = self
     Future.sequence(registration.toList.map(LocationService.register)).onComplete {
-      case Success(list) ⇒ registration.foreach { r ⇒
+      case Success(list) => registration.foreach { r =>
         val c = r.connection
         log.info(s"Successful register of connection: $c")
-        list.find(_.componentId == c.componentId).foreach { result ⇒
+        list.find(_.componentId == c.componentId).foreach { result =>
           replyTo.getOrElse(context.parent) ! ComponentRegistered(c, result)
         }
         system.stop(a)
       }
-      case Failure(ex) ⇒
+      case Failure(ex) =>
         val failed = registration.map(_.connection)
         log.error(s"Registration failed for $failed", ex)
         // XXX allan: Shoud an error message be sent to replyTo?
@@ -324,7 +324,7 @@ object LocationService {
     }
 
     def receive: Receive = {
-      case x ⇒ log.error(s"Received unexpected message: $x")
+      case x => log.error(s"Received unexpected message: $x")
     }
   }
 
@@ -373,7 +373,7 @@ object LocationService {
       def rm(loc: Location): Unit = {
         if (loc.isResolved) {
           val unc = Unresolved(loc.connection)
-          connections += (loc.connection → unc)
+          connections += (loc.connection -> unc)
           sendLocationUpdate(unc)
         }
       }
@@ -383,18 +383,18 @@ object LocationService {
     // Check to see if a connection is already resolved, and if so, resolve the service
     private def tryToResolve(connection: Connection): Unit = {
       connections.get(connection) match {
-        case Some(Unresolved(c)) ⇒
+        case Some(Unresolved(c)) =>
           val s = Option(registry.getServiceInfo(dnsType, connection.toString))
           log.info(s"Try to resolve connection: $connection: Result: $s")
           s.foreach(resolveService(connection, _))
-        case x ⇒
+        case x =>
           log.warning(s"Attempt to track and already tracked connection: $x")
       }
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
       // Gets the connection from the name and, if we are tracking the connection, resolve it
-      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc ⇒
+      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc =>
         resolveService(loc.connection, event.getInfo)
       })
     }
@@ -404,35 +404,35 @@ object LocationService {
         // Gets the URI, adding the akka system as user if needed
         def getUri(uriStr: String): Option[URI] = {
           connection match {
-            case _: AkkaConnection ⇒
+            case _: AkkaConnection =>
               val path = info.getPropertyString(PATH_KEY)
               if (path == null) None else getAkkaUri(uriStr, info.getPropertyString(SYSTEM_KEY))
-            case _ ⇒
+            case _ =>
               Some(new URI(uriStr))
           }
         }
 
         info.getURLs(connection.connectionType.name).toList.flatMap(getUri).foreach {
-          uri ⇒
+          uri =>
             log.info(s"Resolve service: resolve URI = $uri")
             connection match {
-              case ac: AkkaConnection ⇒
+              case ac: AkkaConnection =>
                 val prefix = info.getPropertyString(PREFIX_KEY)
                 // An Akka connection is finished after identify returns
                 val rac = ResolvedAkkaLocation(ac, uri, prefix)
                 identify(rac)
-              case hc: HttpConnection ⇒
+              case hc: HttpConnection =>
                 // An Http connection is finished off here
                 val path = info.getPropertyString(PATH_KEY)
                 val rhc = ResolvedHttpLocation(hc, uri, path)
-                connections += (connection → rhc)
+                connections += (connection -> rhc)
                 log.info("Resolved HTTP: " + connections.values.toList)
                 // Here is where the resolved message is sent for an Http Connection
                 sendLocationUpdate(rhc)
             }
         }
       } catch {
-        case e: Exception ⇒ log.error(e, "resolveService: resolve error")
+        case e: Exception => log.error(e, "resolveService: resolve error")
       }
     }
 
@@ -440,7 +440,7 @@ object LocationService {
       val uri = new URI(uriStr)
       Some(new URI("akka.tcp", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))
     } catch {
-      case e: Exception ⇒
+      case e: Exception =>
         // some issue with ipv6 addresses?
         log.error(s"Couldn't make URI from $uriStr and userInfo $userInfo", e)
         None
@@ -461,7 +461,7 @@ object LocationService {
         log.info(s"Resolved: Identified actor $actorRefOpt")
         // Update the table
         val newrc = rs.copy(actorRef = actorRefOpt)
-        connections += (rs.connection → newrc)
+        connections += (rs.connection -> newrc)
         // Watch the actor for death
         context.watch(actorRefOpt.get)
         // Here is where the resolved message is sent for an Akka Connection
@@ -480,24 +480,24 @@ object LocationService {
     override def receive: Receive = {
 
       // Result of sending an Identify message to the actor's URI (actorSelection)
-      case ActorIdentity(id, actorRefOpt) ⇒
+      case ActorIdentity(id, actorRefOpt) =>
         id match {
-          case rs: ResolvedAkkaLocation ⇒ actorIdentified(actorRefOpt, rs)
-          case _                        ⇒ log.warning(s"Received unexpected ActorIdentity id: $id")
+          case rs: ResolvedAkkaLocation => actorIdentified(actorRefOpt, rs)
+          case _                        => log.warning(s"Received unexpected ActorIdentity id: $id")
         }
 
-      case TrackConnection(connection: Connection) ⇒
+      case TrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, add it
         if (!connections.contains(connection)) {
           val unc = Unresolved(connection)
-          connections += connection → unc
+          connections += connection -> unc
           // Should we send an update here?
           sendLocationUpdate(unc)
         }
         // Note this will be called whether we are currently tracking or not, could already be resolved
         tryToResolve(connection)
 
-      case UntrackConnection(connection: Connection) ⇒
+      case UntrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, ignore it
         if (connections.contains(connection)) {
           // Remove from the map and send an updated Resolved List
@@ -506,17 +506,17 @@ object LocationService {
           replyTo.getOrElse(context.parent) ! UnTrackedLocation(connection)
         }
 
-      case Terminated(actorRef) ⇒
+      case Terminated(actorRef) =>
         // If a requested Akka service terminates, remove it, just in case it didn't unregister with mDns...
         connections.values.foreach {
-          case ResolvedAkkaLocation(c, _, _, Some(otherActorRef)) ⇒
+          case ResolvedAkkaLocation(c, _, _, Some(otherActorRef)) =>
             log.info(s"Unresolving terminated actor: $c")
             if (actorRef == otherActorRef) removeService(c)
-          case x ⇒ // should not happen
+          case x => // should not happen
             log.warning(s"Received Terminated message from unknown location: $x")
         }
 
-      case x ⇒
+      case x =>
         log.error(s"Received unexpected message $x")
     }
 

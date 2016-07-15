@@ -19,12 +19,12 @@ trait ConfigServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport
     override def write(configId: ConfigId): JsValue = JsObject(("ConfigId", JsString(configId.id)))
 
     override def read(json: JsValue): ConfigId = json match {
-      case JsObject(fields) ⇒
+      case JsObject(fields) =>
         fields("ConfigId") match {
-          case JsString(s) ⇒ ConfigId(s)
-          case _           ⇒ deserializationError("Expected a ConfigId")
+          case JsString(s) => ConfigId(s)
+          case _           => deserializationError("Expected a ConfigId")
         }
-      case _ ⇒ deserializationError("Expected a ConfigId")
+      case _ => deserializationError("Expected a ConfigId")
     }
   }
 
@@ -42,9 +42,9 @@ trait ConfigServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport
 
     override def read(value: JsValue): ConfigFileInfo =
       value.asJsObject.getFields("path", "id", "comment") match {
-        case Seq(JsString(path), JsString(id), JsString(comment)) ⇒
+        case Seq(JsString(path), JsString(id), JsString(comment)) =>
           ConfigFileInfo(new File(path), ConfigId(id), comment)
-        case x ⇒ deserializationError("Expected ConfigFileInfo as JsObject, but got " + x.getClass)
+        case x => deserializationError("Expected ConfigFileInfo as JsObject, but got " + x.getClass)
       }
   }
 
@@ -62,9 +62,9 @@ trait ConfigServiceJsonFormats extends DefaultJsonProtocol with SprayJsonSupport
 
     override def read(value: JsValue): ConfigFileHistory =
       value.asJsObject.getFields("id", "comment", "time") match {
-        case Seq(JsString(id), JsString(comment), JsNumber(time)) ⇒
+        case Seq(JsString(id), JsString(comment), JsNumber(time)) =>
           ConfigFileHistory(ConfigId(id), comment, new Date(time.longValue()))
-        case x ⇒ deserializationError("Expected ConfigFileHistory as JsObject, but got " + x.getClass)
+        case x => deserializationError("Expected ConfigFileHistory as JsObject, but got " + x.getClass)
       }
   }
 }

@@ -21,11 +21,11 @@ object JSONTests extends DefaultJsonProtocol {
     // Creates a GenericItem[MyData2] from a JSON value (This didn't work with the jsonFormat3 method)
     def reader(json: JsValue): GenericItem[MyData2] = {
       json.asJsObject.getFields("keyName", "value", "units") match {
-        case Seq(JsString(keyName), JsArray(v), u) ⇒
+        case Seq(JsString(keyName), JsArray(v), u) =>
           val units = ConfigJSON.unitsFormat.read(u)
           val value = v.map(MyData2.myData2Format.read)
           GenericItem[MyData2]("MyData2", keyName, value, units)
-        case _ ⇒ throw new DeserializationException("Color expected")
+        case _ => throw new DeserializationException("Color expected")
       }
     }
 

@@ -41,17 +41,17 @@ case class AlarmModel(
   def asMap(): Map[String, String] = {
     import AlarmModel.F
     Map(
-      F.subsystem → subsystem,
-      F.component → component,
-      F.name → name,
-      F.description → description,
-      F.location → location,
-      F.alarmType → alarmType.toString,
-      F.severityLevels → severityLevels.mkString(":"),
-      F.probableCause → probableCause,
-      F.operatorResponse → operatorResponse,
-      F.acknowledge → acknowledge.toString,
-      F.latched → latched.toString
+      F.subsystem -> subsystem,
+      F.component -> component,
+      F.name -> name,
+      F.description -> description,
+      F.location -> location,
+      F.alarmType -> alarmType.toString,
+      F.severityLevels -> severityLevels.mkString(":"),
+      F.probableCause -> probableCause,
+      F.operatorResponse -> operatorResponse,
+      F.acknowledge -> acknowledge.toString,
+      F.latched -> latched.toString
     )
   }
 }
@@ -116,13 +116,13 @@ object AlarmModel extends ByteStringDeserializerDefault {
     case object Critical extends SeverityLevelBase(3, "Critical")
 
     def apply(name: String): Option[SeverityLevel] = name match {
-      case Disconnected.name  ⇒ Some(Disconnected)
-      case Indeterminate.name ⇒ Some(Indeterminate)
-      case Okay.name          ⇒ Some(Okay)
-      case Warning.name       ⇒ Some(Warning)
-      case Major.name         ⇒ Some(Major)
-      case Critical.name      ⇒ Some(Critical)
-      case _                  ⇒ None
+      case Disconnected.name  => Some(Disconnected)
+      case Indeterminate.name => Some(Indeterminate)
+      case Okay.name          => Some(Okay)
+      case Warning.name       => Some(Warning)
+      case Major.name         => Some(Major)
+      case Critical.name      => Some(Critical)
+      case _                  => None
     }
   }
 
@@ -156,17 +156,17 @@ object AlarmModel extends ByteStringDeserializerDefault {
     case object System extends AlarmType
 
     def apply(name: String): AlarmType = name match {
-      case "Absolute"     ⇒ Absolute
-      case "BitPattern"   ⇒ BitPattern
-      case "Calculated"   ⇒ Calculated
-      case "Deviation"    ⇒ Deviation
-      case "Discrepancy"  ⇒ Discrepancy
-      case "Instrument"   ⇒ Instrument
-      case "RateChange"   ⇒ RateChange
-      case "RecipeDriven" ⇒ RecipeDriven
-      case "Safety"       ⇒ Safety
-      case "Statistical"  ⇒ Statistical
-      case "System"       ⇒ System
+      case "Absolute"     => Absolute
+      case "BitPattern"   => BitPattern
+      case "Calculated"   => Calculated
+      case "Deviation"    => Deviation
+      case "Discrepancy"  => Discrepancy
+      case "Instrument"   => Instrument
+      case "RateChange"   => RateChange
+      case "RecipeDriven" => RecipeDriven
+      case "Safety"       => Safety
+      case "Statistical"  => Statistical
+      case "System"       => System
     }
   }
 
@@ -266,9 +266,9 @@ private[alarms] object AlarmModelSmall {
   def apply(seq: Seq[Option[ByteString]]): Option[AlarmModelSmall] = {
     val formatter = implicitly[ByteStringDeserializer[String]]
     for {
-      severityLevels ← seq.head.map(formatter.deserialize(_).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Disconnected)))
-      acknowledge ← seq(1).map(formatter.deserialize(_).toBoolean)
-      latched ← seq(2).map(formatter.deserialize(_).toBoolean)
+      severityLevels <- seq.head.map(formatter.deserialize(_).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Disconnected)))
+      acknowledge <- seq(1).map(formatter.deserialize(_).toBoolean)
+      latched <- seq(2).map(formatter.deserialize(_).toBoolean)
     } yield AlarmModelSmall(severityLevels, acknowledge, latched)
   }
 }

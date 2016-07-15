@@ -33,41 +33,41 @@ object ConfigManagerTestHelper extends FunSuite {
     import system.dispatcher
     val result = for {
       //      // Try to update a file that does not exist (should fail)
-      //      updateIdNull ← manager.update(path1, ConfigData(contents2), comment2) recover {
-      //        case e: IOException ⇒ null
+      //      updateIdNull <- manager.update(path1, ConfigData(contents2), comment2) recover {
+      //        case e: IOException => null
       //      }
 
       // Add, then update the file twice
-      createId1 ← manager.create(path1, ConfigData(contents1), oversize, comment1)
-      createId2 ← manager.createOrUpdate(path2, ConfigData(contents1), oversize, comment1)
-      updateId1 ← manager.update(path1, ConfigData(contents2), comment2)
-      updateId2 ← manager.createOrUpdate(path1, ConfigData(contents3), oversize, comment3)
+      createId1 <- manager.create(path1, ConfigData(contents1), oversize, comment1)
+      createId2 <- manager.createOrUpdate(path2, ConfigData(contents1), oversize, comment1)
+      updateId1 <- manager.update(path1, ConfigData(contents2), comment2)
+      updateId2 <- manager.createOrUpdate(path1, ConfigData(contents3), oversize, comment3)
 
       // Check that we can access each version
-      result1 ← manager.get(path1).flatMap(_.get.toFutureString)
-      result2 ← manager.get(path1, Some(createId1)).flatMap(_.get.toFutureString)
-      result3 ← manager.get(path1, Some(updateId1)).flatMap(_.get.toFutureString)
-      result4 ← manager.get(path1, Some(updateId2)).flatMap(_.get.toFutureString)
-      result5 ← manager.get(path2).flatMap(_.get.toFutureString)
-      result6 ← manager.get(path2, Some(createId2)).flatMap(_.get.toFutureString)
+      result1 <- manager.get(path1).flatMap(_.get.toFutureString)
+      result2 <- manager.get(path1, Some(createId1)).flatMap(_.get.toFutureString)
+      result3 <- manager.get(path1, Some(updateId1)).flatMap(_.get.toFutureString)
+      result4 <- manager.get(path1, Some(updateId2)).flatMap(_.get.toFutureString)
+      result5 <- manager.get(path2).flatMap(_.get.toFutureString)
+      result6 <- manager.get(path2, Some(createId2)).flatMap(_.get.toFutureString)
 
-      historyList1 ← manager.history(path1)
-      historyList2 ← manager.history(path2)
+      historyList1 <- manager.history(path1)
+      historyList2 <- manager.history(path2)
 
       // Test default file features
-      default1 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
-      _ ← manager.setDefault(path1, Some(updateId1))
-      default2 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
-      _ ← manager.resetDefault(path1)
-      default3 ← manager.getDefault(path1).flatMap(_.get.toFutureString)
-      _ ← manager.setDefault(path1, Some(updateId2))
+      default1 <- manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ <- manager.setDefault(path1, Some(updateId1))
+      default2 <- manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ <- manager.resetDefault(path1)
+      default3 <- manager.getDefault(path1).flatMap(_.get.toFutureString)
+      _ <- manager.setDefault(path1, Some(updateId2))
 
       // test list()
-      list ← manager.list()
+      list <- manager.list()
 
       //      // Should throw exception if we try to create a file that already exists
-      //      createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
-      //        case e: IOException ⇒ null
+      //      createIdNull <- manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
+      //        case e: IOException => null
       //      }
 
     } yield {
@@ -89,11 +89,11 @@ object ConfigManagerTestHelper extends FunSuite {
       assert(historyList1(2).comment == comment1)
 
       assert(list.size == 3) // +1 for default file
-      for (info ← list) {
+      for (info <- list) {
         info.path match {
-          case this.path1 ⇒ assert(info.comment == this.comment3)
-          case this.path2 ⇒ assert(info.comment == this.comment1)
-          case _          ⇒
+          case this.path1 => assert(info.comment == this.comment3)
+          case this.path2 => assert(info.comment == this.comment1)
+          case _          =>
         }
       }
 
@@ -106,9 +106,9 @@ object ConfigManagerTestHelper extends FunSuite {
       logger.info(s"\n\n runTests passed\n\n")
     }
     result.onComplete {
-      case Success(_) ⇒
+      case Success(_) =>
         logger.info("runTest done")
-      case Failure(ex) ⇒
+      case Failure(ex) =>
         logger.error("runTest failed", ex)
     }
     result
@@ -121,19 +121,19 @@ object ConfigManagerTestHelper extends FunSuite {
     // Sequential, non-blocking for-comprehension
     val result = for {
       // Check that we can access each version
-      result1 ← manager.get(path1).flatMap(_.get.toFutureString)
-      result5 ← manager.get(path2).flatMap(_.get.toFutureString)
+      result1 <- manager.get(path1).flatMap(_.get.toFutureString)
+      result5 <- manager.get(path2).flatMap(_.get.toFutureString)
 
       // test history()
-      historyList1 ← manager.history(path1)
-      historyList2 ← manager.history(path2)
+      historyList1 <- manager.history(path1)
+      historyList2 <- manager.history(path2)
 
       // test list()
-      list ← manager.list()
+      list <- manager.list()
 
       // Should throw exception if we try to create a file that already exists
-      createIdNull ← manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
-        case e: IOException ⇒ null
+      createIdNull <- manager.create(path1, ConfigData(contents2), oversize, comment2) recover {
+        case e: IOException => null
       }
     } yield {
       // At this point all of the above Futures have completed,so we can do some tests
@@ -155,20 +155,20 @@ object ConfigManagerTestHelper extends FunSuite {
 
       println(s"XXX list=$list, ex1=${list.exists(_.path == path1)}")
 
-      for (info ← list) {
+      for (info <- list) {
         info.path match {
-          case this.path1 ⇒ assert(info.comment == this.comment3)
-          case this.path2 ⇒ assert(info.comment == this.comment1)
-          case _          ⇒ // other files: README, *.default...
+          case this.path1 => assert(info.comment == this.comment3)
+          case this.path2 => assert(info.comment == this.comment1)
+          case _          => // other files: README, *.default...
         }
       }
 
       logger.info(s"\n\n runTests2 passed\n\n")
     }
     result.onComplete {
-      case Success(_) ⇒
+      case Success(_) =>
         logger.info("runTest done")
-      case Failure(ex) ⇒
+      case Failure(ex) =>
         logger.error("runTest failed", ex)
     }
     result
@@ -178,15 +178,15 @@ object ConfigManagerTestHelper extends FunSuite {
   private def test3(manager: ConfigManager)(implicit system: ActorSystem): Future[Unit] = {
     import system.dispatcher
     val f = for {
-      _ ← manager.get(path1)
-      _ ← manager.update(path1, ConfigData(s"${contents2}Added by ${manager.name}\n"), s"$comment1 - ${manager.name}")
-      _ ← manager.get(path2)
-      _ ← manager.update(path2, ConfigData(s"${contents1}Added by ${manager.name}\n"), s"$comment2 - ${manager.name}")
+      _ <- manager.get(path1)
+      _ <- manager.update(path1, ConfigData(s"${contents2}Added by ${manager.name}\n"), s"$comment1 - ${manager.name}")
+      _ <- manager.get(path2)
+      _ <- manager.update(path2, ConfigData(s"${contents1}Added by ${manager.name}\n"), s"$comment2 - ${manager.name}")
     } yield ()
     f.onComplete {
-      case Success(_) ⇒
+      case Success(_) =>
         logger.info(s"test3 (${manager.name}) done")
-      case Failure(ex) ⇒
+      case Failure(ex) =>
         logger.error(s"test3 (${manager.name}) failed", ex)
     }
     // XXX removing this causes conflict when using svn, since both managers point to same repo (not a good idea)!
@@ -198,14 +198,14 @@ object ConfigManagerTestHelper extends FunSuite {
   def concurrentTest(managers: List[ConfigManager], oversize: Boolean)(implicit system: ActorSystem): Future[Unit] = {
     import system.dispatcher
     val result = Future.sequence {
-      val f = for (manager ← managers) yield {
+      val f = for (manager <- managers) yield {
         test3(manager)
       }
       // wait here, since we want to do the updates sequentially for each configManager
       f.foreach(Await.ready(_, 10.seconds))
       f
     }
-    result.map(_ ⇒ ())
+    result.map(_ => ())
   }
 }
 

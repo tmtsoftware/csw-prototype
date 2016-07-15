@@ -17,6 +17,7 @@ import javacsw.services.event.JEventService;
 import javacsw.services.event.JEventSubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.PartialFunction;
 import scala.concurrent.duration.FiniteDuration;
@@ -33,6 +34,7 @@ import static javacsw.util.config.JItems.*;
  * Java test for event service
  */
 @SuppressWarnings("FieldCanBeLocal")
+@Ignore // Don't run this test automatically, since it requires Hornetq to be running
 public class JEventPubSubTest {
   // --- configure this ---
 

@@ -27,11 +27,11 @@ class ConfigServiceAnnexTests extends FunSuite with LazyLogging {
 
     try {
       val f = for {
-        id ← client.post(file)
-        exists1 ← client.head(id)
-        file1 ← client.get(id, file)
-        delete1 ← client.delete(id)
-        exists2 ← client.head(id)
+        id <- client.post(file)
+        exists1 <- client.head(id)
+        file1 <- client.get(id, file)
+        delete1 <- client.delete(id)
+        exists2 <- client.head(id)
       } yield {
         assert(id == HashGeneratorUtils.generateSHA1(file))
         assert(exists1)

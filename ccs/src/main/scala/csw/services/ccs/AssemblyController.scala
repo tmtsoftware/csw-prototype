@@ -104,7 +104,7 @@ object AssemblyController {
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
 trait AssemblyController extends LocationTrackerClientActor with PublisherActor[CurrentStates] {
-  this: Actor with ActorLogging ⇒
+  this: Actor with ActorLogging =>
 
   import AssemblyController._
   import context.dispatcher
@@ -116,16 +116,16 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
    * Receive actor messages
    */
   protected def controllerReceive: Receive = publisherReceive orElse trackerClientReceive orElse {
-    case Submit(configArg) ⇒ submit(allResolved, configArg, oneway = false, sender())
+    case Submit(configArg) => submit(allResolved, configArg, oneway = false, sender())
 
-    case OneWay(configArg) ⇒ submit(allResolved, configArg, oneway = true, sender())
+    case OneWay(configArg) => submit(allResolved, configArg, oneway = true, sender())
 
-    case Request(config) ⇒
+    case Request(config) =>
       val replyTo = sender()
       request(allResolved, config).onComplete {
-        case Success(resp) ⇒
+        case Success(resp) =>
           replyTo ! resp
-        case Failure(ex) ⇒
+        case Failure(ex) =>
           log.error("Request failed", ex)
           replyTo ! RequestResult(RequestFailed(ex.toString), None)
       }
@@ -144,13 +144,13 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
   ): Unit = {
     val statusReplyTo = if (oneway) None else Some(replyTo)
     val valid = config match {
-      case sc: SetupConfigArg   ⇒ setup(locationsResolved, sc, statusReplyTo)
-      case ob: ObserveConfigArg ⇒ observe(locationsResolved, ob, statusReplyTo)
+      case sc: SetupConfigArg   => setup(locationsResolved, sc, statusReplyTo)
+      case ob: ObserveConfigArg => observe(locationsResolved, ob, statusReplyTo)
     }
     valid match {
-      case Valid ⇒
+      case Valid =>
         replyTo ! CommandStatus.Accepted(config.info.runId)
-      case Invalid(reason) ⇒
+      case Invalid(reason) =>
         replyTo ! CommandStatus.Error(config.info.runId, reason)
     }
   }
@@ -194,7 +194,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
                                   matcher: Matcher = StateVariable.defaultMatcher): Unit = {
     // Cancel any previous state matching, so that no timeout errors are sent to the replyTo actor
     stateMatcherActor.foreach(context.stop)
-    replyTo.foreach { actorRef ⇒
+    replyTo.foreach { actorRef =>
       // Wait for the demand states to match the current states, then reply to the sender with the command status
       val props = HcdStatusMatcherActor.props(demandStates.toList, hcds, actorRef, runId, timeout, matcher)
       stateMatcherActor = Some(context.actorOf(props))
@@ -214,8 +214,8 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
                                        replyTo: Option[ActorRef]): Validation = {
     if (locationsResolved) {
       val pairs = for {
-        config ← configArg.configs
-        actorRef ← getActorRefs(config.prefix)
+        config <- configArg.configs
+        actorRef <- getActorRefs(config.prefix)
       } yield {
         log.debug(s"Forwarding $config to $actorRef")
         actorRef ! HcdController.Submit(config)
@@ -241,7 +241,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
    */
   protected def subscribe(locations: Set[Location], subscriber: ActorRef = self): Unit = {
     val x = locations.collect {
-      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) ⇒ actorRefOpt
+      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) => actorRefOpt
     }
     val hcds = x.flatten
     hcds.foreach(_ ! PublisherActor.Subscribe)

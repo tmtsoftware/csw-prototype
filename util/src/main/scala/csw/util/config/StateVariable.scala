@@ -17,7 +17,7 @@ object StateVariable {
    * Type of a function that returns true if two state variables (demand and current)
    * match (or are close enough, which is implementation dependent)
    */
-  type Matcher = (DemandState, CurrentState) ⇒ Boolean
+  type Matcher = (DemandState, CurrentState) => Boolean
 
   /**
    * The default matcher for state variables tests for an exact match

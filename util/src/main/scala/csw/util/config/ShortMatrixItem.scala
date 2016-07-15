@@ -12,7 +12,7 @@ import scala.language.implicitConversions
 case class ShortMatrix(data: Array[Array[Short]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l <- data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   /**
    * Gets the value at the given row and column
@@ -22,9 +22,9 @@ case class ShortMatrix(data: Array[Array[Short]]) {
   override def canEqual(other: Any) = other.isInstanceOf[ShortMatrix]
 
   override def equals(other: Any) = other match {
-    case that: ShortMatrix ⇒
+    case that: ShortMatrix =>
       this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 
