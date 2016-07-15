@@ -371,10 +371,16 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
       exists(sc1, k1) shouldBe true
       exists(sc1, k2) shouldBe true
 
-      val sc2 = sc(ck2, k1 → 3, k2 → 44.3)
+      val sc2 = sc(
+        ck2,
+        k1 → 3 withUnits UnitsOfMeasure.Deg,
+        k2 → 44.3 withUnits UnitsOfMeasure.Meters
+      )
       csize(sc2) should be(2)
       exists(sc2, k1) shouldBe true
       exists(sc2, k2) shouldBe true
+      units(item(sc2, k1)) shouldBe UnitsOfMeasure.Deg
+      units(item(sc2, k2)) shouldBe UnitsOfMeasure.Meters
     }
   }
 

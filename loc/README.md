@@ -23,6 +23,17 @@ If you want to specify the IP address yourself, you can also call it like this:
 
     LocationService.initInterface(hostnameOrIpAddress)
 
+IPv6 Addresses
+--------------
+
+The Location Service currently has problems with IPv6 addresses.
+To avoid problems, add this option when running applications using the Location Service:
+
+    -Djava.net.preferIPv4Stack=true
+
+Note that it is not enough to just set the system property once the application is running.
+It needs to be on the command line to the application.
+
 Service Types
 -------------
 

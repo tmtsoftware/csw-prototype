@@ -4,9 +4,9 @@ import org.scalatest.FunSpec
 import csw.util.config.ConfigDSL._
 
 /**
- * Test functional DSL for configs
+ * Test DSL for configs
  */
-class ConfigDSLFunctionsTests extends FunSpec {
+class ConfigDSL2Tests extends FunSpec {
 
   describe("Tests DSL functions") {
     val k1 = IntKey("itest")
@@ -43,22 +43,26 @@ class ConfigDSLFunctionsTests extends FunSpec {
     it("should support key -> value syntax for building configs") {
       val setupConfig1 = sc(
         "test",
-        k1 → Vector(1, 2, 3),
-        k2 → Vector(1.0, 2.0, 3.0),
+        k1 → Vector(1, 2, 3) withUnits UnitsOfMeasure.Deg,
+        k2 → Vector(1.0, 2.0, 3.0) withUnits UnitsOfMeasure.Meters,
         k3 → Vector("A", "B", "C")
       )
       assert(setupConfig1.get(k1).get.values == Vector(1, 2, 3))
+      assert(setupConfig1.get(k1).get.units == UnitsOfMeasure.Deg)
       assert(setupConfig1.get(k2).get.head == 1.0)
+      assert(setupConfig1.get(k2).get.units == UnitsOfMeasure.Meters)
       assert(setupConfig1.get(k3).get.value(1) == "B")
 
       val setupConfig2 = sc(
         "test",
-        k1 → 1,
-        k2 → 2.0,
+        k1 → 1 withUnits UnitsOfMeasure.Deg,
+        k2 → 2.0 withUnits UnitsOfMeasure.Meters,
         k3 → "C"
       )
       assert(get(setupConfig2, k1).get.head == 1)
+      assert(get(setupConfig2, k1).get.units == UnitsOfMeasure.Deg)
       assert(setupConfig2.get(k2).get.head == 2.0)
+      assert(setupConfig2.get(k2).get.units == UnitsOfMeasure.Meters)
       assert(setupConfig2.get(k3).get.head == "C")
     }
   }

@@ -1,5 +1,7 @@
 package csw.util.config
 
+import java.time.Instant
+
 import csw.util.config.Configurations._
 import csw.util.config.Events._
 import csw.util.config.StateVariable._
@@ -58,9 +60,17 @@ object ConfigJSON extends DefaultJsonProtocol {
     }
   }
 
+  implicit def eventTimeFormat: JsonFormat[EventTime] = new JsonFormat[EventTime] {
+    def write(et: EventTime): JsValue = JsString(et.toString)
+
+    def read(json: JsValue): EventTime = json match {
+      case JsString(s) ⇒ Instant.parse(s)
+      case _           ⇒ unexpectedJsValueError(json)
+    }
+  }
+
   implicit val configKeyFormat = jsonFormat2(ConfigKey.apply)
   implicit val obsIdFormat = jsonFormat1(ObsId.apply)
-  implicit val eventTimeFormat = jsonFormat1(EventTime.apply)
   implicit val eventInfoFormat = jsonFormat4(EventInfo.apply)
 
   // JSON type tags

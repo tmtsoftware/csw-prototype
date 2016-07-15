@@ -199,8 +199,9 @@ public class JAlarmServiceTests {
         alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
         alarmService.setSeverity(key3, JSeverityLevel.Okay).get();
         Thread.sleep(shortDelayMs); // make sure actor has started
-        assertEquals(callbackHealth.get(), JHealth.Good); // XXX failed here once: need more delay?
         assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Good);
+        Thread.sleep(shortDelayMs); // make sure actor has started
+        assertEquals(callbackHealth.get(), JHealth.Good);
 
         Thread.sleep(delayMs); // wait for severity to expire and become "Indeterminate"
         assertEquals(callbackHealth.get(), JHealth.Bad);
