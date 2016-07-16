@@ -1,6 +1,7 @@
 package csw.services.alarms
 
 import java.net.InetSocketAddress
+import java.time.{Clock, LocalDateTime}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus}
@@ -144,6 +145,9 @@ private class HealthMonitorWorkorActor(
     case x => log.debug(s"Ignoring message since not ready: $x")
   }
 
+  // Returns a timestamp for an alarm
+  private def timestamp(): LocalDateTime = LocalDateTime.now(Clock.systemUTC())
+
   // expect updates to the alarm severity or state, then calculate the new health value
   private def working(alarmMap: Map[AlarmKey, HealthInfo]): Receive = {
     case h @ HealthInfo(alarmKey, severityLevel, alarmState) =>
@@ -156,7 +160,7 @@ private class HealthMonitorWorkorActor(
         context.become(working(newMap))
         updateHealth(newMap)
         if (alarmState.shelvedState == ShelvedState.Normal && alarmState.activationState == ActivationState.Normal)
-          notifyListeners(AlarmStatus(alarmKey, severityLevel, alarmState))
+          notifyListeners(AlarmStatus(timestamp(), alarmKey, severityLevel, alarmState))
       }
   }
 
@@ -167,20 +171,20 @@ private class HealthMonitorWorkorActor(
     // Notify listeners if the health changed
     if (healthOpt.isEmpty || healthOpt.get != health) {
       healthOpt = Some(health)
-      notifyListeners(HealthStatus(alarmKeyPattern, health))
+      notifyListeners(HealthStatus(timestamp(), alarmKeyPattern, health))
     }
   }
 
   // Notify the subscribers of a change in the health
   private def notifyListeners(healthStatus: HealthStatus): Unit = {
     subscriber.foreach(_ ! healthStatus)
-    notifyHealth.foreach(_(healthStatus))
+    notifyHealth.foreach(f => f(healthStatus))
   }
 
   // Notify the subscribers of a change in the severity of an alarm
   private def notifyListeners(alarmStatus: AlarmStatus): Unit = {
     subscriber.foreach(_ ! alarmStatus)
-    notifyAlarm.foreach(_(alarmStatus))
+    notifyAlarm.foreach(f => f(alarmStatus))
   }
 }
 

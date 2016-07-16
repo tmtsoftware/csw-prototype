@@ -93,14 +93,14 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
         val a = alarmStatus.alarmKey
-        logger.info(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
+        logger.info(s"Alarm Status: ${alarmStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
         callbackSev = alarmStatus.severity
       }
 
       // Called when the health status changes
       def printHealthStatus(healthStatus: HealthStatus): Unit = {
         val a = healthStatus.key
-        logger.info(s"Health Status: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
+        logger.info(s"Health Status: ${healthStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
         callbackHealth = Some(healthStatus.health)
       }
 
