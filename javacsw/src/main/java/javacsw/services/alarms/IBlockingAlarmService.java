@@ -70,7 +70,7 @@ public interface IBlockingAlarmService {
    * @param alarmKey the key for the alarm
    * @return a severity level result
    */
-  SeverityLevel getSeverity(AlarmKey alarmKey);
+  CurrentSeverity getSeverity(AlarmKey alarmKey);
 
   /**
    * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.

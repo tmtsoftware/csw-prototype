@@ -6,7 +6,7 @@ import java.util.Optional
 
 import akka.actor.{ActorRef, ActorRefFactory}
 import akka.util.Timeout
-import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
+import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmService.AlarmMonitor
 import csw.services.alarms.{AlarmKey, AlarmModel, AlarmService, AlarmState}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
@@ -86,7 +86,7 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Unit =
     Await.result(alarmService.setSeverity(alarmKey, severity), timeout.duration)
 
-  override def getSeverity(alarmKey: AlarmKey): SeverityLevel =
+  override def getSeverity(alarmKey: AlarmKey): CurrentSeverity =
     Await.result(alarmService.getSeverity(alarmKey), timeout.duration)
 
   override def acknowledgeAlarm(alarmKey: AlarmKey): Unit =

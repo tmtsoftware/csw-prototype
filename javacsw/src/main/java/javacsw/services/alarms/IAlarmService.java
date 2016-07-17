@@ -72,7 +72,7 @@ public interface IAlarmService {
      * @param alarmKey the key for the alarm
      * @return a future severity level result
      */
-    CompletableFuture<SeverityLevel> getSeverity(AlarmKey alarmKey);
+    CompletableFuture<CurrentSeverity> getSeverity(AlarmKey alarmKey);
 
     /**
      * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.

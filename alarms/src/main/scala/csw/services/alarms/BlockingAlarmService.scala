@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.{ActorRef, ActorRefFactory}
 import akka.util.Timeout
-import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
+import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
 import AlarmService._
@@ -92,7 +92,7 @@ case class BlockingAlarmService(alarmService: AlarmService)(implicit val timeout
    * @param alarmKey the key for the alarm
    * @return a severity level result
    */
-  def getSeverity(alarmKey: AlarmKey): SeverityLevel =
+  def getSeverity(alarmKey: AlarmKey): CurrentSeverity =
     Await.result(alarmService.getSeverity(alarmKey), timeout.duration)
 
   /**

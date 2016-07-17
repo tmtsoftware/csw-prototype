@@ -153,7 +153,7 @@ private class HealthMonitorWorkorActor(
     case h @ HealthInfo(alarmKey, severityLevel, alarmState) =>
       val update = if (alarmMap.contains(alarmKey)) {
         val healthInfo = alarmMap(alarmKey)
-        healthInfo.severityLevel != h.severityLevel || healthInfo.alarmState != h.alarmState
+        healthInfo.currentSeverity != h.currentSeverity || healthInfo.alarmState != h.alarmState
       } else false
       if (update) {
         val newMap = alarmMap + (alarmKey -> h)

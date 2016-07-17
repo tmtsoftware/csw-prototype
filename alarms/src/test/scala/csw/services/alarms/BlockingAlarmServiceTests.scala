@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
+import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.LocationService
@@ -78,14 +78,14 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       }
 
       // For testing callback
-      var callbackSev: SeverityLevel = SeverityLevel.Disconnected
+      var callbackSev: CurrentSeverity = CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected)
       var callbackHealth: Option[Health] = None
 
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
         val a = alarmStatus.alarmKey
-        logger.info(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
-        callbackSev = alarmStatus.severity
+        logger.info(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
+        callbackSev = alarmStatus.currentSeverity
       }
 
       // Called when the health status changes
@@ -107,34 +107,41 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       alarmService.setSeverity(key1, SeverityLevel.Critical)
       Thread.sleep(delayMs) // wait for severity to expire
 
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Critical) // alarm is latched, so stays at critical
-      assert(callbackSev == SeverityLevel.Critical)
+      // alarm is latched, so stays at critical
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Critical))
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Critical))
 
       alarmService.setSeverity(key1, SeverityLevel.Warning)
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Critical) // alarm is latched, so stays at critical
-      assert(callbackSev == SeverityLevel.Critical)
+      // alarm is latched, so stays at critical
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
+      Thread.sleep(shortDelayMs)
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
 
       // Acknowledge the alarm, which clears it, resets it back to Okay
       alarmService.acknowledgeAlarm(key1)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback, so the test below passes
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Okay) // alarm was cleared
-      assert(callbackSev == SeverityLevel.Okay)
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay)) // alarm was cleared
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
 
       Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Disconnected) // alarm severity key expired
-      assert(callbackSev == SeverityLevel.Disconnected)
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected)) // alarm severity key expired
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected))
 
       // Test alarm in shelved state
       alarmService.setShelvedState(key1, ShelvedState.Shelved)
       alarmService.setSeverity(key1, SeverityLevel.Warning)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Warning)
-      assert(callbackSev == SeverityLevel.Disconnected)
+      // getSeverity should return the severity that was set ...
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+      // but the callback should not have been called, since alarm is shelved (callbackSev should have previous value)
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected))
+      // un-shelve the alarm and try it again
       alarmService.setShelvedState(key1, ShelvedState.Normal)
       alarmService.setSeverity(key1, SeverityLevel.Warning)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
-      assert(callbackSev == SeverityLevel.Warning)
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Warning)
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+      // Since the alarm is no longer shelved, the callback should be called this time
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
 
       // Test alarm in deactivated state
       alarmService.acknowledgeAlarm(key1)
@@ -143,13 +150,16 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       alarmService.setActivationState(key1, ActivationState.OutOfService)
       alarmService.setSeverity(key1, SeverityLevel.Warning)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Warning)
-      assert(callbackSev == SeverityLevel.Okay)
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+      // callback should not have been called, callbackSev should have previous value
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
+      // reactivate the alarm
       alarmService.setActivationState(key1, ActivationState.Normal)
       alarmService.setSeverity(key1, SeverityLevel.Warning)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
-      assert(callbackSev == SeverityLevel.Warning)
-      assert(alarmService.getSeverity(key1) == SeverityLevel.Warning)
+      assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+      // This time the callback should have been called
+      assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
 
       // Test health monitor
       alarmMonitor.stop()

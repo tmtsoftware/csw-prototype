@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorRefFactory, PoisonPill}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus, SeverityLevel}
+import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
@@ -44,10 +44,9 @@ object AlarmService {
   private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
     val connection = HttpConnection(ComponentId(asName, ComponentType.Service))
-    LocationService.resolve(Set(connection)).map {
-      case locationsReady =>
-        val uri = locationsReady.locations.head.asInstanceOf[ResolvedHttpLocation].uri
-        RedisClient(uri.getHost, uri.getPort)
+    LocationService.resolve(Set(connection)).map { locationsReady =>
+      val uri = locationsReady.locations.head.asInstanceOf[ResolvedHttpLocation].uri
+      RedisClient(uri.getHost, uri.getPort)
     }
   }
 
@@ -98,7 +97,7 @@ object AlarmService {
   }
 
   // Information needed about each alarm in order to calculate the health
-  private[alarms] case class HealthInfo(alarmKey: AlarmKey, severityLevel: SeverityLevel, alarmState: AlarmState)
+  private[alarms] case class HealthInfo(alarmKey: AlarmKey, currentSeverity: CurrentSeverity, alarmState: AlarmState)
 
 }
 
@@ -158,11 +157,12 @@ trait AlarmService {
 
   /**
    * Gets the severity level for the given alarm
+   * (or the latched severity, if the alarm is latched and unacknowledged)
    *
    * @param alarmKey the key for the alarm
    * @return a future severity level result
    */
-  def getSeverity(alarmKey: AlarmKey): Future[SeverityLevel]
+  def getSeverity(alarmKey: AlarmKey): Future[CurrentSeverity]
 
   /**
    * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
@@ -327,74 +327,82 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     for {
       alarm <- getAlarmSmall(alarmKey)
       alarmState <- getAlarmState(alarmKey)
-      currentSeverity <- getSeverity(alarmKey)
-      result <- setSeverity(alarmKey, alarm, alarmState, severity, currentSeverity)
+      result <- setSeverity(alarmKey, alarm, alarmState, severity)
     } yield result
   }
 
   // Sets the severity of the alarm, if allowed based on the alarm state
-  private def setSeverity(alarmKey: AlarmKey, alarm: AlarmModelSmall, alarmState: AlarmState,
-                          severity: SeverityLevel, currentSeverity: SeverityLevel): Future[Unit] = {
+  private def setSeverity(alarmKey: AlarmKey, alarm: AlarmModelSmall, alarmState: AlarmState, severity: SeverityLevel): Future[Unit] = {
 
     // Check that the severity is listed in the spec (XXX Should this throw an exception?)
     if (severity != SeverityLevel.Disconnected && !alarm.severityLevels.contains(severity))
       logger.warn(s"Alarm $alarmKey is not listed as supporting severity level $severity")
 
-    // Is the alarm latched?
-    val newSeverity = if (alarm.latched) {
+    // If the alarm latched and the latch needs reset, use the latched severity, or the given severity if higher
+    val latchedSeverity = if (alarm.latched) {
       if (alarmState.latchedState == LatchedState.Normal) severity
       else {
-        if (severity.level > currentSeverity.level) severity
-        else currentSeverity
+        if (severity.level > alarmState.latchedSeverity.level) severity
+        else alarmState.latchedSeverity
       }
     } else severity
 
-    // Do we need to update the latched state or the acknowledge state?
-    val updateLatchedState = alarm.latched && severity.isAlarm && alarmState.latchedState == LatchedState.Normal
-    val updateAckState = alarm.acknowledge && severity.isAlarm && alarmState.acknowledgedState == AcknowledgedState.Normal
+    val s = if (latchedSeverity != severity) s" (latched: $latchedSeverity)" else ""
+    logger.debug(s"Setting severity for $alarmKey to $severity$s")
 
     val redisTransaction = redisClient.transaction()
-    logger.debug(s"Setting severity for $alarmKey to $newSeverity")
 
-    val f1 = redisTransaction.set(alarmKey.severityKey, newSeverity.name, exSeconds = Some(refreshSecs * maxMissedRefresh))
+    // Set the severity key to the component's reported severity, so we have a record of that
+    val f1 = redisTransaction.set(alarmKey.severityKey, severity.name, exSeconds = Some(refreshSecs * maxMissedRefresh))
 
-    val f2 = if (updateLatchedState) {
+    // Set the latch to NeedsReset, if needed
+    val f2 = if (alarm.latched && severity.isAlarm && alarmState.latchedState == LatchedState.Normal) {
       logger.debug(s"Setting latched state for $alarmKey to NeedsReset")
-      Future.sequence(List(
-        redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedStateField, LatchedState.NeedsReset.name),
-        redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedSeverityField, newSeverity.name)
-      ))
+      redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedStateField, LatchedState.NeedsReset.name)
     } else Future.successful(true)
 
-    val f3 = if (updateAckState) {
+    // Update (increase) the latched severity if needed
+    val f3 = if (alarm.latched && severity.isAlarm && latchedSeverity != alarmState.latchedSeverity) {
+      logger.debug(s"Setting latched severity for $alarmKey to $latchedSeverity")
+      redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedSeverityField, latchedSeverity.name)
+    } else Future.successful(true)
+
+    // Update the acknowledged state if needed
+    val f4 = if (alarm.acknowledge && severity.isAlarm && alarmState.acknowledgedState == AcknowledgedState.Normal) {
       logger.debug(s"Setting acknowledged state for $alarmKey to NeedsAcknowledge")
       redisTransaction.hset(alarmKey.stateKey, AlarmState.acknowledgedStateField, AcknowledgedState.NeedsAcknowledge.name)
     } else Future.successful(true)
 
-    val f4 = redisTransaction.exec()
+    val f5 = redisTransaction.exec()
 
-    Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
+    Future.sequence(List(f1, f2, f3, f4, f5)).map(_ => ())
   }
 
-  override def getSeverity(alarmKey: AlarmKey): Future[SeverityLevel] = {
-    val key = alarmKey.severityKey
-    val f = redisClient.exists(key).flatMap { exists =>
-      // If the key exists in Redis, get the severity string and convert it to a SeverityLevel, otherwise
-      // assume Disconnected
-      if (exists)
-        redisClient.get[String](key).map(_.flatMap(SeverityLevel(_)))
-      else {
-        // If the key doesn't exist, check if it is latched
-        getAlarmState(alarmKey).map { alarmState =>
-          if (alarmState.latchedState == LatchedState.Normal)
-            Some(SeverityLevel.Disconnected)
-          else
-            Some(alarmState.latchedSeverity)
-        }
-      }
+  override def getSeverity(alarmKey: AlarmKey): Future[CurrentSeverity] = {
+    for {
+      alarm <- getAlarmSmall(alarmKey)
+      alarmState <- getAlarmState(alarmKey)
+      reportedSeverity <- getReportedSeverity(alarmKey)
+    } yield {
+      getSeverity(alarmKey, alarm, alarmState, reportedSeverity)
     }
-    // The option should only be empty below if the severity string was wrong
-    f.map(_.getOrElse(SeverityLevel.Disconnected))
+  }
+
+  // Returns the severity level reported by the component, or Disconnected, if the value timed out
+  private def getReportedSeverity(alarmKey: AlarmKey): Future[SeverityLevel] = {
+    for {
+      exists <- redisClient.exists(alarmKey.severityKey)
+      sevStrOpt <- if (exists) redisClient.get[String](alarmKey.severityKey) else Future.successful(None)
+    } yield {
+      sevStrOpt.flatMap(SeverityLevel(_)).getOrElse(SeverityLevel.Disconnected)
+    }
+  }
+
+  // Returns the reported and calculated severity levels, taking latching into account.
+  private def getSeverity(alarmKey: AlarmKey, alarm: AlarmModelSmall, alarmState: AlarmState,
+                          reportedSeverity: SeverityLevel): CurrentSeverity = {
+    val latchedSeverity = if (alarmState.latchedState == LatchedState.Normal) reportedSeverity else alarmState.latchedSeverity
+    CurrentSeverity(reportedSeverity, latchedSeverity)
   }
 
   override def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit] = {
@@ -479,7 +487,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   // Indeterminate, it’s health is also Bad.
   private[alarms] def getHealth(alarmMap: Map[AlarmKey, HealthInfo]): Health = {
     def active(h: HealthInfo): Boolean = h.alarmState.shelvedState == ShelvedState.Normal && h.alarmState.activationState == ActivationState.Normal
-    val severityLevels = alarmMap.values.filter(active).map(_.severityLevel).toList
+    val severityLevels = alarmMap.values.filter(active).map(_.currentSeverity.latched).toList
 
     if (severityLevels.contains(SeverityLevel.Critical) || severityLevels.contains(SeverityLevel.Disconnected) || severityLevels.contains(SeverityLevel.Indeterminate))
       Health.Bad

@@ -105,42 +105,42 @@ object AlarmModel extends ByteStringDeserializerDefault {
     abstract class SeverityLevelBase(override val level: Int, override val name: String) extends SeverityLevel
 
     /**
-      * The component associated with the alarms is currently not executing.
-      * (i.e.: The severity value expired because it was not refreshed within the defined amount of time)
-      */
+     * The component associated with the alarms is currently not executing.
+     * (i.e.: The severity value expired because it was not refreshed within the defined amount of time)
+     */
     case object Disconnected extends SeverityLevelBase(-2, "Disconnected")
 
     /**
-      * The conditions for the alarm can not be determined with any reliability by the component.
-      */
+     * The conditions for the alarm can not be determined with any reliability by the component.
+     */
     case object Indeterminate extends SeverityLevelBase(-1, "Indeterminate")
 
     /**
-      * Normal operations
-      */
+     * Normal operations
+     */
     case object Okay extends SeverityLevelBase(0, "Okay")
 
     /**
-      * An alarm condition that essentially has no required response during an observing night,
-      * but should be handled by day staff during the following day.
-      */
+     * An alarm condition that essentially has no required response during an observing night,
+     * but should be handled by day staff during the following day.
+     */
     case object Warning extends SeverityLevelBase(1, "Warning")
 
     /**
-      * An alarm condition requires action within 30- 60 minutes. Alarm may not impact
-      * observing but may degrade system performance until handled. May get worse over time.
-      */
+     * An alarm condition requires action within 30- 60 minutes. Alarm may not impact
+     * observing but may degrade system performance until handled. May get worse over time.
+     */
     case object Major extends SeverityLevelBase(2, "Major")
 
     /**
-      * An alarm condition requires action soon. Observing cannot continue with critical alarms.
-      */
+     * An alarm condition requires action soon. Observing cannot continue with critical alarms.
+     */
     case object Critical extends SeverityLevelBase(3, "Critical")
 
     /**
-      * Returns the SeverityLevel given its name
-      * @param name the name of the severity level
-      */
+     * Returns the SeverityLevel given its name
+     * @param name the name of the severity level
+     */
     def apply(name: String): Option[SeverityLevel] = name match {
       case Disconnected.name  => Some(Disconnected)
       case Indeterminate.name => Some(Indeterminate)
@@ -151,6 +151,13 @@ object AlarmModel extends ByteStringDeserializerDefault {
       case _                  => None
     }
   }
+
+  /**
+   * Represents the current severity level for an alarm
+   * @param reported the severity level reported by the component (or Disconnected, if it expired due to not being refreshed on time)
+   * @param latched the actual calculated severity level, based on the latched and acknowledged states, etc.
+   */
+  case class CurrentSeverity(reported: SeverityLevel, latched: SeverityLevel)
 
   /**
    * Base trait for alarm types
@@ -216,10 +223,10 @@ object AlarmModel extends ByteStringDeserializerDefault {
    *
    * @param timestamp a timestamp for the alarm event
    * @param alarmKey  the unique key for the alarm
-   * @param severity  the current alarm severity level
+   * @param currentSeverity  the current reported and calculated alarm severity levels
    * @param state     the current alarm state (indicates if the alarm needs acknowledgement, etc.)
    */
-  case class AlarmStatus(timestamp: LocalDateTime, alarmKey: AlarmKey, severity: SeverityLevel, state: AlarmState)
+  case class AlarmStatus(timestamp: LocalDateTime, alarmKey: AlarmKey, currentSeverity: CurrentSeverity, state: AlarmState)
 
   /**
    * Combines an alarm key (which may use wildcards to match a system, subsystem or component)
