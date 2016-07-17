@@ -1,6 +1,7 @@
 package csw.util.config
 
 import csw.util.config.Configurations._
+import csw.util.config.Events.{EventInfo, ObserveEvent, StatusEvent, SystemEvent}
 import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 
 /**
@@ -203,9 +204,36 @@ object ConfigDSL {
    *
    * @param obsId   the obsId to associate with the configs
    * @param configs one or more SetupConfigs
-   * @return
+   * @return a new SetupConfigArg with the items added
    */
   def sca(obsId: String, configs: SetupConfig*): SetupConfigArg = {
     SetupConfigArg(ConfigInfo(obsId), configs: _*)
   }
+
+  /**
+   * Create an ObserveEvent with a number of items
+   *
+   * @param eventInfo and EventInfo object, or can be a String form - "wfos.red.filter
+   * @param items     0 or more items to be added during creation
+   * @return a new ObserveEvent with the items added
+   */
+  def oe(eventInfo: EventInfo, items: Item[_]*): ObserveEvent = ObserveEvent(eventInfo).madd(items: _*)
+
+  /**
+   * Create an StatusEvent with a number of items
+   *
+   * @param eventInfo and EventInfo object, or can be a String form - "wfos.red.filter
+   * @param items     0 or more items to be added during creation
+   * @return a new StatusEvent with the items added
+   */
+  def stEv(eventInfo: EventInfo, items: Item[_]*): StatusEvent = StatusEvent(eventInfo).madd(items: _*)
+
+  /**
+   * Create an SystemEvent with a number of items
+   *
+   * @param eventInfo and EventInfo object, or can be a String form - "wfos.red.filter
+   * @param items     0 or more items to be added during creation
+   * @return a new SystemEvent with the items added
+   */
+  def sysEv(eventInfo: EventInfo, items: Item[_]*): SystemEvent = SystemEvent(eventInfo).madd(items: _*)
 }

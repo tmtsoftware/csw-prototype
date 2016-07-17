@@ -7,11 +7,8 @@ Configurations and Events
 --------------------------
 
 This project contains classes and traits used for *configurations* and *events*.
-These are all based on immutable, type-safe keys and values. Each key has a specific type
-and the key's values must be of that type.
-
-Configurations and events are based on sets of keys and values, with some additional
-information included, such as ids or timestamps.
+These are all based on type-safe keys and items (a set of values with optional units). 
+Each key has a specific type and the key's values must be of that type.
 
 There are a variety of similar classes, used for different purposes:
 
@@ -33,21 +30,14 @@ State Variables:
 
 The key/value store and event service make use of these classes, which need to be
 serialized and deserialized for external storage (in Redis or Hornetq, for example).
-The [[csw.util.cfg.ConfigSerializer.ConfigSerializer]] class provides support for this
-(based on java serialization).
+The (ConfigSerializer)[src/main/scala/csw/util/config/ConfigSerializer.scala] class provides support for this.
 
 Scala and Java APIs
 -------------------
 
-All the config and event classes are immutable. In Scala, the `set` methods return a new instance of the object with a
+All the config and event classes are immutable. The `set` methods return a new instance of the object with a
 new item added and the `get` methods return an Option, in case the Key is not found. There are also `value` methods
 that return a value directly, throwing an exception if the key or value is not found.
-
-For the Java API, replace `get`, `set` and `value` with `jget`, `jset` and `jvalue`. These versions accept and
-return Java types.
-
-Note that internally, the Key and Item classes take two type parameters: S and J: The Scala and Java types.
-This makes it easier to provide generic support for both languages.
 
 Key Types
 ---------
@@ -64,7 +54,7 @@ of the given type. The values are stored internally in a Vector:
 * CharKey
 * BooleanKey
 
-The following keys support one or more values that are each one and two dimensional arrays (stored internally as Arrays):
+The following keys support one or more values that are each one or two dimensional arrays (stored internally as Arrays):
 
 * IntArrayKey, IntMatrixKey
 * ShortArrayKey, ShortMatrixKey
@@ -98,11 +88,24 @@ Example:
       .add(eventNum.set(num))
       .add(exposureTime.set(1.0))
       .add(imageData.set(testImageData))
+      
+  // Or you can use the Scala DSL to do the same thing:
+  
+    import csw.util.config.ConfigDSL._
+    
+    sc(prefix,
+       eventNum -> num,
+       exposureTime -> 1.0,
+       imageData -> testImageData)
+
 ```
 
 Java Example:
 
 ```
+    import static javacsw.util.config.JItems.*;
+    import static javacsw.util.config.JConfigDSL.*;
+
     static final DoubleKey exposureTime = new DoubleKey("exposureTime");
 
     // Define a key for an event id
@@ -119,39 +122,34 @@ Java Example:
 
     // ...
 
-    SetupConfig config = new SetupConfig(prefix)
-           .jset(eventNum, num)
-           .jset(exposureTime, 1.0)
-           .jset(imageData, testImageData);
+      SetupConfig config = new SetupConfig(prefix)
+        .add(jset(eventNum, num))
+        .add(jset(exposureTime, 1.0))
+        .add(jset(imageData, testImageData));
 
+      // Alternative syntax
+      SetupConfig config = jadd(sc(prefix,
+        jset(eventNum, num),
+        jset(exposureTime, 1.0),
+        jset(imageData, testImageData));
 ```
 
-Two Dimensional Arrays
-----------------------
-
-Scala Example:
-
+Scala Example using a matrix as the key value:
 ```
-      val k1 = DoubleMatrixKey("myMatrix")
-      val m1 = DoubleMatrix(Vector(
-        Vector(1.0, 2.0, 3.0),
-        Vector(4.1, 5.1, 6.1),
-        Vector(7.2, 8.2, 9.2)
-      ))
-      val sc1 = SetupConfig(ck).set(k1, m1)
-      assert(sc1.value(k1) == m1)
+    val k1 = DoubleMatrixKey("myMatrix")
+    val dm1 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12)))
+    val sc1 = sc("test", k1 -> dm1 withUnits UnitsOfMeasure.Deg)
+    assert(setupConfig1.get(k1).get.head(0, 0) == 1)
 ```
 
 Java Example:
 
 ```
-        DoubleMatrixKey k1 = new DoubleMatrixKey("myMatrix");
-        JDoubleMatrix m1 = new JDoubleMatrix(Arrays.asList(
-                Arrays.asList(1.0, 2.0, 3.0),
-                Arrays.asList(4.1, 5.1, 6.1),
-                Arrays.asList(7.2, 8.2, 9.2)));
-        SetupConfig sc1 = new SetupConfig(ck).jset(k1, m1);
-        assert (sc1.jvalue(k1).equals(m1));
+   final DoubleMatrixKey k1 = DoubleMatrixKey("matrixTest");
+   double[][] m1 = {{1., 2., 3.}, {4., 5., 6.}, {7., 8., 9.}};
+   DoubleMatrix dm1 = DoubleMatrix(m1);
+   SetupConfig sc1 = jadd(sc("test"), jset(k1, dm1));
+   assertTrue(jvalue(jitem(sc1, k1)).apply(0, 0) == 1);
 ```
 
 Combining Configs
@@ -160,27 +158,32 @@ Combining Configs
 In some cases you may need to wrap multiple configs, for example to pass to an assembly.
 
 ```
-    val encoder1 = IntKey("encoder1")
     val encoder2 = IntKey("encoder2")
     val xOffset = IntKey("xOffset")
     val yOffset = IntKey("yOffset")
     val obsId = "Obs001"
 
-    val sc1 = SetupConfig(ck1).set(encoder1, 22).set(encoder2, 33)
-    val sc2 = SetupConfig(ck1).set(xOffset, 1).set(yOffset, 2)
+    val sc1 = SetupConfig(ck1).madd(encoder1.set(22), encoder2.set(33))
+    val sc2 = SetupConfig(ck1).madd(xOffset.set(1), yOffset.set(2))
     val configArg = SetupConfigArg(obsId, sc1, sc2)
+    
+    assert(configArg.info.obsId.obsId == obsId)
+    assert(configArg.configs.toList == List(sc1, sc2))
 ```
 
 Java API:
 
 ```
-    IntKey encoder1 = new IntKey("encoder1");
-    IntKey encoder2 = new IntKey("encoder2");
-    IntKey xOffset = new IntKey("xOffset");
-    IntKey yOffset = new IntKey("yOffset");
+    IntKey encoder1 = IntKey("encoder1");
+    IntKey encoder2 = IntKey("encoder2");
+    IntKey xOffset = IntKey("xOffset");
+    IntKey yOffset = IntKey("yOffset");
     String obsId = "Obs001";
-
-    SetupConfig sc1 = new SetupConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
-    SetupConfig sc2 = new SetupConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
+    
+    SetupConfig sc1 = jadd(sc(ck1), jset(encoder1, 22), jset(encoder2, 33));
+    SetupConfig sc2 = jadd(sc(ck1), jset(xOffset, 1), jset(yOffset, 2));
     SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
+    
+    assertTrue(configArg.info().obsId().obsId().equals(obsId));
+    assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
 ```

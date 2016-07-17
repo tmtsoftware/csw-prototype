@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.event.tests.JEventPubSubTest.Msg.*;
 import static javacsw.util.config.JItems.*;
+import static javacsw.util.config.JConfigDSL.*;
 
 
 /**
@@ -201,10 +202,10 @@ public class JEventPubSubTest {
 
     // Returns the next event to publish
     private ObserveEvent nextEvent(int num) {
-      return jadd(new ObserveEvent(prefix),
-                  jset(eventNum, num),
-                  jset(exposureTime, 1.0),
-                  jset(imageData, testImageData));
+      return new ObserveEvent(prefix)
+        .add(jset(eventNum, num))
+        .add(jset(exposureTime, 1.0))
+        .add(jset(imageData, testImageData));
     }
 
     private void publish() {

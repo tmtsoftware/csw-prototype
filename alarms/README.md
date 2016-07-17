@@ -168,16 +168,16 @@ trait AlarmService {
   def refreshSecs: Int
 
   /**
-   * Initialize the alarm data in the Redis instance using the given file
+   * Initialize the alarm data in the database using the given file
    *
    * @param inputFile the alarm service config file containing info about all the alarms
    * @param reset     if true, delete the current alarms before importing (default: false)
-   * @return a future list of problems that occurred while validating the config file or ingesting the data into Redis
+   * @return a future list of problems that occurred while validating the config file or ingesting the data into the database
    */
   def initAlarms(inputFile: File, reset: Boolean = false): Future[List[Problem]]
 
   /**
-   * Gets the alarm information from Redis for any matching alarms
+   * Gets the alarm information from the database for any matching alarms
    *
    * @param alarmKey a key that may match multiple alarms (via wildcards, see AlarmKey.apply())
    * @return a future sequence of alarm model objects
@@ -185,7 +185,7 @@ trait AlarmService {
   def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]]
 
   /**
-   * Gets the alarm information from Redis for the matching Alarm
+   * Gets the alarm information from the database for the matching Alarm
    *
    * @param key the key for the alarm
    * @return a future alarm model object
@@ -193,7 +193,7 @@ trait AlarmService {
   def getAlarm(key: AlarmKey): Future[AlarmModel]
 
   /**
-   * Gets the alarm state from Redis for the matching Alarm
+   * Gets the alarm state from the database for the matching Alarm
    *
    * @param key the key for the alarm
    * @return a future alarm state object
@@ -211,11 +211,12 @@ trait AlarmService {
 
   /**
    * Gets the severity level for the given alarm
+   * (or the latched severity, if the alarm is latched and unacknowledged)
    *
    * @param alarmKey the key for the alarm
    * @return a future severity level result
    */
-  def getSeverity(alarmKey: AlarmKey): Future[SeverityLevel]
+  def getSeverity(alarmKey: AlarmKey): Future[CurrentSeverity]
 
   /**
    * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
@@ -264,13 +265,13 @@ trait AlarmService {
    */
   def monitorHealth(
     alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]            = None,
-    notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
-    notifyHealth: Option[HealthStatus ⇒ Unit] = None
+    subscriber:   Option[ActorRef]             = None,
+    notifyAlarm:  Option[AlarmStatus => Unit]  = None,
+    notifyHealth: Option[HealthStatus => Unit] = None
   ): AlarmMonitor
 
   /**
-   * Shuts down the Redis server (For use in test cases that started Redis themselves)
+   * Shuts down the the database server (For use in test cases that started the database themselves)
    */
   def shutdown(): Unit
 }

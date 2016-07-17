@@ -53,7 +53,6 @@ Alarm Java API
 The Alarm Service Java API is defined in the [IAlarmService](src/main/java/javacsw/services/alarms/IAlarmService.java) interface:
 
 ```java
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 public interface IAlarmService {
     /**
      * Alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
@@ -108,7 +107,7 @@ public interface IAlarmService {
      * @param alarmKey the key for the alarm
      * @return a future severity level result
      */
-    CompletableFuture<SeverityLevel> getSeverity(AlarmKey alarmKey);
+    CompletableFuture<CurrentSeverity> getSeverity(AlarmKey alarmKey);
 
     /**
      * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
@@ -209,24 +208,24 @@ public interface IAlarmService {
      * @return a new JAlarmService instance
      */
     static CompletableFuture<IAlarmService> getAlarmService(ActorRefFactory system, Timeout timeout) {
-        return JAlarmService.lookup(AlarmService$.MODULE$.defaultName(), system, timeout);
+        return JAlarmService.lookup(defaultName, system, timeout);
     }
 
     /**
      * The default name that the Alarm Service is registered with
      */
-    String defaultName;
+    String defaultName = AlarmService$.MODULE$.defaultName();
 
     /**
      * An alarm's severity should be refreshed every defaultRefreshSecs seconds
      * to make sure it does not expire and become "Disconnected" (after maxMissedRefresh missed refreshes)
      */
-    int defaultRefreshSecs;
+    int defaultRefreshSecs = AlarmService$.MODULE$.defaultRefreshSecs();
 
     /**
      * The default number of refreshes that may be missed before an alarm's severity is expired
      * and becomes "Disconnected"
      */
-    int maxMissedRefresh;
+    int maxMissedRefresh = AlarmService$.MODULE$.maxMissedRefresh();
 }
 ```
