@@ -45,20 +45,31 @@ package csw.util
  * of the given type. The values are stored internally in a Vector:
  *
  * - IntKey
+ *
  * - ShortKey
+ *
  * - LongKey
+ *
  * - FloatKey
+ *
  * - DoubleKey
+ *
  * - StringKey
+ *
  * - CharKey
+ *
  * - BooleanKey
  *
  * The following keys support one or more values that are each one or two dimensional arrays (stored internally as Arrays):
  *
  * - IntArrayKey, IntMatrixKey
+ *
  * - ShortArrayKey, ShortMatrixKey
+ *
  * - LongArrayKey, LongMatrixKey
+ *
  * - FloatArrayKey, FloatMatrixKey
+ *
  * - DoubleArrayKey, DoubleMatrixKey
  *
  * In addition there is a GenericKey class that can be used for custom types. It is however recommended to

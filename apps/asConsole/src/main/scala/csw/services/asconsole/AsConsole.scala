@@ -158,10 +158,11 @@ object AsConsole extends App {
   private def run(options: Options): Unit = {
     options.logLevel.foreach(setLogLevel)
 
+    val alarmServiceName = options.asName.getOrElse(AlarmService.defaultName)
     val refreshSecs = options.refreshSecs.getOrElse(AlarmService.defaultRefreshSecs)
-    val alarmService = Await.result(AlarmService(options.asName.getOrElse(AlarmService.defaultName)), timeout.duration)
+    val alarmService = Await.result(AlarmService(alarmServiceName, refreshSecs), timeout.duration)
 
-    options.asConfig foreach (init(alarmService, _, options))
+    options.asConfig.foreach(init(alarmService, _, options))
     options.severity.foreach(setSeverity(alarmService, _, options))
     options.shelved.foreach(setShelved(alarmService, _, options))
     options.activated.foreach(setActivated(alarmService, _, options))
@@ -255,14 +256,12 @@ object AsConsole extends App {
   private def alarmStatusCallback(cmd: String)(alarmStatus: AlarmStatus): Unit = {
     import scala.sys.process._
     val a = alarmStatus.alarmKey
-    //    println(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.severity}")
-    s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.severity}".run()
+    s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.currentSeverity.latched}".run()
   }
 
   // XXX TODO: make option execute a shell command
   private def healthStatusCallback(cmd: String)(healthStatus: HealthStatus): Unit = {
     import scala.sys.process._
-    //    println(s"Health for ${healthStatus.key}: ${healthStatus.health}")
     s"$cmd ${healthStatus.health}".run()
   }
 
@@ -271,8 +270,8 @@ object AsConsole extends App {
     alarmService.monitorHealth(
       AlarmKey(options.subsystem, options.component, options.name),
       None,
-      options.monitorAlarms.map(alarmStatusCallback(_) _),
-      options.monitorHealth.map(healthStatusCallback(_) _)
+      options.monitorAlarms.map(alarmStatusCallback),
+      options.monitorHealth.map(healthStatusCallback)
     )
   }
 
