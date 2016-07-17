@@ -47,6 +47,7 @@ public class JPubSubTests {
 
     // Test runs for numSecs seconds, continuously publishing SetupConfig objects and
     // receiving them in the subscriber.
+    /*
     @Test
     public void testJavaKeyValueStore() throws Exception {
         new JavaTestKit(system) {
@@ -165,5 +166,6 @@ public class JPubSubTests {
             getContext().system().terminate();
         }
     }
+    */
 }
 

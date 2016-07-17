@@ -7,16 +7,12 @@ import scala.language.implicitConversions
 import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
 import spray.json.{JsArray, JsObject, JsString, JsValue, JsonFormat}
 
-import scala.compat.java8.OptionConverters._
-import scala.annotation.varargs
-import scala.collection.JavaConverters._
-
 object GenericItem {
 
   /**
    * type of a function that reads JSON and returns a new GenericItem
    */
-  type JsonReaderFunc = JsValue ⇒ GenericItem[_]
+  type JsonReaderFunc = JsValue => GenericItem[_]
 
   // Used to register a JsonFormat instance to use to read and write JSON for a given GenericItem subclass
   private var jsonReaderMap = Map[String, JsonReaderFunc]()
@@ -28,7 +24,7 @@ object GenericItem {
    * @param jsonReader implements creating this object from JSON
    * @tparam T the (scala) type parameter of the GenericItem
    */
-  def register[T](typeName: String, jsonReader: JsonReaderFunc): Unit = jsonReaderMap += (typeName → jsonReader)
+  def register[T](typeName: String, jsonReader: JsonReaderFunc): Unit = jsonReaderMap += (typeName -> jsonReader)
 
   /**
    * Lookup the JsonFormat for the given type name
@@ -47,7 +43,7 @@ object GenericItem {
  * @param values    the value for the key
  * @param units    the units of the value
  */
-case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values: Vector[S], units: Units) extends Item[S, S] {
+case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values: Vector[S], units: Units) extends Item[S] {
 
   /**
    * @return a JsValue representing this item
@@ -56,21 +52,13 @@ case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values:
     val valueFormat = implicitly[JsonFormat[S]]
     val unitsFormat = ConfigJSON.unitsFormat
     JsObject(
-      "keyName" → JsString(keyName),
-      "value" → JsArray(values.map(valueFormat.write)),
-      "units" → unitsFormat.write(units)
+      "keyName" -> JsString(keyName),
+      "value" -> JsArray(values.map(valueFormat.write)),
+      "units" -> unitsFormat.write(units)
     )
   }
 
-  override def jvalue(index: Int): S = values(index)
-
-  override def jget(index: Int): java.util.Optional[S] = get(index).asJava
-
-  override def jvalue: S = values(0)
-
-  override def withUnits(unitsIn: Units): Item[S, S] = copy(units = unitsIn)
-
-  override def jvalues: util.List[S] = values.asJava
+  override def withUnits(unitsIn: Units): Item[S /*, S*/ ] = copy(units = unitsIn)
 }
 
 /**
@@ -79,18 +67,10 @@ case class GenericItem[S: JsonFormat](typeName: String, keyName: String, values:
  * @param typeName the name of the type S (for JSON serialization)
  * @param nameIn   the name of the key
  */
-case class GenericKey[S: JsonFormat](typeName: String, nameIn: String) extends Key[S, S](nameIn) {
+case class GenericKey[S: JsonFormat](typeName: String, nameIn: String) extends Key[S, GenericItem[S]](nameIn) {
 
-  override def set(v: Vector[S], units: Units = NoUnits) = GenericItem(typeName, keyName, v, units)
+  override def set(v: Vector[S], units: Units = NoUnits): GenericItem[S] = GenericItem(typeName, keyName, v, units)
 
-  override def set(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
-
-  override def jset(v: java.util.List[S]) = {
-    import scala.collection.JavaConverters._
-    GenericItem(typeName, keyName, v.asScala.toVector, NoUnits)
-  }
-
-  @varargs
-  override def jset(v: S*): Item[S, S] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
+  override def set(v: S*): GenericItem[S /*, S*/ ] = GenericItem(typeName, keyName, v.toVector, UnitsOfMeasure.NoUnits)
 }
 

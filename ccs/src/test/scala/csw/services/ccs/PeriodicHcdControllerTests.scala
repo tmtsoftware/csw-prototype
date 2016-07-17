@@ -35,7 +35,7 @@ object PeriodicHcdControllerTests {
       // Note: There could be some logic here to decide when to take the next config,
       // if there is more than one in the queue. (nextConfig is an Option, so this
       // only takes one config from the queue, if there is one there).
-      nextConfig.foreach { config ⇒
+      nextConfig.foreach { config =>
         worker ! config
       }
     }
@@ -60,24 +60,24 @@ object PeriodicHcdControllerTests {
     val position = StringKey("position")
 
     // Simulate getting the initial state from the device and publishing to the kvs
-    val initialState = SetupConfig(testPrefix1).set(position, "None")
+    val initialState = SetupConfig(testPrefix1).add(position.set("None"))
     svs.set(initialState)
 
     def receive: Receive = {
-      case config: SetupConfig ⇒
+      case config: SetupConfig =>
         // Update the demand state variable
         svs.setDemand(config)
         // Simulate doing work
         log.info(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
 
-      case WorkDone(config) ⇒
+      case WorkDone(config) =>
         log.info(s"Done processing $config")
         // Simulate getting the current value from the device and publishing it to the kvs
         log.info(s"Publishing $config")
         svs.set(config)
 
-      case x ⇒ log.error(s"Unexpected message $x")
+      case x => log.error(s"Unexpected message $x")
     }
   }
 }
@@ -99,7 +99,7 @@ class PeriodicHcdControllerTests extends TestKit(PeriodicHcdControllerTests.syst
     hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix1).set(position, "IR2")
+    val config = SetupConfig(testPrefix1).add(position.set("IR2"))
     hcdController ! Submit(config)
     system.actorOf(StateVariableMatcherActor.props(List(config), self))
     within(10.seconds) {

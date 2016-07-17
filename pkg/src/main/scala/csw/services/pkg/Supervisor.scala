@@ -118,93 +118,93 @@ private final class Supervisor(val componentInfo: ComponentInfo)
   lifecycleManager ! SubscribeTransitionCallBack(self)
 
   private def commonMessageReceive: Receive = logLevelReceive orElse {
-    case SubscribeLifecycleCallback(actorRef) ⇒
+    case SubscribeLifecycleCallback(actorRef) =>
       addListener(actorRef)
-    case UnsubscribeLifecycleCallback(actorRef) ⇒
+    case UnsubscribeLifecycleCallback(actorRef) =>
       removeListener(actorRef)
-    case Terminated(actorRef) ⇒
+    case Terminated(actorRef) =>
       terminated(actorRef)
-    case Heartbeat ⇒
+    case Heartbeat =>
       // Forward to lifecycle manager - causes it to reply with the current state
       lifecycleManager ! Heartbeat
     // Forward Subscribe/Unsubscribe messages to the component (HCD and Assembly support subscriptions)
-    case msg: PublisherActor.PublisherActorMessage ⇒
+    case msg: PublisherActor.PublisherActorMessage =>
       component.tell(msg, sender())
-    case x ⇒
+    case x =>
       log.warning(s"$name: Supervisor received an unexpected message: $x")
   }
 
   private def notRunningReceivePF: Receive = {
-    case CurrentState(_, Loaded) ⇒
+    case CurrentState(_, Loaded) =>
       // This message is sent as a side effect of subscribing to the Lifecycle FSM
       log.debug(s"$name: LifecycleManager indicates Loaded")
       notifyListeners(LifecycleStateChanged(Loaded))
-    case Initialize ⇒
+    case Initialize =>
       log.info(s"$name: Handle Initialize message from container or elsewhere")
       lifecycleManager ! Initialize
-    case Startup ⇒
+    case Startup =>
       log.info(s"$name: Handle Startup message from container or elsewhere")
       lifecycleManager ! Startup
-    case Transition(_, PendingInitializedFromLoaded, Initialized) ⇒
+    case Transition(_, PendingInitializedFromLoaded, Initialized) =>
       // LifecycleManager has sent Initialized to component and is waiting for response
       registerWithLocationService()
-    case Transition(_, Initialized, PendingLoadedFromInitialized) ⇒
+    case Transition(_, Initialized, PendingLoadedFromInitialized) =>
       unregisterFromLocationService()
-    case Transition(_, Loaded, Loaded) ⇒
+    case Transition(_, Loaded, Loaded) =>
       // This transition indicates the component is now firmly in Loaded (only during shutdown/restart
       notifyListeners(LifecycleStateChanged(Loaded))
-    case Transition(_, Initialized, Initialized) ⇒
+    case Transition(_, Initialized, Initialized) =>
       // This transition indicates the component is now firmly in Initialized from Loaded or Running
       notifyListeners(LifecycleStateChanged(Initialized))
-    case Transition(_, Running, Running) ⇒
+    case Transition(_, Running, Running) =>
       // This transition indicates the component is now firmly in Running
       log.info(s"$name: Transition to Running")
       notifyListeners(LifecycleStateChanged(Running))
       context become runningReceive
-    case t @ Transition(_, from, to) ⇒
+    case t @ Transition(_, from, to) =>
       log.debug(s"$name: notRunningReceivePF: unhandled transition: $from/$to")
   }
 
   def notRunningReceive = notRunningReceivePF orElse commonMessageReceive
 
   private def runningReceivePF: Receive = {
-    case t @ Transition(_, from, to) ⇒
+    case t @ Transition(_, from, to) =>
       log.info(s"$name: supervisorReceive Transition: $from/$to")
-    case Uninitialize ⇒
+    case Uninitialize =>
       log.info(s"$name: Handle Uninitialize message from container")
       lifecycleManager ! Uninitialize
       context become notRunningReceive
-    case Shutdown ⇒
+    case Shutdown =>
       log.info(s"$name: Handle Shutdown message from container")
       lifecycleManager ! Shutdown
       context become notRunningReceive
-    case HaltComponent ⇒
+    case HaltComponent =>
       log.info(s"$name: Supervisor received 'HaltComponent' in Running state.")
       lifecycleManager ! Uninitialize
       context become haltingReceive
-    case RestartComponent ⇒
+    case RestartComponent =>
     // TODO -- Implement supervisor-based restart
 
     // Forward configs to the component 
-    case msg: AssemblyControllerMessage if componentInfo.componentType == Assembly ⇒ component.tell(msg, sender())
-    case msg: HcdControllerMessage if componentInfo.componentType == HCD ⇒ component.tell(msg, sender())
+    case msg: AssemblyControllerMessage if componentInfo.componentType == Assembly => component.tell(msg, sender())
+    case msg: HcdControllerMessage if componentInfo.componentType == HCD => component.tell(msg, sender())
   }
 
   def runningReceive = runningReceivePF orElse commonMessageReceive
 
   def haltingReceivePF: Receive = {
-    case Transition(_, Initialized, PendingLoadedFromInitialized) ⇒
+    case Transition(_, Initialized, PendingLoadedFromInitialized) =>
       unregisterFromLocationService()
-    case Transition(_, Initialized, Initialized) ⇒
+    case Transition(_, Initialized, Initialized) =>
       // This transition indicates the component is now firmly in Initialized from Loaded or Running
       notifyListeners(LifecycleStateChanged(Initialized))
-    case Transition(_, Loaded, Loaded) ⇒
+    case Transition(_, Loaded, Loaded) =>
       // This transition indicates the component is now firmly in Loaded from Loaded or Running
       notifyListeners(LifecycleStateChanged(Loaded))
       haltComponent()
-    case Transition(_, PendingLoadedFromInitialized, Loaded) ⇒
+    case Transition(_, PendingLoadedFromInitialized, Loaded) =>
       log.info(s"$name: shutting down")
-    case t @ Transition(_, from, to) ⇒
+    case t @ Transition(_, from, to) =>
       log.debug(s"$name: haltingReceive Transition: $from/$to")
   }
 
@@ -218,10 +218,10 @@ private final class Supervisor(val componentInfo: ComponentInfo)
     import context.dispatcher
     if (componentInfo.locationServiceUsage != DoNotRegister) {
       LocationService.registerAkkaConnection(componentId, self, componentInfo.prefix)(context.system).onComplete {
-        case Success(reg) ⇒
+        case Success(reg) =>
           registrationOpt = Some(reg)
           log.info(s"$name: Registered $componentId with the location service")
-        case Failure(ex) ⇒
+        case Failure(ex) =>
           // XXX allan: What to do in case of error?
           log.error(s"$name: Failed to register $componentId with the location service")
       }

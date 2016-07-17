@@ -44,7 +44,7 @@ case class JTelemetryService(settings: KvsSettings, system: ActorRefFactory)
    * Deletes the given status event from the store
    * @return a future indicating if/when the operation has completed
    */
-  def delete(prefix: String): CompletableFuture[Unit] = ts.delete(prefix).map(_ ⇒ ()).toJava.toCompletableFuture
+  def delete(prefix: String): CompletableFuture[Unit] = ts.delete(prefix).map(_ => ()).toJava.toCompletableFuture
 
   /**
    * Disconnects from the key/value store server

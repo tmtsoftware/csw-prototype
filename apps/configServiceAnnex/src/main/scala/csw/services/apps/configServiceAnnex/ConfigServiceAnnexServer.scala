@@ -48,14 +48,14 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   implicit val materializer = ActorMaterializer()
 
   val binding = Http().bind(interface = settings.interface, port = settings.port)
-  binding.runForeach { c ⇒
+  binding.runForeach { c =>
     logger.info(s"Accepted new connection from ${c.remoteAddress}")
     c.handleWithAsyncHandler {
-      case HttpRequest(GET, uri, _, _, _)       ⇒ httpGet(uri)
-      case HttpRequest(POST, uri, _, entity, _) ⇒ httpPost(uri, entity)
-      case HttpRequest(HEAD, uri, _, _, _)      ⇒ httpHead(uri)
-      case HttpRequest(DELETE, uri, _, _, _)    ⇒ httpDelete(uri)
-      case _: HttpRequest                       ⇒ Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
+      case HttpRequest(GET, uri, _, _, _)       => httpGet(uri)
+      case HttpRequest(POST, uri, _, entity, _) => httpPost(uri, entity)
+      case HttpRequest(HEAD, uri, _, _, _)      => httpHead(uri)
+      case HttpRequest(DELETE, uri, _, _, _)    => httpDelete(uri)
+      case _: HttpRequest                       => Future.successful(HttpResponse(StatusCodes.NotFound, entity = "Unknown resource!"))
     }
   }
 
@@ -83,13 +83,13 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val result = Try {
       val mappedByteBuffer = FileUtils.mmap(path)
       val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
-      val chunks = Source.fromIterator(() ⇒ iterator).map(ChunkStreamPart.apply)
+      val chunks = Source.fromIterator(() => iterator).map(ChunkStreamPart.apply)
       HttpResponse(entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks))
     } recover {
-      case NonFatal(cause) ⇒
+      case NonFatal(cause) =>
         logger.error(s"Nonfatal error while attempting to get $path (uri = $uri): cause = ${cause.getMessage}")
         HttpResponse(StatusCodes.InternalServerError, entity = cause.getMessage)
-      case ex ⇒
+      case ex =>
         logger.error(s"Error while attempting to get $path (uri = $uri): cause = ${ex.getMessage}", ex)
         HttpResponse(StatusCodes.InternalServerError, entity = ex.getMessage)
     }
@@ -108,19 +108,19 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
       logger.info(s"Ignoring POST request for existing $file (uri = $uri)")
       val m = entity.dataBytes.runWith(Sink.ignore)
       m.onComplete {
-        case _ ⇒ response.success(HttpResponse(StatusCodes.OK))
+        case _ => response.success(HttpResponse(StatusCodes.OK))
       }
     } else {
       logger.info(s"Received POST request for $file (uri = $uri)")
       val out = new FileOutputStream(file)
-      val sink = Sink.foreach[ByteString] { bytes ⇒
+      val sink = Sink.foreach[ByteString] { bytes =>
         out.write(bytes.toArray)
       }
       val materialized = entity.dataBytes.runWith(sink)
       // ensure the output file is closed and the system shutdown upon completion
       // XXX TODO: Use a for comprehension here instead?
       materialized.onComplete {
-        case Success(_) ⇒
+        case Success(_) =>
           Try(out.close())
           if (FileUtils.validate(id, file)) {
             response.success(HttpResponse(StatusCodes.OK))
@@ -128,7 +128,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
             file.delete()
             response.success(HttpResponse(StatusCodes.InternalServerError, entity = FileUtils.validateError(id, file).getMessage))
           }
-        case Failure(e) ⇒
+        case Failure(e) =>
           logger.error(s"Failed to upload $uri to $file: ${e.getMessage}")
           Try(out.close())
           file.delete()
@@ -157,9 +157,9 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     val path = makePath(settings.dir, new File(uri.path.toString()))
     logger.info(s"Received DELETE request for $path (uri = $uri)")
     val result = Try { if (path.toFile.exists()) Files.delete(path) } match {
-      case Success(_) ⇒
+      case Success(_) =>
         HttpResponse(StatusCodes.OK)
-      case Failure(ex) ⇒
+      case Failure(ex) =>
         logger.error(s"Failed to delete file $path")
         HttpResponse(StatusCodes.InternalServerError, entity = ex.getMessage)
     }

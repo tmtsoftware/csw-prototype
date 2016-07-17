@@ -28,11 +28,11 @@ object ContainerCmd {
   private def parser(name: String): scopt.OptionParser[Config] = new scopt.OptionParser[Config](name) {
     head(name, System.getProperty("CSW_VERSION"))
 
-    opt[File]('c', "config") action { (x, c) ⇒
+    opt[File]('c', "config") action { (x, c) =>
       c.copy(csConfig = Some(x))
     } text "optional config file to use for config service settings"
 
-    arg[File]("<file>") optional () maxOccurs 1 action { (x, c) ⇒
+    arg[File]("<file>") optional () maxOccurs 1 action { (x, c) =>
       c.copy(file = Some(x))
     } text "optional container config file to override the default"
   }
@@ -54,13 +54,13 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
   val logger = Logger(LoggerFactory.getLogger("ContainerCmd"))
 
   ContainerCmd.parse(name, args) match {
-    case Some(options) ⇒ run(options)
-    case None          ⇒ System.exit(1)
+    case Some(options) => run(options)
+    case None          => System.exit(1)
   }
 
   private def run(options: ContainerCmd.Config): Unit = {
     options.file match {
-      case Some(file) ⇒
+      case Some(file) =>
         if (file.exists) {
           logger.info(s" Using file: $file")
           ContainerComponent.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
@@ -69,7 +69,7 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
           initFromConfigService(file, options.csConfig)
         }
 
-      case None ⇒
+      case None =>
         if (resource.isDefined) {
           logger.info(s" Using default resource: $resource")
           ContainerComponent.create(ConfigFactory.load(resource.get))
@@ -87,20 +87,20 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
 
     implicit val timeout: Timeout = 30.seconds
     val settings = csConfig match {
-      case Some(csConfigFile) ⇒ ConfigServiceSettings(ConfigFactory.parseFile(csConfigFile))
-      case None               ⇒ ConfigServiceSettings(system)
+      case Some(csConfigFile) => ConfigServiceSettings(ConfigFactory.parseFile(csConfigFile))
+      case None               => ConfigServiceSettings(system)
     }
 
     val f = for {
-      configOpt ← ConfigServiceClient.getConfigFromConfigService(settings.name, file)
+      configOpt <- ConfigServiceClient.getConfigFromConfigService(settings.name, file)
     } yield {
       if (configOpt.isEmpty) logger.error(s"$file not found in config service")
       configOpt.map(ContainerComponent.create)
     }
     f.onSuccess {
-      case _ ⇒ logger.info(s"Created container based on $file")
+      case _ => logger.info(s"Created container based on $file")
     }
-    f.map(_ ⇒ ())
+    f.map(_ => ())
   }
 
 }

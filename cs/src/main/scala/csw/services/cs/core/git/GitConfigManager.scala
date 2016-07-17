@@ -73,7 +73,7 @@ object GitConfigManager {
 
     if (dir.isDirectory) {
       dir.list.foreach {
-        filePath ⇒
+        filePath =>
           val file = new File(dir, filePath)
           if (file.isDirectory) {
             deleteDirectoryRecursively(file)
@@ -158,9 +158,9 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
       if (file.exists() || sha1File.exists()) {
         Future.failed(new IOException("File already exists in repository: " + file))
       } else for {
-        _ ← configData.writeToFile(file)
-        sha1 ← annex.post(file)
-        configId ← create(shaFile(path), ConfigData(sha1), oversize = false, comment)
+        _ <- configData.writeToFile(file)
+        sha1 <- annex.post(file)
+        configId <- create(shaFile(path), ConfigData(sha1), oversize = false, comment)
       } yield configId
     }
 
@@ -181,15 +181,15 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   override def update(path: File, configData: ConfigData, comment: String): Future[ConfigId] = {
     def updateOversize(file: File): Future[ConfigId] = {
       for {
-        _ ← configData.writeToFile(file)
-        sha1 ← annex.post(file)
-        configId ← update(shaFile(path), ConfigData(sha1), comment)
+        _ <- configData.writeToFile(file)
+        sha1 <- annex.post(file)
+        configId <- update(shaFile(path), ConfigData(sha1), comment)
       } yield configId
     }
 
     logger.debug(s"$name: update $path")
     val file = fileForPath(path)
-    Future(pull()).flatMap { _ ⇒
+    Future(pull()).flatMap { _ =>
       if (isOversize(file)) {
         updateOversize(file)
       } else {
@@ -204,8 +204,8 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
 
   override def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] =
     for {
-      exists ← exists(path)
-      result ← if (exists) update(path, configData, comment) else create(path, configData, oversize, comment)
+      exists <- exists(path)
+      result <- if (exists) update(path, configData, comment) else create(path, configData, oversize, comment)
     } yield result
 
   override def exists(path: File): Future[Boolean] = Future {
@@ -245,19 +245,19 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     // Get oversize files that are stored in the annex server
     def getOversize(file: File): Future[Option[ConfigData]] = {
       for {
-        opt ← get(shaFile(path), id)
-        data ← getData(file, opt)
+        opt <- get(shaFile(path), id)
+        data <- getData(file, opt)
       } yield data
 
     }
     // Gets the actual file data using the SHA-1 value contained in the checked in file
     def getData(file: File, opt: Option[ConfigData]): Future[Option[ConfigData]] = {
       opt match {
-        case None ⇒ Future(None)
-        case Some(configData) ⇒
+        case None => Future(None)
+        case Some(configData) =>
           for {
-            sha1 ← configData.toFutureString
-            configDataOpt ← getIfNeeded(file, sha1)
+            sha1 <- configData.toFutureString
+            configDataOpt <- getIfNeeded(file, sha1)
           } yield configDataOpt
       }
     }
@@ -266,7 +266,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     def getIfNeeded(file: File, sha1: String): Future[Option[ConfigData]] = {
       if (!file.exists() || (sha1 != HashGeneratorUtils.generateSHA1(file))) {
         annex.get(sha1, file).map {
-          _ ⇒ Some(ConfigData(file))
+          _ => Some(ConfigData(file))
         }
       } else {
         Future(Some(ConfigData(file)))
@@ -293,7 +293,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     logger.debug(s"$name: get $path")
     val file = fileForPath(path)
 
-    Future(pull()).flatMap { _ ⇒
+    Future(pull()).flatMap { _ =>
       if (isOversize(file)) {
         getOversize(file)
       } else {
@@ -408,8 +408,8 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   private def put(path: File, configData: ConfigData, comment: String = ""): Future[ConfigId] = {
     val file = fileForPath(path)
     for {
-      _ ← configData.writeToFile(file)
-      configId ← Future {
+      _ <- configData.writeToFile(file)
+      configId <- Future {
         val dirCache = git.add.addFilepattern(path.getPath).call()
         // git.commit().setCommitter(name, email) // XXX using defaults from ~/.gitconfig for now
         git.commit().setOnly(path.getPath).setMessage(comment).call
@@ -463,9 +463,9 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   def setDefault(path: File, id: Option[ConfigId] = None): Future[Unit] = {
     logger.debug(s"$name: setDefault $path $id")
     (if (id.isDefined) id else getCurrentVersion(path)) match {
-      case Some(configId) ⇒
-        create(defaultFile(path), ConfigData(configId.id)).map(_ ⇒ ())
-      case None ⇒
+      case Some(configId) =>
+        create(defaultFile(path), ConfigData(configId.id)).map(_ => ())
+      case None =>
         Future.failed(new RuntimeException(s"Unknown path $path"))
     }
   }
@@ -481,9 +481,9 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
     if (currentId.isEmpty)
       Future(None)
     else for {
-      d ← get(defaultFile(path))
-      id ← if (d.isDefined) d.get.toFutureString else Future(currentId.get.id)
-      result ← get(path, Some(ConfigId(id)))
+      d <- get(defaultFile(path))
+      id <- if (d.isDefined) d.get.toFutureString else Future(currentId.get.id)
+      result <- get(path, Some(ConfigId(id)))
     } yield result
   }
 }

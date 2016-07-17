@@ -62,27 +62,27 @@ object HcdControllerTests {
     import context.dispatcher
 
     // Simulate getting the initial state from the device
-    val initialState = CurrentState(testPrefix1).set(position, "None")
+    val initialState = CurrentState(testPrefix1).add(position.set("None"))
 
     // Simulated current state
     var currentState = initialState
 
     def receive: Receive = {
-      case Work(config) ⇒
+      case Work(config) =>
         // Simulate doing work
         log.info(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
 
-      case RequestCurrentState ⇒
+      case RequestCurrentState =>
         log.info(s"Requested current state")
         context.parent ! currentState
 
-      case WorkDone(config) ⇒
+      case WorkDone(config) =>
         log.info(s"Done processing $config")
         currentState = CurrentState(config.prefix, config.items)
         context.parent ! currentState
 
-      case x ⇒ log.error(s"Unexpected message $x")
+      case x => log.error(s"Unexpected message $x")
     }
   }
 
@@ -103,7 +103,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix2).set(position, "IR3")
+    val config = SetupConfig(testPrefix2).add(position.set("IR3"))
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {

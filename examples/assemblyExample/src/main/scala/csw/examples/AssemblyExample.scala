@@ -25,7 +25,7 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
   trackConnections(info.connections)
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
-    case x ⇒ log.error(s"Unexpected message: $x")
+    case x => log.error(s"Unexpected message: $x")
   }
 
   /**

@@ -43,7 +43,7 @@ package csw.services
  *       // Note: There could be some logic here to decide when to take the next config,
  *       // if there is more than one in the queue. (nextConfig is an Option, so this
  *       // only takes one config from the queue, if there is one there).
- *       nextConfig.foreach { config ⇒
+ *       nextConfig.foreach { config =>
  *         worker ! config
  *       }
  *     }
@@ -67,20 +67,20 @@ package csw.services
  *     svs.set(initialState)
  *
  *     def receive: Receive = {
- *       case config: SetupConfig ⇒
+ *       case config: SetupConfig =>
  *         // Update the demand state variable
  *         svs.setDemand(config)
  *         // Simulate doing work
  *         log.info(s"Start processing \$config")
  *         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
  *
- *       case WorkDone(config) ⇒
+ *       case WorkDone(config) =>
  *         log.info(s"Done processing \$config")
  *         // Simulate getting the current value from the device and publishing it to the kvs
  *         log.info(s"Publishing \$config")
  *         svs.set(config)
  *
- *       case x ⇒ log.error(s"Unexpected message \$x")
+ *       case x => log.error(s"Unexpected message \$x")
  *     }
  *   }
  *

@@ -56,7 +56,7 @@ public class JBlockingTelemetryServiceTest {
         JavaTestKit.shutdownActorSystem(system);
         system = null;
     }
-
+/*
     @Test
     public void basicJavaTests() throws Exception {
         StatusEvent config1 = new StatusEvent("tcs.test")
@@ -239,4 +239,5 @@ public class JBlockingTelemetryServiceTest {
             sender().tell(new Results(count1, count2), self());
         }
     }
+    */
 }

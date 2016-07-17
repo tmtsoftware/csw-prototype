@@ -28,11 +28,11 @@ object TestServiceClient {
  * A test client actor that uses the location service to resolve services
  */
 class TestServiceClient(numServices: Int) extends Actor with ActorLogging with LocationTrackerClientActor {
-  val connections = (1 to numServices).toList.flatMap(i ⇒ List(TestAkkaService.connection(i), TestHttpService.connection(i))).toSet
+  val connections = (1 to numServices).toList.flatMap(i => List(TestAkkaService.connection(i), TestHttpService.connection(i))).toSet
   connections.foreach(trackConnection)
 
   override def receive: Receive = trackerClientReceive orElse {
-    case x ⇒
+    case x =>
       log.error(s"Received unexpected message $x")
   }
 

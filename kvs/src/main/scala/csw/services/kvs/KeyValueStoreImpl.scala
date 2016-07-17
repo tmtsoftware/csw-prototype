@@ -86,13 +86,13 @@ case class KeyValueStoreImpl[T: KvsFormatter](host: String = "127.0.0.1", port: 
     val f2 = redisTransaction.ltrim(key, 0, h + 1)
     val f3 = redisTransaction.publish(key, bs)
     val f4 = redisTransaction.exec()
-    Future.sequence(List(f1, f2, f3, f4)).map(_ ⇒ ())
+    Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
   }
 
-  def disconnect(): Future[Unit] = redis.quit().map(_ ⇒ ())
+  def disconnect(): Future[Unit] = redis.quit().map(_ => ())
 
   def shutdown(): Future[Unit] = {
-    val f = redis.shutdown().map(_ ⇒ ())
+    val f = redis.shutdown().map(_ => ())
     redis.stop()
     f
   }

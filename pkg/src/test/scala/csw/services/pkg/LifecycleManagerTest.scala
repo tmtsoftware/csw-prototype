@@ -358,11 +358,11 @@ class LifecycleManagerTest() extends FSMSpec {
 
     val transitionTester = system.actorOf(Props(new Actor {
       def receive = {
-        case t @ Transition(_, PendingInitializedFromLoaded, Initialized) ⇒
+        case t @ Transition(_, PendingInitializedFromLoaded, Initialized) =>
           println(s"Transition PendingInitializedFromLoaded to Initialized successful: REGISTER WITH LOCATION")
-        case Transition(_, Loaded, PendingInitializedFromLoaded) ⇒
+        case Transition(_, Loaded, PendingInitializedFromLoaded) =>
           println("Reached PendingInitializedFromLoaded")
-        case s @ CurrentState(_, _) ⇒
+        case s @ CurrentState(_, _) =>
           assert(s === new CurrentState(fsm, Loaded))
       }
     }))

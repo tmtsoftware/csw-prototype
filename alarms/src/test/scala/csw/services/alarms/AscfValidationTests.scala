@@ -16,7 +16,7 @@ class AscfValidationTests extends FunSuite with LazyLogging {
 
   test("Test validating the alarm service config file") {
     val problems = AscfValidation.validate(ascf)
-    problems.foreach(p ⇒ println(p.toString))
+    problems.foreach(p => println(p.toString))
     assert(Problem.errorCount(problems) == 0)
   }
 }

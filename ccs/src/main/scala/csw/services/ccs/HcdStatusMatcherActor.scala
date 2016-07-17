@@ -49,9 +49,9 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
   // Waiting for all variables to match, which is the case when the results set contains
   // a matching current state for each demand state
   def waiting(results: Set[CurrentState]): Receive = {
-    case current: CurrentState ⇒
+    case current: CurrentState =>
       log.info(s"received current state: $current")
-      demands.find(_.prefix == current.prefix).foreach { demand ⇒
+      demands.find(_.prefix == current.prefix).foreach { demand =>
         if (matcher(demand, current)) {
           val set = results + current
           if (set.size == demands.size) {
@@ -63,12 +63,12 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
         }
       }
 
-    case `timeout` ⇒
+    case `timeout` =>
       log.info(s"received timeout")
       replyTo ! CommandStatus.Error(runId, "Command timed out")
       hcds.foreach(_ ! PublisherActor.Unsubscribe)
       context.stop(self)
 
-    case x ⇒ log.error(s"Unexpected message $x")
+    case x => log.error(s"Unexpected message $x")
   }
 }

@@ -21,8 +21,8 @@ sealed trait Connection {
   override def toString = s"$componentId-$connectionType"
 
   override def equals(that: Any) = that match {
-    case (that: Connection) ⇒ this.toString == that.toString
-    case _                  ⇒ false
+    case (that: Connection) => this.toString == that.toString
+    case _                  => false
   }
 }
 
@@ -48,9 +48,9 @@ object Connection {
   def apply(s: String): Try[Connection] = {
     val (id, typ) = s.splitAt(s.lastIndexOf('-')) // To strings
     ConnectionType(typ.drop(1)) match {
-      case Success(AkkaType) ⇒ ComponentId(id).map(AkkaConnection)
-      case Success(HttpType) ⇒ ComponentId(id).map(HttpConnection)
-      case Failure(ex)       ⇒ Failure(ex)
+      case Success(AkkaType) => ComponentId(id).map(AkkaConnection)
+      case Success(HttpType) => ComponentId(id).map(HttpConnection)
+      case Failure(ex)       => Failure(ex)
     }
   }
 
@@ -59,8 +59,8 @@ object Connection {
    */
   def apply(componentId: ComponentId, connectionType: ConnectionType): Connection = {
     connectionType match {
-      case AkkaType ⇒ AkkaConnection(componentId)
-      case HttpType ⇒ HttpConnection(componentId)
+      case AkkaType => AkkaConnection(componentId)
+      case HttpType => HttpConnection(componentId)
     }
   }
 }

@@ -8,7 +8,7 @@ import javacsw.services.alarms.IAlarmService.{AlarmHandler, HealthHandler}
 
 import akka.actor.{ActorRef, ActorRefFactory}
 import akka.util.Timeout
-import csw.services.alarms.AlarmModel.{AlarmStatus, AlarmType, Health, HealthStatus, SeverityLevel}
+import csw.services.alarms.AlarmModel.{AlarmStatus, AlarmType, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmService.AlarmMonitor
 import csw.services.alarms.{AlarmKey, AlarmModel, AlarmService, AlarmState}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
@@ -50,7 +50,7 @@ private[alarms] object JAlarmService {
    *
    * @param asName name used to register the Redis instance with the Location Service (default: "Alarm Service")
    * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
-   *                    to "Indeterminate" (after three missed refreshes)
+   *                    to "Disconnected" (after three missed refreshes)
    * @param system the Akka system or context, needed for working with futures and actors
    * @param timeout amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
@@ -83,6 +83,7 @@ private[alarms] object JAlarmService {
    * Supports Java API for SeverityLevel
    */
   case object JSeverityLevelSup {
+    val Disconnected = SeverityLevel.Disconnected
     val Indeterminate = SeverityLevel.Indeterminate
     val Okay = SeverityLevel.Okay
     val Warning = SeverityLevel.Warning
@@ -173,7 +174,7 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): CompletableFuture[Unit] =
     alarmService.setSeverity(alarmKey, severity).toJava.toCompletableFuture
 
-  override def getSeverity(alarmKey: AlarmKey): CompletableFuture[SeverityLevel] =
+  override def getSeverity(alarmKey: AlarmKey): CompletableFuture[CurrentSeverity] =
     alarmService.getSeverity(alarmKey).toJava.toCompletableFuture
 
   override def acknowledgeAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
@@ -192,8 +193,8 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
                              notifyAlarm:  Optional[AlarmHandler],
                              notifyHealth: Optional[HealthHandler]): AlarmMonitor = {
     alarmService.monitorHealth(alarmKey, subscriber.asScala,
-      notifyAlarm.asScala.map(f ⇒ (alarmStatus: AlarmStatus) ⇒ f.handleAlarmStatus(alarmStatus)),
-      notifyHealth.asScala.map(f ⇒ (healthStatus: HealthStatus) ⇒ f.handleHealthStatus(healthStatus)))
+      notifyAlarm.asScala.map(f => (alarmStatus: AlarmStatus) => f.handleAlarmStatus(alarmStatus)),
+      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)))
   }
 
   override def shutdown(): Unit = alarmService.shutdown()

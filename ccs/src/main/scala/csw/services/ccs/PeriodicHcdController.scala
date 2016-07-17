@@ -34,7 +34,7 @@ object PeriodicHcdController {
  * @deprecated use [[HcdController]]
  */
 trait PeriodicHcdController {
-  this: Actor with ActorLogging ⇒
+  this: Actor with ActorLogging =>
 
   import HcdController._
   import PeriodicHcdController._
@@ -60,10 +60,10 @@ trait PeriodicHcdController {
    */
   def controllerReceive: Receive = {
 
-    case msg @ Process(newInterval) ⇒
+    case msg @ Process(newInterval) =>
 
       try process() catch {
-        case ex: Exception ⇒ log.error(s"Failed to process message", ex)
+        case ex: Exception => log.error(s"Failed to process message", ex)
       }
 
       // May need to cancel current timer before starting new one, if new message received before existing timer fires
@@ -78,15 +78,15 @@ trait PeriodicHcdController {
       // Schedule the next update
       timer = context.system.scheduler.scheduleOnce(currentInterval, self, msg)
 
-    case EndProcess ⇒
+    case EndProcess =>
       if (!timer.isCancelled) {
         log.info(s"Processing stopped")
         timer.cancel()
       }
 
-    case Submit(config) ⇒ queue = queue.enqueue(config)
+    case Submit(config) => queue = queue.enqueue(config)
 
-    //case x              ⇒ log.warning(s"Received unexpected message: $x")
+    //case x              => log.warning(s"Received unexpected message: $x")
   }
 
   /**

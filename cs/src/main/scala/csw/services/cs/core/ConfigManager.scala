@@ -172,13 +172,13 @@ trait ConfigData {
   def writeToOutputStream(out: OutputStream)(implicit context: ActorRefFactory): Future[Unit] = {
     import context.dispatcher
     implicit val materializer = ActorMaterializer()
-    val sink = Sink.foreach[ByteString] { bytes ⇒
+    val sink = Sink.foreach[ByteString] { bytes =>
       out.write(bytes.toArray)
     }
     val materialized = source.runWith(sink)
     // ensure the output file is closed when done
     for {
-      _ ← materialized
+      _ <- materialized
     } yield {
       Try(out.close())
     }
@@ -198,7 +198,7 @@ trait ConfigData {
     val tmpFile = File.createTempFile(file.getName, null, dir.toFile)
     val out = new FileOutputStream(tmpFile)
     for {
-      _ ← writeToOutputStream(out)
+      _ <- writeToOutputStream(out)
     } yield {
       Files.move(tmpFile.toPath, path, StandardCopyOption.ATOMIC_MOVE)
     }
@@ -211,11 +211,11 @@ trait ConfigData {
     implicit val materializer = ActorMaterializer()
     import context.dispatcher
     val out = new ByteArrayOutputStream
-    val sink = Sink.foreach[ByteString] { bytes ⇒
+    val sink = Sink.foreach[ByteString] { bytes =>
       out.write(bytes.toArray)
     }
     val materialized = source.runWith(sink)
-    for (_ ← materialized) yield out.toString
+    for (_ <- materialized) yield out.toString
   }
 }
 
@@ -263,7 +263,7 @@ case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
   override def source: Source[ByteString, NotUsed] = {
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
-    Source.fromIterator(() ⇒ iterator)
+    Source.fromIterator(() => iterator)
   }
 }
 

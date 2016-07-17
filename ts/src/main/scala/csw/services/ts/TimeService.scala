@@ -98,7 +98,7 @@ object TimeService {
    * Must extend an Actor with ActorLogging
    */
   trait TimeServiceScheduler {
-    self: Actor with ActorLogging ⇒
+    self: Actor with ActorLogging =>
 
     import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 

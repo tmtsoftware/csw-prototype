@@ -72,18 +72,18 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
     var count = 0
 
     def receive: Receive = {
-      case "once" ⇒
+      case "once" =>
         log.info("Received once start")
         scheduleOnce(localTimeNow.plusSeconds(5), context.self, "once-done")
-      case "five" ⇒
+      case "five" =>
         log.info("Received multi start")
         val c = schedule(localTimeNow.plusSeconds(1), java.time.Duration.ofSeconds(1), context.self, "count")
         caller ! c //Return the cancellable
-      case "count" ⇒
+      case "count" =>
         count = count + 1
         log.info(s"Count: $count")
         if (count >= 5) caller ! count
-      case "once-done" ⇒
+      case "once-done" =>
         log.info("Received Done")
         caller ! "done"
     }

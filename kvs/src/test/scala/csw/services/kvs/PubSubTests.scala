@@ -67,11 +67,11 @@ object PubSubTests {
 
     def nextConfig(): SetupConfig = {
       nextId = nextId + 1
-      SetupConfig(prefix).set(exposureTime, expTime) // XXX change to be a Duration
+      SetupConfig(prefix).add(exposureTime.set(expTime)) // XXX change to be a Duration
     }
 
     override def receive: Receive = {
-      case x ⇒ log.error(s"Unexpected message $x")
+      case x => log.error(s"Unexpected message $x")
     }
   }
 
@@ -82,14 +82,14 @@ object PubSubTests {
     subscribe("tcs.mobie.red.dat.*")
 
     override def receive: Receive = {
-      case config: SetupConfig ⇒
+      case config: SetupConfig =>
         // log.info(s"$name received $config")
         count = count + 1
         if (count % 10000 == 0)
           log.info(s"Received $count configs so far: $config")
 
-      case "done" ⇒ sender() ! count
-      case x      ⇒ log.error(s"Unexpected message $x")
+      case "done" => sender() ! count
+      case x      => log.error(s"Unexpected message $x")
     }
   }
 

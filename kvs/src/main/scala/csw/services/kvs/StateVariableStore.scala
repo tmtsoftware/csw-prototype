@@ -62,7 +62,7 @@ case class StateVariableStore(settings: KvsSettings)(implicit _system: ActorRefF
    * Deletes the given demand value from the store
    * @return a future indicating if/when the operation has completed
    */
-  def deleteDemand(prefix: String): Future[Unit] = kvs.delete(demandPrefix(prefix)).map(_ ⇒ ())
+  def deleteDemand(prefix: String): Future[Unit] = kvs.delete(demandPrefix(prefix)).map(_ => ())
 
   // --- Set/Get Current Values ---
 
@@ -98,7 +98,7 @@ case class StateVariableStore(settings: KvsSettings)(implicit _system: ActorRefF
    * Deletes the given current value from the store
    * @return a future indicating if/when the operation has completed
    */
-  def delete(prefix: String): Future[Unit] = kvs.delete(prefix).map(_ ⇒ ())
+  def delete(prefix: String): Future[Unit] = kvs.delete(prefix).map(_ => ())
 
   /**
    * Disconnects from the key/value store server

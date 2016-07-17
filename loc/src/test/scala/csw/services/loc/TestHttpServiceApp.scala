@@ -17,7 +17,7 @@ object TestHttpServiceApp extends App {
   implicit lazy val system = ActorSystem("TestHttpServiceApp")
   implicit val dispatcher = system.dispatcher
   sys.addShutdownHook(system.terminate())
-  for (i ← 1 to numServices) {
+  for (i <- 1 to numServices) {
     system.actorOf(TestHttpService.props(i))
   }
 }
@@ -37,7 +37,7 @@ class TestHttpService(i: Int) extends Actor with ActorLogging {
   val port = 9000 + i // Dummy value for testing: Normally should be the actually port the HTTP server is running on...
   LocationService.registerHttpConnection(TestHttpService.componentId(i), port)
   override def receive: Receive = {
-    case x ⇒
+    case x =>
       log.error(s"Received unexpected message $x")
   }
 }

@@ -1,6 +1,7 @@
 package csw.services.alarms
 
 import java.net.InetSocketAddress
+import java.time.{Clock, LocalDateTime}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus}
@@ -32,9 +33,9 @@ object HealthMonitorActor {
   def props(
     alarmService: AlarmService,
     alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]            = None,
-    notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
-    notifyHealth: Option[HealthStatus ⇒ Unit] = None
+    subscriber:   Option[ActorRef]             = None,
+    notifyAlarm:  Option[AlarmStatus => Unit]  = None,
+    notifyHealth: Option[HealthStatus => Unit] = None
   ): Props = {
     Props(classOf[HealthMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber, notifyAlarm, notifyHealth)
   }
@@ -46,15 +47,15 @@ private class HealthMonitorActor(
   alarmService: AlarmServiceImpl,
   alarmKey:     AlarmKey,
   subscriber:   Option[ActorRef],
-  notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
-  notifyHealth: Option[HealthStatus ⇒ Unit]
+  notifyAlarm:  Option[AlarmStatus => Unit]  = None,
+  notifyHealth: Option[HealthStatus => Unit]
 )
     extends RedisSubscriberActor(
       address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
       channels = Seq.empty,
       patterns = List("__key*__:*", alarmKey.severityKey),
       authPassword = None,
-      onConnectStatus = (b: Boolean) ⇒ {}
+      onConnectStatus = (b: Boolean) => {}
     )
     with ByteStringSerializerLowPriority {
 
@@ -79,12 +80,12 @@ private class HealthMonitorActor(
       val s = pm.channel.substring(keyEventPrefix.length)
       log.debug(s"key $s: $key")
       val f = for {
-        sev ← alarmService.getSeverity(key)
-        state ← alarmService.getAlarmState(key)
+        sev <- alarmService.getSeverity(key)
+        state <- alarmService.getAlarmState(key)
       } yield {
         worker ! HealthInfo(key, sev, state)
       }
-      f.onFailure { case t ⇒ log.error(t, s"Failed to get severity for key: $key") }
+      f.onFailure { case t => log.error(t, s"Failed to get severity for key: $key") }
     }
   }
 
@@ -92,8 +93,8 @@ private class HealthMonitorActor(
   // This gets the complete list of keys (Note that static keys always exist, but severity keys may expire).
   def initAlarmMap(): Unit = {
     alarmService.getHealthInfoMap(alarmKey).onComplete {
-      case Success(m)  ⇒ worker ! InitialMap(m)
-      case Failure(ex) ⇒ log.error("Failed to initialize health from alarm severity and state", ex)
+      case Success(m)  => worker ! InitialMap(m)
+      case Failure(ex) => log.error("Failed to initialize health from alarm severity and state", ex)
     }
   }
 }
@@ -115,9 +116,9 @@ private object HealthMonitorWorkorActor {
   def props(
     alarmService: AlarmServiceImpl,
     alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]            = None,
-    notifyAlarm:  Option[AlarmStatus ⇒ Unit]  = None,
-    notifyHealth: Option[HealthStatus ⇒ Unit] = None
+    subscriber:   Option[ActorRef]             = None,
+    notifyAlarm:  Option[AlarmStatus => Unit]  = None,
+    notifyHealth: Option[HealthStatus => Unit] = None
   ): Props = {
     Props(classOf[HealthMonitorWorkorActor], alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth)
   }
@@ -129,34 +130,37 @@ private class HealthMonitorWorkorActor(
     alarmService:    AlarmServiceImpl,
     alarmKeyPattern: AlarmKey,
     subscriber:      Option[ActorRef],
-    notifyAlarm:     Option[AlarmStatus ⇒ Unit],
-    notifyHealth:    Option[HealthStatus ⇒ Unit]
+    notifyAlarm:     Option[AlarmStatus => Unit],
+    notifyHealth:    Option[HealthStatus => Unit]
 ) extends Actor with ActorLogging {
 
   var healthOpt: Option[Health] = None
 
   // Expect an initial map containing all the alarms we are tracking
   override def receive: Receive = {
-    case InitialMap(alarmMap) ⇒
+    case InitialMap(alarmMap) =>
       context.become(working(alarmMap))
       updateHealth(alarmMap)
 
-    case x ⇒ log.debug(s"Ignoring message since not ready: $x")
+    case x => log.debug(s"Ignoring message since not ready: $x")
   }
+
+  // Returns a timestamp for an alarm
+  private def timestamp(): LocalDateTime = LocalDateTime.now(Clock.systemUTC())
 
   // expect updates to the alarm severity or state, then calculate the new health value
   private def working(alarmMap: Map[AlarmKey, HealthInfo]): Receive = {
-    case h @ HealthInfo(alarmKey, severityLevel, alarmState) ⇒
+    case h @ HealthInfo(alarmKey, severityLevel, alarmState) =>
       val update = if (alarmMap.contains(alarmKey)) {
         val healthInfo = alarmMap(alarmKey)
-        healthInfo.severityLevel != h.severityLevel || healthInfo.alarmState != h.alarmState
+        healthInfo.currentSeverity != h.currentSeverity || healthInfo.alarmState != h.alarmState
       } else false
       if (update) {
-        val newMap = alarmMap + (alarmKey → h)
+        val newMap = alarmMap + (alarmKey -> h)
         context.become(working(newMap))
         updateHealth(newMap)
         if (alarmState.shelvedState == ShelvedState.Normal && alarmState.activationState == ActivationState.Normal)
-          notifyListeners(AlarmStatus(alarmKey, severityLevel, alarmState))
+          notifyListeners(AlarmStatus(timestamp(), alarmKey, severityLevel, alarmState))
       }
   }
 
@@ -167,20 +171,20 @@ private class HealthMonitorWorkorActor(
     // Notify listeners if the health changed
     if (healthOpt.isEmpty || healthOpt.get != health) {
       healthOpt = Some(health)
-      notifyListeners(HealthStatus(alarmKeyPattern, health))
+      notifyListeners(HealthStatus(timestamp(), alarmKeyPattern, health))
     }
   }
 
   // Notify the subscribers of a change in the health
   private def notifyListeners(healthStatus: HealthStatus): Unit = {
     subscriber.foreach(_ ! healthStatus)
-    notifyHealth.foreach(_(healthStatus))
+    notifyHealth.foreach(f => f(healthStatus))
   }
 
   // Notify the subscribers of a change in the severity of an alarm
   private def notifyListeners(alarmStatus: AlarmStatus): Unit = {
     subscriber.foreach(_ ! alarmStatus)
-    notifyAlarm.foreach(_(alarmStatus))
+    notifyAlarm.foreach(f => f(alarmStatus))
   }
 }
 

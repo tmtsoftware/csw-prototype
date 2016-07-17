@@ -22,27 +22,29 @@ class SerializationTests extends FunSuite {
   val epoch = DoubleKey("epoch")
   val test = IntKey("test")
 
-  val sc1 = SetupConfig("tcs.pos")
-    .set(ra, "12:32:11")
-    .set(dec, "30:22:22")
-    .set(epoch, 1950.0)
-    .set(test, 1) //.second
+  val sc1 = SetupConfig("tcs.pos").madd(
+    ra.set("12:32:11"),
+    dec.set("30:22:22"),
+    epoch.set(1950.0),
+    test.set(1)
+  ) //.second
 
-  val cs1 = CurrentState("tcs.pos")
-    .set(ra, "12:32:11")
-    .set(dec, "30:22:22")
-    .set(epoch, 1950.0)
-    .set(test, 1) //.second
+  val cs1 = CurrentState("tcs.pos").madd(
+    ra.set("12:32:11"),
+    dec.set("30:22:22"),
+    epoch.set(1950.0),
+    test.set(1)
+  ) //.second
 
   val disperser = StringKey("disperser")
   val filter1 = StringKey("filter1")
   val sc2 = SetupConfig("wfos.blue")
-    .set(disperser, "gr243")
-    .set(filter1, "GG433")
+    .add(disperser.set("gr243"))
+    .add(filter1.set("GG433"))
 
   val ob1 = ObserveConfig("wfos.blue.camera")
-    .set(exposureTime, 22.3) // .sec,
-    .set(repeats, 3)
+    .add(exposureTime.set(22.3)) // .sec,
+    .add(repeats.set(3))
 
   val wc1 = WaitConfig("wfos.blue.camera")
 
@@ -113,8 +115,8 @@ class SerializationTests extends FunSuite {
   test("Base trait event Java serialization") {
     import ConfigSerializer._
     val event = SystemEvent(fqn1prefix)
-      .set(ra, "12:32:11")
-      .set(dec, "30:22:22")
+      .add(ra.set("12:32:11"))
+      .add(dec.set("30:22:22"))
 
     val bytes1 = write(event)
 

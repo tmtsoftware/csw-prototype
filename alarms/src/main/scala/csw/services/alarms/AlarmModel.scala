@@ -1,5 +1,7 @@
 package csw.services.alarms
 
+import java.time.LocalDateTime
+
 import akka.util.ByteString
 import com.typesafe.config.Config
 import csw.services.alarms.AlarmModel.SeverityLevel
@@ -9,17 +11,17 @@ import redis.{ByteStringDeserializer, ByteStringDeserializerDefault}
  * Basic model for an Alarm.
  * This information is read from the Alarm Service Config File and stored in Redis
  *
- * @param subsystem The alarm belongs to this subsystem
- * @param component The alarm belongs to this component
- * @param name the name of the alarm
- * @param description a description of the alarm
- * @param location A text description of where the alarming condition is located
- * @param alarmType The general category for the alarm (e.g., limit alarm)
- * @param severityLevels Severity levels implemented by the component alarm
- * @param probableCause The probable cause for each level or for all levels
+ * @param subsystem        The alarm belongs to this subsystem
+ * @param component        The alarm belongs to this component
+ * @param name             the name of the alarm
+ * @param description      a description of the alarm
+ * @param location         A text description of where the alarming condition is located
+ * @param alarmType        The general category for the alarm (e.g., limit alarm)
+ * @param severityLevels   Severity levels implemented by the component alarm
+ * @param probableCause    The probable cause for each level or for all levels
  * @param operatorResponse Instructions or information to help the operator respond to the alarm.
- * @param acknowledge Does this alarm require an acknowledge by the operator?
- * @param latched Should this alarm be latched?
+ * @param acknowledge      Does this alarm require an acknowledge by the operator?
+ * @param latched          Should this alarm be latched?
  */
 case class AlarmModel(
     subsystem:        String,
@@ -39,23 +41,39 @@ case class AlarmModel(
    * @return The contents of this object as a map
    */
   def asMap(): Map[String, String] = {
+    import AlarmModel.F
     Map(
-      "subsystem" → subsystem,
-      "component" → component,
-      "name" → name,
-      "description" → description,
-      "location" → location,
-      "alarmType" → alarmType.toString,
-      "severityLevels" → severityLevels.mkString(":"),
-      "probableCause" → probableCause,
-      "operatorResponse" → operatorResponse,
-      "acknowledge" → acknowledge.toString,
-      "latched" → latched.toString
+      F.subsystem -> subsystem,
+      F.component -> component,
+      F.name -> name,
+      F.description -> description,
+      F.location -> location,
+      F.alarmType -> alarmType.toString,
+      F.severityLevels -> severityLevels.mkString(":"),
+      F.probableCause -> probableCause,
+      F.operatorResponse -> operatorResponse,
+      F.acknowledge -> acknowledge.toString,
+      F.latched -> latched.toString
     )
   }
 }
 
 object AlarmModel extends ByteStringDeserializerDefault {
+
+  // Field name constants
+  private[alarms] object F {
+    val subsystem = "subsystem"
+    val component = "component"
+    val name = "name"
+    val description = "description"
+    val location = "location"
+    val alarmType = "alarmType"
+    val severityLevels = "severityLevels"
+    val probableCause = "probableCause"
+    val operatorResponse = "operatorResponse"
+    val acknowledge = "acknowledge"
+    val latched = "latched"
+  }
 
   import net.ceedubs.ficus.Ficus._
 
@@ -64,16 +82,15 @@ object AlarmModel extends ByteStringDeserializerDefault {
    */
   sealed trait SeverityLevel {
     /**
-     * A numeric level for the severity.
-     * Higher values are more critical.
-     * Anything greater than 0 is not OK.
+     * A numeric level for the severity. Higher values are more critical.
+     * Anything greater than 0 is not OK (less than 0 is something else)
      */
     val level: Int
 
     /**
-     * Returns true if the value represents an alarm condition (i.e.: its not Okay or Indeterminate)
+     * Returns true if the value represents an alarm condition (i.e.: its not Okay)
      */
-    def isAlarm: Boolean = level > 0
+    def isAlarm: Boolean = level > 0 // XXX Disconnected and Indeterminate are not latched (for now)
 
     /**
      * String representation
@@ -87,25 +104,60 @@ object AlarmModel extends ByteStringDeserializerDefault {
 
     abstract class SeverityLevelBase(override val level: Int, override val name: String) extends SeverityLevel
 
+    /**
+     * The component associated with the alarms is currently not executing.
+     * (i.e.: The severity value expired because it was not refreshed within the defined amount of time)
+     */
+    case object Disconnected extends SeverityLevelBase(-2, "Disconnected")
+
+    /**
+     * The conditions for the alarm can not be determined with any reliability by the component.
+     */
     case object Indeterminate extends SeverityLevelBase(-1, "Indeterminate")
 
+    /**
+     * Normal operations
+     */
     case object Okay extends SeverityLevelBase(0, "Okay")
 
+    /**
+     * An alarm condition that essentially has no required response during an observing night,
+     * but should be handled by day staff during the following day.
+     */
     case object Warning extends SeverityLevelBase(1, "Warning")
 
+    /**
+     * An alarm condition requires action within 30- 60 minutes. Alarm may not impact
+     * observing but may degrade system performance until handled. May get worse over time.
+     */
     case object Major extends SeverityLevelBase(2, "Major")
 
+    /**
+     * An alarm condition requires action soon. Observing cannot continue with critical alarms.
+     */
     case object Critical extends SeverityLevelBase(3, "Critical")
 
+    /**
+     * Returns the SeverityLevel given its name
+     * @param name the name of the severity level
+     */
     def apply(name: String): Option[SeverityLevel] = name match {
-      case Indeterminate.name ⇒ Some(Indeterminate)
-      case Okay.name          ⇒ Some(Okay)
-      case Warning.name       ⇒ Some(Warning)
-      case Major.name         ⇒ Some(Major)
-      case Critical.name      ⇒ Some(Critical)
-      case _                  ⇒ None
+      case Disconnected.name  => Some(Disconnected)
+      case Indeterminate.name => Some(Indeterminate)
+      case Okay.name          => Some(Okay)
+      case Warning.name       => Some(Warning)
+      case Major.name         => Some(Major)
+      case Critical.name      => Some(Critical)
+      case _                  => None
     }
   }
+
+  /**
+   * Represents the current severity level for an alarm
+   * @param reported the severity level reported by the component (or Disconnected, if it expired due to not being refreshed on time)
+   * @param latched the actual calculated severity level, based on the latched and acknowledged states, etc.
+   */
+  case class CurrentSeverity(reported: SeverityLevel, latched: SeverityLevel)
 
   /**
    * Base trait for alarm types
@@ -137,17 +189,17 @@ object AlarmModel extends ByteStringDeserializerDefault {
     case object System extends AlarmType
 
     def apply(name: String): AlarmType = name match {
-      case "Absolute"     ⇒ Absolute
-      case "BitPattern"   ⇒ BitPattern
-      case "Calculated"   ⇒ Calculated
-      case "Deviation"    ⇒ Deviation
-      case "Discrepancy"  ⇒ Discrepancy
-      case "Instrument"   ⇒ Instrument
-      case "RateChange"   ⇒ RateChange
-      case "RecipeDriven" ⇒ RecipeDriven
-      case "Safety"       ⇒ Safety
-      case "Statistical"  ⇒ Statistical
-      case "System"       ⇒ System
+      case "Absolute"     => Absolute
+      case "BitPattern"   => BitPattern
+      case "Calculated"   => Calculated
+      case "Deviation"    => Deviation
+      case "Discrepancy"  => Discrepancy
+      case "Instrument"   => Instrument
+      case "RateChange"   => RateChange
+      case "RecipeDriven" => RecipeDriven
+      case "Safety"       => Safety
+      case "Statistical"  => Statistical
+      case "System"       => System
     }
   }
 
@@ -169,20 +221,22 @@ object AlarmModel extends ByteStringDeserializerDefault {
   /**
    * Combines an alarm key with the current severity level and state for the alarm
    *
+   * @param timestamp a timestamp for the alarm event
    * @param alarmKey  the unique key for the alarm
-   * @param severity the current alarm severity level
-   * @param state    the current alarm state (indicates if the alarm needs acknowledgement, etc.)
+   * @param currentSeverity  the current reported and calculated alarm severity levels
+   * @param state     the current alarm state (indicates if the alarm needs acknowledgement, etc.)
    */
-  case class AlarmStatus(alarmKey: AlarmKey, severity: SeverityLevel, state: AlarmState)
+  case class AlarmStatus(timestamp: LocalDateTime, alarmKey: AlarmKey, currentSeverity: CurrentSeverity, state: AlarmState)
 
   /**
    * Combines an alarm key (which may use wildcards to match a system, subsystem or component)
    * with a health value, which is calculated from all the alarms matching the given alarm key.
    *
-   * @param key    an alarm key matching all alarms for the system, a subsystem or component
-   * @param health the total health, calculated from the severity values of all the alarms matching the key
+   * @param timestamp a timestamp for the health event
+   * @param key       an alarm key matching all alarms for the system, a subsystem or component
+   * @param health    the total health, calculated from the severity values of all the alarms matching the key
    */
-  case class HealthStatus(key: AlarmKey, health: Health)
+  case class HealthStatus(timestamp: LocalDateTime, key: AlarmKey, health: Health)
 
   /**
    * Initializes an AlarmModel from the given Config
@@ -192,17 +246,17 @@ object AlarmModel extends ByteStringDeserializerDefault {
    */
   def apply(config: Config): AlarmModel = {
     AlarmModel(
-      subsystem = config.as[String]("subsystem"),
-      component = config.as[String]("component"),
-      name = config.as[String]("name"),
-      description = config.as[String]("description"),
-      location = config.as[String]("location"),
-      alarmType = AlarmType(config.as[String]("alarmType")),
-      severityLevels = config.as[List[String]]("severityLevels").map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate)),
-      probableCause = config.as[String]("probableCause"),
-      operatorResponse = config.as[String]("operatorResponse"),
-      acknowledge = config.as[Boolean]("acknowledge"),
-      latched = config.as[Boolean]("latched")
+      subsystem = config.as[String](F.subsystem),
+      component = config.as[String](F.component),
+      name = config.as[String](F.name),
+      description = config.as[String](F.description),
+      location = config.as[String](F.location),
+      alarmType = AlarmType(config.as[String](F.alarmType)),
+      severityLevels = config.as[List[String]](F.severityLevels).map(SeverityLevel(_).getOrElse(SeverityLevel.Disconnected)),
+      probableCause = config.as[String](F.probableCause),
+      operatorResponse = config.as[String](F.operatorResponse),
+      acknowledge = config.as[Boolean](F.acknowledge),
+      latched = config.as[Boolean](F.latched)
     )
   }
 
@@ -213,20 +267,21 @@ object AlarmModel extends ByteStringDeserializerDefault {
    * @return the alarm model, if found
    */
   def apply(map: Map[String, ByteString]): Option[AlarmModel] = {
-    if (map.isEmpty) None else {
+    if (map.isEmpty) None
+    else {
       val formatter = implicitly[ByteStringDeserializer[String]]
 
-      val subsystem = formatter.deserialize(map("subsystem"))
-      val component = formatter.deserialize(map("component"))
-      val name = formatter.deserialize(map("name"))
-      val description = formatter.deserialize(map("description"))
-      val location = formatter.deserialize(map("location"))
-      val alarmType = AlarmType(formatter.deserialize(map("alarmType")))
-      val severityLevels = formatter.deserialize(map("severityLevels")).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate))
-      val probableCause = formatter.deserialize(map("probableCause"))
-      val operatorResponse = formatter.deserialize(map("operatorResponse"))
-      val acknowledge = formatter.deserialize(map("acknowledge")).toBoolean
-      val latched = formatter.deserialize(map("latched")).toBoolean
+      val subsystem = formatter.deserialize(map(F.subsystem))
+      val component = formatter.deserialize(map(F.component))
+      val name = formatter.deserialize(map(F.name))
+      val description = formatter.deserialize(map(F.description))
+      val location = formatter.deserialize(map(F.location))
+      val alarmType = AlarmType(formatter.deserialize(map(F.alarmType)))
+      val severityLevels = formatter.deserialize(map(F.severityLevels)).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Disconnected))
+      val probableCause = formatter.deserialize(map(F.probableCause))
+      val operatorResponse = formatter.deserialize(map(F.operatorResponse))
+      val acknowledge = formatter.deserialize(map(F.acknowledge)).toBoolean
+      val latched = formatter.deserialize(map(F.latched)).toBoolean
 
       Some(AlarmModel(subsystem, component, name, description, location, alarmType, severityLevels, probableCause,
         operatorResponse, acknowledge, latched))
@@ -238,8 +293,8 @@ object AlarmModel extends ByteStringDeserializerDefault {
  * An abbreviated alarm model that only contains the fields needed internally to calculate the severity, etc..
  *
  * @param severityLevels Severity levels implemented by the component alarm
- * @param acknowledge Does this alarm require an acknowledge by the operator?
- * @param latched Should this alarm be latched?
+ * @param acknowledge    Does this alarm require an acknowledge by the operator?
+ * @param latched        Should this alarm be latched?
  */
 private[alarms] case class AlarmModelSmall(severityLevels: List[AlarmModel.SeverityLevel], acknowledge: Boolean, latched: Boolean)
 
@@ -247,9 +302,9 @@ private[alarms] object AlarmModelSmall {
   def apply(seq: Seq[Option[ByteString]]): Option[AlarmModelSmall] = {
     val formatter = implicitly[ByteStringDeserializer[String]]
     for {
-      severityLevels ← seq.head.map(formatter.deserialize(_).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Indeterminate)))
-      acknowledge ← seq(1).map(formatter.deserialize(_).toBoolean)
-      latched ← seq(2).map(formatter.deserialize(_).toBoolean)
+      severityLevels <- seq.head.map(formatter.deserialize(_).split(":").toList.map(SeverityLevel(_).getOrElse(SeverityLevel.Disconnected)))
+      acknowledge <- seq(1).map(formatter.deserialize(_).toBoolean)
+      latched <- seq(2).map(formatter.deserialize(_).toBoolean)
     } yield AlarmModelSmall(severityLevels, acknowledge, latched)
   }
 }

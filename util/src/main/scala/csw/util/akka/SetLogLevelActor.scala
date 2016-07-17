@@ -21,12 +21,12 @@ object SetLogLevelActor {
  * to set the log level for a package tree.
  */
 trait SetLogLevelActor {
-  this: Actor with ActorLogging ⇒
+  this: Actor with ActorLogging =>
 
   import SetLogLevelActor._
 
   def logLevelReceive: Receive = {
-    case SetLogLevel(pkg, level) ⇒
+    case SetLogLevel(pkg, level) =>
       val newLevel = Level.toLevel(level, null)
       if (newLevel != null) {
         log.info(s"Setting log level for $self to $level")

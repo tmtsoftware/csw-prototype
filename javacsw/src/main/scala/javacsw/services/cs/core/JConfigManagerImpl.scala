@@ -33,14 +33,14 @@ class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFacto
 
   override def get(path: File): CompletableFuture[Optional[JConfigData]] =
     // Note: First map is for the future, second to convert scala Option to java Optional
-    manager.get(path).map(_.map { c ⇒
+    manager.get(path).map(_.map { c =>
       val result: JConfigData = JConfigDataImpl(c)
       result
     }.asJava).toJava.toCompletableFuture
 
   override def get(path: File, id: ConfigId): CompletableFuture[Optional[JConfigData]] =
     // Note: First map is for the future, second to convert scala Option to java Optional
-    manager.get(path, Some(id)).map(_.map { c ⇒
+    manager.get(path, Some(id)).map(_.map { c =>
       val result: JConfigData = JConfigDataImpl(c)
       result
     }.asJava).toJava.toCompletableFuture

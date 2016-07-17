@@ -24,11 +24,11 @@ object UnitsOfMeasure {
 
   object Units {
     def fromString(name: String): Units = name match {
-      case Meters.name       ⇒ Meters
-      case Deg.name          ⇒ Deg
-      case Seconds.name      ⇒ Seconds
-      case Milliseconds.name ⇒ Milliseconds
-      case _                 ⇒ NoUnits
+      case Meters.name       => Meters
+      case Deg.name          => Deg
+      case Seconds.name      => Seconds
+      case Milliseconds.name => Milliseconds
+      case _                 => NoUnits
     }
   }
 

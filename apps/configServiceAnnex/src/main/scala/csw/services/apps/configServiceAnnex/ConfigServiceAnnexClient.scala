@@ -49,7 +49,7 @@ object ConfigServiceAnnexClient {
     implicit val materializer = ActorMaterializer()
 
     val out = new FileOutputStream(file)
-    val sink = Sink.foreach[ByteString] { bytes ⇒
+    val sink = Sink.foreach[ByteString] { bytes =>
       out.write(bytes.toArray)
     }
 
@@ -59,26 +59,26 @@ object ConfigServiceAnnexClient {
 
     val status = Promise[File]()
     result onComplete {
-      case Success(res) if res.status == StatusCodes.OK ⇒
+      case Success(res) if res.status == StatusCodes.OK =>
         val materialized = res.entity.dataBytes.runWith(sink)
         // ensure the output file is closed and the system shutdown upon completion
         materialized.onComplete {
-          case Success(_) ⇒
+          case Success(_) =>
             Try(out.close())
             FileUtils.validate(id, file, status)
-          case Failure(e) ⇒
+          case Failure(e) =>
             Try(out.close())
             logger.error(s"Failed to download $uri to $file: ${e.getMessage}")
             status.failure(e)
         }
 
-      case Success(res) ⇒
+      case Success(res) =>
         Try(out.close())
         val s = s"HTTP response code for $uri: ${res.status}"
         logger.error(s)
         status.failure(new IOException(s))
 
-      case Failure(error) ⇒
+      case Failure(error) =>
         Try(out.close())
         logger.error(s"$error")
         status.failure(error)
@@ -100,7 +100,7 @@ object ConfigServiceAnnexClient {
 
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
     val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
-    val chunks = Source.fromIterator(() ⇒ iterator).map(ChunkStreamPart.apply)
+    val chunks = Source.fromIterator(() => iterator).map(ChunkStreamPart.apply)
     val entity = HttpEntity.Chunked(MediaTypes.`application/octet-stream`, chunks)
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(method = POST, uri = s"/$id", entity = entity)
@@ -108,15 +108,15 @@ object ConfigServiceAnnexClient {
 
     val status = Promise[String]()
     result onComplete {
-      case Success(res) if res.status == StatusCodes.OK ⇒
+      case Success(res) if res.status == StatusCodes.OK =>
         status.success(id)
 
-      case Success(res) ⇒
+      case Success(res) =>
         val s = s"HTTP response code for $uri: ${res.status}"
         logger.error(s)
         status.failure(new IOException(s))
 
-      case Failure(error) ⇒
+      case Failure(error) =>
         logger.error(s"$error")
         status.failure(error)
     }
@@ -140,10 +140,10 @@ object ConfigServiceAnnexClient {
 
     val status = Promise[Boolean]()
     result onComplete {
-      case Success(res) ⇒
+      case Success(res) =>
         status.success(res.status == StatusCodes.OK)
 
-      case Failure(error) ⇒
+      case Failure(error) =>
         logger.error(s"$error")
         status.failure(error)
     }
@@ -167,10 +167,10 @@ object ConfigServiceAnnexClient {
 
     val status = Promise[Boolean]()
     result onComplete {
-      case Success(res) ⇒
+      case Success(res) =>
         status.success(res.status == StatusCodes.OK)
 
-      case Failure(error) ⇒
+      case Failure(error) =>
         logger.error(s"$error")
         status.failure(error)
     }

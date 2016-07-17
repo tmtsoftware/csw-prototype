@@ -1,11 +1,11 @@
 package csw.services.kvs
 
-import akka.testkit.{ImplicitSender, TestKit}
 import akka.actor.ActorSystem
-import csw.util.config.Configurations.SetupConfig
-import org.scalatest.{DoNotDiscover, FunSuiteLike}
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.util.config.Configurations.SetupConfig
 import csw.util.config.{DoubleKey, IntKey, StringKey}
+import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
 
@@ -33,25 +33,25 @@ class BlockingKeyValueStoreTests
 
   test("Test set and get") {
     val config1 = SetupConfig("tcs.test")
-      .set(infoValue, 1)
-      .set(infoStr, "info 1")
+      .add(infoValue.set(1))
+      .add(infoStr.set("info 1"))
 
     val config2 = SetupConfig("tcs.test")
-      .set(infoValue, 2)
-      .set(infoStr, "info 2")
+      .add(infoValue.set(2))
+      .add(infoStr.set("info 2"))
 
     kvs.set("test1", config1)
 
-    val val1 = kvs.get("test1").get
+    val val1: SetupConfig = kvs.get("test1").get
     assert(val1.prefix == "tcs.test")
-    assert(val1.value(infoValue) == 1)
-    assert(val1.value(infoStr) == "info 1")
+    assert(val1(infoValue).head == 1)
+    assert(val1(infoStr).head == "info 1")
 
     kvs.set("test2", config2)
 
-    val val2 = kvs.get("test2")
-    assert(val2.exists(_.value(infoValue) == 2))
-    assert(val2.exists(_.value(infoStr) == "info 2"))
+    val val2: Option[SetupConfig] = kvs.get("test2")
+    assert(val2.exists(_(infoValue).head == 2))
+    assert(val2.exists(_(infoStr).head == "info 2"))
 
     assert(kvs.delete("test1", "test2") == 2)
 
@@ -62,23 +62,23 @@ class BlockingKeyValueStoreTests
   }
 
   test("Test set, get and getHistory") {
-    val config = SetupConfig("tcs.testPrefix").set(exposureTime, 2.0)
+    val config = SetupConfig("tcs.testPrefix").add(exposureTime.set(2.0))
     val key = "test"
     val n = 3
 
-    kvs.set(key, config.set(exposureTime, 3.0), n)
-    kvs.set(key, config.set(exposureTime, 4.0), n)
-    kvs.set(key, config.set(exposureTime, 5.0), n)
-    kvs.set(key, config.set(exposureTime, 6.0), n)
-    kvs.set(key, config.set(exposureTime, 7.0), n)
+    kvs.set(key, config.add(exposureTime.set(3.0)), n)
+    kvs.set(key, config.add(exposureTime.set(4.0)), n)
+    kvs.set(key, config.add(exposureTime.set(5.0)), n)
+    kvs.set(key, config.add(exposureTime.set(6.0)), n)
+    kvs.set(key, config.add(exposureTime.set(7.0)), n)
 
-    val v = kvs.get(key)
+    val v: Option[SetupConfig] = kvs.get(key)
     assert(v.isDefined)
-    assert(v.get.value(exposureTime) == 7.0)
+    assert(v.get(exposureTime).head == 7.0)
 
     val h = kvs.getHistory(key, n + 1)
     assert(h.size == n + 1)
-    for (i ← 0 to n) {
+    for (i <- 0 to n) {
       logger.info(s"History: $i: ${h(i)}")
     }
 

@@ -17,7 +17,7 @@ object TestAkkaServiceApp extends App {
   implicit lazy val system = ActorSystem("TestAkkaServiceApp")
   implicit val dispatcher = system.dispatcher
   sys.addShutdownHook(system.terminate())
-  for (i ← 1 to numServices) {
+  for (i <- 1 to numServices) {
     system.actorOf(TestAkkaService.props(i))
   }
 }
@@ -34,7 +34,7 @@ object TestAkkaService {
 class TestAkkaService(i: Int) extends Actor with ActorLogging {
   LocationService.registerAkkaConnection(TestAkkaService.componentId(i), self, "test.akka.prefix")(context.system)
   override def receive: Receive = {
-    case x ⇒
+    case x =>
       log.error(s"Received unexpected message $x")
   }
 }

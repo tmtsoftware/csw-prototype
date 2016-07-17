@@ -9,16 +9,20 @@ import scala.language.implicitConversions
  * The type of a configuration item
  *
  * @tparam S the Scala type
- * @tparam J the Java type (may be the same)
  */
-trait Item[S, J] {
+trait Item[S] {
   /**
    * @return the name of the key for this item
    */
   def keyName: String
 
   /**
-   * @return The values for this item
+   * @return the units for the values
+   */
+  def units: Units
+
+  /**
+   * @return All the values for this item
    */
   def values: Vector[S]
 
@@ -30,20 +34,16 @@ trait Item[S, J] {
   def size: Int = values.size
 
   /**
-   * @return the units for the values
-   */
-  def units: Units
-
-  /**
    * Returns the value at the given index, throwing an exception if the index is out of range
    *
    * @param index the index of a value
    * @return the value at the given index (may throw an exception if the index is out of range)
    */
-  def apply(index: Int): S = values(index)
+  def apply(index: Int): S = value(index)
 
   /**
    * Returns the value at the given index, throwing an exception if the index is out of range
+   * This is a Scala convenience method
    *
    * @param index the index of a value
    * @return the value at the given index (may throw an exception if the index is out of range)
@@ -52,44 +52,16 @@ trait Item[S, J] {
 
   /**
    * @param index the index of a value
-   * @return Some value at the given index, if the index is in range, otherwise None
+   * @return Some value at the given index as an Option, if the index is in range, otherwise None
    */
   def get(index: Int): Option[S] = values.lift(index)
 
   /**
-   * @return the first or default value (Use this if you know there is only a single value)
-   */
-  def value: S = values(0)
-
-  /**
-   * Java API to get the value at the given index
-   *
-   * @param index the index of a value
-   * @return the value at the given index (may throw an exception if the index is out of range)
-   */
-  def jvalue(index: Int): J
-
-  /**
-   * Java API to get the value at the given index
-   *
-   * @param index the index of a value
-   * @return Some value at the given index, if the index is in range, otherwise None
-   */
-  def jget(index: Int): java.util.Optional[J]
-
-  /**
-   * Java API to get the first or default value
+   * Returns the first value as a convenience when storing a single value
    *
    * @return the first or default value (Use this if you know there is only a single value)
    */
-  def jvalue: J
-
-  /**
-   * Java API: Returns the item's values as a java list
-   *
-   * @return the list of values
-   */
-  def jvalues: java.util.List[J]
+  def head: S = value(0)
 
   /**
    * Sets the units for the values
@@ -97,17 +69,18 @@ trait Item[S, J] {
    * @param units the units for the values
    * @return a new instance of this item with the units set
    */
-  def withUnits(units: Units): Item[S, J]
+  def withUnits(units: Units): Item[S]
 }
 
 /**
  * The type of a configuration item key.
+ * Note that the Item is f-bounded polymorphic so that item returns will have the correct types
  *
  * @param keyName the key
  * @tparam S the value's Scala type
- * @tparam J the value's Java type (will be converted to/from Scala, may be the same)
+ * @tparam I the type of the item created by this Key
  */
-abstract class Key[S, J](val keyName: String) extends Serializable {
+abstract class Key[S, I <: Item[S]](val keyName: String) extends Serializable {
 
   /**
    * Sets the values for the key as a Scala Vector
@@ -116,7 +89,7 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
    * @param units optional units of the values (defaults to no units)
    * @return an item containing the key name, values and units
    */
-  def set(v: Vector[S], units: Units = NoUnits): Item[S, J]
+  def set(v: Vector[S], units: Units = NoUnits): I
 
   /**
    * Sets the values for the key using a variable number of arguments
@@ -124,30 +97,61 @@ abstract class Key[S, J](val keyName: String) extends Serializable {
    * @param v one or more values
    * @return an item containing the key name, values (call withUnits() on the result to set the units)
    */
-  def set(v: S*): Item[S, J]
+  def set(v: S*): I
 
   /**
-   * Java API: Sets the values for the key as a Java list
+   * Sets the values for the key
+   * This definition enables writing code like this (see [[ConfigDSL]]):
+   * {{{
+   *   val setupConfig = sc(
+   *    configKey,
+   *     key1 -> value1 withUnits UnitsOfMeasure.Deg,
+   *     key2 -> value2  // with default units
+   *   )
+   * }}}
    *
-   * @param v a list of values
-   * @return an item containing the key name, values (call withUnits() on the result to set the units)
+   * @param v the value
+   * @return an item containing the key name and one value (call withUnits() on the result to set the units)
    */
-  def jset(v: java.util.List[J]): Item[S, J]
+  def -> (v: S): I = set(v)
 
   /**
-   * Java API: Sets the values for the key using a variable number of arguments
+   * Sets the value and units for the key
+   * This definition enables writing code like this (see [[ConfigDSL]]):
+   * {{{
+   *   val setupConfig = sc(
+   *    configKey,
+   *     key1 -> (value1, units1),
+   *     key2 -> (value2, units2)
+   *   )
+   * }}}
    *
-   * @param v one or more values
-   * @return an item containing the key name, values (call withUnits() on the result to set the units)
+   * @param v a pair containing a single value for the key and the units of the value
+   * @return an item containing the key name, values and units
    */
-  def jset(v: J*): Item[S, J]
+  def -> (v: (S, UnitsOfMeasure.Units)): I = set(Vector(v._1), v._2)
+
+  /**
+   * Sets the values for the key as a Scala Vector
+   * This definition enables writing code like this (see [[ConfigDSL]]):
+   * {{{
+   *   val setupConfig = sc(configKey,
+   *     key1 -> Vector(...),
+   *     key2 -> Vector(...)
+   *   )
+   * }}}
+   *
+   * @param v a vector of values
+   * @return an item containing the key name and values (call withUnits() on the result to set the units)
+   */
+  def -> (v: Vector[S]): I = set(v)
 
   override def toString = keyName
 
   override def equals(that: Any): Boolean = {
     that match {
-      case that: Key[S, J] ⇒ this.keyName == that.keyName
-      case _               ⇒ false
+      case that: Key[S, I] => this.keyName == that.keyName
+      case _               => false
     }
   }
 

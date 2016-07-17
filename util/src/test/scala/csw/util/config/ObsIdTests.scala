@@ -12,17 +12,17 @@ class ObsIdTests extends FunSpec {
     val reg = """(\d{4})(A|B|E)-(C|Q)-P(\d{1,3})-O(\d{1,3})(?:-)?(\d+)?""".r
 
     "2022A-Q-P012-O123" match {
-      case reg(year, sem, kind, prog, obs, null) ⇒ {
+      case reg(year, sem, kind, prog, obs, null) => {
         println(s"Its: $year $sem with $kind and prog $prog, obs $obs")
         println("Kind: " + kind.getClass)
       }
-      case reg(year, sem, kind, prog, obs, file) ⇒ println(s"Its: $year $sem with $kind and prog $prog, obs $obs, file $file")
-      case _                                     ⇒ println("Fail")
+      case reg(year, sem, kind, prog, obs, file) => println(s"Its: $year $sem with $kind and prog $prog, obs $obs, file $file")
+      case _                                     => println("Fail")
     }
     "2022A-Q-P012-O123-234" match {
-      case reg(year, sem, kind, prog, obs, null) ⇒ println(s"Its: $year $sem with $kind and prog $prog, obs $obs")
-      case reg(year, sem, kind, prog, obs, file) ⇒ println(s"Its: $year $sem with $kind and prog $prog, obs $obs, file $file")
-      case _                                     ⇒ println("Fail")
+      case reg(year, sem, kind, prog, obs, null) => println(s"Its: $year $sem with $kind and prog $prog, obs $obs")
+      case reg(year, sem, kind, prog, obs, file) => println(s"Its: $year $sem with $kind and prog $prog, obs $obs, file $file")
+      case _                                     => println("Fail")
     }
   }
 

@@ -13,7 +13,7 @@
  * LocationService.initInterface()
  * } </pre>
  * This determines the primary IP address of the local host and sets some system variables that
- * control which IP address is used. If you forget to call this method, there is a chance that 
+ * control which IP address is used. If you forget to call this method, there is a chance that
  * the wrong IP address will be advertised (there is often more than one).
  * <p>
  * If you want to specify the IP address yourself, you can also call it like this:
