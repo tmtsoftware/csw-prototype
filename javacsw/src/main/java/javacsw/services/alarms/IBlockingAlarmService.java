@@ -80,6 +80,20 @@ public interface IBlockingAlarmService {
   void acknowledgeAlarm(AlarmKey alarmKey);
 
   /**
+   * Resets the latched state of the given alarm, if needed.
+   *
+   * @param alarmKey the key for the alarm
+   */
+  void resetAlarm(AlarmKey alarmKey);
+
+  /**
+   * Acknowledges the given alarm and resets the latched state, if needed.
+   *
+   * @param alarmKey the key for the alarm
+   */
+  void acknowledgeAndResetAlarm(AlarmKey alarmKey);
+
+  /**
    * Sets the shelved state of the alarm
    *
    * @param alarmKey     the key for the alarm

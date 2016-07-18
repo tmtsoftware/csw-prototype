@@ -157,7 +157,8 @@ public class JAlarmServiceTests {
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Critical));
 
     // Acknowledge the alarm, which clears it, resets it back to Okay
-    alarmService.acknowledgeAlarm(key1).get();
+    alarmService.acknowledgeAndResetAlarm(key1).get();
+    alarmService.setSeverity(key1, JSeverityLevel.Okay).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback, so the test below passes
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay)); // alarm was cleared
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay));
@@ -183,7 +184,7 @@ public class JAlarmServiceTests {
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
 
     // Test alarm in deactivated state
-    alarmService.acknowledgeAlarm(key1).get();
+    alarmService.acknowledgeAndResetAlarm(key1).get();
     alarmService.setSeverity(key1, JSeverityLevel.Okay).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     alarmService.setActivationState(key1, JActivationState.OutOfService).get();
@@ -223,7 +224,7 @@ public class JAlarmServiceTests {
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     assertEquals(callbackHealth.get(), JHealth.Ill);
     assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Ill);
-    alarmService.acknowledgeAlarm(key2).get();
+    alarmService.acknowledgeAndResetAlarm(key2).get();
 
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
     alarmService.setSeverity(key3, JSeverityLevel.Critical).get();

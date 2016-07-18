@@ -33,24 +33,25 @@ object AsConsole extends App {
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    asName:          Option[String]  = None, // Alarm Service name
-    asConfig:        Option[File]    = None, // Alarm Service Config File (ASCF)
-    reset:           Boolean         = false,
-    listAlarms:      Boolean         = false,
-    shutdown:        Boolean         = false,
-    subsystem:       Option[String]  = None,
-    component:       Option[String]  = None,
-    name:            Option[String]  = None, // Alarm name (with wildcards)
-    severity:        Option[String]  = None,
-    refreshSecs:     Option[Int]     = Some(5),
-    refreshSeverity: Boolean         = false,
-    monitorAlarms:   Option[String]  = None,
-    monitorHealth:   Option[String]  = None,
-    acknowledge:     Boolean         = false,
-    shelved:         Option[Boolean] = None,
-    activated:       Option[Boolean] = None,
-    logLevel:        Option[String]  = Some("OFF"),
-    noExit:          Boolean         = false
+    asName:           Option[String]  = None, // Alarm Service name
+    asConfig:         Option[File]    = None, // Alarm Service Config File (ASCF)
+    delete:           Boolean         = false,
+    listAlarms:       Boolean         = false,
+    shutdown:         Boolean         = false,
+    subsystem:        Option[String]  = None,
+    component:        Option[String]  = None,
+    name:             Option[String]  = None, // Alarm name (with wildcards)
+    severity:         Option[String]  = None,
+    refreshSecs:      Option[Int]     = Some(5),
+    refreshSeverity:  Boolean         = false,
+    monitorAlarms:    Option[String]  = None,
+    monitorHealth:    Option[String]  = None,
+    acknowledgeAlarm: Boolean         = false,
+    resetAlarm:       Boolean         = false,
+    shelved:          Option[Boolean] = None,
+    activated:        Option[Boolean] = None,
+    logLevel:         Option[String]  = Some("OFF"),
+    noExit:           Boolean         = false
   )
 
   // XXX TODO: Add options for --list output format: pdf, html, json, config, text?
@@ -69,8 +70,8 @@ object AsConsole extends App {
       c.copy(asConfig = Some(x))
     } text "Initialize the set of available alarms from the given Alarm Service Config File (ASCF)"
 
-    opt[Unit]("reset") action { (x, c) =>
-      c.copy(reset = true)
+    opt[Unit]("delete") action { (x, c) =>
+      c.copy(delete = true)
     } text "When used with --init, deletes the existing alarm data before importing"
 
     opt[Unit]("list").action((_, c) =>
@@ -104,8 +105,12 @@ object AsConsole extends App {
     } text "Starts monitoring the health of the subsystems or components given by (--subsystem, --component, --name) and calls the shell command with one arg: Good, Ill or Bad"
 
     opt[Unit]("acknowledge") action { (x, c) =>
-      c.copy(acknowledge = true)
+      c.copy(acknowledgeAlarm = true)
     } text "Acknowledge the alarm given by (--subsystem, --component, --name) (Alarm must be unique)"
+
+    opt[Unit]("reset") action { (x, c) =>
+      c.copy(resetAlarm = true)
+    } text "Reset the latched state of the alarm given by (--subsystem, --component, --name) (Alarm must be unique)"
 
     opt[Boolean]("shelved") action { (x, c) =>
       c.copy(shelved = Some(x))
@@ -169,7 +174,8 @@ object AsConsole extends App {
     if (options.refreshSeverity) refreshSeverity(alarmService, options)
     if (options.listAlarms) list(alarmService, options)
     if (options.monitorAlarms.isDefined || options.monitorHealth.isDefined) monitor(alarmService, options)
-    if (options.acknowledge) acknowledgeAlarm(alarmService, options)
+    if (options.acknowledgeAlarm) acknowledgeAlarm(alarmService, options)
+    if (options.resetAlarm) resetAlarm(alarmService, options)
 
     if (options.shutdown) {
       println(s"Shutting down the alarm service")
@@ -193,7 +199,7 @@ object AsConsole extends App {
 
   // Handle the --init option
   private def init(alarmService: AlarmService, file: File, options: Options): Unit = {
-    val problems = Await.result(alarmService.initAlarms(file, options.reset), timeout.duration)
+    val problems = Await.result(alarmService.initAlarms(file, options.delete), timeout.duration)
     Problem.printProblems(problems)
     if (Problem.errorCount(problems) != 0) error(s"Failed to initialize Alarm Service with $file")
   }
@@ -279,6 +285,14 @@ object AsConsole extends App {
   private def acknowledgeAlarm(alarmService: AlarmService, options: Options): Unit = {
     Await.ready(
       alarmService.acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name)),
+      timeout.duration
+    )
+  }
+
+  // Handle the --reset option
+  private def resetAlarm(alarmService: AlarmService, options: Options): Unit = {
+    Await.ready(
+      alarmService.resetAlarm(AlarmKey(options.subsystem, options.component, options.name)),
       timeout.duration
     )
   }

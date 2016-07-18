@@ -118,7 +118,8 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
 
       // Acknowledge the alarm, which clears it, resets it back to Okay
-      alarmService.acknowledgeAlarm(key1)
+      alarmService.acknowledgeAndResetAlarm(key1)
+      alarmService.setSeverity(key1, SeverityLevel.Okay)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback, so the test below passes
       assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay)) // alarm was cleared
       assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
@@ -144,7 +145,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
 
       // Test alarm in deactivated state
-      alarmService.acknowledgeAlarm(key1)
+      alarmService.acknowledgeAndResetAlarm(key1)
       alarmService.setSeverity(key1, SeverityLevel.Okay)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       alarmService.setActivationState(key1, ActivationState.OutOfService)
@@ -184,7 +185,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(callbackHealth.contains(Health.Ill))
       assert(alarmService.getHealth(nfKey) == Health.Ill)
-      alarmService.acknowledgeAlarm(key2)
+      alarmService.acknowledgeAndResetAlarm(key2)
 
       alarmService.setSeverity(key2, SeverityLevel.Okay)
       alarmService.setSeverity(key3, SeverityLevel.Critical)
@@ -196,7 +197,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(Try(alarmService.getAlarm(badKey)).isFailure)
       assert(Try(alarmService.setSeverity(badKey, SeverityLevel.Critical)).isFailure)
       assert(Try(alarmService.getSeverity(badKey)).isFailure)
-      assert(Try(alarmService.acknowledgeAlarm(badKey)).isFailure)
+      assert(Try(alarmService.acknowledgeAndResetAlarm(badKey)).isFailure)
       assert(Try(alarmService.getHealth(badKey)).isFailure)
       assert(Try(alarmService.setShelvedState(badKey, ShelvedState.Normal)).isFailure)
       assert(Try(alarmService.setActivationState(badKey, ActivationState.Normal)).isFailure)

@@ -75,12 +75,28 @@ public interface IAlarmService {
     CompletableFuture<CurrentSeverity> getSeverity(AlarmKey alarmKey);
 
     /**
-     * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
+     * Acknowledges the given alarm, if needed.
      *
      * @param alarmKey the key for the alarm
      * @return a future indicating when the operation has completed
      */
     CompletableFuture<Unit> acknowledgeAlarm(AlarmKey alarmKey);
+
+    /**
+     * Resets the latched state of the given alarm, if needed.
+     *
+     * @param alarmKey the key for the alarm
+     * @return a future indicating when the operation has completed
+     */
+    CompletableFuture<Unit> resetAlarm(AlarmKey alarmKey);
+
+    /**
+     * Acknowledges the given alarm and resets the latched state, if needed.
+     *
+     * @param alarmKey the key for the alarm
+     * @return a future indicating when the operation has completed
+     */
+    CompletableFuture<Unit> acknowledgeAndResetAlarm(AlarmKey alarmKey);
 
     /**
      * Sets the shelved state of the alarm

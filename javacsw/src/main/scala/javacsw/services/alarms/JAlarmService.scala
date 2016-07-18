@@ -180,6 +180,12 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
   override def acknowledgeAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
     alarmService.acknowledgeAlarm(alarmKey).toJava.toCompletableFuture
 
+  override def resetAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
+    alarmService.resetAlarm(alarmKey).toJava.toCompletableFuture
+
+  override def acknowledgeAndResetAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
+    alarmService.acknowledgeAndResetAlarm(alarmKey).toJava.toCompletableFuture
+
   override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): CompletableFuture[Unit] =
     alarmService.setShelvedState(alarmKey, shelvedState).toJava.toCompletableFuture
 

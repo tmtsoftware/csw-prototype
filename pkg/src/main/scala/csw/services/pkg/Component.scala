@@ -8,8 +8,6 @@ import scala.concurrent.duration.{FiniteDuration, _}
 
 /**
  * Represents a Component, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).
- *
- * Each component has its own ActorSystem, LifecycleManager and name.
  */
 object Component {
 

@@ -96,12 +96,28 @@ case class BlockingAlarmService(alarmService: AlarmService)(implicit val timeout
     Await.result(alarmService.getSeverity(alarmKey), timeout.duration)
 
   /**
-   * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
+   * Acknowledges the given alarm, if needed.
    *
    * @param alarmKey the key for the alarm
    */
   def acknowledgeAlarm(alarmKey: AlarmKey): Unit =
     Await.result(alarmService.acknowledgeAlarm(alarmKey), timeout.duration)
+
+  /**
+   * Resets the given alarm, if needed.
+   *
+   * @param alarmKey the key for the alarm
+   */
+  def resetAlarm(alarmKey: AlarmKey): Unit =
+    Await.result(alarmService.resetAlarm(alarmKey), timeout.duration)
+
+  /**
+   * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
+   *
+   * @param alarmKey the key for the alarm
+   */
+  def acknowledgeAndResetAlarm(alarmKey: AlarmKey): Unit =
+    Await.result(alarmService.acknowledgeAndResetAlarm(alarmKey), timeout.duration)
 
   /**
    * Sets the shelved state of the alarm

@@ -165,12 +165,28 @@ trait AlarmService {
   def getSeverity(alarmKey: AlarmKey): Future[CurrentSeverity]
 
   /**
-   * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
+   * Acknowledges the given alarm, if needed.
    *
    * @param alarmKey the key for the alarm
    * @return a future indicating when the operation has completed
    */
   def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit]
+
+  /**
+   * Resets the latched state of the given alarm, if needed.
+   *
+   * @param alarmKey the key for the alarm
+   * @return a future indicating when the operation has completed
+   */
+  def resetAlarm(alarmKey: AlarmKey): Future[Unit]
+
+  /**
+   * Acknowledges the given alarm and resets the latched state, if needed.
+   *
+   * @param alarmKey the key for the alarm
+   * @return a future indicating when the operation has completed
+   */
+  def acknowledgeAndResetAlarm(alarmKey: AlarmKey): Future[Unit]
 
   /**
    * Sets the shelved state of the alarm
@@ -413,27 +429,34 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     } yield result
   }
 
-  // acknowledge the given alarm and update the alarm state and severity if needed
+  // acknowledge the given alarm
   private def acknowledgeAlarm(alarmKey: AlarmKey, alarmState: AlarmState): Future[Unit] = {
-    val redisTransaction = redisClient.transaction()
-
-    val f1 = if (alarmState.acknowledgedState == AcknowledgedState.NeedsAcknowledge) {
+    val f = if (alarmState.acknowledgedState == AcknowledgedState.NeedsAcknowledge) {
       logger.debug(s"Acknowledging alarm: $alarmKey and resetting to Okay")
-      Future.sequence(List(
-        redisTransaction.hset(alarmKey.stateKey, AlarmState.acknowledgedStateField, AcknowledgedState.Normal.name),
-        redisTransaction.set(alarmKey.severityKey, SeverityLevel.Okay.name, exSeconds = Some(refreshSecs * maxMissedRefresh))
-      ))
+      redisClient.hset(alarmKey.stateKey, AlarmState.acknowledgedStateField, AcknowledgedState.Normal.name)
     } else Future.successful(true)
+    f.map(_ => ())
+  }
 
-    val f2 = if (alarmState.latchedState == LatchedState.NeedsReset) {
+  override def resetAlarm(alarmKey: AlarmKey): Future[Unit] = {
+    for {
+      alarmState <- getAlarmState(alarmKey)
+      currentSeverity <- getSeverity(alarmKey)
+      result <- resetAlarm(alarmKey, alarmState)
+    } yield result
+  }
+
+  override def acknowledgeAndResetAlarm(alarmKey: AlarmKey): Future[Unit] = {
+    Future.sequence(List(acknowledgeAlarm(alarmKey), resetAlarm(alarmKey))).map(_ => ())
+  }
+
+  // reset the given alarm and update the alarm state and severity if needed
+  private def resetAlarm(alarmKey: AlarmKey, alarmState: AlarmState): Future[Unit] = {
+    val f = if (alarmState.latchedState == LatchedState.NeedsReset) {
       logger.debug(s"Resetting latched state for alarm: $alarmKey")
-      redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedStateField, LatchedState.Normal.name)
-      redisTransaction.hset(alarmKey.stateKey, AlarmState.latchedSeverityField, SeverityLevel.Okay.name)
+      redisClient.hset(alarmKey.stateKey, AlarmState.latchedStateField, LatchedState.Normal.name)
     } else Future.successful(true)
-
-    val f3 = redisTransaction.exec()
-
-    Future.sequence(List(f1, f2, f3)).map(_ => ())
+    f.map(_ => ())
   }
 
   override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): Future[Unit] = {

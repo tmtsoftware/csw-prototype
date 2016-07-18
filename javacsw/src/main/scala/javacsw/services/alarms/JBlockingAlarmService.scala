@@ -92,6 +92,12 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
   override def acknowledgeAlarm(alarmKey: AlarmKey): Unit =
     Await.result(alarmService.acknowledgeAlarm(alarmKey), timeout.duration)
 
+  override def resetAlarm(alarmKey: AlarmKey): Unit =
+    Await.result(alarmService.resetAlarm(alarmKey), timeout.duration)
+
+  override def acknowledgeAndResetAlarm(alarmKey: AlarmKey): Unit =
+    Await.result(alarmService.acknowledgeAndResetAlarm(alarmKey), timeout.duration)
+
   override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): Unit =
     Await.result(alarmService.setShelvedState(alarmKey, shelvedState), timeout.duration)
 
