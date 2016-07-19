@@ -100,7 +100,7 @@ object ContainerComponent {
     context watch ref
 
     def receive = {
-      case Terminated(_) ⇒
+      case Terminated(_) =>
         log.info("{} has terminated, shutting down system", ref.path)
         context.system.terminate()
     }
@@ -157,8 +157,8 @@ object ContainerComponent {
       val conf = config.getConfig("container.components")
       val names = conf.root.keySet().toList
       val entries = for {
-        key ← names
-        value ← parseComponentConfig(key, conf.getConfig(key))
+        key <- names
+        value <- parseComponentConfig(key, conf.getConfig(key))
       } yield value
       Set(entries: _*)
     }
@@ -168,11 +168,11 @@ object ContainerComponent {
   private[pkg] def parseComponentConfig(name: String, conf: Config): Option[ComponentInfo] = {
     val t = conf.getString(TYPE)
     val info = ComponentType(t) match {
-      case Success(HCD)      ⇒ parseHcd(name, conf)
-      case Success(Assembly) ⇒ parseAssembly(name, conf)
-      case Failure(ex) ⇒
+      case Success(HCD)      => parseHcd(name, conf)
+      case Success(Assembly) => parseAssembly(name, conf)
+      case Failure(ex) =>
         logger.error(s"Unknown component type: $t", ex); None
-      case _ ⇒ None
+      case _ => None
     }
     info
 
@@ -206,7 +206,7 @@ object ContainerComponent {
       Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNECTION_TYPE< for component: $name"))
     else Try {
       // Note that conf.getStringList can throw an exception...
-      val set = conf.getStringList(CONNECTION_TYPE).map(ctype ⇒ ConnectionType(ctype)).toSet
+      val set = conf.getStringList(CONNECTION_TYPE).map(ctype => ConnectionType(ctype)).toSet
       if (set.exists(_.isFailure))
         throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNECTION_TYPE)}< for component: $name")
       set.map(_.asInstanceOf[Success[ConnectionType]].get)
@@ -239,11 +239,11 @@ object ContainerComponent {
       Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNECTIONS< for Assembly: $name"))
     else Try {
       // Note: config.getConfigList could throw an exception...
-      val list = config.getConfigList(CONNECTIONS).toList.map { conf: Config ⇒
+      val list = config.getConfigList(CONNECTIONS).toList.map { conf: Config =>
         for {
-          connName ← parseName(name, conf)
-          componentId ← parseComponentId(connName, conf)
-          connTypes ← parseConnType(connName, conf)
+          connName <- parseName(name, conf)
+          componentId <- parseComponentId(connName, conf)
+          connTypes <- parseConnType(connName, conf)
         } yield connTypes.map(Connection(componentId, _))
       }
       val failed = list.find(_.isFailure).map(_.asInstanceOf[Failure[_]].exception)
@@ -270,10 +270,10 @@ object ContainerComponent {
   // Parse the "services" section of the component config
   def parseHcd(name: String, conf: Config): Option[HcdInfo] = {
     val x = for {
-      componentClassName ← parseClassName(name, conf)
-      prefix ← parsePrefix(name, conf)
-      registerAs ← parseConnType(name, conf)
-      cycle ← parseRate(name, conf)
+      componentClassName <- parseClassName(name, conf)
+      prefix <- parsePrefix(name, conf)
+      registerAs <- parseConnType(name, conf)
+      cycle <- parseRate(name, conf)
     } yield HcdInfo(name, prefix, componentClassName, RegisterOnly, registerAs, cycle)
     if (x.isFailure) logger.error(s"An error occurred while parsing HCD info for: $name", x.asInstanceOf[Failure[_]].exception)
     x.toOption
@@ -282,10 +282,10 @@ object ContainerComponent {
   // Parse the "services" section of the component config
   def parseAssembly(name: String, conf: Config): Option[AssemblyInfo] = {
     val x = for {
-      componentClassName ← parseClassName(name, conf)
-      prefix ← parsePrefix(name, conf)
-      registerAs ← parseConnType(name, conf)
-      connections ← parseConnections(name, conf)
+      componentClassName <- parseClassName(name, conf)
+      prefix <- parsePrefix(name, conf)
+      registerAs <- parseConnType(name, conf)
+      connections <- parseConnections(name, conf)
     } yield AssemblyInfo(name, prefix, componentClassName, RegisterAndTrackServices, registerAs, connections)
     if (x.isFailure) logger.error(s"An error occurred while parsing Assembly info for: $name", x.asInstanceOf[Failure[_]].exception)
     x.toOption
@@ -293,9 +293,9 @@ object ContainerComponent {
 
   def parseConfigToContainerInfo(config: Config): Try[ContainerInfo] = {
     for {
-      componentConfigs ← parseConfig(config)
-      containerConfig ← Try(config.getConfig(CONTAINER))
-      name ← parseName("container", containerConfig)
+      componentConfigs <- parseConfig(config)
+      containerConfig <- Try(config.getConfig(CONTAINER))
+      name <- parseName("container", containerConfig)
     } yield {
       val initialDelay = parseDuration(name, INITIAL_DELAY, containerConfig, DEFAULT_INITIAL_DELAY)
       val creationDelay = parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
@@ -336,19 +336,19 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
   // Receive messages
   private def runningReceive(supervisors: List[SupervisorInfo]): Receive = {
-    case LifecycleToAll(cmd: LifecycleCommand) ⇒ sendAllComponents(cmd, supervisors)
-    case GetComponents                         ⇒ sender() ! Components(supervisors)
-    case Stop                                  ⇒ stop(supervisors)
-    case Halt                                  ⇒ halt(supervisors)
-    case Restart                               ⇒ restart(supervisors)
-    //    case CreateComponents(infos)               ⇒ createComponents(infos, supervisors)
-    case LifecycleStateChanged(state)          ⇒ log.info("Received state while running: " + state)
-    case Terminated(actorRef)                  ⇒ componentDied(actorRef)
-    case x                                     ⇒ log.info(s"Unhandled command in runningReceive: $x")
+    case LifecycleToAll(cmd: LifecycleCommand) => sendAllComponents(cmd, supervisors)
+    case GetComponents                         => sender() ! Components(supervisors)
+    case Stop                                  => stop(supervisors)
+    case Halt                                  => halt(supervisors)
+    case Restart                               => restart(supervisors)
+    //    case CreateComponents(infos)               => createComponents(infos, supervisors)
+    case LifecycleStateChanged(state)          => log.info("Received state while running: " + state)
+    case Terminated(actorRef)                  => componentDied(actorRef)
+    case x                                     => log.info(s"Unhandled command in runningReceive: $x")
   }
 
   private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {
-    case LifecycleStateChanged(state) ⇒
+    case LifecycleStateChanged(state) =>
       if (state == Loaded) {
         sender() ! UnsubscribeLifecycleCallback(self)
         val reloaded = (supervisors.find(_.supervisor == sender()) ++ restarted).toList
@@ -359,7 +359,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
           context.become(restartReceive(supervisors, reloaded))
         }
       }
-    case x ⇒
+    case x =>
       log.info(s"Unhandled command in restartReceive: $x")
   }
 
@@ -390,10 +390,10 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   private def registerWithLocationService(): Unit = {
     if (containerInfo.locationServiceUsage != DoNotRegister) {
       LocationService.registerAkkaConnection(componentId, self, containerInfo.prefix)(context.system).onComplete {
-        case Success(reg) ⇒
+        case Success(reg) =>
           registrationOpt = Some(reg)
           log.info(s"$name: Registered $componentId with the location service")
-        case Failure(ex) ⇒
+        case Failure(ex) =>
           // XXX allan: What to do in case of error?
           log.error(s"$name: Failed to register $componentId with the location service")
       }
@@ -410,10 +410,10 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
   private def createComponent(componentInfo: ComponentInfo, supervisors: List[SupervisorInfo]): Option[SupervisorInfo] = {
     supervisors.find(_.componentInfo == componentInfo) match {
-      case Some(existingComponentInfo) ⇒
+      case Some(existingComponentInfo) =>
         log.error(s"In supervisor ${containerInfo.componentName}, component ${componentInfo.componentName} already exists")
         None
-      case None ⇒
+      case None =>
         val supervisor = Supervisor(componentInfo)
         Some(SupervisorInfo(supervisor, componentInfo))
     }
@@ -429,7 +429,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     }
   }
 
-  private def stagedCommand(conditional: ⇒ Boolean, duration: FiniteDuration = 1.seconds)(body: ⇒ Unit) {
+  private def stagedCommand(conditional: => Boolean, duration: FiniteDuration = 1.seconds)(body: => Unit) {
     if (conditional) {
       context.system.scheduler.scheduleOnce(duration) {
         body
@@ -448,11 +448,11 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     sendAllComponents(Uninitialize, supervisors)
   }
 
-  def staged[A, B, C](in: List[A], f: A ⇒ Option[B], f2: (List[A]) ⇒ C)(delay: FiniteDuration = 0.seconds) = {
+  def staged[A, B, C](in: List[A], f: A => Option[B], f2: (List[A]) => C)(delay: FiniteDuration = 0.seconds) = {
     log.info("Staged!!! " + in)
     in match {
-      case Nil ⇒ log.info("Staged Done") // Done
-      case cinfo :: tail ⇒
+      case Nil => log.info("Staged Done") // Done
+      case cinfo :: tail =>
         f(cinfo)
         val message = f2(tail)
         context.system.scheduler.scheduleOnce(delay, self, message)

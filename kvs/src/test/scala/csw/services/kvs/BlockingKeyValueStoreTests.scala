@@ -78,7 +78,7 @@ class BlockingKeyValueStoreTests
 
     val h = kvs.getHistory(key, n + 1)
     assert(h.size == n + 1)
-    for (i ← 0 to n) {
+    for (i <- 0 to n) {
       logger.info(s"History: $i: ${h(i)}")
     }
 

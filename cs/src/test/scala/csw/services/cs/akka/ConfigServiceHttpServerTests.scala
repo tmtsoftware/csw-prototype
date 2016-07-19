@@ -39,11 +39,11 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
     val annexServer = ConfigServiceAnnexServer()
     try {
       val f = for {
-        _ ← runTests(settings, oversize = false)
-        _ ← runTests2(settings2, oversize = false)
+        _ <- runTests(settings, oversize = false)
+        _ <- runTests2(settings2, oversize = false)
 
-        _ ← runTests(settings, oversize = true)
-        _ ← runTests2(settings2, oversize = true)
+        _ <- runTests(settings, oversize = true)
+        _ <- runTests2(settings2, oversize = true)
       } yield ()
       Await.ready(f, 60.seconds)
     } finally {
@@ -65,7 +65,7 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
     val csClient = ConfigServiceHttpClient(settings)
 
     for {
-      _ ← ConfigManagerTestHelper.runTests(csClient, oversize)
+      _ <- ConfigManagerTestHelper.runTests(csClient, oversize)
     } yield {
       system.stop(csActor)
       server.shutdown()
@@ -86,7 +86,7 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
     val csClient = ConfigServiceClient(csActor, settings.name)
 
     for {
-      _ ← ConfigManagerTestHelper.runTests2(csClient, oversize)
+      _ <- ConfigManagerTestHelper.runTests2(csClient, oversize)
     } yield {
       system.stop(csActor)
     }

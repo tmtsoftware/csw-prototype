@@ -74,7 +74,7 @@ object AscfValidation {
     try {
       validateResult(schema.validate(jsonInput, true), source)
     } catch {
-      case e: Exception ⇒
+      case e: Exception =>
         e.printStackTrace()
         List(Problem("fatal", e.toString))
     }
@@ -84,7 +84,7 @@ object AscfValidation {
   // 'source' is the name of the input file for use in error messages.
   private def validateResult(report: ProcessingReport, source: String): List[Problem] = {
     import scala.collection.JavaConverters._
-    val result = for (msg ← report.asScala)
+    val result = for (msg <- report.asScala)
       yield Problem(msg.getLogLevel.toString, formatMsg(msg, source))
     result.toList
   }
@@ -107,9 +107,9 @@ object AscfValidation {
     val reports = json.get("reports")
     val messages = if (reports == null) ""
     else {
-      for (r ← reports.elements().toList) yield r
-      val msgElems = (for (r ← reports) yield r.elements().toList).flatten
-      val msgTexts = for (e ← msgElems) yield e.get("message").asText()
+      for (r <- reports.elements().toList) yield r
+      val msgElems = (for (r <- reports) yield r.elements().toList).flatten
+      val msgTexts = for (e <- msgElems) yield e.get("message").asText()
       "\n" + msgTexts.mkString("\n")
     }
 
@@ -133,14 +133,14 @@ object AscfValidation {
      * Returns the number of problems in the list with a severity or ERROR or FATAL
      */
     def errorCount(problems: List[Problem]): Int = {
-      problems.count(p ⇒ p.severity == "error" || p.severity == "fatal")
+      problems.count(p => p.severity == "error" || p.severity == "fatal")
     }
 
     /**
      * Prints the list of problems to stdout
      */
     def printProblems(problems: List[Problem]): List[Problem] = {
-      for (problem ← problems) {
+      for (problem <- problems) {
         println(s"${problem.severity}: ${problem.message}")
       }
       problems

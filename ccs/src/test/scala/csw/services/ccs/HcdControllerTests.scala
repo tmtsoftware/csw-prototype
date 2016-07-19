@@ -68,21 +68,21 @@ object HcdControllerTests {
     var currentState = initialState
 
     def receive: Receive = {
-      case Work(config) ⇒
+      case Work(config) =>
         // Simulate doing work
         log.info(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
 
-      case RequestCurrentState ⇒
+      case RequestCurrentState =>
         log.info(s"Requested current state")
         context.parent ! currentState
 
-      case WorkDone(config) ⇒
+      case WorkDone(config) =>
         log.info(s"Done processing $config")
         currentState = CurrentState(config.prefix, config.items)
         context.parent ! currentState
 
-      case x ⇒ log.error(s"Unexpected message $x")
+      case x => log.error(s"Unexpected message $x")
     }
   }
 

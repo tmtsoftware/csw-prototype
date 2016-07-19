@@ -1,10 +1,10 @@
 package csw.services.trackLocation
 
 import java.io.File
+import java.net.ServerSocket
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
 import csw.services.cs.akka.{ConfigServiceClient, ConfigServiceSettings}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
@@ -41,27 +41,27 @@ object TrackLocation extends App {
   private val parser = new scopt.OptionParser[Options]("trackLocation") {
     head("trackLocation", System.getProperty("CSW_VERSION"))
 
-    opt[String]("name") valueName "<name>" action { (x, c) ⇒
+    opt[String]("name") valueName "<name>" action { (x, c) =>
       c.copy(name = Some(x))
     } text "Required: The name used to register the application (also root name in config file)"
 
-    opt[String]("cs-name") action { (x, c) ⇒
+    opt[String]("cs-name") action { (x, c) =>
       c.copy(csName = Some(x))
     } text "optional name of the config service to use (for fetching the application config file)"
 
-    opt[String]('c', "command") valueName "<name>" action { (x, c) ⇒
+    opt[String]('c', "command") valueName "<name>" action { (x, c) =>
       c.copy(command = Some(x))
-    } text "The command that starts the target application (default: use $name.command from config file: Required)"
+    } text "The command that starts the target application: use %port to insert the port number (default: use $name.command from config file: Required)"
 
-    opt[Int]('p', "port") valueName "<number>" action { (x, c) ⇒
+    opt[Int]('p', "port") valueName "<number>" action { (x, c) =>
       c.copy(port = Some(x))
-    } text "Port number the application listens on (default: use value of $name.port from config file. Required.)"
+    } text "Optional port number the application listens on (default: use value of $name.port from config file, or use a random, free port.)"
 
-    arg[File]("<app-config>") optional () maxOccurs 1 action { (x, c) ⇒
+    arg[File]("<app-config>") optional () maxOccurs 1 action { (x, c) =>
       c.copy(appConfigFile = Some(x))
     } text "optional config file in HOCON format (Options specified as: $name.command, $name.port, etc. Fetched from config service if path does not exist)"
 
-    opt[Unit]("no-exit") action { (x, c) ⇒
+    opt[Unit]("no-exit") action { (x, c) =>
       c.copy(noExit = true)
     } text "for testing: prevents application from exiting after running command"
 
@@ -71,15 +71,15 @@ object TrackLocation extends App {
 
   // Parse the command line options
   parser.parse(args, Options()) match {
-    case Some(options) ⇒
+    case Some(options) =>
       try {
         run(options)
       } catch {
-        case e: Throwable ⇒
+        case e: Throwable =>
           e.printStackTrace()
           System.exit(1)
       }
-    case None ⇒ System.exit(1)
+    case None => System.exit(1)
   }
 
   // Report error and exit
@@ -101,8 +101,8 @@ object TrackLocation extends App {
   // Uses the given config service name to find the config service, if not empty.
   private def getFromConfigService(file: File, csName: Option[String]): Config = {
     val name = csName match {
-      case Some(s) ⇒ s
-      case None    ⇒ ConfigServiceSettings(system).name
+      case Some(s) => s
+      case None    => ConfigServiceSettings(system).name
     }
 
     val configOpt = Await.result(ConfigServiceClient.getConfigFromConfigService(name, file), timeout.duration)
@@ -123,7 +123,7 @@ object TrackLocation extends App {
     def getStringOpt(opt: String, arg: Option[String] = None, required: Boolean = true): Option[String] = {
       val value = if (arg.isDefined) arg
       else {
-        appConfig.flatMap { c ⇒
+        appConfig.flatMap { c =>
           val path = s"$name.$opt"
           if (c.hasPath(path)) Some(c.getString(path)) else None
         }
@@ -140,8 +140,19 @@ object TrackLocation extends App {
       getStringOpt(opt, arg.map(_.toString), required).map(_.toInt)
     }
 
-    val command = getStringOpt("command", options.command).get
-    val port = getIntOpt("port", options.port).get
+    // Find a random, free port to use
+    def getFreePort: Int = {
+      val sock = new ServerSocket(0)
+      val port = sock.getLocalPort
+      sock.close()
+      port
+    }
+
+    // Use the value of the --port option, or use a random, free port
+    val port = getIntOpt("port", options.port, required = false).getOrElse(getFreePort)
+
+    // Replace %port in the command
+    val command = getStringOpt("command", options.command).get.replace("%port", port.toString)
 
     startApp(name, command, port, options.noExit)
   }

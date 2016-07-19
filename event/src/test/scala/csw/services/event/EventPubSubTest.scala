@@ -93,13 +93,13 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
   subscribe(prefix)
 
   override def receive: Receive = {
-    case PublisherInfo ⇒
+    case PublisherInfo =>
       log.info("Subscriber starting")
       context.become(working(sender()))
   }
 
   def working(publisher: ActorRef): Receive = {
-    case event: ObserveEvent ⇒
+    case event: ObserveEvent =>
       if (startTime == 0L) startTime = System.currentTimeMillis()
       val num = event(eventNum).head
       if (num != count) {
@@ -114,11 +114,11 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
         publisher ! SubscriberAck
       }
 
-    case t: ReceiveTimeout ⇒
+    case t: ReceiveTimeout =>
       log.error("Publisher seems to be blocked!")
       context.system.terminate()
 
-    case x ⇒ log.warning(s"Unknown $x")
+    case x => log.warning(s"Unknown $x")
 
   }
 }
@@ -136,10 +136,11 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
 
   // Returns the next event to publish
   def nextEvent(num: Int): Event = {
-    ObserveEvent(prefix)
-      .add(eventNum.set(num))
-      .add(exposureTime.set(1.0))
-      .add(imageData.set(testImageData))
+    import csw.util.config.ConfigDSL._
+    oe(prefix,
+      eventNum -> num,
+      exposureTime -> 1.0,
+      imageData -> testImageData)
   }
 
   def publish(): Unit = {
@@ -150,18 +151,18 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
   subscriber ! PublisherInfo
 
   def receive: Receive = {
-    case Publish ⇒
+    case Publish =>
       context.become(publishing(sender()))
       publish()
 
-    case x ⇒ log.warning(s"Unknown $x")
+    case x => log.warning(s"Unknown $x")
   }
 
   def publishing(testActor: ActorRef): Receive = {
-    case Publish ⇒
+    case Publish =>
       publish()
 
-    case SubscriberAck ⇒
+    case SubscriberAck =>
       if (count < totalEventsToPublish) {
         //        context.system.scheduler.scheduleOnce(delay, self, Publish)
         Thread.sleep(0L, delay.toNanos.toInt)
@@ -170,11 +171,11 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
         testActor ! Done
       }
 
-    case t: ReceiveTimeout ⇒
+    case t: ReceiveTimeout =>
       log.error("Subscriber did not reply!")
       context.system.terminate()
 
-    case x ⇒ log.warning(s"Unknown $x")
+    case x => log.warning(s"Unknown $x")
   }
 }
 

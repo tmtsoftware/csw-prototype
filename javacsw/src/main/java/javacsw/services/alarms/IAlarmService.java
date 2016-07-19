@@ -72,7 +72,7 @@ public interface IAlarmService {
      * @param alarmKey the key for the alarm
      * @return a future severity level result
      */
-    CompletableFuture<SeverityLevel> getSeverity(AlarmKey alarmKey);
+    CompletableFuture<CurrentSeverity> getSeverity(AlarmKey alarmKey);
 
     /**
      * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
@@ -152,7 +152,7 @@ public interface IAlarmService {
      *
      * @param asName      name used to register the Redis instance with the Location Service (default: "Alarm Service")
      * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
-     *                    to "Indeterminate" (after three missed refreshes)
+     *                    to "Disconnected" (after three missed refreshes)
      * @param system      the Akka system or context, needed for working with futures and actors
      * @param timeout     amount of time to wait when looking up the alarm service with the location service
      * @return a new JAlarmService instance
@@ -183,13 +183,13 @@ public interface IAlarmService {
 
     /**
      * An alarm's severity should be refreshed every defaultRefreshSecs seconds
-     * to make sure it does not expire and become "Indeterminate" (after maxMissedRefresh missed refreshes)
+     * to make sure it does not expire and become "Disconnected" (after maxMissedRefresh missed refreshes)
      */
     int defaultRefreshSecs = AlarmService$.MODULE$.defaultRefreshSecs();
 
     /**
      * The default number of refreshes that may be missed before an alarm's severity is expired
-     * and becomes "Indeterminate"
+     * and becomes "Disconnected"
      */
     int maxMissedRefresh = AlarmService$.MODULE$.maxMissedRefresh();
 }

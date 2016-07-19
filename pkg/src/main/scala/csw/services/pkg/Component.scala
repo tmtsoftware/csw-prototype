@@ -135,11 +135,11 @@ object Component {
   }
 
   def create(context: ActorContext, componentInfo: ComponentInfo): ActorRef = componentInfo match {
-    case hcd: HcdInfo ⇒
+    case hcd: HcdInfo =>
       createHCD(context, hcd)
-    case ass: AssemblyInfo ⇒
+    case ass: AssemblyInfo =>
       createAssembly(context, ass)
-    case cont: ContainerInfo ⇒
+    case cont: ContainerInfo =>
       ContainerComponent.create(cont)
   }
 

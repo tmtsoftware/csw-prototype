@@ -12,7 +12,7 @@ import scala.language.implicitConversions
 case class FloatMatrix(data: Array[Array[Float]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l <- data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   /**
    * Gets the value at the given row and column
@@ -22,9 +22,9 @@ case class FloatMatrix(data: Array[Array[Float]]) {
   override def canEqual(other: Any) = other.isInstanceOf[FloatMatrix]
 
   override def equals(other: Any) = other match {
-    case that: FloatMatrix ⇒
+    case that: FloatMatrix =>
       this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 

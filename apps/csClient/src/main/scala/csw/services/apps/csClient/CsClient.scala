@@ -22,26 +22,26 @@ object CsClient extends App {
   import system.dispatcher
 
   CsClientOpts.parse(args) match {
-    case Some(options) ⇒ run(options)
-    case None          ⇒ System.exit(1)
+    case Some(options) => run(options)
+    case None          => System.exit(1)
   }
 
   private def run(options: CsClientOpts.Options): Unit = {
     val csName = options.csName match {
-      case Some(s) ⇒ s
-      case None    ⇒ ConfigServiceSettings(system).name
+      case Some(s) => s
+      case None    => ConfigServiceSettings(system).name
     }
 
     val f = for {
-      cs ← ConfigServiceActor.locateConfigService(csName)
-      result ← commandLine(ConfigServiceClient(cs, csName), options)
+      cs <- ConfigServiceActor.locateConfigService(csName)
+      result <- commandLine(ConfigServiceClient(cs, csName), options)
     } yield result
 
     f.onComplete {
-      case Success(client) ⇒
+      case Success(client) =>
         system.terminate()
         System.exit(0)
-      case Failure(ex) ⇒
+      case Failure(ex) =>
         System.err.println(s"Error: ${ex.getMessage}")
         system.terminate()
         System.exit(1)
@@ -53,15 +53,15 @@ object CsClient extends App {
     def get(): Future[Unit] = {
       val idOpt = options.id.map(ConfigId(_))
       for {
-        configDataOpt ← client.get(options.path, idOpt)
+        configDataOpt <- client.get(options.path, idOpt)
         if configDataOpt.isDefined
-        _ ← configDataOpt.get.writeToFile(options.outputFile)
+        _ <- configDataOpt.get.writeToFile(options.outputFile)
       } yield ()
     }
 
     def exists(): Future[Unit] = {
       for {
-        exists ← client.exists(options.path)
+        exists <- client.exists(options.path)
       } yield {
         println(exists)
       }
@@ -70,7 +70,7 @@ object CsClient extends App {
     def create(): Future[Unit] = {
       val configData = ConfigData(options.inputFile)
       for {
-        configId ← client.create(options.path, configData, oversize = options.oversize, options.comment)
+        configId <- client.create(options.path, configData, oversize = options.oversize, options.comment)
       } yield {
         println(configId.id)
       }
@@ -79,7 +79,7 @@ object CsClient extends App {
     def update(): Future[Unit] = {
       val configData = ConfigData(options.inputFile)
       for {
-        configId ← client.update(options.path, configData, options.comment)
+        configId <- client.update(options.path, configData, options.comment)
       } yield {
         println(configId.id)
       }
@@ -88,7 +88,7 @@ object CsClient extends App {
     def createOrUpdate(): Future[Unit] = {
       val configData = ConfigData(options.inputFile)
       for {
-        configId ← client.createOrUpdate(options.path, configData, oversize = options.oversize, options.comment)
+        configId <- client.createOrUpdate(options.path, configData, oversize = options.oversize, options.comment)
       } yield {
         println(configId.id)
       }
@@ -96,9 +96,9 @@ object CsClient extends App {
 
     def list(): Future[Unit] = {
       for {
-        infoList ← client.list()
+        infoList <- client.list()
       } yield {
-        for (i ← infoList) {
+        for (i <- infoList) {
           println(s"${i.path}\t${i.id.id}\t${i.comment}")
         }
       }
@@ -106,9 +106,9 @@ object CsClient extends App {
 
     def history(): Future[Unit] = {
       for {
-        histList ← client.history(options.path)
+        histList <- client.history(options.path)
       } yield {
-        for (h ← histList) {
+        for (h <- histList) {
           println(s"${h.id.id}\t${h.time}\t${h.comment}")
         }
       }
@@ -117,36 +117,36 @@ object CsClient extends App {
     def setDefault(): Future[Unit] = {
       val idOpt = options.id.map(ConfigId(_))
       for {
-        _ ← client.setDefault(options.path, idOpt)
+        _ <- client.setDefault(options.path, idOpt)
       } yield ()
     }
 
     def getDefault: Future[Unit] = {
       for {
-        configDataOpt ← client.getDefault(options.path)
+        configDataOpt <- client.getDefault(options.path)
         if configDataOpt.isDefined
-        _ ← configDataOpt.get.writeToFile(options.outputFile)
+        _ <- configDataOpt.get.writeToFile(options.outputFile)
       } yield ()
     }
 
     def resetDefault(): Future[Unit] = {
       for {
-        _ ← client.resetDefault(options.path)
+        _ <- client.resetDefault(options.path)
       } yield ()
     }
 
     options.subcmd match {
-      case "get"            ⇒ get()
-      case "exists"         ⇒ exists()
-      case "create"         ⇒ create()
-      case "update"         ⇒ update()
-      case "createOrUpdate" ⇒ createOrUpdate()
-      case "list"           ⇒ list()
-      case "history"        ⇒ history()
-      case "setDefault"     ⇒ setDefault()
-      case "getDefault"     ⇒ getDefault
-      case "resetDefault"   ⇒ resetDefault()
-      case x ⇒
+      case "get"            => get()
+      case "exists"         => exists()
+      case "create"         => create()
+      case "update"         => update()
+      case "createOrUpdate" => createOrUpdate()
+      case "list"           => list()
+      case "history"        => history()
+      case "setDefault"     => setDefault()
+      case "getDefault"     => getDefault
+      case "resetDefault"   => resetDefault()
+      case x =>
         throw new RuntimeException(s"Unknown subcommand: $x")
     }
   }

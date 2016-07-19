@@ -116,7 +116,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
 
       // Test list()
       configServiceActor ! ListRequest
-      checkListResult(2, Map(path1 → comment3, path2 → comment1))
+      checkListResult(2, Map(path1 -> comment3, path2 -> comment1))
 
       // Test getting history of document that has been deleted
       configServiceActor ! DeleteRequest(path1, "test delete")
@@ -193,8 +193,8 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
   def checkHistoryResult(path: File, count: Int, comments: List[String]): Unit = {
     val result = expectMsgType[HistoryResult]
     result.history match {
-      case Success(v)  ⇒ assert(v.map(_.comment) == comments)
-      case Failure(ex) ⇒ throw ex
+      case Success(v)  => assert(v.map(_.comment) == comments)
+      case Failure(ex) => throw ex
     }
     assert(result.path == path)
     assert(comments.size == count)
@@ -205,7 +205,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
     assert(result.list.isSuccess)
     val list = result.list.get
     assert(list.size >= size) // plus 1 for README file (git) or *.default file, etc.
-    for (info ← list) {
+    for (info <- list) {
       if (comments.contains(info.path))
         assert(info.comment == comments(info.path))
     }

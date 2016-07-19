@@ -37,7 +37,7 @@ class ResponseCollector[T](
   )
 
   private def ready(responses: Vector[T], tracker: ResponseTracker[T]): Receive = {
-    case m if matcher.isDefinedAt(m) ⇒
+    case m if matcher.isDefinedAt(m) =>
       val response = matcher(m)
       val nextResponses = responses :+ response
       val nextTracker = tracker.addResponse(response)
@@ -51,12 +51,12 @@ class ResponseCollector[T](
         context.become(ready(nextResponses, nextTracker))
       }
 
-    case ReceiveTimeout ⇒
+    case ReceiveTimeout =>
       log.warning("Response collecting timed out")
       result.success(Result(responses, Partial))
       context.stop(self)
 
-    case m ⇒
+    case m =>
       log.warning("Unknown message: {}", m)
   }
 
@@ -92,11 +92,11 @@ class Countdown(expectedMessagesCount: Int) extends ResponseTracker[Any] {
 }
 
 object MatchIds {
-  def apply[Msg, Id](expectedIds: Set[Id], toId: Msg ⇒ Id): MatchIds[Msg, Id] =
+  def apply[Msg, Id](expectedIds: Set[Id], toId: Msg => Id): MatchIds[Msg, Id] =
     new MatchIds(expectedIds, toId)
 }
 
-class MatchIds[Msg, Id](expectedIds: Set[Id], toId: Msg ⇒ Id)
+class MatchIds[Msg, Id](expectedIds: Set[Id], toId: Msg => Id)
     extends ResponseTracker[Msg] {
 
   def isDone: Boolean = expectedIds.isEmpty
@@ -115,7 +115,7 @@ object DataStore {
 
 class DataStore(id: String, items: Map[Int, String]) extends Actor {
   def receive: Receive = {
-    case i: Int ⇒ items.get(i).foreach(v ⇒ sender() ! Data(id, v))
+    case i: Int => items.get(i).foreach(v => sender() ! Data(id, v))
   }
 }
 
@@ -126,21 +126,21 @@ object Main extends App {
   val allStores = List(
     system.actorOf(DataStore.props(
       "name",
-      Map(1 → "Mike", 2 → "Robert", 3 → "Joe")
+      Map(1 -> "Mike", 2 -> "Robert", 3 -> "Joe")
     )),
     system.actorOf(DataStore.props(
       "location",
-      Map(1 → "UK", 2 → "Sweden", 3 → "Germany")
+      Map(1 -> "UK", 2 -> "Sweden", 3 -> "Germany")
     )),
     system.actorOf(DataStore.props(
       "lastPurchase",
-      Map(1 → "couch", 2 → "laptop")
+      Map(1 -> "couch", 2 -> "laptop")
     ))
   )
 
   // Set up response collectors
   val matcher: PartialFunction[Any, Data] = {
-    case d: Data ⇒ d
+    case d: Data => d
   }
 
   def getId(e: Data): String = e.id
@@ -153,7 +153,7 @@ object Main extends App {
   val (result3, collector3) = ResponseCollector(tracker, matcher)
 
   // Fetch data
-  allStores.foreach { store ⇒
+  allStores.foreach { store =>
     store.tell(1, collector1)
     store.tell(2, collector2)
     store.tell(3, collector3)
@@ -162,8 +162,8 @@ object Main extends App {
   // Print results
   def printResult(r: Result[Data]): Unit = {
     val status = r.state match {
-      case Full    ⇒ "All values received"
-      case Partial ⇒ "Only some values received"
+      case Full    => "All values received"
+      case Partial => "Only some values received"
     }
     val values = r.values.mkString(", ")
     println(s"$status: $values")

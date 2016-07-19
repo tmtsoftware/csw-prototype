@@ -17,6 +17,7 @@ import javacsw.services.event.JEventService;
 import javacsw.services.event.JEventSubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.PartialFunction;
 import scala.concurrent.duration.FiniteDuration;
@@ -27,12 +28,14 @@ import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.event.tests.JEventPubSubTest.Msg.*;
 import static javacsw.util.config.JItems.*;
+import static javacsw.util.config.JConfigDSL.*;
 
 
 /**
  * Java test for event service
  */
 @SuppressWarnings("FieldCanBeLocal")
+@Ignore // Don't run this test automatically, since it requires Hornetq to be running
 public class JEventPubSubTest {
   // --- configure this ---
 
@@ -199,10 +202,10 @@ public class JEventPubSubTest {
 
     // Returns the next event to publish
     private ObserveEvent nextEvent(int num) {
-      return jadd(new ObserveEvent(prefix),
-                  jset(eventNum, num),
-                  jset(exposureTime, 1.0),
-                  jset(imageData, testImageData));
+      return new ObserveEvent(prefix)
+        .add(jset(eventNum, num))
+        .add(jset(exposureTime, 1.0))
+        .add(jset(imageData, testImageData));
     }
 
     private void publish() {

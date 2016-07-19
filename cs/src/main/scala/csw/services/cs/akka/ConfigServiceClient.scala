@@ -28,8 +28,8 @@ object ConfigServiceClient {
   def getFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[ConfigData]] = {
     import system.dispatcher
     for {
-      cs ← locateConfigService(csName)
-      configDataOpt ← ConfigServiceClient(cs, csName).get(path, id)
+      cs <- locateConfigService(csName)
+      configDataOpt <- ConfigServiceClient(cs, csName).get(path, id)
     } yield configDataOpt
   }
 
@@ -48,7 +48,7 @@ object ConfigServiceClient {
    */
   def getStringFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[String]] = {
     import system.dispatcher
-    getFromConfigService(csName, path, id).flatMap { configDataOpt ⇒
+    getFromConfigService(csName, path, id).flatMap { configDataOpt =>
       if (configDataOpt.isDefined)
         configDataOpt.get.toFutureString.map(Some(_))
       else
@@ -73,7 +73,7 @@ object ConfigServiceClient {
   def getConfigFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[Config]] = {
     import system.dispatcher
     for {
-      s ← getStringFromConfigService(csName, path, id)
+      s <- getStringFromConfigService(csName, path, id)
     } yield s.map(ConfigFactory.parseString(_).resolve(ConfigResolveOptions.noSystem()))
   }
 }

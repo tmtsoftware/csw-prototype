@@ -47,15 +47,15 @@ private class AlarmRefreshActor(alarmService: AlarmService, initialMap: Map[Alar
   def receive: Receive = working(initialMap)
 
   def working(map: Map[AlarmKey, SeverityLevel]): Receive = {
-    case ChangeSeverity(m) ⇒
+    case ChangeSeverity(m) =>
       context.become(working(map ++ m))
 
-    case Publish ⇒
-      for ((a, s) ← map) {
+    case Publish =>
+      for ((a, s) <- map) {
         alarmService.setSeverity(a, s)
       }
 
-    case x ⇒ log.error(s"Received unexpected message: $x")
+    case x => log.error(s"Received unexpected message: $x")
   }
 
 }

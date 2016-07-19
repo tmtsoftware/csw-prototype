@@ -34,38 +34,38 @@ object ConfigService extends App {
   val parser = new scopt.OptionParser[Options]("scopt") {
     head("cs", System.getProperty("CSW_VERSION"))
 
-    opt[File]("config") action { (x, c) ⇒
+    opt[File]("config") action { (x, c) =>
       c.copy(config = Some(x))
     } text "optional config file to use for config service settings"
 
-    opt[Unit]("init") action { (_, c) ⇒
+    opt[Unit]("init") action { (_, c) =>
       c.copy(init = true)
     } text "the repository is initialized, if it does not yet exist"
 
-    opt[Unit]("delete") action { (_, c) ⇒
+    opt[Unit]("delete") action { (_, c) =>
       c.copy(delete = true, init = true)
     } text "(implies --init) existing repositories are first deleted"
 
-    opt[Unit]("nohttp") action { (_, c) ⇒
+    opt[Unit]("nohttp") action { (_, c) =>
       c.copy(nohttp = true)
     } text "don't start the http server"
 
-    opt[Unit]("noregister") action { (_, c) ⇒
+    opt[Unit]("noregister") action { (_, c) =>
       c.copy(noregister = true)
     } text "don't register with the location service"
   }
 
   parser.parse(args, Options()) match {
-    case Some(options) ⇒ run(options)
-    case None          ⇒ System.exit(1)
+    case Some(options) => run(options)
+    case None          => System.exit(1)
   }
 
   def run(options: Options): Unit = {
     implicit val system = ActorSystem("ConfigService")
 
     val settings = options.config match {
-      case Some(file) ⇒ ConfigServiceSettings(ConfigFactory.parseFile(file))
-      case None       ⇒ ConfigServiceSettings(system)
+      case Some(file) => ConfigServiceSettings(ConfigFactory.parseFile(file))
+      case None       => ConfigServiceSettings(system)
     }
 
     logger.info(s"Config Service(${settings.name}}): using local repo: ${settings.localRepository}, remote repo: ${settings.mainRepository}")
@@ -121,7 +121,7 @@ object ConfigService extends App {
     context watch ref
 
     def receive = {
-      case Terminated(_) ⇒
+      case Terminated(_) =>
         log.info("{} has terminated, shutting down system", ref.path)
         context.system.terminate()
     }

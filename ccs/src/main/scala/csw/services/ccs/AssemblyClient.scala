@@ -87,21 +87,21 @@ private object AssemblyWrapper {
 private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = {
-    case s: Submit ⇒
+    case s: Submit =>
       assembly ! s
       context.become(waitingForStatus(sender()))
 
-    case x ⇒ log.error(s"Received unexpected message: $x")
+    case x => log.error(s"Received unexpected message: $x")
   }
 
   def waitingForStatus(replyTo: ActorRef): Receive = {
-    case s: CommandStatus ⇒
+    case s: CommandStatus =>
       if (s.isDone) {
         replyTo ! s
         context.stop(self)
       }
 
-    case x ⇒ log.error(s"Received unexpected message: $x")
+    case x => log.error(s"Received unexpected message: $x")
   }
 }
 

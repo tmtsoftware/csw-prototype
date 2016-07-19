@@ -95,7 +95,7 @@ object LifecycleManager {
 }
 
 // format: OFF    <-- this directive disables scalariform formatting from this point
-// (due to problem where -> in Akka FSM state machines is not equivalent to ⇒)
+// (due to problem where -> in Akka FSM state machines is not equivalent to =>)
 class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleState, FSMData] {
 
   import LifecycleManager._
@@ -108,13 +108,13 @@ class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleS
   startWith(Loaded, TargetLoaded)
 
   when(Loaded) {
-    case Event(Initialize, TargetLoaded) ⇒
+    case Event(Initialize, TargetLoaded) =>
       logState(PendingInitializedFromLoaded, Initialized)
       goto(PendingInitializedFromLoaded) using TargetInitialized
-    case Event(Startup, TargetLoaded) ⇒
+    case Event(Startup, TargetLoaded) =>
       logState(PendingInitializedFromLoaded, Running)
       goto(PendingInitializedFromLoaded) using TargetRunning
-    case Event(Heartbeat, _) ⇒
+    case Event(Heartbeat, _) =>
       // This is present to notify Supervisor that component is now officially in Loaded state
       // Use of goto ensures a transition notification, stay does not make a transition
       logState(Loaded, Loaded)
@@ -122,7 +122,7 @@ class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleS
   }
 
   onTransition {
-    case Loaded -> PendingInitializedFromLoaded ⇒
+    case Loaded -> PendingInitializedFromLoaded =>
       // Send initialize to component
       logTransition("sending Initialize to component")
       component ! Initialize
@@ -131,42 +131,42 @@ class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleS
 
   // Only wait for pendingTimeout seconds for response
   when(PendingLoadedFromInitialized, stateTimeout = pendingTimeout) {
-    case Event(UninitializeFailure(reason), _) ⇒
+    case Event(UninitializeFailure(reason), _) =>
       goto(LifecycleFailure) using FailureInfo(Loaded, reason)
-    case Event(UninitializeSuccess, TargetLoaded) ⇒
+    case Event(UninitializeSuccess, TargetLoaded) =>
       logState(Loaded, Loaded)
       self ! Heartbeat // Not sure I like this, but it's here to tell supervisor when loaded is attained
       goto(Loaded) using TargetLoaded
     // unregisterFromLocationService
-    case (Event(StateTimeout, _)) ⇒
+    case (Event(StateTimeout, _)) =>
       goto(LifecycleFailure) using FailureInfo(Loaded, timeoutErrorMsg)
   }
 
   // Only wait for pendingTimeout seconds for response
   when(PendingInitializedFromLoaded, stateTimeout = pendingTimeout) {
-    case Event(InitializeFailure(reason), _) ⇒
+    case Event(InitializeFailure(reason), _) =>
       goto(LifecycleFailure) using FailureInfo(Initialized, reason)
-    case Event(InitializeSuccess, TargetInitialized) ⇒
+    case Event(InitializeSuccess, TargetInitialized) =>
       logState(Initialized, Initialized)
       self ! Heartbeat // Not sure I like this, but it's here to tell supervisor when Initialized is attained
       goto(Initialized) using TargetInitialized
-    case Event(InitializeSuccess, TargetRunning) ⇒
+    case Event(InitializeSuccess, TargetRunning) =>
       logState(Initialized, Running)
       self ! Heartbeat // Not sure I like this, but it's here to tell supervisor when Initialized is attained
       self ! Startup
       goto(Initialized) using TargetRunning
-    case (Event(StateTimeout, _)) ⇒
+    case (Event(StateTimeout, _)) =>
       goto(LifecycleFailure) using FailureInfo(Initialized, timeoutErrorMsg)
   }
 
   when(Initialized) {
-    case Event(Uninitialize, _) ⇒
+    case Event(Uninitialize, _) =>
       logState(Loaded, Loaded)
       goto(PendingLoadedFromInitialized) using TargetLoaded
-    case Event(Startup, _) ⇒
+    case Event(Startup, _) =>
       logState(PendingRunningFromInitialized, Running)
       goto(PendingRunningFromInitialized) using TargetRunning
-    case Event(Heartbeat, _) ⇒
+    case Event(Heartbeat, _) =>
       // This is present to notify Supervisor that component is now officially in Initialized state
       // Use of goto ensures a transition notification, stay does not make a transition
       logState(Initialized, Initialized)
@@ -175,56 +175,56 @@ class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleS
   }
 
   onTransition {
-    case Initialized -> PendingRunningFromInitialized ⇒
+    case Initialized -> PendingRunningFromInitialized =>
       logTransition("sending Startup to component")
       // Send startup to component
       component ! Startup
     // requestServices
-    case Initialized -> PendingLoadedFromInitialized ⇒
+    case Initialized -> PendingLoadedFromInitialized =>
       // Send uninitialize to component
       logTransition("sending Uninitialize to component")
       component ! Uninitialize
-    case PendingInitializedFromLoaded -> Initialized ⇒
+    case PendingInitializedFromLoaded -> Initialized =>
       logTransition()
   }
 
   // Only wait for pendingTimeout seconds for response
   when(PendingRunningFromInitialized, stateTimeout = pendingTimeout) {
-    case Event(StartupFailure(reason), _) ⇒
+    case Event(StartupFailure(reason), _) =>
       goto(LifecycleFailure) using FailureInfo(Running, reason)
-    case Event(StartupSuccess, TargetRunning) ⇒
+    case Event(StartupSuccess, TargetRunning) =>
       logState(Running, Running)
       self ! Heartbeat // Not sure I like this, it's not needed, but it's here to tell supervisor when running is attained
       goto(Running) using TargetRunning
-    case (Event(StateTimeout, _)) ⇒
+    case (Event(StateTimeout, _)) =>
       goto(LifecycleFailure) using FailureInfo(Running, timeoutErrorMsg)
   }
 
   // Only wait for pendingTimeout seconds for response
   when(PendingInitializedFromRunning, stateTimeout = pendingTimeout) {
-    case Event(ShutdownFailure(reason), _) ⇒
+    case Event(ShutdownFailure(reason), _) =>
       logState(LifecycleFailure, Initialized)
       goto(LifecycleFailure) using FailureInfo(Initialized, reason)
-    case Event(ShutdownSuccess, TargetInitialized) ⇒
+    case Event(ShutdownSuccess, TargetInitialized) =>
       logState(Initialized, Initialized)
       self ! Heartbeat // Not sure I like this, it's not needed, but it's here to tell supervisor when running is attained
       goto(Initialized) using TargetInitialized
-    case Event(ShutdownSuccess, TargetLoaded) ⇒
+    case Event(ShutdownSuccess, TargetLoaded) =>
       logState(Initialized, Loaded)
       self ! Heartbeat // Not sure I like this, it's not needed, but it's here to tell supervisor when running is attained
       self ! Uninitialize
       goto(Initialized) using TargetLoaded
-    case (Event(StateTimeout, _)) ⇒
+    case (Event(StateTimeout, _)) =>
       goto(LifecycleFailure) using FailureInfo(Initialized, timeoutErrorMsg)
   }
 
   when(Running) {
-    case Event(Shutdown, TargetRunning) ⇒
+    case Event(Shutdown, TargetRunning) =>
       logState(PendingInitializedFromRunning, Initialized)
       goto(PendingInitializedFromRunning) using TargetInitialized
-    case Event(Uninitialize, TargetRunning) ⇒
+    case Event(Uninitialize, TargetRunning) =>
       goto(PendingInitializedFromRunning) using TargetLoaded
-    case Event(Heartbeat, _) ⇒
+    case Event(Heartbeat, _) =>
       // This is present to notify Supervisor that component is now officially in Running state
       // Use of goto ensures a transition notification, stay does not make a transition
       logState(Running, Running)
@@ -232,30 +232,30 @@ class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleS
   }
 
   onTransition {
-    case Running -> PendingInitializedFromRunning ⇒
+    case Running -> PendingInitializedFromRunning =>
       logTransition("sending Shutdown to component")
       component ! Shutdown
   }
 
   when(LifecycleFailure) {
-    case Event(state @ _, data @ _) ⇒
+    case Event(state @ _, data @ _) =>
       log.info(s"Lifecycle failed event/data: $state/$data in state: $stateName/$stateData")
       stop
   }
 
   onTransition {
-    case _ -> LifecycleFailure ⇒
+    case _ -> LifecycleFailure =>
       log.info(s"Sending failure to component: $nextStateData")
       nextStateData match {
-        case FailureInfo(nextState, reason) ⇒
+        case FailureInfo(nextState, reason) =>
           component ! LifecycleFailure(nextState, reason)
-        case _@ msg ⇒
+        case _@ msg =>
           log.error(s"While entering LifecycleFailure state from state: $stateName, received unknown data: $msg")
       }
   }
 
   whenUnhandled {
-    case Event(state @ _, data @ __) ⇒
+    case Event(state @ _, data @ __) =>
       log.debug(s"Unhandled lifecycle event/data: $state/$data in state: $stateName/$stateData")
       stay
   }

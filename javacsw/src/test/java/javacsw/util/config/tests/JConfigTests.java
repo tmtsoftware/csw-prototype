@@ -1,8 +1,7 @@
 package javacsw.util.config.tests;
 
 import csw.util.config.*;
-import csw.util.config.Configurations.ObserveConfig;
-import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.*;
 import javacsw.util.config.JItems;
 import javacsw.util.config.JUnitsOfMeasure;
 import org.junit.Test;
@@ -10,6 +9,8 @@ import org.junit.Test;
 import java.util.*;
 
 import static javacsw.util.config.JItems.*;
+import static javacsw.util.config.JConfigDSL.*;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
@@ -120,8 +121,7 @@ public class JConfigTests {
 
     // it("Should allow setting")
     {
-      SetupConfig sc1 = new SetupConfig(ck1);
-      sc1 = sc1.add(jset(k1, 22)).add(jset(k2, 44));
+      SetupConfig sc1 = new SetupConfig(ck1).add(jset(k1, 22)).add(jset(k2, 44));
       assertTrue(sc1.size() == 2);
       assertTrue(sc1.exists(k1));
       assertTrue(sc1.exists(k2));
@@ -130,7 +130,6 @@ public class JConfigTests {
     // Should allow getting values
     {
       SetupConfig sc1 = new SetupConfig(ck1);
-      //sc1 = sc1.jset(k1, NoUnits, 22).jset(k2, NoUnits, 44);
       sc1 = jadd(sc1, jset(k1, 22));
       sc1 = jadd(sc1, jset(k2, 44));
       List<Integer> v1 = jvalues(jitem(sc1, k1));
@@ -304,6 +303,7 @@ public class JConfigTests {
         }
     }
 */
+
   @Test
   public void testSetupConfigArgs() {
     IntKey encoder1 = IntKey("encoder1");
@@ -311,12 +311,11 @@ public class JConfigTests {
     IntKey xOffset = IntKey("xOffset");
     IntKey yOffset = IntKey("yOffset");
     String obsId = "Obs001";
-
-    // SetupConfig sc1 = SetupConfig(ck1).jset(encoder1, 22).jset(encoder2, 33);
-    //SetupConfig sc2 = SetupConfig(ck1).jset(xOffset, 1).jset(yOffset, 2);
-    //      SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
-//        assertTrue(configArg.info().obsId().obsId().equals(obsId));
-//        assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
+    SetupConfig sc1 = jadd(sc(ck1), jset(encoder1, 22), jset(encoder2, 33));
+    SetupConfig sc2 = jadd(sc(ck1), jset(xOffset, 1), jset(yOffset, 2));
+    SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
+    assertTrue(configArg.info().obsId().obsId().equals(obsId));
+    assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
   }
 
   @Test

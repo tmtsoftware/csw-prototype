@@ -4,14 +4,14 @@ import java.io.File
 import java.util
 import java.util.Optional
 
-import akka.actor.{ ActorRef, ActorRefFactory }
+import akka.actor.{ActorRef, ActorRefFactory}
 import akka.util.Timeout
-import csw.services.alarms.AlarmModel.{ AlarmStatus, Health, HealthStatus, SeverityLevel }
+import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmService.AlarmMonitor
-import csw.services.alarms.{ AlarmKey, AlarmModel, AlarmService, AlarmState }
-import csw.services.alarms.AlarmState.{ ActivationState, ShelvedState }
+import csw.services.alarms.{AlarmKey, AlarmModel, AlarmService, AlarmState}
+import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
-import javacsw.services.alarms.IAlarmService.{ AlarmHandler, HealthHandler }
+import javacsw.services.alarms.IAlarmService.{AlarmHandler, HealthHandler}
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
@@ -49,7 +49,7 @@ private[alarms] object JBlockingAlarmService {
    *
    * @param asName      name used to register the Redis instance with the Location Service (default: "Alarm Service")
    * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
-   *                    to "Indeterminate" (after three missed refreshes)
+   *                    to "Disconnected" (after three missed refreshes)
    * @param system      the Akka system or context, needed for working with futures and actors
    * @param timeout     amount of time to wait when looking up the alarm service with the location service
    * @return a new JBlockingAlarmService instance
@@ -86,7 +86,7 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Unit =
     Await.result(alarmService.setSeverity(alarmKey, severity), timeout.duration)
 
-  override def getSeverity(alarmKey: AlarmKey): SeverityLevel =
+  override def getSeverity(alarmKey: AlarmKey): CurrentSeverity =
     Await.result(alarmService.getSeverity(alarmKey), timeout.duration)
 
   override def acknowledgeAlarm(alarmKey: AlarmKey): Unit =
@@ -102,10 +102,10 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
     Await.result(alarmService.getHealth(alarmKey), timeout.duration)
 
   override def monitorHealth(alarmKey: AlarmKey, subscriber: Optional[ActorRef],
-    notifyAlarm: Optional[AlarmHandler], notifyHealth: Optional[HealthHandler]): AlarmMonitor = {
+                             notifyAlarm: Optional[AlarmHandler], notifyHealth: Optional[HealthHandler]): AlarmMonitor = {
     alarmService.monitorHealth(alarmKey, subscriber.asScala,
-      notifyAlarm.asScala.map(f ⇒ (alarmStatus: AlarmStatus) ⇒ f.handleAlarmStatus(alarmStatus)),
-      notifyHealth.asScala.map(f ⇒ (healthStatus: HealthStatus) ⇒ f.handleHealthStatus(healthStatus)))
+      notifyAlarm.asScala.map(f => (alarmStatus: AlarmStatus) => f.handleAlarmStatus(alarmStatus)),
+      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)))
   }
 
   override def shutdown(): Unit = alarmService.shutdown()

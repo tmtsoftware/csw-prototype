@@ -19,9 +19,9 @@ case class IntArray(data: Array[Int]) {
   override def canEqual(other: Any) = other.isInstanceOf[IntArray]
 
   override def equals(other: Any) = other match {
-    case that: IntArray ⇒
+    case that: IntArray =>
       this.canEqual(that) && deepArrayEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 

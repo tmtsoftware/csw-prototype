@@ -86,7 +86,7 @@ class TelemetryServiceTests
     assert(v.get(exposureTime).isDefined)
     assert(v(exposureTime).head == 7.0)
     assert(h.size == n + 1)
-    for (i ← 0 to n) {
+    for (i <- 0 to n) {
       logger.info(s"History: $i: ${h(i)}")
     }
   }
@@ -104,13 +104,13 @@ class TelemetryServiceTests
       .add(infoStr.set("info 2"))
 
     for {
-      res1 ← ts.set(event1)
-      val1 ← ts.get(prefix)
-      res2 ← ts.set(event2)
-      val2 ← ts.get(prefix)
-      _ ← ts.delete(prefix)
-      res3 ← ts.get(prefix)
-      res4 ← ts.delete(prefix)
+      res1 <- ts.set(event1)
+      val1 <- ts.get(prefix)
+      res2 <- ts.set(event2)
+      val2 <- ts.get(prefix)
+      _ <- ts.delete(prefix)
+      res3 <- ts.get(prefix)
+      res4 <- ts.delete(prefix)
     } yield {
       assert(val1.exists(_.prefix == prefix))
       assert(val1.exists(_(infoValue).head == 1))
@@ -127,19 +127,19 @@ class TelemetryServiceTests
     val n = 3
 
     val f = for {
-      _ ← ts.set(event.add(exposureTime.set(3.0)), n)
-      _ ← ts.set(event.add(exposureTime.set(4.0)), n)
-      _ ← ts.set(event.add(exposureTime.set(5.0)), n)
-      _ ← ts.set(event.add(exposureTime.set(6.0)), n)
-      _ ← ts.set(event.add(exposureTime.set(7.0)), n)
-      v ← ts.get(prefix)
-      h ← ts.getHistory(prefix, n + 1)
-      _ ← ts.delete(prefix)
+      _ <- ts.set(event.add(exposureTime.set(3.0)), n)
+      _ <- ts.set(event.add(exposureTime.set(4.0)), n)
+      _ <- ts.set(event.add(exposureTime.set(5.0)), n)
+      _ <- ts.set(event.add(exposureTime.set(6.0)), n)
+      _ <- ts.set(event.add(exposureTime.set(7.0)), n)
+      v <- ts.get(prefix)
+      h <- ts.getHistory(prefix, n + 1)
+      _ <- ts.delete(prefix)
     } yield {
       assert(v.isDefined)
       assert(v.get(exposureTime).head == 7.0)
       assert(h.size == n + 1)
-      for (i ← 0 to n) {
+      for (i <- 0 to n) {
         logger.info(s"History: $i: ${h(i)}")
       }
     }
@@ -200,17 +200,17 @@ class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber
   subscribe(prefix1, prefix2)
 
   def receive: Receive = {
-    case event: StatusEvent if event.prefix == prefix1 ⇒
+    case event: StatusEvent if event.prefix == prefix1 =>
       count1 = count1 + 1
       assert(event(infoValue).head == count1)
       assert(event(infoStr).head == "info 1")
 
-    case event: StatusEvent if event.prefix == prefix2 ⇒
+    case event: StatusEvent if event.prefix == prefix2 =>
       count2 = count2 + 1
       assert(event(infoValue).head == count2)
       assert(event(infoStr).head == "info 2")
 
-    case GetResults ⇒
+    case GetResults =>
       sender() ! Results(count1, count2)
   }
 }

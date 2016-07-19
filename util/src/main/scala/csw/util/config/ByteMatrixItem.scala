@@ -12,7 +12,7 @@ import scala.language.implicitConversions
 case class ByteMatrix(data: Array[Array[Byte]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l <- data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   /**
    * Gets the value at the given row and column
@@ -22,9 +22,9 @@ case class ByteMatrix(data: Array[Array[Byte]]) {
   override def canEqual(other: Any) = other.isInstanceOf[ByteMatrix]
 
   override def equals(other: Any) = other match {
-    case that: ByteMatrix ⇒
+    case that: ByteMatrix =>
       this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 

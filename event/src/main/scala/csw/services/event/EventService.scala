@@ -58,7 +58,7 @@ object EventService {
         new TransportConfiguration(classOf[InVMConnectorFactory].getName)
       )
     } else {
-      val map = Map("host" → host, "port" → port)
+      val map = Map("host" -> host, "port" -> port)
       HornetQClient.createServerLocatorWithoutHA(
         new TransportConfiguration(
           classOf[NettyConnectorFactory].getName,

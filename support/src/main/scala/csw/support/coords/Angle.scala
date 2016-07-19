@@ -153,9 +153,9 @@ object Angle {
     val r1 = ("([+|-]?)([0-9]+)[" + Angle.DEGREE_SIGN + "d: ]{1,2}([0-9]+)[m': ]{1,2}([0-9\\.]+)[s\\\"]?").r
     val r2 = ("([+|-]?)([0-9]+)[" + Angle.DEGREE_SIGN + "d: ]{1,2}([0-9]+)[m']?").r
     de match {
-      case r1(sign, d, m, s) ⇒ parseDe(sign, d, m, s)
-      case r2(sign, d, m)    ⇒ parseDe(sign, d, m, null)
-      case _                 ⇒ throw new IllegalArgumentException("Could not parse DE: " + de)
+      case r1(sign, d, m, s) => parseDe(sign, d, m, s)
+      case r2(sign, d, m)    => parseDe(sign, d, m, null)
+      case _                 => throw new IllegalArgumentException("Could not parse DE: " + de)
     }
   }
 
@@ -194,10 +194,10 @@ object Angle {
     val r2 = "([0-9]+)[h: ]{1,2}([0-9\\.]+)[m]?".r
     val r3 = "([0-9]+)d([0-9]+)m([0-9\\.]+)s".r
     ra match {
-      case r1(h, m, s) ⇒ parseRa(h, m, s)
-      case r2(h, m)    ⇒ parseRa(h, m, null)
-      case r3(d, m, s) ⇒ d.toDouble.degree + m.toDouble.arcMinute + m.toDouble.arcSec
-      case _           ⇒ throw new IllegalArgumentException("Could not parse RA: " + ra)
+      case r1(h, m, s) => parseRa(h, m, s)
+      case r2(h, m)    => parseRa(h, m, null)
+      case r3(d, m, s) => d.toDouble.degree + m.toDouble.arcMinute + m.toDouble.arcSec
+      case _           => throw new IllegalArgumentException("Could not parse RA: " + ra)
     }
   }
 
@@ -231,11 +231,11 @@ object Angle {
     lazy val r5 = "([0-9]{1,3}\\.?[0-9]*)[d]?[ ]?([\\+-]?[0-9]{1,2}\\.?[0-9]*)[d]?".r
 
     str match {
-      case r1(ah, am, as, ss, d, m, s) ⇒ (parseRa(ah, am, as), parseDe(ss, d, m, s))
-      case r2(ah, am, ss, d, m)        ⇒ (parseRa(ah, am, null), parseDe(ss, d, m, null))
-      case r3(ra, de)                  ⇒ (parseRa(ra), parseDe(de))
-      case r4(ra, de)                  ⇒ (ra.toDouble.arcHour, de.toDouble.degree)
-      case r5(ra, de)                  ⇒ (ra.toDouble.degree, de.toDouble.degree)
+      case r1(ah, am, as, ss, d, m, s) => (parseRa(ah, am, as), parseDe(ss, d, m, s))
+      case r2(ah, am, ss, d, m)        => (parseRa(ah, am, null), parseDe(ss, d, m, null))
+      case r3(ra, de)                  => (parseRa(ra), parseDe(de))
+      case r4(ra, de)                  => (ra.toDouble.arcHour, de.toDouble.degree)
+      case r5(ra, de)                  => (ra.toDouble.degree, de.toDouble.degree)
     }
 
   }

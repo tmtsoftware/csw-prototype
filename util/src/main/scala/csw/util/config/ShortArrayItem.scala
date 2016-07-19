@@ -22,9 +22,9 @@ case class ShortArray(data: Array[Short]) {
   override def canEqual(other: Any) = other.isInstanceOf[ShortArray]
 
   override def equals(other: Any) = other match {
-    case that: ShortArray ⇒
+    case that: ShortArray =>
       this.canEqual(that) && deepArrayEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 case object ShortArray extends DefaultJsonProtocol {

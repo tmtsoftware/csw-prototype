@@ -46,7 +46,7 @@ object Configurations {
    * @tparam T the subclass of ConfigType
    */
   trait ConfigType[T <: ConfigType[T]] {
-    self: T ⇒
+    self: T =>
 
     /**
      * A name identifying the type of config, such as "setup", "observe".
@@ -92,7 +92,7 @@ object Configurations {
      * @tparam I must be a subclass of Item
      * @return a new instance of this config with the given item added
      */
-    def madd[I <: Item[_]](itemsToAdd: I*): T = itemsToAdd.foldLeft(this)((c, item) ⇒ doAdd(c, item))
+    def madd[I <: Item[_]](itemsToAdd: I*): T = itemsToAdd.foldLeft(this)((c, item) => doAdd(c, item))
 
     /**
      * Returns an Option with the item for the key if found, otherwise None
@@ -162,8 +162,8 @@ object Configurations {
     private def removeByKeyname[I <: Item[_]](c: ConfigType[T], keyname: String): T = {
       val f: Option[I] = getByKeyname(c.items, keyname)
       f match {
-        case Some(item) ⇒ create(c.items.-(item))
-        case None       ⇒ c.asInstanceOf[T] //create(c.items) also works
+        case Some(item) => create(c.items.-(item))
+        case None       => c.asInstanceOf[T] //create(c.items) also works
       }
     }
 
@@ -177,8 +177,8 @@ object Configurations {
     private def removeByItem[I <: Item[_]](c: ConfigType[T], itemIn: I): T = {
       val f: Option[I] = getByItem(c.items, itemIn)
       f match {
-        case Some(item) ⇒ create(c.items.-(item))
-        case None       ⇒ c.asInstanceOf[T]
+        case Some(item) => create(c.items.-(item))
+        case None       => c.asInstanceOf[T]
       }
     }
 
@@ -230,7 +230,7 @@ object Configurations {
      * (Could be useful for exporting in a format that other languages can read).
      * Derived classes might want to add values to this map for fixed fields.
      */
-    def getStringMap: Map[String, String] = items.map(i ⇒ i.keyName → i.values.map(_.toString).mkString(",")).toMap
+    def getStringMap: Map[String, String] = items.map(i => i.keyName -> i.values.map(_.toString).mkString(",")).toMap
   }
 
   /**
@@ -311,19 +311,19 @@ object Configurations {
    */
   object ConfigFilters {
     // A filter type for various ConfigData
-    type ConfigFilter[A] = A ⇒ Boolean
+    type ConfigFilter[A] = A => Boolean
 
     def prefixes(configs: Seq[ConfigType[_]]): Set[String] = configs.map(_.prefix).toSet
 
-    def onlySetupConfigs(configs: Seq[SequenceConfig]): Seq[SetupConfig] = configs.collect { case ct: SetupConfig ⇒ ct }
+    def onlySetupConfigs(configs: Seq[SequenceConfig]): Seq[SetupConfig] = configs.collect { case ct: SetupConfig => ct }
 
-    def onlyObserveConfigs(configs: Seq[SequenceConfig]): Seq[ObserveConfig] = configs.collect { case ct: ObserveConfig ⇒ ct }
+    def onlyObserveConfigs(configs: Seq[SequenceConfig]): Seq[ObserveConfig] = configs.collect { case ct: ObserveConfig => ct }
 
-    def onlyWaitConfigs(configs: Seq[SequenceConfig]): Seq[WaitConfig] = configs.collect { case ct: WaitConfig ⇒ ct }
+    def onlyWaitConfigs(configs: Seq[SequenceConfig]): Seq[WaitConfig] = configs.collect { case ct: WaitConfig => ct }
 
-    val prefixStartsWithFilter: String ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.prefix.startsWith(query)
-    val prefixContainsFilter: String ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.prefix.contains(query)
-    val prefixIsSubsystem: Subsystem ⇒ ConfigFilter[ConfigType[_]] = query ⇒ sc ⇒ sc.subsystem.equals(query)
+    val prefixStartsWithFilter: String => ConfigFilter[ConfigType[_]] = query => sc => sc.prefix.startsWith(query)
+    val prefixContainsFilter: String => ConfigFilter[ConfigType[_]] = query => sc => sc.prefix.contains(query)
+    val prefixIsSubsystem: Subsystem => ConfigFilter[ConfigType[_]] = query => sc => sc.subsystem.equals(query)
 
     def prefixStartsWith(query: String, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixStartsWithFilter(query))
 

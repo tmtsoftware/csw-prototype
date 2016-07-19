@@ -41,12 +41,12 @@ object ConfigJSON extends DefaultJsonProtocol {
 
     def read(value: JsValue) = {
       value match {
-        case JsString(subsystemStr) ⇒ Subsystem.lookup(subsystemStr) match {
-          case Some(subsystem) ⇒ subsystem
-          case None            ⇒ Subsystem.BAD
+        case JsString(subsystemStr) => Subsystem.lookup(subsystemStr) match {
+          case Some(subsystem) => subsystem
+          case None            => Subsystem.BAD
         }
         // With malformed JSON, return BAD
-        case _ ⇒ Subsystem.BAD
+        case _ => Subsystem.BAD
       }
     }
   }
@@ -55,8 +55,8 @@ object ConfigJSON extends DefaultJsonProtocol {
     def write(items: ConfigData) = JsArray(items.map(writeItem(_)).toList: _*)
 
     def read(json: JsValue) = json match {
-      case a: JsArray ⇒ a.elements.map((el: JsValue) ⇒ readItemAndType(el)).toSet
-      case _          ⇒ unexpectedJsValueError(json)
+      case a: JsArray => a.elements.map((el: JsValue) => readItemAndType(el)).toSet
+      case _          => unexpectedJsValueError(json)
     }
   }
 
@@ -64,8 +64,8 @@ object ConfigJSON extends DefaultJsonProtocol {
     def write(et: EventTime): JsValue = JsString(et.toString)
 
     def read(json: JsValue): EventTime = json match {
-      case JsString(s) ⇒ Instant.parse(s)
-      case _           ⇒ unexpectedJsValueError(json)
+      case JsString(s) => Instant.parse(s)
+      case _           => unexpectedJsValueError(json)
     }
   }
 
@@ -110,62 +110,62 @@ object ConfigJSON extends DefaultJsonProtocol {
   // XXX TODO Use JNumber?
   def writeItem[S, I /*, J */ ](item: Item[S /*, J */ ]): JsValue = {
     val result: (JsString, JsValue) = item match {
-      case ci: CharItem         ⇒ (JsString(charType), charItemFormat.write(ci))
-      case si: ShortItem        ⇒ (JsString(shortType), shortItemFormat.write(si))
-      case ii: IntItem          ⇒ (JsString(integerType), intItemFormat.write(ii))
-      case li: LongItem         ⇒ (JsString(longType), longItemFormat.write(li))
-      case fi: FloatItem        ⇒ (JsString(floatType), floatItemFormat.write(fi))
-      case di: DoubleItem       ⇒ (JsString(doubleType), doubleItemFormat.write(di))
-      case bi: BooleanItem      ⇒ (JsString(booleanType), booleanItemFormat.write(bi))
-      case si: StringItem       ⇒ (JsString(stringType), stringItemFormat.write(si))
-      case di: DoubleMatrixItem ⇒ (JsString(doubleMatrixType), doubleMatrixItemFormat.write(di))
-      case di: DoubleArrayItem  ⇒ (JsString(doubleArrayType), doubleArrayItemFormat.write(di))
-      case di: FloatMatrixItem  ⇒ (JsString(floatMatrixType), floatMatrixItemFormat.write(di))
-      case di: FloatArrayItem   ⇒ (JsString(floatArrayType), floatArrayItemFormat.write(di))
-      case di: IntMatrixItem    ⇒ (JsString(intMatrixType), intMatrixItemFormat.write(di))
-      case di: IntArrayItem     ⇒ (JsString(intArrayType), intArrayItemFormat.write(di))
-      case di: ByteMatrixItem   ⇒ (JsString(byteMatrixType), byteMatrixItemFormat.write(di))
-      case di: ByteArrayItem    ⇒ (JsString(byteArrayType), byteArrayItemFormat.write(di))
-      case di: ShortMatrixItem  ⇒ (JsString(shortMatrixType), shortMatrixItemFormat.write(di))
-      case di: ShortArrayItem   ⇒ (JsString(shortArrayType), shortArrayItemFormat.write(di))
-      case di: LongMatrixItem   ⇒ (JsString(longMatrixType), longMatrixItemFormat.write(di))
-      case di: LongArrayItem    ⇒ (JsString(longArrayType), longArrayItemFormat.write(di))
-      case gi: GenericItem[S]   ⇒ (JsString(gi.typeName), gi.toJson)
+      case ci: CharItem         => (JsString(charType), charItemFormat.write(ci))
+      case si: ShortItem        => (JsString(shortType), shortItemFormat.write(si))
+      case ii: IntItem          => (JsString(integerType), intItemFormat.write(ii))
+      case li: LongItem         => (JsString(longType), longItemFormat.write(li))
+      case fi: FloatItem        => (JsString(floatType), floatItemFormat.write(fi))
+      case di: DoubleItem       => (JsString(doubleType), doubleItemFormat.write(di))
+      case bi: BooleanItem      => (JsString(booleanType), booleanItemFormat.write(bi))
+      case si: StringItem       => (JsString(stringType), stringItemFormat.write(si))
+      case di: DoubleMatrixItem => (JsString(doubleMatrixType), doubleMatrixItemFormat.write(di))
+      case di: DoubleArrayItem  => (JsString(doubleArrayType), doubleArrayItemFormat.write(di))
+      case di: FloatMatrixItem  => (JsString(floatMatrixType), floatMatrixItemFormat.write(di))
+      case di: FloatArrayItem   => (JsString(floatArrayType), floatArrayItemFormat.write(di))
+      case di: IntMatrixItem    => (JsString(intMatrixType), intMatrixItemFormat.write(di))
+      case di: IntArrayItem     => (JsString(intArrayType), intArrayItemFormat.write(di))
+      case di: ByteMatrixItem   => (JsString(byteMatrixType), byteMatrixItemFormat.write(di))
+      case di: ByteArrayItem    => (JsString(byteArrayType), byteArrayItemFormat.write(di))
+      case di: ShortMatrixItem  => (JsString(shortMatrixType), shortMatrixItemFormat.write(di))
+      case di: ShortArrayItem   => (JsString(shortArrayType), shortArrayItemFormat.write(di))
+      case di: LongMatrixItem   => (JsString(longMatrixType), longMatrixItemFormat.write(di))
+      case di: LongArrayItem    => (JsString(longArrayType), longArrayItemFormat.write(di))
+      case gi: GenericItem[S]   => (JsString(gi.typeName), gi.toJson)
     }
-    JsObject("itemType" → result._1, "item" → result._2)
+    JsObject("itemType" -> result._1, "item" -> result._2)
   }
 
   def readItemAndType(json: JsValue): Item[_ /*, _ */ ] = json match {
-    case JsObject(fields) ⇒
+    case JsObject(fields) =>
       (fields("itemType"), fields("item")) match {
-        case (JsString(`charType`), item)         ⇒ charItemFormat.read(item)
-        case (JsString(`shortType`), item)        ⇒ shortItemFormat.read(item)
-        case (JsString(`integerType`), item)      ⇒ intItemFormat.read(item)
-        case (JsString(`longType`), item)         ⇒ longItemFormat.read(item)
-        case (JsString(`floatType`), item)        ⇒ floatItemFormat.read(item)
-        case (JsString(`doubleType`), item)       ⇒ doubleItemFormat.read(item)
-        case (JsString(`booleanType`), item)      ⇒ booleanItemFormat.read(item)
-        case (JsString(`stringType`), item)       ⇒ stringItemFormat.read(item)
-        case (JsString(`doubleMatrixType`), item) ⇒ doubleMatrixItemFormat.read(item)
-        case (JsString(`doubleArrayType`), item)  ⇒ doubleArrayItemFormat.read(item)
-        case (JsString(`floatMatrixType`), item)  ⇒ floatMatrixItemFormat.read(item)
-        case (JsString(`floatArrayType`), item)   ⇒ floatArrayItemFormat.read(item)
-        case (JsString(`intMatrixType`), item)    ⇒ intMatrixItemFormat.read(item)
-        case (JsString(`intArrayType`), item)     ⇒ intArrayItemFormat.read(item)
-        case (JsString(`byteMatrixType`), item)   ⇒ byteMatrixItemFormat.read(item)
-        case (JsString(`byteArrayType`), item)    ⇒ byteArrayItemFormat.read(item)
-        case (JsString(`shortMatrixType`), item)  ⇒ shortMatrixItemFormat.read(item)
-        case (JsString(`shortArrayType`), item)   ⇒ shortArrayItemFormat.read(item)
-        case (JsString(`longMatrixType`), item)   ⇒ longMatrixItemFormat.read(item)
-        case (JsString(`longArrayType`), item)    ⇒ longArrayItemFormat.read(item)
-        case (JsString(typeTag), item) ⇒
+        case (JsString(`charType`), item)         => charItemFormat.read(item)
+        case (JsString(`shortType`), item)        => shortItemFormat.read(item)
+        case (JsString(`integerType`), item)      => intItemFormat.read(item)
+        case (JsString(`longType`), item)         => longItemFormat.read(item)
+        case (JsString(`floatType`), item)        => floatItemFormat.read(item)
+        case (JsString(`doubleType`), item)       => doubleItemFormat.read(item)
+        case (JsString(`booleanType`), item)      => booleanItemFormat.read(item)
+        case (JsString(`stringType`), item)       => stringItemFormat.read(item)
+        case (JsString(`doubleMatrixType`), item) => doubleMatrixItemFormat.read(item)
+        case (JsString(`doubleArrayType`), item)  => doubleArrayItemFormat.read(item)
+        case (JsString(`floatMatrixType`), item)  => floatMatrixItemFormat.read(item)
+        case (JsString(`floatArrayType`), item)   => floatArrayItemFormat.read(item)
+        case (JsString(`intMatrixType`), item)    => intMatrixItemFormat.read(item)
+        case (JsString(`intArrayType`), item)     => intArrayItemFormat.read(item)
+        case (JsString(`byteMatrixType`), item)   => byteMatrixItemFormat.read(item)
+        case (JsString(`byteArrayType`), item)    => byteArrayItemFormat.read(item)
+        case (JsString(`shortMatrixType`), item)  => shortMatrixItemFormat.read(item)
+        case (JsString(`shortArrayType`), item)   => shortArrayItemFormat.read(item)
+        case (JsString(`longMatrixType`), item)   => longMatrixItemFormat.read(item)
+        case (JsString(`longArrayType`), item)    => longArrayItemFormat.read(item)
+        case (JsString(typeTag), item) =>
           GenericItem.lookup(typeTag) match {
-            case Some(jsonReaderFunc) ⇒ jsonReaderFunc(item)
-            case None                 ⇒ unexpectedJsValueError(item)
+            case Some(jsonReaderFunc) => jsonReaderFunc(item)
+            case None                 => unexpectedJsValueError(item)
           }
-        case _ ⇒ unexpectedJsValueError(json)
+        case _ => unexpectedJsValueError(json)
       }
-    case _ ⇒ unexpectedJsValueError(json)
+    case _ => unexpectedJsValueError(json)
   }
 
   /**
@@ -177,9 +177,9 @@ object ConfigJSON extends DefaultJsonProtocol {
    */
   def writeConfig[A <: ConfigType[_]](config: A): JsValue = {
     JsObject(
-      "configType" → JsString(config.typeName),
-      "configKey" → configKeyFormat.write(config.configKey),
-      "items" → config.items.toJson
+      "configType" -> JsString(config.typeName),
+      "configKey" -> configKeyFormat.write(config.configKey),
+      "items" -> config.items.toJson
     )
   }
 
@@ -192,9 +192,9 @@ object ConfigJSON extends DefaultJsonProtocol {
    */
   def writeEvent[A <: EventType[_]](event: A): JsValue = {
     JsObject(
-      "eventType" → JsString(event.typeName),
-      "eventInfo" → eventInfoFormat.write(event.info),
-      "items" → event.items.toJson
+      "eventType" -> JsString(event.typeName),
+      "eventInfo" -> eventInfoFormat.write(event.info),
+      "items" -> event.items.toJson
     )
   }
 
@@ -207,21 +207,21 @@ object ConfigJSON extends DefaultJsonProtocol {
    */
   def readConfig[A <: ConfigType[_]](json: JsValue): A = {
     json match {
-      case JsObject(fields) ⇒
+      case JsObject(fields) =>
         (fields("configType"), fields("configKey"), fields("items")) match {
-          case (JsString(typeName), configKey, items) ⇒
+          case (JsString(typeName), configKey, items) =>
             val ck = configKey.convertTo[ConfigKey]
             typeName match {
-              case `setupConfigType`   ⇒ SetupConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `observeConfigType` ⇒ ObserveConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `waitConfigType`    ⇒ WaitConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `curentStateType`   ⇒ CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `demandStateType`   ⇒ DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case _                   ⇒ unexpectedJsValueError(json)
+              case `setupConfigType`   => SetupConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `observeConfigType` => ObserveConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `waitConfigType`    => WaitConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `curentStateType`   => CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `demandStateType`   => DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case _                   => unexpectedJsValueError(json)
             }
-          case _ ⇒ unexpectedJsValueError(json)
+          case _ => unexpectedJsValueError(json)
         }
-      case _ ⇒ unexpectedJsValueError(json)
+      case _ => unexpectedJsValueError(json)
     }
   }
 
@@ -234,19 +234,19 @@ object ConfigJSON extends DefaultJsonProtocol {
    */
   def readEvent[A <: EventType[_]](json: JsValue): A = {
     json match {
-      case JsObject(fields) ⇒
+      case JsObject(fields) =>
         (fields("eventType"), fields("eventInfo"), fields("items")) match {
-          case (JsString(typeName), eventInfo, items) ⇒
+          case (JsString(typeName), eventInfo, items) =>
             val info = eventInfo.convertTo[EventInfo]
             typeName match {
-              case `statusEventType`  ⇒ StatusEvent(info, itemsFormat.read(items)).asInstanceOf[A]
-              case `observeEventType` ⇒ ObserveEvent(info, itemsFormat.read(items)).asInstanceOf[A]
-              case `systemEventType`  ⇒ SystemEvent(info, itemsFormat.read(items)).asInstanceOf[A]
-              case _                  ⇒ unexpectedJsValueError(json)
+              case `statusEventType`  => StatusEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case `observeEventType` => ObserveEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case `systemEventType`  => SystemEvent(info, itemsFormat.read(items)).asInstanceOf[A]
+              case _                  => unexpectedJsValueError(json)
             }
-          case _ ⇒ unexpectedJsValueError(json)
+          case _ => unexpectedJsValueError(json)
         }
-      case _ ⇒ unexpectedJsValueError(json)
+      case _ => unexpectedJsValueError(json)
     }
   }
 }

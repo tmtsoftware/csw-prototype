@@ -15,7 +15,7 @@ import scala.compat.java8.OptionConverters._
 case class LongMatrix(data: Array[Array[Long]]) {
   import ArrayAndMatrixEquality._
 
-  override def toString = (for (l ← data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
+  override def toString = (for (l <- data) yield l.mkString("(", ",", ")")).mkString("(", ",", ")")
 
   /**
    * Gets the value at the given row and column
@@ -25,9 +25,9 @@ case class LongMatrix(data: Array[Array[Long]]) {
   override def canEqual(other: Any) = other.isInstanceOf[LongMatrix]
 
   override def equals(other: Any) = other match {
-    case that: LongMatrix ⇒
+    case that: LongMatrix =>
       this.canEqual(that) && deepMatrixValueEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 case object LongMatrix extends DefaultJsonProtocol {

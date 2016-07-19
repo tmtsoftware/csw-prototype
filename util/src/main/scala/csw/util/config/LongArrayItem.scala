@@ -22,9 +22,9 @@ case class LongArray(data: Array[Long]) {
   override def canEqual(other: Any) = other.isInstanceOf[LongArray]
 
   override def equals(other: Any) = other match {
-    case that: LongArray ⇒
+    case that: LongArray =>
       this.canEqual(that) && deepArrayEquals(this.data, that.data)
-    case _ ⇒ false
+    case _ => false
   }
 }
 

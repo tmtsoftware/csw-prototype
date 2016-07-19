@@ -68,11 +68,11 @@ object HCDExample {
     }
 
     def receive: Receive = {
-      case Rate(r) ⇒
+      case Rate(r) =>
         timer.cancel()
         timer = setTimer(1000 / r)
 
-      case Tick ⇒
+      case Tick =>
         val (az, el) = genPair(rand)
         val event = SystemEvent(prefix).add(azKey.set(az)).add(elKey.set(el))
         eventService.publish(event)
@@ -97,7 +97,7 @@ object HCDExample {
     subscribe(prefix)
 
     def receive: Receive = {
-      case event: SystemEvent ⇒
+      case event: SystemEvent =>
         val az = event(azKey).head
         val el = event.get(elKey).get.head
         log.info(s"Coords: az: $az, el: $el")
@@ -127,8 +127,8 @@ class HCDExample(info: HcdInfo) extends Hcd with HcdController with TimeServiceS
   // Process a config message
   override def process(sc: SetupConfig): Unit = {
     for {
-      rateItem ← sc.get(rateKey)
-      rate ← rateItem.get(0)
+      rateItem <- sc.get(rateKey)
+      rate <- rateItem.get(0)
     } {
       log.info(s"Set rate to $rate")
       posEventGenerator ! Rate(rate)

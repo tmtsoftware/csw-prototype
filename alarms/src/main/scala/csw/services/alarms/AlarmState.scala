@@ -40,8 +40,8 @@ object AlarmState {
     }
 
     def apply(s: String): AcknowledgedState = s match {
-      case NeedsAcknowledge.name ⇒ NeedsAcknowledge
-      case Normal.name           ⇒ Normal
+      case NeedsAcknowledge.name => NeedsAcknowledge
+      case Normal.name           => Normal
     }
   }
 
@@ -63,8 +63,8 @@ object AlarmState {
 
     def apply(s: String): LatchedState = {
       s match {
-        case NeedsReset.name ⇒ NeedsReset
-        case Normal.name     ⇒ Normal
+        case NeedsReset.name => NeedsReset
+        case Normal.name     => Normal
       }
     }
   }
@@ -85,8 +85,8 @@ object AlarmState {
     }
 
     def apply(s: String): ShelvedState = s match {
-      case Shelved.name ⇒ Shelved
-      case Normal.name  ⇒ Normal
+      case Shelved.name => Shelved
+      case Normal.name  => Normal
     }
   }
 
@@ -107,8 +107,8 @@ object AlarmState {
     }
 
     def apply(s: String): ActivationState = s match {
-      case OutOfService.name ⇒ OutOfService
-      case Normal.name       ⇒ Normal
+      case OutOfService.name => OutOfService
+      case Normal.name       => Normal
     }
   }
 
@@ -135,7 +135,7 @@ object AlarmState {
 case class AlarmState(
     acknowledgedState: AcknowledgedState = AcknowledgedState.Normal,
     latchedState:      LatchedState      = LatchedState.Normal,
-    latchedSeverity:   SeverityLevel     = SeverityLevel.Indeterminate,
+    latchedSeverity:   SeverityLevel     = SeverityLevel.Disconnected,
     shelvedState:      ShelvedState      = ShelvedState.Normal,
     activationState:   ActivationState   = ActivationState.Normal
 ) {
@@ -144,10 +144,10 @@ case class AlarmState(
    * @return The contents of this object as a map
    */
   def asMap(): Map[String, String] = Map(
-    acknowledgedStateField → acknowledgedState.name,
-    latchedStateField → latchedState.name,
-    latchedSeverityField → latchedSeverity.name,
-    shelvedStateField → shelvedState.name,
-    activationStateField → activationState.name
+    acknowledgedStateField -> acknowledgedState.name,
+    latchedStateField -> latchedState.name,
+    latchedSeverityField -> latchedSeverity.name,
+    shelvedStateField -> shelvedState.name,
+    activationStateField -> activationState.name
   )
 }

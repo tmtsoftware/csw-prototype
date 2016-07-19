@@ -44,7 +44,7 @@ object LocationTrackerClientTests {
 
     // query is set to true once after a QueryResolved message was received
     def recv(query: Boolean = false): Receive = {
-      case loc: Location ⇒
+      case loc: Location =>
         trackerClientReceive(loc)
         if (allResolved)
           replyTo ! AllResolved(getLocations)
@@ -52,7 +52,7 @@ object LocationTrackerClientTests {
           replyTo ! NotAllResolved(getLocations)
         context.become(recv() orElse trackerClientReceive)
 
-      case QueryResolved ⇒
+      case QueryResolved =>
         context.become(recv(true) orElse trackerClientReceive)
     }
   }
@@ -215,7 +215,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
 
     val future = LocationService.resolve(Set(ac))
     future.map(_.locations.head).mapTo[ResolvedAkkaLocation] onSuccess {
-      case ral ⇒ logger.info("Its: " + ral.actorRef)
+      case ral => logger.info("Its: " + ral.actorRef)
     }
     val result = Await.result(future, timeout.duration)
     logger.info(s" Got it: ${result.locations}")

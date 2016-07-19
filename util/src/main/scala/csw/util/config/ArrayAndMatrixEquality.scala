@@ -37,9 +37,9 @@ object ArrayAndMatrixEquality {
    * @tparam U the type of the array for comparing (i.e. Array[Long]
    * @return true if the arrays are equal or false if not
    */
-  def vectorEquals1[T, U](one: Vector[T], two: Vector[T], f: T ⇒ Array[U]): Boolean = {
+  def vectorEquals1[T, U](one: Vector[T], two: Vector[T], f: T => Array[U]): Boolean = {
     val zipped: Vector[(T, T)] = one.zip(two)
-    zipped.foldLeft(true) { (acc, v) ⇒ deepArrayEquals(f(v._1), f(v._2)) }
+    zipped.foldLeft(true) { (acc, v) => deepArrayEquals(f(v._1), f(v._2)) }
   }
 
   /**
@@ -54,7 +54,7 @@ object ArrayAndMatrixEquality {
    * @tparam U the type of the array for comparing (i.e. Array[Long]
    * @return true if the arrays are equal or false if not
    */
-  def vectorEquals2[T, U](one: Vector[T], two: Vector[T], f: T ⇒ Array[U]): Boolean = {
+  def vectorEquals2[T, U](one: Vector[T], two: Vector[T], f: T => Array[U]): Boolean = {
     @tailrec
     def doCheck(v: Vector[(T, T)]): Boolean = {
       if (v.isEmpty) true

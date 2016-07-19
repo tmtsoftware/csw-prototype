@@ -34,18 +34,18 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
     try {
       val f = for {
-        _ ← runTests(settings, oversize = false)
-        _ ← runTests2(settings2, oversize = false)
-        //        _ ← runTests3(List(settings, settings2), oversize = false)
+        _ <- runTests(settings, oversize = false)
+        _ <- runTests2(settings2, oversize = false)
+        //        _ <- runTests3(List(settings, settings2), oversize = false)
 
-        _ ← runTests(settings, oversize = true)
-        _ ← runTests2(settings2, oversize = true)
-        //        _ ← runTests3(List(settings, settings2), oversize = true)
+        _ <- runTests(settings, oversize = true)
+        _ <- runTests2(settings2, oversize = true)
+        //        _ <- runTests3(List(settings, settings2), oversize = true)
       } yield ()
 
       f.onComplete {
-        case Success(_)  ⇒ logger.info("Success")
-        case Failure(ex) ⇒ logger.error("Failure", ex)
+        case Success(_)  => logger.info("Success")
+        case Failure(ex) => logger.error("Failure", ex)
       }
 
       Await.ready(f, 600.seconds)
@@ -69,7 +69,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
     val result = ConfigManagerTestHelper.runTests(csClient, oversize)
     result.onComplete {
-      case _ ⇒ system.stop(csActor)
+      case _ => system.stop(csActor)
     }
     result
   }
@@ -88,7 +88,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
     val result = ConfigManagerTestHelper.runTests2(csClient, oversize)
     result.onComplete {
-      case _ ⇒ system.stop(csActor)
+      case _ => system.stop(csActor)
     }
     result
   }
@@ -101,11 +101,11 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
   //    val managers = settings.map(_.getConfigManager)
   //
   //    // Create the actor
-  //    val csActors = managers.map(manager ⇒ system.actorOf(ConfigServiceActor.props(manager)))
-  //    val csClients = csActors.zip(settings).map(p ⇒ ConfigServiceClient(p._1, p._2.name))
+  //    val csActors = managers.map(manager => system.actorOf(ConfigServiceActor.props(manager)))
+  //    val csClients = csActors.zip(settings).map(p => ConfigServiceClient(p._1, p._2.name))
   //    val result = ConfigManagerTestHelper.concurrentTest(csClients, oversize)
   //    result.onComplete {
-  //      case _ ⇒ csActors.foreach(csActor ⇒ system.stop(csActor))
+  //      case _ => csActors.foreach(csActor => system.stop(csActor))
   //    }
   //    result
   //  }

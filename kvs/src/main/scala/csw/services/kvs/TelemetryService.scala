@@ -57,7 +57,7 @@ case class TelemetryService(settings: KvsSettings)(implicit _system: ActorRefFac
    * Deletes the given  status event from the store
    * @return a future indicating if/when the operation has completed
    */
-  def delete(prefix: String): Future[Unit] = kvs.delete(telemetryPrefix(prefix)).map(_ ⇒ ())
+  def delete(prefix: String): Future[Unit] = kvs.delete(telemetryPrefix(prefix)).map(_ => ())
 
   /**
    * Disconnects from the key/value store server

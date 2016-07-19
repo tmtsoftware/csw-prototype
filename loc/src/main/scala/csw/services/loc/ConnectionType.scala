@@ -36,9 +36,9 @@ object ConnectionType {
    * Gets a ConnectionType from the string value ("akka" or "http") or an UnknownConnectionTypeException
    */
   def apply(name: String): Try[ConnectionType] = name match {
-    case "http" ⇒ Success(HttpType)
-    case "akka" ⇒ Success(AkkaType)
-    case x      ⇒ Failure(UnknownConnectionTypeException(x))
+    case "http" => Success(HttpType)
+    case "akka" => Success(AkkaType)
+    case x      => Failure(UnknownConnectionTypeException(x))
   }
 
 }

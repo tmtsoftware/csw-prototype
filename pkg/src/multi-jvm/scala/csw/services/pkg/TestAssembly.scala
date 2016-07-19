@@ -25,7 +25,7 @@ case class TestAssembly(info: AssemblyInfo)
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     // Current state received from one of the HCDs: Just forward it to the assembly, which subscribes to the HCD's status
-    case s: CurrentState ⇒
+    case s: CurrentState =>
 
     case x => log.error(s"Unexpected message: $x")
   }
