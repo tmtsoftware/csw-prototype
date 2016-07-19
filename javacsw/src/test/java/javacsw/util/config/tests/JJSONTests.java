@@ -68,7 +68,7 @@ public class JJSONTests {
         assertTrue(cc2.ra() == 9.1);
         assertTrue(cc2.dec() == 2.9);
 
-        SetupConfig sc2 = new SetupConfig(ck).jset(k1, JUnitsOfMeasure.NoUnits, c1, c2);
+        SetupConfig sc2 = new SetupConfig(ck).jset(k1, JUnitsOfMeasure.none, c1, c2);
         assertTrue(sc2.equals(sc1));
     }
     */
@@ -87,7 +87,7 @@ public class JJSONTests {
     {
       ShortKey k1 = ShortKey(s3);
       short s = -1;
-      ShortItem i1 = jset(k1, s).withUnits(JUnitsOfMeasure.NoUnits);
+      ShortItem i1 = jset(k1, s).withUnits(none);
       JsValue j1 = ConfigJSON.shortItemFormat().write(i1);
       ShortItem in1 = ConfigJSON.shortItemFormat().read(j1);
       assertTrue(in1.equals(i1));
@@ -96,7 +96,7 @@ public class JJSONTests {
     {
       IntKey k1 = IntKey(s3);
       int i = -1;
-      IntItem i1 = jset(k1, i).withUnits(JUnitsOfMeasure.NoUnits);
+      IntItem i1 = jset(k1, i).withUnits(none);
       JsValue j1 = ConfigJSON.intItemFormat().write(i1);
       IntItem in1 = ConfigJSON.intItemFormat().read(j1);
       assertTrue(in1.equals(i1));
@@ -105,7 +105,7 @@ public class JJSONTests {
     {
       LongKey k1 = LongKey(s3);
       long l = 123456L;
-      LongItem i1 = jset(k1, l).withUnits(JUnitsOfMeasure.NoUnits);
+      LongItem i1 = jset(k1, l).withUnits(none);
       JsValue j1 = ConfigJSON.longItemFormat().write(i1);
       LongItem in1 = ConfigJSON.longItemFormat().read(j1);
       assertTrue(in1.equals(i1));
@@ -114,7 +114,7 @@ public class JJSONTests {
     {
       FloatKey k1 = FloatKey(s3);
       float f = 123.456f;
-      FloatItem i1 = jset(k1, f).withUnits(JUnitsOfMeasure.NoUnits);
+      FloatItem i1 = jset(k1, f).withUnits(none);
       JsValue j1 = ConfigJSON.floatItemFormat().write(i1);
       FloatItem in1 = ConfigJSON.floatItemFormat().read(j1);
       assertTrue(in1.equals(i1));
@@ -123,7 +123,7 @@ public class JJSONTests {
     {
       DoubleKey k1 = new DoubleKey(s3);
       double f = 123.456;
-      DoubleItem i1 = jset(k1, f).withUnits(JUnitsOfMeasure.NoUnits);
+      DoubleItem i1 = jset(k1, f).withUnits(none);
       JsValue j1 = ConfigJSON.doubleItemFormat().write(i1);
       DoubleItem in1 = ConfigJSON.doubleItemFormat().read(j1);
       assertTrue(in1.equals(i1));
@@ -131,7 +131,7 @@ public class JJSONTests {
     // boolean item encode/decode
     {
       BooleanKey k1 = new BooleanKey(s3);
-      BooleanItem i1 = jset(k1, true, false).withUnits(JUnitsOfMeasure.NoUnits);
+      BooleanItem i1 = jset(k1, true, false).withUnits(none);
       JsValue j1 = ConfigJSON.booleanItemFormat().write(i1);
       BooleanItem in1 = ConfigJSON.booleanItemFormat().read(j1);
       assertTrue(in1.equals(i1));
@@ -139,7 +139,7 @@ public class JJSONTests {
     // string item encode/decode
     {
       StringKey k1 = new StringKey(s3);
-      StringItem i1 = jset(k1, "Blue", "Green").withUnits(JUnitsOfMeasure.NoUnits);
+      StringItem i1 = jset(k1, "Blue", "Green").withUnits(none);
       JsValue j1 = ConfigJSON.stringItemFormat().write(i1);
       StringItem in1 = ConfigJSON.stringItemFormat().read(j1);
       assertTrue(in1.equals(i1));
@@ -161,13 +161,13 @@ public class JJSONTests {
     BooleanKey k6 = new BooleanKey("f");
     StringKey k7 = new StringKey("g");
 
-    CharItem i1 = jset(k1, 'd').withUnits(NoUnits);
-    IntItem i2 = jset(k2, 22).withUnits(NoUnits);
-    LongItem i3 = jset(k3, 1234L).withUnits(NoUnits);
-    FloatItem i4 = jset(k4, 123.45f).withUnits(Deg);
-    DoubleItem i5 = jset(k5, 123.456).withUnits(Meters);
+    CharItem i1 = jset(k1, 'd').withUnits(none);
+    IntItem i2 = jset(k2, 22).withUnits(none);
+    LongItem i3 = jset(k3, 1234L).withUnits(none);
+    FloatItem i4 = jset(k4, 123.45f).withUnits(degrees);
+    DoubleItem i5 = jset(k5, 123.456).withUnits(meters);
     BooleanItem i6 = jset(k6, false);
-    StringItem i7 = jset(k7, "GG495").withUnits(Deg);
+    StringItem i7 = jset(k7, "GG495").withUnits(degrees);
 
     // Should encode/decode a SetupConfig
     {

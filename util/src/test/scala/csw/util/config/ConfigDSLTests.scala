@@ -2,7 +2,7 @@ package csw.util.config
 
 import csw.util.config.ConfigDSL._
 import csw.util.config.Configurations.SetupConfig
-import csw.util.config.UnitsOfMeasure.{Deg, NoUnits}
+import csw.util.config.UnitsOfMeasure.{degrees, NoUnits}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
@@ -36,10 +36,10 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     }
 
     it("should work with units too") {
-      val i1 = set(detectorTemp, 100.0).withUnits(Deg)
+      val i1 = set(detectorTemp, 100.0).withUnits(degrees)
       i1 shouldBe an[DoubleItem]
       ssize(i1) shouldBe 1
-      units(i1) should be(Deg)
+      units(i1) should be(degrees)
     }
   }
 
@@ -232,8 +232,8 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val k3 = StringKey("stest")
     val k4 = LongArrayKey("lartest")
 
-    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.Deg)
-    val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.degrees)
+    val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = set(k3, "A", "B", "C")
     val i4 = set(k4, LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
 
@@ -297,8 +297,8 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val k3 = StringKey("stest")
     val k4 = LongArrayKey("lartest")
 
-    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.Deg)
-    val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.degrees)
+    val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = set(k3, "A", "B", "C")
     val i4 = set(k4, LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
 
@@ -362,8 +362,8 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     val k3 = StringKey("stest")
     val k4 = LongArrayKey("lartest")
 
-    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.Deg)
-    val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.degrees)
+    val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
 
     it("should allow creation") {
       val sc1 = sc(ck2, i1, i2)
@@ -373,14 +373,14 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
       val sc2 = sc(
         ck2,
-        k1 → 3 withUnits UnitsOfMeasure.Deg,
-        k2 → 44.3 withUnits UnitsOfMeasure.Meters
+        k1 → 3 withUnits UnitsOfMeasure.degrees,
+        k2 → 44.3 withUnits UnitsOfMeasure.meters
       )
       csize(sc2) should be(2)
       exists(sc2, k1) shouldBe true
       exists(sc2, k2) shouldBe true
-      units(item(sc2, k1)) shouldBe UnitsOfMeasure.Deg
-      units(item(sc2, k2)) shouldBe UnitsOfMeasure.Meters
+      units(item(sc2, k1)) shouldBe UnitsOfMeasure.degrees
+      units(item(sc2, k2)) shouldBe UnitsOfMeasure.meters
     }
   }
 
@@ -410,6 +410,17 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
       item(default, zeroPoint) should equal(i3)
       item(default, filter) should equal(i2)
       item(default, mode) should equal(i1)
+    }
+  }
+
+  describe("checking arrow notation") {
+    val zeroPoint = IntKey("zeroPoint")
+    val filter = StringKey("filter")
+    val mode = StringKey("mode")
+
+    it("should work with an sc") {
+      // val defaultMoveSC = SetupConfig(ck2).add(zeroPoint -> 0)
+
     }
   }
 }

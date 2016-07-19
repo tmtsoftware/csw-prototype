@@ -214,4 +214,7 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
 lazy val endToEndExample = Project(id = "endToEndExample", base = file("examples/endToEndExample"))
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("endToEndExample", "End To End Example", "More complicated example showing CSW features"): _*)
-  .dependsOn(pkg, cs, ccs, loc, ts, kvs, event, util)
+  .settings(libraryDependencies ++=
+    compile(akkaActor, akkaRemote, akkaHttp, akkaKryo) ++
+      test(scalaTest, specs2, akkaTestKit)
+  ).dependsOn(pkg, cs, ccs, loc, ts, kvs, event, util)

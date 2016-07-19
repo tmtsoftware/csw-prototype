@@ -55,18 +55,18 @@ public class JItemTests {
     assertEquals(jget(bi, 0).get(), false);
 
     List<Boolean> bval2 = Arrays.asList(false, true);
-    BooleanItem bi2 = jset(bk, bval2).withUnits(JUnitsOfMeasure.Deg);
-    assertEquals(bi2.units(), JUnitsOfMeasure.Deg);
+    BooleanItem bi2 = jset(bk, bval2).withUnits(JUnitsOfMeasure.degrees);
+    assertEquals(bi2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(bi2, 1), bval2.get(1));
     assertEquals(jvalues(bi2), bval2);
 
-    bi2 = jset(bk, bval2, JUnitsOfMeasure.Deg);
-    assertSame(bi2.units(), JUnitsOfMeasure.Deg);
+    bi2 = jset(bk, bval2, JUnitsOfMeasure.degrees);
+    assertSame(bi2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(bi2, 1), bval2.get(1));
     assertEquals(jvalues(bi2), bval2);
 
-    BooleanItem bi3 = jset(bk, true, false).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(bi3.units(), JUnitsOfMeasure.Deg);
+    BooleanItem bi3 = jset(bk, true, false).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(bi3.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalues(bi3), Arrays.asList(true, false));
   }
 
@@ -88,22 +88,22 @@ public class JItemTests {
     List<ByteArray> listIn = Arrays.asList(ba1, ba2);
 
     // Test with list, withUnits
-    ByteArrayItem di2 = jset(bk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    ByteArrayItem di2 = jset(bk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list and units
-    di2 = jset(bk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(bk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one array without and with units
     di2 = jset(bk, a1);
     assertEquals(jvalue(di2), ba1);
-    di2 = jset(bk, a2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(bk, a2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), ba2);
 
     // Test with varargs
@@ -115,8 +115,8 @@ public class JItemTests {
     byte[] b = {10, 11, 12};
     byte[] c = {100, 101, 102};
 
-    ByteArrayItem di4 = jset(bk, a, b, c).withUnits(JUnitsOfMeasure.Meters);
-    assertSame(di4.units(), JUnitsOfMeasure.Meters);
+    ByteArrayItem di4 = jset(bk, a, b, c).withUnits(JUnitsOfMeasure.meters);
+    assertSame(di4.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalues(di4).size(), 3);
     assertEquals(jvalue(di4, 2), ByteArray(c));
   }
@@ -140,33 +140,33 @@ public class JItemTests {
     List<ByteMatrix> listIn = Arrays.asList(bm1, bm2);
 
     // Test with list, withUnits
-    ByteMatrixItem di2 = jset(bk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    ByteMatrixItem di2 = jset(bk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, units
-    di2 = jset(bk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(bk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one matrix without and with units
     di2 = jset(bk, m1);
     assertEquals(jvalue(di2), bm1);
-    di2 = jset(bk, m2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(bk, m2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), bm2);
 
     // Test using varargs as matrix
-    ByteMatrixItem di3 = jset(bk, bm1, bm2).withUnits(JUnitsOfMeasure.Seconds);
-    assertSame(di3.units(), JUnitsOfMeasure.Seconds);
+    ByteMatrixItem di3 = jset(bk, bm1, bm2).withUnits(JUnitsOfMeasure.seconds);
+    assertSame(di3.units(), JUnitsOfMeasure.seconds);
     assertEquals(jvalue(di3, 1), bm2);
     assertEquals(jvalues(di3), listIn);
 
     // Test using varargs as arrays
-    ByteMatrixItem di4 = jset(bk, m1, m2).withUnits(JUnitsOfMeasure.Meters);
-    assertSame(di4.units(), JUnitsOfMeasure.Meters);
+    ByteMatrixItem di4 = jset(bk, m1, m2).withUnits(JUnitsOfMeasure.meters);
+    assertSame(di4.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalue(di4, 0), bm1);
     assertEquals(jvalues(di4), listIn);
   }
@@ -183,14 +183,14 @@ public class JItemTests {
 
     List<Character> listIn = Arrays.asList('K', 'G');
     // Test with list, withUnits
-    CharItem ci2 = jset(ck, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(ci2.units(), JUnitsOfMeasure.Deg);
+    CharItem ci2 = jset(ck, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(ci2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(ci2, 1), listIn.get(1));
     assertEquals(jvalues(ci2), listIn);
 
     // Test with units
-    ci2 = jset(ck, listIn, JUnitsOfMeasure.Deg);
-    assertSame(ci2.units(), JUnitsOfMeasure.Deg);
+    ci2 = jset(ck, listIn, JUnitsOfMeasure.degrees);
+    assertSame(ci2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(ci2, 1), listIn.get(1));
     assertEquals(jvalues(ci2), listIn);
   }
@@ -208,14 +208,14 @@ public class JItemTests {
 
     List<Double> dval2 = Arrays.asList(123.0, 456.0);
     // Test with list, withUnits
-    DoubleItem di2 = jset(dk, dval2).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    DoubleItem di2 = jset(dk, dval2).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), dval2.get(1));
     assertEquals(jvalues(di2), dval2);
 
     // Test with List, units
-    di2 = jset(dk, dval2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, dval2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), dval2.get(1));
     assertEquals(jvalues(di2), dval2);
   }
@@ -238,22 +238,22 @@ public class JItemTests {
     List<DoubleArray> listIn = Arrays.asList(da1, da2);
 
     // Test with list, withUnits
-    DoubleArrayItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    DoubleArrayItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list and units
-    di2 = jset(dk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one array without and with units
     di2 = jset(dk, a1);
     assertEquals(jvalue(di2), da1);
-    di2 = jset(dk, a2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, a2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), da2);
 
     // Test with var args
@@ -265,7 +265,7 @@ public class JItemTests {
     double[] b = {10, 20, 30};
     double[] c = {100, 200, 300};
 
-    DoubleArrayItem di4 = jset(dk, a, b, c).withUnits(JUnitsOfMeasure.Meters);
+    DoubleArrayItem di4 = jset(dk, a, b, c).withUnits(JUnitsOfMeasure.meters);
     assertEquals(jvalues(di4).size(), 3);
     assertEquals(jvalue(di4, 2), DoubleArray(c));
   }
@@ -287,33 +287,33 @@ public class JItemTests {
 
     // Test with list, withUnits
     List<DoubleMatrix> listIn = Arrays.asList(dm1, dm2);
-    DoubleMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    DoubleMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, units
-    di2 = jset(dk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one matrix without and with units
     di2 = jset(dk, m1);
     assertEquals(jvalue(di2), dm1);
-    di2 = jset(dk, m2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, m2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), dm2);
 
     // Test using varargs as matrix
-    DoubleMatrixItem di3 = jset(dk, dm1, dm2).withUnits(JUnitsOfMeasure.Seconds);
-    assertSame(di3.units(), JUnitsOfMeasure.Seconds);
+    DoubleMatrixItem di3 = jset(dk, dm1, dm2).withUnits(JUnitsOfMeasure.seconds);
+    assertSame(di3.units(), JUnitsOfMeasure.seconds);
     assertEquals(jvalue(di3, 1), dm2);
     assertEquals(jvalues(di3), listIn);
 
     // Test using varargs as arrays
-    DoubleMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.Meters);
-    assertSame(di4.units(), JUnitsOfMeasure.Meters);
+    DoubleMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.meters);
+    assertSame(di4.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalue(di4, 0), dm1);
     assertEquals(jvalues(di4), listIn);
   }
@@ -336,14 +336,14 @@ public class JItemTests {
 
     // Test list, withUnits
     List<Float> fval2 = Arrays.asList(123.0f, 456.0f);
-    FloatItem fi2 = jset(fk, fval2).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(fi2.units(), JUnitsOfMeasure.Deg);
+    FloatItem fi2 = jset(fk, fval2).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(fi2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(fi2, 1), fval2.get(1));
     assertEquals(jvalues(fi2), fval2);
 
     // Test list, withUnits
-    fi2 = jset(fk, fval2, JUnitsOfMeasure.Deg);
-    assertSame(fi2.units(), JUnitsOfMeasure.Deg);
+    fi2 = jset(fk, fval2, JUnitsOfMeasure.degrees);
+    assertSame(fi2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(fi2, 1), fval2.get(1));
     assertEquals(jvalues(fi2), fval2);
   }
@@ -366,22 +366,22 @@ public class JItemTests {
     List<FloatArray> listIn = Arrays.asList(fa1, fa2);
 
     // Test list, withUnits
-    FloatArrayItem di2 = jset(fk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    FloatArrayItem di2 = jset(fk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, units
-    di2 = jset(fk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(fk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one array without and with units
     di2 = jset(fk, a1);
     assertEquals(jvalue(di2), fa1);
-    di2 = jset(fk, a2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(fk, a2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), fa2);
 
     // Test with varargs
@@ -394,7 +394,7 @@ public class JItemTests {
     float[] b = {10f, 20f, 30f};
     float[] c = {100f, 200f, 300f};
 
-    FloatArrayItem di4 = jset(fk, a, b, c).withUnits(JUnitsOfMeasure.Meters);
+    FloatArrayItem di4 = jset(fk, a, b, c).withUnits(JUnitsOfMeasure.meters);
     assertEquals(jvalues(di4).size(), 3);
     assertEquals(jvalue(di4, 2), FloatArray(c));
   }
@@ -417,33 +417,33 @@ public class JItemTests {
 
     // Test with list, withUnits
     List<FloatMatrix> listIn = Arrays.asList(fm1, fm2);
-    FloatMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    FloatMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, units
-    di2 = jset(dk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one matrix without and with units
     di2 = jset(dk, m1);
     assertEquals(jvalue(di2), fm1);
-    di2 = jset(dk, m2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, m2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), fm2);
 
     // Test using varargs as matrix
-    FloatMatrixItem di3 = jset(dk, fm1, fm2).withUnits(JUnitsOfMeasure.Seconds);
-    assertSame(di3.units(), JUnitsOfMeasure.Seconds);
+    FloatMatrixItem di3 = jset(dk, fm1, fm2).withUnits(JUnitsOfMeasure.seconds);
+    assertSame(di3.units(), JUnitsOfMeasure.seconds);
     assertEquals(jvalue(di3, 1), fm2);
     assertEquals(jvalues(di3), listIn);
 
     // Test using varargs as arrays
-    FloatMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.Meters);
-    assertSame(di4.units(), JUnitsOfMeasure.Meters);
+    FloatMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.meters);
+    assertSame(di4.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalue(di4, 0), fm1);
     assertEquals(jvalues(di4), listIn);
   }
@@ -459,8 +459,8 @@ public class JItemTests {
     assertTrue(jget(ii, 0).get() == ival);
 
     List<Integer> ival2 = Arrays.asList(123, 456);
-    IntItem ii2 = jset(ik, ival2, JUnitsOfMeasure.Deg);
-    assertTrue(ii2.units().equals(JUnitsOfMeasure.Deg));
+    IntItem ii2 = jset(ik, ival2, JUnitsOfMeasure.degrees);
+    assertTrue(ii2.units().equals(JUnitsOfMeasure.degrees));
     assertTrue(jvalue(ii2, 1).equals(ival2.get(1)));
     assertTrue(jvalues(ii2).equals(ival2));
   }
@@ -490,7 +490,7 @@ public class JItemTests {
     IntItem b = JItems.jset(encoder1, 100, 200);
     assertEquals(jvalues(b), Arrays.asList(100, 200));
 
-    b = JItems.jset(encoder1, Arrays.asList(100, 200), JUnitsOfMeasure.Deg);
+    b = JItems.jset(encoder1, Arrays.asList(100, 200), JUnitsOfMeasure.degrees);
     assertEquals(jvalues(b), Arrays.asList(100, 200));
   }
 
@@ -513,22 +513,22 @@ public class JItemTests {
     List<IntArray> listIn = Arrays.asList(ia1, ia2);
 
     // Test with list, withUnits
-    IntArrayItem di2 = jset(ak, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    IntArrayItem di2 = jset(ak, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, with units
-    di2 = jset(ak, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(ak, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one array without and with units
     di2 = jset(ak, a1);
     assertEquals(jvalue(di2), ia1);
-    di2 = jset(ak, a2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(ak, a2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), ia2);
 
     // test using var args
@@ -541,7 +541,7 @@ public class JItemTests {
     int[] b = {10, 20, 30};
     int[] c = {100, 200, 300};
 
-    IntArrayItem di4 = jset(ak, a, b, c).withUnits(JUnitsOfMeasure.Meters);
+    IntArrayItem di4 = jset(ak, a, b, c).withUnits(JUnitsOfMeasure.meters);
     assertTrue(jvalues(di4).size() == 3);
     assertEquals(jvalue(di4, 2), IntArray(c));
   }
@@ -564,33 +564,33 @@ public class JItemTests {
 
     // Test with list, withUnits
     List<IntMatrix> listIn = Arrays.asList(im1, im2);
-    IntMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    IntMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, units
-    di2 = jset(dk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one matrix without and with units
     di2 = jset(dk, m1);
     assertEquals(jvalue(di2), im1);
-    di2 = jset(dk, m2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, m2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), im2);
 
     // Test using varargs as matrix
-    IntMatrixItem di3 = jset(dk, im1, im2).withUnits(JUnitsOfMeasure.Seconds);
-    assertSame(di3.units(), JUnitsOfMeasure.Seconds);
+    IntMatrixItem di3 = jset(dk, im1, im2).withUnits(JUnitsOfMeasure.seconds);
+    assertSame(di3.units(), JUnitsOfMeasure.seconds);
     assertEquals(jvalue(di3, 1), im2);
     assertEquals(jvalues(di3), listIn);
 
     // Test using varargs as arrays
-    IntMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.Meters);
-    assertSame(di4.units(), JUnitsOfMeasure.Meters);
+    IntMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.meters);
+    assertSame(di4.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalue(di4, 0), im1);
     assertEquals(jvalues(di4), listIn);
   }
@@ -609,14 +609,14 @@ public class JItemTests {
 
     List<Long> lval2 = Arrays.asList(123L, 456L);
     // Test with list, withUnits
-    LongItem li2 = jset(lk, lval2).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(li2.units(), JUnitsOfMeasure.Deg);
+    LongItem li2 = jset(lk, lval2).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(li2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(li2, 1), lval2.get(1));
     assertEquals(jvalues(li2), lval2);
 
     // test with list, units
-    li2 = jset(lk, lval2, JUnitsOfMeasure.Deg);
-    assertSame(li2.units(), JUnitsOfMeasure.Deg);
+    li2 = jset(lk, lval2, JUnitsOfMeasure.degrees);
+    assertSame(li2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(li2, 1), lval2.get(1));
     assertEquals(jvalues(li2), lval2);
   }
@@ -639,22 +639,22 @@ public class JItemTests {
     List<LongArray> listIn = Arrays.asList(la1, la2);
 
     // Test with list, withUnits
-    LongArrayItem li2 = jset(lk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(li2.units(), JUnitsOfMeasure.Deg);
+    LongArrayItem li2 = jset(lk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(li2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(li2, 1), listIn.get(1));
     assertEquals(jvalues(li2), listIn);
 
     // Test with list, with units
-    li2 = jset(lk, listIn, JUnitsOfMeasure.Deg);
-    assertEquals(li2.units(), JUnitsOfMeasure.Deg);
+    li2 = jset(lk, listIn, JUnitsOfMeasure.degrees);
+    assertEquals(li2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(li2, 1), listIn.get(1));
     assertEquals(jvalues(li2), listIn);
 
     // Test using one array without and with units
     li2 = jset(lk, a1);
     assertEquals(jvalue(li2), la1);
-    li2 = jset(lk, a2, JUnitsOfMeasure.Deg);
-    assertEquals(li2.units(), JUnitsOfMeasure.Deg);
+    li2 = jset(lk, a2, JUnitsOfMeasure.degrees);
+    assertEquals(li2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(li2), la2);
 
     // test using var args
@@ -667,7 +667,7 @@ public class JItemTests {
     long[] b = {10, 20, 30};
     long[] c = {100, 200, 300};
 
-    LongArrayItem li4 = jset(lk, a, b, c).withUnits(JUnitsOfMeasure.Meters);
+    LongArrayItem li4 = jset(lk, a, b, c).withUnits(JUnitsOfMeasure.meters);
     assertEquals(jvalues(li4).size(), 3);
     assertEquals(jvalue(li4, 2), LongArray(c));
   }
@@ -690,33 +690,33 @@ public class JItemTests {
 
     // Test with list, withUnits
     List<LongMatrix> listIn = Arrays.asList(lm1, lm2);
-    LongMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    LongMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, units
-    di2 = jset(dk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one matrix without and with units
     di2 = jset(dk, m1);
     assertEquals(jvalue(di2), lm1);
-    di2 = jset(dk, m2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, m2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), lm2);
 
     // Test using varargs as matrix
-    LongMatrixItem di3 = jset(dk, lm1, lm2).withUnits(JUnitsOfMeasure.Seconds);
-    assertSame(di3.units(), JUnitsOfMeasure.Seconds);
+    LongMatrixItem di3 = jset(dk, lm1, lm2).withUnits(JUnitsOfMeasure.seconds);
+    assertSame(di3.units(), JUnitsOfMeasure.seconds);
     assertEquals(jvalue(di3, 1), lm2);
     assertEquals(jvalues(di3), listIn);
 
     // Test using varargs as arrays
-    LongMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.Meters);
-    assertSame(di4.units(), JUnitsOfMeasure.Meters);
+    LongMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.meters);
+    assertSame(di4.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalue(di4, 0), lm1);
     assertEquals(jvalues(di4), listIn);
   }
@@ -735,14 +735,14 @@ public class JItemTests {
 
     // Test with list, withUnits
     List<Short> sval2 = Arrays.asList((short)12, (short)24);
-    ShortItem si2 = jset(ik, sval2).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(si2.units(), JUnitsOfMeasure.Deg);
+    ShortItem si2 = jset(ik, sval2).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(si2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(si2, 1), sval2.get(1));
     assertEquals(jvalues(si2), sval2);
 
     // Test with list, units
-    si2 = jset(ik, sval2, JUnitsOfMeasure.Deg);
-    assertSame(si2.units(), JUnitsOfMeasure.Deg);
+    si2 = jset(ik, sval2, JUnitsOfMeasure.degrees);
+    assertSame(si2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(si2, 1), sval2.get(1));
     assertEquals(jvalues(si2), sval2);
   }
@@ -765,22 +765,22 @@ public class JItemTests {
     List<ShortArray> listIn = Arrays.asList(sa1, sa2);
 
     // Test with list, withUnits
-    ShortArrayItem si2 = jset(sk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(si2.units(), JUnitsOfMeasure.Deg);
+    ShortArrayItem si2 = jset(sk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(si2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(si2, 1), listIn.get(1));
     assertEquals(jvalues(si2), listIn);
 
     // Test with list, units
-    si2 = jset(sk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(si2.units(), JUnitsOfMeasure.Deg);
+    si2 = jset(sk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(si2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(si2, 1), listIn.get(1));
     assertEquals(jvalues(si2), listIn);
 
     // Test using one array without and with units
     si2 = jset(sk, a1);
     assertEquals(jvalue(si2), sa1);
-    si2 = jset(sk, a2, JUnitsOfMeasure.Deg);
-    assertSame(si2.units(), JUnitsOfMeasure.Deg);
+    si2 = jset(sk, a2, JUnitsOfMeasure.degrees);
+    assertSame(si2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(si2), sa2);
 
     // Test with varargs
@@ -792,7 +792,7 @@ public class JItemTests {
     short[] b = {10, 20, 30};
     short[] c = {100, 200, 300};
 
-    ShortArrayItem di4 = jset(sk, a, b, c).withUnits(JUnitsOfMeasure.Meters);
+    ShortArrayItem di4 = jset(sk, a, b, c).withUnits(JUnitsOfMeasure.meters);
     assertTrue(jvalues(di4).size() == 3);
     assertEquals(jvalue(di4, 2), ShortArray(c));
   }
@@ -815,33 +815,33 @@ public class JItemTests {
 
     // Test with list, withUnits
     List<ShortMatrix> listIn = Arrays.asList(sm1, sm2);
-    ShortMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    ShortMatrixItem di2 = jset(dk, listIn).withUnits(JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test with list, units
-    di2 = jset(dk, listIn, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, listIn, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2, 1), listIn.get(1));
     assertEquals(jvalues(di2), listIn);
 
     // Test using one matrix without and with units
     di2 = jset(dk, m1);
     assertEquals(jvalue(di2), sm1);
-    di2 = jset(dk, m2, JUnitsOfMeasure.Deg);
-    assertSame(di2.units(), JUnitsOfMeasure.Deg);
+    di2 = jset(dk, m2, JUnitsOfMeasure.degrees);
+    assertSame(di2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(di2), sm2);
 
     // Test using varargs as matrix
-    ShortMatrixItem di3 = jset(dk, sm1, sm2).withUnits(JUnitsOfMeasure.Seconds);
-    assertSame(di3.units(), JUnitsOfMeasure.Seconds);
+    ShortMatrixItem di3 = jset(dk, sm1, sm2).withUnits(JUnitsOfMeasure.seconds);
+    assertSame(di3.units(), JUnitsOfMeasure.seconds);
     assertEquals(jvalue(di3, 1), sm2);
     assertEquals(jvalues(di3), listIn);
 
     // Test using varargs as arrays
-    ShortMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.Meters);
-    assertSame(di4.units(), JUnitsOfMeasure.Meters);
+    ShortMatrixItem di4 = jset(dk, m1, m2).withUnits(JUnitsOfMeasure.meters);
+    assertSame(di4.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalue(di4, 0), sm1);
     assertEquals(jvalues(di4), listIn);
   }
@@ -855,7 +855,7 @@ public class JItemTests {
     assertEquals(jvalue(si), "A");
 
     // Test list withUnits
-    si = jset(filter1, Arrays.asList("A", "B", "C")).withUnits(JUnitsOfMeasure.Meters);
+    si = jset(filter1, Arrays.asList("A", "B", "C")).withUnits(JUnitsOfMeasure.meters);
     assertEquals(jvalue(si), "A");
     assertEquals(jvalue(si, 0), "A");
     assertEquals(jvalue(si, 1), "B");
@@ -871,8 +871,8 @@ public class JItemTests {
     assertTrue(exFlag);
 
     // Test list units
-    si = jset(filter1, Arrays.asList("A", "B", "C"), JUnitsOfMeasure.Meters);
-    assertSame(si.units(), JUnitsOfMeasure.Meters);
+    si = jset(filter1, Arrays.asList("A", "B", "C"), JUnitsOfMeasure.meters);
+    assertSame(si.units(), JUnitsOfMeasure.meters);
     assertEquals(jvalue(si), "A");
     assertEquals(jvalue(si, 0), "A");
     assertEquals(jvalue(si, 1), "B");

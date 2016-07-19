@@ -3,7 +3,6 @@ package csw.services.ts
 import java.time._
 
 import akka.actor._
-import akka.event.Logging
 
 /**
  * TMT Prototype CSW Time Service

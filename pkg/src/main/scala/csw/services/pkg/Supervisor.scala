@@ -131,7 +131,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
     case msg: PublisherActor.PublisherActorMessage ⇒
       component.tell(msg, sender())
     case x ⇒
-      log.warning(s"$name: Supervisor received an unexpected message: $x")
+      log.warning(s"$name: xSupervisor received an unexpected message: $x")
   }
 
   private def notRunningReceivePF: Receive = {
@@ -185,7 +185,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
     case RestartComponent ⇒
     // TODO -- Implement supervisor-based restart
 
-    // Forward configs to the component 
+    // Forward configs to the component
     case msg: AssemblyControllerMessage if componentInfo.componentType == Assembly ⇒ component.tell(msg, sender())
     case msg: HcdControllerMessage if componentInfo.componentType == HCD ⇒ component.tell(msg, sender())
   }
@@ -249,6 +249,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
     log.info(s"Halting component: ${componentInfo.componentName}")
     context.stop(self)
     context.system.terminate
+    System.exit(-1)
   }
 
   // Starts the component actor

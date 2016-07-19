@@ -3,7 +3,7 @@ package csw.services.pkg
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.ConnectionType._
 import csw.services.loc._
@@ -211,7 +211,6 @@ object ContainerComponent {
         throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNECTION_TYPE)}< for component: $name")
       set.map(_.asInstanceOf[Success[ConnectionType]].get)
     }
-
   }
 
   // Parse the "connectionType" section of the component config
@@ -255,8 +254,21 @@ object ContainerComponent {
     }
   }
 
+  /**
+    * A function that can be used to parse a container config from a string.  Primarily useful for testing.
+    *
+    * @param s
+    * @return
+    */
+  def parseStringConfig(s: String) = {
+    val options = ConfigParseOptions.defaults().
+      setOriginDescription("string container config").
+      setSyntax(ConfigSyntax.CONF)
+    ConfigFactory.parseString(s, options)
+  }
+
   // Parse the "services" section of the component config
-  private[pkg] def parseHcd(name: String, conf: Config): Option[HcdInfo] = {
+  def parseHcd(name: String, conf: Config): Option[HcdInfo] = {
     val x = for {
       componentClassName ← parseClassName(name, conf)
       prefix ← parsePrefix(name, conf)
@@ -268,7 +280,7 @@ object ContainerComponent {
   }
 
   // Parse the "services" section of the component config
-  private[pkg] def parseAssembly(name: String, conf: Config): Option[AssemblyInfo] = {
+  def parseAssembly(name: String, conf: Config): Option[AssemblyInfo] = {
     val x = for {
       componentClassName ← parseClassName(name, conf)
       prefix ← parsePrefix(name, conf)
@@ -279,7 +291,7 @@ object ContainerComponent {
     x.toOption
   }
 
-  private[pkg] def parseConfigToContainerInfo(config: Config): Try[ContainerInfo] = {
+  def parseConfigToContainerInfo(config: Config): Try[ContainerInfo] = {
     for {
       componentConfigs ← parseConfig(config)
       containerConfig ← Try(config.getConfig(CONTAINER))

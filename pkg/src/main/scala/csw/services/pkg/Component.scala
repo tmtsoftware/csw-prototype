@@ -147,10 +147,6 @@ object Component {
 
 trait Component extends Actor with ActorLogging {
   def supervisor = context.parent
-
-  override def postStop: Unit = {
-    log.info(s"Post Stop: !!")
-  }
 }
 
 trait Assembly extends Component
