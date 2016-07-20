@@ -35,11 +35,11 @@ object Supervisor {
   }
 
   /**
-   * Returns a new supervisor actor managing the components described in the argument
+   * Returns a new actor system and supervisor actor managing the components described in the argument
    * @param componentInfo describes the components to create and manage
    * @return the actorRef for the supervisor (parent actor of the top level component)
    */
-  def applyXXX(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
+  def create(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
     val system = ActorSystem(s"${componentInfo.componentName}-system")
     (system, system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor"))
   }
