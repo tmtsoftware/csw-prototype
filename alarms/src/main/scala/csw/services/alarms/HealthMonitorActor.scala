@@ -15,6 +15,8 @@ import HealthMonitorWorkorActor._
 import csw.services.alarms.AlarmService.HealthInfo
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 
+import scala.concurrent.Future
+
 /**
  * An actor that monitors selected subsystem or component health and notifies a method or
  * another actor of changes in the health status.
@@ -145,6 +147,8 @@ private class HealthMonitorWorkorActor(
     notifyAll:       Boolean
 ) extends Actor with ActorLogging {
 
+  import context.dispatcher
+
   var healthOpt: Option[Health] = None
 
   // Expect an initial map containing all the alarms we are tracking
@@ -189,13 +193,29 @@ private class HealthMonitorWorkorActor(
   // Notify the subscribers of a change in the health
   private def notifyListeners(healthStatus: HealthStatus): Unit = {
     subscriber.foreach(_ ! healthStatus)
-    notifyHealth.foreach(f => f(healthStatus))
+
+    // Run callback in a future and report any errors
+    notifyHealth.foreach { f =>
+      Future {
+        f(healthStatus)
+      }.onFailure {
+        case ex => log.error("Health notification callback failed: ", ex)
+      }
+    }
   }
 
   // Notify the subscribers of a change in the severity of an alarm
   private def notifyListeners(alarmStatus: AlarmStatus): Unit = {
     subscriber.foreach(_ ! alarmStatus)
-    notifyAlarm.foreach(f => f(alarmStatus))
+
+    // Run callback in a future and report any errors
+    notifyAlarm.foreach { f =>
+      Future {
+        f(alarmStatus)
+      }.onFailure {
+        case ex => log.error("Alarm notification callback failed: ", ex)
+      }
+    }
   }
 }
 
