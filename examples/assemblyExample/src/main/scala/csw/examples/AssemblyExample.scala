@@ -84,12 +84,10 @@ object AssemblyExampleApp extends App {
 
   // The code below shows how you could shut down the assembly
   if (false) {
-    val system = ActorSystem("AssemblyExampleApp")
-    import system.dispatcher
-    system.scheduler.scheduleOnce(15.seconds) {
+    import supervisorSystem.dispatcher
+    supervisorSystem.scheduler.scheduleOnce(15.seconds) {
       Supervisor.haltComponent(supervisor)
       Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-      Await.ready(system.terminate(), 5.seconds)
       System.exit(0)
     }
   }
