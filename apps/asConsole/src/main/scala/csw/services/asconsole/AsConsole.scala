@@ -46,6 +46,7 @@ object AsConsole extends App {
     refreshSeverity:  Boolean         = false,
     monitorAlarms:    Option[String]  = None,
     monitorHealth:    Option[String]  = None,
+    monitorAll:       Boolean         = false,
     acknowledgeAlarm: Boolean         = false,
     resetAlarm:       Boolean         = false,
     shelved:          Option[Boolean] = None,
@@ -103,6 +104,10 @@ object AsConsole extends App {
     opt[String]("monitor-health") valueName "<shell-command>" action { (x, c) =>
       c.copy(monitorHealth = Some(x))
     } text "Starts monitoring the health of the subsystems or components given by (--subsystem, --component, --name) and calls the shell command with one arg: Good, Ill or Bad"
+
+    opt[Unit]("monitor-all") action { (x, c) =>
+      c.copy(monitorAll = true)
+    } text "With this option all severity changes are reported, even if shelved or out of service"
 
     opt[Unit]("acknowledge") action { (x, c) =>
       c.copy(acknowledgeAlarm = true)
@@ -277,7 +282,8 @@ object AsConsole extends App {
       AlarmKey(options.subsystem, options.component, options.name),
       None,
       options.monitorAlarms.map(alarmStatusCallback),
-      options.monitorHealth.map(healthStatusCallback)
+      options.monitorHealth.map(healthStatusCallback),
+      options.monitorAll
     )
   }
 

@@ -257,7 +257,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
 
   private def haltComponent(): Unit = {
     log.info(s"Halting component: ${componentInfo.componentName}")
-//    context.stop(self)
+    //    context.stop(self)
     context.system.terminate
   }
 

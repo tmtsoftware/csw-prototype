@@ -29,6 +29,8 @@ Usage: asconsole [options]
         Starts monitoring changes in the severity of alarm(s) given by (--subsystem, --component, --name) and calls the shell command with args: (subsystem, component, name, severity)
   --monitor-health <shell-command>
         Starts monitoring the health of the subsystems or components given by (--subsystem, --component, --name) and calls the shell command with one arg: Good, Ill or Bad
+  --monitor-all
+        With this option all severity changes are reported, even if shelved or out of service
   --acknowledge
         Acknowledge the alarm given by (--subsystem, --component, --name) (Alarm must be unique)
   --reset
