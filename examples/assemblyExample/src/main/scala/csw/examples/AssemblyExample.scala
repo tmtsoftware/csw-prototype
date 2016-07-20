@@ -1,14 +1,20 @@
 package csw.examples
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import csw.services.ccs.{AssemblyController, CommandStatus}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
+import csw.services.pkg.ContainerComponent.{Halt, Stop}
+import csw.services.pkg.LifecycleHandler.HandlerResponse
 import csw.services.pkg.Supervisor._
-import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
+import csw.services.pkg.{Assembly, LifecycleHandler, LifecycleManager, Supervisor}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 /**
  * Class that implements the assembly actor
@@ -63,7 +69,6 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
     }
     valid
   }
-
 }
 
 /**
@@ -78,5 +83,18 @@ object AssemblyExampleApp extends App {
   val targetHcdConnection = AkkaConnection(ComponentId(HCDExample.hcdName, ComponentType.HCD))
   val hcdConnections: Set[Connection] = Set(targetHcdConnection)
   val assemblyInfo = AssemblyInfo(assemblyName, "", className, RegisterOnly, Set(AkkaType), hcdConnections)
-  val supervisor = Supervisor(assemblyInfo)
+  val (supervisorSystem, supervisor) = Supervisor.applyXXX(assemblyInfo)
+//  val supervisor = Supervisor(assemblyInfo)
+
+  val system = ActorSystem("AssemblyExampleApp")
+  import system.dispatcher
+  system.scheduler.scheduleOnce(15.seconds) {
+    println(s"XXX Stopping now")
+    Supervisor.haltComponent(supervisor)
+    Await.ready(supervisorSystem.whenTerminated, 5.seconds)
+    println(s"XXX Stopped!")
+    system.terminate()
+    Thread.sleep(1000)
+    System.exit(0)
+  }
 }

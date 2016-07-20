@@ -35,6 +35,16 @@ object Supervisor {
   }
 
   /**
+   * Returns a new supervisor actor managing the components described in the argument
+   * @param componentInfo describes the components to create and manage
+   * @return the actorRef for the supervisor (parent actor of the top level component)
+   */
+  def applyXXX(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
+    val system = ActorSystem(s"${componentInfo.componentName}-system")
+    (system, system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor"))
+  }
+
+  /**
    * Used to create the Supervisor actor
    *
    * @param componentInfo used to create the component
@@ -247,7 +257,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
 
   private def haltComponent(): Unit = {
     log.info(s"Halting component: ${componentInfo.componentName}")
-    context.stop(self)
+//    context.stop(self)
     context.system.terminate
   }
 
