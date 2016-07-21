@@ -22,13 +22,23 @@ object HcdController {
    */
   case class Submit(config: SetupConfig) extends HcdControllerMessage
 
-  //  /**
-  //   * Message to submit a oneway config to the HCD.
-  //   * There will be no messages on completion.
-  //   *
-  //   * @param config the configuration to execute
-  //   */
-  //  case class OneWay(config: SetupConfig) extends HcdControllerMessage
+  // --- Inherited messages that this actor receives ---
+
+  /**
+    * Message to subscribe the sender to the HCD's state.
+    * The sender will receive [[CurrentState]] messages from the HCD whenever it's state changes.
+    */
+  val Subscribe = PublisherActor.Subscribe
+
+  /**
+    * Message to unsubscribes from the HCD's state messages.
+    */
+  val Unubscribe = PublisherActor.Unsubscribe
+
+  /**
+    * Message to request that the HCD's current state be sent to all subscribers
+    */
+  val RequestCurrent = PublisherActor.RequestCurrent
 }
 
 /**
@@ -45,8 +55,6 @@ trait HcdController extends PublisherActor[CurrentState] {
    */
   protected def controllerReceive: Receive = publisherReceive orElse {
     case Submit(config)  => process(config)
-
-    //    case OneWay(config) => process(config, oneway = true)
 
     // Can be used by related actors to post the current status
     case s: CurrentState => notifySubscribers(s)
