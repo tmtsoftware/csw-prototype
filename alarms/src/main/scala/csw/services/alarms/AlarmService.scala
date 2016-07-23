@@ -291,7 +291,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   private def initAlarms(alarms: List[AlarmModel]): Future[Unit] = {
     val fList = alarms.map { alarm =>
       val alarmKey = AlarmKey(alarm)
-      logger.info(s"Adding alarm: subsystem: ${alarm.subsystem}, component: ${alarm.component}, ${alarm.name}")
+      logger.debug(s"Adding alarm: subsystem: ${alarm.subsystem}, component: ${alarm.component}, ${alarm.name}")
       // store the static alarm data, alarm state, and the initial severity in redis
       for {
         _ <- redisClient.hmset(alarmKey.key, alarm.asMap())

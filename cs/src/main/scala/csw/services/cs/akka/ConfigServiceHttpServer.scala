@@ -19,7 +19,7 @@ import spray.json._
 
 case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: ConfigServiceSettings, registerWithLoc: Boolean = false) extends ConfigServiceJsonFormats {
   val logger = Logger(LoggerFactory.getLogger("ConfigServiceHttpServer"))
-  logger.info("Config service http server started")
+  logger.debug("Config service http server started")
 
   implicit val system = ActorSystem("ConfigServiceHttpServer")
 
@@ -31,7 +31,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   val binding = Http().bind(interface = settings.httpInterface, port = settings.httpPort)
   binding.runForeach { c =>
-    logger.info(s"${c.localAddress} accepted new connection from ${c.remoteAddress}")
+    logger.debug(s"${c.localAddress} accepted new connection from ${c.remoteAddress}")
     c.handleWithAsyncHandler {
       case HttpRequest(GET, uri, _, _, _)       => httpGet(uri)
       case HttpRequest(POST, uri, _, entity, _) => httpPost(uri, entity)
@@ -62,7 +62,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
   def registerWithLocationService(addr: InetSocketAddress) {
     val componentId = ComponentId("ConfigServiceHttpServer", ComponentType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
-    logger.info(s"Registering with the location service with URI $httpUri")
+    logger.debug(s"Registering with the location service with URI $httpUri")
     LocationService.registerHttpConnection(componentId, addr.getPort)
   }
 
@@ -75,7 +75,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   private def httpGet(uri: Uri): Future[HttpResponse] = {
     val path = uri.path.toString()
-    logger.info(s"Received GET request for $path (uri = $uri)")
+    logger.debug(s"Received GET request for $path (uri = $uri)")
 
     path match {
       case "/get"        => get(uri)
@@ -146,7 +146,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   private def httpPost(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
     val path = uri.path.toString()
-    logger.info(s"Received POST request for $path (uri = $uri)")
+    logger.debug(s"Received POST request for $path (uri = $uri)")
     path match {
       case "/create"         => createOrUpdate(uri, entity)
       case "/createOrUpdate" => createOrUpdate(uri, entity)
@@ -156,7 +156,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
 
   private def httpPut(uri: Uri, entity: RequestEntity): Future[HttpResponse] = {
     val path = uri.path.toString()
-    logger.info(s"Received PUT request for $path (uri = $uri)")
+    logger.debug(s"Received PUT request for $path (uri = $uri)")
     path match {
       case "/update"       => createOrUpdate(uri, entity)
       case "/setDefault"   => setDefault(uri)
@@ -173,9 +173,9 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     val comment = uri.query().get("comment").getOrElse("")
 
     if (op.startsWith("create"))
-      logger.info(s"$op $pathOpt oversize=$oversize comment=$comment")
+      logger.debug(s"$op $pathOpt oversize=$oversize comment=$comment")
     else
-      logger.info(s"$op $pathOpt comment=$comment")
+      logger.debug(s"$op $pathOpt comment=$comment")
 
     pathOpt match {
       case Some(path) =>
@@ -189,7 +189,7 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
           }
         } yield {
           val json = configId.toJson.toString()
-          //          logger.info(s"Returing configId as: $json")
+          //          logger.debug(s"Returing configId as: $json")
           HttpResponse(StatusCodes.OK, entity = HttpEntity(MediaTypes.`application/json`, json))
         }
         result.recover {

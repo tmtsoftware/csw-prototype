@@ -35,7 +35,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
   implicit val timeout = Timeout(60.seconds)
 
   test("Test with command line args") {
-    logger.info("Test1 started")
+    logger.debug("Test1 started")
     val name = "test1"
     val port = 9999
     Future {
@@ -49,7 +49,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
 
     val connection = HttpConnection(ComponentId(name, ComponentType.Service))
     val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    logger.info(s"Found $locationsReady")
+    logger.debug(s"Found $locationsReady")
     assert(locationsReady.locations.size == 1)
     val loc = locationsReady.locations.head
     assert(loc.isResolved)
@@ -57,12 +57,12 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     assert(loc.connection.componentId.name == name)
     val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
     assert(httpLoc.uri.getPort == port)
-    logger.info(s"$name passed")
-    logger.info("Test1 done")
+    logger.debug(s"$name passed")
+    logger.debug("Test1 done")
   }
 
   test("Test with config file") {
-    logger.info("Test2 started")
+    logger.debug("Test2 started")
     val name = "test2"
     val port = 8888
     val url = getClass.getResource("/test2.conf")
@@ -74,7 +74,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
 
     val connection = HttpConnection(ComponentId(name, ComponentType.Service))
     val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    logger.info(s"Found $locationsReady")
+    logger.debug(s"Found $locationsReady")
     assert(locationsReady.locations.size == 1)
     val loc = locationsReady.locations.head
     assert(loc.isResolved)
@@ -82,12 +82,12 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     assert(loc.connection.componentId.name == name)
     val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
     assert(httpLoc.uri.getPort == port)
-    logger.info(s"$name passed")
-    logger.info("Test2 done")
+    logger.debug(s"$name passed")
+    logger.debug("Test2 done")
   }
 
   test("Test with config service") {
-    logger.info("Test3 started")
+    logger.debug("Test3 started")
     val name = "test3"
     val path = "test3/test3.conf"
     val port = 8888
@@ -112,7 +112,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
 
     val connection = HttpConnection(ComponentId(name, ComponentType.Service))
     val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    logger.info(s"Found $locationsReady")
+    logger.debug(s"Found $locationsReady")
     assert(locationsReady.locations.size == 1)
     val loc = locationsReady.locations.head
     assert(loc.isResolved)
@@ -120,8 +120,8 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     assert(loc.connection.componentId.name == name)
     val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
     assert(httpLoc.uri.getPort == port)
-    logger.info(s"$name passed")
-    logger.info("Test3 done")
+    logger.debug(s"$name passed")
+    logger.debug("Test3 done")
   }
 }
 

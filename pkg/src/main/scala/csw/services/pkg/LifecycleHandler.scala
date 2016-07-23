@@ -101,7 +101,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def initialize(): HandlerResponse = {
-    log.info(s"initialize $componentName")
+    log.debug(s"initialize $componentName")
     Success
   }
 
@@ -111,7 +111,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def startup(): HandlerResponse = {
-    log.info(s"startup $componentName")
+    log.debug(s"startup $componentName")
     Success
   }
 
@@ -121,7 +121,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def shutdown(): HandlerResponse = {
-    log.info(s"shutdown $componentName")
+    log.debug(s"shutdown $componentName")
     Success
   }
 
@@ -131,7 +131,7 @@ trait LifecycleHandler {
    * @return either the new lifecycle state, or the lifecycle error
    */
   def uninitialize(): HandlerResponse = {
-    log.info(s"uninitialize $componentName")
+    log.debug(s"uninitialize $componentName")
     Success
   }
 
@@ -141,7 +141,7 @@ trait LifecycleHandler {
    * @return nothing
    */
   def lifecycleFailure(lifecycleState: LifecycleState, reason: String): Unit = {
-    log.info(s"lifecycleFailure for $componentName going to state $lifecycleState failed for reason: $reason")
+    log.debug(s"lifecycleFailure for $componentName going to state $lifecycleState failed for reason: $reason")
   }
 
 }

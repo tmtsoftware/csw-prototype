@@ -29,9 +29,9 @@ trait SetLogLevelActor {
     case SetLogLevel(pkg, level) =>
       val newLevel = Level.toLevel(level, null)
       if (newLevel != null) {
-        log.info(s"Setting log level for $self to $level")
+        log.debug(s"Setting log level for $self to $level")
         LoggerFactory.getLogger(pkg).asInstanceOf[Logger].setLevel(newLevel)
-        log.info(s"XXX Done setting log level for $self to $level")
+        log.debug(s"XXX Done setting log level for $self to $level")
       }
   }
 }

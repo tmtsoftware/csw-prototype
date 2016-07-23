@@ -99,7 +99,7 @@ public class JBlockingAlarmServiceTests {
   static AlarmHandler alarmHandler = new AlarmHandler() {
     public void handleAlarmStatus(AlarmStatus alarmStatus) {
       AlarmKey a = alarmStatus.alarmKey();
-      logger.info("Alarm Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + alarmStatus.currentSeverity());
+      logger.debug("Alarm Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + alarmStatus.currentSeverity());
       callbackSev = alarmStatus.currentSeverity();
     }
   };
@@ -108,7 +108,7 @@ public class JBlockingAlarmServiceTests {
   static HealthHandler healthHandler = new HealthHandler() {
     public void handleHealthStatus(HealthStatus healthStatus) {
       AlarmKey a = healthStatus.key();
-      logger.info("Health Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + healthStatus.health());
+      logger.debug("Health Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + healthStatus.health());
       callbackHealth = Optional.of(healthStatus.health());
     }
   };
@@ -132,7 +132,7 @@ public class JBlockingAlarmServiceTests {
     List<AlarmModel> alarms = alarmService.getAlarms(JAlarmKey.create());
     for (AlarmModel alarm : alarms) {
       // XXX TODO: compare results
-      logger.info("List Alarm: " + alarm);
+      logger.debug("List Alarm: " + alarm);
     }
 
     // Test working with an alarm and monitoring the alarm severity level

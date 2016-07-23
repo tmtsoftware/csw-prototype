@@ -33,7 +33,7 @@ import csw.util.config.Events.EventServiceEvent
  *     subscribe(prefix)
  *
  *     override def receive: Receive = {
- *       case event: ObserveEvent =>  log.info(s"Received event: \$event")
+ *       case event: ObserveEvent =>  log.debug(s"Received event: \$event")
  *     }
  *   }
  * }}}

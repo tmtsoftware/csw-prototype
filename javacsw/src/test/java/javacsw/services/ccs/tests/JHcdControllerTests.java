@@ -130,18 +130,18 @@ public class JHcdControllerTests {
 
         // Simulate doing work
         private void handleSetupConfig(SetupConfig config) {
-            log.info("Start processing " + config);
+            log.debug("Start processing " + config);
             FiniteDuration d = FiniteDuration.create(2, TimeUnit.SECONDS);
             getContext().system().scheduler().scheduleOnce(d, self(), new WorkDone(config), system.dispatcher(), null);
         }
 
         private void handleRequestCurrentState() {
-            log.info("Requested current state");
+            log.debug("Requested current state");
             getContext().parent().tell(currentState, self());
         }
 
         private void handleWorkDone(SetupConfig config) {
-            log.info("Done processing " + config);
+            log.debug("Done processing " + config);
             currentState = new CurrentState(config);
             getContext().parent().tell(currentState, self());
         }
@@ -175,7 +175,7 @@ public class JHcdControllerTests {
                 new Within(JavaTestKit.duration("10 seconds")) {
                     protected void run() {
                         CommandStatus status = expectMsgClass(CommandStatus.Completed.class);
-                        log.info("Done (2). Received reply from matcher with current state: " + status);
+                        log.debug("Done (2). Received reply from matcher with current state: " + status);
                     }
                 };
             }

@@ -69,7 +69,7 @@ trait PeriodicHcdController {
       // May need to cancel current timer before starting new one, if new message received before existing timer fires
       if (currentInterval != newInterval) {
         if (!timer.isCancelled) {
-          log.info(s"Cancelling current schedule timer of $currentInterval with new value of $newInterval")
+          log.debug(s"Cancelling current schedule timer of $currentInterval with new value of $newInterval")
           timer.cancel()
         }
         currentInterval = newInterval
@@ -80,7 +80,7 @@ trait PeriodicHcdController {
 
     case EndProcess =>
       if (!timer.isCancelled) {
-        log.info(s"Processing stopped")
+        log.debug(s"Processing stopped")
         timer.cancel()
       }
 

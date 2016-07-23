@@ -157,7 +157,7 @@ public class JBlockingTelemetryServiceTest {
                         MySubscriber.Results result = expectMsgClass(MySubscriber.Results.class);
                         assertTrue(result.getCount1() == 2);
                         assertTrue(result.getCount2() == 3);
-                        log.info("Java telemetry subscriber test passed!");
+                        log.debug("Java telemetry subscriber test passed!");
                     }
                 };
             }

@@ -71,13 +71,13 @@ package csw.services
  *         // Update the demand state variable
  *         svs.setDemand(config)
  *         // Simulate doing work
- *         log.info(s"Start processing \$config")
+ *         log.debug(s"Start processing \$config")
  *         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
  *
  *       case WorkDone(config) =>
- *         log.info(s"Done processing \$config")
+ *         log.debug(s"Done processing \$config")
  *         // Simulate getting the current value from the device and publishing it to the kvs
- *         log.info(s"Publishing \$config")
+ *         log.debug(s"Publishing \$config")
  *         svs.set(config)
  *
  *       case x => log.error(s"Unexpected message \$x")

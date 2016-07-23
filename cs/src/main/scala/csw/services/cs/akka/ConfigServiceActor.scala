@@ -203,7 +203,7 @@ class ConfigServiceActor(configManager: ConfigManager, registerWithLoc: Boolean)
   // timeout for blocking wait (used to make sure local repo access is not concurrent)
   val timeout = 60.seconds
 
-  log.info("Started config service")
+  log.debug("Started config service")
 
   // Registers with the location service
   def registerWithLocationService(): Unit = {

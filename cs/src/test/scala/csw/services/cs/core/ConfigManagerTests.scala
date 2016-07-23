@@ -29,7 +29,7 @@ class ConfigManagerTests extends FunSuite with LazyLogging {
   }
 
   def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {
-    logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
+    logger.debug(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
     // create a test git or svn repository and use it to create the manager
     val settings = ConfigServiceSettings(ActorSystem())
@@ -39,7 +39,7 @@ class ConfigManagerTests extends FunSuite with LazyLogging {
 
     Await.result(result, 30.seconds)
     if (annexServer.isDefined) {
-      logger.info("Shutting down annex server")
+      logger.debug("Shutting down annex server")
       annexServer.get.shutdown()
     }
   }

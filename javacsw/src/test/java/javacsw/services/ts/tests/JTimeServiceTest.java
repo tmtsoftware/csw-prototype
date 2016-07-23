@@ -75,9 +75,9 @@ public class JTimeServiceTest {
                 new Within(JavaTestKit.duration("10 seconds")) {
                     protected void run() {
                         Cancellable cancellable = expectMsgClass(Cancellable.class);
-                        logger.info("Received cancellable: " + cancellable);
+                        logger.debug("Received cancellable: " + cancellable);
                         int count = expectMsgClass(Integer.class);
-                        logger.info("Executed " + count + " scheduled messages");
+                        logger.debug("Executed " + count + " scheduled messages");
                         assertTrue(count == 5);
                         cancellable.cancel();
                     }
@@ -111,20 +111,20 @@ public class JTimeServiceTest {
         public void onReceive(Object message) throws Exception {
             if (message instanceof String) {
                 if (message.equals("once")) {
-                    log.info(name + ": Received once start");
+                    log.debug(name + ": Received once start");
                     scheduleOnce(JTimeService.localTimeNow().plusSeconds(5), context().self(), "once-done");
                 } else if (message.equals("five")) {
-                    log.info(name + ": Received multi start");
+                    log.debug(name + ": Received multi start");
                     Cancellable c = schedule(JTimeService.localTimeNow().plusSeconds(1), java.time.Duration.ofSeconds(1), context().self(), "count");
                     caller.tell(c, self()); //Return the cancellable
 
                 } else if (message.equals("count")) {
                     count = count + 1;
-                    log.info(name + ": Count: " + count);
+                    log.debug(name + ": Count: " + count);
                     if (count >= 5) caller.tell(count, self());
 
                 } else if (message.equals("once-done")) {
-                    log.info(name + ": Received Done");
+                    log.debug(name + ": Received Done");
                     caller.tell("done", self());
                 }
             } else

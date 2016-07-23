@@ -61,7 +61,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
   }
 
   private def createOrUpdate(method: HttpMethod, uri: Uri, configData: ConfigData, comment: String, create: Boolean): Future[ConfigId] = {
-    logger.info(s"$uri")
+    logger.debug(s"$uri")
     implicit val materializer = ActorMaterializer()
 
     val chunks = configData.source.map(ChunkStreamPart.apply)
@@ -88,7 +88,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
       makeUri("/get", "path" -> path.toString, "id" -> id.get.id)
     else
       makeUri("/get", "path" -> path.toString)
-    logger.info(s"$uri")
+    logger.debug(s"$uri")
 
     implicit val materializer = ActorMaterializer()
     val connection = Http().outgoingConnection(host, port)
@@ -103,7 +103,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def exists(path: File): Future[Boolean] = {
     val uri = Uri().withPath(Uri.Path(path.toString))
-    logger.info(s"check if $path exists")
+    logger.debug(s"check if $path exists")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(HEAD, uri = uri)
@@ -116,7 +116,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def delete(path: File, comment: String): Future[Unit] = {
     val uri = makeUri(path.toString, "comment" -> comment)
-    logger.info(s"deleting $path")
+    logger.debug(s"deleting $path")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(DELETE, uri = uri)
@@ -129,7 +129,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def list(): Future[List[ConfigFileInfo]] = {
     val uri = Uri("/list")
-    logger.info(s"list files")
+    logger.debug(s"list files")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)
@@ -151,7 +151,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def history(path: File, maxResults: Int = Int.MaxValue): Future[List[ConfigFileHistory]] = {
     val uri = makeUri("/history", "path" -> path.toString, "maxResults" -> maxResults.toString)
-    logger.info(s"history for $path")
+    logger.debug(s"history for $path")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)
@@ -176,7 +176,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
       makeUri("/setDefault", "path" -> path.toString, "id" -> id.get.id)
     else
       makeUri("/setDefault", "path" -> path.toString)
-    logger.info(s"$uri")
+    logger.debug(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(PUT, uri = uri)
@@ -189,7 +189,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def resetDefault(path: File): Future[Unit] = {
     val uri = makeUri("/resetDefault", "path" -> path.toString)
-    logger.info(s"$uri")
+    logger.debug(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(PUT, uri = uri)
@@ -202,7 +202,7 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
 
   override def getDefault(path: File): Future[Option[ConfigData]] = {
     val uri = makeUri("/getDefault", "path" -> path.toString)
-    logger.info(s"$uri")
+    logger.debug(s"$uri")
 
     val connection = Http().outgoingConnection(host, port)
     val request = HttpRequest(GET, uri = uri)

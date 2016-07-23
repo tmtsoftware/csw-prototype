@@ -75,7 +75,7 @@ class EventPubSubTest extends TestKit(ActorSystem("Test")) with ImplicitSender w
   publisher ! Publish
 
   test("Wait for end of test") {
-    logger.info("Waiting for Done message...")
+    logger.debug("Waiting for Done message...")
     expectMsgType[Done.type](5.minutes)
     system.terminate()
   }
@@ -94,7 +94,7 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
 
   override def receive: Receive = {
     case PublisherInfo =>
-      log.info("Subscriber starting")
+      log.debug("Subscriber starting")
       context.become(working(sender()))
   }
 
@@ -109,7 +109,7 @@ class Subscriber extends Actor with ActorLogging with EventSubscriber {
         count = count + 1
         if (count % 100 == 0) {
           val t = (System.currentTimeMillis() - startTime) / 1000.0
-          log.info(s"Received $count events in $t seconds (${count * 1.0 / t} per second)")
+          log.debug(s"Received $count events in $t seconds (${count * 1.0 / t} per second)")
         }
         publisher ! SubscriberAck
       }
@@ -130,7 +130,7 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
   context.setReceiveTimeout(timeout)
 
   override def postStop(): Unit = {
-    log.info(s"Close connection to the event service")
+    log.debug(s"Close connection to the event service")
     eventService.close()
   }
 

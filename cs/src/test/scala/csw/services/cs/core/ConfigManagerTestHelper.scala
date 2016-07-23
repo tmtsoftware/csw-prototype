@@ -103,11 +103,11 @@ object ConfigManagerTestHelper extends FunSuite {
 
       //      assert(createIdNull == null)
 
-      logger.info(s"\n\n runTests passed\n\n")
+      logger.debug(s"\n\n runTests passed\n\n")
     }
     result.onComplete {
       case Success(_) =>
-        logger.info("runTest done")
+        logger.debug("runTest done")
       case Failure(ex) =>
         logger.error("runTest failed", ex)
     }
@@ -163,11 +163,11 @@ object ConfigManagerTestHelper extends FunSuite {
         }
       }
 
-      logger.info(s"\n\n runTests2 passed\n\n")
+      logger.debug(s"\n\n runTests2 passed\n\n")
     }
     result.onComplete {
       case Success(_) =>
-        logger.info("runTest done")
+        logger.debug("runTest done")
       case Failure(ex) =>
         logger.error("runTest failed", ex)
     }
@@ -185,7 +185,7 @@ object ConfigManagerTestHelper extends FunSuite {
     } yield ()
     f.onComplete {
       case Success(_) =>
-        logger.info(s"test3 (${manager.name}) done")
+        logger.debug(s"test3 (${manager.name}) done")
       case Failure(ex) =>
         logger.error(s"test3 (${manager.name}) failed", ex)
     }

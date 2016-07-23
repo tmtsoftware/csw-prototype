@@ -55,7 +55,7 @@ public class JPubSubTests {
                 LoggingAdapter log = Logging.getLogger(system, this);
                 ActorRef subscriber = system.actorOf(JPubSubTests.TestSubscriber.props("Subscriber-1"));
                 system.actorOf(JPubSubTests.TestPublisher.props(getRef(), numSecs));
-                log.info("Waiting for Done message...");
+                log.debug("Waiting for Done message...");
 
                 new Within(Duration.create(numSecs + 10, TimeUnit.SECONDS)) {
                     protected void run() {
@@ -63,7 +63,7 @@ public class JPubSubTests {
                         subscriber.tell("done", getRef());
                         int count = expectMsgClass(Integer.class);
                         double msgPerSec = count / numSecs;
-                        log.info("Recieved " + count + " configs in " + numSecs + " seconds (" + msgPerSec + " per second)");
+                        log.debug("Recieved " + count + " configs in " + numSecs + " seconds (" + msgPerSec + " per second)");
                     }
                 };
             }
@@ -84,7 +84,7 @@ public class JPubSubTests {
 
         @Override
         public void postStop() {
-            log.info("Close connection to the kvs");
+            log.debug("Close connection to the kvs");
             kvs.disconnect();
         }
 
@@ -158,7 +158,7 @@ public class JPubSubTests {
 
         private void handleSetupConfig(SetupConfig config) {
             if (++count % 10000 == 0)
-                log.info("Received " + count + " configs so far: " + config);
+                log.debug("Received " + count + " configs so far: " + config);
         }
 
         private void receiveTimedOut() {

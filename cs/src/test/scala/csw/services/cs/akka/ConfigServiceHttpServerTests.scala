@@ -47,14 +47,14 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
       } yield ()
       Await.ready(f, 60.seconds)
     } finally {
-      logger.info("Shutting down annex server")
+      logger.debug("Shutting down annex server")
       annexServer.shutdown()
     }
   }
 
   // Runs the tests for the config service, using the given oversize option.
   def runTests(settings: ConfigServiceSettings, oversize: Boolean): Future[Unit] = {
-    logger.info(s"--- Testing config service: oversize = $oversize ---")
+    logger.debug(s"--- Testing config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
     val manager = TestRepo.getTestRepoConfigManager(settings)
@@ -74,7 +74,7 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
 
   // Verify that a second config service can still see all the files that were checked in by the first
   def runTests2(settings: ConfigServiceSettings, oversize: Boolean): Future[Unit] = {
-    logger.info(s"--- Verify config service: oversize = $oversize ---")
+    logger.debug(s"--- Verify config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
     if (!settings.useSvn)

@@ -79,15 +79,15 @@
 //    def receive: Receive = {
 //      case Work(config) =>
 //        // Simulate doing work
-//        log.info(s"Start processing $config")
+//        log.debug(s"Start processing $config")
 //        context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
 //
 //      case RequestCurrentState =>
-//        log.info(s"Requested current state")
+//        log.debug(s"Requested current state")
 //        context.parent ! currentState
 //
 //      case WorkDone(config) =>
-//        log.info(s"Done processing $config")
+//        log.debug(s"Done processing $config")
 //        currentState = CurrentState(config.prefix, config.items)
 //        context.parent ! currentState
 //
@@ -119,7 +119,7 @@
 //    system.actorOf(AssemblyStatusMatcherActor.props(List(config), Set(assemblyController), self))
 //    within(10.seconds) {
 //      val status = expectMsgType[CommandStatus.Completed]
-//      logger.info(s"Done (2). Received reply from matcher with current state: $status")
+//      logger.debug(s"Done (2). Received reply from matcher with current state: $status")
 //    }
 //  }
 //}

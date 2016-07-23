@@ -47,7 +47,7 @@ class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLog
     // In another JVM, use a telemetry service based on the Redis instance:
     val connection = HttpConnection(ComponentId(name, ComponentType.Service))
     val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    logger.info(s"Found $locationsReady")
+    logger.debug(s"Found $locationsReady")
     assert(locationsReady.locations.size == 1)
     val loc = locationsReady.locations.head
     assert(loc.isResolved)

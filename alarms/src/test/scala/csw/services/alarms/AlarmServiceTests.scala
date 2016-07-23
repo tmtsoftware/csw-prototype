@@ -74,7 +74,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       val alarms = Await.result(alarmService.getAlarms(AlarmKey()), timeout.duration)
       alarms.foreach { alarm =>
         // XXX TODO: compare results
-        logger.info(s"List Alarm: $alarm")
+        logger.debug(s"List Alarm: $alarm")
       }
 
       // Test internal function
@@ -93,14 +93,14 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
         val a = alarmStatus.alarmKey
-        logger.info(s"Alarm Status: ${alarmStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
+        logger.debug(s"Alarm Status: ${alarmStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
         callbackSev = alarmStatus.currentSeverity
       }
 
       // Called when the health status changes
       def printHealthStatus(healthStatus: HealthStatus): Unit = {
         val a = healthStatus.key
-        logger.info(s"Health Status: ${healthStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
+        logger.debug(s"Health Status: ${healthStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
         callbackHealth = Some(healthStatus.health)
       }
 

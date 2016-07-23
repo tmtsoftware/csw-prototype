@@ -71,13 +71,13 @@ object PeriodicHcdControllerTests {
         // Update the demand state variable
         svs.setDemand(config)
         // Simulate doing work
-        log.info(s"Start processing $config")
+        log.debug(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
 
       case WorkDone(config) =>
-        log.info(s"Done processing $config")
+        log.debug(s"Done processing $config")
         // Simulate getting the current value from the device and publishing it to the kvs
-        log.info(s"Publishing $config")
+        log.debug(s"Publishing $config")
         svs.set(config)
 
       case x => log.error(s"Unexpected message $x")
@@ -106,7 +106,7 @@ class PeriodicHcdControllerTests extends TestKit(PeriodicHcdControllerTests.syst
     system.actorOf(StateVariableMatcherActor.props(List(config), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed]
-      logger.info(s"Done (1). Received reply from matcher with current state: $status")
+      logger.debug(s"Done (1). Received reply from matcher with current state: $status")
     }
   }
 }

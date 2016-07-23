@@ -30,7 +30,7 @@ class PubSubTests extends TestKit(ActorSystem("Test"))
       subscriber ! "done"
       val count = expectMsgType[Int]
       val msgPerSec = count / numSecs
-      logger.info(s"Recieved $count configs in $numSecs seconds ($msgPerSec per second)")
+      logger.debug(s"Recieved $count configs in $numSecs seconds ($msgPerSec per second)")
     }
   }
 
@@ -83,10 +83,10 @@ object PubSubTests {
 
     override def receive: Receive = {
       case config: SetupConfig =>
-        // log.info(s"$name received $config")
+        // log.debug(s"$name received $config")
         count = count + 1
         if (count % 10000 == 0)
-          log.info(s"Received $count configs so far: $config")
+          log.debug(s"Received $count configs so far: $config")
 
       case "done" => sender() ! count
       case x      => log.error(s"Unexpected message $x")

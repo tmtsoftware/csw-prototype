@@ -108,7 +108,7 @@ public class JEventPubSubTest {
         ActorRef subscriber = system.actorOf(Subscriber.props());
         ActorRef publisher = system.actorOf(Publisher.props(subscriber));
         publisher.tell(Publish, getRef());
-        log.info("Waiting for Done message...");
+        log.debug("Waiting for Done message...");
 
         new Within(JavaTestKit.duration("5 minutes")) {
           protected void run() {
@@ -143,7 +143,7 @@ public class JEventPubSubTest {
       subscribe(prefix);
       receive(ReceiveBuilder.
               matchEquals(PublisherInfo, m -> {
-                log.info("Subscriber starting");
+                log.debug("Subscriber starting");
                 getContext().become(working(sender()));
               }).build());
     }
@@ -177,7 +177,7 @@ public class JEventPubSubTest {
           count = count + 1;
           if (count % 100 == 0) {
             double t = (System.currentTimeMillis() - startTime) / 1000.0;
-            log.info("Received {} events in {} seconds ({} per second)",
+            log.debug("Received {} events in {} seconds ({} per second)",
                     count, t, count * 1.0 / t);
           }
           publisher.tell(SubscriberAck, sender());
@@ -196,7 +196,7 @@ public class JEventPubSubTest {
 
     @Override
     public void postStop() {
-      log.info("Close connection to the event service");
+      log.debug("Close connection to the event service");
       eventService.close();
     }
 
@@ -247,7 +247,7 @@ public class JEventPubSubTest {
     }
 
     private void handleSubscriberAck(ActorRef testActor) {
-//            log.info("Received subscriber ack: " + count);
+//            log.debug("Received subscriber ack: " + count);
       if (count < totalEventsToPublish) {
         try {
           Thread.sleep(0L, (int) delay.toNanos());

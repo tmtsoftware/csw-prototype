@@ -43,7 +43,7 @@ class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, r
   import context.dispatcher
   context.become(waiting(Set[CurrentState]()))
   val keys = demands.map(_.prefix)
-  log.info(s"Subscribing to ${keys.mkString(", ")}")
+  log.debug(s"Subscribing to ${keys.mkString(", ")}")
   subscribe(keys: _*)
 
   // Subscribe only sends us a message if the value changes. We also need to
@@ -64,7 +64,7 @@ class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, r
   // a matching current state for each demand state
   def waiting(results: Set[CurrentState]): Receive = {
     case current: CurrentState =>
-      log.info(s"received current state: $current")
+      log.debug(s"received current state: $current")
       demands.find(_.prefix == current.prefix).foreach { demand =>
         if (matcher(demand, current)) {
           val set = results + current
@@ -78,7 +78,7 @@ class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, r
       }
 
     case `timeout` =>
-      log.info(s"received timeout")
+      log.debug(s"received timeout")
       replyTo ! CommandStatus.Error(runId, "Command timed out")
       svs.disconnect()
       context.stop(self)

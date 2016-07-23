@@ -74,7 +74,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       val alarms = alarmService.getAlarms(AlarmKey())
       alarms.foreach { alarm =>
         // XXX TODO: compare results
-        logger.info(s"List Alarm: $alarm")
+        logger.debug(s"List Alarm: $alarm")
       }
 
       // For testing callback
@@ -84,14 +84,14 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
         val a = alarmStatus.alarmKey
-        logger.info(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
+        logger.debug(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
         callbackSev = alarmStatus.currentSeverity
       }
 
       // Called when the health status changes
       def printHealthStatus(healthStatus: HealthStatus): Unit = {
         val a = healthStatus.key
-        logger.info(s"Health Status: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
+        logger.debug(s"Health Status: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
         callbackHealth = Some(healthStatus.health)
       }
 

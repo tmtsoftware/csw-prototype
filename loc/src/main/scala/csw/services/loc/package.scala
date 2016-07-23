@@ -39,10 +39,10 @@ package csw.services
  *
  *   override def receive: Receive = {
  *     case ServicesReady(services) =>
- *       log.info(s"Received services: \${services.values.map(_.connection.componentId.name).mkString(", ")}")
+ *       log.debug(s"Received services: \${services.values.map(_.connection.componentId.name).mkString(", ")}")
  *
  *     case Disconnected(connection) =>
- *       log.info(s"Disconnected service: \${connection.componentId.name}")
+ *       log.debug(s"Disconnected service: \${connection.componentId.name}")
  *
  *     case x =>
  *       log.error(s"Received unexpected message \$x")

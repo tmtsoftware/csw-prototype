@@ -68,7 +68,7 @@ object ConfigService extends App {
       case None       => ConfigServiceSettings(system)
     }
 
-    logger.info(s"Config Service(${settings.name}}): using local repo: ${settings.localRepository}, remote repo: ${settings.mainRepository}")
+    logger.debug(s"Config Service(${settings.name}}): using local repo: ${settings.localRepository}, remote repo: ${settings.mainRepository}")
 
     if (options.init) {
       if (settings.mainRepository.getScheme != "file") {
@@ -92,12 +92,12 @@ object ConfigService extends App {
 
       if (settings.useSvn) {
         if (!new File(mainRepo, ".svn").exists) {
-          logger.info(s"creating new svn repo under $mainRepo")
+          logger.debug(s"creating new svn repo under $mainRepo")
           SvnConfigManager.initSvnRepo(mainRepo)
         }
       } else {
         if (!new File(mainRepo, ".git").exists) {
-          logger.info(s"creating new git main repo under $mainRepo")
+          logger.debug(s"creating new git main repo under $mainRepo")
           GitConfigManager.initBareRepo(mainRepo)
         }
       }
@@ -122,7 +122,7 @@ object ConfigService extends App {
 
     def receive = {
       case Terminated(_) =>
-        log.info("{} has terminated, shutting down system", ref.path)
+        log.debug("{} has terminated, shutting down system", ref.path)
         context.system.terminate()
     }
   }

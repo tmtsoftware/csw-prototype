@@ -100,12 +100,12 @@ object HCDExample {
       case event: SystemEvent =>
         val az = event(azKey).head
         val el = event.get(elKey).get.head
-        log.info(s"Coords: az: $az, el: $el")
+        log.debug(s"Coords: az: $az, el: $el")
 
         count = count + 1
         if (count % 1000 == 0) {
           val t = Duration.between(startTime, Instant.now).getSeconds
-          log.info(s"Received $count events from event service in $t seconds (${count.toFloat / t} per second)")
+          log.debug(s"Received $count events from event service in $t seconds (${count.toFloat / t} per second)")
         }
     }
   }
@@ -117,8 +117,8 @@ class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with
   import HCDExample._
   import Supervisor._
 
-  log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
-  log.info(s"My Rate: ${info.rate}")
+  log.debug(s"Freq: ${context.system.scheduler.maxFrequency}")
+  log.debug(s"My Rate: ${info.rate}")
   lifecycle(supervisor)
 
   // Create an actor to generate position events
@@ -130,7 +130,7 @@ class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with
       rateItem <- sc.get(rateKey)
       rate <- rateItem.get(0)
     } {
-      log.info(s"Set rate to $rate")
+      log.debug(s"Set rate to $rate")
       posEventGenerator ! Rate(rate)
     }
   }

@@ -17,7 +17,7 @@ trait EventSubscriber extends Actor with ActorLogging {
 
   @throws(classOf[Exception]) // For java API
   override def postStop(): Unit = {
-    log.info(s"Close connection to the event service")
+    log.debug(s"Close connection to the event service")
     hq.close()
   }
 

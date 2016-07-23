@@ -52,12 +52,12 @@ class TestWorker(demand: SetupConfig, override val prefix: String) extends Actor
   import context.dispatcher
 
   // Simulate doing work
-  log.info(s"Start processing $demand")
+  log.debug(s"Start processing $demand")
   context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(demand))
 
   def receive: Receive = {
     case WorkDone(config) =>
-      log.info(s"Publishing $config")
+      log.debug(s"Publishing $config")
       context.parent ! CurrentState(config)
       context.stop(self)
   }

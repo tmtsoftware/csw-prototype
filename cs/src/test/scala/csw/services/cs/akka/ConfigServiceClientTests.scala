@@ -44,21 +44,21 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
       } yield ()
 
       f.onComplete {
-        case Success(_)  => logger.info("Success")
+        case Success(_)  => logger.debug("Success")
         case Failure(ex) => logger.error("Failure", ex)
       }
 
       Await.ready(f, 600.seconds)
 
     } finally {
-      logger.info("Shutting down annex server")
+      logger.debug("Shutting down annex server")
       annexServer.shutdown()
     }
   }
 
   // Runs the tests for the config service, using the given oversize option.
   def runTests(settings: ConfigServiceSettings, oversize: Boolean): Future[Unit] = {
-    logger.info(s"--- Testing config service: oversize = $oversize ---")
+    logger.debug(s"--- Testing config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
     val manager = TestRepo.getTestRepoConfigManager(settings)
@@ -76,7 +76,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
 
   // Verify that a second config service can still see all the files that were checked in by the first
   def runTests2(settings: ConfigServiceSettings, oversize: Boolean): Future[Unit] = {
-    logger.info(s"--- Verify config service: oversize = $oversize ---")
+    logger.debug(s"--- Verify config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
     GitConfigManager.deleteDirectoryRecursively(settings.localRepository)
@@ -96,7 +96,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
   //  // Test concurrent access
   //  // (XXX: Doesn't make sense for svn case: There should only be one cs actor per repo)
   //  def runTests3(settings: List[ConfigServiceSettings], oversize: Boolean): Future[Unit] = {
-  //    logger.info(s"--- Test concurrent access: oversize = $oversize ---")
+  //    logger.debug(s"--- Test concurrent access: oversize = $oversize ---")
   //
   //    val managers = settings.map(_.getConfigManager)
   //
