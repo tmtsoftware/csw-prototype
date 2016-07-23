@@ -24,13 +24,18 @@ import scala.util.{Failure, Success}
  */
 object Supervisor {
 
+  private def makeActorSystem(componentInfo: ComponentInfo): ActorSystem = {
+    val name = componentInfo.prefix.replace('.', '-')
+    ActorSystem(s"${componentInfo.componentName}-system")
+  }
+
   /**
    * Returns a new supervisor actor managing the components described in the argument
    * @param componentInfo describes the components to create and manage
    * @return the actorRef for the supervisor (parent actor of the top level component)
    */
   def apply(componentInfo: ComponentInfo): ActorRef = {
-    val system = ActorSystem(s"${componentInfo.componentName}-system")
+    val system = makeActorSystem(componentInfo)
     system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor")
   }
 
@@ -40,7 +45,7 @@ object Supervisor {
    * @return the actorRef for the supervisor (parent actor of the top level component)
    */
   def create(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
-    val system = ActorSystem(s"${componentInfo.componentName}-system")
+    val system = makeActorSystem(componentInfo)
     (system, system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor"))
   }
 

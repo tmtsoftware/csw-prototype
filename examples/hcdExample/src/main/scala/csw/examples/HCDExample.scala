@@ -111,7 +111,7 @@ object HCDExample {
   }
 }
 
-class HCDExample(info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
+class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
   import HCDExample._
   import PosGenerator._
   import HCDExample._

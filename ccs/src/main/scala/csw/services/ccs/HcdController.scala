@@ -25,19 +25,19 @@ object HcdController {
   // --- Inherited messages that this actor receives ---
 
   /**
-    * Message to subscribe the sender to the HCD's state.
-    * The sender will receive [[CurrentState]] messages from the HCD whenever it's state changes.
-    */
+   * Message to subscribe the sender to the HCD's state.
+   * The sender will receive [[CurrentState]] messages from the HCD whenever it's state changes.
+   */
   val Subscribe = PublisherActor.Subscribe
 
   /**
-    * Message to unsubscribes from the HCD's state messages.
-    */
+   * Message to unsubscribes from the HCD's state messages.
+   */
   val Unubscribe = PublisherActor.Unsubscribe
 
   /**
-    * Message to request that the HCD's current state be sent to all subscribers
-    */
+   * Message to request that the HCD's current state be sent to all subscribers
+   */
   val RequestCurrent = PublisherActor.RequestCurrent
 }
 
@@ -45,7 +45,7 @@ object HcdController {
  * Base trait for an HCD controller actor that reacts immediately to SetupConfig messages.
  */
 trait HcdController extends PublisherActor[CurrentState] {
-  this: Actor with ActorLogging =>
+  this: Actor =>
 
   import HcdController._
 

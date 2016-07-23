@@ -3,9 +3,10 @@ package csw.services.pkg
 import akka.actor.FSM.UnsubscribeTransitionCallBack
 import akka.actor._
 import akka.testkit._
-import csw.services.pkg.LifecycleHandler.{Failure, HandlerResponse}
+import csw.services.pkg.Component.{ComponentInfo, HcdInfo}
 import csw.services.pkg.LifecycleManager._
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, MustMatchers}
+import scala.concurrent.duration._
 
 import scala.language.postfixOps
 
@@ -340,12 +341,12 @@ class LifecycleManagerTest() extends FSMSpec {
 
     fsm ! SubscribeTransitionCallBack(fakesupervisor.ref)
 
-    fakesupervisor.expectMsg(new CurrentState(fsm, Loaded))
+    fakesupervisor.expectMsg(CurrentState(fsm, Loaded))
 
     successfulInitialize(fsm, component)
 
-    fakesupervisor.expectMsg(new Transition(fsm, Loaded, PendingInitializedFromLoaded))
-    fakesupervisor.expectMsg(new Transition(fsm, PendingInitializedFromLoaded, Initialized))
+    fakesupervisor.expectMsg(Transition(fsm, Loaded, PendingInitializedFromLoaded))
+    fakesupervisor.expectMsg(Transition(fsm, PendingInitializedFromLoaded, Initialized))
 
     fsm ! UnsubscribeTransitionCallBack(fakesupervisor.ref)
   }
@@ -363,7 +364,7 @@ class LifecycleManagerTest() extends FSMSpec {
         case Transition(_, Loaded, PendingInitializedFromLoaded) =>
           println("Reached PendingInitializedFromLoaded")
         case s @ CurrentState(_, _) =>
-          assert(s === new CurrentState(fsm, Loaded))
+          assert(s === CurrentState(fsm, Loaded))
       }
     }))
 
@@ -384,7 +385,7 @@ class LifecycleManagerTest() extends FSMSpec {
 
     fsm ! SubscribeTransitionCallBack(stateProbe.ref)
 
-    stateProbe.expectMsg(new CurrentState(fsm, Loaded))
+    stateProbe.expectMsg(CurrentState(fsm, Loaded))
 
     // start the test
     fsm ! Initialize
@@ -397,10 +398,10 @@ class LifecycleManagerTest() extends FSMSpec {
     import scala.concurrent.duration._
 
     // First get the transition to Pending
-    stateProbe.expectMsg(new Transition(fsm, Loaded, PendingInitializedFromLoaded))
+    stateProbe.expectMsg(Transition(fsm, Loaded, PendingInitializedFromLoaded))
 
     // Now timeout for failure to respond
-    stateProbe.expectMsg(5.seconds, new Transition(fsm, PendingInitializedFromLoaded, LifecycleFailure))
+    stateProbe.expectMsg(5.seconds, Transition(fsm, PendingInitializedFromLoaded, LifecycleFailure))
 
     component.expectMsg(LifecycleFailure(Initialized, "timeout out while waiting for component response"))
 
@@ -412,6 +413,14 @@ class LifecycleManagerTest() extends FSMSpec {
 
     val component = system.actorOf(Props(
       new Actor with Hcd with LifecycleHandler {
+        //      componentName:        String,
+        //      prefix:               String,
+        //      componentClassName:   String,
+        //      locationServiceUsage: LocationServiceUsage,
+        //      registerAs:           Set[ConnectionType],
+        //      rate:                 FiniteDuration
+
+        override def info: ComponentInfo = HcdInfo("", "test.test", "", Component.DoNotRegister, Set.empty, 5.seconds)
         def receive = lifecycleHandlerReceive
       }
     ), "LifecycleHandlerTester1")
@@ -423,16 +432,16 @@ class LifecycleManagerTest() extends FSMSpec {
 
     fsm ! SubscribeTransitionCallBack(stateProbe.ref)
 
-    stateProbe.expectMsg(new CurrentState(fsm, Loaded))
+    stateProbe.expectMsg(CurrentState(fsm, Loaded))
 
     fsm ! Startup
 
-    stateProbe.expectMsg(new Transition(fsm, Loaded, PendingInitializedFromLoaded))
-    stateProbe.expectMsg(new Transition(fsm, PendingInitializedFromLoaded, Initialized))
+    stateProbe.expectMsg(Transition(fsm, Loaded, PendingInitializedFromLoaded))
+    stateProbe.expectMsg(Transition(fsm, PendingInitializedFromLoaded, Initialized))
     // The following state is from Heartbeat
-    stateProbe.expectMsg(new Transition(fsm, Initialized, Initialized))
-    stateProbe.expectMsg(new Transition(fsm, Initialized, PendingRunningFromInitialized))
-    stateProbe.expectMsg(new Transition(fsm, PendingRunningFromInitialized, Running))
+    stateProbe.expectMsg(Transition(fsm, Initialized, Initialized))
+    stateProbe.expectMsg(Transition(fsm, Initialized, PendingRunningFromInitialized))
+    stateProbe.expectMsg(Transition(fsm, PendingRunningFromInitialized, Running))
 
     fsm ! UnsubscribeTransitionCallBack(stateProbe.ref)
   }

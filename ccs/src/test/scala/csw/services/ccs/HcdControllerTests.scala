@@ -4,6 +4,7 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
+import csw.util.akka.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.StringKey
@@ -14,9 +15,7 @@ import scala.concurrent.duration._
 object HcdControllerTests {
   val system = ActorSystem("Test")
 
-  val testPrefix1 = "wfos.blue.filter"
-  val testPrefix2 = "wfos.red.filter"
-
+  val testPrefix = "wfos.blue.filter"
   val position = StringKey("position")
 
   object TestHcdController {
@@ -56,13 +55,14 @@ object HcdControllerTests {
     case object RequestCurrentState
   }
 
-  class TestWorker extends Actor with ActorLogging {
+  class TestWorker extends Actor with PrefixedActorLogging {
+    override val prefix = testPrefix
 
     import TestWorker._
     import context.dispatcher
 
     // Simulate getting the initial state from the device
-    val initialState = CurrentState(testPrefix1).add(position.set("None"))
+    val initialState = CurrentState(prefix).add(position.set("None"))
 
     // Simulated current state
     var currentState = initialState
@@ -103,7 +103,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix2).add(position.set("IR3"))
+    val config = SetupConfig(testPrefix).add(position.set("IR3"))
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {

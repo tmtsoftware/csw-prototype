@@ -1,6 +1,6 @@
 package csw.examples
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
 import csw.services.ccs.{AssemblyController, CommandStatus}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
@@ -18,7 +18,7 @@ import scala.concurrent.duration._
  *
  * @param info contains information about the assembly and the components it depends on
  */
-class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
+class AssemblyExample(override val info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
 
@@ -79,7 +79,8 @@ object AssemblyExampleApp extends App {
   val componentId = ComponentId(assemblyName, ComponentType.Assembly)
   val targetHcdConnection = AkkaConnection(ComponentId(HCDExample.hcdName, ComponentType.HCD))
   val hcdConnections: Set[Connection] = Set(targetHcdConnection)
-  val assemblyInfo = AssemblyInfo(assemblyName, "", className, RegisterOnly, Set(AkkaType), hcdConnections)
+  val prefix = "tcs.mobie.blue.filter"
+  val assemblyInfo = AssemblyInfo(assemblyName, prefix, className, RegisterOnly, Set(AkkaType), hcdConnections)
   val (supervisorSystem, supervisor) = Supervisor.create(assemblyInfo)
 
   // The code below shows how you could shut down the assembly

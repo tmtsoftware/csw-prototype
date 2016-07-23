@@ -1,8 +1,12 @@
 package csw.services.pkg
 
 import akka.actor._
-import csw.services.loc.{Connection, ComponentType, ConnectionType}
+import csw.services.loc.{ComponentType, Connection, ConnectionType}
 import csw.services.loc.ComponentType._
+import csw.util.config.Subsystem
+import akka.event.{LogSource, Logging}
+import csw.services.pkg.Component.ComponentInfo
+import csw.util.akka.PrefixedActorLogging
 
 import scala.concurrent.duration.{FiniteDuration, _}
 
@@ -47,7 +51,7 @@ object Component {
     val locationServiceUsage: LocationServiceUsage
 
     /**
-     * An optional, dot separated prefix (for example tcs.ao.mycomp) that applies to this component
+     * A dot separated prefix (for example tcs.ao.mycomp) that applies to this component
      */
     val prefix: String
   }
@@ -143,7 +147,13 @@ object Component {
 
 }
 
-trait Component extends Actor with ActorLogging {
+trait Component extends Actor with PrefixedActorLogging {
+  def info: ComponentInfo
+  override def prefix = info.prefix
+
+  /**
+   * A reference to this component's supervisor actor
+   */
   def supervisor = context.parent
 
   override def postStop: Unit = {

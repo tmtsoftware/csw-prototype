@@ -52,7 +52,7 @@ object Subsystem {
   case object WFOS extends Subsystem("WFOS", "wfos", "Wide Field Optical Spectrometer")
   // for testing
   case object TEST extends Subsystem("TEST", "test", "Testing System")
-  case object BAD extends Subsystem("BAD SUBSYSTEM", "bad", "Unknown/default Subsystem ")
+  case object BAD extends Subsystem("BAD", "bad", "Unknown/default Subsystem ")
 
   val subsystems: Set[Subsystem] = Set(AOESW, APS, CIS, CSW, DMS, DPS, ENC, ESEN, ESW,
     GMS, IRIS, IRMS, LGSF, M1CS, M2CS, M3CS, MCS,

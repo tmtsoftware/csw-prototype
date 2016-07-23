@@ -14,11 +14,11 @@ abstract class AkkaTestSpec extends TestKit(ActorSystem()) with ImplicitSender
 
 object SupervisorTests {
 
-  case class SimpleTestHcd(hcdInfo: HcdInfo) extends Hcd with LifecycleHandler {
+  case class SimpleTestHcd(override val info: HcdInfo) extends Hcd with LifecycleHandler {
     def receive = lifecycleHandlerReceive
   }
 
-  case class SimpleTestAssembly(assemblyInfo: AssemblyInfo) extends Assembly with LifecycleHandler {
+  case class SimpleTestAssembly(override val info: AssemblyInfo) extends Assembly with LifecycleHandler {
     def receive = lifecycleHandlerReceive
   }
 
@@ -56,8 +56,8 @@ class SupervisorTests extends AkkaTestSpec {
     val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
     supervisor ! Initialize
-    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
-    stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
+    stateProbe.expectMsg(LifecycleStateChanged(Loaded))
+    stateProbe.expectMsg(LifecycleStateChanged(Initialized))
     stateProbe.expectNoMsg(1.seconds)
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
     system.stop(supervisor)
@@ -68,9 +68,9 @@ class SupervisorTests extends AkkaTestSpec {
     val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
     supervisor ! Startup
-    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
-    stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
-    stateProbe.expectMsg(new LifecycleStateChanged(Running))
+    stateProbe.expectMsg(LifecycleStateChanged(Loaded))
+    stateProbe.expectMsg(LifecycleStateChanged(Initialized))
+    stateProbe.expectMsg(LifecycleStateChanged(Running))
     stateProbe.expectNoMsg(1.seconds)
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
     system.stop(supervisor)
@@ -81,11 +81,11 @@ class SupervisorTests extends AkkaTestSpec {
     val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
     supervisor ! Startup
-    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
-    stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
-    stateProbe.expectMsg(new LifecycleStateChanged(Running))
+    stateProbe.expectMsg(LifecycleStateChanged(Loaded))
+    stateProbe.expectMsg(LifecycleStateChanged(Initialized))
+    stateProbe.expectMsg(LifecycleStateChanged(Running))
     supervisor ! Shutdown
-    stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
+    stateProbe.expectMsg(LifecycleStateChanged(Initialized))
     stateProbe.expectNoMsg(1.seconds)
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
     system.stop(supervisor)
@@ -96,12 +96,12 @@ class SupervisorTests extends AkkaTestSpec {
     val supervisor = newHcdSupervisor()
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
     supervisor ! Startup
-    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
-    stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
-    stateProbe.expectMsg(new LifecycleStateChanged(Running))
+    stateProbe.expectMsg(LifecycleStateChanged(Loaded))
+    stateProbe.expectMsg(LifecycleStateChanged(Initialized))
+    stateProbe.expectMsg(LifecycleStateChanged(Running))
     supervisor ! Uninitialize
-    stateProbe.expectMsg(new LifecycleStateChanged(Initialized))
-    stateProbe.expectMsg(new LifecycleStateChanged(Loaded))
+    stateProbe.expectMsg(LifecycleStateChanged(Initialized))
+    stateProbe.expectMsg(LifecycleStateChanged(Loaded))
     stateProbe.expectNoMsg(1.seconds)
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
     system.stop(supervisor)

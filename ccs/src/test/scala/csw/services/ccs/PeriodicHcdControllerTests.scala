@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdControllerTests.TestPeriodicHcdController
 import csw.services.kvs._
+import csw.util.akka.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StringKey
 import org.scalatest.FunSuiteLike
@@ -15,15 +16,16 @@ import scala.concurrent.duration._
 object PeriodicHcdControllerTests {
   val system = ActorSystem("Test")
 
-  val testPrefix1 = "wfos.blue.filter"
-  val testPrefix2 = "wfos.red.filter"
+  val testPrefix = "wfos.blue.filter"
+  val position = StringKey("position")
 
   // -- Test implementation of a periodic HCD controller --
   object TestPeriodicHcdController {
     def props(): Props = Props(classOf[TestPeriodicHcdController])
   }
 
-  class TestPeriodicHcdController extends Actor with ActorLogging with PeriodicHcdController {
+  class TestPeriodicHcdController extends Actor with PrefixedActorLogging with PeriodicHcdController {
+    override val prefix = testPrefix
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
@@ -50,7 +52,8 @@ object PeriodicHcdControllerTests {
 
   }
 
-  class TestWorker extends Actor with ActorLogging {
+  class TestWorker extends Actor with PrefixedActorLogging {
+    override val prefix = testPrefix
 
     import TestWorker._
     import context.dispatcher
@@ -60,7 +63,7 @@ object PeriodicHcdControllerTests {
     val position = StringKey("position")
 
     // Simulate getting the initial state from the device and publishing to the kvs
-    val initialState = SetupConfig(testPrefix1).add(position.set("None"))
+    val initialState = SetupConfig(testPrefix).add(position.set("None"))
     svs.set(initialState)
 
     def receive: Receive = {
@@ -91,7 +94,6 @@ object PeriodicHcdControllerTests {
 class PeriodicHcdControllerTests extends TestKit(PeriodicHcdControllerTests.system)
     with ImplicitSender with FunSuiteLike with LazyLogging {
 
-  import HcdControllerTests._
   import PeriodicHcdController._
 
   test("Test periodic HCD controller") {
@@ -99,7 +101,7 @@ class PeriodicHcdControllerTests extends TestKit(PeriodicHcdControllerTests.syst
     hcdController ! Process(1.second) // Normally sent by the container when parsing the config file
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix1).add(position.set("IR2"))
+    val config = SetupConfig(PeriodicHcdControllerTests.testPrefix).add(PeriodicHcdControllerTests.position.set("IR2"))
     hcdController ! Submit(config)
     system.actorOf(StateVariableMatcherActor.props(List(config), self))
     within(10.seconds) {

@@ -304,13 +304,13 @@ object ContainerComponent {
  * Implements the container actor based on the contents of the given config.
  */
 //noinspection ScalaUnusedSymbol
-final case class ContainerComponent(containerInfo: ContainerInfo) extends Container {
+final case class ContainerComponent(override val info: ContainerInfo) extends Container {
   implicit val ec = context.dispatcher
   import ContainerComponent._
 
-  val componentInfos = containerInfo.componentInfos
-  private val name = containerInfo.componentName
-  private val componentId = ComponentId(name, containerInfo.componentType)
+  val componentInfos = info.componentInfos
+  private val name = info.componentName
+  private val componentId = ComponentId(name, info.componentType)
 
   // This is set once the component is registered with the location service
   private var registrationOpt: Option[LocationService.RegistrationResult] = None
@@ -376,8 +376,8 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   // If the component is configured to register with the location service, do it,
   // and save the result for unregistering later.
   private def registerWithLocationService(): Unit = {
-    if (containerInfo.locationServiceUsage != DoNotRegister) {
-      LocationService.registerAkkaConnection(componentId, self, containerInfo.prefix)(context.system).onComplete {
+    if (info.locationServiceUsage != DoNotRegister) {
+      LocationService.registerAkkaConnection(componentId, self, info.prefix)(context.system).onComplete {
         case Success(reg) =>
           registrationOpt = Some(reg)
           log.info(s"$name: Registered $componentId with the location service")
@@ -399,7 +399,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   private def createComponent(componentInfo: ComponentInfo, supervisors: List[SupervisorInfo]): Option[SupervisorInfo] = {
     supervisors.find(_.componentInfo == componentInfo) match {
       case Some(existingComponentInfo) =>
-        log.error(s"In supervisor ${containerInfo.componentName}, component ${componentInfo.componentName} already exists")
+        log.error(s"In supervisor ${info.componentName}, component ${componentInfo.componentName} already exists")
         None
       case None =>
         val supervisor = Supervisor(componentInfo)
@@ -409,7 +409,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
   private def sendAllComponents(cmd: Any, infos: List[SupervisorInfo]) = {
     var sinfos = infos
-    stagedCommand(sinfos.nonEmpty, containerInfo.creationDelay) {
+    stagedCommand(sinfos.nonEmpty, info.creationDelay) {
       val sinfo: SupervisorInfo = sinfos.head
       log.info(s"Sending $cmd to: ${sinfo.componentInfo.componentName}")
       sinfo.supervisor ! cmd

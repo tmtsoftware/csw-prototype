@@ -1,8 +1,9 @@
 package csw.services.pkg
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, Props}
 import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
+import csw.util.akka.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 
@@ -13,7 +14,6 @@ object TestHcd {
 
   // Message sent to self to simulate work done
   case class WorkDone(config: SetupConfig)
-
 }
 
 /**
@@ -31,20 +31,22 @@ case class TestHcd(info: HcdInfo)
 
   // Send the config to the worker for processing
   override protected def process(config: SetupConfig): Unit = {
-    context.actorOf(TestWorker.props(config))
+    context.actorOf(TestWorker.props(config, info.prefix))
   }
 
 }
 
 // -- Test worker actor that simulates doing some work --
 object TestWorker {
-  def props(demand: SetupConfig): Props = Props(classOf[TestWorker], demand)
+  def props(demand: SetupConfig, prefix: String): Props = Props(classOf[TestWorker], demand, prefix)
 
   // Message sent to self to simulate work done
   case class WorkDone(config: SetupConfig)
 }
 
-class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
+
+//class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
+class TestWorker(demand: SetupConfig, override val prefix: String) extends Actor with PrefixedActorLogging {
 
   import TestWorker._
   import context.dispatcher

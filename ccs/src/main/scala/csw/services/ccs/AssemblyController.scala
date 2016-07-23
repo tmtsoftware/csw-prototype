@@ -126,7 +126,6 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
         case Success(resp) =>
           replyTo ! resp
         case Failure(ex) =>
-          log.error("Request failed", ex)
           replyTo ! RequestResult(RequestFailed(ex.toString), None)
       }
   }

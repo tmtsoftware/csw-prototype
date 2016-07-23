@@ -4,8 +4,6 @@ import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import java.util.function.BiFunction
 
-import collection.JavaConverters._
-import scala.compat.java8.OptionConverters._
 import scala.compat.java8.FunctionConverters._
 import akka.actor.{AbstractActor, ActorLogging, ActorRef}
 import akka.util.Timeout

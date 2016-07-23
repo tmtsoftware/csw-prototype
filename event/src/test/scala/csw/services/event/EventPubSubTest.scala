@@ -137,10 +137,12 @@ class Publisher(subscriber: ActorRef) extends Actor with ActorLogging {
   // Returns the next event to publish
   def nextEvent(num: Int): Event = {
     import csw.util.config.ConfigDSL._
-    oe(prefix,
+    oe(
+      prefix,
       eventNum -> num,
       exposureTime -> 1.0,
-      imageData -> testImageData)
+      imageData -> testImageData
+    )
   }
 
   def publish(): Unit = {
