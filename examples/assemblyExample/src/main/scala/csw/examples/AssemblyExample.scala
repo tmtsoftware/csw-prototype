@@ -27,6 +27,8 @@ class AssemblyExample(override val info: AssemblyInfo) extends Assembly with Ass
   // Get the connection to the HCD this assembly uses and track it
   trackConnections(info.connections)
 
+  log.info("XXXXXXXX Started")
+
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")
   }

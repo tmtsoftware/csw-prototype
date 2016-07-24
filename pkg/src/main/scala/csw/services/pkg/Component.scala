@@ -3,10 +3,8 @@ package csw.services.pkg
 import akka.actor._
 import csw.services.loc.{ComponentType, Connection, ConnectionType}
 import csw.services.loc.ComponentType._
-import csw.util.config.Subsystem
-import akka.event.{LogSource, Logging}
+import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.ComponentInfo
-import csw.util.akka.PrefixedActorLogging
 
 import scala.concurrent.duration.{FiniteDuration, _}
 

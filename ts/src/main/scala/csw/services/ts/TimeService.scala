@@ -3,7 +3,6 @@ package csw.services.ts
 import java.time._
 
 import akka.actor._
-import akka.event.Logging
 
 /**
  * TMT Prototype CSW Time Service
@@ -98,7 +97,7 @@ object TimeService {
    * Must extend an Actor with ActorLogging
    */
   trait TimeServiceScheduler {
-    self: Actor with ActorLogging =>
+    self: Actor =>
 
     import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
@@ -109,10 +108,7 @@ object TimeService {
     private def toStartDuration(startTime: LocalTime): FiniteDuration = {
       val now = LocalTime.now.toNanoOfDay
       val t1 = startTime.toNanoOfDay
-      val futureTimeNano = t1 - now
-      if (futureTimeNano < 0) {
-        log.error(s"Requested schedule start time in not in the future: $futureTimeNano")
-      }
+      val futureTimeNano = math.max(t1 - now, 0L)
       FiniteDuration(futureTimeNano, NANOSECONDS)
     }
 
@@ -154,5 +150,5 @@ object TimeService {
 /**
  * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]]
  */
-abstract class JavaTimeServiceScheduler extends UntypedActor with ActorLogging with TimeService.TimeServiceScheduler
+abstract class JavaTimeServiceScheduler extends UntypedActor with TimeService.TimeServiceScheduler
 

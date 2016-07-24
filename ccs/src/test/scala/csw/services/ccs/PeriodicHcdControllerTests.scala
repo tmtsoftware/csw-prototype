@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.PeriodicHcdControllerTests.TestPeriodicHcdController
 import csw.services.kvs._
-import csw.util.akka.PrefixedActorLogging
+import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StringKey
 import org.scalatest.FunSuiteLike

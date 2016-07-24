@@ -1,6 +1,7 @@
 package csw.services.ccs
 
 import akka.actor._
+import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 
 import scala.collection.immutable.Queue
@@ -34,7 +35,7 @@ object PeriodicHcdController {
  * @deprecated use [[HcdController]]
  */
 trait PeriodicHcdController {
-  this: Actor with ActorLogging =>
+  this: Actor with PrefixedActorLogging =>
 
   import HcdController._
   import PeriodicHcdController._

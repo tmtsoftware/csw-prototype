@@ -9,7 +9,7 @@
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="akka.remote" level="ERROR"/>
     <logger name="spray" level="INFO"/>
-    <logger name="csw" level="DEBUG"/>
+    <logger name="csw" level="INFO"/>
     <logger name="org.hornetq" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="javax.jmdns" level="ERROR"/>
@@ -36,7 +36,7 @@
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!--<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>-->
-            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} -%X{prefix}- %msg%n</pattern>
         </encoder>
     </appender>
     <root level="all">

@@ -2,8 +2,8 @@ package csw.services.pkg
 
 import akka.actor.{Actor, Props}
 import csw.services.ccs.HcdController
+import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.HcdInfo
-import csw.util.akka.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 
@@ -24,6 +24,8 @@ case class TestHcd(info: HcdInfo)
 
   import Supervisor._
   lifecycle(supervisor)
+
+  log.info("Message from TestHcd")
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")
@@ -52,12 +54,12 @@ class TestWorker(demand: SetupConfig, override val prefix: String) extends Actor
   import context.dispatcher
 
   // Simulate doing work
-  log.debug(s"Start processing $demand")
+  log.info(s"Start processing $demand")
   context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(demand))
 
   def receive: Receive = {
     case WorkDone(config) =>
-      log.debug(s"Publishing $config")
+      log.info(s"Publishing $config")
       context.parent ! CurrentState(config)
       context.stop(self)
   }

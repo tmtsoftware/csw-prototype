@@ -15,8 +15,4 @@ import csw.services.ts.TimeService;
  * {@link TimeService.TimeServiceScheduler#schedule} - waits until a specific time and then sends periodic message to an actor until cancelled
  */
 public abstract class JTimeServiceScheduler extends JavaTimeServiceScheduler {
-    /**
-     * Reference to the actor's logger
-     */
-    public LoggingAdapter log = log();
 }

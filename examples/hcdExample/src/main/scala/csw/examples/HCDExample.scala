@@ -1,6 +1,6 @@
 package csw.examples
 
-import akka.actor.{Actor, ActorLogging, Cancellable, Props}
+import akka.actor.{Actor, Cancellable, Props}
 import csw.services.ccs.HcdController
 import csw.services.event.{EventService, EventServiceSettings, EventSubscriber}
 import csw.services.loc.ConnectionType.AkkaType
@@ -47,7 +47,7 @@ object HCDExample {
   }
 
   // Position generator actor
-  protected class PosGenerator(name: String, prefix: String) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
+  protected class PosGenerator(name: String, prefix: String) extends Actor with TimeService.TimeServiceScheduler {
 
     import java.time._
 

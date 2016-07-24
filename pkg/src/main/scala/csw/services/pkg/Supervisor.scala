@@ -6,6 +6,7 @@ import csw.services.ccs.AssemblyController.AssemblyControllerMessage
 import csw.services.ccs.HcdController.HcdControllerMessage
 import csw.services.loc.ComponentType.{Assembly, HCD}
 import csw.services.loc.{ComponentId, LocationService}
+import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 import csw.services.pkg.LifecycleManager._
 import csw.util.akka.{PublisherActor, SetLogLevelActor}
@@ -25,7 +26,6 @@ import scala.util.{Failure, Success}
 object Supervisor {
 
   private def makeActorSystem(componentInfo: ComponentInfo): ActorSystem = {
-    val name = componentInfo.prefix.replace('.', '-')
     ActorSystem(s"${componentInfo.componentName}-system")
   }
 
@@ -55,7 +55,7 @@ object Supervisor {
    * @param componentInfo used to create the component
    * @return an object to be used to create the Supervisor actor
    */
-  private def props(componentInfo: ComponentInfo): Props = Props(classOf[Supervisor], componentInfo)
+  private def props(componentInfo: ComponentInfo): Props = Props(classOf[Supervisor], componentInfo, componentInfo.prefix)
 
   /**
    * Base trair of supervisor actor messages
@@ -115,8 +115,8 @@ object Supervisor {
  * A supervisor actor that manages the component actor given by the arguments
  * (see props() for argument descriptions).
  */
-private final class Supervisor(val componentInfo: ComponentInfo)
-    extends Actor with ActorLogging with SetLogLevelActor {
+private final class Supervisor(val componentInfo: ComponentInfo, override val prefix: String)
+    extends Actor with PrefixedActorLogging with SetLogLevelActor {
 
   import Supervisor._
 

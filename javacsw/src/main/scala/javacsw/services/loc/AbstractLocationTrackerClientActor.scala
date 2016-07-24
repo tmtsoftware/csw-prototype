@@ -1,6 +1,6 @@
 package javacsw.services.loc
 
-import akka.actor.{AbstractActor, ActorLogging}
+import akka.actor.AbstractActor
 import csw.services.loc.LocationService.Location
 import csw.services.loc.LocationTrackerClientActor
 import collection.JavaConverters._
@@ -8,7 +8,7 @@ import collection.JavaConverters._
 /**
  * Java API abstract base class for an actor that wants to track connections with the location service.
  */
-abstract class AbstractLocationTrackerClientActor extends AbstractActor with ActorLogging with LocationTrackerClientActor {
+abstract class AbstractLocationTrackerClientActor extends AbstractActor with LocationTrackerClientActor {
 
   /**
    * Don't override this from Java. Use the one below that takes a Java Set.

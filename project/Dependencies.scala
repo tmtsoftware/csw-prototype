@@ -25,7 +25,7 @@ object Dependencies {
   val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaStreamsVersion
 
   val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.5.0" // ApacheV2
-  val akkaKryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.1" // ApacheV2
+//  val akkaKryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.1" // ApacheV2
 
   val jeromq = "org.zeromq" % "jeromq" % "0.3.5" // LGPL
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" // ApacheV2

@@ -4,6 +4,7 @@ import javacsw.services.pkg.AbstractAssemblyControllerWithLifecycleHandler;
 import csw.services.ccs.AssemblyController.*;
 import akka.actor.ActorRef;
 import csw.util.config.Configurations;
+import csw.services.pkg.Component.AssemblyInfo;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -24,4 +25,9 @@ public abstract class JAssemblyControllerWithLifecycleHandler extends AbstractAs
     public CompletableFuture<RequestResult> jrequest(Boolean locationsResolved, Configurations.SetupConfig config) {
         return super.jrequest(locationsResolved, config);
     }
+
+    public JAssemblyControllerWithLifecycleHandler(AssemblyInfo info) {
+        super(info);
+    }
+
 }

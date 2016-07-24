@@ -4,7 +4,7 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
-import csw.util.akka.PrefixedActorLogging
+import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.StringKey
@@ -22,7 +22,8 @@ object HcdControllerTests {
     def props(): Props = Props(classOf[TestHcdController])
   }
 
-  class TestHcdController extends HcdController with Actor with ActorLogging {
+  class TestHcdController extends HcdController with Actor with PrefixedActorLogging {
+    override val prefix = testPrefix
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)

@@ -1,7 +1,8 @@
 package csw.util.akka
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.Actor
 import ch.qos.logback.classic._
+import csw.services.log.PrefixedActorLogging
 import org.slf4j.LoggerFactory
 
 object SetLogLevelActor {
@@ -21,7 +22,7 @@ object SetLogLevelActor {
  * to set the log level for a package tree.
  */
 trait SetLogLevelActor {
-  this: Actor with ActorLogging =>
+  this: Actor with PrefixedActorLogging =>
 
   import SetLogLevelActor._
 

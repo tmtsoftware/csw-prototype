@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.LocationTrackerClientActor
+import csw.services.log.PrefixedActorLogging
 import csw.util.akka.PublisherActor
 import csw.util.config.StateVariable._
 import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfig, SetupConfigArg}
@@ -104,7 +105,7 @@ object AssemblyController {
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
 trait AssemblyController extends LocationTrackerClientActor with PublisherActor[CurrentStates] {
-  this: Actor with ActorLogging =>
+  this: Actor with PrefixedActorLogging =>
 
   import AssemblyController._
   import context.dispatcher
@@ -195,7 +196,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
     stateMatcherActor.foreach(context.stop)
     replyTo.foreach { actorRef =>
       // Wait for the demand states to match the current states, then reply to the sender with the command status
-      val props = HcdStatusMatcherActor.props(demandStates.toList, hcds, actorRef, runId, timeout, matcher)
+      val props = HcdStatusMatcherActor.props(demandStates.toList, hcds, actorRef, runId, timeout, matcher, this.prefix)
       stateMatcherActor = Some(context.actorOf(props))
     }
   }
