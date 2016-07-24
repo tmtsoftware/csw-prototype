@@ -18,7 +18,7 @@ import scala.concurrent.Future
 import spray.json._
 
 case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: ConfigServiceSettings, registerWithLoc: Boolean = false) extends ConfigServiceJsonFormats {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceHttpServer"))
+  val logger = Logger(LoggerFactory.getLogger(ConfigServiceHttpServer.getClass))
   logger.debug("Config service http server started")
 
   implicit val system = ActorSystem("ConfigServiceHttpServer")

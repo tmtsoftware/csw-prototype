@@ -22,7 +22,7 @@ import scala.util.{Try, Failure, Success}
  * Provides a client API to the ConfigServiceAnnexServer.
  */
 object ConfigServiceAnnexClient {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexClient"))
+  val logger = Logger(LoggerFactory.getLogger(ConfigServiceAnnexClient.getClass))
 
   // Note: We could take the actor system as an implicit argument from the caller,
   // but using a separate one was suggested, to avoid congestion and slowing down actor

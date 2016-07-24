@@ -16,6 +16,7 @@
     <logger name="com.google.inject" level="ERROR"/>
     <logger name="com.digitalpetri.opcua" level="ERROR"/>
     <logger name="com.romix.akka.serialization.kryo" level="WARN"/>
+    <logger name="redis.actors" level="ERROR"/>
 
     <if condition='isDefined("application-name")'>
         <then>
@@ -29,7 +30,9 @@
                     <maxHistory>30</maxHistory>
                 </rollingPolicy>
                 <!-- Use Logback encoder which creates JSON for use with Logstash -->
-                <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+                <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                    <!--<excludeMdcKeyName>key1ToExclude</excludeMdcKeyName>-->
+                </encoder>
             </appender>
         </then>
     </if>

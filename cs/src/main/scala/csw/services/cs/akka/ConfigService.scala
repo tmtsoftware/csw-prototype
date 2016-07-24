@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
  */
 object ConfigService extends App {
   LocationService.initInterface()
-  val logger = Logger(LoggerFactory.getLogger("ConfigService"))
+  val logger = Logger(LoggerFactory.getLogger(ConfigService.getClass))
 
   /**
    * Command line options: [--config <config> --init --delete --http]

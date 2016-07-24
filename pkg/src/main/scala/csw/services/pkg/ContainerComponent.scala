@@ -41,7 +41,7 @@ import scala.util.{Failure, Success, Try}
  * See also "OSW TN012 Component Lifecycle Design".
  */
 object ContainerComponent {
-  private val logger = Logger(LoggerFactory.getLogger("ContainerComponent"))
+  private val logger = Logger(LoggerFactory.getLogger(ContainerComponent.getClass))
 
   // for parsing of file
   private[pkg] val CONTAINER = "container"

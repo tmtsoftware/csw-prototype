@@ -18,10 +18,10 @@ case class TestLogging(override val prefix: String) extends Actor with PrefixedA
 }
 
 /**
-  * Tests that the prefix for each actor is unique
-  */
+ * Tests that the prefix for each actor is unique
+ */
 class PrefixedActorLoggingTests extends TestKit(ActorSystem("testsys"))
-  with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
+    with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
   val a1 = system.actorOf(TestLogging.props("test1"))
   val a2 = system.actorOf(TestLogging.props("test2"))

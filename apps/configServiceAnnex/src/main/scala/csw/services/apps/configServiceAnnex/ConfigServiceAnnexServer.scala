@@ -36,7 +36,7 @@ import scala.util.control.NonFatal
  * @param registerWithLoc if true, register with the location service (default: false)
  */
 case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServer"))
+  val logger = Logger(LoggerFactory.getLogger(ConfigServiceAnnexServer.getClass))
   logger.debug("Config service annex started")
   implicit val system = ActorSystem("ConfigServiceAnnexServer")
 

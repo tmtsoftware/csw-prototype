@@ -15,7 +15,7 @@ import scala.concurrent.duration._
  * Common test code for classes that implement the ConfigManager trait
  */
 object ConfigManagerTestHelper extends FunSuite {
-  val logger = Logger(LoggerFactory.getLogger("ConfigManagerTestHelper"))
+  val logger = Logger(LoggerFactory.getLogger(ConfigManagerTestHelper.getClass))
 
   val path1 = new File("some/test1/TestConfig1")
   val path2 = new File("some/test2/TestConfig2")

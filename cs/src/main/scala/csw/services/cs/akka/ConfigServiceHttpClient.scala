@@ -21,7 +21,7 @@ import scala.concurrent.Future
 case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit system: ActorSystem)
     extends ConfigManager with ConfigServiceJsonFormats {
 
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceHttpClient"))
+  val logger = Logger(LoggerFactory.getLogger(ConfigServiceHttpClient.getClass))
 
   //  // Note: We could take the actor system as an implicit argument from the caller,
   //  // but using a separate one was suggested, to avoid congestion and slowing down actor

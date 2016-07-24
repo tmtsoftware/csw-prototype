@@ -29,7 +29,7 @@ import collection.JavaConverters._
  */
 object LocationService {
 
-  private val logger = Logger(LoggerFactory.getLogger("LocationService"))
+  private val logger = Logger(LoggerFactory.getLogger(LocationService.getClass))
 
   // Share the JmDNS instance within this jvm for better performance
   // (Note: Using lazy initialization, since this should run after calling initInterface() below

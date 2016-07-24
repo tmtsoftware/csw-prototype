@@ -21,7 +21,7 @@ import scala.concurrent.{Await, Future}
  * Static definitions for the Alarm Service
  */
 object AlarmService {
-  private[alarms] val logger = Logger(LoggerFactory.getLogger("AlarmService"))
+  private[alarms] val logger = Logger(LoggerFactory.getLogger(AlarmService.getClass))
 
   /**
    * The default name that the Alarm Service is registered with

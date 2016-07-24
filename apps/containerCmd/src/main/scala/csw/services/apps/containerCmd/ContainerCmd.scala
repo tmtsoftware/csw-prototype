@@ -51,7 +51,7 @@ object ContainerCmd {
  * @param resource optional name of default config file (under src/main/resources)
  */
 case class ContainerCmd(name: String, args: Array[String], resource: Option[String] = None) {
-  val logger = Logger(LoggerFactory.getLogger("ContainerCmd"))
+  val logger = Logger(LoggerFactory.getLogger(ContainerCmd.getClass))
 
   ContainerCmd.parse(name, args) match {
     case Some(options) => run(options)
