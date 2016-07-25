@@ -6,6 +6,7 @@ import csw.services.cs.core.ConfigFileInfo;
 import csw.services.cs.core.ConfigId;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,6 +67,19 @@ public interface IBlockingConfigManager {
    * @return an optional object containing the configuration data, if found
    */
   Optional<IBlockingConfigData> get(File path, ConfigId id);
+
+  /**
+   /**
+   * Gets the file as it existed on the given date.
+   * If date is before the file was created, the initial version is returned.
+   * If date is after the last change, the most recent version is returned.
+   * If the path does not exist in the repo, an empty value is returned.
+   *
+   * @param path the file path relative to the repository root
+   * @param date the target date
+   * @return an object that can be used to access the file's data, if found
+   */
+  Optional<IBlockingConfigData> get(File path, Date date);
 
   /**
    * Returns true if the given path exists and is being managed

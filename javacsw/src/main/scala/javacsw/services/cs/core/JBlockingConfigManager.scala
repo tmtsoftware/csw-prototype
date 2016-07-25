@@ -1,7 +1,7 @@
 package javacsw.services.cs.core
 
 import java.io.File
-import java.util.Optional
+import java.util.{Date, Optional}
 import java.{lang, util}
 import javacsw.services.cs.{IBlockingConfigData, IBlockingConfigManager}
 
@@ -44,6 +44,13 @@ case class JBlockingConfigManager(manager: ConfigManager)(implicit context: Acto
 
   override def get(path: File, id: ConfigId): Optional[IBlockingConfigData] = {
     Await.result(manager.get(path, Some(id)), timeout).map { c =>
+      val result: IBlockingConfigData = JBlockingConfigData(c)
+      result
+    }.asJava
+  }
+
+  override def get(path: File, date: Date): Optional[IBlockingConfigData] = {
+    Await.result(manager.get(path, date), timeout).map { c =>
       val result: IBlockingConfigData = JBlockingConfigData(c)
       result
     }.asJava

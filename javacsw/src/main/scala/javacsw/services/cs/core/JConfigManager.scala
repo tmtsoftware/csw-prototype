@@ -1,7 +1,7 @@
 package javacsw.services.cs.core
 
 import java.io.{File, OutputStream}
-import java.util.Optional
+import java.util.{Date, Optional}
 import java.util.concurrent.CompletableFuture
 import javacsw.services.cs.{IConfigData, IConfigManager}
 
@@ -38,6 +38,10 @@ class JConfigManager(manager: ConfigManager)(implicit context: ActorRefFactory)
   override def get(path: File, id: ConfigId): CompletableFuture[Optional[IConfigData]] =
     // Note: First map is for the future, second to convert scala Option to java Optional
     manager.get(path, Some(id)).map(_.map(JConfigData(_).asInstanceOf[IConfigData]).asJava).toJava.toCompletableFuture
+
+  override def get(path: File, date: Date): CompletableFuture[Optional[IConfigData]] =
+    // Note: First map is for the future, second to convert scala Option to java Optional
+    manager.get(path, date).map(_.map(JConfigData(_).asInstanceOf[IConfigData]).asJava).toJava.toCompletableFuture
 
   override def exists(path: File): CompletableFuture[java.lang.Boolean] =
     manager.exists(path).map(Boolean.box).toJava.toCompletableFuture
