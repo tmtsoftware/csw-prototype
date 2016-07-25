@@ -3,7 +3,7 @@ package javacsw.services.cs.core.tests;
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
-import javacsw.services.cs.JBlockingConfigManager;
+import javacsw.services.cs.IBlockingConfigManager;
 import javacsw.services.cs.akka.tests.JTestRepo;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,7 +31,7 @@ public class JBlockingConfigManagerTest {
     // Test creating a ConfigManager, storing and retrieving some files
     @Test
     public void testConfigManager() throws Exception {
-        JBlockingConfigManager manager = JTestRepo.getTestRepoBlockingConfigManager(system);
+        IBlockingConfigManager manager = JTestRepo.getTestRepoBlockingConfigManager(system);
         JConfigManagerTestHelper.runTests(manager, false);
 
         // Start the config service annex http server and wait for it to be ready for connections

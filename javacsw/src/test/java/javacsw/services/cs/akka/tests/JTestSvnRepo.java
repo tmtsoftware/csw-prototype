@@ -4,9 +4,9 @@ import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
 import csw.services.cs.akka.ConfigServiceSettings;
 import csw.services.cs.core.svn.SvnConfigManager;
-import javacsw.services.cs.JBlockingConfigManager;
-import javacsw.services.cs.JConfigManager;
-import javacsw.services.cs.core.JBlockingConfigManagerImpl;
+import javacsw.services.cs.IBlockingConfigManager;
+import javacsw.services.cs.IConfigManager;
+import javacsw.services.cs.core.JBlockingConfigManager;
 import javacsw.services.cs.core.JConfigManagerImpl;
 
 import java.io.File;
@@ -35,11 +35,11 @@ public class JTestSvnRepo {
    *
    * @return a new blocking ConfigManager set to manage the newly created Svn repository
    */
-  public static JBlockingConfigManager getJBlockingConfigManager(ActorSystem system) {
+  public static IBlockingConfigManager getJBlockingConfigManager(ActorSystem system) {
       ConfigServiceSettings settings = ConfigServiceSettings.getConfigServiceSettings(system);
       resetRepo(settings, system);
       SvnConfigManager manager = SvnConfigManager.apply(settings.mainRepository(), settings.name(), system);
-      return new JBlockingConfigManagerImpl(manager, system);
+      return new JBlockingConfigManager(manager, system);
   }
 
   /**
@@ -48,7 +48,7 @@ public class JTestSvnRepo {
     *
     * @return a new ConfigManager set to manage the newly created Svn repository
     */
-  public static JConfigManager getJConfigManager(ActorSystem system) {
+  public static IConfigManager getJConfigManager(ActorSystem system) {
       ConfigServiceSettings settings = ConfigServiceSettings.getConfigServiceSettings(system);
       resetRepo(settings, system);
       SvnConfigManager manager = SvnConfigManager.apply(settings.mainRepository(), settings.name(), system);

@@ -5,7 +5,7 @@ import java.io.File;
 /**
  * Java synchronous interface to ConfigData
  */
-public interface JBlockingConfigData {
+public interface IBlockingConfigData {
     /**
      * Returns a string representation of the data (assuming it is not binary data)
      */

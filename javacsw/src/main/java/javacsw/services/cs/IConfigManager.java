@@ -1,19 +1,24 @@
 package javacsw.services.cs;
 
-import csw.services.cs.core.ConfigData;
-import csw.services.cs.core.ConfigFileHistory;
-import csw.services.cs.core.ConfigFileInfo;
-import csw.services.cs.core.ConfigId;
+import csw.services.cs.core.*;
+import scala.Unit;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * Defines a synchronous (blocking) java interface for storing and retrieving configuration information
+ * Defines an asynchronous (non-blocking) java interface for storing and retrieving configuration information
  */
-@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
-public interface JBlockingConfigManager {
+@SuppressWarnings("unused")
+public interface IConfigManager {
+
+    /**
+     * Returns a reference to the underlying scala ConfigManager
+     * @return the ConfigManager
+     */
+    ConfigManager getManager();
 
     /**
      * Creates a config file with the given path and data and optional comment.
@@ -23,9 +28,9 @@ public interface JBlockingConfigManager {
      * @param configData the contents of the file
      * @param oversize   true if the file is large and requires special handling (external storage)
      * @param comment    a comment to associate with this file
-     * @return a unique id that can be used to refer to the file
+     * @return a future unique id that can be used to refer to the file
      */
-    ConfigId create(File path, ConfigData configData, Boolean oversize, String comment);
+    CompletableFuture<ConfigId> create(File path, ConfigData configData, Boolean oversize, String comment);
 
     /**
      * Updates the config file with the given path and data and optional comment.
@@ -34,9 +39,9 @@ public interface JBlockingConfigManager {
      * @param path       the config file path
      * @param configData the contents of the file
      * @param comment    a comment to associate with this file
-     * @return a unique id that can be used to refer to the file
+     * @return a future unique id that can be used to refer to the file
      */
-    ConfigId update(File path, ConfigData configData, String comment);
+    CompletableFuture<ConfigId> update(File path, ConfigData configData, String comment);
 
     /**
      * Creates a config file with the given path and data and optional comment,
@@ -46,26 +51,26 @@ public interface JBlockingConfigManager {
      * @param configData the contents of the file
      * @param oversize   true if the file is large and requires special handling (external storage)
      * @param comment    a comment to associate with this file
-     * @return a unique id that can be used to refer to the file
+     * @return a future unique id that can be used to refer to the file
      */
-    ConfigId createOrUpdate(File path, ConfigData configData, Boolean oversize, String comment);
+    CompletableFuture<ConfigId> createOrUpdate(File path, ConfigData configData, Boolean oversize, String comment);
 
     /**
-     * Gets and returns the config file stored under the given path, if found.
+     * Gets and returns the latest version of the config file stored under the given path.
      *
      * @param path the configuration path
-     * @return an optional object containing the configuration data, if found
+     * @return a future  object containing the configuration data, if found
      */
-    Optional<JBlockingConfigData> get(File path);
+    CompletableFuture<Optional<IConfigData>> get(File path);
 
     /**
-     * Gets and returns the config file stored under the given path, if found.
+     * Gets and returns the config file stored under the given path.
      *
      * @param path the configuration path
-     * @param id   id used to specify a specific version to fetch (default: latest)
-     * @return an optional object containing the configuration data, if found
+     * @param id   id used to specify a specific version to fetch
+     * @return a future object containing the configuration data, if found
      */
-    Optional<JBlockingConfigData> get(File path, ConfigId id);
+    CompletableFuture<Optional<IConfigData>> get(File path, ConfigId id);
 
     /**
      * Returns true if the given path exists and is being managed
@@ -73,29 +78,31 @@ public interface JBlockingConfigManager {
      * @param path the configuration path
      * @return true if the file exists
      */
-    boolean exists(File path);
+    CompletableFuture<Boolean> exists(File path);
 
     /**
      * Deletes the given config file (older versions will still be available)
      *
      * @param path the configuration path
+     * @return a future indicating when done
      */
-    void delete(File path);
+    CompletableFuture<Unit> delete(File path);
 
     /**
      * Deletes the given config file (older versions will still be available)
      *
      * @param path    the configuration path
      * @param comment comment for the delete operation
+     * @return a future indicating when done
      */
-    void delete(File path, String comment);
+    CompletableFuture<Unit> delete(File path, String comment);
 
     /**
      * Returns a list containing all known configuration files
      *
      * @return a list containing one ConfigFileInfo object for each known config file
      */
-    List<ConfigFileInfo> list();
+    CompletableFuture<List<ConfigFileInfo>> list();
 
     /**
      * Returns a list of all known versions of a given path
@@ -103,5 +110,5 @@ public interface JBlockingConfigManager {
      * @param path the relative path in the repo
      * @return a list containing one ConfigFileHistory object for each version of path
      */
-    List<ConfigFileHistory> history(File path);
+    CompletableFuture<List<ConfigFileHistory>> history(File path);
 }

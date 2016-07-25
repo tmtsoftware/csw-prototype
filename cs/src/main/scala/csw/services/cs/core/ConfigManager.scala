@@ -11,7 +11,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -67,6 +67,20 @@ trait ConfigManager {
    * @return a future object that can be used to access the file's data, if found
    */
   def get(path: File, id: Option[ConfigId] = None): Future[Option[ConfigData]]
+
+  /**
+   * Gets the file as it existed on or before the given date
+   * @param path the file path relative to the repository root
+   * @param date the target date
+   * @return a future object that can be used to access the file's data, if found
+   */
+  def get(path: File, date: Date)(implicit ec: ExecutionContext): Future[Option[ConfigData]] = {
+    for {
+      hist <- history(path).map(_.find(_.time.getTime < date.getTime))
+      if hist.nonEmpty
+      result <- get(path, hist.map(_.id))
+    } yield result
+  }
 
   /**
    * Returns true if the given path exists and is being managed

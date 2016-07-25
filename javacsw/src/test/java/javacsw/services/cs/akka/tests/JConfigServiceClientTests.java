@@ -7,7 +7,7 @@ import akka.util.Timeout;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
 import csw.services.cs.akka.ConfigServiceActor;
 import csw.services.loc.LocationService;
-import javacsw.services.cs.JConfigManager;
+import javacsw.services.cs.IConfigManager;
 import javacsw.services.cs.akka.JBlockingConfigServiceClient;
 import javacsw.services.cs.akka.JConfigServiceClient;
 import javacsw.services.cs.akka.JConfigServiceFactory;
@@ -20,7 +20,7 @@ import scala.concurrent.duration.FiniteDuration;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests the JConfigManager class
+ * Tests the IConfigManager class
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class JConfigServiceClientTests {
@@ -43,7 +43,7 @@ public class JConfigServiceClientTests {
     // Test creating a JConfigServiceClient, storing and retrieving some files
     @Test
     public void configServiceClientTests() throws Exception {
-        JConfigManager repoManager = JTestRepo.getTestRepoConfigManager(system);
+        IConfigManager repoManager = JTestRepo.getTestRepoConfigManager(system);
         // Note: For this test we create the actor here, normally you would look it up with the location service
         ActorRef configServiceActor = system.actorOf(ConfigServiceActor.props(repoManager.getManager(), false));
         JConfigServiceClient client = JConfigServiceFactory.getConfigServiceClient(configServiceActor, system, timeout);
@@ -61,7 +61,7 @@ public class JConfigServiceClientTests {
     // Test creating a JBlockingConfigServiceClient, storing and retrieving some files
     @Test
     public void blockingConfigServiceClientTests() throws Exception {
-        JConfigManager repoManager = JTestRepo.getTestRepoConfigManager(system);
+        IConfigManager repoManager = JTestRepo.getTestRepoConfigManager(system);
         // Note: For this test we create the actor here, normally you would look it up with the location service
         ActorRef configServiceActor = system.actorOf(ConfigServiceActor.props(repoManager.getManager(), false));
         JBlockingConfigServiceClient client = JConfigServiceFactory.getBlockingConfigServiceClient(configServiceActor, system, timeout);
@@ -81,7 +81,7 @@ public class JConfigServiceClientTests {
 //    @Test
 //    public void locationServiceLookupTests() throws Exception {
 //        // Note: For this test we create the actor here, normally you would just look it up with the location service
-//        JConfigManager repoManager = JTestRepo.getTestRepoConfigManager(system);
+//        IConfigManager repoManager = JTestRepo.getTestRepoConfigManager(system);
 //        ActorRef configServiceActor = system.actorOf(ConfigServiceActor.props(repoManager.getManager(), true));
 //
 //        // Client code to get the default config service from the location service and wrap it in a blocking client

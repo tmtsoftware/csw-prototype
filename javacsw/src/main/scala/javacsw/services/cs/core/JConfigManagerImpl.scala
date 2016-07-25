@@ -3,7 +3,7 @@ package javacsw.services.cs.core
 import java.io.{File, OutputStream}
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
-import javacsw.services.cs.{JConfigData, JConfigManager}
+import javacsw.services.cs.{IConfigData, IConfigManager}
 
 import akka.actor.ActorRefFactory
 import csw.services.cs.core.{ConfigFileHistory, _}
@@ -16,7 +16,7 @@ import scala.compat.java8.OptionConverters._
  * Non-blocking Java API for the config service.
  */
 class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFactory)
-    extends JConfigManager {
+    extends IConfigManager {
 
   import context.dispatcher
 
@@ -31,19 +31,13 @@ class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFacto
   override def createOrUpdate(path: File, configData: ConfigData, oversize: java.lang.Boolean, comment: String): CompletableFuture[ConfigId] =
     manager.createOrUpdate(path, configData, oversize, comment).toJava.toCompletableFuture
 
-  override def get(path: File): CompletableFuture[Optional[JConfigData]] =
+  override def get(path: File): CompletableFuture[Optional[IConfigData]] =
     // Note: First map is for the future, second to convert scala Option to java Optional
-    manager.get(path).map(_.map { c =>
-      val result: JConfigData = JConfigDataImpl(c)
-      result
-    }.asJava).toJava.toCompletableFuture
+    manager.get(path).map(_.map(JConfigData(_).asInstanceOf[IConfigData]).asJava).toJava.toCompletableFuture
 
-  override def get(path: File, id: ConfigId): CompletableFuture[Optional[JConfigData]] =
+  override def get(path: File, id: ConfigId): CompletableFuture[Optional[IConfigData]] =
     // Note: First map is for the future, second to convert scala Option to java Optional
-    manager.get(path, Some(id)).map(_.map { c =>
-      val result: JConfigData = JConfigDataImpl(c)
-      result
-    }.asJava).toJava.toCompletableFuture
+    manager.get(path, Some(id)).map(_.map(JConfigData(_).asInstanceOf[IConfigData]).asJava).toJava.toCompletableFuture
 
   override def exists(path: File): CompletableFuture[java.lang.Boolean] =
     manager.exists(path).map(Boolean.box).toJava.toCompletableFuture
@@ -62,7 +56,7 @@ class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFacto
     manager.history(path).map(_.asJava).toJava.toCompletableFuture
 }
 
-case class JConfigDataImpl(configData: ConfigData)(implicit context: ActorRefFactory) extends JConfigData {
+case class JConfigData(configData: ConfigData)(implicit context: ActorRefFactory) extends IConfigData {
   // XXX TODO: Add static factory methods
 
   override def toFutureString: CompletableFuture[String] = configData.toFutureString.toJava.toCompletableFuture

@@ -1,7 +1,7 @@
 package javacsw.services.cs.akka
 
 import java.util.concurrent.CompletableFuture
-import javacsw.services.cs.core.{JBlockingConfigManagerImpl, JConfigManagerImpl}
+import javacsw.services.cs.core.{JBlockingConfigManager, JConfigManagerImpl}
 
 import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import csw.services.cs.akka.{ConfigServiceActor, ConfigServiceClient}
@@ -21,7 +21,7 @@ class JConfigServiceClient(client: ConfigServiceClient)(implicit context: ActorR
  * @param client the scala implementation of the cs client
  * @param context the akka actor context (system or context)
  */
-class JBlockingConfigServiceClient(client: ConfigServiceClient)(implicit context: ActorRefFactory) extends JBlockingConfigManagerImpl(client)
+class JBlockingConfigServiceClient(client: ConfigServiceClient)(implicit context: ActorRefFactory) extends JBlockingConfigManager(client)
 
 /**
  * Contains Java API helper methods related to the Scala ConfigServiceActor class

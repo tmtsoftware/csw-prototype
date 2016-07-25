@@ -3,10 +3,10 @@ package javacsw.services.cs.core.tests;
 import csw.services.cs.core.ConfigFileHistory;
 import csw.services.cs.core.ConfigFileInfo;
 import csw.services.cs.core.ConfigId;
-import javacsw.services.cs.JBlockingConfigData;
-import javacsw.services.cs.JBlockingConfigManager;
-import javacsw.services.cs.JConfigData;
-import javacsw.services.cs.JConfigManager;
+import javacsw.services.cs.IBlockingConfigData;
+import javacsw.services.cs.IConfigData;
+import javacsw.services.cs.IBlockingConfigManager;
+import javacsw.services.cs.IConfigManager;
 
 import java.io.File;
 import java.util.List;
@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
 
 
 /**
- * Common test code for classes that implement the JConfigManager interface
+ * Common test code for classes that implement the IConfigManager interface
  */
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class JConfigManagerTestHelper {
@@ -30,7 +30,7 @@ public class JConfigManagerTestHelper {
     private static final String comment2 = "update 1 comment";
     private static final String comment3 = "update 2 comment";
 
-    public static void runTests(JConfigManager manager, Boolean oversize) throws ExecutionException, InterruptedException {
+    public static void runTests(IConfigManager manager, Boolean oversize) throws ExecutionException, InterruptedException {
 
         // Note: In the tests below we just call .get() on the future results for simplicity.
         // In a real application, you could use other methods...
@@ -43,28 +43,28 @@ public class JConfigManagerTestHelper {
         }
 
         // Add, then update the file twice
-        ConfigId createId1 = manager.create(path1, JConfigData.create(contents1), oversize, comment1).get();
-        ConfigId createId2 = manager.create(path2, JConfigData.create(contents1), oversize, comment1).get();
-        ConfigId updateId1 = manager.update(path1, JConfigData.create(contents2), comment2).get();
-        ConfigId updateId2 = manager.update(path1, JConfigData.create(contents3), comment3).get();
+        ConfigId createId1 = manager.create(path1, IConfigData.create(contents1), oversize, comment1).get();
+        ConfigId createId2 = manager.create(path2, IConfigData.create(contents1), oversize, comment1).get();
+        ConfigId updateId1 = manager.update(path1, IConfigData.create(contents2), comment2).get();
+        ConfigId updateId2 = manager.update(path1, IConfigData.create(contents3), comment3).get();
 
         // Check that we can access each version
-        JConfigData data1 = manager.get(path1).get().get();
+        IConfigData data1 = manager.get(path1).get().get();
         assertTrue (data1.toFutureString().get().equals(contents3));
 
-        JConfigData data2 = manager.get(path1, createId1).get().get();
+        IConfigData data2 = manager.get(path1, createId1).get().get();
         assertTrue(data2.toFutureString().get().equals(contents1));
 
-        JConfigData data3 = manager.get(path1, updateId1).get().get();
+        IConfigData data3 = manager.get(path1, updateId1).get().get();
         assertTrue(data3.toFutureString().get().equals(contents2));
 
-        JConfigData data4 = manager.get(path1, updateId2).get().get();
+        IConfigData data4 = manager.get(path1, updateId2).get().get();
         assertTrue(data4.toFutureString().get().equals(contents3));
 
-        JConfigData data5 = manager.get(path2).get().get();
+        IConfigData data5 = manager.get(path2).get().get();
         assertTrue(data5.toFutureString().get().equals(contents1));
 
-        JConfigData data6 = manager.get(path2, createId2).get().get();
+        IConfigData data6 = manager.get(path2, createId2).get().get();
         assertTrue(data6.toFutureString().get().equals(contents1));
 
         // test history()
@@ -82,7 +82,7 @@ public class JConfigManagerTestHelper {
     }
 
 
-    public static void runTests(JBlockingConfigManager manager, Boolean oversize) {
+    public static void runTests(IBlockingConfigManager manager, Boolean oversize) {
         if (manager.exists(path1)) {
             manager.delete(path1, "deleted");
         }
@@ -91,28 +91,28 @@ public class JConfigManagerTestHelper {
         }
 
         // Add, then update the file twice
-        ConfigId createId1 = manager.create(path1, JConfigData.create(contents1), oversize, comment1);
-        ConfigId createId2 = manager.create(path2, JConfigData.create(contents1), oversize, comment1);
-        ConfigId updateId1 = manager.update(path1, JConfigData.create(contents2), comment2);
-        ConfigId updateId2 = manager.update(path1, JConfigData.create(contents3), comment3);
+        ConfigId createId1 = manager.create(path1, IConfigData.create(contents1), oversize, comment1);
+        ConfigId createId2 = manager.create(path2, IConfigData.create(contents1), oversize, comment1);
+        ConfigId updateId1 = manager.update(path1, IConfigData.create(contents2), comment2);
+        ConfigId updateId2 = manager.update(path1, IConfigData.create(contents3), comment3);
 
         // Check that we can access each version
-        JBlockingConfigData data1 = manager.get(path1).get();
+        IBlockingConfigData data1 = manager.get(path1).get();
         assertTrue(data1.toString().equals(contents3));
 
-        JBlockingConfigData data2 = manager.get(path1, createId1).get();
+        IBlockingConfigData data2 = manager.get(path1, createId1).get();
         assertTrue(data2.toString().equals(contents1));
 
-        JBlockingConfigData data3 = manager.get(path1, updateId1).get();
+        IBlockingConfigData data3 = manager.get(path1, updateId1).get();
         assertTrue(data3.toString().equals(contents2));
 
-        JBlockingConfigData data4 = manager.get(path1, updateId2).get();
+        IBlockingConfigData data4 = manager.get(path1, updateId2).get();
         assertTrue(data4.toString().equals(contents3));
 
-        JBlockingConfigData data5 = manager.get(path2).get();
+        IBlockingConfigData data5 = manager.get(path2).get();
         assertTrue(data5.toString().equals(contents1));
 
-        JBlockingConfigData data6 = manager.get(path2, createId2).get();
+        IBlockingConfigData data6 = manager.get(path2, createId2).get();
         assertTrue(data6.toString().equals(contents1));
 
         // test history()

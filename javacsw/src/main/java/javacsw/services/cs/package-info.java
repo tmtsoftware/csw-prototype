@@ -10,10 +10,10 @@
  * <p>
  * The config service can be accessed by sending messages to the config service actor,
  * however client wrapper classes provide a somewhat simpler API.
- * See {@link javacsw.services.cs.JBlockingConfigManager} for a simple, blocking API
- * and {@link javacsw.services.cs.JConfigManager} for a non-blocking API that returns future values.
+ * See {@link javacsw.services.cs.IBlockingConfigManager} for a simple, blocking API
+ * and {@link javacsw.services.cs.IConfigManager} for a non-blocking API that returns future values.
  * <p>
- * Data returned from the config service is accessed via the {@link javacsw.services.cs.JConfigData} interface,
+ * Data returned from the config service is accessed via the {@link javacsw.services.cs.IConfigData} interface,
  * which allows writing the data to a file or output stream or returning it as a String (assuming the data is not binary).
  * The interface also provides static factory methods to create instances to pass to the config service methods.
  * <p>
@@ -24,18 +24,18 @@
  *  Boolean oversize = false; // Set to true to for special handling of large files
  *
  *  // Add, then update the file twice
- *  ConfigId createId1 = manager.create(path1, JConfigData.create(contents1), oversize, comment1);
- *  ConfigId createId2 = manager.create(path2, JConfigData.create(contents1), oversize, comment1);
- *  ConfigId updateId1 = manager.update(path1, JConfigData.create(contents2), comment2);
- *  ConfigId updateId2 = manager.update(path1, JConfigData.create(contents3), comment3);
+ *  ConfigId createId1 = manager.create(path1, IConfigData.create(contents1), oversize, comment1);
+ *  ConfigId createId2 = manager.create(path2, IConfigData.create(contents1), oversize, comment1);
+ *  ConfigId updateId1 = manager.update(path1, IConfigData.create(contents2), comment2);
+ *  ConfigId updateId2 = manager.update(path1, IConfigData.create(contents3), comment3);
  *
  *  // Check that we can access each version
- *  JBlockingConfigData data1 = manager.get(path1).get();
- *  JBlockingConfigData data2 = manager.get(path1, createId1).get();
- *  JBlockingConfigData data3 = manager.get(path1, updateId1).get();
- *  JBlockingConfigData data4 = manager.get(path1, updateId2).get();
- *  JBlockingConfigData data5 = manager.get(path2).get();
- *  JBlockingConfigData data6 = manager.get(path2, createId2).get();
+ *  IBlockingConfigData data1 = manager.get(path1).get();
+ *  IBlockingConfigData data2 = manager.get(path1, createId1).get();
+ *  IBlockingConfigData data3 = manager.get(path1, updateId1).get();
+ *  IBlockingConfigData data4 = manager.get(path1, updateId2).get();
+ *  IBlockingConfigData data5 = manager.get(path2).get();
+ *  IBlockingConfigData data6 = manager.get(path2, createId2).get();
  *
  *  // Get the file history()
  *  List<ConfigFileHistory> historyList1 = manager.history(path1);

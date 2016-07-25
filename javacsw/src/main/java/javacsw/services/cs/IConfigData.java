@@ -4,7 +4,6 @@ import csw.services.cs.core.ConfigBytes;
 import csw.services.cs.core.ConfigData;
 import csw.services.cs.core.ConfigFile;
 import csw.services.cs.core.ConfigString;
-import javacsw.services.cs.core.JConfigDataImpl;
 import scala.Unit;
 
 import java.io.File;
@@ -14,7 +13,8 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Java asynchronous interface to ConfigData
  */
-public interface JConfigData {
+@SuppressWarnings("unused")
+public interface IConfigData {
     /**
      * Returns a future string representation of the data (assuming it is not binary data)
      * @return the future string
