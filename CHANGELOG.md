@@ -2,8 +2,24 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+### Added
+- Added [BlockingConfigManager](src/main/scala/csw/services/cs/core/BlockingConfigManager.scala) 
+  (a blocking API to the Config Service)
+
+- Added [PrefixedActorLogging](src/main/scala/csw/services/log/PrefixedActorLogging.scala) to use in place
+  of ActorLogging, to include a component's subsystem and prefix in log messages (subsystem is part of a component's prefix)
+  
+- Added [HcdControllerClient](src/main/scala/csw/services/ccs/HcdControllerClient.scala) 
+  and [AssemblyControllerClient](src/main/scala/csw/services/ccs/AssemblyControllerClient.scala) classes, as
+  an alternative API that makes clear which methods can be call (or which messages can be sent to the actor)
+
 ### Changed
+- Renamed Config Service Java interfaces to start with I instead of J, to be more like the other Java APIs
+
 - Reimplemented parts of the configuration classes, adding Scala and Java DSLs (See [util](util))
+
+- Changed most log messages to debug level, rather than info
 
 ### Added
 - Added new [Alarm Service](alarms) and [command line app](apps/asConsole).

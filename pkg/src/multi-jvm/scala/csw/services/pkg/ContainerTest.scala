@@ -5,7 +5,7 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import csw.services.ccs.{AssemblyClient, BlockingAssemblyClient, CommandStatus}
+import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient, CommandStatus}
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
@@ -74,7 +74,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
             expectMsgType[CommandStatus.Completed]
 
             // Use client wrapper
-            val client = AssemblyClient(assembly1)
+            val client = AssemblyControllerClient(assembly1)
             assert(Await.result(client.submit(TestConfig.testConfigArg), timeout.duration).isSuccess)
 
             // Test dummy request and blocking client

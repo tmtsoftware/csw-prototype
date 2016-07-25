@@ -16,7 +16,7 @@ import scala.concurrent.{Await, Future}
  * @param assemblyController the actor for the target assembly
  * @param timeout amount of time to wait for a command to complete before reporting an error
  */
-case class AssemblyClient(assemblyController: ActorRef)(implicit val timeout: Timeout, context: ActorRefFactory) {
+case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
   /**
    * Submits the given config to the assembly and returns the future (final) command status
@@ -50,7 +50,7 @@ case class AssemblyClient(assemblyController: ActorRef)(implicit val timeout: Ti
  *
  * @param client a client for the target assembly
  */
-case class BlockingAssemblyClient(client: AssemblyClient)(implicit val timeout: Timeout, context: ActorRefFactory) {
+case class BlockingAssemblyClient(client: AssemblyControllerClient)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
   def submit(config: SetupConfigArg): CommandStatus = {
     Await.result(client.submit(config), timeout.duration)
