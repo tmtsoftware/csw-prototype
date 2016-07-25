@@ -1,6 +1,7 @@
 package csw.services.cs.core
 
 import java.io.File
+import java.util.Date
 
 import akka.actor.ActorSystem
 import org.scalatest.FunSuite
@@ -28,10 +29,17 @@ object ConfigManagerTestHelper extends FunSuite {
   def runTests(cm: ConfigManager, oversize: Boolean)(implicit system: ActorSystem): Unit = {
     val manager = BlockingConfigManager(cm)
     // Add, then update the file twice
+    val date1 = new Date()
+    Thread.sleep(100)
     val createId1 = manager.create(path1, ConfigData(contents1), oversize, comment1)
     val createId2 = manager.createOrUpdate(path2, ConfigData(contents1), oversize, comment1)
+    val date1a = new Date()
+    Thread.sleep(100) // make sure date is different
     val updateId1 = manager.update(path1, ConfigData(contents2), comment2)
+    val date2 = new Date()
+    Thread.sleep(100) // make sure date is different
     val updateId2 = manager.createOrUpdate(path1, ConfigData(contents3), oversize, comment3)
+    val date3 = new Date()
 
     // Check that we can access each version
     assert(manager.get(path1).get.toString == contents3)
@@ -40,6 +48,11 @@ object ConfigManagerTestHelper extends FunSuite {
     assert(manager.get(path1, Some(updateId2)).get.toString == contents3)
     assert(manager.get(path2).map(_.toString).get.toString == contents1)
     assert(manager.get(path2, Some(createId2)).get.toString == contents1)
+
+    assert(manager.get(path1, date1).get.toString == contents1)
+    assert(manager.get(path1, date1a).get.toString == contents1)
+    assert(manager.get(path1, date2).get.toString == contents2)
+    assert(manager.get(path1, date3).get.toString == contents3)
 
     val historyList1 = manager.history(path1)
     assert(historyList1.size == 3)
