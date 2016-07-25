@@ -12,7 +12,6 @@ import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 object ConfigServiceHttpServerTests {
   LocationService.initInterface()
@@ -26,8 +25,6 @@ object ConfigServiceHttpServerTests {
 class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.system)
     with ImplicitSender with FunSuiteLike with BeforeAndAfterAll with LazyLogging {
 
-  import system.dispatcher
-
   implicit val timeout: Timeout = 60.seconds
 
   test("Test the ConfigServiceClent, storing and retrieving some files") {
@@ -38,14 +35,11 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
     // (In normal operations, this server would already be running)
     val annexServer = ConfigServiceAnnexServer()
     try {
-      val f = for {
-        _ <- runTests(settings, oversize = false)
-        _ <- runTests2(settings2, oversize = false)
+      runTests(settings, oversize = false)
+      runTests2(settings2, oversize = false)
 
-        _ <- runTests(settings, oversize = true)
-        _ <- runTests2(settings2, oversize = true)
-      } yield ()
-      Await.ready(f, 60.seconds)
+      runTests(settings, oversize = true)
+      runTests2(settings2, oversize = true)
     } finally {
       logger.debug("Shutting down annex server")
       annexServer.shutdown()
@@ -53,7 +47,7 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
   }
 
   // Runs the tests for the config service, using the given oversize option.
-  def runTests(settings: ConfigServiceSettings, oversize: Boolean): Future[Unit] = {
+  def runTests(settings: ConfigServiceSettings, oversize: Boolean): Unit = {
     logger.debug(s"--- Testing config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
@@ -64,16 +58,13 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
     val server = ConfigServiceHttpServer(csActor, settings)
     val csClient = ConfigServiceHttpClient(settings)
 
-    for {
-      _ <- ConfigManagerTestHelper.runTests(csClient, oversize)
-    } yield {
-      system.stop(csActor)
-      server.shutdown()
-    }
+    ConfigManagerTestHelper.runTests(csClient, oversize)
+    system.stop(csActor)
+    server.shutdown()
   }
 
   // Verify that a second config service can still see all the files that were checked in by the first
-  def runTests2(settings: ConfigServiceSettings, oversize: Boolean): Future[Unit] = {
+  def runTests2(settings: ConfigServiceSettings, oversize: Boolean): Unit = {
     logger.debug(s"--- Verify config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
@@ -85,10 +76,7 @@ class ConfigServiceHttpServerTests extends TestKit(ConfigServiceHttpServerTests.
     val csActor = system.actorOf(ConfigServiceActor.props(manager))
     val csClient = ConfigServiceClient(csActor, settings.name)
 
-    for {
-      _ <- ConfigManagerTestHelper.runTests2(csClient, oversize)
-    } yield {
-      system.stop(csActor)
-    }
+    ConfigManagerTestHelper.runTests2(csClient, oversize)
+    system.stop(csActor)
   }
 }

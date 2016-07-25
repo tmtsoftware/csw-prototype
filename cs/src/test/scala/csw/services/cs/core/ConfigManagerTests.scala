@@ -3,11 +3,8 @@ package csw.services.cs.core
 import akka.actor.ActorSystem
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
-import csw.services.cs.akka.{TestRepo, TestSvnRepo, ConfigServiceSettings, TestGitRepo}
+import csw.services.cs.akka.{TestRepo, ConfigServiceSettings}
 import org.scalatest.FunSuite
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 /**
  * Tests the ConfigManager class
@@ -35,9 +32,8 @@ class ConfigManagerTests extends FunSuite with LazyLogging {
     val settings = ConfigServiceSettings(ActorSystem())
     val manager = TestRepo.getTestRepoConfigManager(settings)
 
-    val result = ConfigManagerTestHelper.runTests(manager, oversize)
+    ConfigManagerTestHelper.runTests(manager, oversize)
 
-    Await.result(result, 30.seconds)
     if (annexServer.isDefined) {
       logger.debug("Shutting down annex server")
       annexServer.get.shutdown()

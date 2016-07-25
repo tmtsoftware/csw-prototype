@@ -7,7 +7,7 @@ import csw.services.cs.core.svn.SvnConfigManager;
 import javacsw.services.cs.IBlockingConfigManager;
 import javacsw.services.cs.IConfigManager;
 import javacsw.services.cs.core.JBlockingConfigManager;
-import javacsw.services.cs.core.JConfigManagerImpl;
+import javacsw.services.cs.core.JConfigManager;
 
 import java.io.File;
 import java.util.Objects;
@@ -52,6 +52,6 @@ public class JTestSvnRepo {
       ConfigServiceSettings settings = ConfigServiceSettings.getConfigServiceSettings(system);
       resetRepo(settings, system);
       SvnConfigManager manager = SvnConfigManager.apply(settings.mainRepository(), settings.name(), system);
-      return new JConfigManagerImpl(manager, system);
+      return new JConfigManager(manager, system);
   }
 }

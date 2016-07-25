@@ -15,7 +15,7 @@ import scala.compat.java8.OptionConverters._
 /**
  * Non-blocking Java API for the config service.
  */
-class JConfigManagerImpl(manager: ConfigManager)(implicit context: ActorRefFactory)
+class JConfigManager(manager: ConfigManager)(implicit context: ActorRefFactory)
     extends IConfigManager {
 
   import context.dispatcher

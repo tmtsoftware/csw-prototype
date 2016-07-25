@@ -3,20 +3,21 @@
 <!-- A Logback config file that logs to the console and also to a file in JSON format for use by Logstash -->
 <!-- Logging to a file requires setting the system property 'application-name' -->
 <configuration>
-    <logger name="com.prosysopc.ua" level="INFO"/>
-    <logger name="org.opcfoundation.ua" level="ERROR"/>
     <logger name="akka" level="INFO"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="akka.remote" level="ERROR"/>
-    <logger name="spray" level="INFO"/>
+    <logger name="com.digitalpetri.opcua" level="ERROR"/>
+    <logger name="com.google.inject" level="ERROR"/>
+    <logger name="com.prosysopc.ua" level="INFO"/>
+    <logger name="com.romix.akka.serialization.kryo" level="WARN"/>
+    <logger name="com.typesafe" level="INFO"/>
     <logger name="csw" level="INFO"/>
-    <logger name="org.hornetq" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="javax.jmdns" level="ERROR"/>
-    <logger name="com.google.inject" level="ERROR"/>
-    <logger name="com.digitalpetri.opcua" level="ERROR"/>
-    <logger name="com.romix.akka.serialization.kryo" level="WARN"/>
+    <logger name="org.hornetq" level="ERROR"/>
+    <logger name="org.opcfoundation.ua" level="ERROR"/>
     <logger name="redis.actors" level="ERROR"/>
+    <logger name="spray" level="INFO"/>
 
     <if condition='isDefined("application-name")'>
         <then>

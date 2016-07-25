@@ -64,8 +64,8 @@ case class BlockingConfigManager(manager: ConfigManager, timeout: Duration = 30.
    *           (by default the latest version is returned)
    * @return an object that can be used to access the file's data, if found
    */
-  def get(path: File, id: Option[ConfigId] = None): Option[ConfigData] =
-    Await.result(manager.get(path, id), timeout)
+  def get(path: File, id: Option[ConfigId] = None): Option[BlockingConfigData] =
+    Await.result(manager.get(path, id), timeout).map(BlockingConfigData(_))
 
   /**
    * Gets the file as it existed on or before the given date
@@ -73,8 +73,8 @@ case class BlockingConfigManager(manager: ConfigManager, timeout: Duration = 30.
    * @param date the target date
    * @return an object that can be used to access the file's data, if found
    */
-  def get(path: File, date: Date): Option[ConfigData] =
-    Await.result(manager.get(path, date), timeout)
+  def get(path: File, date: Date): Option[BlockingConfigData] =
+    Await.result(manager.get(path, date), timeout).map(BlockingConfigData(_))
 
   /**
    * Returns true if the given path exists and is being managed
@@ -136,7 +136,12 @@ case class BlockingConfigManager(manager: ConfigManager, timeout: Duration = 30.
    * @param path the file path relative to the repository root
    * @return an object that can be used to access the file's data, if found
    */
-  def getDefault(path: File): Option[ConfigData] =
-    Await.result(manager.getDefault(path), timeout)
+  def getDefault(path: File): Option[BlockingConfigData] =
+    Await.result(manager.getDefault(path), timeout).map(BlockingConfigData(_))
 }
 
+case class BlockingConfigData(configData: ConfigData, timeout: Duration = 30.seconds)(implicit context: ActorRefFactory) {
+  override def toString: String = Await.result(configData.toFutureString, timeout)
+
+  def writeToFile(file: File): Unit = Await.result(configData.writeToFile(file), timeout)
+}

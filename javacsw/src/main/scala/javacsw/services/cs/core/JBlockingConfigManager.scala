@@ -37,14 +37,14 @@ case class JBlockingConfigManager(manager: ConfigManager)(implicit context: Acto
 
   override def get(path: File): Optional[IBlockingConfigData] = {
     Await.result(manager.get(path), timeout).map { c =>
-      val result: IBlockingConfigData = JBlockingConfigDataImpl(c)
+      val result: IBlockingConfigData = JBlockingConfigData(c)
       result
     }.asJava
   }
 
   override def get(path: File, id: ConfigId): Optional[IBlockingConfigData] = {
     Await.result(manager.get(path, Some(id)), timeout).map { c =>
-      val result: IBlockingConfigData = JBlockingConfigDataImpl(c)
+      val result: IBlockingConfigData = JBlockingConfigData(c)
       result
     }.asJava
   }
@@ -102,7 +102,7 @@ case class JBlockingConfigManager(manager: ConfigManager)(implicit context: Acto
 
 }
 
-case class JBlockingConfigDataImpl(configData: ConfigData)(implicit context: ActorRefFactory) extends IBlockingConfigData {
+case class JBlockingConfigData(configData: ConfigData)(implicit context: ActorRefFactory) extends IBlockingConfigData {
   private val timeout = 30.seconds
 
   override def toString: String = Await.result(configData.toFutureString, timeout)

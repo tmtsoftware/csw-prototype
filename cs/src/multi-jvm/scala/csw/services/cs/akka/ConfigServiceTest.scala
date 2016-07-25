@@ -83,7 +83,6 @@ class TestSpec extends MultiNodeSpec(TestConfig) with STMultiNodeSpec with Impli
 
     val csClient = ConfigServiceClient(configServiceActor)
 
-    val result = ConfigManagerTestHelper.runTests(csClient, oversize)
-    Await.result(result, 30.seconds)
+    ConfigManagerTestHelper.runTests(csClient, oversize)
   }
 }
