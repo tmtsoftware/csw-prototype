@@ -13,6 +13,9 @@ All notable changes to this project will be documented in this file.
 - Added [HcdControllerClient](src/main/scala/csw/services/ccs/HcdControllerClient.scala) 
   and [AssemblyControllerClient](src/main/scala/csw/services/ccs/AssemblyControllerClient.scala) classes, as
   an alternative API that makes clear which methods can be call (or which messages can be sent to the actor)
+  
+- Add `get(path, date)` method to [ConfigManager](src/main/scala/csw/services/cs/core/ConfigManager.scala) and
+  all Config Service APIs, so that you can get the version of a file for a given date
 
 ### Changed
 - Renamed Config Service Java interfaces to start with I instead of J, to be more like the other Java APIs
