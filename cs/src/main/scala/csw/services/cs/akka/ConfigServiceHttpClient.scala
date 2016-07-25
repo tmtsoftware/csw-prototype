@@ -1,6 +1,7 @@
 package csw.services.cs.akka
 
 import java.io.{File, IOException}
+import java.util.Date
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
@@ -16,7 +17,7 @@ import csw.services.cs.core._
 import org.slf4j.LoggerFactory
 import spray.json._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit system: ActorSystem)
     extends ConfigManager with ConfigServiceJsonFormats {
@@ -88,6 +89,22 @@ case class ConfigServiceHttpClient(settings: ConfigServiceSettings)(implicit sys
       makeUri("/get", "path" -> path.toString, "id" -> id.get.id)
     else
       makeUri("/get", "path" -> path.toString)
+    logger.debug(s"$uri")
+
+    implicit val materializer = ActorMaterializer()
+    val connection = Http().outgoingConnection(host, port)
+    val request = HttpRequest(GET, uri = uri)
+
+    for {
+      result <- sendRequest(request, connection)
+    } yield if (result.status == StatusCodes.OK)
+      Some(ConfigData(result.entity.dataBytes))
+    else None
+  }
+
+  // Note: Could let the parent trait handle this, if we wanted to, however this should be more efficient
+  override def get(path: File, date: Date)(implicit ec: ExecutionContext): Future[Option[ConfigData]] = {
+    val uri = makeUri("/get", "path" -> path.toString, "date" -> date.getTime.toString)
     logger.debug(s"$uri")
 
     implicit val materializer = ActorMaterializer()

@@ -13,7 +13,9 @@ however the ConfigServiceClient wrapper class implements a
 and provides a somewhat simpler API.
 
 The ConfigManager API is non-blocking (returns future values). If this is inconvenient,
-you can always wrap the calls in Await.result(...). The Java API also contains a blocking API.
+you can always wrap the calls in Await.result(...). Blocking APIs are available for
+convenience. See [BlockingConfigManager](src/main/scala/csw/services/cs/core/BlockingConfigManager.scala) 
+and [JBlockingConfigManager](src/main/scala/javacsw/services/cs/core/JBlockingConfigManager.scala).
 
 The data for the files being stored in the config service is passed as a
 [ConfigData](src/main/scala/csw/services/cs/core/ConfigManager.scala) object,

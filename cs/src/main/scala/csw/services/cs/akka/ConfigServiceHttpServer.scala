@@ -2,6 +2,7 @@ package csw.services.cs.akka
 
 import java.io.File
 import java.net.{InetSocketAddress, URI}
+import java.util.Date
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
@@ -16,6 +17,8 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import spray.json._
+
+import scala.util.Try
 
 case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: ConfigServiceSettings, registerWithLoc: Boolean = false) extends ConfigServiceJsonFormats {
   val logger = Logger(LoggerFactory.getLogger(ConfigServiceHttpServer.getClass))
@@ -86,14 +89,17 @@ case class ConfigServiceHttpServer(configServiceActor: ActorRef, settings: Confi
     }
   }
 
-  // Gets the file from the config service with the given path and id (optional)
+  // Gets the file from the config service with the given path and id or date (optional)
+  // If the date is given, it should be the number of secs since 1970 GMT.
   private def get(uri: Uri): Future[HttpResponse] = {
     val pathOpt = uri.query().get("path")
     val idOpt = uri.query().get("id").map(ConfigId(_))
+    def getDate(s: String): Date = Try(new Date(s.toLong)).getOrElse(new Date)
+    val dateOpt = uri.query().get("date").map(getDate)
     pathOpt match {
       case Some(path) =>
         val result = for {
-          result <- client.get(new File(path), idOpt)
+          result <- if (dateOpt.nonEmpty) client.get(new File(path), dateOpt.get) else client.get(new File(path), idOpt)
         } yield {
           result match {
             case Some(configData) =>
