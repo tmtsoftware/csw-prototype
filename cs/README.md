@@ -89,11 +89,7 @@ The default config service name and the location of the git or svn repository is
 Alternatively you can specify a different config file on the command line in the same format.
 You can also override the values with system properties. For example:
 
-```
-     cs -Dcsw.services.cs.name=MyConfigServiceName
-        -Dcsw.services.cs.main-repository=http://myHost/MyMainRepo/
-        -Dcsw.services.cs.local-repository=/myPath/MyLocalRepo
-```
+     cs -Dcsw.services.cs.name=MyConfigServiceName -Dcsw.services.cs.main-repository=http://myHost/MyMainRepo/
 
 Note that multiple config service instances may be running in the network, but the names an host:port combinations should
 each be unique. Only a single config service instance should access a given local repository.
@@ -116,6 +112,7 @@ The HTTP/REST interface to the command service follows the scala and java APIs:
 ---------|---------|-------------------------------------------|---------
 | POST   | /create | path=_filePath_, comment=_create+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /get    | path=_filePath_, id=_id_                  | Contents of file (current or version _id_)
+| GET    | /get    | path=_filePath_, date=milliseconds        | Contents of file (version from given data, in milliseconds since 1970)
 | PUT    | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
 | HEAD   | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
 | GET    | /list   |                                           | JSON list of available files
