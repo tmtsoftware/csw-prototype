@@ -7,7 +7,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.cs.akka.{ConfigServiceActor, ConfigServiceClient, ConfigServiceSettings, TestRepo}
+import csw.services.cs.akka._
 import csw.services.cs.core.ConfigData
 import csw.services.loc.Connection.HttpConnection
 import csw.services.loc.ConnectionType.HttpType
@@ -96,7 +96,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     val settings = ConfigServiceSettings(system)
     val manager = TestRepo.getTestRepoConfigManager(settings)
     val csActor = system.actorOf(ConfigServiceActor.props(manager, registerWithLocationService = true), name = "configService")
-    val csClient = ConfigServiceClient(csActor, settings.name)
+    val csClient = new BlockingConfigServiceClient(ConfigServiceClient(csActor, settings.name))
     val appConfigStr =
       s"""
         |$name {
@@ -104,7 +104,7 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
         |  port = $port
         |}
       """.stripMargin
-    Await.ready(csClient.create(new File(path), ConfigData(appConfigStr), oversize = false, "test"), timeout.duration)
+    csClient.create(new File(path), ConfigData(appConfigStr), oversize = false, "test")
 
     Future {
       TrackLocation.main(Array("--name", name, "--no-exit", path))

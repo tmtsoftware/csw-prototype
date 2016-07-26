@@ -3,7 +3,7 @@ package javacsw.services.kvs
 import java.util.Optional
 
 import akka.actor.ActorRefFactory
-import csw.services.kvs._
+import csw.services.events._
 import csw.util.config.Events.StatusEvent
 
 import scala.concurrent.duration.FiniteDuration

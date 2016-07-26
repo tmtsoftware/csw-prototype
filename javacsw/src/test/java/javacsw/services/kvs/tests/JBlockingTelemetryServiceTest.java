@@ -1,31 +1,17 @@
 package javacsw.services.kvs.tests;
 
-import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
-import csw.services.kvs.KvsSettings;
+import csw.services.events.KvsSettings;
 import csw.util.config.DoubleKey;
-import csw.util.config.Events.StatusEvent;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.kvs.IBlockingTelemetryService;
 import javacsw.services.kvs.IKeyValueStore;
-import javacsw.services.kvs.JTelemetrySubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertTrue;
 

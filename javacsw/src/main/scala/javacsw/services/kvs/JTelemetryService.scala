@@ -4,7 +4,7 @@ import java.util.Optional
 import java.util.concurrent.CompletableFuture
 
 import akka.actor.ActorRefFactory
-import csw.services.kvs.{Implicits, JAbstractSubscriber, KvsSettings, TelemetryService}
+import csw.services.events.{Implicits, JAbstractSubscriber, KvsSettings, TelemetryService}
 import csw.util.config.Events._
 
 import scala.collection.JavaConverters._

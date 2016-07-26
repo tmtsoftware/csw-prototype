@@ -4,8 +4,8 @@ import java.util.Optional
 import java.util.concurrent.CompletableFuture
 
 import akka.actor.ActorRefFactory
-import csw.services.kvs.KeyValueStore.KvsFormatter
-import csw.services.kvs.{Implicits, KeyValueStore, KvsSettings}
+import csw.services.events.KeyValueStore.KvsFormatter
+import csw.services.events.{Implicits, KeyValueStore, KvsSettings}
 import csw.util.config.Configurations._
 import csw.util.config.Events._
 import csw.util.config.StateVariable._

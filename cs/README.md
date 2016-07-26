@@ -68,7 +68,8 @@ Convenience Methods
 -------------------
 
 If there is a config service actor running already and you just want to get the latest version of
-a config file (in HOCON format), there is a convenience method:
+a config file (in HOCON format), there is a convenience method in the
+[ConfigServiceClient](src/main/scala/csw/services/cs/akka/ConfigServiceClient.scala) class:
 
 ```
     val configOpt = Await.result(ConfigServiceClient.getConfigFromConfigService(csName, file), timeout.duration)
@@ -76,7 +77,8 @@ a config file (in HOCON format), there is a convenience method:
 ```
 
 This looks up the config service that was registered with the name `csName` in the location service and then
-gets the contents of the given file, returning an Option[Config], if successful.
+gets the contents of the given file, returning an Option[Config], if successful. There are also methods available
+to get the contents of a file stored in the Config Service as a string or read it as a file or stream.
 
 
 Config Service Application

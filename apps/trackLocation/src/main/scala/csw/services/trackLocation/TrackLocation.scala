@@ -6,7 +6,7 @@ import java.net.ServerSocket
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
-import csw.services.cs.akka.{ConfigServiceClient, ConfigServiceSettings}
+import csw.services.cs.akka.{BlockingConfigServiceClient, ConfigServiceSettings}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 
 import scala.concurrent.Await
@@ -105,7 +105,7 @@ object TrackLocation extends App {
       case None    => ConfigServiceSettings(system).name
     }
 
-    val configOpt = Await.result(ConfigServiceClient.getConfigFromConfigService(name, file), timeout.duration)
+    val configOpt = BlockingConfigServiceClient.getConfigFromConfigService(name, file)
     if (configOpt.isEmpty)
       error(s"$file not found locally or from the config service")
     configOpt.get

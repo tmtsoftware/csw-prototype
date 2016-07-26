@@ -3,8 +3,8 @@ package javacsw.services.kvs
 import java.util.Optional
 
 import akka.actor.ActorRefFactory
-import csw.services.kvs.KeyValueStore.KvsFormatter
-import csw.services.kvs.{BlockingKeyValueStore, Implicits, KvsSettings}
+import csw.services.events.KeyValueStore.KvsFormatter
+import csw.services.events.{BlockingKeyValueStore, Implicits, KvsSettings}
 import csw.util.config.Configurations.{ControlConfigArg, SequenceConfigArg, _}
 import csw.util.config.Events.{EventServiceEvent, ObserveEvent, StatusEvent, SystemEvent}
 import csw.util.config.StateVariable._

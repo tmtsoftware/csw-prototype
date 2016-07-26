@@ -6,8 +6,8 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
-import csw.services.event.EventService;
-import csw.services.event.EventServiceSettings;
+import csw.services.event_old.EventService;
+import csw.services.event_old.EventServiceSettings;
 import csw.util.config.DoubleKey;
 import csw.util.config.Events.ObserveEvent;
 import csw.util.config.IntArray;
@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.event.tests.JEventPubSubTest.Msg.*;
 import static javacsw.util.config.JItems.*;
-import static javacsw.util.config.JConfigDSL.*;
 
 
 /**

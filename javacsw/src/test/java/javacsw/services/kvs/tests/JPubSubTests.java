@@ -1,21 +1,11 @@
 package javacsw.services.kvs.tests;
 
 import akka.actor.*;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
-import csw.services.kvs.KvsSettings;
-import csw.util.config.Configurations.*;
 import csw.util.config.DoubleKey;
-import javacsw.services.kvs.IKeyValueStore;
-import javacsw.services.kvs.JSubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
-import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
-import akka.japi.Creator;
 
 import java.util.concurrent.TimeUnit;
 

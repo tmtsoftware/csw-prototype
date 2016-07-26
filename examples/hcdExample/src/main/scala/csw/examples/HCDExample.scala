@@ -2,7 +2,7 @@ package csw.examples
 
 import akka.actor.{Actor, Cancellable, Props}
 import csw.services.ccs.HcdController
-import csw.services.event.{EventService, EventServiceSettings, EventSubscriber}
+import csw.services.event_old.{EventService, EventServiceSettings, EventSubscriber}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}

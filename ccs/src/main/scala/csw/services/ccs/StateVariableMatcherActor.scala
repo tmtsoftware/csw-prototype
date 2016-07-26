@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
-import csw.services.kvs.{Implicits, KvsSettings, StateVariableStore, Subscriber}
+import csw.services.events.{Implicits, KvsSettings, StateVariableStore, Subscriber}
 import Implicits._
 import csw.util.config.StateVariable
 import csw.util.config.StateVariable.{CurrentState, DemandState, Matcher}

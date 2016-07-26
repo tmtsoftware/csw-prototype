@@ -1,7 +1,7 @@
 package javacsw.services.kvs;
 
 import akka.actor.ActorRefFactory;
-import csw.services.kvs.KvsSettings;
+import csw.services.events.KvsSettings;
 import csw.util.config.Configurations;
 import csw.util.config.Events;
 import csw.util.config.StateVariable;

@@ -1,7 +1,7 @@
 package javacsw.services.event
 
 import akka.actor.AbstractActor
-import csw.services.event.EventSubscriber
+import csw.services.event_old.EventSubscriber
 
 /**
  * Java API for Scala EventSubscriber trait

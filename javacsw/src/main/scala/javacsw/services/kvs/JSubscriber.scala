@@ -1,6 +1,6 @@
 package javacsw.services.kvs
 
-import csw.services.kvs._
+import csw.services.events._
 import csw.util.config.Configurations._
 import csw.util.config.Events._
 import csw.util.config.StateVariable._
