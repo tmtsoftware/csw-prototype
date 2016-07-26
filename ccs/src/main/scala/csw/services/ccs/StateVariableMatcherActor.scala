@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.util.Timeout
-import csw.services.events.{Implicits, KvsSettings, StateVariableStore, Subscriber}
+import csw.services.events.{EventServiceSettings, Implicits, StateVariableStore, Subscriber}
 import Implicits._
 import csw.util.config.StateVariable
 import csw.util.config.StateVariable.{CurrentState, DemandState, Matcher}
@@ -48,7 +48,7 @@ class StateVariableMatcherActor(demands: List[DemandState], replyTo: ActorRef, r
 
   // Subscribe only sends us a message if the value changes. We also need to
   // check if the value already matches the demand.
-  val svs = StateVariableStore(KvsSettings(context.system))
+  val svs = StateVariableStore(EventServiceSettings(context.system))
   keys.foreach { k =>
     svs.get(k).onSuccess {
       case Some(v) => self ! v

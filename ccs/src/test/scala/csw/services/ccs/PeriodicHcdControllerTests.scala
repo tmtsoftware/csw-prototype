@@ -58,11 +58,11 @@ object PeriodicHcdControllerTests {
     import TestWorker._
     import context.dispatcher
 
-    val settings = KvsSettings(context.system)
+    val settings = EventServiceSettings(context.system)
     val svs = StateVariableStore(settings)
     val position = StringKey("position")
 
-    // Simulate getting the initial state from the device and publishing to the kvs
+    // Simulate getting the initial state from the device and publishing to the event service
     val initialState = SetupConfig(testPrefix).add(position.set("None"))
     svs.set(initialState)
 
@@ -76,7 +76,7 @@ object PeriodicHcdControllerTests {
 
       case WorkDone(config) =>
         log.debug(s"Done processing $config")
-        // Simulate getting the current value from the device and publishing it to the kvs
+        // Simulate getting the current value from the device and publishing it to the event service
         log.debug(s"Publishing $config")
         svs.set(config)
 

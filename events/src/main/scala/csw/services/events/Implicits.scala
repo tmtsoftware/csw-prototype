@@ -1,7 +1,7 @@
 package csw.services.events
 
 import akka.util.ByteString
-import csw.services.events.KeyValueStore.KvsFormatter
+import csw.services.events.EventService.EventFormatter
 import csw.util.config.StateVariable.{CurrentState, DemandState}
 import csw.util.config.Configurations._
 import csw.util.config.Events._
@@ -13,7 +13,7 @@ import csw.util.config.StateVariable._
  * Defines the automatic conversion to a ByteString and back again for commonly used value types
  */
 trait Implicits extends ByteStringDeserializerDefault {
-  implicit val statusEventKvsFormatter = new KvsFormatter[StatusEvent] {
+  implicit val statusEventKvsFormatter = new EventFormatter[StatusEvent] {
     def serialize(e: StatusEvent): ByteString = {
       ByteString(write(e))
     }
@@ -25,7 +25,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val observeEventKvsFormatter = new KvsFormatter[ObserveEvent] {
+  implicit val observeEventKvsFormatter = new EventFormatter[ObserveEvent] {
     def serialize(e: ObserveEvent): ByteString = {
       ByteString(write(e))
     }
@@ -37,7 +37,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val systemEventKvsFormatter = new KvsFormatter[SystemEvent] {
+  implicit val systemEventKvsFormatter = new EventFormatter[SystemEvent] {
     def serialize(e: SystemEvent): ByteString = {
       ByteString(write(e))
     }
@@ -49,7 +49,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val setupConfigKvsFormatter = new KvsFormatter[SetupConfig] {
+  implicit val setupConfigKvsFormatter = new EventFormatter[SetupConfig] {
     def serialize(e: SetupConfig): ByteString = {
       ByteString(write(e))
     }
@@ -61,7 +61,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val observeConfigKvsFormatter = new KvsFormatter[ObserveConfig] {
+  implicit val observeConfigKvsFormatter = new EventFormatter[ObserveConfig] {
     def serialize(e: ObserveConfig): ByteString = {
       ByteString(write(e))
     }
@@ -73,7 +73,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val currentStateKvsFormatter = new KvsFormatter[CurrentState] {
+  implicit val currentStateKvsFormatter = new EventFormatter[CurrentState] {
     def serialize(e: CurrentState): ByteString = {
       ByteString(write(e))
     }
@@ -85,7 +85,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val demandStateKvsFormatter = new KvsFormatter[DemandState] {
+  implicit val demandStateKvsFormatter = new EventFormatter[DemandState] {
     def serialize(e: DemandState): ByteString = {
       ByteString(write(e))
     }
@@ -97,7 +97,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val stateVariableKvsFormatter = new KvsFormatter[StateVariable] {
+  implicit val stateVariableKvsFormatter = new EventFormatter[StateVariable] {
     def serialize(e: StateVariable): ByteString = {
       ByteString(write(e))
     }
@@ -109,7 +109,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val setupConfigArgKvsFormatter = new KvsFormatter[SetupConfigArg] {
+  implicit val setupConfigArgKvsFormatter = new EventFormatter[SetupConfigArg] {
     def serialize(e: SetupConfigArg): ByteString = {
       ByteString(write(e))
     }
@@ -121,7 +121,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val observeConfigArgKvsFormatter = new KvsFormatter[ObserveConfigArg] {
+  implicit val observeConfigArgKvsFormatter = new EventFormatter[ObserveConfigArg] {
     def serialize(e: ObserveConfigArg): ByteString = {
       ByteString(write(e))
     }
@@ -133,7 +133,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val eventTypeKvsFormatter = new KvsFormatter[EventServiceEvent] {
+  implicit val eventTypeKvsFormatter = new EventFormatter[EventServiceEvent] {
     def serialize(e: EventServiceEvent): ByteString = {
       ByteString(write(e))
     }
@@ -145,7 +145,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val sequenceConfigKvsFormatter = new KvsFormatter[SequenceConfig] {
+  implicit val sequenceConfigKvsFormatter = new EventFormatter[SequenceConfig] {
     def serialize(e: SequenceConfig): ByteString = {
       ByteString(write(e))
     }
@@ -157,7 +157,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val controlConfigKvsFormatter = new KvsFormatter[ControlConfig] {
+  implicit val controlConfigKvsFormatter = new EventFormatter[ControlConfig] {
     def serialize(e: ControlConfig): ByteString = {
       ByteString(write(e))
     }
@@ -169,7 +169,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val sequenceConfigArgKvsFormatter = new KvsFormatter[SequenceConfigArg] {
+  implicit val sequenceConfigArgKvsFormatter = new EventFormatter[SequenceConfigArg] {
     def serialize(e: SequenceConfigArg): ByteString = {
       ByteString(write(e))
     }
@@ -181,7 +181,7 @@ trait Implicits extends ByteStringDeserializerDefault {
     }
   }
 
-  implicit val controlConfigArgKvsFormatter = new KvsFormatter[ControlConfigArg] {
+  implicit val controlConfigArgKvsFormatter = new EventFormatter[ControlConfigArg] {
     def serialize(e: ControlConfigArg): ByteString = {
       ByteString(write(e))
     }

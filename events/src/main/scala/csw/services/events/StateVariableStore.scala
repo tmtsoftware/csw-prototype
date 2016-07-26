@@ -11,7 +11,7 @@ object StateVariableStore {
 }
 
 /**
- * A class for working with state variables.
+ * A convenience class for working with state variables.
  * There are two types of state variables: ''demand'' and ''current''.
  * The demand value is the requested value, while the current value indicates the actual value.
  *
@@ -21,12 +21,12 @@ object StateVariableStore {
  * @param settings settings from reference.conf or application.conf with the Redis server host/port information
  * @param _system Akka environment needed by the implementation
  */
-case class StateVariableStore(settings: KvsSettings)(implicit _system: ActorRefFactory) {
+case class StateVariableStore(settings: EventServiceSettings)(implicit _system: ActorRefFactory) {
   import _system.dispatcher
   import StateVariableStore._
   import Implicits._
 
-  private val kvs = KeyValueStore[StateVariable](settings)
+  private val kvs = EventService[StateVariable](settings)
 
   // --- Set/Get Demand Values ---
 

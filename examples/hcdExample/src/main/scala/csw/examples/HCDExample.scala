@@ -2,7 +2,7 @@ package csw.examples
 
 import akka.actor.{Actor, Cancellable, Props}
 import csw.services.ccs.HcdController
-import csw.services.event_old.{EventService, EventServiceSettings, EventSubscriber}
+import csw.services.events.{EventServiceSettings, TelemetryService, TelemetrySubscriber}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
@@ -10,7 +10,7 @@ import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.config.Configurations.SetupConfig
-import csw.util.config.Events.SystemEvent
+import csw.util.config.Events.StatusEvent
 import csw.util.config.IntKey
 
 import scala.concurrent.duration._
@@ -55,7 +55,7 @@ object HCDExample {
     import TimeService._
 
     val rand = Random
-    val eventService = EventService(prefix, EventServiceSettings(context.system))
+    val eventService = TelemetryService(EventServiceSettings(context.system))
 
     // Create a subscriber to positions (just for test)
     context.actorOf(Props(classOf[EventPosSubscriber], "ev subscriber", prefix))
@@ -74,8 +74,8 @@ object HCDExample {
 
       case Tick =>
         val (az, el) = genPair(rand)
-        val event = SystemEvent(prefix).add(azKey.set(az)).add(elKey.set(el))
-        eventService.publish(event)
+        val event = StatusEvent(prefix).add(azKey.set(az)).add(elKey.set(el))
+        eventService.set(event)
     }
 
     def genPair(r: Random): (Int, Int) = {
@@ -85,7 +85,7 @@ object HCDExample {
     }
   }
 
-  class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
+  class EventPosSubscriber(name: String, prefix: String) extends TelemetrySubscriber {
 
     import PosGenerator._
 
@@ -97,15 +97,15 @@ object HCDExample {
     subscribe(prefix)
 
     def receive: Receive = {
-      case event: SystemEvent =>
+      case event: StatusEvent =>
         val az = event(azKey).head
         val el = event.get(elKey).get.head
-        log.debug(s"Coords: az: $az, el: $el")
+        log.info(s"Coords: az: $az, el: $el")
 
         count = count + 1
         if (count % 1000 == 0) {
           val t = Duration.between(startTime, Instant.now).getSeconds
-          log.debug(s"Received $count events from event service in $t seconds (${count.toFloat / t} per second)")
+          log.info(s"Received $count events from event service in $t seconds (${count.toFloat / t} per second)")
         }
     }
   }
@@ -117,8 +117,8 @@ class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with
   import HCDExample._
   import Supervisor._
 
-  log.debug(s"Freq: ${context.system.scheduler.maxFrequency}")
-  log.debug(s"My Rate: ${info.rate}")
+  log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
+  log.info(s"My Rate: ${info.rate}")
   lifecycle(supervisor)
 
   // Create an actor to generate position events
@@ -130,7 +130,7 @@ class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with
       rateItem <- sc.get(rateKey)
       rate <- rateItem.get(0)
     } {
-      log.debug(s"Set rate to $rate")
+      log.info(s"Set rate to $rate")
       posEventGenerator ! Rate(rate)
     }
   }

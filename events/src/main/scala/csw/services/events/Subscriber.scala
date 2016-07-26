@@ -1,7 +1,7 @@
 package csw.services.events
 
 import akka.actor.{AbstractActor, Actor, ActorLogging, ActorRef, Props}
-import csw.services.events.KeyValueStore.KvsFormatter
+import csw.services.events.EventService.EventFormatter
 import redis.actors.{DecodeReplies, RedisWorkerIO}
 import java.net.InetSocketAddress
 
@@ -15,9 +15,9 @@ import scala.annotation.varargs
  * Adds the ability to subscribe to objects of type T.
  * The subscribed actor will receive messages of type T for the given keys.
  */
-abstract class Subscriber[T: KvsFormatter] extends Actor with ActorLogging {
+abstract class Subscriber[T: EventFormatter] extends Actor with ActorLogging {
 
-  private val settings = KvsSettings(context.system)
+  private val settings = EventServiceSettings(context.system)
 
   private lazy val redis = context.actorOf(SubscribeActor.props[T](self, settings.redisHostname, settings.redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
@@ -51,9 +51,9 @@ abstract class Subscriber[T: KvsFormatter] extends Actor with ActorLogging {
  * Helper class For Java API: Adds the ability to subscribe to objects of type T.
  * The subscribed actor will receive messages of type T for the given keys.
  */
-abstract class JAbstractSubscriber[T: KvsFormatter] extends AbstractActor {
+abstract class JAbstractSubscriber[T: EventFormatter] extends AbstractActor {
 
-  private val settings = KvsSettings(context.system)
+  private val settings = EventServiceSettings(context.system)
 
   private lazy val redis = context.actorOf(SubscribeActor.props[T](self, settings.redisHostname, settings.redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
@@ -88,7 +88,7 @@ abstract class JAbstractSubscriber[T: KvsFormatter] extends AbstractActor {
 // -- Implementation --
 
 private object SubscribeActor {
-  def props[T: KvsFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int): Props =
+  def props[T: EventFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int): Props =
     Props(new SubscribeActor[T](subscriber, redisHost, redisPort))
 
   val dispatcherName = "rediscala.rediscala-client-worker-dispatcher"
@@ -97,7 +97,7 @@ private object SubscribeActor {
 // The actor that receives the messages from Redis.
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
-private class SubscribeActor[T: KvsFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int)
+private class SubscribeActor[T: EventFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int)
     extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) => ()) with DecodeReplies {
 
   /**
@@ -130,7 +130,7 @@ private class SubscribeActor[T: KvsFormatter](subscriber: ActorRef, redisHost: S
   }
 
   def onDecodedReply(reply: RedisReply) {
-    val formatter = implicitly[KvsFormatter[T]]
+    val formatter = implicitly[EventFormatter[T]]
 
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>

@@ -1,7 +1,7 @@
-Key/Value Store and Publish/Subscribe
-=====================================
+Event Service, Key/Value Store and Publish/Subscribe
+====================================================
 
-This module provides key/value store and publish/subscribe features based on Redis (http://redis.io/).
+This module provides event service, key/value store and publish/subscribe features based on [Redis](http://redis.io/).
 An event or configuration object can be set or published on a channel and subscribers
 can receive the events. The last n events are always saved for reference (where n is an optional argument).
 
@@ -13,11 +13,11 @@ Redis instance with the location service and then look up the host and port to u
 Telemetry Service
 -----------------
 
-The [Telemetry Service](src/main/scala/csw/services/kvs/TelemetryService.scala) defined in this project uses a
-`KeyValueStore` containing `StatusEvents`.
-The API is slightly simpler than the generic `KeyValueStore`, since the type is known
+The [Telemetry Service](src/main/scala/csw/services/events/TelemetryService.scala) defined in this project uses an
+[EventService](src/main/scala/csw/services/events/EventService.scala) containing `StatusEvents`.
+The API is slightly simpler than the generic `EventService`, since the type is known
 (Keys and not required, since it uses the event's prefix as a key).
 
-See the kvs [unit tests](src/test/scala/csw/services/kvs) for some examples of the usage in Scala
-(Or [here](https://github.com/tmtsoftware/csw/tree/master/javacsw/src/test/java/javacsw/services/kvs)
+See the [unit tests](src/test/scala/csw/services/events) for some examples of the usage in Scala
+(Or [here]../javacsw/src/test/java/javacsw/services/events)
 for the Java versions).

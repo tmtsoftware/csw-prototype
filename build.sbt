@@ -103,7 +103,7 @@ lazy val cs = project
 lazy val pkg = project
   .settings(defaultSettings: _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(log, loc, ccs, util, ts % "test", event_old % "test", events % "test")
+  .dependsOn(log, loc, ccs, util, ts % "test")
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
@@ -203,7 +203,7 @@ lazy val hcdExample = Project(id = "hcdExample", base = file("examples/hcdExampl
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("hcdExample", "HCD Example", "Simple HCD example application"): _*)
   .settings(mainClass in Compile := Some("csw.examples.HCDExampleApp"))
-  .dependsOn(pkg, ts, event_old)
+  .dependsOn(pkg, ts, events)
 
 // Assembly Example project
 lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples/assemblyExample"))

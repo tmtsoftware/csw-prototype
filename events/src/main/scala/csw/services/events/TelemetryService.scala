@@ -13,20 +13,20 @@ object TelemetryService {
 }
 
 /**
- * A class for publishing, getting and subscribing to telemetry.
+ * A convenience class for publishing, getting and subscribing to telemetry (StatusEvent objects).
  *
  * @param settings settings from reference.conf or application.conf with the Redis server host/port information
  * @param _system Akka environment needed by the implementation
  */
-case class TelemetryService(settings: KvsSettings)(implicit _system: ActorRefFactory) {
+case class TelemetryService(settings: EventServiceSettings)(implicit _system: ActorRefFactory) {
   import Implicits._
   import TelemetryService._
   import _system.dispatcher
 
-  private val kvs = KeyValueStore[StatusEvent](settings)
+  private val kvs = EventService[StatusEvent](settings)
 
   /**
-   * Sets the value for the status event (key is based on the event's prefix)
+   * Sets (and publishes) the value for the status event (key is based on the event's prefix)
    *
    * @param status the value to store
    * @param history optional number of previous values to store

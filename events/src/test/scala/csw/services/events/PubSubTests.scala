@@ -46,8 +46,8 @@ object PubSubTests {
 
   // A test class that publishes configs
   case class TestPublisher(caller: ActorRef, numSecs: Int) extends Actor with ActorLogging {
-    val settings = KvsSettings(context.system)
-    val kvs = KeyValueStore[SetupConfig](settings)
+    val settings = EventServiceSettings(context.system)
+    val kvs = EventService[SetupConfig](settings)
     val prefix = "tcs.mobie.red.dat.exposureInfo"
     val expTime = 1.0
     var nextId = 0

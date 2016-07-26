@@ -125,7 +125,7 @@ trait PeriodicHcdController {
   /**
    * Periodic method to be implemented by the HCD or assembly.
    * This method can use the nextConfig method to pop the next config from the queue
-   * and the key/value store API (kvs) to set the demand and current values.
+   * and the EventService API (events) to set the demand and current values.
    */
   protected def process(): Unit
 

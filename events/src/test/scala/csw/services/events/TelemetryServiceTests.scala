@@ -30,7 +30,7 @@ class TelemetryServiceTests
   import TelemetryServiceTests._
   import system.dispatcher
 
-  val settings = KvsSettings(system)
+  val settings = EventServiceSettings(system)
   val ts = TelemetryService(settings)
   implicit val timeout = Timeout(5.seconds)
   val bts = BlockingTelemetryService(ts)
