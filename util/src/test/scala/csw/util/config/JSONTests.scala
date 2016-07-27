@@ -25,7 +25,7 @@ object JSONTests extends DefaultJsonProtocol {
           val units = ConfigJSON.unitsFormat.read(u)
           val value = v.map(MyData2.myData2Format.read)
           GenericItem[MyData2]("MyData2", keyName, value, units)
-        case _ => throw new DeserializationException("Color expected")
+        case _ => throw DeserializationException("Invalid JSON for GenericItem[MyData2]")
       }
     }
 
@@ -501,6 +501,26 @@ class JSONTests extends FunSpec {
       assert(sc1in(k1).head == m1)
 
       val sc2 = SetupConfig(ck).add(k1.set(m1))
+      assert(sc2 == sc1)
+    }
+  }
+
+  describe("Test Choice items") {
+    it("Should allow choice/enum values") {
+      val k1 = ChoiceKey("myChoice", Choices.get("A", "B", "C"))
+      val c1 = Choice("B")
+      val i1 = k1.set(c1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1(k1).head == c1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      //      info("sc1out: " + sc1out.prettyPrint)
+
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in(k1).head == c1)
+
+      val sc2 = SetupConfig(ck).add(k1.set(c1))
       assert(sc2 == sc1)
     }
   }

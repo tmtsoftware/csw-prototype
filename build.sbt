@@ -94,6 +94,7 @@ lazy val cs = project
   .settings(packageSettings("configService", "CSW Config Service", "Used to manage configuration files in a Git repository"): _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
   .dependsOn(log, loc, util, configServiceAnnex)
+  .enablePlugins(DockerPlugin)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaHttpSprayJson, jgit, svnkit, logback, akkaHttp, scopt) ++
       test(scalaTest, akkaTestKit, junit, akkaMultiNodeTest)
