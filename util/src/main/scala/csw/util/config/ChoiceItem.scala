@@ -18,9 +18,6 @@ case class Choice(name: String) {
  * Provides implicit conversion from String to Choice
  */
 object Choice {
-  // Used for serializing choices to JSON
-  // implicit def format = spray.json.DefaultJsonProtocol.jsonFormat1(Choice.apply)
-
   implicit def toChoice(name: String): Choice = new Choice(name)
 }
 
@@ -39,19 +36,6 @@ case class Choices(values: Set[Choice]) {
 object Choices {
   def get(values: String*) = new Choices(values.map(Choice(_)).toSet)
 }
-
-/*
-object ChoicesProtocol extends DefaultJsonProtocol {
-  implicit object ChoicesJsonFormat extends JsonFormat[Choices] {
-    def write(c: Choices) = c.values.toJson
-
-    def read(value: JsValue) = value match {
-      case JsArray(elements) => Choices(elements.map(_.convertTo[Choice]).toSet)
-      case _ => deserializationError("Choices expected")
-    }
-  }
-}
-*/
 
 /**
  * The type of a value for a ChoiceKey: One or more Choice objects
