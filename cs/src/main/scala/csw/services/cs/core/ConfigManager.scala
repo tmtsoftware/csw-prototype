@@ -1,7 +1,7 @@
 package csw.services.cs.core
 
 import java.io.{ByteArrayOutputStream, File, FileOutputStream, OutputStream}
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.util.Date
 
 import akka.NotUsed
@@ -231,7 +231,7 @@ trait ConfigData {
   def writeToFile(file: File)(implicit context: ActorRefFactory): Future[Unit] = {
     import context.dispatcher
     val path = file.toPath
-    val dir = path.getParent
+    val dir = Option(path.getParent).getOrElse(new File(".").toPath)
     if (!Files.isDirectory(dir))
       Files.createDirectories(dir)
 
@@ -301,11 +301,19 @@ case class ConfigBytes(bytes: Array[Byte]) extends ConfigData {
 }
 
 case class ConfigFile(file: File, chunkSize: Int = 4096) extends ConfigData {
-  override def source: Source[ByteString, NotUsed] = {
-    val mappedByteBuffer = FileUtils.mmap(file.toPath)
-    val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
-    Source.fromIterator(() => iterator)
-  }
+
+  // XXX Seems that Source is not serializable...
+  //  override def source: Source[ByteString, NotUsed] = {
+  //    val mappedByteBuffer = FileUtils.mmap(file.toPath)
+  //    val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, chunkSize)
+  //    Source.fromIterator(() => iterator)
+  //  }
+
+  private val bytes = Files.readAllBytes(Paths.get(file.getPath))
+
+  override def source: Source[ByteString, NotUsed] = Source(List(ByteString(bytes)))
+
+  override def toString: String = new String(bytes)
 }
 
 case class ConfigSource(override val source: Source[ByteString, Any]) extends ConfigData
