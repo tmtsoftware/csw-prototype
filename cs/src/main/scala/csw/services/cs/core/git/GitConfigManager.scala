@@ -150,7 +150,7 @@ class GitConfigManager(val git: Git, override val name: String)(implicit context
   import context.dispatcher
 
   // used to access the http server that manages oversize files
-  val annex = ConfigServiceAnnexClient
+  lazy val annex = ConfigServiceAnnexClient
 
   override def create(path: File, configData: ConfigData, oversize: Boolean, comment: String): Future[ConfigId] = {
     def createOversize(file: File): Future[ConfigId] = {

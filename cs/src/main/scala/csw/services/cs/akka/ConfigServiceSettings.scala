@@ -53,7 +53,7 @@ case class ConfigServiceSettings(config: Config) extends Extension {
   /**
    * If true, the config service http server is started
    */
-  val startHttpServer = config.hasPath(s"$prefix.http.interface")
+  val startHttpServer = config.getBoolean(s"$prefix.http.enabled")
 
   /**
    * The interface (hostname or IP) to listen on for the http server

@@ -107,7 +107,7 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
   import context.dispatcher
 
   // used to access the http server that manages oversize files
-  val annex = ConfigServiceAnnexClient
+  lazy val annex = ConfigServiceAnnexClient
 
   // Gets an object for accessing the svn repository (not reusing a single instance since not thread safe)
   private def getSvn: SVNRepository = {

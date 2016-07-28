@@ -10,6 +10,7 @@ import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
 import sbtunidoc.Plugin._
 import UnidocKeys._
+import com.typesafe.sbt.packager.docker._
 
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 
@@ -94,10 +95,20 @@ object Settings {
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
 
-  // Customize the Docker install
-  lazy val dockerSettings = Seq(
+  // Customize the Docker file for the Config Service (cs)
+  lazy val configServiceDockerSettings = Seq(
     maintainer := "TMT Software",
-    dockerExposedPorts := Seq(9000),
-    dockerBaseImage := "java:8"
+    // mDns port: 5353/udp, config service actor system port: 9999
+    dockerExposedPorts := Seq(9999, 5353),
+    dockerBaseImage := "java:8",
+    dockerCommands ++= Seq(
+      Cmd("USER", "root"),
+      ExecCmd("RUN", "svnadmin", "create", "/svnrepo"),
+      ExecCmd("RUN", "chown", "-R", "daemon", "/svnrepo"),
+      Cmd("USER", "daemon")
+    )
+//    dockerEntrypoint := Seq("/bin/cs",
+//        "-Dcsw.services.cs.main-repository=file:///svnrepo/",
+//        "-Dakka.remote.netty.tcp.port=9999")
   )
 }
