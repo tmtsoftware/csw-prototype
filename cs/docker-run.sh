@@ -9,8 +9,11 @@ port=9999
 user=$USER
 
 # Start the application
-docker run --net host -t -P --name cs $user/cs \
+docker run --net host -t -P -p $port:$port --name cs $user/cs \
+    -Dakka.remote.netty.tcp.port=$port  \
     || exit 1
 
-# Note: For boot2docker, might need to run this once the application is running to expose ports
+# Note: For Mac users: Use Bridged Networking to get avahi/mDns to work for Location Service
+# (select in VirtualBox manager under Network).
+# If using VirtualBox/boot2docker, may need to run this once the application is running to expose ports
 # VBoxManage controlvm "boot2docker-vm" natpf1 "tcp-port9999,tcp,,9999,,9999";
