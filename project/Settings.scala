@@ -98,17 +98,16 @@ object Settings {
   // Customize the Docker file for the Config Service (cs)
   lazy val configServiceDockerSettings = Seq(
     maintainer := "TMT Software",
-    // mDns port: 5353/udp, config service actor system port: 9999
-    dockerExposedPorts := Seq(9999, 5353),
     dockerBaseImage := "java:8",
     dockerCommands ++= Seq(
       Cmd("USER", "root"),
       ExecCmd("RUN", "svnadmin", "create", "/svnrepo"),
       ExecCmd("RUN", "chown", "-R", "daemon", "/svnrepo"),
       Cmd("USER", "daemon")
-    )
-//    dockerEntrypoint := Seq("/bin/cs",
-//        "-Dcsw.services.cs.main-repository=file:///svnrepo/",
-//        "-Dakka.remote.netty.tcp.port=9999")
+    ),
+    dockerEntrypoint := Seq("/opt/docker/bin/cs",
+      "-Djava.net.preferIPv4Stack=true",
+      "-Dcsw.services.cs.http.enabled=false",
+      "-Dcsw.services.cs.main-repository=file:///svnrepo/")
   )
 }

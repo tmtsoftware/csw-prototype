@@ -9,7 +9,7 @@
 # boot2docker init
 # boot2docker up
 
-# user name for docker push (Change this to your docker user name)
+# user name for docker (Change this to your docker user name if you want to push to docker hub)
 user=$USER
 
 # version tag
@@ -22,6 +22,3 @@ docker build -t $user/cs:$version .  || exit 1
 
 # Push to docker hub...
 # docker push $user/cs:latest
-
-# Note: For boot2docker, may need to run this once the application is running to expose ports
-# VBoxManage controlvm "boot2docker-vm" natpf1 "tcp-port9000,tcp,,9000,,9000";
