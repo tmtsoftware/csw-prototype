@@ -81,7 +81,8 @@ Command Line Tools
 ------------------
 
 On a Mac, you can use the dns-sd command to view information about registered services.
-For example:
+In Linux the command is avahi-browse.
+For example, on a mac:
 
     dns-sd -B _csw._tcp 
 

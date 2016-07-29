@@ -107,7 +107,6 @@ object Settings {
     ),
     dockerEntrypoint := Seq("/opt/docker/bin/cs",
       "-Djava.net.preferIPv4Stack=true",
-      "-Dcsw.services.cs.http.enabled=false",
       "-Dcsw.services.cs.main-repository=file:///svnrepo/")
   )
 }
