@@ -15,6 +15,11 @@ user=$USER
 # version tag
 version=latest
 
+# Get the IP address (Use boot2docker for Mac. Linux it should be the same IP?)
+if  [ `which boot2docker` ] ; then
+    eval "$(boot2docker shellinit)"
+fi
+
 cd ..
 sbt "project cs" docker:stage || exit 1
 cd cs/target/docker/stage
