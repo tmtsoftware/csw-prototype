@@ -49,7 +49,7 @@ final case class ChoiceItem(keyName: String, choices: Choices, values: Vector[Ch
 }
 
 /**
- * A key for an enum value
+  * A key for a choice item similar to an enumeration
  *
  * @param nameIn  the name of the key
  * @param choices the available choices, the values set must be in the choices

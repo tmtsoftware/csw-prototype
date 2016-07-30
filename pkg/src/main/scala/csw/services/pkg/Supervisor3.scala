@@ -4,11 +4,10 @@ import akka.actor._
 import Supervisor3._
 import csw.services.loc.{ComponentId, LocationService}
 import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
-import csw.util.akka.SetLogLevelActor
 
 import scala.util.{Failure, Success}
 
-class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorRef]) extends Actor with ActorLogging with SetLogLevelActor {
+class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorRef]) extends Actor with ActorLogging {
 
   import scala.concurrent.duration._
   import SupervisorExternal._
@@ -310,7 +309,6 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   // Used to log messages for state changes
   def logState(thisState: LifecycleState, nextState: LifecycleState) = log.debug(s"In $thisState going to $nextState")
 
-
   // The following is listener support for the container or other interested component
   private var listeners = Set[ActorRef]()
 
@@ -328,7 +326,6 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   }
 
 }
-
 
 object Supervisor3 {
 
@@ -369,7 +366,6 @@ object Supervisor3 {
   def props(componentInfo: ComponentInfo): Props = Props(classOf[Supervisor3], componentInfo)
 
   private def props(componentInfo: ComponentInfo, componentActor: Option[ActorRef]) = Props(classOf[Supervisor3], componentInfo, componentActor)
-
 
   // The following are states used for the Supervisor lifecycle manager
   sealed trait LifecycleState
@@ -444,7 +440,6 @@ object Supervisor3 {
 
   // Report to component that a lifecycle failure has occurred for logging, etc.
   case class LifecycleFailureInfo(state: LifecycleState, reason: String) extends ToComponentLifecycleMessage
-
 
   /**
     * Messages from component indicating events

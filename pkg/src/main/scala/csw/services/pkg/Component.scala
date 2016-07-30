@@ -153,10 +153,6 @@ trait Component extends Actor with PrefixedActorLogging {
    * A reference to this component's supervisor actor
    */
   def supervisor = context.parent
-
-  override def postStop: Unit = {
-    log.debug(s"Post Stop: !!")
-  }
 }
 
 trait Assembly extends Component

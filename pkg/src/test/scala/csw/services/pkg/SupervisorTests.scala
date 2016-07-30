@@ -31,7 +31,7 @@ object SupervisorTests {
 
     val hcdInfo = HcdInfo(name, prefix, className, RegisterOnly, Set.empty, 1.second)
 
-    val (componentActorSystem, actorRef) = Supervisor(hcdInfo)
+    val actorRef = Supervisor(hcdInfo)
     actorRef
   }
 

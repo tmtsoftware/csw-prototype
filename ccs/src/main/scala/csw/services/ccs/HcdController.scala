@@ -33,7 +33,7 @@ object HcdController {
   /**
    * Message to unsubscribes from the HCD's state messages.
    */
-  val Unubscribe = PublisherActor.Unsubscribe
+  val Unsubscribe = PublisherActor.Unsubscribe
 
   /**
    * Message to request that the HCD's current state be sent to all subscribers

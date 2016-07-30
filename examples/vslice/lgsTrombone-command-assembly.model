@@ -1,0 +1,325 @@
+subsystem = NFIRAOS
+component = lgsTrombone
+
+description = LGS Trombone Assembly commands.
+
+receive = [
+
+  {
+    name = init
+    description = """
+    Request Command.
+
+    Prepares the assembly for operation and read configuration files. The configuration name must be specified if a configuration version is specified. This command will also the sodium layer estimate, and the clear NSS flag. This command will internally trigger a stop if required.
+
+    If the configuration name is not specified, then a default configuration name and version is used. If the configuration version is not specified, then the default version is used for the specified configuration name.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> none
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> state.cmd = busy
+  <li> state.move = unindexed | indexed
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = ready
+  <li> state.sodiumLayer = false
+  <li> status.nss = false
+  </ul>
+</html>
+    """
+    args = [
+      {
+        name = configuration name
+        description = Name of the configuration file to get from the TMT Configuration Service
+        type = string
+      }
+      {
+        name = configuration version
+        description = Version of the configuration file to get from the TMT Configuration Service
+        type = string
+      }
+    ]
+
+  }
+
+  {
+    name = datum
+    description = """
+    Submit Command.
+
+    Datum the LGS trombone stage, clear sodium layer estimate, and the clear NSS flag. This command will internally trigger a stop if required.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> state.cmd != uninitialized
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> state.cmd = busy
+  <li> state.move = indexing
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = ready
+  <li> state.move = indexed
+  <li> state.sodiumLayer = false
+  <li> status.nss = false
+  </ul>
+</html>
+    """
+  }
+
+  {
+    name = stop
+    description = """
+    Request Command.
+
+    Cancel the current submit type command and stop the LGS trombone state stages.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> state.cmd != uninitialized
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> state.cmd = busy
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = ready
+  <li> state.move = unindexed | indexed
+  </ul>
+</html>
+    """
+  }
+
+  {
+    name = move
+    description = """
+    Submit Command.
+
+    Engineering command that moves the LGS trombone stage to the specified  position.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> state.cmd != uninitialized
+  <li> state.move = indexed | moving
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> state.cmd = busy
+  <li> state.move = moving
+  <li> state.sodiumLayer = false
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = ready
+  <li> state.move = indexed
+  </ul>
+</html>
+    """
+    args = [
+      {
+        name = position
+        description = target LGS trombone stage position.
+        type = double
+        units = mm
+      }
+    ]
+  }
+
+  {
+    name = position
+    description = """
+    Submit Command.
+
+    Engineering command that moves the LGS trombone stage to the specified  range distance.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> state.cmd != uninitialized
+  <li> state.move = indexed | moving
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> state.cmd = busy
+  <li> state.move = moving
+  <li> state.sodiumLayer = false
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = ready
+  <li> state.move = indexed
+  </ul>
+</html>
+    """
+    args = [
+      {
+        name = rangeDistance
+        description = target range distance.
+        type = double
+        minimum = 0
+        units = km
+      }
+    ]
+  }
+
+  {
+    name = setElevation
+    description = """
+    Submit Command.
+
+    Set the initial sodium layer elevation value, and move the LGS trombone to the corresponding position by executing the move command.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> state.cmd != uninitialized
+  <li> state.move = indexed | moving
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> state.cmd = busy
+  <li> state.move = moving
+  <li> state.sodiumLayer = false
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = ready
+  <li> state.move = indexed
+  <li> state.sodiumLayer = true
+  </ul>
+</html>
+    """
+    args = [
+      {
+        name = elevation
+        description = initial sodium layer elevation estimate
+        type = double
+        units = km
+      }
+      {
+        name = angle
+        description = initial zenith angle used to calculate range distance
+        type = double
+        units = degrees
+      }
+
+    ]
+  }
+
+  {
+    name = setAngle
+    description = """
+    Submit Command.
+
+    Engineering command that sets the zenith angle used to position the trombone. In normal operation the zenith angle supplied by the TCS and is tracked while the follow mode is enabled.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> state.cmd != uninitialized
+  <li> state.move = indexed | moving
+  <li> state.sodiumLayer = true
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> state.cmd = busy
+  <li> state.move = moving
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = ready
+  <li> state.move = indexed
+  </ul>
+</html>
+    """
+    args = [
+      {
+        name = angle
+        description = zenith angle used to calculate range distance
+        type = double
+        units = degrees
+      }
+    ]
+  }
+
+  {
+    name = follow
+    description = """
+    Request Command.
+
+    Enable the LGS trombone follow mode. When the follow mode is enabled, the LGS trombone will track the focus errors from the NRTC, zenith angle from the TCS, and update the sodium layer elevation and range distance estimations. If NSS mode is enable, then the LGS trombone will not follow the zenith angle stream from the TCS and the internal set the zenith angle to zero.
+<html>
+  <p>
+  Precondition:
+  <ul>
+  <li> state.cmd != uninitialized
+  <li> state.move = indexed | moving
+  <li> state.sodiumLayer = true
+  </ul>
+
+  <p>
+  Execution:
+  <ul>
+  <li> none
+  </ul>
+
+  <p>
+  At Completion:
+  <ul>
+  <li> state.cmd = continuous
+  <li> state.move = indexed | moving
+  <li> status.nss =  &lt; input nss value  &gt;
+  </ul>
+</html>
+  """
+    args = [
+      {
+        name = nss
+        description = enable NSS mode to operate with NSS LGS Assembly
+        type = boolean
+      }
+    ]
+  }
+
+]
+
+

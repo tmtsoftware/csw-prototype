@@ -24,7 +24,6 @@ object LifecycleManager2 {
   // Final state when component does not shutdown properly
   case object LifecycleShutdownFailure extends LifecycleState2
 
-
   //
   private[pkg] sealed trait ComponentState
 
@@ -53,7 +52,6 @@ object LifecycleManager2 {
 
   case object Heartbeat extends LifecycleInternalEvents
 
-
   /**
     * Messages sent to components to notify of lifecycle changes
     */
@@ -73,7 +71,6 @@ object LifecycleManager2 {
 
   // Report to component that a lifecycle failure has occurred for logging, etc.
   case class LifecycleFailure(state: LifecycleState2, reason: String) extends LifecycleComponentEvents
-
 
   // Events from outside that influence component lifecycle
   sealed trait ExternalLifecycleEvents

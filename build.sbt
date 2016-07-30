@@ -213,10 +213,10 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
   .dependsOn(pkg, ts, hcdExample)
 
 // EndToEnd Example project
-lazy val endToEndExample = Project(id = "endToEndExample", base = file("examples/endToEndExample"))
+lazy val vslice = Project(id = "VerticalSlice", base = file("examples/vslice"))
   .enablePlugins(JavaAppPackaging)
-  .settings(packageSettings("endToEndExample", "End To End Example", "More complicated example showing CSW features"): _*)
+  .settings(packageSettings("VerticalSlice", "Vertical Slice Example", "More complicated example showing CSW features"): _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaRemote, akkaHttp, akkaKryo) ++
+    compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaTest, specs2, akkaTestKit)
-  ).dependsOn(pkg, cs, ccs, loc, ts, kvs, event, util)
+  ).dependsOn(pkg, cs, ccs, loc, ts, events, util)

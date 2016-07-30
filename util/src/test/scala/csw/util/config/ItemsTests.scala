@@ -876,31 +876,32 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       di.values should equal(listIn)
     }
   }
+  /*
+    describe("testing enumitem") {
 
-  describe("testing enumitem") {
+      it("should allow filtering") {
 
-    it("should allow filtering") {
+        val choices = Choices("A", "B", "C")
+        println("Choices: " + choices)
 
-      val choices = Choices("A", "B", "C")
-      println("Choices: " + choices)
+        val vals1 = Vector(Choice("A"), Choice("C"))
 
-      val vals1 = Vector(Choice("A"), Choice("C"))
+        val vals2 = Vector(Choice("A"), Choice("D"))
 
-      val vals2 = Vector(Choice("A"), Choice("D"))
+        val x = vals1.forall(choices.contains(_))
+        val y = vals2.forall(choices.contains(_))
 
-      val x = vals1.forall(choices.contains(_))
-      val y = vals2.forall(choices.contains(_))
+        val ek = ChoiceKey("mode", Choices("A", "B", "C"))
 
-      val ek = ChoiceKey("mode", Choices("A", "B", "C"))
-
-      val ci = ek.set("A")
+        val ci = ek.set("A")
 
 
-      println("X: " + x)
-      println("Y: " + y)
-      println("ek: " + ek)
-      println("ci: " + ci)
+        println("X: " + x)
+        println("Y: " + y)
+        println("ek: " + ek)
+        println("ci: " + ci)
+      }
+
     }
-
-  }
+    */
 }

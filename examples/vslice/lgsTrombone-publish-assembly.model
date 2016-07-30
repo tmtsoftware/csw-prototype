@@ -1,0 +1,96 @@
+subsystem = NFIRAOS
+component = lgsTrombone
+
+publish {
+  telemetry = [
+    {
+      name = state
+      description = LGS trombone assembly state
+      attributes = [
+        {
+          name = cmd
+          description = LGS trombone assembly command state
+          enum = [uninitialized, ready, busy, continuous, error]
+        }
+        {
+          name = move
+          description = LGS trombone assembly movement state
+          enum = [unindexed, indexing, indexed, moving]
+        }
+        {
+          name = sodiumLayer
+          description = flag indicating if the initial sodium layer estimate has been set
+          type = boolean
+        }
+        {
+          name = nss
+          description = flag indicating if NSS mode is enabled
+          type = boolean
+        }
+      ]
+    }
+
+    {
+      name = sodiumLayer
+      description = "Estimate of the current sodium layer elevation and range distance. The sodium layer estimate is only valid when state.sodiumLayer flag is true. If state.sodiumLayer is false then both elevation and range distance will be zero."
+      maxRate = 3.33
+      archive = true
+      archiveRate = 3.33
+      attributes = [
+        {
+          name = elevation
+          description = "sodium layer elevation estimation."
+          type = double
+          minimum = 0
+          units = km
+        }
+        {
+          name = rangeDistance
+          description = "sodium layer range distance estimation. This value is equivalent elevation to if NSS mode is enabled (i.e. zenith angle is 0)."
+          type = double
+          minimum = 0
+          units = km
+        }
+      ]
+    }
+
+    {
+      name = engr
+      description = engineering data for LGS trombone assembly
+      maxRate = 3.33
+      attributes = [
+        {
+          name = focus
+          description = Current focus error from the NRTC.
+          type = double
+          units = micrometers of RMS wavefront error
+        }
+        {
+          name = position
+          description = Current position of the LGS trombone stage.
+          type = double
+          units = mm
+        }
+        {
+          name = angle
+          description = "Current zenith angle used to calculate range distance. This value is 0 if NSS mode is enabled."
+          type = double
+          units = degrees
+        }
+
+      ]
+    }
+  ]
+
+  alarms = [
+    {
+      name = limit
+      description = The LGS trombone stage has reached a limit
+      severity = major
+      archive = true
+    }
+
+  ]
+
+}
+
