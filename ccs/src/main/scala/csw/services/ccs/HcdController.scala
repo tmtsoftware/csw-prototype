@@ -29,6 +29,11 @@ object HcdController {
   //   * @param config the configuration to execute
   //   */
   //  case class OneWay(config: SetupConfig) extends HcdControllerMessage
+
+  // Inherited messages that this actor receives
+  val Subscribe = PublisherActor.Subscribe
+  val Unsubscribe = PublisherActor.Unsubscribe
+  val RequestCurrent = PublisherActor.RequestCurrent
 }
 
 /**

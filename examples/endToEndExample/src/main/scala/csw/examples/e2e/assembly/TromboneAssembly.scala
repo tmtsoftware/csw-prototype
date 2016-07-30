@@ -31,7 +31,7 @@ class TromboneAssembly(info: AssemblyInfo) extends Assembly with AssemblyControl
 
   println(s"Assembly: ${info.componentName}\nComponent Type:${info.componentType}\nClassName: ${info.componentClassName}\nPrefix: ${info.prefix}")
 
-  val g = context.system.settings.config.getDouble("csw.examples.TromboneAssembly.gain-default")
+  val g = context.system.settings.config.getDouble("csw.examples.Trombone.gain-default")
   log.info("G value: " + g)
 
   lifecycle(supervisor, Startup)
@@ -190,7 +190,7 @@ object TromboneAssembly {
 object TromboneAssemblyApp extends App {
 
   import TromboneAssembly._
-  import TromboneData._
+  import csw.examples.e2e.shared.TromboneData._
 
   private def setup: Config = ContainerComponent.parseStringConfig(testConf)
 

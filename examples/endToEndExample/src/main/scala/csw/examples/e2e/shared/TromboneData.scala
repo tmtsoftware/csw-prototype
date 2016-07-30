@@ -1,4 +1,4 @@
-package csw.examples.e2e
+package csw.examples.e2e.shared
 
 /**
   * TMT Source Code: 7/15/16.
@@ -16,7 +16,7 @@ object TromboneData {
       |  components {
       |    lgsTrombone {
       |      type = Assembly
-      |      class = csw.examples.e2e.TromboneAssembly
+      |      class = csw.examples.e2e.assembly.TromboneAssembly
       |      prefix = nfiraos.ncc.trombone
       |      connectionType: [akka]
       |      connections = [
@@ -31,7 +31,7 @@ object TromboneData {
       |      }
       |      lgsTromboneHCD {
       |        type = HCD
-      |        class = "csw.examples.e2e.TromboneHCD"
+      |        class = "csw.examples.e2e.hcd.TromboneHCD"
       |        prefix = nfiraos.ncc.tromboneHCD
       |        connectionType: [akka]
       |        rate = 1 second

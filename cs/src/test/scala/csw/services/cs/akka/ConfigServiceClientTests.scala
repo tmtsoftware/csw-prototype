@@ -94,7 +94,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
   }
 
   //  // Test concurrent access
-  //  // (XXX: Doesn't make sense for svn case: There should only be one cs actor per repo)
+  //  // (Choice: Doesn't make sense for svn case: There should only be one cs actor per repo)
   //  def runTests3(settings: List[ConfigServiceSettings], oversize: Boolean): Future[Unit] = {
   //    logger.info(s"--- Test concurrent access: oversize = $oversize ---")
   //

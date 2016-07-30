@@ -373,8 +373,8 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
 
       val sc2 = sc(
         ck2,
-        k1 → 3 withUnits UnitsOfMeasure.degrees,
-        k2 → 44.3 withUnits UnitsOfMeasure.meters
+        k1 -> 3 withUnits UnitsOfMeasure.degrees,
+        k2 -> 44.3 withUnits UnitsOfMeasure.meters
       )
       csize(sc2) should be(2)
       exists(sc2, k1) shouldBe true
@@ -396,7 +396,7 @@ class ConfigDSLTests extends FunSpec with ShouldMatchers {
     it("should create overriding defaults") {
       val default: SetupConfig = sc(ck2, i1, i2, i3)
 
-      val sc1 = add(default, zeroPoint → 2000)
+      val sc1 = add(default, zeroPoint -> 2000)
 
       val intItem = sc1(zeroPoint)
 

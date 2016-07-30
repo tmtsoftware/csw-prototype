@@ -15,6 +15,7 @@ object PeriodicHcdController {
 
   /**
    * Tells the controller to check its inputs and update its outputs
+    * * Allows changing the update rate of processing.
    *
    * @param interval the amount of time until the next update
    */

@@ -9,12 +9,10 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, MustMatchers}
 
 import scala.language.postfixOps
 
-abstract class FSMSpec extends TestKit(ActorSystem()) with ImplicitSender
+class LifecycleManagerTest() extends TestKit(ActorSystem("TestKit")) with ImplicitSender
     with FunSpecLike with MustMatchers with BeforeAndAfterAll {
-  override def afterAll = TestKit.shutdownActorSystem(system)
-}
 
-class LifecycleManagerTest() extends FSMSpec {
+  override def afterAll = TestKit.shutdownActorSystem(system)
 
   type MyTestFsm = TestFSMRef[LifecycleManager.LifecycleState, LifecycleManager.FSMData, LifecycleManager]
 

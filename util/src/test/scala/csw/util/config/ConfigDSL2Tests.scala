@@ -13,10 +13,12 @@ class ConfigDSL2Tests extends FunSpec {
     val k1 = IntKey("itest")
     val k2 = DoubleKey("dtest")
     val k3 = StringKey("stest")
+    val k4 = DoubleMatrixKey("myMatrix")
 
     val i1 = set(k1, 1, 2, 3).withUnits(degrees)
     val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = set(k3, "A", "B", "C")
+    val i4 = set(k4, DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12))))
 
     it("should allow using head(item) and value(item)") {
       assert(head(i1) == 1)
@@ -42,23 +44,26 @@ class ConfigDSL2Tests extends FunSpec {
     }
 
     it("should support key -> value syntax for building configs") {
+      val dm1 = DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12)))
       val setupConfig1 = sc(
         "test",
-        k1 → Vector(1, 2, 3) withUnits UnitsOfMeasure.degrees,
-        k2 → Vector(1.0, 2.0, 3.0) withUnits UnitsOfMeasure.meters,
-        k3 → Vector("A", "B", "C")
+        k1 -> Vector(1, 2, 3) withUnits UnitsOfMeasure.degrees,
+        k2 -> Vector(1.0, 2.0, 3.0) withUnits UnitsOfMeasure.meters,
+        k3 -> Vector("A", "B", "C"),
+        k4 -> dm1 withUnits UnitsOfMeasure.degrees
       )
       assert(setupConfig1.get(k1).get.values == Vector(1, 2, 3))
       assert(setupConfig1.get(k1).get.units == UnitsOfMeasure.degrees)
       assert(setupConfig1.get(k2).get.head == 1.0)
       assert(setupConfig1.get(k2).get.units == UnitsOfMeasure.meters)
       assert(setupConfig1.get(k3).get.value(1) == "B")
+      assert(setupConfig1.get(k4).get.head(0, 0) == 1)
 
       val setupConfig2 = sc(
         "test",
-        k1 → 1 withUnits UnitsOfMeasure.degrees,
-        k2 → 2.0 withUnits UnitsOfMeasure.meters,
-        k3 → "C"
+        k1 -> 1 withUnits UnitsOfMeasure.degrees,
+        k2 -> 2.0 withUnits UnitsOfMeasure.meters,
+        k3 -> "C"
       )
       assert(get(setupConfig2, k1).get.head == 1)
       assert(get(setupConfig2, k1).get.units == UnitsOfMeasure.degrees)

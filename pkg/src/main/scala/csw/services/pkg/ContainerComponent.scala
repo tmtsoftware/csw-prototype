@@ -307,7 +307,7 @@ object ContainerComponent {
     }
   }
 
-  case class SupervisorInfo(supervisor: ActorRef, componentInfo: ComponentInfo)
+  case class SupervisorInfo(componentActorSystem: ActorSystem, supervisor: ActorRef, componentInfo: ComponentInfo)
 
   def apply(config: Config): Try[ContainerComponent] = parseConfigToContainerInfo(config).map(ContainerComponent(_))
 }
@@ -414,8 +414,8 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
         log.error(s"In supervisor ${containerInfo.componentName}, component ${componentInfo.componentName} already exists")
         None
       case None =>
-        val supervisor = Supervisor(componentInfo)
-        Some(SupervisorInfo(supervisor, componentInfo))
+        val (componentActorSystem, supervisor) = Supervisor(componentInfo)
+        Some(SupervisorInfo(componentActorSystem, supervisor, componentInfo))
     }
   }
 

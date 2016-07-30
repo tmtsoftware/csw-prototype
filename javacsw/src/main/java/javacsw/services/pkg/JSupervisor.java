@@ -36,7 +36,7 @@ public class JSupervisor {
      * @return the actorRef for the supervisor (parent actor of the top level component)
      */
     public static ActorRef create(Component.ComponentInfo componentInfo) {
-        return Supervisor.apply(componentInfo);
+        return Supervisor.apply(componentInfo)._2();
     }
 
     /**

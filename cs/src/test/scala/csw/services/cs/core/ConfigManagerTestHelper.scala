@@ -148,12 +148,12 @@ object ConfigManagerTestHelper extends FunSuite {
       assert(historyList1(1).comment == comment2)
       assert(historyList1(2).comment == comment1)
 
-      // XXX Below fails when oversize=true since files have .sha1 suffix
-      // XXX Should .sha1 files have the .sha1 suffix removed in the result?
+      // Choice Below fails when oversize=true since files have .sha1 suffix
+      // Choice Should .sha1 files have the .sha1 suffix removed in the result?
       //      assert(list.exists(_.path == path1))
       //      assert(list.exists(_.path == path2))
 
-      println(s"XXX list=$list, ex1=${list.exists(_.path == path1)}")
+      println(s"Choice list=$list, ex1=${list.exists(_.path == path1)}")
 
       for (info <- list) {
         info.path match {
@@ -189,7 +189,7 @@ object ConfigManagerTestHelper extends FunSuite {
       case Failure(ex) =>
         logger.error(s"test3 (${manager.name}) failed", ex)
     }
-    // XXX removing this causes conflict when using svn, since both managers point to same repo (not a good idea)!
+    // Choice removing this causes conflict when using svn, since both managers point to same repo (not a good idea)!
     Await.ready(f, 10.seconds)
     f
   }

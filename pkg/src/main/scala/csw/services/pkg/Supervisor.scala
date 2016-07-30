@@ -29,9 +29,10 @@ object Supervisor {
    * @param componentInfo describes the components to create and manage
    * @return the actorRef for the supervisor (parent actor of the top level component)
    */
-  def apply(componentInfo: ComponentInfo): ActorRef = {
+  def apply(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
     val system = ActorSystem(s"${componentInfo.componentName}-system")
-    system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor")
+    val componentActor = system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor")
+    (system, componentActor)
   }
 
   /**
@@ -80,7 +81,7 @@ object Supervisor {
    * Function called by a component to indicate the lifecycle should be started.
    *
    * @param supervisor the ActorRef of the component's supervisor
-   * @param command    the LifecycleCommand to be sent to the supervisor
+    * @param command   the FromComponentLifecycleMessage to be sent to the supervisor
    */
   def lifecycle(supervisor: ActorRef, command: LifecycleCommand = Startup): Unit = {
     supervisor ! command
@@ -222,7 +223,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
           registrationOpt = Some(reg)
           log.info(s"$name: Registered $componentId with the location service")
         case Failure(ex) ⇒
-          // XXX allan: What to do in case of error?
+          // Choice allan: What to do in case of error?
           log.error(s"$name: Failed to register $componentId with the location service")
       }
     }
@@ -237,7 +238,7 @@ private final class Supervisor(val componentInfo: ComponentInfo)
   }
 
   // The default supervision behavior will normally restart the component automatically.
-  // (XXX allan: check this: needs to be properly configured)
+  // (Choice allan: check this: needs to be properly configured)
   // The Terminated message should only be received if we manually stop the component, or a
   // system error occurs (Exceptions don't cause termination).
   private def terminated(actorRef: ActorRef): Unit = {

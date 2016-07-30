@@ -16,6 +16,7 @@ object ConfigJSON extends DefaultJsonProtocol {
 
   // JSON formats
   implicit val charItemFormat = jsonFormat3(CharItem.apply)
+  //  implicit val choiceItemFormat = jsonFormat4(ChoiceItem.apply)
   implicit val shortItemFormat = jsonFormat3(ShortItem.apply)
   implicit val intItemFormat = jsonFormat3(IntItem.apply)
   implicit val longItemFormat = jsonFormat3(LongItem.apply)
@@ -75,6 +76,7 @@ object ConfigJSON extends DefaultJsonProtocol {
 
   // JSON type tags
   private val charType = classOf[CharItem].getSimpleName
+  private val choiceType = classOf[ChoiceItem].getSimpleName
   private val shortType = classOf[ShortItem].getSimpleName
   private val integerType = classOf[IntItem].getSimpleName
   private val longType = classOf[LongItem].getSimpleName
@@ -107,10 +109,11 @@ object ConfigJSON extends DefaultJsonProtocol {
 
   private def unexpectedJsValueError(x: JsValue) = deserializationError(s"Unexpected JsValue: $x")
 
-  // XXX TODO Use JNumber?
+  // Choice TODO Use JNumber?
   def writeItem[S, I /*, J */ ](item: Item[S /*, J */ ]): JsValue = {
     val result: (JsString, JsValue) = item match {
       case ci: CharItem         => (JsString(charType), charItemFormat.write(ci))
+      // case ci: ChoiceItem       => (JsString(choiceType), choiceItemFormat.write(ci))
       case si: ShortItem        => (JsString(shortType), shortItemFormat.write(si))
       case ii: IntItem          => (JsString(integerType), intItemFormat.write(ii))
       case li: LongItem         => (JsString(longType), longItemFormat.write(li))
@@ -139,6 +142,7 @@ object ConfigJSON extends DefaultJsonProtocol {
     case JsObject(fields) =>
       (fields("itemType"), fields("item")) match {
         case (JsString(`charType`), item)         => charItemFormat.read(item)
+        //  case (JsString(`choiceType`), item)       => choiceItemFormat.read(item)
         case (JsString(`shortType`), item)        => shortItemFormat.read(item)
         case (JsString(`integerType`), item)      => intItemFormat.read(item)
         case (JsString(`longType`), item)         => longItemFormat.read(item)

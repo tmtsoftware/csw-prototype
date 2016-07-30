@@ -14,6 +14,8 @@ object UnitsOfMeasure {
 
   object NoUnits extends Units("none")
 
+  object encoder extends Units("enc")
+
   object micrometers extends Units("µm")
 
   object millimeters extends Units("mm")
@@ -30,14 +32,15 @@ object UnitsOfMeasure {
 
   object Units {
     def fromString(name: String): Units = name match {
-      case micrometers.name ⇒ micrometers
-      case millimeters.name ⇒ millimeters
-      case meters.name ⇒ meters
-      case kilometers.name ⇒ kilometers
-      case degrees.name ⇒ degrees
-      case seconds.name ⇒ seconds
-      case milliseconds.name ⇒ milliseconds
-      case _                 ⇒ NoUnits
+      case encoder.name => encoder
+      case micrometers.name => micrometers
+      case millimeters.name => millimeters
+      case meters.name => meters
+      case kilometers.name => kilometers
+      case degrees.name => degrees
+      case seconds.name => seconds
+      case milliseconds.name => milliseconds
+      case _ => NoUnits
     }
   }
 

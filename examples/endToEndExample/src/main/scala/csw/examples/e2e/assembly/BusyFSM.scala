@@ -1,6 +1,7 @@
 package csw.examples.e2e.assembly
 
 import akka.actor._
+import csw.examples.e2e.assembly.BusyFSM.{AssemblyActivity, AssemblyState}
 import csw.services.pkg.Assembly
 
 /**
