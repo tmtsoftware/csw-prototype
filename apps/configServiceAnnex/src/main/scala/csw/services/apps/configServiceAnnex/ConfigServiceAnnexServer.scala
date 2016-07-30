@@ -36,8 +36,8 @@ import scala.util.control.NonFatal
  * @param registerWithLoc if true, register with the location service (default: false)
  */
 case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServer"))
-  logger.info("Config service annex started")
+  val logger = Logger(LoggerFactory.getLogger(ConfigServiceAnnexServer.getClass))
+  logger.debug("Config service annex started")
   implicit val system = ActorSystem("ConfigServiceAnnexServer")
 
   import system.dispatcher
@@ -49,7 +49,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
 
   val binding = Http().bind(interface = settings.interface, port = settings.port)
   binding.runForeach { c =>
-    logger.info(s"Accepted new connection from ${c.remoteAddress}")
+    logger.debug(s"Accepted new connection from ${c.remoteAddress}")
     c.handleWithAsyncHandler {
       case HttpRequest(GET, uri, _, _, _)       => httpGet(uri)
       case HttpRequest(POST, uri, _, entity, _) => httpPost(uri, entity)
@@ -72,14 +72,14 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   def registerWithLocationService(addr: InetSocketAddress) {
     val componentId = ComponentId("ConfigServiceAnnex", ComponentType.Service)
     val httpUri = new URI(s"http://${addr.getHostString}:${addr.getPort}/")
-    logger.info(s"Registering with the location service with URI $httpUri")
+    logger.debug(s"Registering with the location service with URI $httpUri")
     LocationService.registerHttpConnection(componentId, addr.getPort)
   }
 
   // Implements Http GET
   private def httpGet(uri: Uri): Future[HttpResponse] = {
     val path = makePath(settings.dir, new File(uri.path.toString()))
-    logger.info(s"Received GET request for $path (uri = $uri)")
+    logger.debug(s"Received GET request for $path (uri = $uri)")
     val result = Try {
       val mappedByteBuffer = FileUtils.mmap(path)
       val iterator = new FileUtils.ByteBufferIterator(mappedByteBuffer, settings.chunkSize)
@@ -105,13 +105,13 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
     file.getParentFile.mkdirs()
     val response = Promise[HttpResponse]()
     if (file.exists) {
-      logger.info(s"Ignoring POST request for existing $file (uri = $uri)")
+      logger.debug(s"Ignoring POST request for existing $file (uri = $uri)")
       val m = entity.dataBytes.runWith(Sink.ignore)
       m.onComplete {
         case _ => response.success(HttpResponse(StatusCodes.OK))
       }
     } else {
-      logger.info(s"Received POST request for $file (uri = $uri)")
+      logger.debug(s"Received POST request for $file (uri = $uri)")
       val out = new FileOutputStream(file)
       val sink = Sink.foreach[ByteString] { bytes =>
         out.write(bytes.toArray)
@@ -142,10 +142,10 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   private def httpHead(uri: Uri): Future[HttpResponse] = {
     val path = makePath(settings.dir, new File(uri.path.toString()))
     val result = if (path.toFile.exists()) {
-      logger.info(s"Received HEAD request for $path (uri = $uri) (exists)")
+      logger.debug(s"Received HEAD request for $path (uri = $uri) (exists)")
       HttpResponse(StatusCodes.OK)
     } else {
-      logger.info(s"Received HEAD request for $path (uri = $uri) (not found)")
+      logger.debug(s"Received HEAD request for $path (uri = $uri) (not found)")
       HttpResponse(StatusCodes.NotFound)
     }
     Future.successful(result)
@@ -155,7 +155,7 @@ case class ConfigServiceAnnexServer(registerWithLoc: Boolean = false) {
   // Note: In normal operation files should probably never be deleted. This is for testing use.
   private def httpDelete(uri: Uri): Future[HttpResponse] = {
     val path = makePath(settings.dir, new File(uri.path.toString()))
-    logger.info(s"Received DELETE request for $path (uri = $uri)")
+    logger.debug(s"Received DELETE request for $path (uri = $uri)")
     val result = Try { if (path.toFile.exists()) Files.delete(path) } match {
       case Success(_) =>
         HttpResponse(StatusCodes.OK)

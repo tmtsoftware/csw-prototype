@@ -11,9 +11,9 @@ Scala and Java types. Java APIs are provided for all the CSW subprojects:
 
 * [Config Service (cs)](README.cs.md)
 
-* [Event Service (event)](README.event.md)
+* [Event Service (events)](README.events.md)
 
-* [Key Value Store (kvs)](README.kvs.md)
+* [Event Service (old version: event_old)](README.event_old.md)
 
 * [Location Service (loc)](README.loc.md)
 

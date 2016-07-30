@@ -4,6 +4,7 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
+import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.StringKey
@@ -14,16 +15,15 @@ import scala.concurrent.duration._
 object HcdControllerTests {
   val system = ActorSystem("Test")
 
-  val testPrefix1 = "wfos.blue.filter"
-  val testPrefix2 = "wfos.red.filter"
-
+  val testPrefix = "wfos.blue.filter"
   val position = StringKey("position")
 
   object TestHcdController {
     def props(): Props = Props(classOf[TestHcdController])
   }
 
-  class TestHcdController extends HcdController with Actor with ActorLogging {
+  class TestHcdController extends HcdController with Actor with PrefixedActorLogging {
+    override val prefix = testPrefix
 
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
@@ -56,13 +56,14 @@ object HcdControllerTests {
     case object RequestCurrentState
   }
 
-  class TestWorker extends Actor with ActorLogging {
+  class TestWorker extends Actor with PrefixedActorLogging {
+    override val prefix = testPrefix
 
     import TestWorker._
     import context.dispatcher
 
     // Simulate getting the initial state from the device
-    val initialState = CurrentState(testPrefix1).add(position.set("None"))
+    val initialState = CurrentState(prefix).add(position.set("None"))
 
     // Simulated current state
     var currentState = initialState
@@ -70,15 +71,15 @@ object HcdControllerTests {
     def receive: Receive = {
       case Work(config) =>
         // Simulate doing work
-        log.info(s"Start processing $config")
+        log.debug(s"Start processing $config")
         context.system.scheduler.scheduleOnce(2.seconds, self, WorkDone(config))
 
       case RequestCurrentState =>
-        log.info(s"Requested current state")
+        log.debug(s"Requested current state")
         context.parent ! currentState
 
       case WorkDone(config) =>
-        log.info(s"Done processing $config")
+        log.debug(s"Done processing $config")
         currentState = CurrentState(config.prefix, config.items)
         context.parent ! currentState
 
@@ -103,12 +104,12 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     val hcdController = system.actorOf(TestHcdController.props())
 
     // Send a setup config to the HCD
-    val config = SetupConfig(testPrefix2).add(position.set("IR3"))
+    val config = SetupConfig(testPrefix).add(position.set("IR3"))
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {
       val status = expectMsgType[CommandStatus.Completed]
-      logger.info(s"Done (2). Received reply from matcher with current state: $status")
+      logger.debug(s"Done (2). Received reply from matcher with current state: $status")
     }
   }
 }

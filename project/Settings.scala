@@ -94,4 +94,10 @@ object Settings {
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
 
+  // Customize the Docker install
+  lazy val dockerSettings = Seq(
+    maintainer := "TMT Software",
+    dockerExposedPorts := Seq(9000),
+    dockerBaseImage := "java:8"
+  )
 }

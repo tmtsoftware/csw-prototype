@@ -51,7 +51,7 @@ object ContainerCmd {
  * @param resource optional name of default config file (under src/main/resources)
  */
 case class ContainerCmd(name: String, args: Array[String], resource: Option[String] = None) {
-  val logger = Logger(LoggerFactory.getLogger("ContainerCmd"))
+  val logger = Logger(LoggerFactory.getLogger(ContainerCmd.getClass))
 
   ContainerCmd.parse(name, args) match {
     case Some(options) => run(options)
@@ -62,16 +62,16 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
     options.file match {
       case Some(file) =>
         if (file.exists) {
-          logger.info(s" Using file: $file")
+          logger.debug(s" Using file: $file")
           ContainerComponent.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
         } else {
-          logger.info(s" Attempting to get '$file' from the config service")
+          logger.debug(s" Attempting to get '$file' from the config service")
           initFromConfigService(file, options.csConfig)
         }
 
       case None =>
         if (resource.isDefined) {
-          logger.info(s" Using default resource: $resource")
+          logger.debug(s" Using default resource: $resource")
           ContainerComponent.create(ConfigFactory.load(resource.get))
         } else {
           logger.error("Error: No config file or resource was specified")
@@ -98,7 +98,7 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
       configOpt.map(ContainerComponent.create)
     }
     f.onSuccess {
-      case _ => logger.info(s"Created container based on $file")
+      case _ => logger.debug(s"Created container based on $file")
     }
     f.map(_ => ())
   }

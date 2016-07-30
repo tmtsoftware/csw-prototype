@@ -74,7 +74,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       val alarms = Await.result(alarmService.getAlarms(AlarmKey()), timeout.duration)
       alarms.foreach { alarm =>
         // XXX TODO: compare results
-        logger.info(s"List Alarm: $alarm")
+        logger.debug(s"List Alarm: $alarm")
       }
 
       // Test internal function
@@ -93,14 +93,14 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
         val a = alarmStatus.alarmKey
-        logger.info(s"Alarm Status: ${alarmStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
+        logger.debug(s"Alarm Status: ${alarmStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
         callbackSev = alarmStatus.currentSeverity
       }
 
       // Called when the health status changes
       def printHealthStatus(healthStatus: HealthStatus): Unit = {
         val a = healthStatus.key
-        logger.info(s"Health Status: ${healthStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
+        logger.debug(s"Health Status: ${healthStatus.timestamp}: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
         callbackHealth = Some(healthStatus.health)
       }
 
@@ -126,10 +126,11 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       Thread.sleep(shortDelayMs)
       assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
 
-      // Acknowledge the alarm, which clears it, resets it back to Okay
-      Await.ready(alarmService.acknowledgeAlarm(key1), timeout.duration)
+      // Acknowledge the alarm
+      Await.ready(alarmService.acknowledgeAndResetAlarm(key1), timeout.duration)
+      Await.ready(alarmService.setSeverity(key1, SeverityLevel.Okay), timeout.duration)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback, so the test below passes
-      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay)) // alarm was cleared
+      assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
       assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
 
       Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
@@ -154,7 +155,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       assert(Await.result(alarmService.getSeverity(key1), timeout.duration) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
 
       // Test alarm in deactivated state
-      Await.ready(alarmService.acknowledgeAlarm(key1), timeout.duration)
+      Await.ready(alarmService.acknowledgeAndResetAlarm(key1), timeout.duration)
       Await.ready(alarmService.setSeverity(key1, SeverityLevel.Okay), timeout.duration)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
@@ -195,7 +196,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(callbackHealth.contains(Health.Ill))
       assert(Await.result(alarmService.getHealth(nfKey), timeout.duration) == Health.Ill)
-      Await.ready(alarmService.acknowledgeAlarm(key2), timeout.duration)
+      Await.ready(alarmService.acknowledgeAndResetAlarm(key2), timeout.duration)
 
       Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
       Await.ready(alarmService.setSeverity(key3, SeverityLevel.Critical), timeout.duration)
@@ -207,7 +208,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       assert(Try(Await.result(alarmService.getAlarm(badKey), timeout.duration)).isFailure)
       assert(Try(Await.result(alarmService.setSeverity(badKey, SeverityLevel.Critical), timeout.duration)).isFailure)
       assert(Try(Await.result(alarmService.getSeverity(badKey), timeout.duration)).isFailure)
-      assert(Try(Await.result(alarmService.acknowledgeAlarm(badKey), timeout.duration)).isFailure)
+      assert(Try(Await.result(alarmService.acknowledgeAndResetAlarm(badKey), timeout.duration)).isFailure)
       assert(Try(Await.result(alarmService.getHealth(badKey), timeout.duration)).isFailure)
       assert(Try(Await.result(alarmService.setShelvedState(badKey, ShelvedState.Normal), timeout.duration)).isFailure)
       assert(Try(Await.result(alarmService.setActivationState(badKey, ActivationState.Normal), timeout.duration)).isFailure)

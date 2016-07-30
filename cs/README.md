@@ -13,7 +13,9 @@ however the ConfigServiceClient wrapper class implements a
 and provides a somewhat simpler API.
 
 The ConfigManager API is non-blocking (returns future values). If this is inconvenient,
-you can always wrap the calls in Await.result(...). The Java API also contains a blocking API.
+you can always wrap the calls in Await.result(...). Blocking APIs are available for
+convenience. See [BlockingConfigManager](src/main/scala/csw/services/cs/core/BlockingConfigManager.scala) 
+and [JBlockingConfigManager](src/main/scala/javacsw/services/cs/core/JBlockingConfigManager.scala).
 
 The data for the files being stored in the config service is passed as a
 [ConfigData](src/main/scala/csw/services/cs/core/ConfigManager.scala) object,
@@ -66,7 +68,8 @@ Convenience Methods
 -------------------
 
 If there is a config service actor running already and you just want to get the latest version of
-a config file (in HOCON format), there is a convenience method:
+a config file (in HOCON format), there is a convenience method in the
+[ConfigServiceClient](src/main/scala/csw/services/cs/akka/ConfigServiceClient.scala) class:
 
 ```
     val configOpt = Await.result(ConfigServiceClient.getConfigFromConfigService(csName, file), timeout.duration)
@@ -74,7 +77,8 @@ a config file (in HOCON format), there is a convenience method:
 ```
 
 This looks up the config service that was registered with the name `csName` in the location service and then
-gets the contents of the given file, returning an Option[Config], if successful.
+gets the contents of the given file, returning an Option[Config], if successful. There are also methods available
+to get the contents of a file stored in the Config Service as a string or read it as a file or stream.
 
 
 Config Service Application
@@ -87,11 +91,7 @@ The default config service name and the location of the git or svn repository is
 Alternatively you can specify a different config file on the command line in the same format.
 You can also override the values with system properties. For example:
 
-```
-     cs -Dcsw.services.cs.name=MyConfigServiceName
-        -Dcsw.services.cs.main-repository=http://myHost/MyMainRepo/
-        -Dcsw.services.cs.local-repository=/myPath/MyLocalRepo
-```
+     cs -Dcsw.services.cs.name=MyConfigServiceName -Dcsw.services.cs.main-repository=http://myHost/MyMainRepo/
 
 Note that multiple config service instances may be running in the network, but the names an host:port combinations should
 each be unique. Only a single config service instance should access a given local repository.
@@ -114,6 +114,7 @@ The HTTP/REST interface to the command service follows the scala and java APIs:
 ---------|---------|-------------------------------------------|---------
 | POST   | /create | path=_filePath_, comment=_create+comment_ | JSON with _id_ that can be used to reference this version of file
 | GET    | /get    | path=_filePath_, id=_id_                  | Contents of file (current or version _id_)
+| GET    | /get    | path=_filePath_, date=milliseconds        | Contents of file (version from given data, in milliseconds since 1970)
 | PUT    | /update | path=_filePath_, comment=_update+comment_ | JSON with _id_ that can be used to reference this version of file
 | HEAD   | /exists | path=_filePath_                           | Status: OK if file exists, otherwise NotFound
 | GET    | /list   |                                           | JSON list of available files

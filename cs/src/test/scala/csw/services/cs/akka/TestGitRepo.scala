@@ -12,8 +12,8 @@ import csw.services.cs.core.git.GitConfigManager
 object TestGitRepo {
 
   private def resetRepo(settings: ConfigServiceSettings)(implicit context: ActorRefFactory): Unit = {
-    // Choice FIXME TODO: Use generated temp dirs, not settings
-    println(s"Local repo = ${settings.localRepository}, remote = ${settings.mainRepository}")
+    // XXX FIXME TODO: Use generated temp dirs, not settings
+    //    println(s"Local repo = ${settings.localRepository}, remote = ${settings.mainRepository}")
     if (settings.mainRepository.getScheme != "file")
       throw new RuntimeException(s"Please specify a file URI for csw.services.cs.main-repository for testing")
 

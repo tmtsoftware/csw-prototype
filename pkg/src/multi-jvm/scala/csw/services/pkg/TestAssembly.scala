@@ -23,6 +23,8 @@ case class TestAssembly(info: AssemblyInfo)
   // Get the connections to the HCDs this assembly uses and track them
   trackConnections(info.connections)
 
+  log.info("Message from TestAssembly")
+
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     // Current state received from one of the HCDs: Just forward it to the assembly, which subscribes to the HCD's status
     case s: CurrentState =>

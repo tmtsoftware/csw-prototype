@@ -10,12 +10,15 @@ import csw.services.pkg.Supervisor._
 import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 /**
  * Class that implements the assembly actor
  *
  * @param info contains information about the assembly and the components it depends on
  */
-class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
+class AssemblyExample(override val info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
 
@@ -23,6 +26,8 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
 
   // Get the connection to the HCD this assembly uses and track it
   trackConnections(info.connections)
+
+  log.info("XXXXXXXX Started")
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")
@@ -63,7 +68,6 @@ class AssemblyExample(info: AssemblyInfo) extends Assembly with AssemblyControll
     }
     valid
   }
-
 }
 
 /**
@@ -77,6 +81,17 @@ object AssemblyExampleApp extends App {
   val componentId = ComponentId(assemblyName, ComponentType.Assembly)
   val targetHcdConnection = AkkaConnection(ComponentId(HCDExample.hcdName, ComponentType.HCD))
   val hcdConnections: Set[Connection] = Set(targetHcdConnection)
-  val assemblyInfo = AssemblyInfo(assemblyName, "", className, RegisterOnly, Set(AkkaType), hcdConnections)
-  val supervisor = Supervisor(assemblyInfo)
+  val prefix = "tcs.mobie.blue.filter"
+  val assemblyInfo = AssemblyInfo(assemblyName, prefix, className, RegisterOnly, Set(AkkaType), hcdConnections)
+  val (supervisorSystem, supervisor) = Supervisor.create(assemblyInfo)
+
+  // The code below shows how you could shut down the assembly
+  if (false) {
+    import supervisorSystem.dispatcher
+    supervisorSystem.scheduler.scheduleOnce(15.seconds) {
+      Supervisor.haltComponent(supervisor)
+      Await.ready(supervisorSystem.whenTerminated, 5.seconds)
+      System.exit(0)
+    }
+  }
 }

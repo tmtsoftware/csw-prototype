@@ -22,7 +22,7 @@ import scala.util.{Try, Failure, Success}
  * Provides a client API to the ConfigServiceAnnexServer.
  */
 object ConfigServiceAnnexClient {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexClient"))
+  val logger = Logger(LoggerFactory.getLogger(ConfigServiceAnnexClient.getClass))
 
   // Note: We could take the actor system as an implicit argument from the caller,
   // but using a separate one was suggested, to avoid congestion and slowing down actor
@@ -45,7 +45,7 @@ object ConfigServiceAnnexClient {
    */
   def get(id: String, file: File): Future[File] = {
     val uri = s"http://$host:$port/$id"
-    logger.info(s"Downloading $file from $uri")
+    logger.debug(s"Downloading $file from $uri")
     implicit val materializer = ActorMaterializer()
 
     val out = new FileOutputStream(file)
@@ -95,7 +95,7 @@ object ConfigServiceAnnexClient {
   def post(file: File): Future[String] = {
     val id = HashGeneratorUtils.generateSHA1(file)
     val uri = s"http://$host:$port/$id"
-    logger.info(s"Uploading $file to $uri")
+    logger.debug(s"Uploading $file to $uri")
     implicit val materializer = ActorMaterializer()
 
     val mappedByteBuffer = FileUtils.mmap(file.toPath)
@@ -131,7 +131,7 @@ object ConfigServiceAnnexClient {
    */
   def head(id: String): Future[Boolean] = {
     val uri = s"http://$host:$port/$id"
-    logger.info(s"Checking existence of $uri")
+    logger.debug(s"Checking existence of $uri")
     implicit val materializer = ActorMaterializer()
 
     val connection = Http().outgoingConnection(host, port)
@@ -158,7 +158,7 @@ object ConfigServiceAnnexClient {
    */
   def delete(id: String): Future[Boolean] = {
     val uri = s"http://$host:$port/$id"
-    logger.info(s"Deleting $uri")
+    logger.debug(s"Deleting $uri")
     implicit val materializer = ActorMaterializer()
 
     val connection = Http().outgoingConnection(host, port)

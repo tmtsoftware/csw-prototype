@@ -3,7 +3,7 @@ package csw.services.apps.sequencer
 import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import csw.services.ccs.HcdController.Submit
-import csw.services.ccs.{AssemblyClient, BlockingAssemblyClient}
+import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
@@ -37,7 +37,7 @@ object SequencerEnv {
     val connection = AkkaConnection(ComponentId(name, ComponentType.Assembly))
     val info = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
     val actorRef = getActorRef(info.locations, connection)
-    BlockingAssemblyClient(AssemblyClient(actorRef))
+    BlockingAssemblyClient(AssemblyControllerClient(actorRef))
   }
 
   /**

@@ -1,12 +1,12 @@
 package csw.util.config
 
-import csw.util.config.ConfigJSON._
 import csw.util.config.Configurations.{ObserveConfig, SetupConfig, WaitConfig}
-import csw.util.config.Events.{ObserveEvent, StatusEvent, SystemEvent}
-import csw.util.config.StateVariable.{CurrentState, DemandState}
-import csw.util.config.UnitsOfMeasure.meters
 import org.scalatest.FunSpec
 import spray.json._
+import ConfigJSON._
+import csw.util.config.Events.{ObserveEvent, StatusEvent, SystemEvent}
+import csw.util.config.StateVariable.{CurrentState, DemandState}
+import csw.util.config.UnitsOfMeasure.Meters
 
 object JSONTests extends DefaultJsonProtocol {
 
@@ -21,11 +21,11 @@ object JSONTests extends DefaultJsonProtocol {
     // Creates a GenericItem[MyData2] from a JSON value (This didn't work with the jsonFormat3 method)
     def reader(json: JsValue): GenericItem[MyData2] = {
       json.asJsObject.getFields("keyName", "value", "units") match {
-        case Seq(JsString(keyName), JsArray(v), u) ⇒
+        case Seq(JsString(keyName), JsArray(v), u) =>
           val units = ConfigJSON.unitsFormat.read(u)
           val value = v.map(MyData2.myData2Format.read)
           GenericItem[MyData2]("MyData2", keyName, value, units)
-        case _ ⇒ throw DeserializationException("Color expected")
+        case _ => throw DeserializationException("Invalid JSON for GenericItem[MyData2]")
       }
     }
 
@@ -147,7 +147,7 @@ class JSONTests extends FunSpec {
     val k2 = StringKey(s2)
 
     val i1 = k1.set(22, 33, 44)
-    val i2 = k2.set("a", "b", "c").withUnits(UnitsOfMeasure.degrees)
+    val i2 = k2.set("a", "b", "c").withUnits(UnitsOfMeasure.Deg)
 
     it("should encode and decode items list") {
       // Use this to get a list to test
@@ -173,10 +173,10 @@ class JSONTests extends FunSpec {
     val i1 = k1.set('d').withUnits(UnitsOfMeasure.NoUnits)
     val i2 = k2.set(22).withUnits(UnitsOfMeasure.NoUnits)
     val i3 = k3.set(1234L).withUnits(UnitsOfMeasure.NoUnits)
-    val i4 = k4.set(123.45f).withUnits(UnitsOfMeasure.degrees)
-    val i5 = k5.set(123.456).withUnits(UnitsOfMeasure.meters)
+    val i4 = k4.set(123.45f).withUnits(UnitsOfMeasure.Deg)
+    val i5 = k5.set(123.456).withUnits(UnitsOfMeasure.Meters)
     val i6 = k6.set(false)
-    val i7 = k7.set("GG495").withUnits(UnitsOfMeasure.degrees)
+    val i7 = k7.set("GG495").withUnits(UnitsOfMeasure.Deg)
 
     it("Should encode/decode a SetupConfig") {
       val c1 = SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
@@ -257,12 +257,12 @@ class JSONTests extends FunSpec {
       val k1 = GenericKey[MyData2]("MyData2", "testData")
       val d1 = MyData2(1, 2.0f, 3.0, "4")
       val d2 = MyData2(10, 20.0f, 30.0, "40")
-      val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.meters)
+      val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.Meters)
       val sc1 = SetupConfig(ck).add(i1)
       assert(sc1.get(k1).get.values.size == 2)
       assert(sc1.get(k1).get.values(0) == d1)
       assert(sc1.get(k1).get.values(1) == d2)
-      assert(sc1.get(k1).get.units == UnitsOfMeasure.meters)
+      assert(sc1.get(k1).get.units == UnitsOfMeasure.Meters)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("2: sc1out: " + sc1out.prettyPrint)
@@ -272,9 +272,9 @@ class JSONTests extends FunSpec {
       assert(sc1in.get(k1).get.values.size == 2)
       assert(sc1in.get(k1).get.values(0) == d1)
       assert(sc1in.get(k1).get.values(1) == d2)
-      assert(sc1in.get(k1).get.units == UnitsOfMeasure.meters)
+      assert(sc1in.get(k1).get.units == UnitsOfMeasure.Meters)
 
-      val sc2 = SetupConfig(ck).add(k1.set(d1, d2).withUnits(meters))
+      val sc2 = SetupConfig(ck).add(k1.set(d1, d2).withUnits(Meters))
       assert(sc2 == sc1)
     }
   }
@@ -501,6 +501,26 @@ class JSONTests extends FunSpec {
       assert(sc1in(k1).head == m1)
 
       val sc2 = SetupConfig(ck).add(k1.set(m1))
+      assert(sc2 == sc1)
+    }
+  }
+
+  describe("Test Choice items") {
+    it("Should allow choice/enum values") {
+      val k1 = ChoiceKey("myChoice", Choices.get("A", "B", "C"))
+      val c1 = Choice("B")
+      val i1 = k1.set(c1)
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1(k1).head == c1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+      //      info("sc1out: " + sc1out.prettyPrint)
+
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in(k1).head == c1)
+
+      val sc2 = SetupConfig(ck).add(k1.set(c1))
       assert(sc2 == sc1)
     }
   }

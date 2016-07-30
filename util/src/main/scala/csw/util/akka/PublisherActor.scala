@@ -25,7 +25,7 @@ object PublisherActor {
 }
 
 trait PublisherActor[A] {
-  this: Actor with ActorLogging =>
+  this: Actor =>
 
   import PublisherActor._
 

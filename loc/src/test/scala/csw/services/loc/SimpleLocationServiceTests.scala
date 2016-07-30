@@ -26,7 +26,7 @@ package csw.services.loc
 //    LocationService.registerAkkaConnection(connections.head.componentId, testActor, "test.prefix")
 //    within(25.seconds) {
 //      val ready = expectMsgType[ServicesReady](20.seconds)
-//      logger.info(s"Services ready: $ready")
+//      logger.debug(s"Services ready: $ready")
 //      assert(connections == ready.services.keys)
 //    }
 //  }

@@ -98,7 +98,7 @@ public class JAlarmServiceTests {
   static IAlarmService.AlarmHandler alarmHandler = new IAlarmService.AlarmHandler() {
     public void handleAlarmStatus(AlarmStatus alarmStatus) {
       AlarmKey a = alarmStatus.alarmKey();
-      logger.info("Alarm Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + alarmStatus.currentSeverity());
+      logger.debug("Alarm Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + alarmStatus.currentSeverity());
       callbackSev = alarmStatus.currentSeverity();
     }
   };
@@ -107,7 +107,7 @@ public class JAlarmServiceTests {
   static IAlarmService.HealthHandler healthHandler = new IAlarmService.HealthHandler() {
     public void handleHealthStatus(HealthStatus healthStatus) {
       AlarmKey a = healthStatus.key();
-      logger.info("Health Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + healthStatus.health());
+      logger.debug("Health Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + healthStatus.health());
       callbackHealth = Optional.of(healthStatus.health());
     }
   };
@@ -131,7 +131,7 @@ public class JAlarmServiceTests {
     List<AlarmModel> alarms = alarmService.getAlarms(JAlarmKey.create()).get();
     for (AlarmModel alarm : alarms) {
       // XXX TODO: compare results
-      logger.info("List Alarm: " + alarm);
+      logger.debug("List Alarm: " + alarm);
     }
 
     // Test working with an alarm and monitoring the alarm severity level
@@ -140,7 +140,7 @@ public class JAlarmServiceTests {
     AlarmKey key3 = new AlarmKey("NFIRAOS", "envCtrl", "maxTemperature");
 
     AlarmMonitor alarmMonitor = alarmService.monitorHealth(key1,
-      Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler));
+      Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler), false);
     Thread.sleep(shortDelayMs); // make sure actor has started
 
     alarmService.setSeverity(key1, JSeverityLevel.Critical).get();
@@ -157,7 +157,8 @@ public class JAlarmServiceTests {
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Critical));
 
     // Acknowledge the alarm, which clears it, resets it back to Okay
-    alarmService.acknowledgeAlarm(key1).get();
+    alarmService.acknowledgeAndResetAlarm(key1).get();
+    alarmService.setSeverity(key1, JSeverityLevel.Okay).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback, so the test below passes
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay)); // alarm was cleared
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay));
@@ -183,7 +184,7 @@ public class JAlarmServiceTests {
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
 
     // Test alarm in deactivated state
-    alarmService.acknowledgeAlarm(key1).get();
+    alarmService.acknowledgeAndResetAlarm(key1).get();
     alarmService.setSeverity(key1, JSeverityLevel.Okay).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     alarmService.setActivationState(key1, JActivationState.OutOfService).get();
@@ -203,7 +204,7 @@ public class JAlarmServiceTests {
     alarmMonitor.stop();
     AlarmKey nfKey = JAlarmKey.create(Optional.of("NFIRAOS"));
     AlarmMonitor healthMonitor = alarmService.monitorHealth(nfKey,
-      Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler));
+      Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler), false);
     Thread.sleep(shortDelayMs); // make sure actor has started
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
     alarmService.setSeverity(key3, JSeverityLevel.Okay).get();
@@ -223,7 +224,7 @@ public class JAlarmServiceTests {
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     assertEquals(callbackHealth.get(), JHealth.Ill);
     assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Ill);
-    alarmService.acknowledgeAlarm(key2).get();
+    alarmService.acknowledgeAndResetAlarm(key2).get();
 
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
     alarmService.setSeverity(key3, JSeverityLevel.Critical).get();

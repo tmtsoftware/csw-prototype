@@ -92,6 +92,12 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
   override def acknowledgeAlarm(alarmKey: AlarmKey): Unit =
     Await.result(alarmService.acknowledgeAlarm(alarmKey), timeout.duration)
 
+  override def resetAlarm(alarmKey: AlarmKey): Unit =
+    Await.result(alarmService.resetAlarm(alarmKey), timeout.duration)
+
+  override def acknowledgeAndResetAlarm(alarmKey: AlarmKey): Unit =
+    Await.result(alarmService.acknowledgeAndResetAlarm(alarmKey), timeout.duration)
+
   override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): Unit =
     Await.result(alarmService.setShelvedState(alarmKey, shelvedState), timeout.duration)
 
@@ -102,10 +108,13 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
     Await.result(alarmService.getHealth(alarmKey), timeout.duration)
 
   override def monitorHealth(alarmKey: AlarmKey, subscriber: Optional[ActorRef],
-                             notifyAlarm: Optional[AlarmHandler], notifyHealth: Optional[HealthHandler]): AlarmMonitor = {
+                             notifyAlarm:  Optional[AlarmHandler],
+                             notifyHealth: Optional[HealthHandler],
+                             notifyAll:    Boolean): AlarmMonitor = {
     alarmService.monitorHealth(alarmKey, subscriber.asScala,
       notifyAlarm.asScala.map(f => (alarmStatus: AlarmStatus) => f.handleAlarmStatus(alarmStatus)),
-      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)))
+      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)),
+      notifyAll)
   }
 
   override def shutdown(): Unit = alarmService.shutdown()

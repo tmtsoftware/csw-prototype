@@ -170,7 +170,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     tester ! LocationTrackerWorker.TrackConnections(Set(hc))
 
     val result = testProbe.expectMsgType[LocationsReady](30.seconds)
-    logger.info("Result =:" + result)
+    logger.debug("Result =:" + result)
 
     val r = Await.result(f, t)
     r.unregister()
@@ -195,7 +195,7 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     implicit val timeout: Timeout = 40.seconds
     val future = LocationService.resolve(Set(hc, ac))
     val result = Await.result(future, timeout.duration)
-    logger.info(s" Got it: ${result.locations}")
+    logger.debug(s" Got it: ${result.locations}")
     assert(result.locations.size == 2)
 
     val resultList = Await.result(f, t)
@@ -215,10 +215,10 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
 
     val future = LocationService.resolve(Set(ac))
     future.map(_.locations.head).mapTo[ResolvedAkkaLocation] onSuccess {
-      case ral => logger.info("Its: " + ral.actorRef)
+      case ral => logger.debug("Its: " + ral.actorRef)
     }
     val result = Await.result(future, timeout.duration)
-    logger.info(s" Got it: ${result.locations}")
+    logger.debug(s" Got it: ${result.locations}")
     assert(result.locations.size == 1)
     val r = Await.result(f, t)
     r.unregister()

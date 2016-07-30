@@ -20,7 +20,10 @@ Version History
 Build Instructions
 ------------------
 
-To build, run 'sbt' in the top level directory and type one of the following commands:
+The easiest way to build this project is to run the `install.sh` script (or `quick-install.sh`, which skips
+generating the documentation).
+
+To build manually, run 'sbt' in the top level directory and type one of the following commands:
 
 * compile - compiles the sources
 * test - run the tests (Note that not all tests run automatically, due to dependencies on external servers)
@@ -64,10 +67,9 @@ for starting the CSW applications, as well as the generated java and scala docum
 Runtime Dependencies
 --------------------
 
-The kvs project assumes that redis-server is running (http://redis.io/).
+The events project assumes that redis-server is running (http://redis.io/).
 
-The event service can be configured to use an embedded server, but by default
-depends on an external Hornetq server running (http://hornetq.jboss.org/).
+(The old event service (event_old) depends on an external Hornetq server running (http://hornetq.jboss.org/)).
 
 
 Projects and Directories
@@ -77,10 +79,10 @@ Projects and Directories
 * [apps](apps) - contains some standalone applications
 * [ccs](ccs) - the Command and Control Service (for sending configurations to HCDs and Assemblies)
 * [cs](cs) - the Configuration Service (manages configuration files in Git repos)
-* [event](event) - the Event Service, based on HornetQ
-* [kvs](kvs) - provides key/value store and publish/subscribe features based on Redis
+* [event_old](event_old) - an earlier version of the Event Service, based on HornetQ
+* [events](events) - provides Event Service, key/value store and publish/subscribe features based on Redis
 * [loc](loc) - the Location Service (based on Multicast DNS, supports registering and finding Akka and http based services)
-* [log](log) - contains logging related code
+* [log](log) - contains logging related code and configuration files
 * [pkg](pkg) - a packaging layer over the command service that provides Container, Supervisor, HCD and Assembly classes
 * [util](util) - for reusable utility code, including configuration and event classes
 

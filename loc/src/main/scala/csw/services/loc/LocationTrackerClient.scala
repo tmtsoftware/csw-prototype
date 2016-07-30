@@ -1,6 +1,6 @@
 package csw.services.loc
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorRef}
 import csw.services.loc.LocationService._
 import csw.services.loc.LocationTrackerClient.LocationMap
 
@@ -73,7 +73,7 @@ case class LocationTrackerClient(tracker: ActorRef, connections: LocationMap = M
  * Can be used by an actor to keep track of component connections.
  */
 trait LocationTrackerClientActor {
-  this: Actor with ActorLogging =>
+  this: Actor =>
 
   private val tracker = context.actorOf(LocationTracker.props(Some(self)))
   private var trackerClient = LocationTrackerClient(tracker)
@@ -83,7 +83,6 @@ trait LocationTrackerClientActor {
    */
   protected def trackerClientReceive: Receive = {
     case loc: Location =>
-      log.info(s"Received location: $loc")
       trackerClient = trackerClient.locationUpdate(loc)
       if (allResolved) allResolved(getLocations)
 

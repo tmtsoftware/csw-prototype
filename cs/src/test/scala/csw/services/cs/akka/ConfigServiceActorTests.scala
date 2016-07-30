@@ -49,7 +49,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
 
   // Runs the tests for the config service, using the given oversize option.
   def runTests(annexServer: Option[ConfigServiceAnnexServer], oversize: Boolean): Unit = {
-    logger.info(s"\n\n--- Testing config service: oversize = $oversize ---\n")
+    logger.debug(s"\n\n--- Testing config service: oversize = $oversize ---\n")
 
     // create a test repository and use it to create the actor
     val manager = TestRepo.getTestRepoConfigManager()
@@ -143,7 +143,7 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
       system.stop(configServiceActor)
 
       if (annexServer.isDefined) {
-        logger.info("Shutting down annex server")
+        logger.debug("Shutting down annex server")
         annexServer.get.shutdown()
       }
     }

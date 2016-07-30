@@ -75,12 +75,28 @@ public interface IAlarmService {
     CompletableFuture<CurrentSeverity> getSeverity(AlarmKey alarmKey);
 
     /**
-     * Acknowledges the given alarm, clearing the acknowledged and latched states, if needed.
+     * Acknowledges the given alarm, if needed.
      *
      * @param alarmKey the key for the alarm
      * @return a future indicating when the operation has completed
      */
     CompletableFuture<Unit> acknowledgeAlarm(AlarmKey alarmKey);
+
+    /**
+     * Resets the latched state of the given alarm, if needed.
+     *
+     * @param alarmKey the key for the alarm
+     * @return a future indicating when the operation has completed
+     */
+    CompletableFuture<Unit> resetAlarm(AlarmKey alarmKey);
+
+    /**
+     * Acknowledges the given alarm and resets the latched state, if needed.
+     *
+     * @param alarmKey the key for the alarm
+     * @return a future indicating when the operation has completed
+     */
+    CompletableFuture<Unit> acknowledgeAndResetAlarm(AlarmKey alarmKey);
 
     /**
      * Sets the shelved state of the alarm
@@ -125,14 +141,17 @@ public interface IAlarmService {
      * @param subscriber   if defined, an actor that will receive a HealthStatus message whenever the health for the given key changes
      * @param notifyAlarm  if defined, a function that will be called with an AlarmStatus object whenever the severity of an alarm changes
      * @param notifyHealth if defined, a function that will be called with a HealthStatus object whenever the total health for key pattern changes
+     * @param notifyAll    if true, all severity changes are reported (for example, for logging), otherwise
+     *                     only the relevant changes in alarms are reported, for alarms that are not shelved and not out of service,
+     *                     and where the latched severity or calculated health actually changed
      * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
      */
     AlarmMonitor monitorHealth(
             AlarmKey alarmKey,
             Optional<ActorRef> subscriber,
-            // XXX TODO: Add code to convert Java void to Scala Unit?
             Optional<AlarmHandler> notifyAlarm,
-            Optional<HealthHandler> notifyHealth
+            Optional<HealthHandler> notifyHealth,
+            boolean notifyAll
     );
 
     /**

@@ -11,7 +11,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import csw.services.apps.configServiceAnnex.FileUtils
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -28,10 +28,10 @@ trait ConfigManager {
    * Creates a file with the given path and data and optional comment.
    * An IOException is thrown if the file already exists.
    *
-   * @param path the file path relative to the repository root
+   * @param path       the file path relative to the repository root
    * @param configData used to read the contents of the file
-   * @param oversize true if the file is large and requires special handling (external storage)
-   * @param comment an optional comment to associate with this file
+   * @param oversize   true if the file is large and requires special handling (external storage)
+   * @param comment    an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
   def create(path: File, configData: ConfigData, oversize: Boolean = false, comment: String = ""): Future[ConfigId]
@@ -40,9 +40,9 @@ trait ConfigManager {
    * Updates the config file with the given path and data and optional comment.
    * An FileNotFoundException is thrown if the file does not exists.
    *
-   * @param path the file path relative to the repository root
+   * @param path       the file path relative to the repository root
    * @param configData used to read the contents of the file
-   * @param comment an optional comment to associate with this file
+   * @param comment    an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
   def update(path: File, configData: ConfigData, comment: String = ""): Future[ConfigId]
@@ -50,10 +50,10 @@ trait ConfigManager {
   /**
    * Creates the file with the given path, or updates it, if it already exists.
    *
-   * @param path the file path relative to the repository root
+   * @param path       the file path relative to the repository root
    * @param configData used to read the contents of the file
-   * @param oversize true if the file is large and requires special handling (external storage)
-   * @param comment an optional comment to associate with this file
+   * @param oversize   true if the file is large and requires special handling (external storage)
+   * @param comment    an optional comment to associate with this file
    * @return a unique id that can be used to refer to the file
    */
   def createOrUpdate(path: File, configData: ConfigData, oversize: Boolean = false, comment: String = ""): Future[ConfigId]
@@ -62,11 +62,51 @@ trait ConfigManager {
    * Gets and returns the file stored under the given path.
    *
    * @param path the file path relative to the repository root
-   * @param id an optional id used to specify a specific version to fetch
-   *           (by default the latest version is returned)
+   * @param id   an optional id used to specify a specific version to fetch
+   *             (by default the latest version is returned)
    * @return a future object that can be used to access the file's data, if found
    */
   def get(path: File, id: Option[ConfigId] = None): Future[Option[ConfigData]]
+
+  /**
+   * Gets the file as it existed on the given date.
+   * If date is before the file was created, the initial version is returned.
+   * If date is after the last change, the most recent version is returned.
+   * If the path does not exist in the repo, Future[None] is returned.
+   *
+   * @param path the file path relative to the repository root
+   * @param date the target date
+   * @return a future object that can be used to access the file's data, if found
+   */
+  def get(path: File, date: Date)(implicit ec: ExecutionContext): Future[Option[ConfigData]] = {
+    val t = date.getTime
+
+    // A condition used in the for comprehension below to catch the case where the file does not exist
+    def predicate(condition: Boolean): Future[Unit] =
+      if (condition) Future(()) else Future.failed(new RuntimeException)
+
+    // Gets the ConfigFileHistory matching the date
+    def getHist: Future[Option[ConfigFileHistory]] = {
+      history(path).map { h =>
+        val found = h.find(_.time.getTime <= t)
+        if (found.nonEmpty) found
+        else if (h.isEmpty) None
+        else {
+          Some(if (t > h.head.time.getTime) h.head else h.last)
+        }
+      }
+    }
+
+    val f = for {
+      hist <- getHist
+      _ <- predicate(hist.nonEmpty)
+      result <- get(path, hist.map(_.id))
+    } yield result
+
+    f.recover {
+      case _ => None
+    }
+  }
 
   /**
    * Returns true if the given path exists and is being managed
@@ -93,7 +133,7 @@ trait ConfigManager {
   /**
    * Returns a list of all known versions of a given path
    *
-   * @param path the file path relative to the repository root
+   * @param path       the file path relative to the repository root
    * @param maxResults the maximum number of history results to return (default: unlimited)
    * @return a list containing one ConfigFileHistory object for each version of path
    */
@@ -105,8 +145,8 @@ trait ConfigManager {
    * After calling this method, the version with the given Id will be the default.
    *
    * @param path the file path relative to the repository root
-   * @param id an optional id used to specify a specific version
-   *           (by default the id of the latest version is used)
+   * @param id   an optional id used to specify a specific version
+   *             (by default the id of the latest version is used)
    * @return a future result
    */
   def setDefault(path: File, id: Option[ConfigId] = None): Future[Unit]
@@ -138,6 +178,7 @@ trait ConfigId {
 
 object ConfigId {
   def apply(id: String): ConfigId = ConfigIdImpl(id)
+
   def apply(id: Long): ConfigId = ConfigIdImpl(id.toString)
 }
 
@@ -236,7 +277,7 @@ object ConfigData {
   /**
    * Initialize with the contents of the given file.
    *
-   * @param file the data source
+   * @param file      the data source
    * @param chunkSize the block or chunk size to use when streaming the data
    */
   def apply(file: File, chunkSize: Int = 4096): ConfigData = ConfigFile(file, chunkSize)

@@ -56,9 +56,9 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
 
     within(10.seconds) {
       val cancellable = expectMsgType[Cancellable]
-      logger.info(s"Received cancellable: $cancellable")
+      logger.debug(s"Received cancellable: $cancellable")
       val count = expectMsgType[Int]
-      logger.info(s"Executed $count scheduled messages")
+      logger.debug(s"Executed $count scheduled messages")
       assert(count == 5)
       cancellable.cancel()
     }
@@ -73,18 +73,18 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
 
     def receive: Receive = {
       case "once" =>
-        log.info("Received once start")
+        log.debug("Received once start")
         scheduleOnce(localTimeNow.plusSeconds(5), context.self, "once-done")
       case "five" =>
-        log.info("Received multi start")
+        log.debug("Received multi start")
         val c = schedule(localTimeNow.plusSeconds(1), java.time.Duration.ofSeconds(1), context.self, "count")
         caller ! c //Return the cancellable
       case "count" =>
         count = count + 1
-        log.info(s"Count: $count")
+        log.debug(s"Count: $count")
         if (count >= 5) caller ! count
       case "once-done" =>
-        log.info("Received Done")
+        log.debug("Received Done")
         caller ! "done"
     }
   }

@@ -4,10 +4,8 @@ import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import java.util.function.BiFunction
 
-import collection.JavaConverters._
-import scala.compat.java8.OptionConverters._
 import scala.compat.java8.FunctionConverters._
-import akka.actor.{AbstractActor, ActorLogging, ActorRef}
+import akka.actor.{AbstractActor, ActorRef}
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController
 import csw.services.loc.Connection
@@ -17,6 +15,7 @@ import csw.util.config.Configurations.{ObserveConfigArg, SetupConfig, SetupConfi
 import csw.util.config.RunId
 import csw.util.config.StateVariable.{CurrentState, CurrentStates, DemandState}
 import csw.services.ccs.AssemblyController.{RequestFailed, RequestResult, Validation}
+import csw.services.pkg.Component.AssemblyInfo
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
@@ -26,8 +25,8 @@ import scala.concurrent.Future
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
  */
-abstract class AbstractAssemblyControllerWithLifecycleHandler extends AbstractActor
-    with ActorLogging with Assembly with AssemblyController with LifecycleHandler {
+abstract class AbstractAssemblyControllerWithLifecycleHandler(override val info: AssemblyInfo) extends AbstractActor
+    with Assembly with AssemblyController with LifecycleHandler {
 
   /**
    * The default actor receive method for an assembly.

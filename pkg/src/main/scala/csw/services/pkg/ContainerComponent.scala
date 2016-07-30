@@ -41,7 +41,7 @@ import scala.util.{Failure, Success, Try}
  * See also "OSW TN012 Component Lifecycle Design".
  */
 object ContainerComponent {
-  private val logger = Logger(LoggerFactory.getLogger("ContainerComponent"))
+  private val logger = Logger(LoggerFactory.getLogger(ContainerComponent.getClass))
 
   // for parsing of file
   private[pkg] val CONTAINER = "container"
@@ -101,7 +101,7 @@ object ContainerComponent {
 
     def receive = {
       case Terminated(_) =>
-        log.info("{} has terminated, shutting down system", ref.path)
+        log.debug("{} has terminated, shutting down system", ref.path)
         context.system.terminate()
     }
   }
@@ -230,7 +230,7 @@ object ContainerComponent {
   private[pkg] def parseDuration(name: String, configName: String, conf: Config, defaultDuration: FiniteDuration): FiniteDuration = {
     import scala.concurrent.duration._
     val t = Try(FiniteDuration(conf.getDuration(configName).getSeconds, TimeUnit.SECONDS))
-    if (t.isFailure) logger.info(s"Container $configName for $name is missing or not valid, returning: $defaultDuration.")
+    if (t.isFailure) logger.debug(s"Container $configName for $name is missing or not valid, returning: $defaultDuration.")
     t.getOrElse(defaultDuration)
   }
 
@@ -300,7 +300,7 @@ object ContainerComponent {
       val initialDelay = parseDuration(name, INITIAL_DELAY, containerConfig, DEFAULT_INITIAL_DELAY)
       val creationDelay = parseDuration(name, CREATION_DELAY, containerConfig, DEFAULT_CREATION_DELAY)
       val lifecycleDelay = parseDuration(name, LIFECYCLE_DELAY, containerConfig, DEFAULT_LIFECYCLE_DELAY)
-      logger.info(s"Delays: init: $initialDelay, create: $creationDelay, lifecycle: $lifecycleDelay")
+      logger.debug(s"Delays: init: $initialDelay, create: $creationDelay, lifecycle: $lifecycleDelay")
       // For container, if no connectionType, set to Akka
       val registerAs = parseConnTypeWithDefault(name, containerConfig, Set(AkkaType))
       ContainerInfo(name, RegisterOnly, registerAs, componentConfigs, initialDelay, creationDelay, lifecycleDelay)
@@ -316,13 +316,13 @@ object ContainerComponent {
  * Implements the container actor based on the contents of the given config.
  */
 //noinspection ScalaUnusedSymbol
-final case class ContainerComponent(containerInfo: ContainerInfo) extends Container {
+final case class ContainerComponent(override val info: ContainerInfo) extends Container {
   implicit val ec = context.dispatcher
   import ContainerComponent._
 
-  val componentInfos = containerInfo.componentInfos
-  private val name = containerInfo.componentName
-  private val componentId = ComponentId(name, containerInfo.componentType)
+  val componentInfos = info.componentInfos
+  private val name = info.componentName
+  private val componentId = ComponentId(name, info.componentType)
 
   // This is set once the component is registered with the location service
   private var registrationOpt: Option[LocationService.RegistrationResult] = None
@@ -342,9 +342,9 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     case Halt                                  => halt(supervisors)
     case Restart                               => restart(supervisors)
     //    case CreateComponents(infos)               => createComponents(infos, supervisors)
-    case LifecycleStateChanged(state)          => log.info("Received state while running: " + state)
+    case LifecycleStateChanged(state)          => log.debug("Received state while running: " + state)
     case Terminated(actorRef)                  => componentDied(actorRef)
-    case x                                     => log.info(s"Unhandled command in runningReceive: $x")
+    case x                                     => log.debug(s"Unhandled command in runningReceive: $x")
   }
 
   private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {
@@ -360,7 +360,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
         }
       }
     case x =>
-      log.info(s"Unhandled command in restartReceive: $x")
+      log.debug(s"Unhandled command in restartReceive: $x")
   }
 
   // Tell all components to uninitialize and start an actor to wait until they do before restarting them.
@@ -376,7 +376,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
     // XXX allan: Delayed start caused problems in tests - unpredictable when Loaded status is received
     //    stagedCommand(cinfos.nonEmpty, containerInfo.creationDelay) {
     //      val cinfo = cinfos.head
-    //      log.info(s"Creating component: " + cinfo.componentName)
+    //      log.debug(s"Creating component: " + cinfo.componentName)
     //      createComponent(cinfo)
     //      cinfos = cinfos.tail
     //    }
@@ -388,11 +388,11 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   // If the component is configured to register with the location service, do it,
   // and save the result for unregistering later.
   private def registerWithLocationService(): Unit = {
-    if (containerInfo.locationServiceUsage != DoNotRegister) {
-      LocationService.registerAkkaConnection(componentId, self, containerInfo.prefix)(context.system).onComplete {
+    if (info.locationServiceUsage != DoNotRegister) {
+      LocationService.registerAkkaConnection(componentId, self, info.prefix)(context.system).onComplete {
         case Success(reg) =>
           registrationOpt = Some(reg)
-          log.info(s"$name: Registered $componentId with the location service")
+          log.debug(s"$name: Registered $componentId with the location service")
         case Failure(ex) =>
           // XXX allan: What to do in case of error?
           log.error(s"$name: Failed to register $componentId with the location service")
@@ -403,7 +403,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   // If the component is registered with the location service, unregister it
   private def unregisterFromLocationService(): Unit = {
     registrationOpt.foreach {
-      log.info(s"Unregistering $componentId from the location service")
+      log.debug(s"Unregistering $componentId from the location service")
       _.unregister()
     }
   }
@@ -411,7 +411,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   private def createComponent(componentInfo: ComponentInfo, supervisors: List[SupervisorInfo]): Option[SupervisorInfo] = {
     supervisors.find(_.componentInfo == componentInfo) match {
       case Some(existingComponentInfo) =>
-        log.error(s"In supervisor ${containerInfo.componentName}, component ${componentInfo.componentName} already exists")
+        log.error(s"In supervisor ${info.componentName}, component ${componentInfo.componentName} already exists")
         None
       case None =>
         val (componentActorSystem, supervisor) = Supervisor(componentInfo)
@@ -421,9 +421,9 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
   private def sendAllComponents(cmd: Any, infos: List[SupervisorInfo]) = {
     var sinfos = infos
-    stagedCommand(sinfos.nonEmpty, containerInfo.creationDelay) {
+    stagedCommand(sinfos.nonEmpty, info.creationDelay) {
       val sinfo: SupervisorInfo = sinfos.head
-      log.info(s"Sending $cmd to: ${sinfo.componentInfo.componentName}")
+      log.debug(s"Sending $cmd to: ${sinfo.componentInfo.componentName}")
       sinfo.supervisor ! cmd
       sinfos = sinfos.tail
     }
@@ -440,7 +440,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
 
   // Called when a component (lifecycle manager) terminates
   private def componentDied(actorRef: ActorRef): Unit = {
-    log.info(s"Actor $actorRef terminated")
+    log.debug(s"Actor $actorRef terminated")
   }
 
   // Tell all components to uninitialize
@@ -449,9 +449,9 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   }
 
   def staged[A, B, C](in: List[A], f: A => Option[B], f2: (List[A]) => C)(delay: FiniteDuration = 0.seconds) = {
-    log.info("Staged!!! " + in)
+    log.debug("Staged!!! " + in)
     in match {
-      case Nil => log.info("Staged Done") // Done
+      case Nil => log.debug("Staged Done") // Done
       case cinfo :: tail =>
         f(cinfo)
         val message = f2(tail)
@@ -460,7 +460,7 @@ final case class ContainerComponent(containerInfo: ContainerInfo) extends Contai
   }
 
   private def halt(supervisors: List[SupervisorInfo]): Unit = {
-    log.info("Halting")
+    log.debug("Halting")
     sendAllComponents(HaltComponent, supervisors)
   }
 }

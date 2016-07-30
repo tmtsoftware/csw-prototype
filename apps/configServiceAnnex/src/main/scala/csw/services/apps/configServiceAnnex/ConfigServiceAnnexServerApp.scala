@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory
  * Files are immutable. (TODO: Should delete be available?)
  */
 object ConfigServiceAnnexServerApp extends App {
-  val logger = Logger(LoggerFactory.getLogger("ConfigServiceAnnexServerApp"))
   LocationService.initInterface()
   ConfigServiceAnnexServer(registerWithLoc = true)
 }

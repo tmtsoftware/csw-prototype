@@ -1,8 +1,8 @@
 package csw.examples
 
-import akka.actor.{Actor, ActorLogging, Cancellable, Props}
+import akka.actor.{Actor, Cancellable, Props}
 import csw.services.ccs.HcdController
-import csw.services.event.{EventService, EventServiceSettings, EventSubscriber}
+import csw.services.events.{EventServiceSettings, TelemetryService, TelemetrySubscriber}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
@@ -10,7 +10,7 @@ import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.config.Configurations.SetupConfig
-import csw.util.config.Events.SystemEvent
+import csw.util.config.Events.StatusEvent
 import csw.util.config.IntKey
 
 import scala.concurrent.duration._
@@ -47,7 +47,7 @@ object HCDExample {
   }
 
   // Position generator actor
-  protected class PosGenerator(name: String, prefix: String) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
+  protected class PosGenerator(name: String, prefix: String) extends Actor with TimeService.TimeServiceScheduler {
 
     import java.time._
 
@@ -55,7 +55,7 @@ object HCDExample {
     import TimeService._
 
     val rand = Random
-    val eventService = EventService(prefix, EventServiceSettings(context.system))
+    val eventService = TelemetryService(EventServiceSettings(context.system))
 
     // Create a subscriber to positions (just for test)
     context.actorOf(Props(classOf[EventPosSubscriber], "ev subscriber", prefix))
@@ -74,8 +74,8 @@ object HCDExample {
 
       case Tick =>
         val (az, el) = genPair(rand)
-        val event = SystemEvent(prefix).add(azKey.set(az)).add(elKey.set(el))
-        eventService.publish(event)
+        val event = StatusEvent(prefix).add(azKey.set(az)).add(elKey.set(el))
+        eventService.set(event)
     }
 
     def genPair(r: Random): (Int, Int) = {
@@ -85,7 +85,7 @@ object HCDExample {
     }
   }
 
-  class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
+  class EventPosSubscriber(name: String, prefix: String) extends TelemetrySubscriber {
 
     import PosGenerator._
 
@@ -97,7 +97,7 @@ object HCDExample {
     subscribe(prefix)
 
     def receive: Receive = {
-      case event: SystemEvent =>
+      case event: StatusEvent =>
         val az = event(azKey).head
         val el = event.get(elKey).get.head
         log.info(s"Coords: az: $az, el: $el")
@@ -111,7 +111,7 @@ object HCDExample {
   }
 }
 
-class HCDExample(info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
+class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
   import HCDExample._
   import PosGenerator._
   import HCDExample._

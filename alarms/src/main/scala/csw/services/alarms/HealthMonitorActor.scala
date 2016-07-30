@@ -15,6 +15,8 @@ import HealthMonitorWorkorActor._
 import csw.services.alarms.AlarmService.HealthInfo
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 
+import scala.concurrent.Future
+
 /**
  * An actor that monitors selected subsystem or component health and notifies a method or
  * another actor of changes in the health status.
@@ -29,15 +31,20 @@ object HealthMonitorActor {
    * @param alarmKey     key matching all the alarms for a subsystem or component, etc.
    * @param subscriber   an optional actor that will receive HealthStatus and AlarmStatus messages
    * @param notifyHealth an optional function that will be called with HealthStatus messages
+   * @param notifyAll    if true, all severity changes are reported (for example, for logging), otherwise
+   *                     only the relevant changes in alarms are reported, for alarms that are not shelved and not out of service,
+   *                     and where the latched severity or calculated health actually changed
    */
   def props(
     alarmService: AlarmService,
     alarmKey:     AlarmKey,
     subscriber:   Option[ActorRef]             = None,
     notifyAlarm:  Option[AlarmStatus => Unit]  = None,
-    notifyHealth: Option[HealthStatus => Unit] = None
+    notifyHealth: Option[HealthStatus => Unit] = None,
+    notifyAll:    Boolean                      = false
   ): Props = {
-    Props(classOf[HealthMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber, notifyAlarm, notifyHealth)
+    Props(classOf[HealthMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber,
+      notifyAlarm, notifyHealth, notifyAll)
   }
 }
 
@@ -47,8 +54,9 @@ private class HealthMonitorActor(
   alarmService: AlarmServiceImpl,
   alarmKey:     AlarmKey,
   subscriber:   Option[ActorRef],
-  notifyAlarm:  Option[AlarmStatus => Unit]  = None,
-  notifyHealth: Option[HealthStatus => Unit]
+  notifyAlarm:  Option[AlarmStatus => Unit],
+  notifyHealth: Option[HealthStatus => Unit],
+  notifyAll:    Boolean
 )
     extends RedisSubscriberActor(
       address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
@@ -62,7 +70,7 @@ private class HealthMonitorActor(
   import context.dispatcher
 
   // Use a worker actor to keep track of the alarm severities and states, calculate health and notify listeners
-  var worker = context.actorOf(HealthMonitorWorkorActor.props(alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth))
+  var worker = context.actorOf(HealthMonitorWorkorActor.props(alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll))
 
   // Initialize the complete map once at startup, and then keep it up to date by subscribing to the Redis key pattern
   initAlarmMap()
@@ -111,16 +119,20 @@ private object HealthMonitorWorkorActor {
    * @param alarmService reference to alarm service instance
    * @param alarmKey     key matching all the alarms for a subsystem or component, etc.
    * @param subscriber   an optional actor that will receive HealthStatus messages
-   * @param notifyHealth       an optional function that will be called with HealthStatus messages
+   * @param notifyHealth an optional function that will be called with HealthStatus messages
+   * @param notifyAll    if true, all severity changes are reported (for example, for logging), otherwise
+   *                     only the relevant changes in alarms are reported, for alarms that are not shelved and not out of service,
+   *                     and where the latched severity or calculated health actually changed
    */
   def props(
     alarmService: AlarmServiceImpl,
     alarmKey:     AlarmKey,
-    subscriber:   Option[ActorRef]             = None,
-    notifyAlarm:  Option[AlarmStatus => Unit]  = None,
-    notifyHealth: Option[HealthStatus => Unit] = None
+    subscriber:   Option[ActorRef],
+    notifyAlarm:  Option[AlarmStatus => Unit],
+    notifyHealth: Option[HealthStatus => Unit],
+    notifyAll:    Boolean
   ): Props = {
-    Props(classOf[HealthMonitorWorkorActor], alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth)
+    Props(classOf[HealthMonitorWorkorActor], alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll)
   }
 }
 
@@ -131,8 +143,11 @@ private class HealthMonitorWorkorActor(
     alarmKeyPattern: AlarmKey,
     subscriber:      Option[ActorRef],
     notifyAlarm:     Option[AlarmStatus => Unit],
-    notifyHealth:    Option[HealthStatus => Unit]
+    notifyHealth:    Option[HealthStatus => Unit],
+    notifyAll:       Boolean
 ) extends Actor with ActorLogging {
+
+  import context.dispatcher
 
   var healthOpt: Option[Health] = None
 
@@ -159,7 +174,7 @@ private class HealthMonitorWorkorActor(
         val newMap = alarmMap + (alarmKey -> h)
         context.become(working(newMap))
         updateHealth(newMap)
-        if (alarmState.shelvedState == ShelvedState.Normal && alarmState.activationState == ActivationState.Normal)
+        if (notifyAll || (alarmState.shelvedState == ShelvedState.Normal && alarmState.activationState == ActivationState.Normal))
           notifyListeners(AlarmStatus(timestamp(), alarmKey, severityLevel, alarmState))
       }
   }
@@ -178,13 +193,29 @@ private class HealthMonitorWorkorActor(
   // Notify the subscribers of a change in the health
   private def notifyListeners(healthStatus: HealthStatus): Unit = {
     subscriber.foreach(_ ! healthStatus)
-    notifyHealth.foreach(f => f(healthStatus))
+
+    // Run callback in a future and report any errors
+    notifyHealth.foreach { f =>
+      Future {
+        f(healthStatus)
+      }.onFailure {
+        case ex => log.error("Health notification callback failed: ", ex)
+      }
+    }
   }
 
   // Notify the subscribers of a change in the severity of an alarm
   private def notifyListeners(alarmStatus: AlarmStatus): Unit = {
     subscriber.foreach(_ ! alarmStatus)
-    notifyAlarm.foreach(f => f(alarmStatus))
+
+    // Run callback in a future and report any errors
+    notifyAlarm.foreach { f =>
+      Future {
+        f(alarmStatus)
+      }.onFailure {
+        case ex => log.error("Alarm notification callback failed: ", ex)
+      }
+    }
   }
 }
 

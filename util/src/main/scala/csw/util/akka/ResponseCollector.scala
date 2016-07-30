@@ -43,7 +43,7 @@ class ResponseCollector[T](
       val nextTracker = tracker.addResponse(response)
 
       if (nextTracker.isDone) {
-        log.info("All responses received.")
+        log.debug("All responses received.")
         result.success(Result(nextResponses, Full))
         scheduledTimeout.cancel()
         context.stop(self)

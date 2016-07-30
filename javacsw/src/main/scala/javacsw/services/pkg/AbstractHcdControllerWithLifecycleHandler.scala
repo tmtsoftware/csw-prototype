@@ -1,7 +1,8 @@
 package javacsw.services.pkg
 
-import akka.actor.{AbstractActor, ActorLogging}
+import akka.actor.AbstractActor
 import csw.services.ccs.HcdController
+import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.{Hcd, LifecycleHandler}
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
@@ -9,8 +10,8 @@ import csw.util.config.StateVariable.CurrentState
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
  */
-abstract class AbstractHcdControllerWithLifecycleHandler extends AbstractActor
-    with ActorLogging with Hcd with HcdController with LifecycleHandler {
+abstract class AbstractHcdControllerWithLifecycleHandler(override val info: HcdInfo) extends AbstractActor
+    with Hcd with HcdController with LifecycleHandler {
 
   /**
    * The default actor receive method

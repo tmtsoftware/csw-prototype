@@ -14,11 +14,11 @@ abstract class AkkaTestSpec extends TestKit(ActorSystem()) with ImplicitSender
 
 object SupervisorTests {
 
-  case class SimpleTestHcd(hcdInfo: HcdInfo) extends Hcd with LifecycleHandler {
+  case class SimpleTestHcd(override val info: HcdInfo) extends Hcd with LifecycleHandler {
     def receive = lifecycleHandlerReceive
   }
 
-  case class SimpleTestAssembly(assemblyInfo: AssemblyInfo) extends Assembly with LifecycleHandler {
+  case class SimpleTestAssembly(override val info: AssemblyInfo) extends Assembly with LifecycleHandler {
     def receive = lifecycleHandlerReceive
   }
 

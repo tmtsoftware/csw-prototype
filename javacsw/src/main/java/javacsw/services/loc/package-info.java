@@ -82,7 +82,7 @@
  *     public void allResolved(Set<LocationService.Location> locations) {
  *         List<String> names = new ArrayList<>();
  *         locations.forEach(loc -> names.add(loc.connection().componentId().name()));
- *         log.info("Test Passed: Received services: " + names.stream().collect(Collectors.joining(", ")));
+ *         log.debug("Test Passed: Received services: " + names.stream().collect(Collectors.joining(", ")));
  *     }
  *
  *     // If a command line arg is given, it should be the number of (akka, http) pairs of services to start (default: 1 of each).

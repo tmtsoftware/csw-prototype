@@ -239,13 +239,13 @@ class LifecycleManager(component: ActorRef, name: String) extends FSM[LifecycleS
 
   when(LifecycleFailure) {
     case Event(state @ _, data @ _) =>
-      log.info(s"Lifecycle failed event/data: $state/$data in state: $stateName/$stateData")
+      log.debug(s"Lifecycle failed event/data: $state/$data in state: $stateName/$stateData")
       stop
   }
 
   onTransition {
     case _ -> LifecycleFailure =>
-      log.info(s"Sending failure to component: $nextStateData")
+      log.debug(s"Sending failure to component: $nextStateData")
       nextStateData match {
         case FailureInfo(nextState, reason) =>
           component ! LifecycleFailure(nextState, reason)

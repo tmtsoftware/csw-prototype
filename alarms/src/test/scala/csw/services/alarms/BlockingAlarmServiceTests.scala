@@ -74,7 +74,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       val alarms = alarmService.getAlarms(AlarmKey())
       alarms.foreach { alarm =>
         // XXX TODO: compare results
-        logger.info(s"List Alarm: $alarm")
+        logger.debug(s"List Alarm: $alarm")
       }
 
       // For testing callback
@@ -84,14 +84,14 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       // Called when alarm severity changes
       def printAlarmStatus(alarmStatus: AlarmStatus): Unit = {
         val a = alarmStatus.alarmKey
-        logger.info(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
+        logger.debug(s"Alarm Status: ${a.subsystem}:${a.component}:${a.name}: ${alarmStatus.currentSeverity}")
         callbackSev = alarmStatus.currentSeverity
       }
 
       // Called when the health status changes
       def printHealthStatus(healthStatus: HealthStatus): Unit = {
         val a = healthStatus.key
-        logger.info(s"Health Status: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
+        logger.debug(s"Health Status: ${a.subsystem}:${a.component}:${a.name}: ${healthStatus.health}")
         callbackHealth = Some(healthStatus.health)
       }
 
@@ -118,7 +118,8 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
 
       // Acknowledge the alarm, which clears it, resets it back to Okay
-      alarmService.acknowledgeAlarm(key1)
+      alarmService.acknowledgeAndResetAlarm(key1)
+      alarmService.setSeverity(key1, SeverityLevel.Okay)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback, so the test below passes
       assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay)) // alarm was cleared
       assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
@@ -144,7 +145,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(alarmService.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
 
       // Test alarm in deactivated state
-      alarmService.acknowledgeAlarm(key1)
+      alarmService.acknowledgeAndResetAlarm(key1)
       alarmService.setSeverity(key1, SeverityLevel.Okay)
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       alarmService.setActivationState(key1, ActivationState.OutOfService)
@@ -184,7 +185,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       Thread.sleep(shortDelayMs) // Give redis time to notify the callback
       assert(callbackHealth.contains(Health.Ill))
       assert(alarmService.getHealth(nfKey) == Health.Ill)
-      alarmService.acknowledgeAlarm(key2)
+      alarmService.acknowledgeAndResetAlarm(key2)
 
       alarmService.setSeverity(key2, SeverityLevel.Okay)
       alarmService.setSeverity(key3, SeverityLevel.Critical)
@@ -196,7 +197,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       assert(Try(alarmService.getAlarm(badKey)).isFailure)
       assert(Try(alarmService.setSeverity(badKey, SeverityLevel.Critical)).isFailure)
       assert(Try(alarmService.getSeverity(badKey)).isFailure)
-      assert(Try(alarmService.acknowledgeAlarm(badKey)).isFailure)
+      assert(Try(alarmService.acknowledgeAndResetAlarm(badKey)).isFailure)
       assert(Try(alarmService.getHealth(badKey)).isFailure)
       assert(Try(alarmService.setShelvedState(badKey, ShelvedState.Normal)).isFailure)
       assert(Try(alarmService.setActivationState(badKey, ActivationState.Normal)).isFailure)

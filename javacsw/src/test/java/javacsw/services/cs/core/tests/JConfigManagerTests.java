@@ -3,14 +3,14 @@ package javacsw.services.cs.core.tests;
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer;
-import javacsw.services.cs.JConfigManager;
+import javacsw.services.cs.IConfigManager;
 import javacsw.services.cs.akka.tests.JTestRepo;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * Tests the JConfigManager class
+ * Tests the IConfigManager class
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class JConfigManagerTests {
@@ -31,7 +31,7 @@ public class JConfigManagerTests {
     // Test creating a ConfigManager, storing and retrieving some files
     @Test
     public void testConfigManager() throws Exception {
-        JConfigManager manager = JTestRepo.getTestRepoConfigManager(system);
+        IConfigManager manager = JTestRepo.getTestRepoConfigManager(system);
         JConfigManagerTestHelper.runTests(manager, false);
 
         // Start the config service annex http server and wait for it to be ready for connections

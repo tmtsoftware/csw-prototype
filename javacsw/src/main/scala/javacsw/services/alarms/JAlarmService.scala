@@ -180,6 +180,12 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
   override def acknowledgeAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
     alarmService.acknowledgeAlarm(alarmKey).toJava.toCompletableFuture
 
+  override def resetAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
+    alarmService.resetAlarm(alarmKey).toJava.toCompletableFuture
+
+  override def acknowledgeAndResetAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
+    alarmService.acknowledgeAndResetAlarm(alarmKey).toJava.toCompletableFuture
+
   override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): CompletableFuture[Unit] =
     alarmService.setShelvedState(alarmKey, shelvedState).toJava.toCompletableFuture
 
@@ -191,10 +197,12 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
 
   override def monitorHealth(alarmKey: AlarmKey, subscriber: Optional[ActorRef],
                              notifyAlarm:  Optional[AlarmHandler],
-                             notifyHealth: Optional[HealthHandler]): AlarmMonitor = {
+                             notifyHealth: Optional[HealthHandler],
+                             notifyAll:    Boolean): AlarmMonitor = {
     alarmService.monitorHealth(alarmKey, subscriber.asScala,
       notifyAlarm.asScala.map(f => (alarmStatus: AlarmStatus) => f.handleAlarmStatus(alarmStatus)),
-      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)))
+      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)),
+      notifyAll)
   }
 
   override def shutdown(): Unit = alarmService.shutdown()
