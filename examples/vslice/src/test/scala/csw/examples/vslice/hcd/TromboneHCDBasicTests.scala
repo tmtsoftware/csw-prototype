@@ -2,6 +2,7 @@ package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import csw.examples.vslice.hcd.SingleAxisSimulator.AxisConfig
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
@@ -118,13 +119,36 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
     }
 
+    it("should allow fetching config") {
+
+      val (supervisor, tla) = newTestTrombone()
+      lifecycleStart(supervisor, tla)
+
+      tla ! Subscribe
+      tla ! AxisConfig
+
+      val config = expectMsgClass(classOf[CurrentState])
+      println("AxisStats: " + config)
+      config(axisNameKey).head equals (tla.underlyingActor.axisConfig.axisName)
+      config(lowLimitKey).head should be(tla.underlyingActor.axisConfig.lowLimit)
+      config(lowUserKey).head should be(tla.underlyingActor.axisConfig.lowUser)
+      config(highUserKey).head should be(tla.underlyingActor.axisConfig.highUser)
+      config(highLimitKey).head should be(tla.underlyingActor.axisConfig.highLimit)
+      config(homeValueKey).head should be(tla.underlyingActor.axisConfig.home)
+      config(startValueKey).head should be(tla.underlyingActor.axisConfig.startPosition)
+
+      tla ! Unsubscribe
+
+      tla.underlyingActor.context.stop(tla)
+    }
+
     it("should allow fetching stats") {
 
       val (supervisor, tla) = newTestTrombone()
       lifecycleStart(supervisor, tla)
 
       tla ! Subscribe
-      tla ! AxisStats
+      tla ! GetAxisStats
 
       val stats = expectMsgClass(classOf[CurrentState])
       //println("AxisStats: " + stats)
@@ -153,7 +177,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       msgs.last(positionKey).head should equal(tla.underlyingActor.axisConfig.startPosition + 1) // Init position is one off the start position
       //info("Msgs: " + msgs)
 
-      tla ! AxisStats
+      tla ! GetAxisStats
       val stats = expectMsgClass(classOf[CurrentState])
       //println("Stats: " + stats)
       stats.configKey should equal(TromboneHCD.axisStatsCK)
@@ -178,11 +202,11 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       val msgs = waitForMoveMsgs
       //info("Msgs: " + msgs)
       msgs.last(positionKey).head should equal(300)
-      msgs.last(homedKey).head should equal(true)
-      msgs.last(lowLimitKey).head should equal(false)
-      msgs.last(highLimitKey).head should equal(false)
+      msgs.last(inHomeKey).head should equal(true)
+      msgs.last(inLowLimitKey).head should equal(false)
+      msgs.last(inHighLimitKey).head should equal(false)
 
-      tla ! AxisStats
+      tla ! GetAxisStats
       val stats = expectMsgClass(classOf[CurrentState])
       //info(s"Stats: $stats")
       stats.configKey should equal(TromboneHCD.axisStatsCK)
@@ -235,8 +259,8 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       // Check the last message
       msgs.last(stateKey).head should be("AXIS_IDLE")
       msgs.last(positionKey).head should be(testActual)
-      msgs.last(lowLimitKey).head should equal(true)
-      msgs.last(highLimitKey).head should equal(false)
+      msgs.last(inLowLimitKey).head should equal(true)
+      msgs.last(inHighLimitKey).head should equal(false)
 
       //info("Msgs: " + msgs)
       tla ! Unsubscribe
@@ -264,8 +288,8 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       // Check the last message
       msgs.last(stateKey).head should be("AXIS_IDLE")
       msgs.last(positionKey).head should be(testActual)
-      msgs.last(lowLimitKey).head should equal(false)
-      msgs.last(highLimitKey).head should equal(true)
+      msgs.last(inLowLimitKey).head should equal(false)
+      msgs.last(inHighLimitKey).head should equal(true)
 
       //info("Msgs: " + msgs)
       tla ! Unsubscribe
@@ -290,12 +314,12 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       // Move 1
       tla ! Submit(SetupConfig(axisInitPrefix)) // Could use ones in TromboneHCD
       var msgs = waitForMoveMsgs
-      msgs.last(homedKey).head should be(false)
+      msgs.last(inHomeKey).head should be(false)
 
       // Move 2
       tla ! Submit(homeSC)
       msgs = waitForMoveMsgs
-      msgs.last(homedKey).head should be(true)
+      msgs.last(inHomeKey).head should be(true)
 
       // Move 3
       var testPos = 423
@@ -304,9 +328,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       // Check the last message
       msgs.last(positionKey).head should be(testPos)
       msgs.last(stateKey).head should be("AXIS_IDLE")
-      msgs.last(homedKey).head should be(false)
-      msgs.last(lowLimitKey).head should be(false)
-      msgs.last(highLimitKey).head should be(false)
+      msgs.last(inHomeKey).head should be(false)
+      msgs.last(inLowLimitKey).head should be(false)
+      msgs.last(inHighLimitKey).head should be(false)
 
       // Move 4
       testPos = 800
@@ -323,18 +347,18 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       // Check the last message
       msgs.last(positionKey).head should be(testPos)
       msgs.last(stateKey).head should be("AXIS_IDLE")
-      msgs.last(lowLimitKey).head should be(false)
-      msgs.last(highLimitKey).head should be(true)
+      msgs.last(inLowLimitKey).head should be(false)
+      msgs.last(inHighLimitKey).head should be(true)
 
       // Move 6
       tla ! Submit(homeSC)
       msgs = waitForMoveMsgs
-      msgs.last(homedKey).head should be(true)
-      msgs.last(lowLimitKey).head should be(false)
-      msgs.last(highLimitKey).head should be(false)
+      msgs.last(inHomeKey).head should be(true)
+      msgs.last(inLowLimitKey).head should be(false)
+      msgs.last(inHighLimitKey).head should be(false)
 
       // Get summary stats
-      tla ! AxisStats
+      tla ! GetAxisStats
       val stats = expectMsgClass(classOf[CurrentState])
       //println("Stats: " + stats)
       stats.configKey should equal(TromboneHCD.axisStatsCK)
@@ -375,7 +399,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       info("Msgs: " + msgs)
 
       // Get summary stats
-      tla ! AxisStats
+      tla ! GetAxisStats
       val stats = expectMsgClass(classOf[CurrentState])
       //println("Stats: " + stats)
       stats.configKey should equal(TromboneHCD.axisStatsCK)

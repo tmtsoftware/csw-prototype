@@ -24,7 +24,7 @@ import csw.util.config.{BooleanKey, DoubleItem, DoubleKey, StringKey}
 /**
   * TMT Source Code: 6/10/16.
   */
-class TromboneAssembly(override val info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
+class TromboneAssembly(override val info: AssemblyInfo) extends Assembly with AssemblyController {
 
   import LifecycleHandler._
   import TromboneAssembly._
@@ -44,31 +44,11 @@ class TromboneAssembly(override val info: AssemblyInfo) extends Assembly with As
   //trackConnections(info.connections)
 
 
-  override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
+  override def receive: Receive = controllerReceive orElse {
     case Quit =>
       println("Got it already")
       haltComponent(supervisor)
     case x ⇒ log.error(s"Unexpected message: $x")
-  }
-
-  /**
-    * Components can override this method to run code when initializing.
-    *
-    * @return either the new lifecycle state, or the lifecycle error
-    */
-  override def initialize(): HandlerResponse = {
-    log.info(s"initialize ${info.componentName}")
-    Success
-  }
-
-  /**
-    * Components can override this method to run code when starting up.
-    *
-    * @return either the new lifecycle state, or the lifecycle error
-    */
-  override def startup(): HandlerResponse = {
-    log.info(s"startup ${info.componentName}")
-    Success
   }
 
   /**

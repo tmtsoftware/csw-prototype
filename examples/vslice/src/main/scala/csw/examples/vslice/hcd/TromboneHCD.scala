@@ -24,7 +24,7 @@ import scala.language.implicitConversions
 /**
   * TMT Source Code: 6/20/16.
   */
-class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
+class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController {
 
   import SingleAxisSimulator._
   import TromboneHCD._
@@ -70,11 +70,22 @@ class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
   def runningReceive2 = lifecycleReceivePF orElse unhandledPF
 
   def runningReceivePF: Receive = {
-    case AxisStats =>
+    case GetAxisStats =>
       tromboneAxis ! GetStatistics
 
     case AxisStarted =>
     //println("Axis Started")
+
+    case GetAxisConfig =>
+      val axisConfigState = defaultConfigState.madd(
+        lowLimitKey -> axisConfig.lowLimit,
+        lowUserKey -> axisConfig.lowUser,
+        highUserKey -> axisConfig.highUser,
+        highLimitKey -> axisConfig.highLimit,
+        homeValueKey -> axisConfig.home,
+        startValueKey -> axisConfig.startPosition
+      )
+      notifySubscribers(axisConfigState)
 
     case au@AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
       //log.info(s"Axis Update: $au")
@@ -83,9 +94,9 @@ class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
       val tromboneAxisState = defaultAxisState.madd(
         positionKey -> currentPosition withUnits encoder,
         stateKey -> axisState.toString,
-        lowLimitKey -> inLowLimit,
-        highLimitKey -> inHighLimit,
-        homedKey -> inHomed
+        inLowLimitKey -> inLowLimit,
+        inHighLimitKey -> inHighLimit,
+        inHomeKey -> inHomed
       )
       notifySubscribers(tromboneAxisState)
 
@@ -178,7 +189,10 @@ object TromboneHCD {
   val componentClassName = "csw.examples.vslice.hcd.TromboneHCD"
   val trombonePrefix = "nfiraos.ncc.tromboneHCD"
 
+  val tromboneAxisName = "tromboneAxis"
+
   val axisStatePrefix = s"$trombonePrefix.axis1State"
+  val axisStateCK: ConfigKey = axisStatePrefix
   val axisNameKey = StringKey("axisName")
   val stateKey = StringKey("defaultAxisState")
   val IDLE = SingleAxisSimulator.AXIS_IDLE.toString
@@ -186,18 +200,17 @@ object TromboneHCD {
   val ERROR = SingleAxisSimulator.AXIS_ERROR.toString
   //val stateKey = ChoiceKey("defaultAxisState", Choices(IDLE, MOVING, ERROR))
   val positionKey = IntKey("position")
-  val lowLimitKey = BooleanKey("lowLimit")
-  val highLimitKey = BooleanKey("highLimit")
-  val homedKey = BooleanKey("homed")
+  val inLowLimitKey = BooleanKey("lowLimit")
+  val inHighLimitKey = BooleanKey("highLimit")
+  val inHomeKey = BooleanKey("homed")
 
-  val axisName = "tromboneAxis"
-  val defaultAxisState = CurrentState(axisStatePrefix).madd(
-    axisNameKey -> axisName,
+  val defaultAxisState = CurrentState(axisStateCK).madd(
+    axisNameKey -> tromboneAxisName,
     stateKey -> IDLE,
     positionKey -> 0 withUnits encoder,
-    lowLimitKey -> false,
-    highLimitKey -> false,
-    homedKey -> false
+    inLowLimitKey -> false,
+    inHighLimitKey -> false,
+    inHomeKey -> false
   )
 
   val axisStatsPrefix = s"$trombonePrefix.axisStats"
@@ -209,9 +222,8 @@ object TromboneHCD {
   val successCountKey = IntKey("successCount")
   val failureCountKey = IntKey("failureCount")
   val cancelCountKey = IntKey("cancelCount")
-
   val defaultStatsState = CurrentState(axisStatsCK).madd(
-    axisNameKey -> axisName,
+    axisNameKey -> tromboneAxisName,
     initCountKey -> 0,
     moveCountKey -> 0,
     homeCountKey -> 0,
@@ -220,6 +232,19 @@ object TromboneHCD {
     failureCountKey -> 0,
     cancelCountKey -> 0
   )
+
+  val axisConfigPrefix = s"$trombonePrefix.axisConfig"
+  val axisConfigCK: ConfigKey = axisConfigPrefix
+  // axisNameKey
+  val lowLimitKey = IntKey("lowLimit")
+  val lowUserKey = IntKey("lowUser")
+  val highUserKey = IntKey("highUser")
+  val highLimitKey = IntKey("highLimit")
+  val homeValueKey = IntKey("homeValue")
+  val startValueKey = IntKey("startValue")
+  // No full default current state because it is determined at runtime
+  val defaultConfigState = CurrentState(axisConfigCK).madd(
+    axisNameKey -> tromboneAxisName)
 
   val axisMovePrefix = s"$trombonePrefix.move"
   val axisMoveCK: ConfigKey = axisMovePrefix
@@ -239,8 +264,10 @@ object TromboneHCD {
 
   // Testing messages for TromboneHCD
   trait TromboneEngineering
-  case object AxisStats extends TromboneEngineering
 
+  case object GetAxisStats extends TromboneEngineering
+
+  case object GetAxisConfig extends TromboneEngineering
 }
 
 /**

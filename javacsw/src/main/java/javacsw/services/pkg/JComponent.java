@@ -9,6 +9,7 @@ import csw.services.pkg.Component$;
 import csw.services.pkg.Component.*;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -24,8 +25,8 @@ public class JComponent {
     public static final LocationServiceUsage RegisterOnly = Component.RegisterOnly$.MODULE$;
     public static final LocationServiceUsage RegisterAndTrackServices = Component.RegisterAndTrackServices$.MODULE$;
 
-    public static ActorRef create(ActorContext context, ComponentInfo componentInfo) {
-        return Component$.MODULE$.create(context, componentInfo);
+    public static ActorRef create(ActorContext context, ComponentInfo componentInfo, Optional<ActorRef> supervisor) {
+        return Component$.MODULE$.create(context, componentInfo, supervisor);
     }
 
     /**

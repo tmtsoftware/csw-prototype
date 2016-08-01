@@ -1,5 +1,7 @@
 package csw.services.pkg
 
+import java.util.Optional
+
 import akka.actor._
 import csw.services.loc.{ComponentType, Connection, ConnectionType}
 import csw.services.loc.ComponentType._
@@ -121,28 +123,44 @@ object Component {
     val prefix = ""
   }
 
-  private def createHCD(context: ActorContext, cinfo: ComponentInfo): ActorRef = {
+  private def createHCD(context: ActorContext, cinfo: ComponentInfo, supervisorIn: Option[ActorRef]): ActorRef = {
+
+    val supervisor = supervisorIn match {
+      case None => context.self // Will be parent which is supervisor
+      case Some(supervisorRef) => supervisorRef
+    }
+
     // Form props for component
-    val props = Props(Class.forName(cinfo.componentClassName), cinfo)
+    val props = Props(Class.forName(cinfo.componentClassName), cinfo, supervisor)
 
     context.actorOf(props, s"${cinfo.componentName}-${cinfo.componentType}")
   }
 
-  private def createAssembly(context: ActorContext, cinfo: AssemblyInfo): ActorRef = {
-    val props = Props(Class.forName(cinfo.componentClassName), cinfo)
+  private def createAssembly(context: ActorContext, cinfo: AssemblyInfo, supervisorIn: Option[ActorRef]): ActorRef = {
+
+    val supervisor = supervisorIn match {
+      case None => context.self // Will be parent which is supervisor
+      case Some(supervisorRef) => supervisorRef
+    }
+
+    val props = Props(Class.forName(cinfo.componentClassName), cinfo, supervisor)
 
     context.actorOf(props, s"${cinfo.componentName}-${cinfo.componentType}")
   }
 
-  def create(context: ActorContext, componentInfo: ComponentInfo): ActorRef = componentInfo match {
+  def create(context: ActorContext, componentInfo: ComponentInfo, supervisorIn: Option[ActorRef] = None): ActorRef = componentInfo match {
     case hcd: HcdInfo =>
-      createHCD(context, hcd)
+      createHCD(context, hcd, supervisorIn)
     case ass: AssemblyInfo =>
-      createAssembly(context, ass)
+      createAssembly(context, ass, supervisorIn)
     case cont: ContainerInfo =>
       ContainerComponent.create(cont)
   }
 
+  // This is for JComponent create
+  import scala.compat.java8.OptionConverters._
+
+  def create(context: ActorContext, componentInfo: ComponentInfo, supervisorIn: Optional[ActorRef]): ActorRef = create(context, componentInfo, supervisorIn.asScala)
 }
 
 trait Component extends Actor with PrefixedActorLogging {
