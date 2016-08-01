@@ -9,6 +9,7 @@ import java.util.*;
 /**
  * Java API for configuration items.
  */
+@SuppressWarnings("unused")
 public class JItems {
   // BooleanItem
   public static BooleanKey BooleanKey(String name) {

@@ -1,6 +1,6 @@
 package csw.util.config
 
-import csw.util.config.UnitsOfMeasure.{Deg, Meters, Seconds}
+import csw.util.config.UnitsOfMeasure.{degrees, meters, seconds}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
@@ -46,15 +46,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(false, true)
 
     it("should work with list, withUnits") {
-      val ii = bk.set(listIn).withUnits(Deg)
-      ii.units should be(Deg)
+      val ii = bk.set(listIn).withUnits(degrees)
+      ii.units should be(degrees)
       ii.value(1) should equal(listIn(1))
       ii.values should equal(listIn)
     }
 
     it("should work with list, units") {
-      val ii = bk.set(listIn, Deg)
-      ii.units should be(Deg)
+      val ii = bk.set(listIn, degrees)
+      ii.units should be(degrees)
       ii.value(1) should equal(listIn(1))
       ii.values should equal(listIn)
     }
@@ -78,15 +78,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(la1, la2)
 
     it("should test with list, withUnits") {
-      val li2: ByteArrayItem = lk.set(listIn).withUnits(UnitsOfMeasure.Deg)
-      li2.units should be(Deg)
+      val li2: ByteArrayItem = lk.set(listIn).withUnits(UnitsOfMeasure.degrees)
+      li2.units should be(degrees)
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
 
     it("should test with list, units") {
-      val li2 = lk.set(listIn, Deg)
-      li2.units should be theSameInstanceAs Deg
+      val li2 = lk.set(listIn, degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
@@ -94,8 +94,8 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("should test using one array with and without units") {
       var li2 = lk.set(a1) // Uses implicit to create from long array
       li2.head should equal(la1)
-      li2 = lk.set(a2).withUnits(Deg)
-      li2.units should be theSameInstanceAs Deg
+      li2 = lk.set(a2).withUnits(degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.head should equal(la2)
     }
 
@@ -108,7 +108,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val b: Array[Byte] = Array[Byte](10, 20, 30)
       val c: Array[Byte] = Array[Byte](100, 101, 102)
 
-      val li4: ByteArrayItem = lk.set(a, b, c).withUnits(Meters)
+      val li4: ByteArrayItem = lk.set(a, b, c).withUnits(meters)
       li4.values.size should be(3)
       li4.value(2) should equal(ByteArray(c))
     }
@@ -132,15 +132,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(lm1, lm2)
 
     it("should work with list and withUnits") {
-      val di = dk.set(listIn).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
 
     it("should work with list and units") {
-      val di = dk.set(listIn, Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn, degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
@@ -148,21 +148,21 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("work with one matrix without and with units") {
       var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
-      di = dk.set(m1).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      di = dk.set(m1).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.head should equal(lm1)
     }
 
     it("work with varargs") {
-      val di = dk.set(lm1, lm2).withUnits(Seconds)
-      di.units should be theSameInstanceAs Seconds
+      val di = dk.set(lm1, lm2).withUnits(seconds)
+      di.units should be theSameInstanceAs seconds
       di.value(1) should equal(lm2)
       di.values should equal(listIn)
     }
 
     it("work with varargs as arrays") {
-      val di = dk.set(m1, m2).withUnits(Meters)
-      di.units should be theSameInstanceAs Meters
+      val di = dk.set(m1, m2).withUnits(meters)
+      di.units should be theSameInstanceAs meters
       di.value(0) should equal(lm1)
       di.values should equal(listIn)
     }
@@ -182,15 +182,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector[Char]('K', 'G')
 
     it("should work with list, withUnits") {
-      val li = lk.set(listIn).withUnits(Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn).withUnits(degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
 
     it("should work with list, units") {
-      val li = lk.set(listIn, Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn, degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
@@ -210,15 +210,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector[Double](123.0, 456.0)
 
     it("should work with list, withUnits") {
-      val li = lk.set(listIn).withUnits(Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn).withUnits(degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
 
     it("should work with list, units") {
-      val li = lk.set(listIn, Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn, degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
@@ -242,15 +242,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(la1, la2)
 
     it("should test with list, withUnits") {
-      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.Deg)
-      li2.units should be(Deg)
+      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.degrees)
+      li2.units should be(degrees)
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
 
     it("should test with list, units") {
-      val li2 = lk.set(listIn, Deg)
-      li2.units should be theSameInstanceAs Deg
+      val li2 = lk.set(listIn, degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
@@ -258,8 +258,8 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("should test using one array with and without units") {
       var li2 = lk.set(a1) // Uses implicit to create from long array
       li2.head should equal(la1)
-      li2 = lk.set(a2).withUnits(Deg)
-      li2.units should be theSameInstanceAs Deg
+      li2 = lk.set(a2).withUnits(degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.head should equal(la2)
     }
 
@@ -272,7 +272,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val b: Array[Double] = Array(10, 20, 30)
       val c: Array[Double] = Array(100, 200, 300)
 
-      val li4 = lk.set(a, b, c).withUnits(Meters)
+      val li4 = lk.set(a, b, c).withUnits(meters)
       li4.values.size should be(3)
       li4.value(2) should equal(DoubleArray(c))
     }
@@ -296,15 +296,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(lm1, lm2)
 
     it("should work with list and withUnits") {
-      val di = dk.set(listIn).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
 
     it("should work with list and units") {
-      val di = dk.set(listIn, Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn, degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
@@ -312,21 +312,21 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("work with one matrix without and with units") {
       var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
-      di = dk.set(m1).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      di = dk.set(m1).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.head should equal(lm1)
     }
 
     it("work with varargs") {
-      val di = dk.set(lm1, lm2).withUnits(Seconds)
-      di.units should be theSameInstanceAs Seconds
+      val di = dk.set(lm1, lm2).withUnits(seconds)
+      di.units should be theSameInstanceAs seconds
       di.value(1) should equal(lm2)
       di.values should equal(listIn)
     }
 
     it("work with varargs as arrays") {
-      val di = dk.set(m1, m2).withUnits(Meters)
-      di.units should be theSameInstanceAs Meters
+      val di = dk.set(m1, m2).withUnits(meters)
+      di.units should be theSameInstanceAs meters
       di.value(0) should equal(lm1)
       di.values should equal(listIn)
     }
@@ -346,15 +346,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector[Float](123.0f, 456.0f)
 
     it("should work with list, withUnits") {
-      val li = lk.set(listIn).withUnits(Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn).withUnits(degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
 
     it("should work with list, units") {
-      val li = lk.set(listIn, Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn, degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
@@ -378,15 +378,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(la1, la2)
 
     it("should test with list, withUnits") {
-      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.Deg)
-      li2.units should be(Deg)
+      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.degrees)
+      li2.units should be(degrees)
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
 
     it("should test with list, units") {
-      val li2 = lk.set(listIn, Deg)
-      li2.units should be theSameInstanceAs Deg
+      val li2 = lk.set(listIn, degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
@@ -394,8 +394,8 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("should test using one array with and without units") {
       var li2 = lk.set(a1) // Uses implicit to create from long array
       li2.head should equal(la1)
-      li2 = lk.set(a2).withUnits(Deg)
-      li2.units should be theSameInstanceAs Deg
+      li2 = lk.set(a2).withUnits(degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.head should equal(la2)
     }
 
@@ -408,7 +408,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val b: Array[Float] = Array(10f, 20f, 30f)
       val c: Array[Float] = Array(100f, 200f, 300f)
 
-      val li4 = lk.set(a, b, c).withUnits(Meters)
+      val li4 = lk.set(a, b, c).withUnits(meters)
       li4.values.size should be(3)
       li4.value(2) should equal(FloatArray(c))
     }
@@ -432,15 +432,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(lm1, lm2)
 
     it("should work with list and withUnits") {
-      val di = dk.set(listIn).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
 
     it("should work with list and units") {
-      val di = dk.set(listIn, Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn, degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
@@ -448,21 +448,21 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("work with one matrix without and with units") {
       var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
-      di = dk.set(m1).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      di = dk.set(m1).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.head should equal(lm1)
     }
 
     it("work with varargs") {
-      val di = dk.set(lm1, lm2).withUnits(Seconds)
-      di.units should be theSameInstanceAs Seconds
+      val di = dk.set(lm1, lm2).withUnits(seconds)
+      di.units should be theSameInstanceAs seconds
       di.value(1) should equal(lm2)
       di.values should equal(listIn)
     }
 
     it("work with varargs as arrays") {
-      val di = dk.set(m1, m2).withUnits(Meters)
-      di.units should be theSameInstanceAs Meters
+      val di = dk.set(m1, m2).withUnits(meters)
+      di.units should be theSameInstanceAs meters
       di.value(0) should equal(lm1)
       di.values should equal(listIn)
     }
@@ -482,16 +482,16 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector[Int](123, 456)
 
     it("should work with list, withUnits") {
-      val li = lk.set(listIn).withUnits(Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn).withUnits(degrees)
+      li.units should be(degrees)
       li.value(0) should equal(listIn(0))
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
 
     it("should work with list, units") {
-      val li = lk.set(listIn, Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn, degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
@@ -515,15 +515,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(la1, la2)
 
     it("should test with list, withUnits") {
-      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.Deg)
-      li2.units should be(Deg)
+      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.degrees)
+      li2.units should be(degrees)
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
 
     it("should test with list, units") {
-      val li2 = lk.set(listIn, Deg)
-      li2.units should be theSameInstanceAs Deg
+      val li2 = lk.set(listIn, degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
@@ -531,8 +531,8 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("should test using one array with and without units") {
       var li2 = lk.set(a1) // Uses implicit to create from int array
       li2.head should equal(la1)
-      li2 = lk.set(a2).withUnits(Deg)
-      li2.units should be theSameInstanceAs Deg
+      li2 = lk.set(a2).withUnits(degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.head should equal(la2)
     }
 
@@ -545,7 +545,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val b: Array[Int] = Array(10, 20, 30)
       val c: Array[Int] = Array(100, 200, 300)
 
-      val li4 = lk.set(a, b, c).withUnits(Meters)
+      val li4 = lk.set(a, b, c).withUnits(meters)
       li4.values.size should be(3)
       li4.value(2) should equal(IntArray(c))
     }
@@ -569,15 +569,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(lm1, lm2)
 
     it("should work with list and withUnits") {
-      val di = dk.set(listIn).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
 
     it("should work with list and units") {
-      val di = dk.set(listIn, Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn, degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
@@ -585,21 +585,21 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("work with one matrix without and with units") {
       var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
-      di = dk.set(m1).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      di = dk.set(m1).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.head should equal(lm1)
     }
 
     it("work with varargs") {
-      val di = dk.set(lm1, lm2).withUnits(Seconds)
-      di.units should be theSameInstanceAs Seconds
+      val di = dk.set(lm1, lm2).withUnits(seconds)
+      di.units should be theSameInstanceAs seconds
       di.value(1) should equal(lm2)
       di.values should equal(listIn)
     }
 
     it("work with varargs as arrays") {
-      val di = dk.set(m1, m2).withUnits(Meters)
-      di.units should be theSameInstanceAs Meters
+      val di = dk.set(m1, m2).withUnits(meters)
+      di.units should be theSameInstanceAs meters
       di.value(0) should equal(lm1)
       di.values should equal(listIn)
     }
@@ -618,15 +618,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector[Long](123L, 456L)
 
     it("should work with list, withUnits") {
-      val li = lk.set(listIn).withUnits(Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn).withUnits(degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
 
     it("should work with list, units") {
-      val li = lk.set(listIn, Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn, degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
@@ -650,15 +650,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(la1, la2)
 
     it("should test with list, withUnits") {
-      val li2: LongArrayItem = lk.set(listIn).withUnits(UnitsOfMeasure.Deg)
-      li2.units should be(Deg)
+      val li2: LongArrayItem = lk.set(listIn).withUnits(UnitsOfMeasure.degrees)
+      li2.units should be(degrees)
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
 
     it("should test with list, units") {
-      val li2 = lk.set(listIn, Deg)
-      li2.units should be theSameInstanceAs Deg
+      val li2 = lk.set(listIn, degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
@@ -666,8 +666,8 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("should test using one array with and without units") {
       var li2 = lk.set(a1) // Uses implicit to create from long array
       li2.head should equal(la1)
-      li2 = lk.set(a2).withUnits(Deg)
-      li2.units should be theSameInstanceAs Deg
+      li2 = lk.set(a2).withUnits(degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.head should equal(la2)
     }
 
@@ -680,7 +680,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val b: Array[Long] = Array(10, 20, 30)
       val c: Array[Long] = Array(100, 200, 300)
 
-      val li4: LongArrayItem = lk.set(a, b, c).withUnits(Meters)
+      val li4: LongArrayItem = lk.set(a, b, c).withUnits(meters)
       li4.values.size should be(3)
       li4.value(2) should equal(LongArray(c))
     }
@@ -704,15 +704,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(lm1, lm2)
 
     it("should work with list and withUnits") {
-      val di = dk.set(listIn).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
 
     it("should work with list and units") {
-      val di = dk.set(listIn, Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn, degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
@@ -720,21 +720,21 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("work with one matrix without and with units") {
       var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
-      di = dk.set(m1).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      di = dk.set(m1).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.head should equal(lm1)
     }
 
     it("work with varargs") {
-      val di = dk.set(lm1, lm2).withUnits(Seconds)
-      di.units should be theSameInstanceAs Seconds
+      val di = dk.set(lm1, lm2).withUnits(seconds)
+      di.units should be theSameInstanceAs seconds
       di.value(1) should equal(lm2)
       di.values should equal(listIn)
     }
 
     it("work with varargs as arrays") {
-      val di = dk.set(m1, m2).withUnits(Meters)
-      di.units should be theSameInstanceAs Meters
+      val di = dk.set(m1, m2).withUnits(meters)
+      di.units should be theSameInstanceAs meters
       di.value(0) should equal(lm1)
       di.values should equal(listIn)
     }
@@ -754,16 +754,16 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector[Short](123, 456)
 
     it("should work with list, withUnits") {
-      val li = lk.set(listIn).withUnits(Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn).withUnits(degrees)
+      li.units should be(degrees)
       li.value(0) should equal(listIn(0))
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
 
     it("should work with list, units") {
-      val li = lk.set(listIn, Deg)
-      li.units should be(Deg)
+      val li = lk.set(listIn, degrees)
+      li.units should be(degrees)
       li.value(1) should equal(listIn(1))
       li.values should equal(listIn)
     }
@@ -787,15 +787,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(la1, la2)
 
     it("should test with list, withUnits") {
-      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.Deg)
-      li2.units should be(Deg)
+      val li2 = lk.set(listIn).withUnits(UnitsOfMeasure.degrees)
+      li2.units should be(degrees)
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
 
     it("should test with list, units") {
-      val li2 = lk.set(listIn, Deg)
-      li2.units should be theSameInstanceAs Deg
+      val li2 = lk.set(listIn, degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.value(1) should equal(listIn(1))
       li2.values should equal(listIn)
     }
@@ -803,8 +803,8 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("should test using one array with and without units") {
       var li2 = lk.set(a1) // Uses implicit to create from int array
       li2.head should equal(la1)
-      li2 = lk.set(a2).withUnits(Deg)
-      li2.units should be theSameInstanceAs Deg
+      li2 = lk.set(a2).withUnits(degrees)
+      li2.units should be theSameInstanceAs degrees
       li2.head should equal(la2)
     }
 
@@ -817,7 +817,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val b: Array[Short] = Array[Short](10, 20, 30)
       val c: Array[Short] = Array[Short](100, 200, 300)
 
-      val li4 = lk.set(a, b, c).withUnits(Meters)
+      val li4 = lk.set(a, b, c).withUnits(meters)
       li4.values.size should be(3)
       li4.value(2) should equal(ShortArray(c))
     }
@@ -841,15 +841,15 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     val listIn = Vector(lm1, lm2)
 
     it("should work with list and withUnits") {
-      val di = dk.set(listIn).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
 
     it("should work with list and units") {
-      val di = dk.set(listIn, Deg)
-      di.units should be theSameInstanceAs Deg
+      val di = dk.set(listIn, degrees)
+      di.units should be theSameInstanceAs degrees
       di.value(1) should equal(listIn(1))
       di.values should equal(listIn)
     }
@@ -857,21 +857,21 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("work with one matrix without and with units") {
       var di = dk.set(m1) // This is an implicit
       di.head should equal(lm1)
-      di = dk.set(m1).withUnits(Deg)
-      di.units should be theSameInstanceAs Deg
+      di = dk.set(m1).withUnits(degrees)
+      di.units should be theSameInstanceAs degrees
       di.head should equal(lm1)
     }
 
     it("work with varargs") {
-      val di = dk.set(lm1, lm2).withUnits(Seconds)
-      di.units should be theSameInstanceAs Seconds
+      val di = dk.set(lm1, lm2).withUnits(seconds)
+      di.units should be theSameInstanceAs seconds
       di.value(1) should equal(lm2)
       di.values should equal(listIn)
     }
 
     it("work with varargs as arrays") {
-      val di = dk.set(m1, m2).withUnits(Meters)
-      di.units should be theSameInstanceAs Meters
+      val di = dk.set(m1, m2).withUnits(meters)
+      di.units should be theSameInstanceAs meters
       di.value(0) should equal(lm1)
       di.values should equal(listIn)
     }

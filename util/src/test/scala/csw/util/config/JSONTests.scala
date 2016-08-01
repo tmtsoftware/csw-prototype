@@ -6,7 +6,7 @@ import spray.json._
 import ConfigJSON._
 import csw.util.config.Events.{ObserveEvent, StatusEvent, SystemEvent}
 import csw.util.config.StateVariable.{CurrentState, DemandState}
-import csw.util.config.UnitsOfMeasure.Meters
+import csw.util.config.UnitsOfMeasure.meters
 
 object JSONTests extends DefaultJsonProtocol {
 
@@ -147,7 +147,7 @@ class JSONTests extends FunSpec {
     val k2 = StringKey(s2)
 
     val i1 = k1.set(22, 33, 44)
-    val i2 = k2.set("a", "b", "c").withUnits(UnitsOfMeasure.Deg)
+    val i2 = k2.set("a", "b", "c").withUnits(UnitsOfMeasure.degrees)
 
     it("should encode and decode items list") {
       // Use this to get a list to test
@@ -173,10 +173,10 @@ class JSONTests extends FunSpec {
     val i1 = k1.set('d').withUnits(UnitsOfMeasure.NoUnits)
     val i2 = k2.set(22).withUnits(UnitsOfMeasure.NoUnits)
     val i3 = k3.set(1234L).withUnits(UnitsOfMeasure.NoUnits)
-    val i4 = k4.set(123.45f).withUnits(UnitsOfMeasure.Deg)
-    val i5 = k5.set(123.456).withUnits(UnitsOfMeasure.Meters)
+    val i4 = k4.set(123.45f).withUnits(UnitsOfMeasure.degrees)
+    val i5 = k5.set(123.456).withUnits(UnitsOfMeasure.meters)
     val i6 = k6.set(false)
-    val i7 = k7.set("GG495").withUnits(UnitsOfMeasure.Deg)
+    val i7 = k7.set("GG495").withUnits(UnitsOfMeasure.degrees)
 
     it("Should encode/decode a SetupConfig") {
       val c1 = SetupConfig(ck).add(i1).add(i2).add(i3).add(i4).add(i5).add(i6).add(i7)
@@ -257,12 +257,12 @@ class JSONTests extends FunSpec {
       val k1 = GenericKey[MyData2]("MyData2", "testData")
       val d1 = MyData2(1, 2.0f, 3.0, "4")
       val d2 = MyData2(10, 20.0f, 30.0, "40")
-      val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.Meters)
+      val i1 = k1.set(d1, d2).withUnits(UnitsOfMeasure.meters)
       val sc1 = SetupConfig(ck).add(i1)
       assert(sc1.get(k1).get.values.size == 2)
       assert(sc1.get(k1).get.values(0) == d1)
       assert(sc1.get(k1).get.values(1) == d2)
-      assert(sc1.get(k1).get.units == UnitsOfMeasure.Meters)
+      assert(sc1.get(k1).get.units == UnitsOfMeasure.meters)
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("2: sc1out: " + sc1out.prettyPrint)
@@ -272,9 +272,9 @@ class JSONTests extends FunSpec {
       assert(sc1in.get(k1).get.values.size == 2)
       assert(sc1in.get(k1).get.values(0) == d1)
       assert(sc1in.get(k1).get.values(1) == d2)
-      assert(sc1in.get(k1).get.units == UnitsOfMeasure.Meters)
+      assert(sc1in.get(k1).get.units == UnitsOfMeasure.meters)
 
-      val sc2 = SetupConfig(ck).add(k1.set(d1, d2).withUnits(Meters))
+      val sc2 = SetupConfig(ck).add(k1.set(d1, d2).withUnits(meters))
       assert(sc2 == sc1)
     }
   }

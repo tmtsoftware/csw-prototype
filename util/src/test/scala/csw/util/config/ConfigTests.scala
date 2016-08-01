@@ -47,9 +47,9 @@ class ConfigTests extends FunSpec {
       assert(i.head == 22)
 
       assert(k2.keyName eq s2)
-      val j: StringItem = k2.set("Bob").withUnits(UnitsOfMeasure.Meters)
+      val j: StringItem = k2.set("Bob").withUnits(UnitsOfMeasure.meters)
       assert(j.values == Vector("Bob"))
-      assert(j.units == Meters)
+      assert(j.units == meters)
     }
 
     it("Should support equality of keys") {
@@ -79,17 +79,17 @@ class ConfigTests extends FunSpec {
 
     it("Should allow setting with units") {
       var sc1 = SetupConfig(ck1)
-      sc1 = sc1.madd(k1.set(22).withUnits(Deg), k2.set("B"))
+      sc1 = sc1.madd(k1.set(22).withUnits(degrees), k2.set("B"))
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
       assert(sc1.exists(k2))
-      assert(sc1.get(k1).map(_.units == Deg).get)
+      assert(sc1.get(k1).map(_.units == degrees).get)
       assert(sc1.get(k2).get.units == NoUnits)
     }
 
     it("Should allow apply which returns values") {
       var sc1 = SetupConfig(ck1)
-      sc1 = sc1.madd(k1.set(22).withUnits(Deg), k2.set("C"))
+      sc1 = sc1.madd(k1.set(22).withUnits(degrees), k2.set("C"))
 
       val v1: IntItem = sc1(k1)
       val v2: StringItem = sc1(k2)
@@ -106,9 +106,9 @@ class ConfigTests extends FunSpec {
       assert(sc1.exists(k2))
       assert(sc1(k2).values == Vector("D"))
 
-      sc1 = sc1.add(k2.set("E").withUnits(Meters))
+      sc1 = sc1.add(k2.set("E").withUnits(meters))
       assert(sc1.exists(k2))
-      assert(sc1(k2).units == Meters)
+      assert(sc1(k2).units == meters)
       assert(sc1(k2).values == Vector("E"))
     }
   }
@@ -212,9 +212,9 @@ class ConfigTests extends FunSpec {
       assert(sc1.exists(k2))
       assert(sc1(k2).values == Vector(22))
 
-      sc1 = sc1.add(k2.set(33).withUnits(Meters))
+      sc1 = sc1.add(k2.set(33).withUnits(meters))
       assert(sc1.exists(k2))
-      assert(sc1(k2).units == Meters)
+      assert(sc1(k2).units == meters)
       assert(sc1(k2).values == Vector(33))
     }
   }
@@ -291,18 +291,18 @@ class ConfigTests extends FunSpec {
       assert(i1.units == NoUnits)
       assert(i1(1) == 3)
 
-      val i2 = t1.set(Vector(10, 30, 50, 70)).withUnits(Deg)
+      val i2 = t1.set(Vector(10, 30, 50, 70)).withUnits(degrees)
       assert(i2.values == Vector(10, 30, 50, 70))
-      assert(i2.units == Deg)
+      assert(i2.units == degrees)
       assert(i2(1) == 30)
       assert(i2(3) == 70)
     }
     it("should also allow setting with sequence") {
       val s1 = Vector(2, 4, 6, 8)
-      val i1 = t1.set(s1).withUnits(Meters)
+      val i1 = t1.set(s1).withUnits(meters)
       assert(i1.values == s1)
       assert(i1.values.size == s1.size)
-      assert(i1.units == Meters)
+      assert(i1.units == meters)
       assert(i1(2) == 6)
     }
   }
@@ -345,11 +345,11 @@ class ConfigTests extends FunSpec {
 
   describe("testing for getting typed items") {
     val t1 = IntKey("test1")
-    val sc1 = SetupConfig(ck1).add(t1.set(Vector(22), Deg))
+    val sc1 = SetupConfig(ck1).add(t1.set(Vector(22), degrees))
 
     val item: Option[IntItem] = sc1.get(t1) // Works now!
     val itm: IntItem = item.get
-    assert(itm.units == UnitsOfMeasure.Deg)
+    assert(itm.units == UnitsOfMeasure.degrees)
     val i: Int = itm(0)
     assert(i == 22)
     val i2: Int = itm.head
@@ -363,8 +363,8 @@ class ConfigTests extends FunSpec {
     val k2: DoubleKey = new DoubleKey("dtest")
     val k3: StringKey = new StringKey("stest")
 
-    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.Deg)
-    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.degrees)
+    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = k3.set("A", "B", "C")
 
     it("Should get as IntItem") {
@@ -385,8 +385,8 @@ class ConfigTests extends FunSpec {
     val k2: DoubleKey = new DoubleKey("dtest")
     val k3: StringKey = new StringKey("stest")
 
-    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.Deg)
-    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.degrees)
+    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = k3.set("A", "B", "C")
 
     it("Should allow vararg add") {
@@ -406,8 +406,8 @@ class ConfigTests extends FunSpec {
     val k3 = StringKey("stest")
     val k4 = LongArrayKey("lartest")
 
-    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.Deg)
-    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.degrees)
+    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = k3.set("A", "B", "C")
     val i4 = k4.set(LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
 
@@ -471,9 +471,9 @@ class ConfigTests extends FunSpec {
     val k3 = StringKey("stest")
     val k4 = LongArrayKey("lartest")
 
-    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.Deg)
-    val i11 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.Deg) // This is here to see if it is checking equality or address
-    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.Meters)
+    val i1 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.degrees)
+    val i11 = k1.set(1, 2, 3).withUnits(UnitsOfMeasure.degrees) // This is here to see if it is checking equality or address
+    val i2 = k2.set(1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = k3.set("A", "B", "C")
     val i4 = k4.set(LongArray(Array.fill[Long](100)(10)), LongArray(Array.fill[Long](100)(100)))
     val i5 = k1.set(22) // This is not added for testing not present removal
