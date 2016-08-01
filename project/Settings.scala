@@ -96,17 +96,24 @@ object Settings {
       .setPreference(DoubleIndentClassDeclaration, true)
 
   // Customize the Docker file for the Config Service (cs)
+  // The image contains an svn repository volume and an annex dir for large files.
+  val dataVol = "/var/data"
+  val svnrepo = s"$dataVol/svnrepo"
+  val annex = s"$dataVol/annex"
   lazy val configServiceDockerSettings = Seq(
     maintainer := "TMT Software",
     dockerBaseImage := "java:8",
     dockerCommands ++= Seq(
       Cmd("USER", "root"),
-      ExecCmd("RUN", "svnadmin", "create", "/svnrepo"),
-      ExecCmd("RUN", "chown", "-R", "daemon", "/svnrepo"),
-      Cmd("USER", "daemon")
+      ExecCmd("RUN", "mkdir", "-p", annex),
+//      ExecCmd("RUN", "svnadmin", "create", svnrepo),
+      Cmd("VOLUME", dataVol)
     ),
     dockerEntrypoint := Seq("/opt/docker/bin/cs",
       "-Djava.net.preferIPv4Stack=true",
-      "-Dcsw.services.cs.main-repository=file:///svnrepo/")
+      "--init",
+      s"-Dcsw.services.cs.main-repository=file://$svnrepo/",
+      s"-Dcsw.services.apps.configServiceAnnex.dir=$annex"
+    )
   )
 }
