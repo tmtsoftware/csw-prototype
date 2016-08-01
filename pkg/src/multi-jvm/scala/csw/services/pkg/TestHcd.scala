@@ -23,7 +23,8 @@ case class TestHcd(info: HcdInfo)
   extends Hcd with HcdController with LifecycleHandler {
 
   import Supervisor._
-  lifecycle(supervisor)
+
+  lifecycle(context.parent)
 
   log.info("Message from TestHcd")
 

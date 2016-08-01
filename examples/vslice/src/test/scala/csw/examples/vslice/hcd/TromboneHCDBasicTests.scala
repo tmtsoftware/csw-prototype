@@ -1,10 +1,11 @@
 package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor
+import csw.services.pkg.Supervisor3
+import csw.services.pkg.Supervisor3._
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
@@ -28,30 +29,30 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
     DoNotRegister, Set(AkkaType), 1.second)
 
 
-  describe("axis should be initialized") {
-
-    it("should initialize the trombone axis simulator") {
-      val tla = TestActorRef[TromboneHCD](Props(new TromboneHCD(testInfo)))
-      val ua = tla.underlyingActor
-
-      ua.tromboneAxis should not be null
-
-      // Should have initialized the current values in HCD from Axis
-      ua.current.current should be(ua.axisConfig.startPosition)
-      ua.current.state should be(SingleAxisSimulator.AXIS_IDLE) // This is simulator value
-      ua.current.inHighLimit should be(false)
-      ua.current.inLowLimit should be(false)
-      ua.current.inHomed should be(false)
-
-      // Should initialize the statistics
-      ua.stats.limitCount should be(0)
-      ua.stats.cancelCount should be(0)
-      ua.stats.failureCount should be(0)
-      ua.stats.homeCount should be(0)
-      ua.stats.initCount should be(0)
-      ua.stats.moveCount should be(0)
-      ua.stats.successCount should be(0)
+  def getTromboneProps(hcdInfo: HcdInfo, supervisorIn: Option[ActorRef]): Props = {
+    supervisorIn match {
+      case None => TromboneHCD.props(hcdInfo, TestProbe().ref)
+      case Some(actorRef) => TromboneHCD.props(hcdInfo, actorRef)
     }
+  }
+
+  def newTrombone(hcdInfo: HcdInfo = testInfo): (TestProbe, ActorRef) = {
+    val supervisor = TestProbe()
+    val props = getTromboneProps(hcdInfo, Some(supervisor.ref))
+    (supervisor, system.actorOf(props))
+  }
+
+  def newTestTrombone(hcdInfo: HcdInfo = testInfo): (TestProbe, TestActorRef[TromboneHCD]) = {
+    val supervisor = TestProbe()
+    val props = getTromboneProps(hcdInfo, Some(supervisor.ref))
+    (supervisor, TestActorRef(props))
+  }
+
+  def lifecycleStart(supervisor: TestProbe, tla: ActorRef): Unit = {
+    supervisor.expectMsg(Initialized)
+    supervisor.expectMsg(Started)
+
+    supervisor.send(tla, Running)
   }
 
   def waitForMoveMsgs: Seq[CurrentState] = {
@@ -76,13 +77,51 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
     allmsgs
   }
 
-  describe("Should be ready for running with stats") {
-    import TromboneHCD._
+  describe("low-level instrumented trombone HCD tests") {
     import csw.services.ccs.HcdController._
+    import TromboneHCD._
+
+    it("should initialize the trombone axis simulator") {
+
+      val (_, tla) = newTestTrombone()
+      val ua = tla.underlyingActor
+
+      ua.tromboneAxis should not be null
+
+      // Should have initialized the current values in HCD from Axis
+      ua.current.current should be(ua.axisConfig.startPosition)
+      ua.current.state should be(SingleAxisSimulator.AXIS_IDLE) // This is simulator value
+      ua.current.inHighLimit should be(false)
+      ua.current.inLowLimit should be(false)
+      ua.current.inHomed should be(false)
+
+      // Should initialize the statistics
+      ua.stats.limitCount should be(0)
+      ua.stats.cancelCount should be(0)
+      ua.stats.failureCount should be(0)
+      ua.stats.homeCount should be(0)
+      ua.stats.initCount should be(0)
+      ua.stats.moveCount should be(0)
+      ua.stats.successCount should be(0)
+    }
+
+    it("should lifecycle properly with a fake supervisor") {
+      val (supervisor, tla) = newTestTrombone()
+
+      supervisor.expectMsg(Initialized)
+      supervisor.expectMsg(Started)
+
+      supervisor.send(tla, Running)
+
+      supervisor.send(tla, DoShutdown)
+      supervisor.expectMsg(ShutdownComplete)
+
+    }
 
     it("should allow fetching stats") {
 
-      val tla = TestActorRef[TromboneHCD](Props(new TromboneHCD(testInfo)))
+      val (supervisor, tla) = newTestTrombone()
+      lifecycleStart(supervisor, tla)
 
       tla ! Subscribe
       tla ! AxisStats
@@ -101,25 +140,11 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
       tla.underlyingActor.context.stop(tla)
     }
-  }
 
-  def createTromboneHCD(hcdInfo: HcdInfo): ActorRef = {
-    val props = TromboneHCD.props(hcdInfo)
-    system.actorOf(props)
-  }
+    it("should allow external init when running") {
 
-  def createTestTromboneHCD(hcdInfo: HcdInfo): TestActorRef[TromboneHCD] = {
-    val props = TromboneHCD.props(hcdInfo)
-    TestActorRef(props)
-  }
-
-  describe("Should work running with init") {
-    import TromboneHCD._
-    import csw.services.ccs.HcdController._
-
-    it("should allow init") {
-
-      val tla = createTestTromboneHCD(testInfo)
+      val (supervisor, tla) = newTestTrombone()
+      lifecycleStart(supervisor, tla)
 
       tla ! Subscribe
       tla ! Submit(initSC)
@@ -138,16 +163,12 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       tla ! Unsubscribe
       system.stop(tla)
     }
-  }
-
-  describe("Should be ready for running with home") {
-    import TromboneHCD._
-    import csw.services.ccs.HcdController._
 
     it("should allow homing") {
 
       // Note there is no test actor ref
-      val tla = createTromboneHCD(testInfo)
+      val (supervisor, tla) = newTrombone()
+      lifecycleStart(supervisor, tla)
 
       tla ! Subscribe
       // Being done this way to ensure ConfigKey equality works
@@ -172,15 +193,12 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
       system.stop(tla)
     }
-  }
 
-  describe("Should be ready for running with move") {
-    import TromboneHCD._
-    import csw.services.ccs.HcdController._
+    it("should allow a short move") {
 
-    it("should allow short move") {
+      val (supervisor, tla) = newTrombone()
+      lifecycleStart(supervisor, tla)
 
-      val tla = createTromboneHCD(testInfo)
       val testPos = 500
 
       tla ! Subscribe
@@ -204,7 +222,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
     it("should show entering a low limit") {
 
-      val tla = createTestTromboneHCD(testInfo)
+      val (supervisor, tla) = newTestTrombone()
+      lifecycleStart(supervisor, tla)
+
       val testPos = 0
       val testActual = tla.underlyingActor.axisConfig.lowLimit
 
@@ -231,7 +251,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
     it("should show entering a high limit") {
 
-      val tla = createTestTromboneHCD(testInfo)
+      val (supervisor, tla) = newTestTrombone()
+      lifecycleStart(supervisor, tla)
+
       val testPos = 3000
       val testActual = tla.underlyingActor.axisConfig.highLimit
 
@@ -259,7 +281,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
     it("should allow complex series of moves") {
       // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
 
-      val tla = createTromboneHCD(testInfo)
+      val (supervisor, tla) = newTrombone()
+      lifecycleStart(supervisor, tla)
+
       // Get state events
       tla ! Subscribe
 
@@ -334,7 +358,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
     it("start up a move and cancel it") {
 
-      val tla = createTromboneHCD(testInfo)
+      val (supervisor, tla) = newTrombone()
+      lifecycleStart(supervisor, tla)
+
       val testPos = 1000
 
       tla ! Subscribe
@@ -363,20 +389,20 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
     }
   }
 
-
-  def startHCD: ActorRef = {
-    val testInfo = HcdInfo(TromboneHCD.componentName,
-      TromboneHCD.trombonePrefix,
-      TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second)
-    Supervisor(testInfo)
-  }
-
+  /*
+    def startHCD: ActorRef = {
+      val testInfo = HcdInfo(TromboneHCD.componentName,
+        TromboneHCD.trombonePrefix,
+        TromboneHCD.componentClassName,
+        DoNotRegister, Set(AkkaType), 1.second)
+      Supervisor3(testInfo)
+    }
+  */
 
   def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
     //system.scheduler.scheduleOnce(timeout) {
     println("STOPPING")
-    Supervisor.haltComponent(supervisor)
+    Supervisor3.haltComponent(supervisor)
     Await.ready(supervisorSystem.whenTerminated, 5.seconds)
     system.terminate()
     System.exit(0)

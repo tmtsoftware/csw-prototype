@@ -18,7 +18,8 @@ case class TestAssembly(info: AssemblyInfo)
 
   import AssemblyController._
   import Supervisor._
-  lifecycle(supervisor)
+
+  lifecycle(context.parent)
 
   // Get the connections to the HCDs this assembly uses and track them
   trackConnections(info.connections)

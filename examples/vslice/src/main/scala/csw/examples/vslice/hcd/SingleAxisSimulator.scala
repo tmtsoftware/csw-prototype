@@ -105,6 +105,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_MOVING
       update(replyTo, AxisStarted)
       val clampedTargetPosition = SingleAxisSimulator.limitMove(axisConfig, targetPosition)
+      // The 200 ms here is the time for one step, so a 10 step move takes 2 seconds
       val props = MotionWorker.props(current, clampedTargetPosition, calcNumSteps(current, clampedTargetPosition), delayInMS = 200, self, diagFlag)
       val mw = context.actorOf(props, "moveWorker")
       context.become(moveReceive(mw))
@@ -159,8 +160,6 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case x => log.error(s"Unexpected message in moveReceive: $x")
   }
 
-  // Determines the number of step updates between two positions. For long moves, there are 10, small moves 5
-  def calcNumSteps(start: Int, end: Int): Int = if (Math.abs(start - end) > 500) 10 else 5
 
   def calcLimitsAndStats(): Unit = {
     inHighLimit = isHighLimit(axisConfig, current)
@@ -235,6 +234,15 @@ object SingleAxisSimulator {
   def isLowLimit(ac: AxisConfig, current: Int): Boolean = current <= ac.lowUser
 
   def isHomed(ac: AxisConfig, current: Int): Boolean = current == ac.home
+
+  // Determines the number of step updates between two positions. For long moves, there are 10, small moves 5
+  def calcNumSteps(start: Int, end: Int): Int = {
+    val diff = Math.abs(start - end)
+    if (diff < 20) 2
+    else if (diff > 500) 10
+    else 5
+  }
+
 }
 
 

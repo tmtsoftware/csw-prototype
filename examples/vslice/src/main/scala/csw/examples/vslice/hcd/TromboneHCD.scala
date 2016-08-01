@@ -1,6 +1,6 @@
 package csw.examples.vslice.hcd
 
-import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.Config
@@ -10,6 +10,7 @@ import csw.services.loc.{ComponentType, LocationService}
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.ContainerComponent._
 import csw.services.pkg.Supervisor.{apply => _}
+import csw.services.pkg.Supervisor3.{apply => _, _}
 import csw.services.pkg.{ContainerComponent, Hcd, Supervisor}
 import csw.util.config.Configurations.{ConfigKey, SetupConfig}
 import csw.util.config.StateVariable.CurrentState
@@ -28,12 +29,10 @@ class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
   import SingleAxisSimulator._
   import TromboneHCD._
 
-  //import LifecycleHandler._
-
   //lifecycle(supervisor, Initialize)
 
   // Receive actor methods
-  def receive = tromboneReceive //initializingReceive
+  def receive = initializingReceive
 
   // Initialize axis from ConfigService
   val axisConfig = getAxisConfig
@@ -50,15 +49,27 @@ class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
   // Keep track of the last SetupConfig to be received from external
   var lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix)
 
-  // send Initialized
-  // send Started
+  def initializingReceive: Receive = {
+    case Running =>
+      // When Running is received, transition to running Receive
+      log.info("becoming runningReceive")
+      context.become(runningReceive)
+    case x => log.error(s"Unexpected message in TromboneHCD:initializingReceive: $x")
+  }
 
-  // When Running is received, transition to running Receive
-  //context.become(tromboneReceive)
+  // Required setup for Lifecycle in order to get messages
+  supervisor ! Initialized
+  supervisor ! Started
 
-  def tromboneReceive = controllerReceive orElse runningReceive
 
-  def runningReceive: Receive = {
+  // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
+  def runningReceive = controllerReceive orElse runningReceive1
+
+  def runningReceive1 = runningReceivePF orElse runningReceive2
+
+  def runningReceive2 = lifecycleReceivePF orElse unhandledPF
+
+  def runningReceivePF: Receive = {
     case AxisStats =>
       tromboneAxis ! GetStatistics
 
@@ -66,7 +77,7 @@ class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
     //println("Axis Started")
 
     case au@AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
-      //log.debug(s"Axis Update: $au")
+      //log.info(s"Axis Update: $au")
       // Update actor state
       current = au
       val tromboneAxisState = defaultAxisState.madd(
@@ -92,8 +103,26 @@ class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
         cancelCountKey -> as.cancelCount
       )
       notifySubscribers(tromboneStats)
+  }
 
-    case x => log.error(s"Unexpected message in TromboneHCD:runningReceive: $x")
+  def lifecycleReceivePF: Receive = {
+    case Running =>
+      log.info("Received running")
+      context.become(runningReceive)
+    case RunningOffline =>
+      log.info("Received running offline")
+    case DoRestart =>
+      log.info("Received dorestart")
+    case DoShutdown =>
+      log.info("Received doshutdown")
+      // Just say complete for now
+      supervisor ! ShutdownComplete
+    case LifecycleFailureInfo(state: LifecycleState, reason: String) =>
+      log.info(s"Received failed state: $state for reason: $reason")
+  }
+
+  def unhandledPF: Receive = {
+    case x => log.error(s"Unexpected message in TromboneHCD:unhandledPF: $x")
   }
 
   /**
@@ -141,12 +170,12 @@ class TromboneHCD(override val info: HcdInfo) extends Hcd with HcdController {
 }
 
 object TromboneHCD {
-  def props(hcdInfo: HcdInfo) = Props(classOf[TromboneHCD], hcdInfo)
+  def props(hcdInfo: HcdInfo, supervisor: ActorRef) = Props(classOf[TromboneHCD], hcdInfo, supervisor)
 
   // HCD Info
   val componentName = "lgsTromboneHCD"
   val componentType = ComponentType.HCD
-  val componentClassName = "csw.examples.e2e.hcd.TromboneHCD"
+  val componentClassName = "csw.examples.vslice.hcd.TromboneHCD"
   val trombonePrefix = "nfiraos.ncc.tromboneHCD"
 
   val axisStatePrefix = s"$trombonePrefix.axis1State"
@@ -210,7 +239,6 @@ object TromboneHCD {
 
   // Testing messages for TromboneHCD
   trait TromboneEngineering
-
   case object AxisStats extends TromboneEngineering
 
 }

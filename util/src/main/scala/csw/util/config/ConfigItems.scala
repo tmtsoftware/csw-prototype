@@ -70,6 +70,9 @@ trait Item[S] {
    * @return a new instance of this item with the units set
    */
   def withUnits(units: Units): Item[S]
+
+  //def valuesToString = values.mkString("(", ",", ")")
+  //override def toString = s"$keyName(" + valuesToString + s", $units)"
 }
 
 /**

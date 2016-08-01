@@ -200,7 +200,7 @@ private final class Supervisor(val componentInfo: ComponentInfo, override val pr
     case RestartComponent =>
     // TODO -- Implement supervisor-based restart
 
-    // Forward configs to the component 
+    // Forward configs to the component
     case msg: AssemblyControllerMessage if componentInfo.componentType == Assembly => component.tell(msg, sender())
     case msg: HcdControllerMessage if componentInfo.componentType == HCD => component.tell(msg, sender())
   }

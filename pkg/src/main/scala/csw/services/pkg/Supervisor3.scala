@@ -16,18 +16,22 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   private val componentId = ComponentId(name, componentInfo.componentType)
 
   // This is present to bypass the component creation code and inject a testprobe
-  val component = testComponent match {
+  var lifecycleState: LifecycleState = LifecycleWaitingForInitialized
+
+  // In case we want to add some extra messages
+  def receive = lifecycleWaitingForInitialized
+
+  // Initial delay before starting component allows listener to subscribe
+  val component: ActorRef = testComponent match {
     case None => startComponent(context, componentInfo)
     case Some(actorRef) => actorRef
   }
 
-  // In case we want to add some extra messages
-  override def receive = lifecycleWaitingForInitialized
-
-  var lifecycleState: LifecycleState = LifecycleWaitingForInitialized
 
   // Starts the component actor
   def startComponent(context: ActorContext, componentInfo: ComponentInfo): ActorRef = {
+    // This is currently needed to give time to process a subscription, need a better way
+    Thread.sleep(100)
     log.info(s"Starting ${componentInfo.componentName}")
     val actorRef = Component.create(context, componentInfo)
     context.watch(actorRef)
@@ -50,7 +54,7 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
           // Choice allan: What to do in case of error?
           log.error(s"$name: Failed to register $componentId with the location service")
       }
-    }
+    } else log.info(s"$name: Not registering $componentId")
   }
 
   // If the component is registered with the location service, unregister it
@@ -102,13 +106,13 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
     case Initialized =>
       logState(LifecycleWaitingForInitialized, LifecycleInitialized)
       // Actions for moving to the next state
-      log.debug("In Initialized, registering with Location Service")
+      log.info("In Initialized, registering with Location Service")
       registerWithLocationService()
       lifecycleState = LifecycleInitialized
-      // This transition indicates the component is now firmly in Initialized
-      notifyListeners(LifecycleStateChanged(LifecycleInitialized))
       // Transition to the new state
       context.become(lifecycleInitialized)
+      // This transition indicates the component is now firmly in Initialized
+      notifyListeners(LifecycleStateChanged(LifecycleInitialized))
     case InitializeFailure(reason) =>
       logState(LifecycleWaitingForInitialized, LifecycleFailure)
       handleLifecycleFailure(LifecycleWaitingForInitialized, reason)
@@ -127,12 +131,12 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   def lifecycleInitializedPF: Receive = {
     case Started =>
       logState(LifecycleInitialized, LifecycleRunning)
-      log.debug("lifecycleInitialized: sending Running to component")
+      log.info("lifecycleInitialized: sending Running to component")
       component ! Running
       lifecycleState = LifecycleRunning
+      context.become(lifecycleRunning)
       // This transition indicates component is in running state
       notifyListeners(LifecycleStateChanged(LifecycleRunning))
-      context.become(lifecycleRunning)
     case StartupFailure(reason) =>
       logState(LifecycleInitialized, LifecycleFailure)
       handleLifecycleFailure(LifecycleInitialized, reason)
@@ -152,7 +156,7 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   def lifecycleRunningPF: Receive = {
     case ExComponentOffline =>
       logState(LifecycleRunning, LifecycleRunningOffline)
-      log.debug("lifecycleRunning: sending RunningOffline to component")
+      log.info("lifecycleRunning: sending RunningOffline to component")
       component ! RunningOffline
       lifecycleState = LifecycleRunningOffline
       context.become(lifecycleRunningOffline)
@@ -160,19 +164,19 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
     // Stay
     case ExComponentRestart =>
       logState(LifecycleRunning, LifecycleWaitingForInitialized)
-      log.debug("lifecycleRunning: sending DoRestart to component")
+      log.info("lifecycleRunning: sending DoRestart to component")
       component ! DoRestart
-      log.debug("Unregister")
+      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecycleWaitingForInitialized
       context.become(lifecycleWaitingForInitialized)
     case ExComponentShutdown =>
       logState(LifecycleRunning, LifecyclePreparingToShutdown)
-      log.debug("lifecycleRunning: sending DoShutdown to component")
+      log.info("lifecycleRunning: sending DoShutdown to component")
       component ! DoShutdown
       // This sets a timer to send a message if the component does not respond within shutdownTimeout
       shutdownTimer = Some(scheduleTimeout)
-      log.debug("Unregister")
+      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecyclePreparingToShutdown
       // Transition indicates component is shutting down
@@ -197,15 +201,15 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
     // Stay
     case ExComponentOnline =>
       logState(LifecycleRunningOffline, LifecycleRunning)
-      log.debug("lifecycleRunningOffline: sending Running to component")
+      log.info("lifecycleRunningOffline: sending Running to component")
       component ! Running
       lifecycleState = LifecycleRunning
       context.become(lifecycleRunning)
     case ExComponentRestart =>
       logState(LifecycleRunningOffline, LifecycleWaitingForInitialized)
-      log.debug("lifecycleRunningOffline: sending DoRestart to component")
+      log.info("lifecycleRunningOffline: sending DoRestart to component")
       component ! DoRestart
-      log.debug("Unregister")
+      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecycleWaitingForInitialized
       context.become(lifecycleWaitingForInitialized)
@@ -213,9 +217,9 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
       logState(LifecycleRunningOffline, LifecyclePreparingToShutdown)
       // This sets a timer to send a message if the component does not respond within shutdownTimeout
       shutdownTimer = Some(scheduleTimeout)
-      log.debug("lifecycleRunningOffline: sending DoShutdown to component")
+      log.info("lifecycleRunningOffline: sending DoShutdown to component")
       component ! DoShutdown
-      log.debug("Unregister")
+      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecyclePreparingToShutdown
       context.become(lifecyclePreparingToShutdown)
@@ -230,7 +234,7 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
       // First cancel the shutdown timer
       shutdownTimer.map(_.cancel())
       logState(LifecyclePreparingToShutdown, LifecycleShutdown)
-      log.debug("lifecycleWatingForShutdown: shutdown successful")
+      log.info("lifecycleWatingForShutdown: shutdown successful")
       lifecycleState = LifecycleShutdown
       // Transition means component has shutdown
       notifyListeners(LifecycleStateChanged(LifecycleShutdown))
@@ -262,26 +266,27 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
 
   // Partial function for the lifecycleShutdown state
   def lifecycleShutdownPF: Receive = {
-    case x ⇒ log.debug(s"Supervisor in lifecycleShutdown received an unexpected message: $x ")
+    case x ⇒ log.info(s"Supervisor in lifecycleShutdown received an unexpected message: $x ")
   }
 
   /**
     * Receive method for the lifecycleFailure state
     */
   def lifecycleFailure: Receive = {
-    case x ⇒ log.debug(s"Supervisor in lifecycleFailure received an unexpected message: $x ")
+    case x ⇒ log.info(s"Supervisor in lifecycleFailure received an unexpected message: $x ")
   }
 
   /**
     * Recieve method for the lifecycleShutdownFailure state
     */
   def lifecycleShutdownFailure: Receive = {
-    case x ⇒ log.debug(s"Supervisor in lifecycleShutdownFailure received an unexpected message: $x ")
+    case x ⇒ log.info(s"Supervisor in lifecycleShutdownFailure received an unexpected message: $x ")
   }
 
   // Partial function combined with others to receive common messages
   def commonMessagesPF: Receive = {
-    case SubscribeLifecycleCallback(actorRef) ⇒
+    case SubscribeLifecycleCallback(actorRef) =>
+      log.info("Adding listener: " + actorRef)
       addListener(actorRef)
     case UnsubscribeLifecycleCallback(actorRef) ⇒
       removeListener(actorRef)
@@ -307,7 +312,7 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   }
 
   // Used to log messages for state changes
-  def logState(thisState: LifecycleState, nextState: LifecycleState) = log.debug(s"In $thisState going to $nextState")
+  def logState(thisState: LifecycleState, nextState: LifecycleState) = log.info(s"In $thisState going to $nextState")
 
   // The following is listener support for the container or other interested component
   private var listeners = Set[ActorRef]()
@@ -322,12 +327,16 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
     * @param msg a message to send to all listeners
     */
   private def notifyListeners(msg: Any): Unit = {
+    log.info("Listeners: " + listeners)
     listeners.foreach(_ ! msg)
   }
-
 }
 
 object Supervisor3 {
+
+  private def makeActorSystem(componentInfo: ComponentInfo): ActorSystem = {
+    ActorSystem(s"${componentInfo.componentName}-system")
+  }
 
   /**
     * Returns a new supervisor actor managing the components described in the argument
@@ -336,25 +345,21 @@ object Supervisor3 {
     * @return the [[akka.actor.ActorRef]] for the supervisor (parent actor of the top level component)
     *         and the component's new [[akka.actor.ActorSystem]] as a tuple.
     */
-  def apply(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
-    val system = ActorSystem(s"${componentInfo.componentName}-system")
-    val supervisorActor = system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor")
-    (system, supervisorActor)
+  def apply(componentInfo: ComponentInfo): ActorRef = {
+    val system = makeActorSystem(componentInfo)
+    //println("System done")
+    system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisorx")
   }
 
   /**
-    * A test routine for testing supervisor that allows a TestProbe to be injected for the component and the supervisor
-    * to be created using the TestKit. This bypasses the normal component creation method which needs to be
-    * tested in other ways.
+    * Returns a new actor system and supervisor actor managing the components described in the argument
     *
-    * @param system        an [[akka.actor.ActorSystem]] to be used when creating the supervisor (rather than creating
-    *                      a new ActorSystem as is the case normally. Typically the TestKit ActorSystem
-    * @param componentInfo a [[csw.services.pkg.Component.ComponentInfo]] that is only used for naming the Supervisor
-    * @param testComponent an [[akka.actor.ActorRef]] for the test component, normally a TestProbe
-    * @return supervisor as an [[akka.actor.ActorRef]]
+    * @param componentInfo describes the components to create and manage
+    * @return the actorRef for the supervisor (parent actor of the top level component)
     */
-  def testSetup(system: ActorSystem, componentInfo: ComponentInfo, testComponent: ActorRef): ActorRef = {
-    system.actorOf(props(componentInfo, Some(testComponent)), s"${componentInfo.componentName}-supervisor")
+  def create(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
+    val system = makeActorSystem(componentInfo)
+    (system, system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor"))
   }
 
   /**
@@ -363,9 +368,14 @@ object Supervisor3 {
     * @param componentInfo used to create the component
     * @return an object to be used to create the Supervisor actor
     */
-  def props(componentInfo: ComponentInfo): Props = Props(classOf[Supervisor3], componentInfo)
+  def props(componentInfo: ComponentInfo): Props = {
+    Props(classOf[Supervisor3], componentInfo, None)
+  }
 
-  private def props(componentInfo: ComponentInfo, componentActor: Option[ActorRef]) = Props(classOf[Supervisor3], componentInfo, componentActor)
+  //  def props(componentInfo: ComponentInfo, componentActor: Option[ActorRef]) = Props(classOf[Supervisor3], componentInfo, componentActor)
+  def props(componentInfo: ComponentInfo, componentActor: Option[ActorRef]): Props = {
+    Props(new Supervisor3(componentInfo, componentActor))
+  }
 
   // The following are states used for the Supervisor lifecycle manager
   sealed trait LifecycleState
@@ -493,6 +503,15 @@ object Supervisor3 {
     */
   def lifecycle(supervisor: ActorRef, command: FromComponentLifecycleMessage): Unit = {
     supervisor ! command
+  }
+
+  /**
+    * Function called by a component to exit in a controlled way.
+    *
+    * @param supervisor the ActorRef of the component's supervisor
+    */
+  def haltComponent(supervisor: ActorRef): Unit = {
+    supervisor ! HaltComponent
   }
 
 }

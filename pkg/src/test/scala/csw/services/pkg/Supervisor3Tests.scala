@@ -1,11 +1,19 @@
 package csw.services.pkg
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
+import csw.services.pkg.Component.{AssemblyInfo, HcdInfo, RegisterOnly}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
+
 import scala.concurrent.duration._
 
+case class SimpleTestHcd(override val info: HcdInfo, override val supervisor: ActorRef) extends Hcd with LifecycleHandler {
+  def receive = lifecycleHandlerReceive
+}
+
+case class SimpleTestAssembly(override val info: AssemblyInfo, override val supervisor: ActorRef) extends Assembly with LifecycleHandler {
+  def receive = lifecycleHandlerReceive
+}
 
 class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSender
   with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
@@ -18,39 +26,34 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
 
   type MyTestFsm = TestActorRef[Supervisor3]
 
-  def newHcdSupervisor(system: ActorSystem, componentRef: ActorRef): ActorRef = {
+  def newHcdFSM(implicit system: ActorSystem, component: ActorRef): MyTestFsm = {
     import scala.concurrent.duration._
 
     val name = "test1"
     val prefix = "test1.prefix"
-    val className = "testing"
+    val className = "csw.services.pkg.SimpleTestHcd"
 
     val hcdInfo = HcdInfo(name, prefix, className, RegisterOnly, Set.empty, 1.second)
 
-    val supervisorRef = Supervisor3.testSetup(system, hcdInfo, componentRef)
-    supervisorRef
-  }
+    val props = Supervisor3.props(hcdInfo, Some(component))
 
-  def newHcdFSM(implicit system: ActorSystem, component: ActorRef) = {
-    import scala.concurrent.duration._
-
-    val name = "test1"
-    val prefix = "test1.prefix"
-    val className = "csw.services.pkg.SupervisorTests$SimpleTestHcd"
-
-    val hcdInfo = HcdInfo(name, prefix, className, RegisterOnly, Set.empty, 1.second)
-
-    TestActorRef(new Supervisor3(hcdInfo, Some(component)))
+    TestActorRef(props)
   }
 
 
   it("should be initialized in the Pending Initialized State") {
 
     val component = TestProbe()
+    val name = "test1"
+    val prefix = "test1.prefix"
+    val className = "csw.services.pkg.SimpleTestHcd"
 
-    val fsm = newHcdFSM(system, component.ref)
+    val hcdInfo = HcdInfo(name, prefix, className, RegisterOnly, Set.empty, 1.second)
+    //val fsm = newHcdFSM(system, component.ref)
 
-    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+    val fsm = TestActorRef(Supervisor3.props(hcdInfo))
+
+    //fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
   }
 
   it("in pendingInitialize should accept Initialized with Success") {

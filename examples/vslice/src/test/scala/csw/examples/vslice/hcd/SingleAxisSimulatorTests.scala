@@ -19,6 +19,20 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
   // Calculates the time to wait for messages with a little extra
   def calcDelay(numberSteps: Int, delayInSseconds: Int): FiniteDuration = (numberSteps + 1) * delayInSseconds * 1000.seconds
 
+  describe("Testing steps calc") {
+    import SingleAxisSimulator._
+    val test1 = (100, 110) // Short move  should be 2
+    val test2 = (100, 1000) // long move   should be 10
+    val test3 = (100, 200) // Medium      should be 5
+
+    // Note that putting functions in the companion object allows them to be easily tested!
+    it("should calculate different number of steps based on the size of the move") {
+      calcNumSteps(test1._1, test1._2) should be(2)
+      calcNumSteps(test2._1, test2._2) should be(10)
+      calcNumSteps(test3._1, test3._2) should be(5)
+    }
+  }
+
   describe("motion worker setup") {
     val testStart = 0
     val testDestination = 1000
