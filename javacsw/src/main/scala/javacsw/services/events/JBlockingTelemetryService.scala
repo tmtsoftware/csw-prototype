@@ -23,9 +23,9 @@ case class JBlockingTelemetryService(timeout: FiniteDuration, settings: EventSer
   private implicit val _system: ActorRefFactory = system
   private val ts = BlockingTelemetryService(TelemetryService(settings))(timeout, system)
 
-  def set(status: StatusEvent): Unit = ts.publish(status)
+  def publish(status: StatusEvent): Unit = ts.publish(status)
 
-  def set(status: StatusEvent, history: Int): Unit = ts.publish(status, history)
+  def publish(status: StatusEvent, history: Int): Unit = ts.publish(status, history)
 
   def get(prefix: String): Optional[StatusEvent] = ts.get(prefix).asJava
 

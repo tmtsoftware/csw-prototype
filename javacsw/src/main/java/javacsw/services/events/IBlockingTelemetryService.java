@@ -16,19 +16,19 @@ import java.util.Optional;
 public interface IBlockingTelemetryService {
 
     /**
-     * Sets the value for the status event (key is based on the event's prefix)
+     * Publishes the status event (key is based on the event's prefix)
      *
      * @param status the value to store
      */
-    void set(StatusEvent status);
+    void publish(StatusEvent status);
 
     /**
-     * Sets the value for the status event (key is based on the event's prefix)
+     * Publishes the status event (key is based on the event's prefix)
      *
      * @param status the value to store
      * @param history optional number of previous values to store
      */
-    void set(StatusEvent status, int history);
+    void publish(StatusEvent status, int history);
 
     /**
      * Gets the value for the given status event prefix

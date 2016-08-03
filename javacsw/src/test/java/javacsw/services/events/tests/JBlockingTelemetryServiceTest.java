@@ -4,17 +4,25 @@ import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.DoubleKey;
+import csw.util.config.Events;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.IBlockingTelemetryService;
 import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.List;
+import java.util.Optional;
+
+import static javacsw.util.config.JItems.*;
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 public class JBlockingTelemetryServiceTest {
 
     // Keys used in test
@@ -42,67 +50,66 @@ public class JBlockingTelemetryServiceTest {
         JavaTestKit.shutdownActorSystem(system);
         system = null;
     }
-/*
+
     @Test
-    public void basicJavaTests() throws Exception {
-        StatusEvent config1 = new StatusEvent("tcs.test")
-                .jset(infoValue, 1)
-                .jset(infoStr, "info 1");
+    public void testSetandGet() throws Exception {
+        String prefix1 = "tcs.test1";
+        Events.StatusEvent event1 = StatusEvent(prefix1)
+          .add(jset(infoValue, 1))
+          .add(jset(infoStr, "info 1"));
 
-        StatusEvent config2 = new StatusEvent("tcs.test")
-                .jset(infoValue, 2)
-                .jset(infoStr, "info 2");
+        String prefix2 = "tcs.test2";
+        Events.StatusEvent event2 = StatusEvent(prefix2)
+          .add(jset(infoValue, 2))
+          .add(jset(infoStr, "info 2"));
 
-        bts.set(config1);
-        Optional<StatusEvent> val1Opt = bts.get(config1.prefix());
-        assertTrue(val1Opt.isPresent());
-        StatusEvent val1 = val1Opt.get();
-        assertTrue(val1.prefix().equals("tcs.test"));
-        assertTrue(val1.jvalue(infoValue) == 1);
-        assertTrue(Objects.equals(val1.jvalue(infoStr), "info 1"));
+        bts.publish(event1);
+        Events.StatusEvent val1 = bts.get(prefix1).get();
+        assertEquals(val1.prefix(), prefix1);
+        assertEquals(val1.get(infoValue).get().head(), 1);
+        assertEquals(val1.get(infoStr).get().head(), "info 1");
 
-        bts.set(config2);
-        Optional<StatusEvent> val2Opt = bts.get(config2.prefix());
-        assertTrue(val2Opt.isPresent());
-        StatusEvent val2 = val2Opt.get();
-        assertTrue(val2.prefix().equals("tcs.test"));
-        assertTrue(val2.jvalue(infoValue) == 2);
-        assertTrue(val2.jvalue(infoStr).equals("info 2"));
+        bts.publish(event2);
+        Events.StatusEvent val2 = bts.get(prefix2).get();
+        assertEquals(val2.prefix(), prefix2);
+        assertEquals(val2.get(infoValue).get().head(), 2);
+        assertEquals(val2.get(infoStr).get().head(), "info 2");
 
-        bts.delete(config1.prefix());
-        bts.delete(config2.prefix());
-
-        assertTrue(!bts.get(config1.prefix()).isPresent());
-        assertTrue(!bts.get(config2.prefix()).isPresent());
+        bts.delete(prefix1);
+        bts.delete(prefix2);
+        assertTrue(!bts.get(prefix1).isPresent());
+        assertTrue(!bts.get(prefix2).isPresent());
     }
 
     @Test
     public void TestSetGetAndGetHistory() throws Exception {
-        StatusEvent config = new StatusEvent("tcs.testPrefix")
-                .jset(exposureTime, 2.0);
+        String prefix = "tcs.testPrefix";
+        Events.StatusEvent event = StatusEvent(prefix)
+          .add(jset(exposureTime, 2.0));
 
         int n = 3;
-        bts.set(config.jset(exposureTime, 3.0), n);
-        bts.set(config.jset(exposureTime, 4.0), n);
-        bts.set(config.jset(exposureTime, 5.0), n);
-        bts.set(config.jset(exposureTime, 6.0), n);
-        bts.set(config.jset(exposureTime, 7.0), n);
+        bts.publish(event.add(jset(exposureTime, 3.0)), n);
+        bts.publish(event.add(jset(exposureTime, 4.0)), n);
+        bts.publish(event.add(jset(exposureTime, 5.0)), n);
+        bts.publish(event.add(jset(exposureTime, 6.0)), n);
+        bts.publish(event.add(jset(exposureTime, 7.0)), n);
 
-        Optional<StatusEvent> v = bts.get(config.prefix());
+        Optional<Events.StatusEvent> v = bts.get(prefix);
         assertTrue(v.isPresent());
-        StatusEvent sc = v.get();
-        Optional<Double> expTime = sc.jget(exposureTime, 0);
-        assertTrue(expTime.isPresent());
-        assertTrue(expTime.get() == 7.0);
+        Events.StatusEvent ev = v.get();
+        Double expTime = jvalue(jitem(ev, exposureTime));
+        assertTrue(expTime == 7.0);
 
-        List<StatusEvent> h = bts.getHistory(config.prefix(), n + 1);
+        List<Events.StatusEvent> h = bts.getHistory(prefix, n + 1);
         assertTrue(h.size() == n + 1);
         for (int i = 0; i < n; i++) {
             System.out.println("History: " + i + ": " + h.get(i));
         }
-        bts.delete(config.prefix());
+        bts.delete(prefix);
     }
 
+
+/*
 
     // Test subscribing to telemetry using a subscriber actor to receive status events
     @Test
