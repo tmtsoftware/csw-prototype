@@ -195,7 +195,6 @@ class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber
   import MySubscriber._
   import TelemetryServiceTests._
 
-  println(s"prefix1=$prefix1, prefix2=$prefix2")
   var count1 = 0
   var count2 = 0
 
@@ -204,13 +203,11 @@ class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber
   def receive: Receive = {
     case event: StatusEvent if event.prefix == prefix1 =>
       count1 = count1 + 1
-      println(s"$prefix1: assert(${event(infoValue).head} == $count1)")
       assert(event(infoValue).head == count1)
       assert(event(infoStr).head == "info 1")
 
     case event: StatusEvent if event.prefix == prefix2 =>
       count2 = count2 + 1
-      println(s"$prefix2: assert(${event(infoValue).head} == $count2)")
       assert(event(infoValue).head == count2)
       assert(event(infoStr).head == "info 2")
 

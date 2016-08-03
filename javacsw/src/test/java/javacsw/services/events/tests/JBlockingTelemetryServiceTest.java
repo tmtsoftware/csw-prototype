@@ -1,14 +1,21 @@
 package javacsw.services.events.tests;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.japi.Creator;
+import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.DoubleKey;
-import csw.util.config.Events;
+import csw.util.config.Events.*;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.IBlockingTelemetryService;
 import javacsw.services.events.IEventService;
+import javacsw.services.events.JTelemetrySubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,7 +23,9 @@ import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static javacsw.util.config.JItems.*;
 import static junit.framework.TestCase.assertEquals;
@@ -54,23 +63,23 @@ public class JBlockingTelemetryServiceTest {
     @Test
     public void testSetandGet() throws Exception {
         String prefix1 = "tcs.test1";
-        Events.StatusEvent event1 = StatusEvent(prefix1)
+        StatusEvent event1 = StatusEvent(prefix1)
           .add(jset(infoValue, 1))
           .add(jset(infoStr, "info 1"));
 
         String prefix2 = "tcs.test2";
-        Events.StatusEvent event2 = StatusEvent(prefix2)
+        StatusEvent event2 = StatusEvent(prefix2)
           .add(jset(infoValue, 2))
           .add(jset(infoStr, "info 2"));
 
         bts.publish(event1);
-        Events.StatusEvent val1 = bts.get(prefix1).get();
+        StatusEvent val1 = bts.get(prefix1).get();
         assertEquals(val1.prefix(), prefix1);
         assertEquals(val1.get(infoValue).get().head(), 1);
         assertEquals(val1.get(infoStr).get().head(), "info 1");
 
         bts.publish(event2);
-        Events.StatusEvent val2 = bts.get(prefix2).get();
+        StatusEvent val2 = bts.get(prefix2).get();
         assertEquals(val2.prefix(), prefix2);
         assertEquals(val2.get(infoValue).get().head(), 2);
         assertEquals(val2.get(infoStr).get().head(), "info 2");
@@ -84,7 +93,7 @@ public class JBlockingTelemetryServiceTest {
     @Test
     public void TestSetGetAndGetHistory() throws Exception {
         String prefix = "tcs.testPrefix";
-        Events.StatusEvent event = StatusEvent(prefix)
+        StatusEvent event = StatusEvent(prefix)
           .add(jset(exposureTime, 2.0));
 
         int n = 3;
@@ -94,13 +103,13 @@ public class JBlockingTelemetryServiceTest {
         bts.publish(event.add(jset(exposureTime, 6.0)), n);
         bts.publish(event.add(jset(exposureTime, 7.0)), n);
 
-        Optional<Events.StatusEvent> v = bts.get(prefix);
+        Optional<StatusEvent> v = bts.get(prefix);
         assertTrue(v.isPresent());
-        Events.StatusEvent ev = v.get();
+        StatusEvent ev = v.get();
         Double expTime = jvalue(jitem(ev, exposureTime));
         assertTrue(expTime == 7.0);
 
-        List<Events.StatusEvent> h = bts.getHistory(prefix, n + 1);
+        List<StatusEvent> h = bts.getHistory(prefix, n + 1);
         assertTrue(h.size() == n + 1);
         for (int i = 0; i < n; i++) {
             System.out.println("History: " + i + ": " + h.get(i));
@@ -109,21 +118,19 @@ public class JBlockingTelemetryServiceTest {
     }
 
 
-/*
-
     // Test subscribing to telemetry using a subscriber actor to receive status events
     @Test
     public void TestSubscribingToTelemetry() throws Exception {
         final String prefix1 = "tcs.test1";
         final String prefix2 = "tcs.test2";
 
-        final StatusEvent event1 = new StatusEvent(prefix1)
-                .jset(infoValue, 1)
-                .jset(infoStr, "info 1");
+        final StatusEvent event1 = StatusEvent(prefix1)
+          .add(jset(infoValue, 1))
+          .add(jset(infoStr, "info 1"));
 
-        final StatusEvent event2 = new StatusEvent(prefix2)
-                .jset(infoValue, 1)
-                .jset(infoStr, "info 2");
+        final StatusEvent event2 = StatusEvent(prefix2)
+          .add(jset(infoValue, 1))
+          .add(jset(infoStr, "info 2"));
 
         new JavaTestKit(system) {
             {
@@ -134,12 +141,12 @@ public class JBlockingTelemetryServiceTest {
                 // This is just to make sure the actor has time to subscribe before we proceed
                 Thread.sleep(1000);
 
-                bts.set(event1);
-                bts.set(event1.jset(infoValue, 2));
+                bts.publish(event1);
+                bts.publish(event1.add(jset(infoValue, 2)));
 
-                bts.set(event2);
-                bts.set(event2.jset(infoValue, 2));
-                bts.set(event2.jset(infoValue, 3));
+                bts.publish(event2);
+                bts.publish(event2.add(jset(infoValue, 2)));
+                bts.publish(event2.add(jset(infoValue, 3)));
 
                 // Make sure subscriber actor has received all events before proceeding
                 Thread.sleep(1000);
@@ -150,6 +157,7 @@ public class JBlockingTelemetryServiceTest {
                         MySubscriber.Results result = expectMsgClass(MySubscriber.Results.class);
                         assertTrue(result.getCount1() == 2);
                         assertTrue(result.getCount2() == 3);
+                        system.stop(mySubscriber);
                         log.debug("Java telemetry subscriber test passed!");
                     }
                 };
@@ -210,21 +218,21 @@ public class JBlockingTelemetryServiceTest {
             subscribe(prefix1, prefix2);
 
             receive(ReceiveBuilder
-                    .match(StatusEvent.class, this::handleStatusEvent)
-                    .match(GetResults.class, this::getResults)
-                    .matchAny(t -> log.warning("Unexpected message: " + t)
-                    ).build());
+              .match(StatusEvent.class, this::handleStatusEvent)
+              .match(GetResults.class, this::getResults)
+              .matchAny(t -> log.warning("Unexpected message: " + t)
+              ).build());
         }
 
         private void handleStatusEvent(StatusEvent event) {
-            if (Objects.equals(event.prefix(), prefix1)) {
+            if (event.prefix().equals(prefix1)) {
                 count1++;
-                assertTrue(event.jvalue(infoValue).equals(count1));
-                assertTrue(Objects.equals(event.jvalue(infoStr), "info 1"));
-            } else if (Objects.equals(event.prefix(), prefix2)) {
+                assertEquals(event.get(infoValue).get().head(), count1);
+                assertEquals(event.get(infoStr).get().head(), "info 1");
+            } else if (event.prefix().equals(prefix2)) {
                 count2++;
-                assertTrue(event.jvalue(infoValue).equals(count2));
-                assertTrue(Objects.equals(event.jvalue(infoStr), "info 2"));
+                assertEquals(event.get(infoValue).get().head(), count2);
+                assertEquals(event.get(infoStr).get().head(), "info 2");
             }
         }
 
@@ -232,5 +240,4 @@ public class JBlockingTelemetryServiceTest {
             sender().tell(new Results(count1, count2), self());
         }
     }
-    */
 }
