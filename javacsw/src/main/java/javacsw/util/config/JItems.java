@@ -1,6 +1,7 @@
 package javacsw.util.config;
 
 import csw.util.config.*;
+import csw.util.config.Events.*;
 import csw.util.config.Configurations.ConfigType;
 import csw.util.config.Configurations.*;
 
@@ -902,6 +903,18 @@ public class JItems {
 
   public static WaitConfig WaitConfig(String name) {
     return new WaitConfig(name);
+  }
+
+  public static StatusEvent StatusEvent(String name) {
+    return new StatusEvent(name);
+  }
+
+  public static SystemEvent SystemEvent(String name) {
+    return new SystemEvent(name);
+  }
+
+  public static ObserveEvent ObserveEvent(String name) {
+    return new ObserveEvent(name);
   }
 
   /**
