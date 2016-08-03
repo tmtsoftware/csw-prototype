@@ -3,7 +3,7 @@ package csw.services.events
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.util.config.Configurations.SetupConfig
+import csw.util.config.Events.StatusEvent
 import csw.util.config.{DoubleKey, IntKey, StringKey}
 import org.scalatest.FunSuiteLike
 
@@ -24,66 +24,71 @@ object BlockingEventServiceTests {
 //@DoNotDiscover
 class BlockingEventServiceTests
     extends TestKit(ActorSystem("Test"))
-    with ImplicitSender with FunSuiteLike with LazyLogging with Implicits {
+    with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import BlockingEventServiceTests._
 
   val settings = EventServiceSettings(system)
-  val kvs = BlockingEventService[SetupConfig](5.seconds, settings)
+  val eventService = BlockingEventService(5.seconds, settings)
 
   test("Test set and get") {
-    val config1 = SetupConfig("tcs.test")
+    val event1 = StatusEvent("tcs.test1")
       .add(infoValue.set(1))
       .add(infoStr.set("info 1"))
 
-    val config2 = SetupConfig("tcs.test")
+    val event2 = StatusEvent("tcs.test2")
       .add(infoValue.set(2))
       .add(infoStr.set("info 2"))
 
-    kvs.set("test1", config1)
+    eventService.publish(event1)
+    eventService.get(event1.prefix).get match {
+      case event: StatusEvent =>
+        assert(event.prefix == event1.prefix)
+        assert(event(infoValue).head == 1)
+        assert(event(infoStr).head == "info 1")
+      case _ => fail("Expected a StatusEvent")
+    }
 
-    val val1: SetupConfig = kvs.get("test1").get
-    assert(val1.prefix == "tcs.test")
-    assert(val1(infoValue).head == 1)
-    assert(val1(infoStr).head == "info 1")
+    eventService.publish(event2)
+    eventService.get(event2.prefix).get match {
+      case event: StatusEvent =>
+        assert(event(infoValue).head == 2)
+        assert(event(infoStr).head == "info 2")
+      case _ => fail("Expected a StatusEvent")
+    }
 
-    kvs.set("test2", config2)
+    assert(eventService.delete(event1.prefix, event2.prefix) == 2)
 
-    val val2: Option[SetupConfig] = kvs.get("test2")
-    assert(val2.exists(_(infoValue).head == 2))
-    assert(val2.exists(_(infoStr).head == "info 2"))
+    assert(eventService.get(event1.prefix).isEmpty)
+    assert(eventService.get(event2.prefix).isEmpty)
 
-    assert(kvs.delete("test1", "test2") == 2)
-
-    assert(kvs.get("test1").isEmpty)
-    assert(kvs.get("test2").isEmpty)
-
-    assert(kvs.delete("test1", "test2") == 0)
+    assert(eventService.delete(event1.prefix, event2.prefix) == 0)
   }
 
   test("Test set, get and getHistory") {
-    val config = SetupConfig("tcs.testPrefix").add(exposureTime.set(2.0))
-    val key = "test"
+    val prefix = "tcs.testPrefix"
+    val event = StatusEvent("tcs.testPrefix").add(exposureTime.set(2.0))
     val n = 3
 
-    kvs.set(key, config.add(exposureTime.set(3.0)), n)
-    kvs.set(key, config.add(exposureTime.set(4.0)), n)
-    kvs.set(key, config.add(exposureTime.set(5.0)), n)
-    kvs.set(key, config.add(exposureTime.set(6.0)), n)
-    kvs.set(key, config.add(exposureTime.set(7.0)), n)
+    eventService.publish(event.add(exposureTime.set(3.0)), n)
+    eventService.publish(event.add(exposureTime.set(4.0)), n)
+    eventService.publish(event.add(exposureTime.set(5.0)), n)
+    eventService.publish(event.add(exposureTime.set(6.0)), n)
+    eventService.publish(event.add(exposureTime.set(7.0)), n)
 
-    val v: Option[SetupConfig] = kvs.get(key)
-    assert(v.isDefined)
-    assert(v.get(exposureTime).head == 7.0)
+    eventService.get(prefix).get match {
+      case event: StatusEvent =>
+        assert(event(exposureTime).head == 7.0)
+      case _ => fail("Expected a StatusEvent")
+    }
 
-    val h = kvs.getHistory(key, n + 1)
+    val h = eventService.getHistory(prefix, n + 1)
     assert(h.size == n + 1)
     for (i <- 0 to n) {
       logger.debug(s"History: $i: ${h(i)}")
     }
 
-    kvs.delete(key)
-
+    eventService.delete(prefix)
   }
 }
 

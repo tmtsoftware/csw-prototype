@@ -16,21 +16,21 @@ import java.util.concurrent.CompletableFuture;
 @SuppressWarnings("unused")
 public interface ITelemetryService {
     /**
-     * Sets the value for the status event (key is based on the event's prefix)
+     * Publishes the value for the status event (key is based on the event's prefix)
      *
      * @param status the value to store
      * @return a future indicating if/when the operation has completed
      */
-    CompletableFuture<Unit> set(StatusEvent status);
+    CompletableFuture<Unit> publish(StatusEvent status);
 
     /**
-     * Sets the value for the status event (key is based on the event's prefix)
+     * Publishes the value for the status event (key is based on the event's prefix)
      *
      * @param status the value to store
      * @param history optional number of previous values to store
      * @return a future indicating if/when the operation has completed
      */
-    CompletableFuture<Unit> set(StatusEvent status, int history);
+    CompletableFuture<Unit> publish(StatusEvent status, int history);
 
     /**
      * Gets the value for the given status event prefix
@@ -72,7 +72,7 @@ public interface ITelemetryService {
      * @return an object containing the kvs settings
      */
     static EventServiceSettings getKvsSettings(ActorSystem system) {
-        return EventServiceSettings.getKvsSettings(system);
+        return EventServiceSettings.getEventServiceSettings(system);
     }
 
     /**

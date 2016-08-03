@@ -70,7 +70,7 @@ public interface IBlockingTelemetryService {
      * @return an object containing the kvs settings
      */
     static EventServiceSettings getKvsSettings(ActorSystem system) {
-        return EventServiceSettings.getKvsSettings(system);
+        return EventServiceSettings.getEventServiceSettings(system);
     }
 
     /**

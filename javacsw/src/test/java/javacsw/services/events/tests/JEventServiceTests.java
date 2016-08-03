@@ -23,13 +23,13 @@ public class JEventServiceTests {
     private static ActorSystem system;
 
     // The target for this test
-    private static IEventService<SetupConfig> kvs;
+    private static IEventService kvs;
 
     @BeforeClass
     public static void setup() {
         system = ActorSystem.create();
-        EventServiceSettings settings = IEventService.getKvsSettings(system);
-        kvs = IEventService.getSetupConfigStore(settings, system);
+        EventServiceSettings settings = IEventService.getEventServiceSettings(system);
+        kvs = IEventService.getEventService(settings, system);
     }
 
     @AfterClass

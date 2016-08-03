@@ -3,7 +3,7 @@ package csw.services.events
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.util.config.Configurations.SetupConfig
+import csw.util.config.Events.StatusEvent
 import csw.util.config._
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
@@ -26,37 +26,34 @@ object EventServiceTests {
 //@DoNotDiscover
 class EventServiceTests
     extends TestKit(ActorSystem("Test"))
-    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll with Implicits {
+    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   import EventServiceTests._
   implicit val execContext = system.dispatcher
 
   val settings = EventServiceSettings(system)
-  val kvs = EventService[SetupConfig](settings)
+  val eventService = EventService(settings)
 
   test("Test Set and Get") {
     val prefix1 = "tcs.test1"
-    val config1 = SetupConfig(prefix1)
+    val event1 = StatusEvent(prefix1)
       .add(infoValue.set(1))
       .add(infoStr.set("info 1"))
 
     val prefix2 = "tcs.test2"
-    val config2 = SetupConfig(prefix2)
+    val event2 = StatusEvent(prefix2)
       .add(infoValue.set(2))
       .add(infoStr.set("info 2"))
 
     val f = for {
-      res1 <- kvs.set(prefix1, config1)
-      val1 <- kvs.get(prefix1)
-      res2 <- kvs.set(prefix2, config2)
-      val2 <- kvs.get(prefix2)
-      res3 <- kvs.delete(prefix1, prefix2)
-      res4 <- kvs.get(prefix1)
-      res5 <- kvs.get(prefix2)
-      res6 <- kvs.delete(prefix1, prefix2)
-      res7 <- kvs.hmset("tcs.testx", config1.getStringMap)
-      res8 <- kvs.hmget("tcs.testx", infoValue.keyName)
-      res9 <- kvs.hmget("tcs.testx", infoStr.keyName)
+      res1 <- eventService.publish(event1)
+      val1 <- eventService.get(prefix1).mapTo[Option[StatusEvent]]
+      res2 <- eventService.publish(event2)
+      val2 <- eventService.get(prefix2).mapTo[Option[StatusEvent]]
+      res3 <- eventService.delete(prefix1, prefix2)
+      res4 <- eventService.get(prefix1)
+      res5 <- eventService.get(prefix2)
+      res6 <- eventService.delete(prefix1, prefix2)
     } yield {
       assert(val1.exists(_.prefix == prefix1))
       assert(val1.exists(_(infoValue).head == 1))
@@ -67,28 +64,24 @@ class EventServiceTests
       assert(res4.isEmpty)
       assert(res5.isEmpty)
       assert(res6 == 0)
-      assert(res7)
-      assert(res8.contains("1"))
-      assert(res9.contains("info 1"))
     }
     Await.result(f, 5.seconds)
   }
 
   test("Test set, get and getHistory") {
     val prefix = "tcs.test2"
-    val config = SetupConfig(prefix).add(exposureTime.set(2.0))
-    //    val testKey = "testKey"
+    val event = StatusEvent(prefix).add(exposureTime.set(2.0))
     val n = 3
 
     val f = for {
-      _ <- kvs.set(prefix, config.add(exposureTime.set(3.0)), n)
-      _ <- kvs.set(prefix, config.add(exposureTime.set(4.0)), n)
-      _ <- kvs.set(prefix, config.add(exposureTime.set(5.0)), n)
-      _ <- kvs.set(prefix, config.add(exposureTime.set(6.0)), n)
-      _ <- kvs.set(prefix, config.add(exposureTime.set(7.0)), n)
-      v <- kvs.get(prefix)
-      h <- kvs.getHistory(prefix, n + 1)
-      _ <- kvs.delete(prefix)
+      _ <- eventService.publish(event.add(exposureTime.set(3.0)), n)
+      _ <- eventService.publish(event.add(exposureTime.set(4.0)), n)
+      _ <- eventService.publish(event.add(exposureTime.set(5.0)), n)
+      _ <- eventService.publish(event.add(exposureTime.set(6.0)), n)
+      _ <- eventService.publish(event.add(exposureTime.set(7.0)), n)
+      v <- eventService.get(prefix).mapTo[Option[StatusEvent]]
+      h <- eventService.getHistory(prefix, n + 1)
+      _ <- eventService.delete(prefix)
     } yield {
       assert(v.isDefined)
       assert(v.get(exposureTime).head == 7.0)
@@ -102,19 +95,20 @@ class EventServiceTests
 
   test("Test future usage") {
     val prefix = "tcs.test3"
-    val config = SetupConfig(prefix)
+    val config = StatusEvent(prefix)
       .add(infoValue.set(2))
       .add(infoStr.set("info 2"))
       .add(boolValue.set(true))
 
-    kvs.set(prefix, config).onSuccess {
+    eventService.publish(config).onSuccess {
       case _ =>
-        kvs.get(prefix).onSuccess {
-          case Some(setupConfig) =>
-            assert(setupConfig(infoValue).head == 2)
-            assert(setupConfig(infoStr).head == "info 2")
-            assert(setupConfig(boolValue).head)
-            setupConfig
+        eventService.get(prefix).onSuccess {
+          case Some(event) =>
+            val statusEvent = event.asInstanceOf[StatusEvent]
+            assert(statusEvent(infoValue).head == 2)
+            assert(statusEvent(infoStr).head == "info 2")
+            assert(statusEvent(boolValue).head)
+            statusEvent
         }
     }
   }

@@ -7,7 +7,7 @@ import java.util.UUID
 
 /**
  * Adds the ability to subscribe to events.
- * The subscribed actor wil receive Event messages for the given prefix.
+ * The subscribed actor will receive Event messages for the given prefix.
  */
 trait EventSubscriber extends Actor with ActorLogging {
 

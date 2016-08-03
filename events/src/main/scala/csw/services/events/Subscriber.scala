@@ -1,85 +1,86 @@
 package csw.services.events
 
 import akka.actor.{AbstractActor, Actor, ActorLogging, ActorRef, Props}
-import csw.services.events.EventService.EventFormatter
 import redis.actors.{DecodeReplies, RedisWorkerIO}
 import java.net.InetSocketAddress
 
 import redis.api.pubsub._
 import akka.util.ByteString
+import redis.ByteStringFormatter
 import redis.protocol.{MultiBulk, RedisReply}
 
 import scala.annotation.varargs
+import EventServiceImpl._
 
 /**
- * Adds the ability to subscribe to objects of type T.
- * The subscribed actor will receive messages of type T for the given keys.
+ * Adds the ability to an actor to subscribe to events from the event service.
+ * The subscribed actor will receive messages of type Event for the given event prefixes.
  */
-abstract class Subscriber[T: EventFormatter] extends Actor with ActorLogging {
+abstract class Subscriber extends Actor with ActorLogging {
 
   private val settings = EventServiceSettings(context.system)
 
-  private lazy val redis = context.actorOf(SubscribeActor.props[T](self, settings.redisHostname, settings.redisPort)
+  private lazy val redis = context.actorOf(SubscribeActor.props(self, settings.redisHostname, settings.redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
 
   /**
-   * Subscribes this actor to values with the given keys.
-   * Each key may be followed by a '*' wildcard to subscribe to all matching events.
+   * Subscribes this actor to events with the given prefixes.
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param keys the top level keys for the events you want to subscribe to.
+   * @param prefixes the top level keys for the events you want to subscribe to.
    */
-  def subscribe(keys: String*): Unit = {
-    val (patterns, channels) = keys.partition(_.endsWith("*"))
+  def subscribe(prefixes: String*): Unit = {
+    val (patterns, channels) = prefixes.partition(_.endsWith("*"))
     if (patterns.nonEmpty) redis ! PSUBSCRIBE(patterns: _*)
     if (channels.nonEmpty) redis ! SUBSCRIBE(channels: _*)
   }
 
   /**
-   * Unsubscribes this actor from values with the given keys.
-   * Each key may be followed by a '*' wildcard to unsubscribe to all matching values.
+   * Unsubscribes this actor from events with the given prefixes.
+   * Each prefix may be followed by a '*' wildcard to unsubscribe to all matching events.
    *
-   * @param keys the top level keys for the events you want to unsubscribe from.
+   * @param prefixes the top level keys for the events you want to unsubscribe from.
    */
-  def unsubscribe(keys: String*): Unit = {
-    val (patterns, channels) = keys.partition(_.endsWith("*"))
+  def unsubscribe(prefixes: String*): Unit = {
+    val (patterns, channels) = prefixes.partition(_.endsWith("*"))
     if (patterns.nonEmpty) redis ! PUNSUBSCRIBE(patterns: _*)
     if (channels.nonEmpty) redis ! UNSUBSCRIBE(channels: _*)
   }
 }
 
 /**
- * Helper class For Java API: Adds the ability to subscribe to objects of type T.
- * The subscribed actor will receive messages of type T for the given keys.
+ * Helper class For Java API: Adds the ability to subscribe to events.
+ * The subscribed actor will receive messages of type Event for the given prefixes.
  */
-abstract class JAbstractSubscriber[T: EventFormatter] extends AbstractActor {
+abstract class JAbstractSubscriber extends AbstractActor {
 
   private val settings = EventServiceSettings(context.system)
 
-  private lazy val redis = context.actorOf(SubscribeActor.props[T](self, settings.redisHostname, settings.redisPort)
+  private lazy val redis = context.actorOf(SubscribeActor.props(self, settings.redisHostname, settings.redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
 
   /**
-   * Subscribes this actor to values with the given keys.
-   * Each key may be followed by a '*' wildcard to subscribe to all matching events.
+   * Subscribes this actor to values with the given prefixes.
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param keys the top level keys for the events you want to subscribe to.
+   * @param prefixes the top level prefixes for the events you want to subscribe to.
    */
   @varargs
-  def subscribe(keys: String*): Unit = {
-    val (patterns, channels) = keys.partition(_.endsWith("*"))
+  def subscribe(prefixes: String*): Unit = {
+    val (patterns, channels) = prefixes.partition(_.endsWith("*"))
     if (patterns.nonEmpty) redis ! PSUBSCRIBE(patterns: _*)
     if (channels.nonEmpty) redis ! SUBSCRIBE(channels: _*)
   }
 
   /**
-   * Unsubscribes this actor from values with the given keys.
-   * Each key may be followed by a '*' wildcard to unsubscribe to all matching values.
+   * Unsubscribes this actor from events with the given prefixes.
+   * Each prefix may be followed by a '*' wildcard to unsubscribe to all matching values.
    *
-   * @param keys the top level keys for the events you want to unsubscribe from.
+   * @param prefixes the top level prefixes for the events you want to unsubscribe from.
    */
   @varargs
-  def unsubscribe(keys: String*): Unit = {
-    val (patterns, channels) = keys.partition(_.endsWith("*"))
+  def unsubscribe(prefixes: String*): Unit = {
+    val (patterns, channels) = prefixes.partition(_.endsWith("*"))
     if (patterns.nonEmpty) redis ! PUNSUBSCRIBE(patterns: _*)
     if (channels.nonEmpty) redis ! UNSUBSCRIBE(channels: _*)
   }
@@ -88,8 +89,8 @@ abstract class JAbstractSubscriber[T: EventFormatter] extends AbstractActor {
 // -- Implementation --
 
 private object SubscribeActor {
-  def props[T: EventFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int): Props =
-    Props(new SubscribeActor[T](subscriber, redisHost, redisPort))
+  def props(subscriber: ActorRef, redisHost: String, redisPort: Int): Props =
+    Props(new SubscribeActor(subscriber, redisHost, redisPort))
 
   val dispatcherName = "rediscala.rediscala-client-worker-dispatcher"
 }
@@ -97,7 +98,7 @@ private object SubscribeActor {
 // The actor that receives the messages from Redis.
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
-private class SubscribeActor[T: EventFormatter](subscriber: ActorRef, redisHost: String, redisPort: Int)
+private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort: Int)
     extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) => ()) with DecodeReplies {
 
   /**
@@ -106,7 +107,7 @@ private class SubscribeActor[T: EventFormatter](subscriber: ActorRef, redisHost:
   private var channelsSubscribed = Set[String]()
   private var patternsSubscribed = Set[String]()
 
-  def writing: Receive = {
+  override def writing: Receive = {
     case message: SubscribeMessage =>
       write(message.toByteString)
       message match {
@@ -117,20 +118,20 @@ private class SubscribeActor[T: EventFormatter](subscriber: ActorRef, redisHost:
       }
   }
 
-  def onConnectWrite(): ByteString = {
+  override def onConnectWrite(): ByteString = {
     ByteString.empty
   }
 
-  def onConnectionClosed() {}
+  override def onConnectionClosed() {}
 
-  def onWriteSent() {}
+  override def onWriteSent() {}
 
-  def onDataReceived(dataByteString: ByteString) {
+  override def onDataReceived(dataByteString: ByteString) {
     decodeReplies(dataByteString)
   }
 
-  def onDecodedReply(reply: RedisReply) {
-    val formatter = implicitly[EventFormatter[T]]
+  override def onDecodedReply(reply: RedisReply) {
+    val formatter = implicitly[ByteStringFormatter[Event]]
 
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
@@ -141,8 +142,8 @@ private class SubscribeActor[T: EventFormatter](subscriber: ActorRef, redisHost:
     }
   }
 
-  def onDataReceivedOnClosingConnection(dataByteString: ByteString): Unit = decodeReplies(dataByteString)
+  override def onDataReceivedOnClosingConnection(dataByteString: ByteString): Unit = decodeReplies(dataByteString)
 
-  def onClosingConnectionClosed(): Unit = {}
+  override def onClosingConnectionClosed(): Unit = {}
 }
 

@@ -33,7 +33,7 @@ public class JBlockingTelemetryServiceTest {
     @BeforeClass
     public static void setup() {
         system = ActorSystem.create();
-        EventServiceSettings settings = IEventService.getKvsSettings(system);
+        EventServiceSettings settings = IEventService.getEventServiceSettings(system);
         bts = IBlockingTelemetryService.getTelemetryService(timeout, settings, system);
     }
 

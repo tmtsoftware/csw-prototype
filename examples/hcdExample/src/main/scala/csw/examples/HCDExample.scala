@@ -75,7 +75,7 @@ object HCDExample {
       case Tick =>
         val (az, el) = genPair(rand)
         val event = StatusEvent(prefix).add(azKey.set(az)).add(elKey.set(el))
-        eventService.set(event)
+        eventService.publish(event)
     }
 
     def genPair(r: Random): (Int, Int) = {

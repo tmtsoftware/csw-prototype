@@ -64,7 +64,7 @@ public class JPubSubTests {
     static class TestPublisher extends AbstractActor {
         private final double expTime = 1.0;
         private final ActorSystem system = getContext().system();
-        private final KvsSettings settings = KvsSettings.getKvsSettings(system);
+        private final KvsSettings settings = KvsSettings.getEventServiceSettings(system);
         private final IEventService<SetupConfig> kvs = IEventService.getSetupConfigStore(settings, system);
         private final String prefix = "tcs.mobie.red.dat.exposureInfo";
         private final LoggingAdapter log = Logging.getLogger(system, this);
