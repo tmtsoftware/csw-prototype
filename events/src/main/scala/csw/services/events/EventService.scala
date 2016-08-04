@@ -54,7 +54,7 @@ trait EventService {
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
    * @param subscriber an optional actor to receive Event messages
-   * @param callback   an optional callback which will be called with Event objects
+   * @param callback   an optional callback which will be called with Event objects (in another thread)
    * @param prefixes   one or more prefixes of events, may include wildcard
    */
   def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor

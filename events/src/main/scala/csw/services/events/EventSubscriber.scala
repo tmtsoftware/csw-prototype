@@ -16,7 +16,7 @@ import EventServiceImpl._
  * Adds the ability to an actor to subscribe to events from the event service.
  * The subscribed actor will receive messages of type Event for the given event prefixes.
  */
-abstract class Subscriber extends Actor with ActorLogging {
+abstract class EventSubscriber extends Actor with ActorLogging {
 
   private val settings = EventServiceSettings(context.system)
 

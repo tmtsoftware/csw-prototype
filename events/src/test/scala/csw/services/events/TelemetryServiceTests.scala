@@ -1,7 +1,7 @@
 package csw.services.events
 
 import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.util.Timeout
 import csw.util.config.Events.StatusEvent
 import csw.util.config.{DoubleKey, IntKey, StringKey}
@@ -191,7 +191,7 @@ object MySubscriber {
   case class Results(count1: Int, count2: Int)
 }
 
-class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber {
+class MySubscriber(prefix1: String, prefix2: String) extends EventSubscriber {
   import MySubscriber._
   import TelemetryServiceTests._
 

@@ -123,7 +123,6 @@ class EventServiceTests
       eventReceived = Some(ev)
       logger.info(s"Listener received event: $ev")
     }
-//    val subscriber = TestProbe()
     val monitor = eventService.subscribe(Some(self), Some(listener), prefix)
     try {
       Thread.sleep(500) // wait for actor to start

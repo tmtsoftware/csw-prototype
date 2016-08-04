@@ -10,8 +10,6 @@ import csw.util.config.Events.StatusEvent
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-// Added annotation below, since test depends on Redis server running (Remove to include in tests)
-//@DoNotDiscover
 class PubSubTests extends TestKit(ActorSystem("Test"))
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
@@ -77,7 +75,7 @@ object PubSubTests {
   }
 
   // A test class that subscribes to events
-  case class TestSubscriber(name: String) extends Subscriber {
+  case class TestSubscriber(name: String) extends EventSubscriber {
     var count = 0
 
     subscribe("tcs.mobie.red.dat.*")

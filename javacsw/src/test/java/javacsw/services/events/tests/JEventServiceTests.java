@@ -2,6 +2,7 @@ package javacsw.services.events.tests;
 
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
+import csw.services.events.EventService.*;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.DoubleKey;
 
@@ -21,7 +22,7 @@ import java.util.Optional;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
-@SuppressWarnings("OptionalGetWithoutIsPresent")
+@SuppressWarnings({"OptionalGetWithoutIsPresent", "OptionalUsedAsFieldOrParameterType"})
 public class JEventServiceTests {
 
   // Keys used in test
@@ -106,4 +107,28 @@ public class JEventServiceTests {
     }
     eventService.delete(prefix).get();
   }
+
+  // Used to test that event handler was called
+  static Optional<EventServiceEvent> eventReceived = Optional.empty();
+
+  // Called when an event is received
+  static IEventService.EventHandler eventHandler = ev -> eventReceived = Optional.of(ev);
+
+  @Test
+  public void TestSubscribeMethod() throws Exception {
+    String prefix = "tcs.test4";
+    StatusEvent event = StatusEvent(prefix)
+      .add(jset(infoValue, 4))
+      .add(jset(infoStr, "info 4"));
+    EventMonitor monitor = eventService.subscribe(Optional.empty(), Optional.of(eventHandler), prefix);
+    try {
+      Thread.sleep(500); // wait for actor to start
+      eventService.publish(event);
+      Thread.sleep(500); // wait for redis to react
+      assertTrue(eventReceived.isPresent());
+      assertTrue(eventReceived.get().equals(event));
+    } finally {
+      monitor.stop();
+    }
+ }
 }

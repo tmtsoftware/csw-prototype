@@ -63,20 +63,6 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
 }
 
 /**
- * Base type of a subscriber actor to telemetry (status events)
- * The subscribed actor will receive messages of type StatusEvent for the given prefixes.
- */
-abstract class TelemetrySubscriber extends Subscriber {
-  override def subscribe(prefixes: String*): Unit = {
-    super.subscribe(prefixes: _*)
-  }
-
-  override def unsubscribe(prefixes: String*): Unit = {
-    super.unsubscribe(prefixes: _*)
-  }
-}
-
-/**
  * Provides a blocking, synchronous API to the telemetry service.
  * @param ts a reference to the telemetry service to use
  * @param timeout max amount of time to wait for a result before timing out

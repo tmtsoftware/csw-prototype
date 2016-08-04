@@ -1,8 +1,8 @@
 package csw.examples
 
-import akka.actor.{Actor, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, Cancellable, Props}
 import csw.services.ccs.HcdController
-import csw.services.events.{EventServiceSettings, TelemetryService, TelemetrySubscriber}
+import csw.services.events.{EventServiceSettings, EventSubscriber, TelemetryService}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
@@ -85,7 +85,7 @@ object HCDExample {
     }
   }
 
-  class EventPosSubscriber(name: String, prefix: String) extends TelemetrySubscriber {
+  class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
 
     import PosGenerator._
 

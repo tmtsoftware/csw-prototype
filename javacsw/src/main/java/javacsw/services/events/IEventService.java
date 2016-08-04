@@ -1,7 +1,10 @@
 package javacsw.services.events;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
+import csw.services.events.EventService;
+import csw.services.events.EventService.*;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.Events.EventServiceEvent;
 import scala.Unit;
@@ -14,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
  * A Java interface for a non-blocking key / value store. This class does not wait for operations to complete
  * and returns Futures as results.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
 public interface IEventService {
     /**
      * @param system the actor system used to access the akka config file containing the kvs settings
@@ -48,6 +51,23 @@ public interface IEventService {
      * @param n     the max number of history values to keep (0 means no history)
      */
     CompletableFuture<Unit> publish(EventServiceEvent event, int n);
+
+    /**
+     * API to handle an event from the event service
+     */
+    interface EventHandler {
+        void handleEvent(EventServiceEvent event);
+    }
+
+    /**
+     * Subscribes an actor or callback function to events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param subscriber an optional actor to receive Event messages
+     * @param callback   an optional callback which will be called with Event objects (in another thread)
+     * @param prefixes   one or more prefixes of events, may include wildcard
+     */
+    EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<EventHandler> callback, String... prefixes);
 
     /**
      * Gets the value of the given key

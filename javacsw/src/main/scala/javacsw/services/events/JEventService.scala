@@ -2,8 +2,10 @@ package javacsw.services.events
 
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
+import javacsw.services.events.IEventService.EventHandler
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRef, ActorRefFactory}
+import csw.services.events.EventService.EventMonitor
 import csw.services.events.{EventService, EventServiceSettings}
 import csw.util.config.Events.EventServiceEvent
 
@@ -42,6 +44,10 @@ case class JEventService(settings: EventServiceSettings, system: ActorRefFactory
    */
   override def publish(event: EventServiceEvent, n: Int): CompletableFuture[Unit] =
     eventService.publish(event, n).toJava.toCompletableFuture
+
+
+  override def subscribe(subscriber: Optional[ActorRef], callback: Optional[EventHandler], prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber.asScala, callback.asScala.map(_.handleEvent), prefixes: _*)
 
   /**
    * Gets the event for the given prefix

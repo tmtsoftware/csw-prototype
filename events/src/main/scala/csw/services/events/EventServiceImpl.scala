@@ -1,6 +1,6 @@
 package csw.services.events
 
-import akka.actor.{ActorRef, ActorRefFactory, PoisonPill, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorRefFactory, PoisonPill, Props}
 import akka.util.ByteString
 import csw.services.events.EventService.EventMonitor
 import csw.util.config.ConfigSerializer._
@@ -35,7 +35,7 @@ object EventServiceImpl {
       Props(classOf[EventMonitorActor], subscriber, callback, prefixes)
   }
 
-  private class EventMonitorActor(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*) extends Subscriber {
+  private class EventMonitorActor(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*) extends EventSubscriber {
     import context.dispatcher
     subscribe(prefixes: _*)
 
