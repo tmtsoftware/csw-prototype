@@ -3,6 +3,8 @@ package csw.services
 import csw.util.config.Events.EventServiceEvent
 
 /**
+ * == Event Service ==
+ *
  * This module implements an Event Service based on [[http://redis.io/ Redis]].
  * An event can be published and subscribers can receive the events.
  * The last n events are always saved for reference (where n is an optional argument).
