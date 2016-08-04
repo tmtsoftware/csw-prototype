@@ -1,7 +1,7 @@
 package csw.services.events
 
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.util.config.Events.StatusEvent
 import csw.util.config._
@@ -95,21 +95,46 @@ class EventServiceTests
 
   test("Test future usage") {
     val prefix = "tcs.test3"
-    val config = StatusEvent(prefix)
+    val event = StatusEvent(prefix)
       .add(infoValue.set(2))
       .add(infoStr.set("info 2"))
       .add(boolValue.set(true))
 
-    eventService.publish(config).onSuccess {
+    eventService.publish(event).onSuccess {
       case _ =>
         eventService.get(prefix).onSuccess {
-          case Some(event) =>
-            val statusEvent = event.asInstanceOf[StatusEvent]
+          case Some(statusEvent: StatusEvent) =>
             assert(statusEvent(infoValue).head == 2)
             assert(statusEvent(infoStr).head == "info 2")
             assert(statusEvent(boolValue).head)
             statusEvent
         }
+    }
+  }
+
+  test("Test subscribing to events via subscribe method") {
+    val prefix = "tcs.test4"
+    val event = StatusEvent(prefix)
+      .add(infoValue.set(4))
+      .add(infoStr.set("info 4"))
+      .add(boolValue.set(true))
+    var eventReceived: Option[Event] = None
+    def listener(ev: Event): Unit = {
+      eventReceived = Some(ev)
+      logger.info(s"Listener received event: $ev")
+    }
+//    val subscriber = TestProbe()
+    val monitor = eventService.subscribe(Some(self), Some(listener), prefix)
+    try {
+      Thread.sleep(500) // wait for actor to start
+      eventService.publish(event)
+      val e = expectMsgType[StatusEvent](5.seconds)
+      logger.info(s"Actor received event: $e")
+      assert(e == event)
+      assert(eventReceived.isDefined)
+      assert(e == eventReceived.get)
+    } finally {
+      monitor.stop()
     }
   }
 

@@ -1,7 +1,8 @@
 package csw.services.events
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRef, ActorRefFactory, PoisonPill, Props}
 import akka.util.ByteString
+import csw.services.events.EventService.EventMonitor
 import csw.util.config.ConfigSerializer._
 import redis.{ByteStringFormatter, RedisClient}
 
@@ -18,6 +19,36 @@ object EventServiceImpl {
       val ar = Array.ofDim[Byte](bs.length)
       bs.asByteBuffer.get(ar)
       read[Event](ar)
+    }
+  }
+
+  // Implement value returned from subscribe method
+  private[events] case class EventMonitorImpl(actorRef: ActorRef) extends EventMonitor {
+    override def stop(): Unit = {
+      actorRef ! PoisonPill
+    }
+  }
+
+  // Actor used to subscribe to events for given prefixes and then notify the actor or call the function
+  private object EventMonitorActor {
+    def props(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): Props =
+      Props(classOf[EventMonitorActor], subscriber, callback, prefixes)
+  }
+
+  private class EventMonitorActor(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*) extends Subscriber {
+    import context.dispatcher
+    subscribe(prefixes: _*)
+
+    def receive: Receive = {
+      case event: Event =>
+        subscriber.foreach(_ ! event)
+        callback.foreach { f =>
+          Future {
+            f(event)
+          }.onFailure {
+            case ex => log.error("Event callback failed: ", ex)
+          }
+        }
     }
   }
 }
@@ -49,6 +80,9 @@ private[events] case class EventServiceImpl(host: String, port: Int)(implicit _s
     val f4 = redisTransaction.exec()
     Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
   }
+
+  override def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor =
+    EventMonitorImpl(_system.actorOf(EventMonitorActor.props(subscriber, callback, prefixes: _*)))
 
   override def get(prefix: String): Future[Option[Event]] = redis.lindex(prefix, 0)
 
