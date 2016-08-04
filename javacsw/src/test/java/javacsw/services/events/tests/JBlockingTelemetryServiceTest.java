@@ -9,13 +9,13 @@ import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
 import csw.services.events.EventServiceSettings;
+import csw.services.events.JAbstractSubscriber;
 import csw.util.config.DoubleKey;
 import csw.util.config.Events.*;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.IBlockingTelemetryService;
 import javacsw.services.events.IEventService;
-import javacsw.services.events.JTelemetrySubscriber;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -166,7 +166,7 @@ public class JBlockingTelemetryServiceTest {
     }
 
     // Subscriber class used to test the Java API for subscribing to telemetry: JTelemetrySubscriber
-    static class MySubscriber extends JTelemetrySubscriber {
+    static class MySubscriber extends JAbstractSubscriber {
         // Message to get the results
         public static class GetResults {
             public static final GetResults instance = new GetResults();

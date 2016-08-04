@@ -1,6 +1,7 @@
 package csw.services.events
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRef, ActorRefFactory}
+import csw.services.events.EventService.EventMonitor
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -21,6 +22,17 @@ case class BlockingEventService(timeout: Duration, settings: EventServiceSetting
    */
   def publish(event: Event, n: Int = 0): Unit =
     Await.result[Unit](eventService.publish(event, n), timeout)
+
+  /**
+   * Subscribes an actor or callback function to events matching the given prefixes
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+   *
+   * @param subscriber an optional actor to receive Event messages
+   * @param callback   an optional callback which will be called with Event objects (in another thread)
+   * @param prefixes   one or more prefixes of events, may include wildcard
+   */
+  def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber, callback, prefixes: _*)
 
   /**
    * Gets the (most recent) event published with the given event prefix

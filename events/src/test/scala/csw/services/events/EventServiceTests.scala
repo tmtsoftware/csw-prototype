@@ -130,6 +130,7 @@ class EventServiceTests
       val e = expectMsgType[StatusEvent](5.seconds)
       logger.info(s"Actor received event: $e")
       assert(e == event)
+      Thread.sleep(500) // wait redis to react?
       assert(eventReceived.isDefined)
       assert(e == eventReceived.get)
     } finally {

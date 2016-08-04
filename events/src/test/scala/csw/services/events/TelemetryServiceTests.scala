@@ -1,7 +1,7 @@
 package csw.services.events
 
 import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import csw.util.config.Events.StatusEvent
 import csw.util.config.{DoubleKey, IntKey, StringKey}
@@ -144,6 +144,31 @@ class TelemetryServiceTests
       }
     }
     Await.result(f, 5.seconds)
+  }
+
+  test("Test subscribing to events via subscribe method") {
+    val prefix = "tcs.test4"
+    val event = StatusEvent(prefix)
+      .add(infoValue.set(4))
+      .add(infoStr.set("info 4"))
+    var eventReceived: Option[StatusEvent] = None
+    def listener(ev: StatusEvent): Unit = {
+      eventReceived = Some(ev)
+      logger.info(s"Listener received event: $ev")
+    }
+    val monitor = ts.subscribe(Some(self), Some(listener), prefix)
+    try {
+      Thread.sleep(500) // wait for actor to start
+      ts.publish(event)
+      val e = expectMsgType[StatusEvent](5.seconds)
+      logger.info(s"Actor received event: $e")
+      assert(e == event)
+      Thread.sleep(500) // wait redis to react?
+      assert(eventReceived.isDefined)
+      assert(e == eventReceived.get)
+    } finally {
+      monitor.stop()
+    }
   }
 
   // --

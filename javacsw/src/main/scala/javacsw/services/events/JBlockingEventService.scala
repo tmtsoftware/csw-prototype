@@ -1,14 +1,17 @@
 package javacsw.services.events
 
 import java.util.Optional
+import javacsw.services.events.IEventService.EventHandler
 
-import akka.actor.ActorRefFactory
-import csw.services.events.{BlockingEventService, EventServiceSettings}
+import akka.actor.{ActorRef, ActorRefFactory}
+import csw.services.events.EventService.EventMonitor
+import csw.services.events._
 import csw.util.config.Events.EventServiceEvent
 
 import scala.concurrent.duration.Duration
 import scala.compat.java8.OptionConverters._
 import collection.JavaConverters._
+import scala.annotation.varargs
 
 /**
  * A wrapper API for a KVS that waits for operations to complete before returing.
@@ -26,6 +29,9 @@ case class JBlockingEventService(timeout: Duration, settings: EventServiceSettin
   override def publish(event: EventServiceEvent): Unit = eventService.publish(event)
 
   override def publish(event: EventServiceEvent, n: Int): Unit = eventService.publish(event, n)
+
+  override def subscribe(subscriber: Optional[ActorRef], callback: Optional[EventHandler], prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber.asScala, callback.asScala.map(_.handleEvent), prefixes: _*)
 
   override def get(prefix: String): Optional[EventServiceEvent] = eventService.get(prefix).asJava
 

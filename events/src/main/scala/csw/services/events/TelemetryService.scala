@@ -1,10 +1,20 @@
 package csw.services.events
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRef, ActorRefFactory}
 import akka.util.Timeout
+import csw.services.events.EventService.EventMonitor
 import csw.util.config.Events.StatusEvent
 
 import scala.concurrent.{Await, Future}
+
+object TelemetryService {
+  // Converts a callback that takes an Event to one that takes a StatusEvent
+  private def callbackConverter(telemCallback: StatusEvent => Unit)(event: Event): Unit =
+    event match {
+      case s: StatusEvent => telemCallback(s)
+      case _              =>
+    }
+}
 
 /**
  * A convenience class for publishing, getting and subscribing to telemetry (StatusEvent objects).
@@ -14,6 +24,7 @@ import scala.concurrent.{Await, Future}
  */
 case class TelemetryService(settings: EventServiceSettings)(implicit _system: ActorRefFactory) {
   import _system.dispatcher
+  import TelemetryService._
 
   private val eventService = EventService(settings)
 
@@ -26,6 +37,17 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
    */
   def publish(status: StatusEvent, history: Int = 0): Future[Unit] =
     eventService.publish(status, history)
+
+  /**
+   * Subscribes an actor or callback function to events matching the given prefixes
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+   *
+   * @param subscriber an optional actor to receive Event messages
+   * @param callback   an optional callback which will be called with Event objects (in another thread)
+   * @param prefixes   one or more prefixes of events, may include wildcard
+   */
+  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber, callback.map(callbackConverter), prefixes: _*)
 
   /**
    * Gets the value for the given status event prefix
@@ -71,16 +93,6 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
 case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
   /**
-   * Disconnects from the key/value store server
-   */
-  def disconnect(): Unit = Await.result(ts.disconnect(), timeout.duration)
-
-  /**
-   * Shuts the key/value store server down
-   */
-  def shutdown(): Unit = Await.result(ts.shutdown(), timeout.duration)
-
-  /**
    * Publishes the value for the status event (key is based on the event's prefix)
    *
    * @param status the value to store
@@ -88,6 +100,17 @@ case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: 
    */
   def publish(status: StatusEvent, history: Int = 0): Unit =
     Await.result(ts.publish(status, history), timeout.duration)
+
+  /**
+   * Subscribes an actor or callback function to events matching the given prefixes
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+   *
+   * @param subscriber an optional actor to receive Event messages
+   * @param callback   an optional callback which will be called with Event objects (in another thread)
+   * @param prefixes   one or more prefixes of events, may include wildcard
+   */
+  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor =
+    ts.subscribe(subscriber, callback, prefixes: _*)
 
   /**
    * Gets the value for the given status event prefix
@@ -112,5 +135,15 @@ case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: 
    */
   def delete(prefix: String): Unit =
     Await.result(ts.delete(prefix), timeout.duration)
+
+  /**
+   * Disconnects from the key/value store server
+   */
+  def disconnect(): Unit = Await.result(ts.disconnect(), timeout.duration)
+
+  /**
+   * Shuts the key/value store server down
+   */
+  def shutdown(): Unit = Await.result(ts.shutdown(), timeout.duration)
 }
 

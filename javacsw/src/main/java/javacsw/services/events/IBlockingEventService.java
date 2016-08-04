@@ -1,6 +1,9 @@
 package javacsw.services.events;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
+import csw.services.events.EventService;
+import csw.services.events.EventService.*;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.Events.EventServiceEvent;
 import scala.concurrent.duration.Duration;
@@ -12,7 +15,7 @@ import java.util.Optional;
  * A blocking Java interface for the event service. This class blocks and waits for operations to complete
  * (rather than returning Futures as results).
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
 public interface IBlockingEventService {
 
     /**
@@ -38,6 +41,16 @@ public interface IBlockingEventService {
      * @param n     the max number of history events to keep (0 means no history)
      */
     void publish(EventServiceEvent event, int n);
+
+    /**
+     * Subscribes an actor or callback function to events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param subscriber an optional actor to receive Event messages
+     * @param callback   an optional callback which will be called with Event objects (in another thread)
+     * @param prefixes   one or more prefixes of events, may include wildcard
+     */
+    EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<IEventService.EventHandler> callback, String... prefixes);
 
     /**
      * Gets the latest event for the given prefix

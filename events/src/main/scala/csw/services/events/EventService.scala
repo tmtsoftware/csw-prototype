@@ -1,6 +1,6 @@
 package csw.services.events
 
-import akka.actor.{ ActorRef, ActorRefFactory }
+import akka.actor.{ActorRef, ActorRefFactory}
 
 import scala.concurrent.Future
 

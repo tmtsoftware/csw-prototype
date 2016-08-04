@@ -62,30 +62,3 @@ case class JTelemetryService(settings: EventServiceSettings, system: ActorRefFac
   @Override
   def shutdown: CompletableFuture[Unit] = ts.shutdown().toJava.toCompletableFuture
 }
-
-/**
- * Java API: Base type of a subscriber actor to telemetry (status events)
- * The subscribed actor will receive messages of type StatusEvent for the given keys.
- */
-abstract class JTelemetrySubscriber extends JAbstractSubscriber {
-  /**
-   * Subscribes this actor to values with the given prefixes.
-   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
-   *
-   * @param prefixes the top level prefixes for the events you want to subscribe to.
-   */
-  override def subscribe(prefixes: String*): Unit = {
-    super.subscribe(prefixes: _*)
-  }
-
-  /**
-   * Unsubscribes this actor from values with the given prefixes.
-   * Each prefix may be followed by a '*' wildcard to unsubscribe to all matching values.
-   *
-   * @param prefixes the top level prefixes for the events you want to unsubscribe from.
-   */
-  override def unsubscribe(prefixes: String*): Unit = {
-    super.unsubscribe(prefixes: _*)
-  }
-}
-
