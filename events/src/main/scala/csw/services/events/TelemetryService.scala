@@ -1,10 +1,10 @@
 package csw.services.events
 
 import akka.actor.{ActorRef, ActorRefFactory}
-import akka.util.Timeout
 import csw.services.events.EventService.EventMonitor
 import csw.util.config.Events.StatusEvent
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 object TelemetryService {
@@ -86,11 +86,11 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
 
 /**
  * Provides a blocking, synchronous API to the telemetry service.
- * @param ts a reference to the telemetry service to use
  * @param timeout max amount of time to wait for a result before timing out
+ * @param ts a reference to the telemetry service to use
  * @param context environment needed for futures
  */
-case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: Timeout, context: ActorRefFactory) {
+case class BlockingTelemetryService(timeout: Duration, ts: TelemetryService)(implicit val context: ActorRefFactory) {
 
   /**
    * Publishes the value for the status event (key is based on the event's prefix)
@@ -99,7 +99,7 @@ case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: 
    * @param history optional number of previous values to store
    */
   def publish(status: StatusEvent, history: Int = 0): Unit =
-    Await.result(ts.publish(status, history), timeout.duration)
+    Await.result(ts.publish(status, history), timeout)
 
   /**
    * Subscribes an actor or callback function to events matching the given prefixes
@@ -119,7 +119,7 @@ case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: 
    * @return the status event, if found
    */
   def get(prefix: String): Option[StatusEvent] =
-    Await.result(ts.get(prefix), timeout.duration)
+    Await.result(ts.get(prefix), timeout)
 
   /**
    * Gets a list of the n most recent status event values for the given prefix
@@ -128,22 +128,22 @@ case class BlockingTelemetryService(ts: TelemetryService)(implicit val timeout: 
    * @return sequence of status events, ordered by most recent
    */
   def getHistory(prefix: String, n: Int): Seq[StatusEvent] =
-    Await.result(ts.getHistory(prefix, n), timeout.duration)
+    Await.result(ts.getHistory(prefix, n), timeout)
 
   /**
    * Deletes the given  status event from the store
    */
   def delete(prefix: String): Unit =
-    Await.result(ts.delete(prefix), timeout.duration)
+    Await.result(ts.delete(prefix), timeout)
 
   /**
    * Disconnects from the key/value store server
    */
-  def disconnect(): Unit = Await.result(ts.disconnect(), timeout.duration)
+  def disconnect(): Unit = Await.result(ts.disconnect(), timeout)
 
   /**
    * Shuts the key/value store server down
    */
-  def shutdown(): Unit = Await.result(ts.shutdown(), timeout.duration)
+  def shutdown(): Unit = Await.result(ts.shutdown(), timeout)
 }
 

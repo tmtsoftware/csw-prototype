@@ -13,7 +13,7 @@ import csw.services.loc.LocationService.ResolvedHttpLocation
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.util.config.Events.StatusEvent
 import csw.util.config.StringKey
-import org.scalatest.FunSuiteLike
+import org.scalatest.{DoNotDiscover, FunSuiteLike}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -27,6 +27,7 @@ object RedisTest {
 /**
  * Test the trackLocation app in-line
  */
+//@DoNotDiscover
 class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLogging {
   implicit val sys = RedisTest.system
 
@@ -56,7 +57,7 @@ class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLog
     val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
 
     val kvsSettings = EventServiceSettings(redisHostname = httpLoc.uri.getHost, redisPort = httpLoc.uri.getPort)
-    val telemetryService = BlockingTelemetryService(TelemetryService(kvsSettings))
+    val telemetryService = BlockingTelemetryService(timeout.duration, TelemetryService(kvsSettings))
     val key = StringKey("testKey")
     val e1 = StatusEvent("test").add(key.set("Test Passed"))
     telemetryService.publish(e1)

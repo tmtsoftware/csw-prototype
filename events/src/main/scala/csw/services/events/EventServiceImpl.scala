@@ -1,6 +1,6 @@
 package csw.services.events
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorRefFactory, PoisonPill, Props}
+import akka.actor.{ActorRef, ActorRefFactory, PoisonPill, Props}
 import akka.util.ByteString
 import csw.services.events.EventService.EventMonitor
 import csw.util.config.ConfigSerializer._
@@ -62,6 +62,10 @@ object EventServiceImpl {
  */
 private[events] case class EventServiceImpl(host: String, port: Int)(implicit _system: ActorRefFactory) extends EventService {
   import EventServiceImpl._
+  //  import org.slf4j.LoggerFactory
+  //  import com.typesafe.scalalogging.slf4j.Logger
+  //  private[events] val logger = Logger(LoggerFactory.getLogger(EventServiceImpl.getClass))
+
   protected val redis = RedisClient(host, port)
   implicit val execContext = _system.dispatcher
 
@@ -95,7 +99,11 @@ private[events] case class EventServiceImpl(host: String, port: Int)(implicit _s
   def shutdown(): Future[Unit] = {
     val f = redis.shutdown().map(_ => ())
     redis.stop()
-    f
+    f.recover {
+      case ex =>
+        //        logger.warn("Error shutting down Redis", ex)
+        ()
+    }
   }
 }
 
