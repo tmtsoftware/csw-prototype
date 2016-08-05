@@ -3,8 +3,6 @@ package javacsw.util.config.tests;
 import csw.util.config.*;
 import csw.util.config.Configurations.ObserveConfig;
 import csw.util.config.Configurations.SetupConfig;
-import javacsw.util.config.JItems;
-import javacsw.util.config.JUnitsOfMeasure;
 import org.junit.Test;
 
 import java.util.*;
@@ -12,7 +10,6 @@ import java.util.*;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JConfigDSL.*;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 /**
@@ -50,7 +47,7 @@ public class JConfigDSLTests {
     SetupConfig sc1 = jadd(sc(ck3), jset(k4, dm1));
     assertTrue(sc1.size() == 1);
     assertTrue(sc1.exists(k4));
-    assertTrue(jvalue(jitem(sc1, k4)).equals(dm1));
+    assertEquals(jvalue(jitem(sc1, k4)), dm1);
     assertTrue(jvalue(jitem(sc1, k4)).data()[0][0] == 1);
     assertTrue(jvalue(jitem(sc1, k4)).apply(0, 0) == 1);
   }
