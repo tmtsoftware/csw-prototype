@@ -21,7 +21,7 @@ class TromboneEventSubscriber(name: String, calculationActor: ActorRef) extends 
 
   // Kim possibly set these initial values from config or get them from telemetry store
   var zenithAngle: DoubleItem = zenithAngleKey.set(0.0f).withUnits(UnitsOfMeasure.degrees)
-  var focusError: DoubleItem = focusKey.set(0.0f).withUnits(UnitsOfMeasure.meters)
+  var focusError: DoubleItem = focusErrorKey.set(0.0f).withUnits(UnitsOfMeasure.millimeters)
 
   def receive: Receive = {
 
@@ -39,7 +39,7 @@ class TromboneEventSubscriber(name: String, calculationActor: ActorRef) extends 
 
         case `focusConfigKey` =>
           // Update focusError state and then update calculator
-          focusError = event(focusKey)
+          focusError = event(focusErrorKey)
           updateCalculator(event.info.time)
       }
 
@@ -60,6 +60,4 @@ class TromboneEventSubscriber(name: String, calculationActor: ActorRef) extends 
   }
 
 }
-
-
 

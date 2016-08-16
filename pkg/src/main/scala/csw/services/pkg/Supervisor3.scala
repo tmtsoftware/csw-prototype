@@ -27,7 +27,6 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
     case Some(actorRef) => actorRef
   }
 
-
   // Starts the component actor
   def startComponent(context: ActorContext, componentInfo: ComponentInfo): ActorRef = {
     // This is currently needed to give time to process a subscription, need a better way

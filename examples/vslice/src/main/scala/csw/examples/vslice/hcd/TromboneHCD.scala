@@ -61,7 +61,6 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   supervisor ! Initialized
   supervisor ! Started
 
-
   // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
   def runningReceive = controllerReceive orElse runningReceive1
 
@@ -244,7 +243,8 @@ object TromboneHCD {
   val startValueKey = IntKey("startValue")
   // No full default current state because it is determined at runtime
   val defaultConfigState = CurrentState(axisConfigCK).madd(
-    axisNameKey -> tromboneAxisName)
+    axisNameKey -> tromboneAxisName
+  )
 
   val axisMovePrefix = s"$trombonePrefix.move"
   val axisMoveCK: ConfigKey = axisMovePrefix

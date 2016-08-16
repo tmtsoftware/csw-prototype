@@ -160,7 +160,6 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case x => log.error(s"Unexpected message in moveReceive: $x")
   }
 
-
   def calcLimitsAndStats(): Unit = {
     inHighLimit = isHighLimit(axisConfig, current)
     inLowLimit = isLowLimit(axisConfig, current)
@@ -244,7 +243,6 @@ object SingleAxisSimulator {
   }
 
 }
-
 
 class MotionWorker(val start: Int, val destination: Int, val numSteps: Int, val delayInMS: Int, replyTo: ActorRef, diagFlag: Boolean) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
 

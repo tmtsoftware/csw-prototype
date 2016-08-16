@@ -1,16 +1,17 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.ActorRef
+
 import scala.language.postfixOps
 import scala.concurrent.duration._
 import com.typesafe.config.Config
 import csw.services.ccs.AssemblyController.{Valid, Validation}
-import csw.services.ccs.{AssemblyController, CommandStatus}
+import csw.services.ccs.{AssemblyController, AssemblyController2, CommandStatus}
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.{ComponentType, Connection, LocationService}
+import csw.services.loc.{ComponentType, Connection, LocationService, TestLocationService}
 import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister}
 import csw.services.pkg.ContainerComponent._
-import csw.services.pkg.LifecycleManager.{Startup, Shutdown}
+import csw.services.pkg.LifecycleManager.{Shutdown, Startup}
 import csw.services.pkg.Supervisor.{apply => _, _}
 import csw.services.pkg.{Assembly, ContainerComponent, LifecycleHandler, Supervisor}
 import csw.util.config.ConfigDSL._
@@ -20,16 +21,17 @@ import csw.util.config.Subsystem.{RTC, TCS}
 import csw.util.config.UnitsOfMeasure.millimeters
 import csw.util.config.{BooleanKey, DoubleItem, DoubleKey, StringKey}
 
-
 /**
   * TMT Source Code: 6/10/16.
   */
-class TromboneAssembly(override val info: AssemblyInfo) extends Assembly with AssemblyController {
+class TromboneAssembly(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController2 {
 
   import LifecycleHandler._
   import TromboneAssembly._
 
   println(s"Assembly: ${info.componentName}\nComponent Type:${info.componentType}\nClassName: ${info.componentClassName}\nPrefix: ${info.prefix}")
+
+  val tracker = context.actorOf(TestLocationService.trackerProps(Some(context.self)))
 
   val g = context.system.settings.config.getDouble("csw.examples.Trombone.gain-default")
   log.info("G value: " + g)
@@ -42,7 +44,6 @@ class TromboneAssembly(override val info: AssemblyInfo) extends Assembly with As
 
   // Get the connection to the HCD this assembly uses and track it
   //trackConnections(info.connections)
-
 
   override def receive: Receive = controllerReceive orElse {
     case Quit =>
@@ -75,8 +76,7 @@ class TromboneAssembly(override val info: AssemblyInfo) extends Assembly with As
     if (list.nonEmpty) list.head else Valid
   }
 
-  override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
-                               replyTo: Option[ActorRef]): Validation = {
+  override protected def setup(configArg: SetupConfigArg, replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
     if (valid.isValid) {
       // Call a convenience method that will forward the config to the HCD based on the prefix
@@ -89,7 +89,6 @@ class TromboneAssembly(override val info: AssemblyInfo) extends Assembly with As
     }
     valid
   }
-
 
 }
 
@@ -123,14 +122,21 @@ object TromboneAssembly {
 
   // Move submit command
   val movePrefix = s"$componentPrefix.move"
+  val moveCK: ConfigKey = movePrefix
   val trombonePositionKey = DoubleKey("trombonePosition")
   // Not sure why -> doesn't work ere
   val defaultMoveSC = SetupConfig(movePrefix).add(set(trombonePositionKey, 0.0).withUnits(millimeters))
 
   // Follow submit command
   val followPrefix = s"$componentPrefix.follow"
+  val followCK: ConfigKey = followPrefix
   val nssInUseKey = BooleanKey("nssInUse")
-  val defaultFollowSC = SetupConfig(followPrefix).add(nssInUseKey.set(false))
+  val defaultFollowSC = SetupConfig(followCK).add(nssInUseKey.set(false))
+
+  // Set initial elevation
+  val initialElevationPrefix = s"$componentPrefix.initialEl"
+  val initialElevationCK: ConfigKey = initialElevationPrefix
+  val initialElevationKey = DoubleKey("elevation1")
 
   // ---------- Keys used by tromboneEventSubscriber
   // This is the zenith angle from TCS
@@ -139,7 +145,7 @@ object TromboneAssembly {
   val focusConfigKey = ConfigKey(RTC, "rtc.focusError")
 
   // Key values
-  val focusKey = DoubleKey("focus")
+  val focusErrorKey = DoubleKey("focus")
   val zenithAngleKey = DoubleKey("zenithAngle")
 
   // --------- Keys/Messages used by TromboneControl
@@ -147,22 +153,34 @@ object TromboneAssembly {
 
   case class HCDTrombonePosition(position: DoubleItem)
 
+  case class AOESWUpdate(naElevation: DoubleItem, naRange: DoubleItem)
+
   // Messages received by the TromboneAssembly and TromboneSubscriber
   case class UsingNSS(inUse: Boolean)
 
-  // --------  Keys/Messages for CalculationActor ---------
+  // ----------- Keys, etc. used by trombonePublisher
   // Key values
   val naLayerRangeDistanceKey = DoubleKey("naLayerRangeDistance")
+  val naLayerElevationKey = DoubleKey("naLayerElevation")
+
+  val aoSystemEventPrefix = s"$componentPrefix.sodiumLayer"
+
+  // --------  Keys/Messages for CalculationActor ---------
 
   // External message to set an initial elevation
   // Messages received by csw.examples.e2e.CalculationActor
   // Update from subscribers
-  case class UpdatedEventData(zenithAngle: DoubleItem, focusError: DoubleItem, time: EventTime)
+  trait CalculatorMessages
 
+  case class UpdatedEventData(zenithAngle: DoubleItem, focusError: DoubleItem, time: EventTime) extends CalculatorMessages
+
+  // Messages to Calculation Actor
+  case class SetElevation(elevation: DoubleItem) extends CalculatorMessages
+
+  // This is used to send data for the system event for AOESW to publisher
   case class NALayerInfo(naLayerRangeDistance: DoubleItem, naLayerElevation: DoubleItem)
 
 }
-
 
 /**
   * Starts Assembly as a standalone application.

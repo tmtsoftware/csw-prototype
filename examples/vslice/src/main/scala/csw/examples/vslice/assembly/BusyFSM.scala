@@ -56,7 +56,6 @@ class BusyFSM(assembly: Assembly, name: String) extends FSM[AssemblyState, Assem
       goto(Ready)
   }
 
-
   def logState(nextState: AssemblyState, s: AssemblyState) = log.debug(s"In $stateName/$stateData going to $nextState/$s")
 
   def logTransition(message: String = "") = log.debug(s"On transition going from $stateName/$stateData to $nextStateData - $message")

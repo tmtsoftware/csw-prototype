@@ -11,7 +11,7 @@ import scala.language.implicitConversions
 object Events {
   import Configurations._
 
-  case class EventTime(time: Instant) {
+  case class EventTime(time: Instant = Instant.now(Clock.systemUTC)) {
     override def toString = time.toString
   }
 
