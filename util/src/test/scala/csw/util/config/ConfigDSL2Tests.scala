@@ -2,12 +2,20 @@ package csw.util.config
 
 import org.scalatest.FunSpec
 import csw.util.config.ConfigDSL._
-import csw.util.config.UnitsOfMeasure.degrees
+import csw.util.config.Configurations.SetupConfig
 
 /**
  * Test DSL for configs
  */
 class ConfigDSL2Tests extends FunSpec {
+
+  describe("checking arrow notation") {
+    val zeroPoint = IntKey("zeroPoint")
+
+    it("should work with an sc") {
+      val defaultMoveSC = SetupConfig("test").add(zeroPoint -> 0)
+    }
+  }
 
   describe("Tests DSL functions") {
     val k1 = IntKey("itest")
@@ -15,7 +23,7 @@ class ConfigDSL2Tests extends FunSpec {
     val k3 = StringKey("stest")
     val k4 = DoubleMatrixKey("myMatrix")
 
-    val i1 = set(k1, 1, 2, 3).withUnits(degrees)
+    val i1 = set(k1, 1, 2, 3).withUnits(UnitsOfMeasure.degrees)
     val i2 = set(k2, 1.0, 2.0, 3.0).withUnits(UnitsOfMeasure.meters)
     val i3 = set(k3, "A", "B", "C")
     val i4 = set(k4, DoubleMatrix(Array(Array[Double](1, 2, 3), Array[Double](2, 3, 6), Array[Double](4, 6, 12))))
@@ -62,7 +70,7 @@ class ConfigDSL2Tests extends FunSpec {
       val setupConfig2 = sc(
         "test",
         k1 -> 1 withUnits UnitsOfMeasure.degrees,
-        k2 -> 2.0 withUnits UnitsOfMeasure.meters,
+        k2 -> (2.0, UnitsOfMeasure.meters),
         k3 -> "C"
       )
       assert(get(setupConfig2, k1).get.head == 1)

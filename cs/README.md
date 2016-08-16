@@ -14,8 +14,8 @@ and provides a somewhat simpler API.
 
 The ConfigManager API is non-blocking (returns future values). If this is inconvenient,
 you can always wrap the calls in Await.result(...). Blocking APIs are available for
-convenience. See [BlockingConfigManager](src/main/scala/csw/services/cs/core/BlockingConfigManager.scala) 
-and [JBlockingConfigManager](src/main/scala/javacsw/services/cs/core/JBlockingConfigManager.scala).
+convenience. See the Scala [BlockingConfigManager](src/main/scala/csw/services/cs/core/BlockingConfigManager.scala) 
+and Java [JBlockingConfigManager](src/main/scala/javacsw/services/cs/core/JBlockingConfigManager.scala) classes.
 
 The data for the files being stored in the config service is passed as a
 [ConfigData](src/main/scala/csw/services/cs/core/ConfigManager.scala) object,
@@ -84,17 +84,50 @@ to get the contents of a file stored in the Config Service as a string or read i
 Config Service Application
 --------------------------
 
-Before starting the config service, the [config service annex server](../apps/configServiceAnnex)
-should be running.
 You can start the config service with the `cs` command (found under target/universal/stage/bin).
+
+```
+cs 0.2-SNAPSHOT
+Usage: scopt [options]
+
+  --config <value>
+        optional config file to use for config service settings
+  --init
+        the repository is initialized, if it does not yet exist
+  --delete
+        (implies --init) existing repositories are first deleted
+  --nohttp
+        don't start the http server
+  --noannex
+        don't start the annex server (an http server used to manage large/oversized files)
+  --noregister
+        don't register with the location service
+  --help
+
+  --version
+```
+
 The default config service name and the location of the git or svn repository is defined in resources/reference.conf.
 Alternatively you can specify a different config file on the command line in the same format.
 You can also override the values with system properties. For example:
 
      cs -Dcsw.services.cs.name=MyConfigServiceName -Dcsw.services.cs.main-repository=http://myHost/MyMainRepo/
 
-Note that multiple config service instances may be running in the network, but the names an host:port combinations should
+Note that multiple config service instances may be running in the network, but the names and host:port combinations should
 each be unique. Only a single config service instance should access a given local repository.
+
+The config service uses the [config service annex server](../apps/configServiceAnnex) to store oversized files.
+By default the cs command starts the annex server automatically (Use the --noannex option to prevent this).
+
+Docker Support
+--------------
+
+The cs application with and all its dependencies can be wrapped in a (Docker)[https://www.docker.com/] container.
+Use the docker-build.sh script to create the docker image. The docker-run.sh script runs the image. 
+The Dockerfile is generated in the (Settings.scala)[../project/Settings.scala] file. The Docker file defines
+a volume to hold the svn repository that can be mapped to a host directory. 
+You can edit the docker-run.sh script and set the value of the dataDir directory to the directory on the host you want to use.
+The docker-clean.sh script stops and deletes the docker container and image. 
 
 Svn or Git
 ----------
@@ -133,21 +166,21 @@ The format of the JSON returned from _create_ and _update_ is:
 Example or using curl to access the Config Service Http Server
 --------------------------------------------------------------
 
-Assuming that the config service http server is running on localhost on port 8541 (see config file, default: reference.conf):
+Assuming that the config service http server is running on localhost on port 8547 (see config file, default: reference.conf):
 
-`curl -X POST 'http://localhost:8541/create?path=some/test1/TestConfig1&comment=comment+here' --data-binary @TestConfig1`
+`curl -X POST 'http://localhost:8547/create?path=some/test1/TestConfig1&comment=comment+here' --data-binary @TestConfig1`
 
    Creates a new file in the config service named some/test1/TestConfig1 using the data in the local file TestConfig1.
 
-`curl 'http://localhost:8541/get?path=some/test1/TestConfig1' > TestConfig1a`
+`curl 'http://localhost:8547/get?path=some/test1/TestConfig1' > TestConfig1a`
 
    Gets the contents of some/test1/TestConfig1 from the service and store in a local file.
 
-`curl -X PUT 'http://localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
+`curl -X PUT 'http://localhost:8547/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1`
 
    Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.
 
-`curl -s 'http://localhost:8541/history?path=some/test1/TestConfig1'`
+`curl -s 'http://localhost:8547/history?path=some/test1/TestConfig1'`
 
    Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:
 
@@ -172,7 +205,7 @@ Assuming that the config service http server is running on localhost on port 854
 
     ```
 
-`curl 'http://localhost:8541/list'`
+`curl 'http://localhost:8547/list'`
 
    Returns JSON listing the files in the config service repository.
 
@@ -197,15 +230,15 @@ Assuming that the config service http server is running on localhost on port 854
 
     ```
 
-`curl 'http://localhost:8541/getDefault?path=some/test1/TestConfig1`
+`curl 'http://localhost:8547/getDefault?path=some/test1/TestConfig1`
 
    Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).
 
-`curl -X PUT 'http://localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
+`curl -X PUT 'http://localhost:8547/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'`
 
    Sets the default version of the file to the one with the given id (an id returned by the history command).
 
-`curl -X PUT 'http://localhost:8541/resetDefault?path=some/test1/TestConfig1'`
+`curl -X PUT 'http://localhost:8547/resetDefault?path=some/test1/TestConfig1'`
 
    Resets the default version of the file to be the latest version.
 

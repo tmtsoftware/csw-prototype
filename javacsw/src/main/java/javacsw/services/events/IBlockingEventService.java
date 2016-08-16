@@ -1,217 +1,89 @@
 package javacsw.services.events;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
+import csw.services.events.EventService;
+import csw.services.events.EventService.*;
 import csw.services.events.EventServiceSettings;
-import csw.util.config.Configurations;
-import csw.util.config.Events;
-import csw.util.config.StateVariable;
+import csw.util.config.Events.EventServiceEvent;
 import scala.concurrent.duration.Duration;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
- * A Java interface for a blocking event service. This class blocks and waits for operations to complete
+ * A blocking Java interface for the event service. This class blocks and waits for operations to complete
  * (rather than returning Futures as results).
- *
- * Note: Type T must extend EventService.EventFormatter, but due to type issues between Scala and Java,
- * that is not declared here.
  */
-@SuppressWarnings("unused")
-public interface IBlockingEventService<T> {
-    //interface IBlockingEventService<T extends EventService.EventFormatter> {
-
-    /**
-     * Sets (and publishes) the value for the given key
-     *
-     * @param key   the key
-     * @param value the value to store
-     */
-    void set(String key, T value);
-
-    /**
-     * Sets (and publishes) the value for the given key
-     *
-     * @param key   the key
-     * @param value the value to store
-     * @param n     the max number of history values to keep (0 means no history)
-     */
-    void set(String key, T value, int n);
-
-    /**
-     * Gets the value of the given key
-     *
-     * @param key the key
-     * @return the result, None if the key was not found
-     */
-    Optional<T> get(String key);
-
-    /**
-     * Returns a list containing up to the last n values for the given key
-     *
-     * @param key the key to use
-     * @param n   max number of history values to return
-     * @return list of the last n values
-     */
-    List<T> getHistory(String key, int n);
-
-    /**
-     * Deletes the given key(s) from the store
-     *
-     * @param key the key to delete
-     * @return the number of keys that were deleted
-     */
-    boolean delete(String key);
-
-    /**
-     * Sets a value for the given key, where the value itself is a map with keys and values.
-     *
-     * @param key   the key
-     * @param value the map of values to store
-     * @return the result (true if successful)
-     */
-    Boolean hmset(String key, Map<String, String> value);
-
-    /**
-     * This method is mainly useful for testing hmset. It gets the value of the given field
-     * in the map that is the value for the given key. The value is returned here as a String.
-     *
-     * @param key   the key
-     * @param field the key for a value in the map
-     * @return the result string value for the field, if found
-     */
-    Optional<String> hmget(String key, String field);
-
-    /**
-     * Disconnects from the key/value store server
-     */
-    void  disconnect();
-
-    /**
-     * Shuts the key/value store server down
-     */
-    void shutdown();
-
-
-    // --- factory methods ---
+@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
+public interface IBlockingEventService {
 
     /**
      * @param settings Redis server settings
      * @param system   Akka env required by RedisClient
      * @return a new IBlockingEventService for StatusEvent objects
      */
-    static IBlockingEventService<Events.StatusEvent> getStatusEventStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getStatusEventStore(timeout, settings, system);
+    static IBlockingEventService getEventService(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
+        return new JBlockingEventService(timeout, settings, system);
     }
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for ObserveEvent objects
+     * Publishes the given event
+     *
+     * @param event the event to publish
      */
-    static IBlockingEventService<Events.ObserveEvent> getObserveEventStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getObserveEventStore(timeout, settings, system);
-    }
+    void publish(EventServiceEvent event);
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for SystemEvent objects
+     * Publishes the given event
+     *
+     * @param event the event to publish
+     * @param n     the max number of history events to keep (0 means no history)
      */
-    static IBlockingEventService<Events.SystemEvent> getSystemEventStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getSystemEventStore(timeout, settings, system);
-    }
+    void publish(EventServiceEvent event, int n);
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for SetupConfig objects
+     * Subscribes an actor or callback function to events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param subscriber an optional actor to receive Event messages
+     * @param callback   an optional callback which will be called with Event objects (in another thread)
+     * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    static IBlockingEventService<Configurations.SetupConfig> getSetupConfigStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getSetupConfigStore(timeout, settings, system);
-    }
+    EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<IEventService.EventHandler> callback, String... prefixes);
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for CurrentState objects
+     * Gets the latest event for the given prefix
+     *
+     * @param prefix the key
+     * @return the result, None if the key was not found
      */
-    static IBlockingEventService<StateVariable.CurrentState> getCurrentStateStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getCurrentStateStore(timeout, settings, system);
-    }
+    Optional<EventServiceEvent> get(String prefix);
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for DemandState objects
+     * Returns a list containing up to the last n events for the given prefix
+     *
+     * @param prefix the event prefix to use
+     * @param n   max number of history events to return
+     * @return list of the last n events
      */
-    static IBlockingEventService<StateVariable.DemandState> getDemandStateStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getDemandStateStore(timeout, settings, system);
-    }
+    List<EventServiceEvent> getHistory(String prefix, int n);
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for StateVariable objects
+     * Deletes the event with the given prefix
+     *
+     * @param prefix the prefix for the event to delete
+     * @return true if an event was deleted
      */
-    static IBlockingEventService<StateVariable.StateVariable> getStateVariableStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getStateVariableStore(timeout, settings, system);
-    }
+    boolean delete(String prefix);
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for SetupConfigArg objects
+     * Disconnects from the event service
      */
-    static IBlockingEventService<Configurations.SetupConfigArg> getSetupConfigArgStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getSetupConfigArgStore(timeout, settings, system);
-    }
+    void  disconnect();
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for EventServiceEvent objects
+     * Shuts the event service down
      */
-    static IBlockingEventService<Events.EventServiceEvent> getEventServiceEventStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getEventServiceEventStore(timeout, settings, system);
-    }
-
-    /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for SequenceConfig objects
-     */
-    static IBlockingEventService<Configurations.SequenceConfig> getSequenceConfigStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getSequenceConfigStore(timeout, settings, system);
-    }
-
-    /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for ControlConfig objects
-     */
-    static IBlockingEventService<Configurations.ControlConfig> getControlConfigStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getControlConfigStore(timeout, settings, system);
-    }
-
-    /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for SequenceConfigArg objects
-     */
-    static IBlockingEventService<Configurations.SequenceConfigArg> getSequenceConfigArgStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getSequenceConfigArgStore(timeout, settings, system);
-    }
-
-    /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new IBlockingEventService for ControlConfigArg objects
-     */
-    static IBlockingEventService<Configurations.ControlConfigArg> getControlConfigArgStore(Duration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return JBlockingEventService.getControlConfigArgStore(timeout, settings, system);
-    }
-
-
+    void shutdown();
 }

@@ -13,7 +13,7 @@ import csw.services.loc.LocationService.ResolvedHttpLocation
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.util.config.Events.StatusEvent
 import csw.util.config.StringKey
-import org.scalatest.FunSuiteLike
+import org.scalatest.{DoNotDiscover, FunSuiteLike}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -27,6 +27,7 @@ object RedisTest {
 /**
  * Test the trackLocation app in-line
  */
+//@DoNotDiscover
 class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLogging {
   implicit val sys = RedisTest.system
 
@@ -54,19 +55,18 @@ class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLog
     assert(loc.connection.connectionType == HttpType)
     assert(loc.connection.componentId.name == name)
     val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
-    //    assert(httpLoc.uri.getPort == port)
 
     val kvsSettings = EventServiceSettings(redisHostname = httpLoc.uri.getHost, redisPort = httpLoc.uri.getPort)
-    val telemetryService = BlockingTelemetryService(TelemetryService(kvsSettings))
+    val telemetryService = BlockingTelemetryService(timeout.duration, TelemetryService(kvsSettings))
     val key = StringKey("testKey")
     val e1 = StatusEvent("test").add(key.set("Test Passed"))
-    telemetryService.set(e1)
+    telemetryService.publish(e1)
     val e2Opt = telemetryService.get("test")
     assert(e2Opt.isDefined)
     assert(e1 == e2Opt.get)
 
     println(e2Opt.get(key))
-    Await.ready(telemetryService.shutdown(), timeout.duration)
+    telemetryService.shutdown()
     println("Redis shutdown completed")
   }
 }

@@ -1,8 +1,13 @@
 Log Service
 ===========
 
-The Log Service currently consists only of config files and optional, external applications
+The Log Service package contains the config files for logging and optional, external applications
 (Logstash, Elasticsearch, Kibana) to view and process the log information.
+
+A special logger [PrefixedActorLogging](src/main/scala/csw/services/log/PrefixedActorLogging.scala) is 
+provided for Akka actors that implement TMT components, such as HCDs and assemblies. 
+It inserts an [MDC](http://logback.qos.ch/manual/mdc.html) prefix field into the log, where prefix 
+is the component prefix, which is made up of the subsystem name, followed by a dot and the rest of the component prefix.
 
 The standard logging framework used here is `slf4j` and `logback`. For packages that require `log4j`
 (like OPC UA), there is a bridge: `log4j-over-slf4j` that can be used instead of the log4j dependency.

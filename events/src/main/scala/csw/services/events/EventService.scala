@@ -1,81 +1,86 @@
 package csw.services.events
 
-import akka.actor.ActorRefFactory
-import redis.ByteStringFormatter
+import akka.actor.{ActorRef, ActorRefFactory}
 
 import scala.concurrent.Future
 
 object EventService {
 
   /**
-   * All generic objects stored in the Event Service need to implement this trait,
-   * which is just a wrapper for the Redis specific ByteStringFormatter trait,
-   * to hide the Redis dependency from the API.
-   * @tparam T the type of the items being stored in the Event Service
+   * Returns a concrete implementation of the EventService trait (based on Redis)
+   *
+   * @param settings contains the host and port settings from reference.conf, or application.conf
+   * @param _system  Akka env required for RedisClient
    */
-  trait EventFormatter[T] extends ByteStringFormatter[T]
+  def apply(settings: EventServiceSettings)(implicit _system: ActorRefFactory): EventService =
+    EventServiceImpl(settings.redisHostname, settings.redisPort)
 
   /**
-   * Returns a concrete implementation of the EventService trait (based on Redis)
-   * @param settings contains the host and port settings from reference.conf, or application.conf
-   * @param _system Akka env required for RedisClient
-   * @tparam T the type of values being stored
+   * Type of return value from the subscribe method
    */
-  def apply[T: EventFormatter](settings: EventServiceSettings)(implicit _system: ActorRefFactory): EventService[T] =
-    EventServiceImpl[T](settings.redisHostname, settings.redisPort)
+  trait EventMonitor {
+    /**
+     * Stops the subscribing actor
+     */
+    def stop(): Unit
+
+    /**
+     * A reference to the subscribing actor (could be used to watch the actor to detect if it stops for some reason)
+     *
+     * @return
+     */
+    def actorRef: ActorRef
+  }
 }
 
 /**
  * The interface of a key value store.
  */
-trait EventService[T] {
+trait EventService {
+
+  import EventService._
 
   /**
-   * Sets (and publishes) the value for the given key
-   * @param key the key
-   * @param value the value to store
-   * @param history the max number of history values to keep (default: 0, no history)
+   * Publishes the given event
+   *
+   * @param event   the event to publish
+   * @param history the max number of history events to keep (default: 0, no history)
    * @return the future result (indicates if and when the operation completed, may be ignored)
    */
-  def set(key: String, value: T, history: Int = 0): Future[Unit]
+  def publish(event: Event, history: Int = 0): Future[Unit]
 
   /**
-   * Gets the (most recent) value of the given key
-   * @param key the key
+   * Subscribes an actor or callback function to events matching the given prefixes
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+   *
+   * @param subscriber an optional actor to receive Event messages
+   * @param callback   an optional callback which will be called with Event objects (in another thread)
+   * @param prefixes   one or more prefixes of events, may include wildcard
+   */
+  def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor
+
+  /**
+   * Gets the (most recent) event published with the given event prefix
+   *
+   * @param prefix the key
    * @return the future result, None if the key was not found
    */
-  def get(key: String): Future[Option[T]]
+  def get(prefix: String): Future[Option[Event]]
 
   /**
-   * Returns a list containing up to the last n values for the given key
-   * @param key the key to use
-   * @param n max number of history values to return
-   */
-  def getHistory(key: String, n: Int): Future[Seq[T]]
-
-  /**
-   * Deletes the given key(s) from the store
-   * @return the future number of keys that were deleted
-   */
-  def delete(key: String*): Future[Long]
-
-  /**
-   * Sets a value for the given key, where the value itself is a map with keys and values.
+   * Returns a list containing up to the last n events published with the given prefix
    *
-   * @param key the key
-   * @param value the map of values to store
-   * @return the future result (true if successful)
+   * @param prefix the prefix for an event
+   * @param n      max number of history events to return
    */
-  def hmset(key: String, value: Map[String, String]): Future[Boolean]
+  def getHistory(prefix: String, n: Int): Future[Seq[Event]]
 
   /**
-   * This method is mainly useful for testing hmset. It gets the value of the given field
-   * in the map that is the value for the given key. The value is returned here as a String.
-   * @param key the key
-   * @param field the key for a value in the map
-   * @return the future string value for the field, if found
+   * Deletes the events with the given prefixes from the store
+   *
+   * @return the future number of events that were deleted
    */
-  def hmget(key: String, field: String): Future[Option[String]]
+  def delete(prefix: String*): Future[Long]
 
   /**
    * Disconnects from the key/value store server

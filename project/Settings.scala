@@ -10,6 +10,7 @@ import com.typesafe.sbt.SbtGhPages.ghpages
 import com.typesafe.sbt.SbtGit.git
 import sbtunidoc.Plugin._
 import UnidocKeys._
+import com.typesafe.sbt.packager.docker._
 
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 
@@ -94,10 +95,25 @@ object Settings {
       .setPreference(AlignSingleLineCaseStatements, true)
       .setPreference(DoubleIndentClassDeclaration, true)
 
-  // Customize the Docker install
-  lazy val dockerSettings = Seq(
+  // Customize the Docker file for the Config Service (cs)
+  // The image contains an svn repository volume and an annex dir for large files.
+  val dataVol = "/var/data"
+  val svnrepo = s"$dataVol/svnrepo"
+  val annex = s"$dataVol/annex"
+  lazy val configServiceDockerSettings = Seq(
     maintainer := "TMT Software",
-    dockerExposedPorts := Seq(9000),
-    dockerBaseImage := "java:8"
+    dockerBaseImage := "java:8",
+    dockerCommands ++= Seq(
+      Cmd("USER", "root"),
+      ExecCmd("RUN", "mkdir", "-p", annex),
+//      ExecCmd("RUN", "svnadmin", "create", svnrepo),
+      Cmd("VOLUME", dataVol)
+    ),
+    dockerEntrypoint := Seq("/opt/docker/bin/cs",
+      "-Djava.net.preferIPv4Stack=true",
+      "--init",
+      s"-Dcsw.services.cs.main-repository=file://$svnrepo/",
+      s"-Dcsw.services.apps.configServiceAnnex.dir=$annex"
+    )
   )
 }

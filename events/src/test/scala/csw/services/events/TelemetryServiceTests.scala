@@ -5,7 +5,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.util.Timeout
 import csw.util.config.Events.StatusEvent
 import csw.util.config.{DoubleKey, IntKey, StringKey}
-import org.scalatest.{DoNotDiscover, FunSuiteLike}
+import org.scalatest.FunSuiteLike
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
 import scala.concurrent.Await
@@ -25,7 +25,7 @@ object TelemetryServiceTests {
 //@DoNotDiscover
 class TelemetryServiceTests
     extends TestKit(ActorSystem("Test"))
-    with ImplicitSender with FunSuiteLike with LazyLogging with Implicits {
+    with ImplicitSender with FunSuiteLike with LazyLogging {
 
   import TelemetryServiceTests._
   import system.dispatcher
@@ -33,7 +33,7 @@ class TelemetryServiceTests
   val settings = EventServiceSettings(system)
   val ts = TelemetryService(settings)
   implicit val timeout = Timeout(5.seconds)
-  val bts = BlockingTelemetryService(ts)
+  val bts = BlockingTelemetryService(timeout.duration, ts)
   val exposureTime = DoubleKey("exposureTime")
 
   // --
@@ -48,7 +48,7 @@ class TelemetryServiceTests
       .add(infoValue.set(2))
       .add(infoStr.set("info 2"))
 
-    bts.set(event1)
+    bts.publish(event1)
     assert(bts.get(prefix).isDefined)
     val val1: StatusEvent = bts.get(prefix).get
 
@@ -57,7 +57,7 @@ class TelemetryServiceTests
     assert(val1(infoValue).head == 1)
     assert(val1(infoStr).head == "info 1")
 
-    bts.set(event2)
+    bts.publish(event2)
     assert(bts.get(prefix).isDefined)
     val val2: StatusEvent = bts.get(prefix).get
     assert(val2(infoValue).head == 2)
@@ -74,11 +74,11 @@ class TelemetryServiceTests
     val event = StatusEvent(prefix).add(exposureTime.set(2.0))
     val n = 3
 
-    bts.set(event.add(exposureTime.set(3.0)), n)
-    bts.set(event.add(exposureTime.set(4.0)), n)
-    bts.set(event.add(exposureTime.set(5.0)), n)
-    bts.set(event.add(exposureTime.set(6.0)), n)
-    bts.set(event.add(exposureTime.set(7.0)), n)
+    bts.publish(event.add(exposureTime.set(3.0)), n)
+    bts.publish(event.add(exposureTime.set(4.0)), n)
+    bts.publish(event.add(exposureTime.set(5.0)), n)
+    bts.publish(event.add(exposureTime.set(6.0)), n)
+    bts.publish(event.add(exposureTime.set(7.0)), n)
     assert(bts.get(prefix).isDefined)
     val v = bts.get(prefix).get
     val h = bts.getHistory(prefix, n + 1)
@@ -104,9 +104,9 @@ class TelemetryServiceTests
       .add(infoStr.set("info 2"))
 
     for {
-      res1 <- ts.set(event1)
+      res1 <- ts.publish(event1)
       val1 <- ts.get(prefix)
-      res2 <- ts.set(event2)
+      res2 <- ts.publish(event2)
       val2 <- ts.get(prefix)
       _ <- ts.delete(prefix)
       res3 <- ts.get(prefix)
@@ -127,11 +127,11 @@ class TelemetryServiceTests
     val n = 3
 
     val f = for {
-      _ <- ts.set(event.add(exposureTime.set(3.0)), n)
-      _ <- ts.set(event.add(exposureTime.set(4.0)), n)
-      _ <- ts.set(event.add(exposureTime.set(5.0)), n)
-      _ <- ts.set(event.add(exposureTime.set(6.0)), n)
-      _ <- ts.set(event.add(exposureTime.set(7.0)), n)
+      _ <- ts.publish(event.add(exposureTime.set(3.0)), n)
+      _ <- ts.publish(event.add(exposureTime.set(4.0)), n)
+      _ <- ts.publish(event.add(exposureTime.set(5.0)), n)
+      _ <- ts.publish(event.add(exposureTime.set(6.0)), n)
+      _ <- ts.publish(event.add(exposureTime.set(7.0)), n)
       v <- ts.get(prefix)
       h <- ts.getHistory(prefix, n + 1)
       _ <- ts.delete(prefix)
@@ -144,6 +144,31 @@ class TelemetryServiceTests
       }
     }
     Await.result(f, 5.seconds)
+  }
+
+  test("Test subscribing to events via subscribe method") {
+    val prefix = "tcs.test4"
+    val event = StatusEvent(prefix)
+      .add(infoValue.set(4))
+      .add(infoStr.set("info 4"))
+    var eventReceived: Option[StatusEvent] = None
+    def listener(ev: StatusEvent): Unit = {
+      eventReceived = Some(ev)
+      logger.info(s"Listener received event: $ev")
+    }
+    val monitor = ts.subscribe(Some(self), Some(listener), prefix)
+    try {
+      Thread.sleep(500) // wait for actor to start
+      ts.publish(event)
+      val e = expectMsgType[StatusEvent](5.seconds)
+      logger.info(s"Actor received event: $e")
+      assert(e == event)
+      Thread.sleep(500) // wait redis to react?
+      assert(eventReceived.isDefined)
+      assert(e == eventReceived.get)
+    } finally {
+      monitor.stop()
+    }
   }
 
   // --
@@ -166,12 +191,12 @@ class TelemetryServiceTests
     // This is just to make sure the actor has time to subscribe before we proceed
     Thread.sleep(1000)
 
-    bts.set(event1)
-    bts.set(event1.add(infoValue.set(2)))
+    bts.publish(event1)
+    bts.publish(event1.add(infoValue.set(2)))
 
-    bts.set(event2)
-    bts.set(event2.add(infoValue.set(2)))
-    bts.set(event2.add(infoValue.set(3)))
+    bts.publish(event2)
+    bts.publish(event2.add(infoValue.set(2)))
+    bts.publish(event2.add(infoValue.set(3)))
 
     // Make sure subscriber actor has received all events before proceeding
     Thread.sleep(1000)
@@ -179,6 +204,7 @@ class TelemetryServiceTests
     val result = Await.result((mySubscriber ? MySubscriber.GetResults).mapTo[MySubscriber.Results], 5.seconds)
     assert(result.count1 == 2)
     assert(result.count2 == 3)
+    system.stop(mySubscriber)
   }
 }
 
@@ -190,7 +216,7 @@ object MySubscriber {
   case class Results(count1: Int, count2: Int)
 }
 
-class MySubscriber(prefix1: String, prefix2: String) extends TelemetrySubscriber {
+class MySubscriber(prefix1: String, prefix2: String) extends EventSubscriber {
   import MySubscriber._
   import TelemetryServiceTests._
 

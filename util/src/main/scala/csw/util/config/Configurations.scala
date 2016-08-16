@@ -207,6 +207,10 @@ object Configurations {
 
     protected def dataToString = items.mkString("(", ",", ")")
 
+    // XXX
+    // XXX
+    // XXX
+    // XXX
     override def toString = s"$typeName[$subsystem, $prefix]$dataToString"
 
     /**

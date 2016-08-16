@@ -1,7 +1,6 @@
 package csw.services.events
 
 import csw.util.config.Events.StatusEvent
-import csw.util.config.Configurations.SetupConfig
 import org.scalatest.FunSuite
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.util.config.{DoubleKey, StringKey}
@@ -20,20 +19,16 @@ object EventTests {
     exposureType.set("flat"),
     exposureClass.set("science")
   )
-
-  val setupConfig = SetupConfig("wfos.red.filter")
-    .add(position.set("IR2"))
-
 }
 
 /**
  * Test serialization and deserialization
  */
-class EventTests extends FunSuite with LazyLogging with Implicits {
+class EventTests extends FunSuite with LazyLogging {
   test("Test serializing an Event to a ByteBuffer") {
     import EventTests._
-    assert(statusEventKvsFormatter.deserialize(statusEventKvsFormatter.serialize(statusEvent)) == statusEvent)
-    assert(setupConfigKvsFormatter.deserialize(setupConfigKvsFormatter.serialize(setupConfig)) == setupConfig)
+    import EventServiceImpl._
+    assert(eventFormatter.deserialize(eventFormatter.serialize(statusEvent)) == statusEvent)
   }
 }
 

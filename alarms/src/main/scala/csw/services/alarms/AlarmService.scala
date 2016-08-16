@@ -73,6 +73,27 @@ object AlarmService {
     }
   }
 
+  //  /**
+  //   * Returns an AlarmService instance using the Redis instance at the given host and port,
+  //   * using the default "127.0.0.1:6379 if not given.
+  //   *
+  //   * @param host      the Redis host name or IP address
+  //   * @param port      the Redis port
+  //   * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
+  //   *                    to "Disconnected" (after three missed refreshes)
+  //   * @return a new AlarmService instance
+  //   */
+  //  def get(host: String = "127.0.0.1", port: Int = 6379, refreshSecs: Int = defaultRefreshSecs)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
+  //    import system.dispatcher
+  //    val redisClient = RedisClient(host, port)
+  //    for {
+  //      ok <- redisClient.configSet("notify-keyspace-events", "KEA")
+  //    } yield {
+  //      if (!ok) logger.error("redis configSet notify-keyspace-events failed")
+  //      AlarmServiceImpl(redisClient, refreshSecs)
+  //    }
+  //  }
+
   /**
    * Type of return value from the monitorAlarms or monitorHealth methods
    */

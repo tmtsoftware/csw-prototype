@@ -21,7 +21,7 @@ class ConfigServiceAnnexTests extends FunSuite with LazyLogging {
 
   test("Test config service annex") {
     val server = ConfigServiceAnnexServer()
-    val client = ConfigServiceAnnexClient
+    lazy val client = ConfigServiceAnnexClient
 
     val file = makeTestFile()
 

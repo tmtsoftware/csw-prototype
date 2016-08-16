@@ -43,6 +43,7 @@ object CsClient extends App {
         System.exit(0)
       case Failure(ex) =>
         System.err.println(s"Error: ${ex.getMessage}")
+        ex.printStackTrace(System.err)
         system.terminate()
         System.exit(1)
     }
