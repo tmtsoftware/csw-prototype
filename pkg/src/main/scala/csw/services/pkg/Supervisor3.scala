@@ -7,7 +7,7 @@ import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 
 import scala.util.{Failure, Success}
 
-class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorRef]) extends Actor with ActorLogging {
+class    Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorRef]) extends Actor with ActorLogging {
 
   import scala.concurrent.duration._
   import SupervisorExternal._
@@ -23,7 +23,7 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
 
   // Initial delay before starting component allows listener to subscribe
   val component: ActorRef = testComponent match {
-    case None => startComponent(context, componentInfo)
+    case None           => startComponent(context, componentInfo)
     case Some(actorRef) => actorRef
   }
 
@@ -90,14 +90,14 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   private var haltingFlag = false
 
   /**
-    * The component triggers the changes in the lifecycle.
-    * When the component starts up, nothing happens until the component sends Initialized or InitializedFailure
-    * There is no timeout waiting for Initialized
-    */
+   * The component triggers the changes in the lifecycle.
+   * When the component starts up, nothing happens until the component sends Initialized or InitializedFailure
+   * There is no timeout waiting for Initialized
+   */
 
   /**
-    * Receive method for the lifecycleWaitingForInitialized state
-    */
+   * Receive method for the lifecycleWaitingForInitialized state
+   */
   def lifecycleWaitingForInitialized = lifecycleWaitingForInitializedPF orElse commonMessagesPF
 
   // Partial function for the lifecycleWaitingForInitialized state
@@ -122,8 +122,8 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   }
 
   /**
-    * Receive method for the lifecycleInitialized state
-    */
+   * Receive method for the lifecycleInitialized state
+   */
   def lifecycleInitialized = lifecycleInitializedPF orElse commonMessagesPF
 
   // Partial function for the lifecycleInitialized state
@@ -146,9 +146,9 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   }
 
   /**
-    * Receive method for the lifecycleRunning state
-    * Note that order is important because lifecycleRuninng passes all messages right now
-    */
+   * Receive method for the lifecycleRunning state
+   * Note that order is important because lifecycleRuninng passes all messages right now
+   */
   def lifecycleRunning = commonMessagesPF orElse lifecycleRunningPF
 
   // Partial function for the lifecycleRunning state
@@ -181,17 +181,17 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
       // Transition indicates component is shutting down
       notifyListeners(LifecycleStateChanged(LifecyclePreparingToShutdown))
       context.become(lifecyclePreparingToShutdown)
-    case m@_ => component forward m
+    case m @ _ => component forward m
   }
 
   // Partial funciton for receiving and passing messages to the component (may need to be less open)
   def supervisorReceivePF: Receive = {
-    case m@_ => component forward m
+    case m @ _ => component forward m
   }
 
   /**
-    * Receive method for the lifecycleRunningOffline state
-    */
+   * Receive method for the lifecycleRunningOffline state
+   */
   def lifecycleRunningOffline = commonMessagesPF orElse lifecycleRunningOfflinePF
 
   // Partial function for the lifecycleRunningOffline state
@@ -222,12 +222,12 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
       unregisterFromLocationService()
       lifecycleState = LifecyclePreparingToShutdown
       context.become(lifecyclePreparingToShutdown)
-    case m@_ => component forward m
+    case m @ _ => component forward m
   }
 
   /**
-    * Receive method for the lifecyclePreparingToShutdown state
-    */
+   * Receive method for the lifecyclePreparingToShutdown state
+   */
   def lifecyclePreparingToShutdown: Receive = {
     case ShutdownComplete =>
       // First cancel the shutdown timer
@@ -259,8 +259,8 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   }
 
   /**
-    * Receive method for the lifecycleShutdown state
-    */
+   * Receive method for the lifecycleShutdown state
+   */
   def lifecycleShutdown = lifecycleShutdownPF orElse commonMessagesPF
 
   // Partial function for the lifecycleShutdown state
@@ -269,15 +269,15 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   }
 
   /**
-    * Receive method for the lifecycleFailure state
-    */
+   * Receive method for the lifecycleFailure state
+   */
   def lifecycleFailure: Receive = {
     case x ⇒ log.info(s"Supervisor in lifecycleFailure received an unexpected message: $x ")
   }
 
   /**
-    * Recieve method for the lifecycleShutdownFailure state
-    */
+   * Recieve method for the lifecycleShutdownFailure state
+   */
   def lifecycleShutdownFailure: Receive = {
     case x ⇒ log.info(s"Supervisor in lifecycleShutdownFailure received an unexpected message: $x ")
   }
@@ -321,10 +321,10 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   private def removeListener(l: ActorRef) = listeners = listeners - l
 
   /**
-    * Sends the supplied message to all current listeners using the provided sender() as sender.
-    *
-    * @param msg a message to send to all listeners
-    */
+   * Sends the supplied message to all current listeners using the provided sender() as sender.
+   *
+   * @param msg a message to send to all listeners
+   */
   private def notifyListeners(msg: Any): Unit = {
     log.info("Listeners: " + listeners)
     listeners.foreach(_ ! msg)
@@ -338,12 +338,12 @@ object Supervisor3 {
   }
 
   /**
-    * Returns a new supervisor actor managing the components described in the argument
-    *
-    * @param componentInfo describes the components to create and manage
-    * @return the [[akka.actor.ActorRef]] for the supervisor (parent actor of the top level component)
-    *         and the component's new [[akka.actor.ActorSystem]] as a tuple.
-    */
+   * Returns a new supervisor actor managing the components described in the argument
+   *
+   * @param componentInfo describes the components to create and manage
+   * @return the [[akka.actor.ActorRef]] for the supervisor (parent actor of the top level component)
+   *         and the component's new [[akka.actor.ActorSystem]] as a tuple.
+   */
   def apply(componentInfo: ComponentInfo): ActorRef = {
     val system = makeActorSystem(componentInfo)
     //println("System done")
@@ -351,22 +351,22 @@ object Supervisor3 {
   }
 
   /**
-    * Returns a new actor system and supervisor actor managing the components described in the argument
-    *
-    * @param componentInfo describes the components to create and manage
-    * @return the actorRef for the supervisor (parent actor of the top level component)
-    */
+   * Returns a new actor system and supervisor actor managing the components described in the argument
+   *
+   * @param componentInfo describes the components to create and manage
+   * @return the actorRef for the supervisor (parent actor of the top level component)
+   */
   def create(componentInfo: ComponentInfo): (ActorSystem, ActorRef) = {
     val system = makeActorSystem(componentInfo)
     (system, system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisor"))
   }
 
   /**
-    * Used to create the Supervisor actor
-    *
-    * @param componentInfo used to create the component
-    * @return an object to be used to create the Supervisor actor
-    */
+   * Used to create the Supervisor actor
+   *
+   * @param componentInfo used to create the component
+   * @return an object to be used to create the Supervisor actor
+   */
   def props(componentInfo: ComponentInfo): Props = {
     Props(classOf[Supervisor3], componentInfo, None)
   }
@@ -380,59 +380,59 @@ object Supervisor3 {
   sealed trait LifecycleState
 
   /**
-    * State of the Supervisor when started and waiting for the first lifecycle message from the component.
-    */
+   * State of the Supervisor when started and waiting for the first lifecycle message from the component.
+   */
   case object LifecycleWaitingForInitialized extends LifecycleState
 
   /**
-    * State of the Supervisor when Initialized after receiving the [[csw.services.pkg.Supervisor3.Initialized]]
-    * message (first) from the component
-    */
+   * State of the Supervisor when Initialized after receiving the [[csw.services.pkg.Supervisor3.Initialized]]
+   * message (first) from the component
+   */
   case object LifecycleInitialized extends LifecycleState
 
   /**
-    * State of the Supervisor after receiving the [[csw.services.pkg.Supervisor3.Started]]
-    * message (second) from the component. Component is Running and Online at this point.
-    * Component receives a [[csw.services.pkg.Supervisor3.Running]] message indicating this.
-    */
+   * State of the Supervisor after receiving the [[csw.services.pkg.Supervisor3.Started]]
+   * message (second) from the component. Component is Running and Online at this point.
+   * Component receives a [[csw.services.pkg.Supervisor3.Running]] message indicating this.
+   */
   case object LifecycleRunning extends LifecycleState
 
   /**
-    * State of the Supervisor/component after receiving an [[csw.services.pkg.SupervisorExternal.ExComponentOffline]]
-    * message to place the component offline. The component receives the [[csw.services.pkg.Supervisor3.RunningOffline]]
-    * message indicating this.
-    */
+   * State of the Supervisor/component after receiving an [[csw.services.pkg.SupervisorExternal.ExComponentOffline]]
+   * message to place the component offline. The component receives the [[csw.services.pkg.Supervisor3.RunningOffline]]
+   * message indicating this.
+   */
   case object LifecycleRunningOffline extends LifecycleState
 
   /**
-    * State of the Supervisor/component after receiving an [[csw.services.pkg.SupervisorExternal.ExComponentShutdown]]
-    * message to shutdown the component. The component receives the [[csw.services.pkg.Supervisor3.DoShutdown]]
-    * message indicating this.
-    */
+   * State of the Supervisor/component after receiving an [[csw.services.pkg.SupervisorExternal.ExComponentShutdown]]
+   * message to shutdown the component. The component receives the [[csw.services.pkg.Supervisor3.DoShutdown]]
+   * message indicating this.
+   */
   case object LifecyclePreparingToShutdown extends LifecycleState
 
   /**
-    * State of the Supervisor/component after the component has indicated it could not initialize or startup
-    * successfully.
-    */
+   * State of the Supervisor/component after the component has indicated it could not initialize or startup
+   * successfully.
+   */
   case object LifecycleFailure extends LifecycleState
 
   /**
-    * State of the Supervisor/component after the component has indicated it is ready to shutdown after receiving
-    * the [[csw.services.pkg.Supervisor3.ShutdownComplete]] message.
-    */
+   * State of the Supervisor/component after the component has indicated it is ready to shutdown after receiving
+   * the [[csw.services.pkg.Supervisor3.ShutdownComplete]] message.
+   */
   case object LifecycleShutdown extends LifecycleState
 
   /**
-    * State of the Supervisor/component when the component indicated it could not get ready to shutdown or failed
-    * to notify the Supervisor with the [[csw.services.pkg.Supervisor3.ShutdownComplete]] message within the
-    * timeout.
-    */
+   * State of the Supervisor/component when the component indicated it could not get ready to shutdown or failed
+   * to notify the Supervisor with the [[csw.services.pkg.Supervisor3.ShutdownComplete]] message within the
+   * timeout.
+   */
   case object LifecycleShutdownFailure extends LifecycleState
 
   /**
-    * Messages sent to components to notify of lifecycle changes
-    */
+   * Messages sent to components to notify of lifecycle changes
+   */
   sealed trait ToComponentLifecycleMessage
 
   // Someone has requested that the component shutdown
@@ -451,64 +451,64 @@ object Supervisor3 {
   case class LifecycleFailureInfo(state: LifecycleState, reason: String) extends ToComponentLifecycleMessage
 
   /**
-    * Messages from component indicating events
-    */
+   * Messages from component indicating events
+   */
   sealed trait FromComponentLifecycleMessage
 
   // Component indicates it has Initialized successfully
   case object Initialized extends FromComponentLifecycleMessage
 
   /**
-    * Component indicates it failed to initialize with the given reason
-    *
-    * @param reason the reason for failing to initialize as a String
-    */
+   * Component indicates it failed to initialize with the given reason
+   *
+   * @param reason the reason for failing to initialize as a String
+   */
   case class InitializeFailure(reason: String) extends FromComponentLifecycleMessage
 
   /**
-    * Component indicates it has started successfully
-    */
+   * Component indicates it has started successfully
+   */
   case object Started extends FromComponentLifecycleMessage
 
   /**
-    * Component indicates it failed to startup with the given reason
-    *
-    * @param reason reason for failing to startup as a String
-    */
+   * Component indicates it failed to startup with the given reason
+   *
+   * @param reason reason for failing to startup as a String
+   */
   case class StartupFailure(reason: String) extends FromComponentLifecycleMessage
 
   /**
-    * Component indicates it has completed shutting down successfully
-    */
+   * Component indicates it has completed shutting down successfully
+   */
   case object ShutdownComplete extends FromComponentLifecycleMessage
 
   /**
-    * Component indicates it has failed to shutdown properly with the given reason
-    *
-    * @param reason reason for failing to shutdown as a String
-    */
+   * Component indicates it has failed to shutdown properly with the given reason
+   *
+   * @param reason reason for failing to shutdown as a String
+   */
   case class ShutdownFailure(reason: String) extends FromComponentLifecycleMessage
 
   /**
-    * Diagnostic message to shutdown and then exit supervisor/component
-    */
+   * Diagnostic message to shutdown and then exit supervisor/component
+   */
   case object HaltComponent extends FromComponentLifecycleMessage
 
   /**
-    * Function called by a component to indicate the lifecycle should be started.
-    *
-    * @param supervisor the ActorRef of the component's supervisor
-    * @param command    the [[FromComponentLifecycleMessage]] to be sent to the supervisor
-    */
+   * Function called by a component to indicate the lifecycle should be started.
+   *
+   * @param supervisor the ActorRef of the component's supervisor
+   * @param command    the [[FromComponentLifecycleMessage]] to be sent to the supervisor
+   */
   def lifecycle(supervisor: ActorRef, command: FromComponentLifecycleMessage): Unit = {
     supervisor ! command
   }
 
   /**
-    * Function called by a component to exit in a controlled way.
-    *
-    * @param supervisor the ActorRef of the component's supervisor
-    */
+   * Function called by a component to exit in a controlled way.
+   *
+   * @param supervisor the ActorRef of the component's supervisor
+   */
   def haltComponent(supervisor: ActorRef): Unit = {
     supervisor ! HaltComponent
   }
@@ -518,47 +518,47 @@ object Supervisor3 {
 object SupervisorExternal {
 
   /**
-    * Base trait of supervisor actor messages
-    */
+   * Base trait of supervisor actor messages
+   */
   sealed trait SupervisorExternalMessage
 
   /**
-    * Message used to subscribe the sender to changes in lifecycle states
-    *
-    * @param actorRef the actor subscribing to callbacks
-    */
+   * Message used to subscribe the sender to changes in lifecycle states
+   *
+   * @param actorRef the actor subscribing to callbacks
+   */
   case class SubscribeLifecycleCallback(actorRef: ActorRef) extends SupervisorExternalMessage
 
   /**
-    * Message to unsubscribe  from lifecycle state changes
-    */
+   * Message to unsubscribe  from lifecycle state changes
+   */
   case class UnsubscribeLifecycleCallback(actorRef: ActorRef) extends SupervisorExternalMessage
 
   /**
-    * Message sent to subscribers of lifecycle states
-    *
-    * @param state the current state as a String
-    */
+   * Message sent to subscribers of lifecycle states
+   *
+   * @param state the current state as a String
+   */
   case class LifecycleStateChanged(state: LifecycleState) extends SupervisorExternalMessage
 
   /**
-    * External request to restart component initialization -- only possible in LifecycleRunning and LifecycleRunningOffline
-    */
+   * External request to restart component initialization -- only possible in LifecycleRunning and LifecycleRunningOffline
+   */
   case object ExComponentRestart extends SupervisorExternalMessage
 
   /**
-    * External request to shutdown component -- only possible in in LifecycleRunning and LifecycleRunningOffline
-    */
+   * External request to shutdown component -- only possible in in LifecycleRunning and LifecycleRunningOffline
+   */
   case object ExComponentShutdown extends SupervisorExternalMessage
 
   /**
-    * External request to put component onlne -- only possible in LifecycleRunningOffline
-    */
+   * External request to put component onlne -- only possible in LifecycleRunningOffline
+   */
   case object ExComponentOnline extends SupervisorExternalMessage
 
   /**
-    * External request to put component offline -- only possible in LifecycleRunning
-    */
+   * External request to put component offline -- only possible in LifecycleRunning
+   */
   case object ExComponentOffline extends SupervisorExternalMessage
 
 }

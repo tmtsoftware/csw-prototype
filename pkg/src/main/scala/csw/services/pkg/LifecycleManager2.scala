@@ -53,8 +53,8 @@ object LifecycleManager2 {
   case object Heartbeat extends LifecycleInternalEvents
 
   /**
-    * Messages sent to components to notify of lifecycle changes
-    */
+   * Messages sent to components to notify of lifecycle changes
+   */
   sealed trait LifecycleComponentEvents
 
   // Someone has requested that the component shutdown
@@ -88,8 +88,8 @@ object LifecycleManager2 {
   case object ExComponentOffline extends ExternalLifecycleEvents
 
   /**
-    * Messages from component indicating events
-    */
+   * Messages from component indicating events
+   */
   sealed trait ComponentEvents
 
   // Component indicates it has Initialized successfully
@@ -111,12 +111,12 @@ object LifecycleManager2 {
   case class ShutdownFailure(reason: String) extends ComponentEvents
 
   /**
-    * Used to create the LifecycleManager actor
-    *
-    * @param component the component being managed
-    * @param name      the name of the managed component
-    * @return Props needed to create the actor
-    */
+   * Used to create the LifecycleManager actor
+   *
+   * @param component the component being managed
+   * @param name      the name of the managed component
+   * @return Props needed to create the actor
+   */
   def props(component: ActorRef, name: String): Props = Props(classOf[LifecycleManager2], component, name)
 }
 

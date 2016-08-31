@@ -7,16 +7,16 @@ import csw.services.loc.TrackerData.LocationMap
 
 object TrackerData {
   /**
-    * Type alias for a map from a connection description to a location (resolved or not)
-    */
+   * Type alias for a map from a connection description to a location (resolved or not)
+   */
   type LocationMap = Map[Connection, Location]
 }
 
 /**
-  * Wraps a LocationTracker actor in an immutable class
-  *
-  * @param connections set of conection states
-  */
+ * Wraps a LocationTracker actor in an immutable class
+ *
+ * @param connections set of conection states
+ */
 case class TrackerData(connections: LocationMap = Map.empty[Connection, Location]) {
 
   // Returns a new LocationMap with the given connection added, replaced, or removed
@@ -31,15 +31,15 @@ case class TrackerData(connections: LocationMap = Map.empty[Connection, Location
   }
 
   /**
-    * Updates the information for the given location
-    */
+   * Updates the information for the given location
+   */
   def locationUpdate(loc: Location): TrackerData = {
     TrackerData(handleLocationMessage(connections, loc))
   }
 
   /**
-    * Starts tracking the given connection, setting the initial state to Unresolved
-    */
+   * Starts tracking the given connection, setting the initial state to Unresolved
+   */
   def trackConnection(connection: Connection): TrackerData = {
     TrackerData(connections + (connection -> Unresolved(connection)))
   }
@@ -49,13 +49,13 @@ case class TrackerData(connections: LocationMap = Map.empty[Connection, Location
   }
 
   /**
-    * Returns the location for the given connection, if known
-    */
+   * Returns the location for the given connection, if known
+   */
   def getLocation(connection: Connection): Option[Location] = connections.get(connection)
 
   /**
-    * Returns the set of known locations
-    */
+   * Returns the set of known locations
+   */
   def getLocations: Set[Location] = connections.values.toSet
 
   /*
@@ -71,8 +71,8 @@ trait LocationTrackerClientActor3 {
   def tracker: ActorRef
 
   /**
-    * Handles location updates and updates the connections map (Should be called from the actor's receive method)
-    */
+   * Handles location updates and updates the connections map (Should be called from the actor's receive method)
+   */
   def trackerClientReceive: Receive = {
     case loc: Location => updateLocation(loc)
   }
@@ -91,43 +91,43 @@ trait LocationTrackerClientActor3 {
   }
 
   /**
-    * Tracks the locations of the given connections
-    */
+   * Tracks the locations of the given connections
+   */
   def trackConnections(connections: Set[Connection]) {
     connections.foreach(trackConnection)
   }
 
   /**
-    * Stops tracking the locations of the given connections
-    */
+   * Stops tracking the locations of the given connections
+   */
   def untrackConnections(connections: Set[Connection]) {
     connections.foreach(untrackConnection)
   }
 
   /**
-    * Starts tracking the location for the given connection
-    */
+   * Starts tracking the location for the given connection
+   */
   def trackConnection(connection: Connection) {
     trackerData = trackerData.trackConnection(connection)
     trackerTrack(connection)
   }
 
   /**
-    * Stops tracking the location for the given connection
-    */
+   * Stops tracking the location for the given connection
+   */
   def untrackConnection(connection: Connection) {
     trackerData.untrackConnection(connection)
     trackerUntrack(connection)
   }
 
   /**
-    * Returns the location for the given connection, if known
-    */
+   * Returns the location for the given connection, if known
+   */
   def getLocation(connection: Connection): Option[Location] = trackerData.getLocation(connection)
 
   /**
-    * Returns the set of known locations
-    */
+   * Returns the set of known locations
+   */
   def getLocations: Set[Location] = trackerData.getLocations
 
   /*
@@ -136,15 +136,15 @@ trait LocationTrackerClientActor3 {
   def allResolved: Boolean = trackerData.allResolved
 
   /**
-    * Called when all locations are resolved
-    *
-    * @param locations the resolved locations (of HCDs, etc.)
-    */
+   * Called when all locations are resolved
+   *
+   * @param locations the resolved locations (of HCDs, etc.)
+   */
   def allResolved(locations: Set[Location]): Unit = {}
 
   /**
-    * Returns a set of ActorRefs for the components that are resolved and match the config's prefix
-    */
+   * Returns a set of ActorRefs for the components that are resolved and match the config's prefix
+   */
   /*
   protected def getActorRefs(targetPrefix: String): Set[ActorRef] = {
     val x = getLocations.collect {

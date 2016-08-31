@@ -255,11 +255,11 @@ object ContainerComponent {
   }
 
   /**
-    * A function that can be used to parse a container config from a string.  Primarily useful for testing.
-    *
-    * @param s
-    * @return
-    */
+   * A function that can be used to parse a container config from a string.  Primarily useful for testing.
+   *
+   * @param s
+   * @return
+   */
   def parseStringConfig(s: String) = {
     val options = ConfigParseOptions.defaults().
       setOriginDescription("string container config").

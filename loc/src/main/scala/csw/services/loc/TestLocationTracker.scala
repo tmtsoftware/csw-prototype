@@ -5,8 +5,8 @@ import csw.services.loc.LocationServiceProvider.Location
 import csw.services.loc.LocationServiceProvider._
 
 /**
-  * TMT Source Code: 8/4/16.
-  */
+ * TMT Source Code: 8/4/16.
+ */
 object TestLocationTracker {
 
   def props(connections: Map[Connection, Location], replyTo: Option[ActorRef]): Props = Props(classOf[TestLocationTracker], connections, replyTo)

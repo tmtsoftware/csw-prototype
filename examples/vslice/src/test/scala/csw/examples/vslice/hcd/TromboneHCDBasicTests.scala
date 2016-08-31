@@ -2,7 +2,6 @@ package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import csw.examples.vslice.hcd.SingleAxisSimulator.AxisConfig
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
@@ -58,7 +57,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
   def waitForMoveMsgs: Seq[CurrentState] = {
     val msgs = receiveWhile(5.seconds) {
-      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.MOVING => m
+      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
       // This is present to pick up the first status message
       case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
     }
@@ -79,8 +78,8 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
   }
 
   describe("low-level instrumented trombone HCD tests") {
-    import csw.services.ccs.HcdController._
     import TromboneHCD._
+    import csw.services.ccs.HcdController._
 
     it("should initialize the trombone axis simulator") {
 
@@ -125,17 +124,18 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       lifecycleStart(supervisor, tla)
 
       tla ! Subscribe
-      tla ! AxisConfig
+      tla ! GetAxisConfig
 
       val config = expectMsgClass(classOf[CurrentState])
-      println("AxisStats: " + config)
-      config(axisNameKey).head equals (tla.underlyingActor.axisConfig.axisName)
+      //println("AxisStats: " + config)
+      config(axisNameKey).head equals tla.underlyingActor.axisConfig.axisName
       config(lowLimitKey).head should be(tla.underlyingActor.axisConfig.lowLimit)
       config(lowUserKey).head should be(tla.underlyingActor.axisConfig.lowUser)
       config(highUserKey).head should be(tla.underlyingActor.axisConfig.highUser)
       config(highLimitKey).head should be(tla.underlyingActor.axisConfig.highLimit)
       config(homeValueKey).head should be(tla.underlyingActor.axisConfig.home)
       config(startValueKey).head should be(tla.underlyingActor.axisConfig.startPosition)
+      config(stepDelayMSKey).head should be(tla.underlyingActor.axisConfig.stepDelayMS)
 
       tla ! Unsubscribe
 
@@ -152,7 +152,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
       val stats = expectMsgClass(classOf[CurrentState])
       //println("AxisStats: " + stats)
-      stats(initCountKey).head should be(0)
+      stats(datumCountKey).head should be(0)
       stats(moveCountKey).head should be(0)
       stats(homeCountKey).head should be(0)
       stats(limitCountKey).head should be(0)
@@ -171,7 +171,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       lifecycleStart(supervisor, tla)
 
       tla ! Subscribe
-      tla ! Submit(initSC)
+      tla ! Submit(datumSC)
 
       val msgs = waitForMoveMsgs
       msgs.last(positionKey).head should equal(tla.underlyingActor.axisConfig.startPosition + 1) // Init position is one off the start position
@@ -181,7 +181,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       val stats = expectMsgClass(classOf[CurrentState])
       //println("Stats: " + stats)
       stats.configKey should equal(TromboneHCD.axisStatsCK)
-      stats.item(initCountKey).head should equal(1)
+      stats.item(datumCountKey).head should equal(1)
       stats.item(moveCountKey).head should equal(1)
 
       tla ! Unsubscribe
@@ -226,211 +226,235 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       val testPos = 500
 
       tla ! Subscribe
-      tla ! Submit(positionSC.add(positionKey -> testPos))
+      tla ! Submit(positionSC(testPos))
 
       val msgs = waitForMoveMsgs
       // Check the last message
       msgs.last(positionKey).head should be(testPos)
-      msgs.last(stateKey).head should be("AXIS_IDLE")
+      msgs.last(stateKey).head should be(AXIS_IDLE)
 
       //info("Msgs: " + msgs)
       tla ! Unsubscribe
 
       system.stop(tla)
     }
-  }
 
-  describe("place into the low limit") {
-    import TromboneHCD._
-    import csw.services.ccs.HcdController._
 
-    it("should show entering a low limit") {
+    it("should allow continuous short values") {
 
-      val (supervisor, tla) = newTestTrombone()
-      lifecycleStart(supervisor, tla)
-
-      val testPos = 0
-      val testActual = tla.underlyingActor.axisConfig.lowLimit
-
-      tla ! Subscribe
-      tla ! Submit(positionSC.add(positionKey -> testPos))
-
-      val msgs = waitForMoveMsgs
-      // Check the last message
-      msgs.last(stateKey).head should be("AXIS_IDLE")
-      msgs.last(positionKey).head should be(testActual)
-      msgs.last(inLowLimitKey).head should equal(true)
-      msgs.last(inHighLimitKey).head should equal(false)
-
-      //info("Msgs: " + msgs)
-      tla ! Unsubscribe
-
-      system.stop(tla)
-    }
-  }
-
-  describe("place into the high limit") {
-    import TromboneHCD._
-    import csw.services.ccs.HcdController._
-
-    it("should show entering a high limit") {
-
-      val (supervisor, tla) = newTestTrombone()
-      lifecycleStart(supervisor, tla)
-
-      val testPos = 3000
-      val testActual = tla.underlyingActor.axisConfig.highLimit
-
-      tla ! Subscribe
-      tla ! Submit(positionSC.add(positionKey -> testPos))
-
-      val msgs = waitForMoveMsgs
-      // Check the last message
-      msgs.last(stateKey).head should be("AXIS_IDLE")
-      msgs.last(positionKey).head should be(testActual)
-      msgs.last(inLowLimitKey).head should equal(false)
-      msgs.last(inHighLimitKey).head should equal(true)
-
-      //info("Msgs: " + msgs)
-      tla ! Unsubscribe
-
-      system.stop(tla)
-    }
-  }
-
-  describe("Should support a more complex series of moves") {
-    import TromboneHCD._
-    import csw.services.ccs.HcdController._
-
-    it("should allow complex series of moves") {
-      // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
+      val encoderTestValues: Vector[Int] = Vector(
+        460, 465, 470, 475, 480, 485, 490, 400
+      )
 
       val (supervisor, tla) = newTrombone()
       lifecycleStart(supervisor, tla)
 
-      // Get state events
       tla ! Subscribe
-
-      // Move 1
-      tla ! Submit(SetupConfig(axisInitPrefix)) // Could use ones in TromboneHCD
-      var msgs = waitForMoveMsgs
-      msgs.last(inHomeKey).head should be(false)
-
       // Move 2
       tla ! Submit(homeSC)
-      msgs = waitForMoveMsgs
+      var msgs = waitForMoveMsgs
       msgs.last(inHomeKey).head should be(true)
 
-      // Move 3
-      var testPos = 423
-      tla ! Submit(positionSC.add(positionKey -> testPos))
-      msgs = waitForMoveMsgs
-      // Check the last message
-      msgs.last(positionKey).head should be(testPos)
-      msgs.last(stateKey).head should be("AXIS_IDLE")
-      msgs.last(inHomeKey).head should be(false)
-      msgs.last(inLowLimitKey).head should be(false)
-      msgs.last(inHighLimitKey).head should be(false)
+      encoderTestValues.foreach { testPos =>
+        tla ! Submit(positionSC(testPos))
+        //val msgs = waitForMoveMsgs
+      }
+      waitForMoveMsgs
 
-      // Move 4
-      testPos = 800
-      tla ! Submit(positionSC.add(positionKey -> testPos))
-      msgs = waitForMoveMsgs
-      // Check the last message
-      msgs.last(positionKey).head should be(testPos)
-      msgs.last(stateKey).head should be("AXIS_IDLE")
-
-      // Move 5
-      testPos = 1240
-      tla ! Submit(positionSC.add(positionKey -> testPos))
-      msgs = waitForMoveMsgs
-      // Check the last message
-      msgs.last(positionKey).head should be(testPos)
-      msgs.last(stateKey).head should be("AXIS_IDLE")
-      msgs.last(inLowLimitKey).head should be(false)
-      msgs.last(inHighLimitKey).head should be(true)
-
-      // Move 6
-      tla ! Submit(homeSC)
-      msgs = waitForMoveMsgs
-      msgs.last(inHomeKey).head should be(true)
-      msgs.last(inLowLimitKey).head should be(false)
-      msgs.last(inHighLimitKey).head should be(false)
-
-      // Get summary stats
-      tla ! GetAxisStats
-      val stats = expectMsgClass(classOf[CurrentState])
-      //println("Stats: " + stats)
-      stats.configKey should equal(TromboneHCD.axisStatsCK)
-      stats.item(initCountKey).head should equal(1)
-      stats.item(moveCountKey).head should equal(6)
-      stats.item(homeCountKey).head should equal(2)
-      stats.item(limitCountKey).head should equal(1)
-      stats.item(successCountKey).head should equal(6)
-      stats.item(failureCountKey).head should be(0)
-      stats.item(cancelCountKey).head should be(0)
-
-      tla ! Unsubscribe
-
-      system.stop(tla)
     }
-  }
 
-  describe("Should handle a cancel of a motion") {
-    import TromboneHCD._
-    import csw.services.ccs.HcdController._
+    describe("place into the low limit") {
+      import TromboneHCD._
+      import csw.services.ccs.HcdController._
 
-    it("start up a move and cancel it") {
+      it("should show entering a low limit") {
 
-      val (supervisor, tla) = newTrombone()
-      lifecycleStart(supervisor, tla)
+        val (supervisor, tla) = newTestTrombone()
+        lifecycleStart(supervisor, tla)
 
-      val testPos = 1000
+        val testPos = 0
+        val testActual = tla.underlyingActor.axisConfig.lowLimit
 
-      tla ! Subscribe
-      tla ! Submit(positionSC.add(positionKey -> testPos))
+        tla ! Subscribe
+        tla ! Submit(positionSC(testPos))
 
-      // wait for 2 updates
-      receiveN(2)
-      tla ! Submit(cancelSC)
-      val msgs = waitForMoveMsgs
-      // Check the last message
-      msgs.last(stateKey).head should be("AXIS_IDLE")
-      info("Msgs: " + msgs)
+        val msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+        msgs.last(positionKey).head should be(testActual)
+        msgs.last(inLowLimitKey).head should equal(true)
+        msgs.last(inHighLimitKey).head should equal(false)
 
-      // Get summary stats
-      tla ! GetAxisStats
-      val stats = expectMsgClass(classOf[CurrentState])
-      //println("Stats: " + stats)
-      stats.configKey should equal(TromboneHCD.axisStatsCK)
-      stats.item(moveCountKey).head should equal(1)
-      stats.item(successCountKey).head should equal(1)
-      stats.item(cancelCountKey).head should be(1)
+        //info("Msgs: " + msgs)
+        tla ! Unsubscribe
 
-      tla ! Unsubscribe
-
-      system.stop(tla)
+        system.stop(tla)
+      }
     }
-  }
 
-  /*
-    def startHCD: ActorRef = {
-      val testInfo = HcdInfo(TromboneHCD.componentName,
-        TromboneHCD.trombonePrefix,
-        TromboneHCD.componentClassName,
-        DoNotRegister, Set(AkkaType), 1.second)
-      Supervisor3(testInfo)
+    describe("place into the high limit") {
+      import TromboneHCD._
+      import csw.services.ccs.HcdController._
+
+      it("should show entering a high limit") {
+
+        val (supervisor, tla) = newTestTrombone()
+        lifecycleStart(supervisor, tla)
+
+        val testPos = 3000
+        val testActual = tla.underlyingActor.axisConfig.highLimit
+
+        tla ! Subscribe
+        tla ! Submit(positionSC(testPos))
+
+        val msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+        msgs.last(positionKey).head should be(testActual)
+        msgs.last(inLowLimitKey).head should equal(false)
+        msgs.last(inHighLimitKey).head should equal(true)
+
+        //info("Msgs: " + msgs)
+        tla ! Unsubscribe
+
+        system.stop(tla)
+      }
     }
-  */
 
-  def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
-    //system.scheduler.scheduleOnce(timeout) {
-    println("STOPPING")
-    Supervisor3.haltComponent(supervisor)
-    Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-    system.terminate()
-    System.exit(0)
-    //}
+    describe("Should support a more complex series of moves") {
+      import TromboneHCD._
+      import csw.services.ccs.HcdController._
+
+      it("should allow complex series of moves") {
+        // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
+
+        val (supervisor, tla) = newTrombone()
+        lifecycleStart(supervisor, tla)
+
+        // Get state events
+        tla ! Subscribe
+
+        // Move 1
+        tla ! Submit(SetupConfig(axisDatumPrefix)) // Could use ones in TromboneHCD
+        var msgs = waitForMoveMsgs
+        msgs.last(inHomeKey).head should be(false)
+
+        // Move 2
+        tla ! Submit(homeSC)
+        msgs = waitForMoveMsgs
+        msgs.last(inHomeKey).head should be(true)
+
+        // Move 3
+        var testPos = 423
+        tla ! Submit(positionSC(testPos))
+        msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(positionKey).head should be(testPos)
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+        msgs.last(inHomeKey).head should be(false)
+        msgs.last(inLowLimitKey).head should be(false)
+        msgs.last(inHighLimitKey).head should be(false)
+
+        // Move 4
+        testPos = 800
+        tla ! Submit(positionSC(testPos))
+        msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(positionKey).head should be(testPos)
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+
+        // Move 5
+        testPos = 1240
+        tla ! Submit(positionSC(testPos))
+        msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(positionKey).head should be(testPos)
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+        msgs.last(inLowLimitKey).head should be(false)
+        msgs.last(inHighLimitKey).head should be(true)
+
+        // Move 6
+        tla ! Submit(homeSC)
+        msgs = waitForMoveMsgs
+        msgs.last(inHomeKey).head should be(true)
+        msgs.last(inLowLimitKey).head should be(false)
+        msgs.last(inHighLimitKey).head should be(false)
+
+        // Get summary stats
+        tla ! GetAxisStats
+        val stats = expectMsgClass(classOf[CurrentState])
+        //println("Stats: " + stats)
+        stats.configKey should equal(TromboneHCD.axisStatsCK)
+        stats.item(datumCountKey).head should equal(1)
+        stats.item(moveCountKey).head should equal(6)
+        stats.item(homeCountKey).head should equal(2)
+        stats.item(limitCountKey).head should equal(1)
+        stats.item(successCountKey).head should equal(6)
+        stats.item(failureCountKey).head should be(0)
+        stats.item(cancelCountKey).head should be(0)
+
+        tla ! Unsubscribe
+
+        system.stop(tla)
+      }
+    }
+
+    describe("Should handle a cancel of a motion") {
+      import TromboneHCD._
+      import csw.services.ccs.HcdController._
+
+      it("start up a move and cancel it") {
+
+        val (supervisor, tla) = newTrombone()
+        lifecycleStart(supervisor, tla)
+
+        val testPos = 1000
+
+        tla ! Subscribe
+        tla ! Submit(positionSC(testPos))
+
+        // wait for 2 updates
+        receiveN(2)
+        tla ! Submit(cancelSC)
+        val msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+        info("Msgs: " + msgs)
+
+        // Get summary stats
+        tla ! GetAxisStats
+        val stats = expectMsgClass(classOf[CurrentState])
+        //println("Stats: " + stats)
+        stats.configKey should equal(TromboneHCD.axisStatsCK)
+        stats.item(moveCountKey).head should equal(1)
+        stats.item(successCountKey).head should equal(1)
+        stats.item(cancelCountKey).head should be(1)
+
+        tla ! Unsubscribe
+
+        system.stop(tla)
+      }
+    }
+
+    /*
+      def startHCD: ActorRef = {
+        val testInfo = HcdInfo(TromboneHCD.componentName,
+          TromboneHCD.trombonePrefix,
+          TromboneHCD.componentClassName,
+          DoNotRegister, Set(AkkaType), 1.second)
+        Supervisor3(testInfo)
+      }
+    */
+
+    def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
+      //system.scheduler.scheduleOnce(timeout) {
+      println("STOPPING")
+      Supervisor3.haltComponent(supervisor)
+      Await.ready(supervisorSystem.whenTerminated, 5.seconds)
+      system.terminate()
+      System.exit(0)
+      //}
+    }
+
   }
-
 }

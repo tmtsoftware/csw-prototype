@@ -4,8 +4,8 @@ import csw.util.config.UnitsOfMeasure.{degrees, meters, seconds}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
- * TMT Source Code: 7/7/16.
- */
+  * TMT Source Code: 7/7/16.
+  */
 class ItemsTests extends FunSpec with ShouldMatchers {
 
   private val s1: String = "encoder"
@@ -876,32 +876,49 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       di.values should equal(listIn)
     }
   }
-  /*
-    describe("testing enumitem") {
 
-      it("should allow filtering") {
+  describe("testing ChoiceItem") {
+    it("should allow creating with Choices object") {
+      // Choices as object with String input
+      val choices = Choices.from("A", "B", "C")
 
-        val choices = Choices("A", "B", "C")
-        println("Choices: " + choices)
+      val ci1 = ChoiceKey("mode", choices)
+      ci1.choices should equal(choices)
+      ci1.keyName should be("mode")
 
-        val vals1 = Vector(Choice("A"), Choice("C"))
-
-        val vals2 = Vector(Choice("A"), Choice("D"))
-
-        val x = vals1.forall(choices.contains(_))
-        val y = vals2.forall(choices.contains(_))
-
-        val ek = ChoiceKey("mode", Choices("A", "B", "C"))
-
-        val ci = ek.set("A")
-
-
-        println("X: " + x)
-        println("Y: " + y)
-        println("ek: " + ek)
-        println("ci: " + ci)
-      }
-
+      val ci = ci1.set("A")
+      ci.head should equal(Choice("A"))
+      // Check that non-choice fails
+      an [AssertionError] should be thrownBy(ci1.set("D"))
     }
-    */
+
+    it("should allow creating with varargs of Strings") {
+      // Create directly with keyname, and Choice names
+      val ci2 = ChoiceKey("test", "A", "B")
+      ci2.choices should equal(Choices.from("A", "B"))
+      ci2.keyName should be("test")
+
+      val ci = ci2.set("A")
+      ci.head should equal(Choice("A"))
+      // Check that non-choice fails
+      an [AssertionError] should be thrownBy(ci2.set("C"))
+    }
+
+    it("should allow creation with individual Choice items") {
+      // Now create with individual Choice items
+      val uninitialized = Choice("uninitialized")
+      val ready = Choice("ready")
+      val busy = Choice("busy")
+      val continuous = Choice("continuous")
+      val error = Choice("error")
+
+      val cmd = ChoiceKey("cmd", uninitialized, ready, busy, continuous, error)
+      cmd.choices should be(Choices(Set(uninitialized, ready, busy, continuous, error)))
+
+      // setting values
+      var ci = cmd.set(ready)
+      ci.head should equal(ready)
+    }
+
+  }
 }

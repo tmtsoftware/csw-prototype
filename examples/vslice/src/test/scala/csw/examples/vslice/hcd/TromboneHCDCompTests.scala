@@ -1,9 +1,9 @@
 package csw.examples.vslice.hcd
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.TestProbe
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.examples.vslice.hcd.SingleAxisSimulator.AxisConfig
+import csw.examples.vslice.assembly.TromboneAssembly
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -24,8 +24,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
   import TromboneHCD._
   import csw.services.ccs.HcdController._
 
-
-  //override def afterAll = TestKit.shutdownActorSystem(system)
+  override def afterAll = system.terminate()
 
   implicit val system = ActorSystem("TestSystem")
 
@@ -34,7 +33,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     TromboneHCD.componentClassName,
     DoNotRegister, Set(AkkaType), 1.second)
 
-  val troboneAssemblyPrefix = "nfiraos.ncc.trombone"
+  val troboneAssemblyPrefix = TromboneAssembly.componentPrefix
 
   def startHCD: ActorRef = {
     val testInfo = HcdInfo(TromboneHCD.componentName,
@@ -42,14 +41,12 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       TromboneHCD.componentClassName,
       DoNotRegister, Set(AkkaType), 1.second)
 
-    //val props = Supervisor3.props(testInfo, None)
-    //system.actorOf(props)
     Supervisor3(testInfo)
   }
 
   def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
     val msgs = tp.receiveWhile(5.seconds) {
-      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.MOVING => m
+      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
       // This is present to pick up the first status message
       case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
     }
@@ -57,6 +54,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     val allmsgs = msgs :+ fmsg
     allmsgs
   }
+
 
   describe("component level external public interface tests") {
 
@@ -76,7 +74,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
       val stats: CurrentState = fakeAssembly.expectMsgClass(classOf[CurrentState])
       println("AxisStats: " + stats)
-      stats(initCountKey).head should be(0)
+      stats(datumCountKey).head should be(0)
       stats(moveCountKey).head should be(0)
       stats(homeCountKey).head should be(0)
       stats(limitCountKey).head should be(0)
@@ -85,15 +83,11 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       stats(cancelCountKey).head should be(0)
 
       hcd ! Unsubscribe
-      /*
-            val probe = TestProbe()
-            probe watch hcd
-            hcd ! PoisonPill
-            probe.expectTerminated(hcd)
-        */
-      info("Done")
 
+      hcd ! PoisonPill
+      info("Done")
     }
+
 
     it("should allow fetching config") {
       val hcd = startHCD
@@ -111,7 +105,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       // The values are hard-coded because we can't look at the config inside the actor, will fail if config changes
       val config: CurrentState = fakeAssembly.expectMsgClass(classOf[CurrentState])
       println("AxisConfig: " + config)
-      config(axisNameKey).head equals (TromboneHCD.tromboneAxisName)
+      config(axisNameKey).head equals TromboneHCD.tromboneAxisName
       config(lowLimitKey).head should be(100)
       config(lowUserKey).head should be(200)
       config(highUserKey).head should be(1200)
@@ -121,6 +115,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
       fakeAssembly.send(hcd, Unsubscribe)
     }
+
 
     it("should accept an init") {
       val hcd = startHCD
@@ -134,7 +129,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       // Currently can't subscribe unless in Running state because controllerReceive has process
       fakeAssembly.send(hcd, Subscribe)
 
-      fakeAssembly.send(hcd, Submit(initSC))
+      fakeAssembly.send(hcd, Submit(datumSC))
 
       val msgs = waitForMoveMsgs(fakeAssembly)
       //msgs.last(positionKey).head should equal(tla.underlyingActor.axisConfig.startPosition + 1) // Init position is one off the start position
@@ -144,7 +139,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       val stats = fakeAssembly.expectMsgClass(classOf[CurrentState])
       println("Stats: " + stats)
       stats.configKey should equal(TromboneHCD.axisStatsCK)
-      stats.item(initCountKey).head should equal(1)
+      stats.item(datumCountKey).head should equal(1)
       stats.item(moveCountKey).head should equal(1)
 
       fakeAssembly.send(hcd, Unsubscribe)
@@ -156,6 +151,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
             */
       info("Done")
     }
+
 
     it("should allow homing") {
       val hcd = startHCD
@@ -190,8 +186,8 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
       fakeAssembly.send(hcd, Unsubscribe)
     }
-
   }
+
 
   it("should allow a short move") {
     val hcd = startHCD
@@ -207,16 +203,14 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     // Being done this way to ensure ConfigKey equality works
     val testPos = 500
 
-    fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
 
     val msgs = waitForMoveMsgs(fakeAssembly)
     // Check the last message
     msgs.last(positionKey).head should be(testPos)
-    msgs.last(stateKey).head should be("AXIS_IDLE")
-    info("Msgs: " + msgs)
+    msgs.last(stateKey).head should be(AXIS_IDLE)
 
     fakeAssembly.send(hcd, Unsubscribe)
-
   }
 
   it("should show entering a low limit") {
@@ -231,12 +225,12 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     fakeAssembly.send(hcd, Subscribe)
 
     val testPos = 0
-    fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
     val lowLimit = 100 // Note this will fail if axisConfig is changed
 
     val msgs = waitForMoveMsgs(fakeAssembly)
     // Check the last message
-    msgs.last(stateKey).head should be("AXIS_IDLE")
+    msgs.last(stateKey).head should be(AXIS_IDLE)
     msgs.last(positionKey).head should be(lowLimit)
     msgs.last(inLowLimitKey).head should equal(true)
     msgs.last(inHighLimitKey).head should equal(false)
@@ -260,11 +254,11 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     val testPos = 3000
     val highLimit = 1300 // Note this will fail if axisConfig is changed
 
-    fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
 
     val msgs = waitForMoveMsgs(fakeAssembly)
     // Check the last message
-    msgs.last(stateKey).head should be("AXIS_IDLE")
+    msgs.last(stateKey).head should be(AXIS_IDLE)
     msgs.last(positionKey).head should be(highLimit)
     msgs.last(inLowLimitKey).head should equal(false)
     msgs.last(inHighLimitKey).head should equal(true)
@@ -286,7 +280,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     fakeAssembly.send(hcd, Subscribe)
 
     // Move 1
-    fakeAssembly.send(hcd, Submit(SetupConfig(axisInitPrefix))) // Could use ones in TromboneHCD
+    fakeAssembly.send(hcd, Submit(SetupConfig(axisDatumPrefix))) // Could use ones in TromboneHCD
     var msgs = waitForMoveMsgs(fakeAssembly)
     msgs.last(inHomeKey).head should be(false)
 
@@ -297,30 +291,30 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
     // Move 3
     var testPos = 423
-    fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
     msgs = waitForMoveMsgs(fakeAssembly)
     // Check the last message
     msgs.last(positionKey).head should be(testPos)
-    msgs.last(stateKey).head should be("AXIS_IDLE")
+    msgs.last(stateKey).head should be(AXIS_IDLE)
     msgs.last(inHomeKey).head should be(false)
     msgs.last(inLowLimitKey).head should be(false)
     msgs.last(inHighLimitKey).head should be(false)
 
     // Move 4
     testPos = 800
-    fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
     msgs = waitForMoveMsgs(fakeAssembly)
     // Check the last message
     msgs.last(positionKey).head should be(testPos)
-    msgs.last(stateKey).head should be("AXIS_IDLE")
+    msgs.last(stateKey).head should be(AXIS_IDLE)
 
     // Move 5
     testPos = 1240
-    fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
     msgs = waitForMoveMsgs(fakeAssembly)
     // Check the last message
     msgs.last(positionKey).head should be(testPos)
-    msgs.last(stateKey).head should be("AXIS_IDLE")
+    msgs.last(stateKey).head should be(AXIS_IDLE)
     msgs.last(inLowLimitKey).head should be(false)
     msgs.last(inHighLimitKey).head should be(true)
 
@@ -336,7 +330,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     val stats = fakeAssembly.expectMsgClass(classOf[CurrentState])
     //println("Stats: " + stats)
     stats.configKey should equal(TromboneHCD.axisStatsCK)
-    stats.item(initCountKey).head should equal(1)
+    stats.item(datumCountKey).head should equal(1)
     stats.item(moveCountKey).head should equal(6)
     stats.item(homeCountKey).head should equal(2)
     stats.item(limitCountKey).head should equal(1)
@@ -360,15 +354,14 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
     val testPos = 1000
 
-    fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
 
     // wait for 2 updates
     fakeAssembly.receiveN(2)
     fakeAssembly.send(hcd, Submit(cancelSC))
     val msgs = waitForMoveMsgs(fakeAssembly)
     // Check the last message
-    msgs.last(stateKey).head should be("AXIS_IDLE")
-    info("Msgs: " + msgs)
+    msgs.last(stateKey).head should be(AXIS_IDLE)
 
     // Get summary stats
     fakeAssembly.send(hcd, GetAxisStats)
@@ -382,7 +375,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     fakeAssembly.send(hcd, Unsubscribe)
   }
 
-  it("should allow repetitive movces") {
+  it("should allow repetitive moves") {
     // Starts at 350, init (351), go home, small moves repeating */
     val hcd = startHCD
 
@@ -395,9 +388,9 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     fakeAssembly.send(hcd, Subscribe)
 
     // Init 1
-    fakeAssembly.send(hcd, Submit(SetupConfig(axisInitPrefix))) // Could use ones in TromboneHCD
+    fakeAssembly.send(hcd, Submit(SetupConfig(axisDatumCK))) // Could use ones in TromboneHCD
     var msgs = waitForMoveMsgs(fakeAssembly)
-    msgs.last(stateKey).head should be(IDLE)
+    msgs.last(stateKey).head should be(AXIS_IDLE)
 
     // Move 2
     fakeAssembly.send(hcd, Submit(homeSC))
@@ -407,16 +400,55 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     val start = 300
     val finish = 500
     val stepSize = 10
-    val loops = 2
     for (loops <- 1 to 2) {
       logger.info(s"Loop: $loops")
       for (testPos <- start to finish by stepSize) {
-        fakeAssembly.send(hcd, Submit(positionSC.add(positionKey -> testPos)))
+        fakeAssembly.send(hcd, Submit(positionSC(testPos)))
         msgs = waitForMoveMsgs(fakeAssembly)
       }
     }
   }
 
+  it("should drive into limits") {
+    // Starts at 350, goes to zero */
+    val hcd = startHCD
+
+    val fakeAssembly = TestProbe()
+
+    fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
+    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
+
+    fakeAssembly.send(hcd, Subscribe)
+
+    // Get the axis config  for testing limits
+    fakeAssembly.send(hcd, GetAxisConfig)
+
+    // The values are hard-coded because we can't look at the config inside the actor, will fail if config changes
+    val config: CurrentState = fakeAssembly.expectMsgClass(classOf[CurrentState])
+    val lowLimit = config(lowLimitKey).head
+    val highLimit = config(highLimitKey).head
+
+    // Move to 0
+    var testPos = 0
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
+    var msgs = waitForMoveMsgs(fakeAssembly)
+    // Check the last message
+    msgs.last(positionKey).head should be(lowLimit)
+    msgs.last(stateKey).head should be(AXIS_IDLE)
+    msgs.last(inLowLimitKey).head should be(true)
+    msgs.last(inHighLimitKey).head should be(false)
+
+    // Move to 2000
+    testPos = 2000
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
+    msgs = waitForMoveMsgs(fakeAssembly)
+    // Check the last message
+    msgs.last(positionKey).head should be(highLimit)
+    msgs.last(stateKey).head should be(AXIS_IDLE)
+    msgs.last(inLowLimitKey).head should be(false)
+    msgs.last(inHighLimitKey).head should be(true)
+  }
 
   def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
     //system.scheduler.scheduleOnce(timeout) {

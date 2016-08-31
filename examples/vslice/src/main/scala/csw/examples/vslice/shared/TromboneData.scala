@@ -16,14 +16,14 @@ object TromboneData {
       |  components {
       |    lgsTrombone {
       |      type = Assembly
-      |      class = csw.examples.e2e.assembly.TromboneAssembly
+      |      class = csw.examples.vslice.assembly.TromboneAssembly
       |      prefix = nfiraos.ncc.trombone
       |      connectionType: [akka]
       |      connections = [
       |        // Component connections used by this component
       |        // Name: ComponentType ConnectionType
       |        {
-      |          name: lgsTromboneHCDx
+      |          name: lgsTromboneHCD
       |          type: HCD
       |          connectionType: [akka]
       |        }

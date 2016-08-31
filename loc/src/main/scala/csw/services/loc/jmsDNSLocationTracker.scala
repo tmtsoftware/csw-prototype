@@ -9,20 +9,20 @@ import csw.services.loc.LocationService._
 
 object jmsDNSLocationTracker {
   /**
-    * Used to create the LocationTracker actor
-    *
-    * @param replyTo optional actorRef to reply to (default: parent of this actor)
-    */
+   * Used to create the LocationTracker actor
+   *
+   * @param replyTo optional actorRef to reply to (default: parent of this actor)
+   */
   def props(registry: JmDNS, replyTo: Option[ActorRef] = None): Props = Props(classOf[jmsDNSLocationTracker], registry, replyTo)
 }
 
 /**
-  * An actor that notifies the replyTo actor when all the requested services are available.
-  * If all services are available, a ServicesReady message is sent. If any of the requested
-  * services stops being available, a Disconnected messages is sent.
-  *
-  * @param replyTo optional actorRef to reply to (default: parent of this actor)
-  */
+ * An actor that notifies the replyTo actor when all the requested services are available.
+ * If all services are available, a ServicesReady message is sent. If any of the requested
+ * services stops being available, a Disconnected messages is sent.
+ *
+ * @param replyTo optional actorRef to reply to (default: parent of this actor)
+ */
 case class jmsDNSLocationTracker(registry: JmDNS, replyTo: Option[ActorRef]) extends Actor with ActorLogging with ServiceListener {
 
   // Set of resolved services (Needs to be a var, since the ServiceListener callbacks prevent using akka state)
@@ -173,7 +173,7 @@ case class jmsDNSLocationTracker(registry: JmDNS, replyTo: Option[ActorRef]) ext
     case ActorIdentity(id, actorRefOpt) =>
       id match {
         case rs: ResolvedAkkaLocation => actorIdentified(actorRefOpt, rs)
-        case _ => log.warning(s"Received unexpected ActorIdentity id: $id")
+        case _                        => log.warning(s"Received unexpected ActorIdentity id: $id")
       }
 
     case TrackConnection(connection: Connection) =>

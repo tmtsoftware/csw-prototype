@@ -12,8 +12,8 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 /**
-  * TMT Source Code: 8/2/16.
-  */
+ * TMT Source Code: 8/2/16.
+ */
 object jmsDNSLocationService extends LocationServiceProvider {
 
   import LocationServiceProvider._
@@ -30,14 +30,14 @@ object jmsDNSLocationService extends LocationServiceProvider {
   def trackerProps(replyTo: Option[ActorRef]) = jmsDNSLocationTracker.props(getRegistry, replyTo)
 
   /**
-    * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
-    * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
-    * This method should be called before creating any actors or web services that depend on the location service.
-    *
-    * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
-    * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
-    * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
-    */
+   * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
+   * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
+   * This method should be called before creating any actors or web services that depend on the location service.
+   *
+   * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
+   * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
+   * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
+   */
   def initInterface(): Unit = {
     if (!initialized) {
       initialized = true
@@ -111,13 +111,13 @@ object jmsDNSLocationService extends LocationServiceProvider {
   }
 
   /**
-    * Registers the given service for the local host and the given port
-    * (The full name of the local host will be used)
-    *
-    * @param componentId describes the component or service
-    * @param actorRef    the actor reference for the actor being registered
-    * @param prefix      indicates the part of a command service config that this service is interested in
-    */
+   * Registers the given service for the local host and the given port
+   * (The full name of the local host will be used)
+   *
+   * @param componentId describes the component or service
+   * @param actorRef    the actor reference for the actor being registered
+   * @param prefix      indicates the part of a command service config that this service is interested in
+   */
 
   def registerAkkaConnection[JMSRegisteryResult](componentId: ComponentId, actorRef: ActorRef, prefix: String = "")(implicit system: ActorSystem): Future[RegistrationResult] = {
     import system.dispatcher
@@ -137,14 +137,14 @@ object jmsDNSLocationService extends LocationServiceProvider {
   }
 
   /**
-    * Registers the given service for the local host and the given port
-    * (The full name of the local host will be used)
-    *
-    * @param componentId describes the component or service
-    * @param port        the port the service is running on
-    * @param path        the path part of the URI (default: empty)
-    * @return an object that can be used to close the connection and unregister the service
-    */
+   * Registers the given service for the local host and the given port
+   * (The full name of the local host will be used)
+   *
+   * @param componentId describes the component or service
+   * @param port        the port the service is running on
+   * @param path        the path part of the URI (default: empty)
+   * @return an object that can be used to close the connection and unregister the service
+   */
   def registerHttpConnection[JMSRegistryResult](componentId: ComponentId, port: Int, path: String = "")(implicit system: ActorSystem): Future[RegistrationResult] = {
     import system.dispatcher
     val connection = HttpConnection(componentId)
@@ -160,10 +160,10 @@ object jmsDNSLocationService extends LocationServiceProvider {
   }
 
   /**
-    * Unregisters the connection from the location service
-    * (Note: it can take some time before the service is removed from the list: see
-    * comments in registry.unregisterService())
-    */
+   * Unregisters the connection from the location service
+   * (Note: it can take some time before the service is removed from the list: see
+   * comments in registry.unregisterService())
+   */
   def unregisterConnection(connection: Connection): Unit = {
     import scala.collection.JavaConverters._
     logger.debug(s"Unregistered connection: $connection")
@@ -180,15 +180,15 @@ object jmsDNSLocationService extends LocationServiceProvider {
 
   // Gets the full URI for the actor
   private def getActorUri(actorRef: ActorRef, system: ActorSystem): URI =
-  new URI(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
+    new URI(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
   /**
-    * Convenience method that gets the location service information for a given set of services.
-    *
-    * @param connections set of requested connections
-    * @param system      the caller's actor system
-    * @return a future object describing the services found
-    */
+   * Convenience method that gets the location service information for a given set of services.
+   *
+   * @param connections set of requested connections
+   * @param system      the caller's actor system
+   * @return a future object describing the services found
+   */
   /*
   def resolve(connections: Set[Connection])(implicit system: ActorRefFactory, timeout: Timeout): Future[LocationsReady] = {
     import akka.pattern.ask

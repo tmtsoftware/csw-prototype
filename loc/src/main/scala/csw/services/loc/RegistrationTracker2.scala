@@ -52,4 +52,4 @@ case class RegistrationTracker2(c: LocationServiceProvider, registration: Set[Re
     case x => log.error(s"Received unexpected message: $x")
   }
 }
-*/
+*/ 

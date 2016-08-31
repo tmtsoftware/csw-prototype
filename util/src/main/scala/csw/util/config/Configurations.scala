@@ -183,12 +183,12 @@ object Configurations {
     }
 
     // Function to find an item by keyname
-    private def getByKeyname[I](xitems: ConfigData, keyname: String): Option[I] =
-      xitems.find(_.keyName == keyname).asInstanceOf[Option[I]]
+    private def getByKeyname[I](itemsIn: ConfigData, keyname: String): Option[I] =
+      itemsIn.find(_.keyName == keyname).asInstanceOf[Option[I]]
 
     // Function to find an item by item
-    private def getByItem[I](xitems: ConfigData, item: Item[_]): Option[I] =
-      xitems.find(_ == item).asInstanceOf[Option[I]]
+    private def getByItem[I](itemsIn: ConfigData, item: Item[_]): Option[I] =
+      itemsIn.find(_ == item).asInstanceOf[Option[I]]
 
     /**
      * The subsystem for the config

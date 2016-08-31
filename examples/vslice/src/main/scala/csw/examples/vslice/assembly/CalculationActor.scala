@@ -1,79 +1,95 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import csw.util.config.Events.EventTime
-import csw.util.config.{DoubleItem, DoubleKey}
-import csw.util.config.UnitsOfMeasure._
-import csw.util.config.ConfigDSL._
-import TromboneAssembly._
-import csw.examples.vslice.assembly.CalculationActor.TromboneControlConfig
+import csw.util.config.DoubleItem
+import csw.examples.vslice.assembly.CalculationActor.CalculationConfig
 
 /**
   * TMT Source Code: 6/21/16.
   */
-class CalculationActor(controlConfig: TromboneControlConfig, tromboneControl: ActorRef, publisher: ActorRef) extends Actor with ActorLogging {
+class CalculationActor(calculationConfig: CalculationConfig,
+                       val tromboneControl: Option[ActorRef],
+                       val aoPublisher: Option[ActorRef],
+                       val engPublisher: Option[ActorRef]) extends Actor with ActorLogging {
 
   import TromboneAssembly._
   import CalculationActor._
 
   // Set to default so it's not necessary to always send a set initial message
-  var initialElevation: DoubleItem = initialElevationKey -> controlConfig.defaultInitialElevation withUnits (kilometers)
+  var initialElevation: DoubleItem = initialElevationKey -> calculationConfig.defaultInitialElevation withUnits initialElevationUnits
+
+  var inNSSMode:Boolean = false
+  val nSSModeZenithAngle = zenithAngleKey -> 0.0 withUnits zenithAngleUnits
+
 
   def receive: Receive = {
 
-    case UpdatedEventData(zenithAngle, focusError, time) =>
+    case UsingNSS(inUse) => inNSSMode = inUse     // True if NSS is in use
+
+    case UpdatedEventData(zenithAngleIn, focusError, time) =>
+      // If inNSSMode is true, then we use angle 0.0
+      val zenithAngle = if (inNSSMode) nSSModeZenithAngle else zenithAngleIn
       // Units checks - should not happen, so if so, flag an error and skip calculation
       // Not really using the time here
-      if (zenithAngle.units != degrees || focusError.units != millimeters) {
+      if (zenithAngle.units != zenithAngleUnits || focusError.units != focusErrorUnits) {
         log.error(s"Ignoring event data received with improper units: zenithAngle: ${zenithAngle.units}, focusError: ${focusError.units}")
       } else if (!verifyZenithAngle(zenithAngle) || !verifyFocusError(focusError)) {
         log.error(s"Ignoring out of range event data: zenithAngle: $zenithAngle, focusError: $focusError")
       } else {
         // Do the calculation
-        val newElevation = naLayerElevation(controlConfig, initialElevation.head, zenithAngle.head)
+        val newElevation = naLayerElevation(calculationConfig, initialElevation.head, zenithAngle.head)
         log.debug(s"newElevation: $newElevation")
-        val newRangeDistance = focusToRangeDistance(controlConfig, focusError.head)
+        val newRangeDistance = focusToRangeDistance(calculationConfig, focusError.head)
         log.debug(s"newRangeDistance: $newRangeDistance")
         // Send the trombone position to the tromboneControl
-        val newTrombonePosition = rangeDistanceTransform(controlConfig, newElevation + newRangeDistance)
-        sendTrombonePosition(trombonePositionKey -> newTrombonePosition withUnits (encoder))
-        sendAOESWUpdate(naLayerElevationKey -> newElevation withUnits (kilometers), naLayerRangeDistanceKey -> newRangeDistance withUnits (kilometers))
+        val newTotalElevation = newElevation + newRangeDistance
+        val newTrombonePosition:DoubleItem = stagePositionKey -> newTotalElevation withUnits stagePositionUnits
+        // Send the new trombone stage position to the HCD
+        sendTrombonePosition(newTrombonePosition)
+        // Post a SystemEvent for AOESW
+        sendAOESWUpdate(naLayerElevationKey -> newElevation withUnits naLayerElevationUnits,
+                        naLayerRangeDistanceKey -> newRangeDistance withUnits naLayerRangeDistanceUnits)
+        // Post a StatusEvent for telemetry updates
+        sendEngrUpdate(focusError, newTrombonePosition, zenithAngle)
       }
-    case SetElevation(elevation) =>
-      initialElevation = elevation
-    case x =>
-      log.error(s"Unexpected message in TromboneAssembly:CalculationActor: $x")
+
+    case SetElevation(elevation) => initialElevation = elevation
+
+    case x => log.error(s"Unexpected message in TromboneAssembly:CalculationActor: $x")
   }
 
   //
   def sendTrombonePosition(trombonePosition: DoubleItem): Unit = {
-    tromboneControl ! HCDTrombonePosition(trombonePosition)
+    //log.info(s"Sending position: $trombonePosition")
+    tromboneControl.foreach(_ ! HCDTromboneUpdate(trombonePosition))
   }
 
   def sendAOESWUpdate(elevationItem: DoubleItem, rangeItem: DoubleItem): Unit = {
-    publisher ! AOESWUpdate(elevationItem, rangeItem)
+    aoPublisher.foreach(_ ! AOESWUpdate(elevationItem, rangeItem))
+  }
+
+  def sendEngrUpdate(focusError: DoubleItem, trombonePosition: DoubleItem, zenithAngle: DoubleItem): Unit = {
+    engPublisher.foreach(_ ! EngrUpdate(focusError, trombonePosition, zenithAngle))
   }
 }
 
 object CalculationActor {
   // Props for creating the calculation actor
-  def props(controlConfig: TromboneControlConfig, tromboneControl: ActorRef, publisher: ActorRef) = Props(classOf[CalculationActor], controlConfig, tromboneControl, publisher)
+  def props(calculationConfig: CalculationConfig, tromboneControl: Option[ActorRef] = None,
+            aoPublisher: Option[ActorRef] = None,
+            engPublisher: Option[ActorRef] = None) = Props(classOf[CalculationActor], calculationConfig, tromboneControl, aoPublisher, engPublisher)
 
   /**
     * Configuration class
     *
-    * @param defaultInitialElevation
-    * @param focusErrorGain
-    * @param upperFocusLimit
-    * @param lowerFocusLimit
-    * @param zenithFactor
-    * @param positionScale
-    * @param minElevation
-    * @param minElevationEncoder
+    * @param defaultInitialElevation a default initial eleveation (possibly remove once workign)
+    * @param focusErrorGain gain value for focus error
+    * @param upperFocusLimit check for maximum focus error
+    * @param lowerFocusLimit check for minimum focus error
+    * @param zenithFactor an algorithm value for scaling zenith angle term
     */
-  case class TromboneControlConfig(defaultInitialElevation: Double, focusErrorGain: Double,
-                                   upperFocusLimit: Double, lowerFocusLimit: Double,
-                                   zenithFactor: Double, positionScale: Double, minElevation: Double, minElevationEncoder: Int)
+  case class CalculationConfig(defaultInitialElevation: Double, focusErrorGain: Double,
+                               upperFocusLimit: Double, lowerFocusLimit: Double, zenithFactor: Double)
 
   /**
     * Arbitrary check of the zenith angle to be within bounds
@@ -94,27 +110,16 @@ object CalculationActor {
   // From Dan K's email,
   // elevation(t+1) =  cos(theta(t))*(elevation(t)/cos(theta(t)) + g*focusRangeDistanceError(t))
   // For this example, layer elevation is the initial elevation + a factor * cosine of zenith angle designed to be 90 to 100 km
-  def naLayerElevation(controlConfig: TromboneControlConfig, initialElevation: Double, zenithAngle: Double): Double =
-  Math.cos(Math.toRadians(zenithAngle)) * controlConfig.zenithFactor + initialElevation
+  def naLayerElevation(calculationConfig: CalculationConfig, initialElevation: Double, zenithAngle: Double): Double =
+                       Math.cos(Math.toRadians(zenithAngle)) * calculationConfig.zenithFactor + initialElevation
 
-  // The focus to range distance is  the gain * focus value/4 where focus is pinned to be between +/-
-  def focusToRangeDistance(controlConfig: TromboneControlConfig, focusError: Double): Double = {
+  // The focus to range distance is  the gain * focus value/4 where focus is pinned to be between +/- 20
+  def focusToRangeDistance(calculationConfig: CalculationConfig, focusError: Double): Double = {
     // Limit the focus Error
-    val pinnedFocusValue = Math.max(controlConfig.lowerFocusLimit, Math.min(controlConfig.upperFocusLimit, focusError))
-    controlConfig.focusErrorGain * pinnedFocusValue / 4.0
+    val pinnedFocusValue = Math.max(calculationConfig.lowerFocusLimit, Math.min(calculationConfig.upperFocusLimit, focusError))
+    calculationConfig.focusErrorGain * pinnedFocusValue / 4.0
   }
 
-  /**
-    * NALayerRange = zfactor*zenithAngle + focusError
-    *
-    * zfactor is read from configuration
-    *
-    * @param rangeElTotal is the calculated value of the range distance + NA layer elevation
-    * @return DoubleItem with key naTrombonePosition and units of enc
-    */
-  def rangeDistanceTransform(controlConfig: TromboneControlConfig, rangeElTotal: Double): Int = {
-    // Scale value to be between 200 and 1000 encoder
-    (controlConfig.positionScale * (rangeElTotal - controlConfig.minElevation) + controlConfig.minElevationEncoder).toInt
-  }
+
 
 }

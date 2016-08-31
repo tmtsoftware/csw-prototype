@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.Future
 
 /**
-  * TMT Source Code: 8/4/16.
-  */
+ * TMT Source Code: 8/4/16.
+ */
 object TestLocationService extends LocationServiceProvider {
   private val logger = Logger(LoggerFactory.getLogger(TestLocationService.getClass))
 
@@ -107,8 +107,8 @@ object TestLocationService extends LocationServiceProvider {
   }
 
   /**
-    * Notifies all subscribers with the given value
-    */
+   * Notifies all subscribers with the given value
+   */
   private def notifySubscribers(a: Any): Unit = {
     subscribers.foreach(_ ! a)
   }

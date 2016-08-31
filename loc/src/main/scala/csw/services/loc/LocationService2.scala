@@ -8,17 +8,17 @@ import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
 import scala.concurrent.Future
 
 /**
-  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
-  *
-  * The Location Service is based on Multicast DNS (AppleTalk, Bonjour) and can be used to register and lookup
-  * akka and http based services in the local network.
-  *
-  * Every application using the location service should call the initInterface() method once at startup,
-  * before creating any actors.
-  *
-  * Note: On a mac, you can use the command line tool dns-sd to browse the registered services.
-  * On Linux use avahi-browse.
-  */
+ * Location Service based on Multicast DNS (AppleTalk, Bonjour).
+ *
+ * The Location Service is based on Multicast DNS (AppleTalk, Bonjour) and can be used to register and lookup
+ * akka and http based services in the local network.
+ *
+ * Every application using the location service should call the initInterface() method once at startup,
+ * before creating any actors.
+ *
+ * Note: On a mac, you can use the command line tool dns-sd to browse the registered services.
+ * On Linux use avahi-browse.
+ */
 
 abstract class LocationServiceProvider {
 
@@ -56,35 +56,35 @@ abstract class LocationServiceProvider {
 object LocationServiceProvider {
 
   /**
-    * Represents a registered connection to a service
-    */
+   * Represents a registered connection to a service
+   */
   sealed trait Registration {
     def connection: Connection
   }
 
   /**
-    * Represents a registered connection to an Akka service
-    */
+   * Represents a registered connection to an Akka service
+   */
   final case class AkkaRegistration(connection: AkkaConnection, component: ActorRef, prefix: String = "") extends Registration
 
   /**
-    * Represents a registered connection to a HTTP based service
-    */
+   * Represents a registered connection to a HTTP based service
+   */
   final case class HttpRegistration(connection: HttpConnection, port: Int, path: String) extends Registration
 
   /**
-    * Returned from register calls so that client can close the connection and deregister the service
-    */
+   * Returned from register calls so that client can close the connection and deregister the service
+   */
   trait RegistrationResult {
     /**
-      * Unregisters the previously registered service.
-      * Note that all services are automatically unregistered on shutdown.
-      */
+     * Unregisters the previously registered service.
+     * Note that all services are automatically unregistered on shutdown.
+     */
     def unregister(): Unit
 
     /**
-      * Identifies the registered component
-      */
+     * Identifies the registered component
+     */
     val componentId: ComponentId
   }
 

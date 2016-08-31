@@ -13,8 +13,8 @@ import csw.services.ts.TimeService._
   */
 class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef]) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
 
-  import SingleAxisSimulator._
   import MotionWorker._
+  import SingleAxisSimulator._
 
   // Check that the home position is not in a limit area - with this check it is not neceesary to check for limits after homing
   assert(axisConfig.home > axisConfig.lowUser, s"home position must be greater than lowUser value: ${axisConfig.lowUser}")
@@ -55,16 +55,16 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       // Send the inital position for its state to the caller directly
       sender() ! getState
 
-    case Init =>
+    case Datum =>
       axisState = AXIS_MOVING
       update(replyTo, AxisStarted)
       // Takes some time and increments the current
-      scheduleOnce(localTimeNow.plusSeconds(1), context.self, InitComplete)
+      scheduleOnce(localTimeNow.plusSeconds(1), context.self, DatumComplete)
       // Stats
       initCount += 1
       moveCount += 1
 
-    case InitComplete =>
+    case DatumComplete =>
       // Set limits
       axisState = AXIS_IDLE
       // Power on causes motion of one unit!
@@ -82,7 +82,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_MOVING
       log.debug(s"AxisHome: $axisState")
       update(replyTo, AxisStarted)
-      val props = MotionWorker.props(current, axisConfig.home, numSteps = 10, delayInMS = 100, self, diagFlag = false)
+      val props = MotionWorker.props(current, axisConfig.home, delayInMS = 2, self, diagFlag = false)
       val mw = context.actorOf(props, "homeWorker")
       context.become(homeReceive(mw))
       mw ! Start
@@ -106,8 +106,8 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       update(replyTo, AxisStarted)
       val clampedTargetPosition = SingleAxisSimulator.limitMove(axisConfig, targetPosition)
       // The 200 ms here is the time for one step, so a 10 step move takes 2 seconds
-      val props = MotionWorker.props(current, clampedTargetPosition, calcNumSteps(current, clampedTargetPosition), delayInMS = 200, self, diagFlag)
-      val mw = context.actorOf(props, "moveWorker")
+      val props = MotionWorker.props(current, clampedTargetPosition, delayInMS = axisConfig.stepDelayMS, self, diagFlag)
+      val mw = context.actorOf(props, s"moveWorker-${System.currentTimeMillis}")
       context.become(moveReceive(mw))
       mw ! Start
       // Stats
@@ -131,7 +131,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
   def homeReceive(worker: ActorRef): Receive = {
     case Start =>
       log.debug("Home Start")
-    case Tick(currentIn, stepsIn) =>
+    case Tick(currentIn) =>
       current = currentIn
       // Send Update
       update(replyTo, getState)
@@ -148,7 +148,10 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       worker ! Cancel
       // Stats
       cancelCount += 1
-    case Tick(currentIn, stepsIn) =>
+    case Move(targetPosition, _) =>
+      // When this is received, we update the final position while a motion is happening
+      worker ! MoveUpdate(targetPosition)
+    case Tick(currentIn) =>
       current = currentIn
       log.debug("Move Update")
       // Send Update to caller
@@ -174,53 +177,35 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
 object SingleAxisSimulator {
   def props(axisConfig: AxisConfig, replyTo: Option[ActorRef] = None) = Props(classOf[SingleAxisSimulator], axisConfig, replyTo)
 
-  case class AxisConfig(axisName: String, lowLimit: Int, lowUser: Int, highUser: Int, highLimit: Int, home: Int, startPosition: Int)
+  case class AxisConfig(axisName: String, lowLimit: Int, lowUser: Int, highUser: Int, highLimit: Int, home: Int, startPosition: Int, stepDelayMS: Int)
 
   trait AxisState
-
   case object AXIS_IDLE extends AxisState
-
   case object AXIS_MOVING extends AxisState
-
   case object AXIS_ERROR extends AxisState
 
   trait AxisRequest
-
   case object Home extends AxisRequest
-
-  case object Init extends AxisRequest
-
+  case object Datum extends AxisRequest
   case class Move(position: Int, diagFlag: Boolean = false) extends AxisRequest
-
   case object CancelMove extends AxisRequest
-
   case object GetStatistics extends AxisRequest
 
   trait AxisResponse
-
   case object AxisStarted extends AxisResponse
-
   case object AxisFinished extends AxisResponse
-
   case class AxisUpdate(axisName: String, state: AxisState, current: Int, inLowLimit: Boolean, inHighLimit: Boolean, inHomed: Boolean) extends AxisResponse
-
   case class AxisFailure(reason: String) extends AxisResponse
-
   case class AxisStatistics(axisName: String, initCount: Int, moveCount: Int, homeCount: Int, limitCount: Int, successCount: Int, failureCount: Int, cancelCount: Int) extends AxisResponse {
     override def toString = s"name: $axisName, inits: $initCount, moves: $moveCount, homes: $homeCount, limits: $limitCount, success: $successCount, fails: $failureCount, cancels: $cancelCount"
   }
 
   // Internal
   trait InternalMessages
-
-  case object InitComplete extends InternalMessages
-
+  case object DatumComplete extends InternalMessages
   case class HomeComplete(position: Int) extends InternalMessages
-
   case class MoveComplete(position: Int) extends InternalMessages
-
   case object InitialState extends InternalMessages
-
   case object InitialStatistics extends InternalMessages
 
   // Helper functions in object for testing
@@ -234,22 +219,18 @@ object SingleAxisSimulator {
 
   def isHomed(ac: AxisConfig, current: Int): Boolean = current == ac.home
 
-  // Determines the number of step updates between two positions. For long moves, there are 10, small moves 5
-  def calcNumSteps(start: Int, end: Int): Int = {
-    val diff = Math.abs(start - end)
-    if (diff < 20) 2
-    else if (diff > 500) 10
-    else 5
-  }
-
 }
 
-class MotionWorker(val start: Int, val destination: Int, val numSteps: Int, val delayInMS: Int, replyTo: ActorRef, diagFlag: Boolean) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
+class MotionWorker(val start: Int, val destinationIn: Int, val delayInMS: Int, replyTo: ActorRef, diagFlag: Boolean) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
 
   import MotionWorker._
   import TimeService._
 
-  val stepSize = calcStepSize(start, destination, numSteps)
+  var destination = destinationIn
+
+  var numSteps = calcNumSteps(start, destination)
+  var stepSize = calcStepSize(start, destination, numSteps)
+  var stepCount = 0
   // Can be + or -
   var cancelFlag = false
   val delayInNanoSeconds: Long = delayInMS * 1000000
@@ -259,15 +240,29 @@ class MotionWorker(val start: Int, val destination: Int, val numSteps: Int, val 
     case Start =>
       if (diagFlag) diag("Starting", start, numSteps)
       replyTo ! Start
-      scheduleOnce(localTimeNow.plusNanos(delayInNanoSeconds), context.self, Tick(start, numSteps))
-    case Tick(currentIn, stepsIn) =>
-      replyTo ! Tick(currentIn, stepsIn)
-      val stepCount = stepsIn - 1
-      // To fix rounding errors, if last tep set current to destination
-      current = if (stepCount == 0) destination else currentIn + stepSize
-      if (diagFlag) diag("Step", current, stepNumber(stepCount, numSteps))
-      if (stepCount > 0 && !cancelFlag) scheduleOnce(localTimeNow.plusNanos(delayInNanoSeconds), context.self, Tick(current, stepCount))
+      scheduleOnce(localTimeNow.plusNanos(delayInNanoSeconds), context.self, Tick(start + stepSize))
+    case Tick(currentIn) =>
+      replyTo ! Tick(currentIn)
+
+      current = currentIn
+      // Keep a count of steps in this MotionWorker instance
+      stepCount += 1
+
+      // If we are on the last step of a move, then distance equals 0
+      val distance = calcDistance(current, destination)
+      val done = distance == 0
+      // To fix rounding errors, if last step set current to destination
+      val last = lastStep(current, destination, stepSize)
+      val nextPos = if (last) destination else currentIn + stepSize
+      if (diagFlag) log.info(s"currentIn: $currentIn, distance: $distance, stepSize: $stepSize, done: $done, nextPos: $nextPos")
+
+      if (!done && !cancelFlag) scheduleOnce(localTimeNow.plusNanos(delayInNanoSeconds), context.self, Tick(nextPos))
       else self ! End(current)
+    case MoveUpdate(destinationUpdate) =>
+      destination = destinationUpdate
+      numSteps = calcNumSteps(current, destination)
+      stepSize = calcStepSize(current, destination, numSteps)
+      log.info(s"NEW dest: $destination, numSteps: $numSteps, stepSize: $stepSize")
     case Cancel =>
       if (diagFlag) log.debug("Worker received cancel")
       cancelFlag = true // Will cause to leave on next Tick
@@ -280,22 +275,32 @@ class MotionWorker(val start: Int, val destination: Int, val numSteps: Int, val 
     case x ⇒ log.error(s"Unexpected message in MotionWorker: $x")
   }
 
-  def stepNumber(stepCount: Int, numSteps: Int) = numSteps - stepCount
-
-  def calcStepSize(current: Int, destination: Int, steps: Int): Int = (destination - current) / steps
-
-  def diag(hint: String, current: Int, stepValue: Int) = log.debug(s"$hint: start=$start, dest=$destination, step/totalSteps: $stepValue/$numSteps, current=$current")
+  def diag(hint: String, current: Int, stepValue: Int) = log.info(s"$hint: start=$start, dest=$destination, totalSteps: $stepValue, current=$current")
 }
 
 object MotionWorker {
-  def props(start: Int, destination: Int, numSteps: Int, delayInMS: Int, replyTo: ActorRef, diagFlag: Boolean) = Props(classOf[MotionWorker], start, destination, numSteps, delayInMS, replyTo, diagFlag)
+  def props(start: Int, destination: Int, delayInMS: Int, replyTo: ActorRef, diagFlag: Boolean) = Props(classOf[MotionWorker], start, destination, delayInMS, replyTo, diagFlag)
 
-  case object Start
+  trait MotionWorkerMsgs
+  case object Start extends MotionWorkerMsgs
+  case class End(finalpos: Int) extends MotionWorkerMsgs
+  case class Tick(current: Int) extends MotionWorkerMsgs
+  case class MoveUpdate(destination: Int) extends MotionWorkerMsgs
+  case object Cancel extends MotionWorkerMsgs
 
-  case class End(finalpos: Int)
+  def calcNumSteps(start: Int, end: Int): Int = {
+    val diff = Math.abs(start - end)
+    if (diff <= 5) 1
+    else if (diff <= 20) 2
+    else if (diff <= 500) 5
+    else 10
+  }
 
-  case class Tick(current: Int, stepCount: Int)
+  def calcStepSize(current: Int, destination: Int, steps: Int):Int = (destination - current) / steps
 
-  case object Cancel
+  //def stepNumber(stepCount: Int, numSteps: Int) = numSteps - stepCount
+
+  def calcDistance(current: Int, destination: Int):Int = Math.abs(current - destination)
+  def lastStep(current: Int, destination: Int, stepSize: Int):Boolean = calcDistance(current, destination) <= Math.abs(stepSize)
 
 }

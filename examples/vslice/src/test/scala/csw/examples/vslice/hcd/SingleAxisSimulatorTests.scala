@@ -2,8 +2,7 @@ package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import csw.examples.vslice.hcd.MotionWorker.{Cancel, End, Start}
-import csw.examples.vslice.hcd.SingleAxisSimulator.AxisConfig
+import csw.examples.vslice.hcd.MotionWorker._
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
@@ -13,23 +12,74 @@ import scala.concurrent.duration._
   */
 class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) with ImplicitSender
   with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+  import SingleAxisSimulator._
 
   override def afterAll = TestKit.shutdownActorSystem(system)
+
+  def expectLLMoveMsgs(diagFlag: Boolean = false): Vector[MotionWorkerMsgs] = {
+    // Get AxisStarted
+    var allMsgs:Vector[MotionWorkerMsgs] = Vector(expectMsg(Start))
+    // Receive updates until axis idle then get the last one
+    val moveMsgs = receiveWhile(5.seconds) {
+      case t@Tick(current) => t
+    }
+    val endMsg = expectMsgClass(classOf[End]) // last one
+    allMsgs =  allMsgs ++ moveMsgs :+ endMsg
+    if (diagFlag) info(s"LLMoveMsgs: $allMsgs")
+    allMsgs
+  }
+
+  def expectMoveMsgs(diagFlag: Boolean = false): Seq[AxisUpdate] = {
+    // Get AxisStarted
+    expectMsg(AxisStarted)
+    // Receive updates until axis idle then get the last one
+    val msgs = receiveWhile(5.seconds) {
+      case m@AxisUpdate(_, axisState, current, _, _, _) if axisState == AXIS_MOVING => m
+    }
+    val fmsg = expectMsgClass(classOf[AxisUpdate]) // last one
+    val allmsgs = msgs :+ fmsg
+    if (diagFlag) info(s"MoveMsgs: $allmsgs")
+    allmsgs
+  }
+
+  def expectMoveMsgsWithDest(target: Int, diagFlag: Boolean = false): Seq[AxisResponse] = {
+    // Receive updates until axis idle then get the last one
+    val msgs  = receiveWhile(5.seconds) {
+      case as@AxisStarted => as
+      case m@AxisUpdate(_, currentState, current, _, _, _) if current != target => m
+    }
+    val fmsg1 = expectMsgClass(classOf[AxisUpdate]) // last one when target == current
+    val fmsg2 = expectMsgClass(classOf[AxisUpdate]) // then the End event with the IDLE
+    val allmsgs = msgs :+ fmsg1 :+ fmsg2
+    if (diagFlag) info(s"MoveMsgs: $allmsgs")
+    allmsgs
+  }
 
   // Calculates the time to wait for messages with a little extra
   def calcDelay(numberSteps: Int, delayInSseconds: Int): FiniteDuration = (numberSteps + 1) * delayInSseconds * 1000.seconds
 
   describe("Testing steps calc") {
     import SingleAxisSimulator._
-    val test1 = (100, 110) // Short move  should be 2
-    val test2 = (100, 1000) // long move   should be 10
-    val test3 = (100, 200) // Medium      should be 5
 
     // Note that putting functions in the companion object allows them to be easily tested!
     it("should calculate different number of steps based on the size of the move") {
-      calcNumSteps(test1._1, test1._2) should be(2)
-      calcNumSteps(test2._1, test2._2) should be(10)
-      calcNumSteps(test3._1, test3._2) should be(5)
+      calcNumSteps(100, 105) should be(1)
+      calcNumSteps(100, 115) should be(2)
+      calcNumSteps(100, 500) should be(5)
+      calcNumSteps(100, 900) should be(10)
+    }
+
+    it("should also work with step size") {
+      calcStepSize(100, 105, calcNumSteps(100, 105)) should be(5)
+      calcStepSize(100, 115, calcNumSteps(100, 115)) should be(7)
+      calcStepSize(100, 500, calcNumSteps(100, 500)) should be(80)
+      calcStepSize(100, 900, calcNumSteps(100, 900)) should be(80)
+    }
+
+    it("should work with step size of 1 (bug found)") {
+      val steps = calcNumSteps(870, 869)
+      steps should be(1)
+      calcStepSize(870, 869, steps) should be(-1)
     }
   }
 
@@ -37,13 +87,11 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     val testStart = 0
     val testDestination = 1000
     val testDelay = 100
-    val testNumberSteps = 4
 
     it("should be initialized properly") {
-      val props = MotionWorker.props(testStart, testDestination, testNumberSteps, testDelay, self, false)
+      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef[MotionWorker](props)
       val under = ms.underlyingActor
-      under.numSteps should equal(testNumberSteps)
       under.start should equal(testStart)
       under.destination should equal(testDestination)
       under.delayInNanoSeconds should equal(testDelay * 1000000)
@@ -52,53 +100,43 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
 
   describe("motion worker forward") {
     val testStart = 0
-    val testDestination = 1000
-    val testDelay = 500
-    val testNumberSteps = 4
+    val testDestination = 1005
+    val testDelay = 10
 
     it("should allow simulation on increasing encoder steps") {
-      val props = MotionWorker.props(testStart, testDestination, 4, testDelay, self, false)
+      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef(props)
       ms ! Start
-
-      expectMsg(Start)
-      receiveN(testNumberSteps, calcDelay(testNumberSteps, testDelay))
-      expectMsg(End(1000))
+      val msgs = expectLLMoveMsgs()
+      msgs.last should be(End(testDestination))
     }
   }
 
-
   describe("motion worker reverse") {
     val testStart = 1000
-    val testDestination = 0
-    val testDelay = 500
-    val testNumberSteps = 5
-    it("should allow creation based on negative encoder steps") {
+    val testDestination = -110
+    val testDelay = 10
 
-      val props = MotionWorker.props(testStart, testDestination, testNumberSteps, testDelay, self, false)
+    it("should allow creation based on negative encoder steps") {
+      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef(props)
       ms ! Start
-      expectMsg(Start)
-      val msgs = receiveN(testNumberSteps, calcDelay(testNumberSteps, testDelay))
-      msgs.size should be(testNumberSteps)
-      expectMsg(End(0))
+      val msgs = expectLLMoveMsgs(false)
+      msgs.last should be(End(testDestination))
     }
   }
 
   describe("simulate continuous motion with motion worker") {
     val testStart = 500
     val testDestination = 600
-    val testDelay = 50
-    val testNumberSteps = 50
+    val testDelay = 10
     it("should allow creation based on negative encoder steps") {
 
-      val props = MotionWorker.props(testStart, testDestination, testNumberSteps, testDelay, self, false)
+      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef(props)
       ms ! Start
-      expectMsg(Start)
-      val msgs = receiveN(testNumberSteps, calcDelay(testNumberSteps, testDelay))
-      msgs.size should be(testNumberSteps)
-      val end = expectMsgClass(classOf[End])
+      val msgs = expectLLMoveMsgs(false)
+      msgs.last should be(End(testDestination))
     }
   }
 
@@ -106,10 +144,9 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     val testStart = 0
     val testDestination = 1000
     val testDelay = 200
-    val testNumberSteps = 10
 
     it("should allow cancelling after a few steps") {
-      val props = MotionWorker.props(testStart, testDestination, testNumberSteps, testDelay, self, false)
+      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef(props)
       ms ! Start
       expectMsg(Start)
@@ -117,8 +154,8 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       receiveN(3, calcDelay(3, testDelay))
       ms ! Cancel
       // One more move
-      val lastmsg = receiveN(1)
-      val end = expectMsgClass(classOf[End])
+      receiveN(1)
+      expectMsgClass(classOf[End])
     }
   }
 
@@ -129,6 +166,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
   val defaultHighLimit = 1300
   val defaultHome = 300
   val defaultStartPosition = 350
+  val defaultStepDelayMS = 5
   val defaultStatusPrefix = "test.axisStatus"
 
   val defaultAxisConfig = AxisConfig(defaultAxisName,
@@ -137,13 +175,13 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     defaultHighUser,
     defaultHighLimit,
     defaultHome,
-    defaultStartPosition)
+    defaultStartPosition,
+    defaultStepDelayMS)
 
   def defaultAxis(replyTo: ActorRef): TestActorRef[SingleAxisSimulator] = {
     val props = SingleAxisSimulator.props(defaultAxisConfig, Some(replyTo))
     TestActorRef(props) // No name here since can't create actors with the same name
   }
-
 
   describe("test single axis") {
     import SingleAxisSimulator._
@@ -189,7 +227,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       //val one = expectMsgClass(classOf[AxisUpdate])
       //one.current should equal(defaultAxisConfig.startPosition)
 
-      sa ! Init
+      sa ! Datum
       expectMsg(AxisStarted)
       val upd = expectMsgClass(classOf[AxisUpdate])
       upd.state should equal(AXIS_IDLE)
@@ -212,10 +250,6 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     it("Should home properly") {
       val sa = defaultAxis(testActor)
 
-      // Expect an initial axis status message
-      //val one = expectMsgClass(classOf[AxisUpdate])
-      //one.current should equal(defaultAxisConfig.startPosition)
-
       sa ! Home
       val msgs = expectMoveMsgs()
       msgs.last.state should be(AXIS_IDLE)
@@ -237,19 +271,6 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       sa ! PoisonPill
     }
 
-    def expectMoveMsgs(diagFlag: Boolean = false): Seq[AxisUpdate] = {
-      // Get AxisStarted
-      expectMsg(AxisStarted)
-      // Receive updates until axis idle then get the last one
-      val msgs = receiveWhile(5.seconds) {
-        case m@AxisUpdate(_, axisState, current, _, _, _) if axisState == AXIS_MOVING => m
-      }
-      val fmsg = expectMsgClass(classOf[AxisUpdate]) // last one
-      val allmsgs = msgs :+ fmsg
-      if (diagFlag) info(s"MoveMsgs: $allmsgs")
-      allmsgs
-    }
-
     it("Should move properly") {
       val sa = defaultAxis(testActor)
 
@@ -263,6 +284,29 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       msgs.last.current should be(500)
 
       sa.underlyingActor.current should be(500)
+
+      sa ! PoisonPill
+    }
+
+    it("Should move and update") {
+      val sa = defaultAxis(testActor)
+
+      // Sleeps are to try and not do all the updates up front before movement starts
+      sa ! Move(360)
+      Thread.sleep(30)
+      sa ! Move(365)
+      Thread.sleep(20)
+      sa ! Move(390)
+      Thread.sleep(30)
+      sa ! Move(420)
+      Thread.sleep(20)
+      sa ! Move(425)
+
+      val msgs = expectMoveMsgsWithDest(425)
+      msgs.last.isInstanceOf[AxisUpdate]
+      val last:AxisUpdate = msgs.last.asInstanceOf[AxisUpdate]
+      last.state should be(AXIS_IDLE)
+      last.current should be(425)
 
       sa ! PoisonPill
     }
@@ -348,7 +392,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       //one.current should equal(defaultAxisConfig.startPosition)
 
       // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
-      sa ! Init
+      sa ! Datum
       var msgs = expectMoveMsgs()
       msgs.last.current should be(defaultAxisConfig.startPosition + 1)
 

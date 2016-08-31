@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import csw.services.log.PrefixedActorLogging
 import csw.util.akka.PublisherActor

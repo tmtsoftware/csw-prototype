@@ -126,7 +126,7 @@ object Component {
   private def createHCD(context: ActorContext, cinfo: ComponentInfo, supervisorIn: Option[ActorRef]): ActorRef = {
 
     val supervisor = supervisorIn match {
-      case None => context.self // Will be parent which is supervisor
+      case None                => context.self // Will be parent which is supervisor
       case Some(supervisorRef) => supervisorRef
     }
 
@@ -139,7 +139,7 @@ object Component {
   private def createAssembly(context: ActorContext, cinfo: AssemblyInfo, supervisorIn: Option[ActorRef]): ActorRef = {
 
     val supervisor = supervisorIn match {
-      case None => context.self // Will be parent which is supervisor
+      case None                => context.self // Will be parent which is supervisor
       case Some(supervisorRef) => supervisorRef
     }
 

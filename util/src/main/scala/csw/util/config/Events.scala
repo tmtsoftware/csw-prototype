@@ -32,6 +32,15 @@ object Events {
    */
   case class EventInfo(source: ConfigKey, time: EventTime, obsId: Option[ObsId], eventId: String = UUID.randomUUID().toString) {
     override def toString = s"$source: eId: $eventId, time: $time, obsId: $obsId"
+
+    override def equals(that: Any): Boolean = {
+      that match {
+        case that: EventInfo =>
+          // Ignore the event ID && time to allow comparing events.  Is this right?
+          this.source == that.source && this.obsId == that.obsId // && this.time == that.time
+        case _               => false
+      }
+    }
   }
 
   object EventInfo {

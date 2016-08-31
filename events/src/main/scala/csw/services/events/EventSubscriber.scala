@@ -16,9 +16,9 @@ import EventServiceImpl._
  * Adds the ability to an actor to subscribe to events from the event service.
  * The subscribed actor will receive messages of type Event for the given event prefixes.
  */
-abstract class EventSubscriber extends Actor with ActorLogging {
+abstract class EventSubscriber(settingsIn: Option[EventServiceSettings] = None) extends Actor with ActorLogging {
 
-  private val settings = EventServiceSettings(context.system)
+  private val settings = settingsIn.getOrElse(EventServiceSettings(context.system))
 
   private lazy val redis = context.actorOf(SubscribeActor.props(self, settings.redisHostname, settings.redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
@@ -30,6 +30,7 @@ abstract class EventSubscriber extends Actor with ActorLogging {
    * @param prefixes the top level keys for the events you want to subscribe to.
    */
   def subscribe(prefixes: String*): Unit = {
+    log.info(s"Subscribe to: $prefixes")
     val (patterns, channels) = prefixes.partition(_.endsWith("*"))
     if (patterns.nonEmpty) redis ! PSUBSCRIBE(patterns: _*)
     if (channels.nonEmpty) redis ! SUBSCRIBE(channels: _*)
