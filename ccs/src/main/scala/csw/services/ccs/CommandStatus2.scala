@@ -4,7 +4,7 @@ import csw.util.config.Configurations.SequenceConfig
 import csw.util.config.RunId
 
 
-sealed trait CommandStatus2
+
 
 
 object CommandStatus2 {
@@ -48,7 +48,7 @@ object CommandStatus2 {
       */
     //def name: String = this.getClass.getSimpleName.toLowerCase
 
-
+    sealed trait CommandStatus2
 
   /**
     * The command was valid when received, but is no longer valid because of itervening activities
@@ -58,7 +58,7 @@ object CommandStatus2 {
   /**
     * The command has completed successfully
     */
-  final case object Completedx extends CommandStatus2
+  final case object Completed extends CommandStatus2
 
   /**
     * The command is currently executing or has not yet started

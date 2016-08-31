@@ -30,14 +30,14 @@ class HcdSingleStatusMatcherActor(demand: DemandState, hcd: ActorRef, replyTo: A
       if (demand.prefix == current.prefix && matcher(demand, current)) {
         val set = results + current
         timer.cancel()
-        replyTo ! CommandStatus.Completed(runId)
+        replyTo ! CommandStatus2.Completed
         hcd ! PublisherActor.Unsubscribe
         context.stop(self)
       } else context.become(waiting(results))
 
     case `timeout` =>
       log.debug(s"received timeout")
-      replyTo ! CommandStatus.Error(runId, "Command timed out")
+      replyTo ! CommandStatus2.Error("Command timed out")
       hcd ! PublisherActor.Unsubscribe
       context.stop(self)
 

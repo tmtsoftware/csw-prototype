@@ -3,8 +3,9 @@ package csw.examples.vslice.assembly
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.examples.vslice.assembly.TromboneCommandHandler.{ExecResults, ExecSequential}
+import csw.examples.vslice.assembly.TromboneCommandHandler.ExecSequential
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.services.ccs.CommandStatus2.ExecResults
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, TestLocationService}

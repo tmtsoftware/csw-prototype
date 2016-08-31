@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.CommandStatus2._
 import csw.services.ccs.{CommandStatus2, HcdController, HcdSingleStatusMatcherActor}
 import csw.services.loc.Connection
@@ -19,7 +20,6 @@ import scala.concurrent.duration._
 class TromboneCommandHandler(val connections: Set[Connection], currentStateReceiver: ActorRef, replyTo: Option[ActorRef]) extends Actor with ActorLogging with TromboneStateHandler {
   import TromboneAssembly._
   import TromboneCommandHandler._
-  import TromboneHCD._
   import TromboneStateHandler._
 
   var moveCnt:Int = 0 // for testing
@@ -48,10 +48,10 @@ class TromboneCommandHandler(val connections: Set[Connection], currentStateRecei
       log.info(s"Starting: $sc")
       doStart(sc, tromboneHCD, Some(context.self))
 
-    case cs:NoLongerValid =>
-      log.info(s"Received complete for cmd")
+    case cs@NoLongerValid(issue) =>
+      log.info(s"Received complete for cmd: $issue + $cs" )
 
-    case x:CommandStatus2.Completedx =>
+    case CommandStatus2.Completed =>
       log.info("WTF")
 
       // Save record of sequential successes
