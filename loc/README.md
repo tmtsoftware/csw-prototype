@@ -19,10 +19,6 @@ This determines the primary IP address of the local host and sets some system va
 control which IP address is used. If you forget to call this method, there is a chance that 
 the wrong IP address will be advertised (there is often more than one).
 
-If you want to specify the IP address yourself, you can also call it like this:
-
-    LocationService.initInterface(hostnameOrIpAddress)
-
 IPv6 Addresses
 --------------
 
