@@ -39,9 +39,17 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
   // IF a dataum cs is found in the CurrentData then it's successful
   def datumCS() = CurrentState(datumCK)
 
+  // Creates a list of CurrentStates for testing
   val listOfPosStates:List[CurrentState] = ((0 to 500 by 10).map(moveCS).toList :+ CurrentState(datumCK)) ++ (510 to 1000 by 10).map(moveCS).toList
 
-  def writeStates(states: List[CurrentState], receiver: ActorRef, delay: Int = 5) = {
+  /**
+    * Writes the CurrentState list to the CurrentStateReceiver in ActorRef. There can be a delay between each one
+    * for more realism.
+    * @param states a List of CurrentState objects
+    * @param receiver an ActorRef to a created instance of CurrentStateReceiver
+    * @param delay a time in milliseconds between writes of CurrentStatus
+    */
+  def writeStates(states: List[CurrentState], receiver: ActorRef, delay: Int = 5):Unit = {
     val fakePublisher = TestProbe()
     receiver ! AddPublisher(fakePublisher.ref)
     states.foreach { s =>
@@ -49,28 +57,32 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       Thread.sleep(delay)
     }
     receiver ! RemovePublisher(fakePublisher.ref)
-    listOfPosStates
   }
 
-  def movingPosMatcher(demand: DemandState, current: CurrentState): Boolean =
-    demand.prefix == current.prefix && demand(posKey).head == current(posKey).head
-
+  // Creates a single matcher match actor
   def singleMatcher(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(10.seconds)):ActorRef = {
     val props = SingleStateMatcherActor.props(currentStateReceiver, timeout)
     val stateMatcherActor = system.actorOf(props)
     stateMatcherActor
   }
 
+  // Creates a multi matcher actor
   def multiMatcher(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(10.seconds)):ActorRef = {
     val props = MultiStateMatcherActor.props(currentStateReceiver, timeout)
     val stateMatcherActor = system.actorOf(props)
     stateMatcherActor
   }
 
+  /**
+    * Test Description: These tests test the various matcher actors
+    */
   describe("testing single item matcher") {
-    // Needed for future
+    // Needed for futures!
     implicit val timeout = Timeout(5.seconds)
 
+    /**
+      * Test Description: This is here to test that writeStates is working properly
+      */
     it("should allow setup with fake current states") {
       val sr = stateReceiver
 
@@ -155,7 +167,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val ds = DemandState(moveCK).add(posKey -> testPosition)
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(List(DemandMatcher(ds)))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
@@ -170,7 +182,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
     /**
       * TestDescription: This test creates a multi state matcher, feeds it a set of
       * fake CurrentStates and tests that it returns a Completed when it matches multiple current states
-      * in the same stream
+      * in the same stream. This is looking for two matches with the same prefix!
       */
     it("multi item match works with multi matcher") {
       import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
@@ -187,7 +199,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(List(DemandMatcher(ds2), DemandMatcher(ds)))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds2), DemandMatcher(ds))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
@@ -202,8 +214,8 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
     /**
       * TestDescription: This test creates a multi state matcher, feeds it a set of
-      * fake CurrentStates and tests that it returns a Completed when it matches multiple current states
-      * in the same stream
+      * fake CurrentStates and tests that it returns a Completed when it matches multiple matchers
+      * with different prefixes
       */
     it("multi item match works with multi matcher diffrent prefixes") {
       import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
@@ -217,7 +229,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(List(DemandMatcher(ds), PresenceMatcher(datumCK.prefix)))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds), PresenceMatcher(datumCK.prefix))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
@@ -249,7 +261,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(List(DemandMatcher(ds, true)))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds, withUnits = true))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 

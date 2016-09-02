@@ -9,27 +9,48 @@ import scala.concurrent.duration._
 
 object StateMatchers {
 
+  /**
+    * A StateMatcher provides a prefix and a check method that checks the CurrentState and returns
+    * a boolean if completion has occured or false in no completion
+    */
   trait StateMatcher {
     def prefix: String
     def check(current: CurrentState):Boolean
   }
 
+  /**
+    * The DemandMatcherAll checks for equality between the CurrentState and the DemandState.
+    * This is more inclusive than DemandMatcher and may not be used regularly
+    * @param demand a DemandState that will be tested for equality with each CurrentState
+    */
   case class DemandMatcherAll(demand: DemandState) extends StateMatcher {
     def prefix = demand.prefix
     def check(current: CurrentState): Boolean = demand.items.equals(current.items)
   }
 
-  case class DemandMatcher(demand: DemandState, withUnitsx: Boolean = false) extends StateMatcher {
+  /**
+    * The DemandMatcher checks the CurrentStatus for equality with the items in the DemandState.
+    * This version tests for equality so it may not work the best with floating point values.
+    * Note: If the withUnits flag is set, the equality check with also compare units. False is the default
+    * so normally units are ignored for this purpose.
+    * @param demand a DemandState that will provide the items for determining completion with the CurrentState
+    * @param withUnits when True, units are compared. When false, units are not compared. Default is false.
+    */
+  case class DemandMatcher(demand: DemandState, withUnits: Boolean = false) extends StateMatcher {
     import csw.util.config.Item
     def prefix = demand.prefix
     def check(current: CurrentState): Boolean = {
       demand.items.forall { di =>
         val foundItem:Option[Item[_]] = current.find(di)
-        foundItem.fold(false)(if (withUnitsx) _.equals(di) else _.values.equals(di.values))
+        foundItem.fold(false)(if(withUnits) _.equals(di) else _.values.equals(di.values))
       }
     }
   }
 
+  /**
+    * PresenceMatcher only checks for the existence of a CurrentState with a given prefix.
+    * @param prefix the prefix to match against the CurrentState
+    */
   case class PresenceMatcher(prefix: String) extends StateMatcher {
     def check(current: CurrentState) = true
   }
@@ -116,7 +137,7 @@ object StateMatchers {
 
     def receive: Receive = waiting
 
-    // This subscribes this 
+    // This subscribes this
     currentStateReceiver ! AddCurrentStateHandler(self)
 
     // Waiting for all variables to match, which is the case when the results set contains
@@ -138,7 +159,7 @@ object StateMatchers {
         // filter the matchers first on prefix and then on check function to get only matchers that succeed
         val matched = matchers.filter(_.prefix == current.prefix).filter(_.check(current))
         if (matched.nonEmpty) {
-          println("Matched")
+          log.debug("MultiStateMatcherActor matched")
           // Note that this accomodates the case when more than one matcher match on the same prefix!
           val newMatchers = matchers.diff(matched)
           if (newMatchers.isEmpty) {
@@ -170,16 +191,18 @@ object StateMatchers {
       * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
       */
     def props(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(60.seconds)): Props =
-    Props(classOf[MultiStateMatcherActor], currentStateReceiver, timeout)
+            Props(classOf[MultiStateMatcherActor], currentStateReceiver, timeout)
 
     /**
-      * Props used to create the HcdStatusMatcherActor actor.
+      * Props used to create the MultiStateMatcherActor actor.
       *
-      * @param matcher the function used to compare the demand and current states
+      * @param matcher the a list of StateMatcher instances used to compare the demand and current states
       */
-    //case class StartMatch(demands: List[DemandState], matcher: Matcher)
-
     case class StartMatch(matcher: List[StateMatcher])
+
+    object StartMatch {
+      def apply(matchers: StateMatcher*):StartMatch = StartMatch(matchers.toList)
+    }
 
   }
 
