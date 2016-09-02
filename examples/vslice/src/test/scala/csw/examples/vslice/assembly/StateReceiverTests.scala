@@ -2,7 +2,8 @@ package csw.examples.vslice.assembly
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import csw.examples.vslice.assembly.CurrentStateReceiver.{AddCurrentStateHandler, AddPublisher}
+import csw.services.ccs.CurrentStateReceiver
+import csw.services.ccs.CurrentStateReceiver.{AddCurrentStateHandler, AddPublisher}
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.StateVariable.CurrentState
 import org.scalatest._

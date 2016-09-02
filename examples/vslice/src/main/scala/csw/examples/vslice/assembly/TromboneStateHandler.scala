@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import csw.util.config._
 
 
@@ -26,7 +26,8 @@ trait TromboneStateHandler {
     * @return Akka Receive partial function
     */
   def stateReceive: Receive = {
-    case ts: TromboneState => tromboneState = ts
+    case ts: TromboneState =>
+      tromboneState = ts
   }
 
   /**

@@ -98,11 +98,22 @@ object Configurations {
      * Returns an Option with the item for the key if found, otherwise None
      *
      * @param key the Key to be used for lookup
-     * @return the item for the key, if foundx
+     * @return the item for the key, if found
      * @tparam S the Scala value type
      * @tparam I the item type for the Scala value S
      */
     def get[S, I <: Item[S]](key: Key[S, I]): Option[I] = getByKeyname[I](items, key.keyName)
+
+    /**
+      * Returns an Option with the item for the key if found, otherwise None. Access with keyname rather
+      * than Key
+      * @param keyName the keyname to be used for the lookup
+      * @tparam S the item for the key, if found
+      * @tparam I the Scala value type
+      * @return I the item type for Scala value S
+      */
+    def getByName[I <: Item[_]](keyName: String): Option[I] = getByKeyname[I](items, keyName)
+    def find[I <: Item[_]](item: I): Option[I] = getByKeyname[I](items, item.keyName)
 
     /**
      * Return the item associated with a Key rather than an Option
@@ -182,13 +193,13 @@ object Configurations {
       }
     }
 
-    // Function to find an item by keyname
+    // Function to find an item by keyname - made public to enable matchers
     private def getByKeyname[I](itemsIn: ConfigData, keyname: String): Option[I] =
       itemsIn.find(_.keyName == keyname).asInstanceOf[Option[I]]
 
     // Function to find an item by item
     private def getByItem[I](itemsIn: ConfigData, item: Item[_]): Option[I] =
-      itemsIn.find(_ == item).asInstanceOf[Option[I]]
+      itemsIn.find(_.equals(item)).asInstanceOf[Option[I]]
 
     /**
      * The subsystem for the config

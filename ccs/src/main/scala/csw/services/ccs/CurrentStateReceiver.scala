@@ -1,7 +1,6 @@
-package csw.examples.vslice.assembly
+package csw.services.ccs
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import csw.services.ccs.HcdController
 import csw.util.config.StateVariable.CurrentState
 
 /**
