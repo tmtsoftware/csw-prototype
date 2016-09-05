@@ -322,4 +322,18 @@ private[config] object JavaHelpers {
     }
   }
 
+  // ChoiceItem
+  def jvalue(item: ChoiceItem): Choice = item.values(0)
+
+  def jvalue(item: ChoiceItem, index: Int): Choice = item.values(index)
+
+  def jvalues(item: ChoiceItem): java.util.List[Choice] = item.values.map(i => i: Choice).asJava
+
+  def jget(item: ChoiceItem, index: Int): java.util.Optional[Choice] = item.get(index).map(i => i: Choice).asJava
+
+  def jset(key: ChoiceKey, v: java.util.List[Choice], units: Units): ChoiceItem = ChoiceItem(key.keyName, key.choices, v.asScala.toVector.map(i => i: Choice), units)
+
+  @varargs
+  def jset(key: ChoiceKey, v: Choice*) = ChoiceItem(key.keyName, key.choices, v.map(i => i: Choice).toVector, units = UnitsOfMeasure.NoUnits)
+
 }

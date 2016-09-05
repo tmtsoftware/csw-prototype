@@ -181,7 +181,7 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
-  // FloatItem
+  // DoubleItem
   public static DoubleKey DoubleKey(String name) {
     return new DoubleKey(name);
   }
@@ -891,6 +891,51 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
+
+  // XXX
+  // ChoiceItem
+  public static ChoiceKey ChoiceKey(String name, String... choices) {
+    return new ChoiceKey(name, Choices.from(choices));
+  }
+
+  public static Choice Choice(String s) {
+    return new Choice(s);
+  }
+
+  public static Choice jvalue(ChoiceItem item) {
+    return JavaHelpers.jvalue(item);
+  }
+
+  public static Choice jvalue(ChoiceItem item, int index) {
+    return JavaHelpers.jvalue(item, index);
+  }
+
+  public static List<Choice> jvalues(ChoiceItem item) {
+    return JavaHelpers.jvalues(item);
+  }
+
+  public static Optional<Choice> jget(ChoiceItem item, int index) {
+    return JavaHelpers.jget(item, index);
+  }
+
+  public static ChoiceItem jset(ChoiceKey key, java.util.List<Choice> v) {
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
+  }
+
+  public static ChoiceItem jset(ChoiceKey key, java.util.List<Choice> v, UnitsOfMeasure.Units units) {
+    return JavaHelpers.jset(key, v, units);
+  }
+
+  public static ChoiceItem jset(ChoiceKey key, Choice... v) {
+    return JavaHelpers.jset(key, v);
+  }
+
+  // XXX
+
+
+
+
+
   // ---------------- Configuration level
 
   public static SetupConfig SetupConfig(String name) {
@@ -944,7 +989,7 @@ public class JItems {
     return JavaHelpers.jget(sc, key, index);
   }
 
-  // I believe it's okay to do this annotation since J is a reasonably known type based on items
+  // I believe it's okay to do this annotation since I is a reasonably known type based on items
   @SafeVarargs
   public static <I extends Item<?>, T extends ConfigType<T>> T jadd(T sc, I... itemsIn) {
     List<I> ilist = Arrays.asList(itemsIn);
