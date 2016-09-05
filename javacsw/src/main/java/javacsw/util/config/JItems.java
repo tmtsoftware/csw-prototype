@@ -891,8 +891,6 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
-
-  // XXX
   // ChoiceItem
   public static ChoiceKey ChoiceKey(String name, String... choices) {
     return new ChoiceKey(name, Choices.from(choices));
@@ -930,16 +928,15 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
-  // XXX
-
-
-
-
 
   // ---------------- Configuration level
 
   public static SetupConfig SetupConfig(String name) {
     return new SetupConfig(name);
+  }
+
+  public static SetupConfig SetupConfig(ConfigKey key) {
+    return new SetupConfig(key, scala.collection.immutable.Nil.toSet());
   }
 
   public static ObserveConfig ObserveConfig(String name) {

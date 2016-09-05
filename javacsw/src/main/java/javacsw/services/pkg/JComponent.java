@@ -46,8 +46,7 @@ public class JComponent {
                                   LocationServiceUsage locationServiceUsage,
                                   Set<ConnectionType> registerAs,
                                   FiniteDuration rate) {
-        //return JComponentSup.hcdInfo(componentName, prefix, componentClassName, locationServiceUsage, registerAs, rate);
-      return null;
+        return JComponentSup.hcdInfo(componentName, prefix, componentClassName, locationServiceUsage, registerAs, rate);
     }
 
     /**
@@ -67,8 +66,7 @@ public class JComponent {
                                             LocationServiceUsage locationServiceUsage,
                                             Set<ConnectionType> registerAs,
                                             Set<Connection> connections) {
-        //return JComponentSup.assemblyInfo(componentName, prefix, componentClassName, locationServiceUsage, registerAs, connections);
-      return null;
+        return JComponentSup.assemblyInfo(componentName, prefix, componentClassName, locationServiceUsage, registerAs, connections);
     }
 
     /**
@@ -90,8 +88,7 @@ public class JComponent {
                                               FiniteDuration initialDelay,
                                               FiniteDuration creationDelay,
                                               FiniteDuration lifecycleDelay) {
-        //return JComponentSup.containerInfo(componentName, locationServiceUsage, registerAs, componentInfos, initialDelay, creationDelay, lifecycleDelay);
-      return null;
+        return JComponentSup.containerInfo(componentName, locationServiceUsage, registerAs, componentInfos, initialDelay, creationDelay, lifecycleDelay);
     }
 }
 

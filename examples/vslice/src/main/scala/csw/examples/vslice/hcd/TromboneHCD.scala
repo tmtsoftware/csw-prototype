@@ -41,6 +41,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   // Initialize values -- This causes an update to the listener
   implicit val timeout = Timeout(2.seconds)
   // The current axis position from the hardware axis, initialize to default value
+  // (XXX TODO FIXME: Do we need to block here?)
   var current = Await.result((tromboneAxis ? InitialState).mapTo[AxisUpdate], timeout.duration)
   var stats = Await.result((tromboneAxis ? GetStatistics).mapTo[AxisStatistics], timeout.duration)
 
@@ -55,6 +56,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   }
 
   // Required setup for Lifecycle in order to get messages
+  // XXX TODO: Do we need to send Initialize and Startup?
   supervisor ! Initialized
   supervisor ! Started
 
@@ -282,8 +284,7 @@ object TromboneHCDApp extends App {
   import TromboneHCD._
   import csw.examples.vslice.shared.TromboneData._
 
-  private def setup: Config = ContainerComponent.parseStringConfig(testConf)
-
+  val setup = ContainerComponent.parseStringConfig(testConf)
   val componentConf = setup.getConfig(s"container.components.$componentName")
   val testInfo = HcdInfo(componentName, trombonePrefix, componentClassName, DoNotRegister, Set(AkkaType), 1.second)
   val hcdInfo = parseHcd(s"$componentName", componentConf).getOrElse(testInfo)

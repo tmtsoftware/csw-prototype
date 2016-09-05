@@ -6,42 +6,87 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
+import akka.pattern.Patterns;
+import akka.util.Timeout;
+import com.typesafe.config.Config;
+import csw.examples.vsliceJava.shared.TromboneData;
 import csw.services.loc.ComponentType;
+import csw.services.loc.LocationService;
+import csw.services.pkg.ContainerComponent;
+import csw.services.pkg.LifecycleManager;
 import csw.services.pkg.Supervisor;
 import csw.util.config.*;
+import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.ConfigKey;
+import csw.util.config.StateVariable.CurrentState;
 import javacsw.services.loc.JComponentType;
-import javacsw.services.pkg.JHcdControllerWithLifecycleHandler;
-import javacsw.services.pkg.JLifecycleManager;
+import javacsw.services.loc.JLocationService;
+import javacsw.services.pkg.*;
+import javacsw.util.config.JUnitsOfMeasure;
 import scala.PartialFunction;
+import scala.concurrent.Await;
+import scala.concurrent.Future;
+import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 import scala.runtime.BoxedUnit;
 
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState;
+import static javacsw.services.loc.JConnectionType.AkkaType;
+import static javacsw.util.config.JItems.*;
+import static javacsw.util.config.JConfigDSL.*;
+import static javacsw.util.config.JUnitsOfMeasure.encoder;
 
+import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState;
+import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStatistics;
+import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisUpdate;
+import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisConfig;
+import csw.examples.vsliceJava.hcd.SingleAxisSimulator.InitialState;
+import csw.examples.vsliceJava.hcd.SingleAxisSimulator.GetStatistics;
+
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TMT Source Code: 6/20/16.
  */
+@SuppressWarnings("unused")
 public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   // Actor constructor: use the props() method to create the actor.
-  private TromboneHCD(final HcdInfo info, ActorRef supervisor) {
+  private TromboneHCD(final HcdInfo info, ActorRef supervisor) throws Exception {
     super(info);
+
     // Receive actor messages
     receive(initializingReceive());
 
-//    Supervisor.lifecycle(supervisor(), JLifecycleManager.Startup);
+    // Required setup for Lifecycle in order to get messages
+    // XXX TODO: Do we need to send Initialize and Startup?
+    Supervisor.lifecycle(supervisor(), JLifecycleManager.Initialize);
+    Supervisor.lifecycle(supervisor(), JLifecycleManager.Startup);
   }
 
-  @Override
-  public void process(Configurations.SetupConfig config) {
+  // Initialize axis from ConfigService
+  AxisConfig axisConfig = getAxisConfig();
 
-  }
+  // Create an axis for simulating trombone motion
+  ActorRef tromboneAxis = setupAxis(axisConfig);
+
+  // Initialize values -- This causes an update to the listener
+  Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+
+  // The current axis position from the hardware axis, initialize to default value
+  // (XXX TODO FIXME: Do we need to block here?)
+  AxisUpdate current = (AxisUpdate) Await.result(Patterns.ask(tromboneAxis, InitialState.instance, timeout), timeout.duration());
+  AxisStatistics stats = (AxisStatistics) Await.result(Patterns.ask(tromboneAxis, GetStatistics.instance, timeout), timeout.duration());
+
+  // Keep track of the last SetupConfig to be received from external
+  SetupConfig lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix);
 
   // This receive is used when executing a Home command
   PartialFunction<Object, BoxedUnit> initializingReceive() {
     return ReceiveBuilder
-      .match(Running.class, e -> {
+      .match(LifecycleManager.Running.class, e -> {
         // When Running is received, transition to running Receive
         context().become(runningReceive());
       })
@@ -49,66 +94,50 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
       .build();
   }
 
-//class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController {
-//
-//  import SingleAxisSimulator._
-//  import TromboneHCD._
-//
-//  // Receive actor methods
-//  def receive = initializingReceive
-//
-//  // Initialize axis from ConfigService
-//  val axisConfig = getAxisConfig
-//
-//  // Create an axis for simulating trombone motion
-//  val tromboneAxis: ActorRef = setupAxis(axisConfig)
-//
-//  // Initialize values -- This causes an update to the listener
-//  implicit val timeout = Timeout(2.seconds)
-//  // The current axis position from the hardware axis, initialize to default value
-//  var current = Await.result((tromboneAxis ? InitialState).mapTo[AxisUpdate], timeout.duration)
-//  var stats = Await.result((tromboneAxis ? GetStatistics).mapTo[AxisStatistics], timeout.duration)
-//
-//  // Keep track of the last SetupConfig to be received from external
-//  var lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix)
-//
-//  def initializingReceive: Receive = {
-//    case Running =>
-//      // When Running is received, transition to running Receive
-//      context.become(runningReceive)
-//    case x => log.error(s"Unexpected message in TromboneHCD:initializingReceive: $x")
-//  }
-//
-//  // Required setup for Lifecycle in order to get messages
-//  supervisor ! Initialized
-//  supervisor ! Started
-//
-//  // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
-//  def runningReceive = controllerReceive orElse runningReceive1
-//
-//  def runningReceive1 = runningReceivePF orElse runningReceive2
-//
-//  def runningReceive2 = lifecycleReceivePF orElse unhandledPF
-//
-//  def runningReceivePF: Receive = {
-//    case GetAxisStats =>
-//      tromboneAxis ! GetStatistics
-//
-//    case AxisStarted =>
-//    //println("Axis Started")
-//
-//    case GetAxisConfig =>
-//      val axisConfigState = defaultConfigState.madd(
-//        lowLimitKey -> axisConfig.lowLimit,
-//        lowUserKey -> axisConfig.lowUser,
-//        highUserKey -> axisConfig.highUser,
-//        highLimitKey -> axisConfig.highLimit,
-//        homeValueKey -> axisConfig.home,
-//        startValueKey -> axisConfig.startPosition,
-//        stepDelayMSKey -> axisConfig.stepDelayMS
-//      )
-//      notifySubscribers(axisConfigState)
-//
+  // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
+  PartialFunction<Object, BoxedUnit> runningReceive = defaultReceive().orElse(runningReceive1);
+
+  PartialFunction<Object, BoxedUnit> runningReceive1 = runningReceivePF.orElse(runningReceive2);
+
+  PartialFunction<Object, BoxedUnit> runningReceive2 = lifecycleReceivePF.orElse(unhandledPF);
+
+  PartialFunction<Object, BoxedUnit> runningReceivePF() {
+    return ReceiveBuilder
+      .matchEquals(TromboneEngineering.GetAxisStats, e -> {
+        tromboneAxis.tell(GetStatistics.instance, self());
+      })
+      .match(SingleAxisSimulator.AxisStarted.class, e -> {
+        // println("Axis Started")
+      })
+      .matchEquals(TromboneEngineering.GetAxisConfig, e -> {
+        CurrentState axisConfigState = jadd(defaultConfigState,
+          jset(lowLimitKey, axisConfig.lowLimit),
+          jset(lowUserKey, axisConfig.lowUser),
+          jset(highUserKey, axisConfig.highUser),
+          jset(highLimitKey, axisConfig.highLimit),
+          jset(homeValueKey, axisConfig.home),
+          jset(startValueKey, axisConfig.startPosition),
+          jset(stepDelayMSKey, axisConfig.stepDelayMS)
+        );
+        notifySubscribers(axisConfigState);
+      })
+      .match(SingleAxisSimulator.AxisUpdate.class, e -> {
+        //log.info(s"Axis Update: $au")
+        // Update actor state
+        current = e;
+        CurrentState tromboneAxisState = jadd(defaultAxisState,
+          jset(positionKey, e.current).withUnits(encoder),
+          jset(stateKey, Choice(e.state.toString())),
+          jset(inLowLimitKey, e.inLowLimit),
+          jset(inHighLimitKey, e.inHighLimit),
+          jset(inHomeKey, e.inHomed)
+        );
+        notifySubscribers(tromboneAxisState)
+      })
+      .matchAny(x -> log.warning("Unexpected message in TromboneHCD:initializingReceive: " + x))
+      .build();
+  }
+
 //    case au@AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
 //      //log.info(s"Axis Update: $au")
 //      // Update actor state
@@ -137,7 +166,7 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 //      )
 //      notifySubscribers(tromboneStats)
 //  }
-//
+
 //  def lifecycleReceivePF: Receive = {
 //    case Running =>
 //      log.info("Received running")
@@ -157,61 +186,64 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 //  def unhandledPF: Receive = {
 //    case x => log.error(s"Unexpected message in TromboneHCD:unhandledPF: $x")
 //  }
-//
-//  /**
-//    * @param sc the config received
-//    */
-//  protected def process(sc: SetupConfig): Unit = {
+
+  /**
+   * @param sc the config received
+   */
+  @Override
+  void process(SetupConfig sc) {
 //    import TromboneHCD._
-//
-//    log.debug(s"Trombone process received sc: $sc")
-//
-//    // Store the last received for diags
-//    lastReceivedSC = sc
-//
-//    sc.configKey match {
-//      case `axisMoveCK` =>
-//        tromboneAxis ! Move(sc(positionKey).head, diagFlag = true)
-//      case `axisDatumCK` =>
-//        log.info("Received Datum")
-//        tromboneAxis ! Datum
-//      case `axisHomeCK` =>
-//        tromboneAxis ! Home
-//      case `axisCancelCK` =>
-//        tromboneAxis ! CancelMove
-//    }
-//  }
-//
-//  def setupAxis(ac: AxisConfig): ActorRef = context.actorOf(SingleAxisSimulator.props(ac, Some(self)), "Test1")
-//
-//  // Utility functions
-//  def getAxisConfig: AxisConfig = {
-//    // Will be obtained from the
-//    val name = getConfigString("axis-config.axisName")
-//    val lowLimit = getConfigInt("axis-config.lowLimit")
-//    val lowUser = getConfigInt("axis-config.lowUser")
-//    val highUser = getConfigInt("axis-config.highUser")
-//    val highLimit = getConfigInt("axis-config.highLimit")
-//    val home = getConfigInt("axis-config.home")
-//    val startPosition = getConfigInt("axis-config.startPosition")
-//    val stepDelayMS = getConfigInt("axis-config.stepDelayMS")
-//    AxisConfig(name, lowLimit, lowUser, highUser, highLimit, home, startPosition, stepDelayMS)
-//  }
-//
-//  def getConfigString(name: String): String = context.system.settings.config.getString(s"csw.examples.Trombone.hcd.$name")
-//
-//  def getConfigInt(name: String): Int = context.system.settings.config.getInt(s"csw.examples.Trombone.hcd.$name")
-//
-//}
 
+    log.debug("Trombone process received sc: " + sc);
 
+    // Store the last received for diags
+    lastReceivedSC = sc;
+
+    sc.configKey match {
+      case `axisMoveCK` =>
+      tromboneAxis !Move(sc(positionKey).head, diagFlag = true)
+      case `axisDatumCK` =>
+      log.info("Received Datum")
+      tromboneAxis !Datum
+      case `axisHomeCK` =>
+      tromboneAxis !Home
+      case `axisCancelCK` =>
+      tromboneAxis !CancelMove
+    }
+  }
+
+  ActorRef setupAxis(AxisConfig ac) {
+    return context().actorOf(SingleAxisSimulator.props(ac, Optional.of(self())), "Test1");
+  }
+
+  // Utility functions
+  AxisConfig getAxisConfig() {
+    // Will be obtained from the
+    String name = getConfigString("axis-config.axisName");
+    int lowLimit = getConfigInt("axis-config.lowLimit");
+    int lowUser = getConfigInt("axis-config.lowUser");
+    int highUser = getConfigInt("axis-config.highUser");
+    int highLimit = getConfigInt("axis-config.highLimit");
+    int home = getConfigInt("axis-config.home");
+    int startPosition = getConfigInt("axis-config.startPosition");
+    int stepDelayMS = getConfigInt("axis-config.stepDelayMS");
+    return new AxisConfig(name, lowLimit, lowUser, highUser, highLimit, home, startPosition, stepDelayMS);
+  }
+
+  String getConfigString(String name) {
+    return context().system().settings().config().getString("csw.examples.Trombone.hcd." + name);
+  }
+
+  int getConfigInt(String name) {
+    return context().system().settings().config().getInt("csw.examples.Trombone.hcd." + name);
+  }
 
   // --- Static defs ---
 
   /**
    * Used to create the TromboneHCD actor
    *
-   * @param info the HCD's prefix, used in configurations
+   * @param info       the HCD's prefix, used in configurations
    * @param supervisor the supervisor for the HCD
    * @return the Props needed to create the actor
    */
@@ -227,116 +259,114 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   }
 
   // HCD Info
-  String componentName = "lgsTromboneHCD";
-  ComponentType componentType = JComponentType.HCD;
-  String componentClassName = "csw.examples.vslice.hcd.TromboneHCD";
-  String trombonePrefix = "nfiraos.ncc.tromboneHCD";
+  public static final String componentName = "lgsTromboneHCD";
+  public static final ComponentType componentType = JComponentType.HCD;
+  public static final String componentClassName = "csw.examples.vslice.hcd.TromboneHCD";
+  public static final String trombonePrefix = "nfiraos.ncc.tromboneHCD";
 
-  String tromboneAxisName = "tromboneAxis";
+  public static final String tromboneAxisName = "tromboneAxis";
 
-  String axisStatePrefix = trombonePrefix + ".axis1State";
-  Configurations.ConfigKey axisStateCK = Configurations.ConfigKey.stringToConfigKey(axisStatePrefix);
-  StringKey axisNameKey = new StringKey("axisName");
-  Choice AXIS_IDLE = new Choice(AxisState.AXIS_IDLE.toString());
-  Choice AXIS_MOVING = new Choice(AxisState.AXIS_MOVING.toString());
-  Choice AXIS_ERROR = new Choice(AxisState.AXIS_ERROR.toString());
-  ChoiceKey stateKey = new ChoiceKey("axisState",
+  public static final String axisStatePrefix = trombonePrefix + ".axis1State";
+  public static final Configurations.ConfigKey axisStateCK = Configurations.ConfigKey.stringToConfigKey(axisStatePrefix);
+  public static final StringKey axisNameKey = new StringKey("axisName");
+  public static final Choice AXIS_IDLE = new Choice(AxisState.AXIS_IDLE.toString());
+  public static final Choice AXIS_MOVING = new Choice(AxisState.AXIS_MOVING.toString());
+  public static final Choice AXIS_ERROR = new Choice(AxisState.AXIS_ERROR.toString());
+  public static final ChoiceKey stateKey = new ChoiceKey("axisState",
     Choices.from(AXIS_IDLE.toString(), AXIS_MOVING.toString(), AXIS_ERROR.toString()));
-  IntKey positionKey = new IntKey("position");
-  BooleanKey inLowLimitKey = new BooleanKey("lowLimit");
-  BooleanKey inHighLimitKey = new BooleanKey("highLimit");
-  BooleanKey inHomeKey = new BooleanKey("homed");
+  public static final IntKey positionKey = new IntKey("position");
+  public static final BooleanKey inLowLimitKey = new BooleanKey("lowLimit");
+  public static final BooleanKey inHighLimitKey = new BooleanKey("highLimit");
+  public static final BooleanKey inHomeKey = new BooleanKey("homed");
 
-//  val defaultAxisState = CurrentState(axisStateCK).madd(
-//    axisNameKey -> tromboneAxisName,
-//    stateKey -> AXIS_IDLE,
-//    positionKey -> 0 withUnits encoder,
-//    inLowLimitKey -> false,
-//    inHighLimitKey -> false,
-//    inHomeKey -> false
-//  )
-//
-//  val axisStatsPrefix = s"$trombonePrefix.axisStats"
-//  val axisStatsCK: ConfigKey = axisStatsPrefix
-//  val datumCountKey = IntKey("initCount")
-//  val moveCountKey = IntKey("moveCount")
-//  val homeCountKey = IntKey("homeCount")
-//  val limitCountKey = IntKey("limitCount")
-//  val successCountKey = IntKey("successCount")
-//  val failureCountKey = IntKey("failureCount")
-//  val cancelCountKey = IntKey("cancelCount")
-//  val defaultStatsState = CurrentState(axisStatsCK).madd(
-//    axisNameKey -> tromboneAxisName,
-//    datumCountKey -> 0,
-//    moveCountKey -> 0,
-//    homeCountKey -> 0,
-//    limitCountKey -> 0,
-//    successCountKey -> 0,
-//    failureCountKey -> 0,
-//    cancelCountKey -> 0
-//  )
-//
-//  val axisConfigPrefix = s"$trombonePrefix.axisConfig"
-//  val axisConfigCK: ConfigKey = axisConfigPrefix
-//  // axisNameKey
-//  val lowLimitKey = IntKey("lowLimit")
-//  val lowUserKey = IntKey("lowUser")
-//  val highUserKey = IntKey("highUser")
-//  val highLimitKey = IntKey("highLimit")
-//  val homeValueKey = IntKey("homeValue")
-//  val startValueKey = IntKey("startValue")
-//  val stepDelayMSKey = IntKey("stepDelayMS")
-//  // No full default current state because it is determined at runtime
-//  val defaultConfigState = CurrentState(axisConfigCK).madd(
-//    axisNameKey -> tromboneAxisName
-//  )
-//
-//  val axisMovePrefix = s"$trombonePrefix.move"
-//  val axisMoveCK: ConfigKey = axisMovePrefix
-//  def positionSC(value: Int):SetupConfig = SetupConfig(axisMoveCK).add(positionKey -> value withUnits encoder)
-//
-//  val axisDatumPrefix = s"$trombonePrefix.datum"
-//  val axisDatumCK: ConfigKey = axisDatumPrefix
-//  val datumSC = SetupConfig(axisDatumCK)
-//
-//  val axisHomePrefix = s"$trombonePrefix.home"
-//  val axisHomeCK: ConfigKey = axisHomePrefix
-//  val homeSC = SetupConfig(axisHomeCK)
-//
-//  val axisCancelPrefix = s"$trombonePrefix.cancel"
-//  val axisCancelCK: ConfigKey = axisCancelPrefix
-//  val cancelSC = SetupConfig(axisCancelCK)
-//
-//  // Testing messages for TromboneHCD
-//  trait TromboneEngineering
-//
-//  case object GetAxisStats extends TromboneEngineering
-//
-//  case object GetAxisConfig extends TromboneEngineering
-//}
-//
-///**
-//  * Starts Assembly as a standalone application.
-//  */
-//object TromboneHCDApp extends App {
-//
-//  import TromboneHCD._
-//  import csw.examples.vslice.shared.TromboneData._
-//
-//  private def setup: Config = ContainerComponent.parseStringConfig(testConf)
-//
-//  val componentConf = setup.getConfig(s"container.components.$componentName")
-//  val testInfo = HcdInfo(componentName, trombonePrefix, componentClassName, DoNotRegister, Set(AkkaType), 1.second)
-//  val hcdInfo = parseHcd(s"$componentName", componentConf).getOrElse(testInfo)
-//
-//  LocationService.initInterface()
-//
-//  println("Starting TromboneHCD: " + hcdInfo)
-//
-//  val supervisor = Supervisor(hcdInfo)
-//}
+  public static final CurrentState defaultAxisState = cs(axisStatePrefix,
+    jset(axisNameKey, tromboneAxisName),
+    jset(stateKey, AXIS_IDLE),
+    jset(positionKey, 0).withUnits(encoder),
+    jset(inLowLimitKey, false),
+    jset(inHighLimitKey, false),
+    jset(inHomeKey, false));
 
+  public static final String axisStatsPrefix = trombonePrefix + ".axisStats";
+  public static final ConfigKey axisStatsCK = ConfigKey.stringToConfigKey(axisStatsPrefix);
+  public static final IntKey datumCountKey = IntKey("initCount");
+  public static final IntKey moveCountKey = IntKey("moveCount");
+  public static final IntKey homeCountKey = IntKey("homeCount");
+  public static final IntKey limitCountKey = IntKey("limitCount");
+  public static final IntKey successCountKey = IntKey("successCount");
+  public static final IntKey failureCountKey = IntKey("failureCount");
+  public static final IntKey cancelCountKey = IntKey("cancelCount");
+  public static final CurrentState defaultStatsState = cs(axisStatsPrefix,
+    jset(axisNameKey, tromboneAxisName),
+    jset(datumCountKey, 0),
+    jset(moveCountKey, 0),
+    jset(homeCountKey, 0),
+    jset(limitCountKey, 0),
+    jset(successCountKey, 0),
+    jset(failureCountKey, 0),
+    jset(cancelCountKey, 0));
+
+  public static final String axisConfigPrefix = trombonePrefix + ".axisConfig";
+  public static final ConfigKey axisConfigCK = ConfigKey.stringToConfigKey(axisConfigPrefix);
+  // axisNameKey
+  public static final IntKey lowLimitKey = IntKey("lowLimit");
+  public static final IntKey lowUserKey = IntKey("lowUser");
+  public static final IntKey highUserKey = IntKey("highUser");
+  public static final IntKey highLimitKey = IntKey("highLimit");
+  public static final IntKey homeValueKey = IntKey("homeValue");
+  public static final IntKey startValueKey = IntKey("startValue");
+  public static final IntKey stepDelayMSKey = IntKey("stepDelayMS");
+  // No full default current state because it is determined at runtime
+  public static final CurrentState defaultConfigState = cs(axisConfigPrefix,
+    jset(axisNameKey, tromboneAxisName)
+  );
+
+  public static final String axisMovePrefix = trombonePrefix + ".move";
+  public static final ConfigKey axisMoveCK = ConfigKey.stringToConfigKey(axisMovePrefix);
+
+  public static SetupConfig positionSC(int value) {
+    return sc(axisMovePrefix, jset(positionKey, value).withUnits(encoder));
+  }
+
+  public static final String axisDatumPrefix = trombonePrefix + ".datum";
+  public static final ConfigKey axisDatumCK = ConfigKey.stringToConfigKey(axisDatumPrefix);
+  public static final SetupConfig datumSC = SetupConfig(axisDatumCK);
+
+  public static final String axisHomePrefix = trombonePrefix + ".home";
+  public static final ConfigKey axisHomeCK = ConfigKey.stringToConfigKey(axisHomePrefix);
+  public static final SetupConfig homeSC = SetupConfig(axisHomeCK);
+
+  public static final String axisCancelPrefix = trombonePrefix + ".cancel";
+  public static final ConfigKey axisCancelCK = ConfigKey.stringToConfigKey(axisCancelPrefix);
+  public static final SetupConfig cancelSC = SetupConfig(axisCancelCK);
+
+  // Testing messages for TromboneHCD
+  enum TromboneEngineering {
+    GetAxisStats,
+    GetAxisConfig
+  }
+
+  /**
+   * Starts Assembly as a standalone application.
+   */
+  public static void main(String[] argv) {
+
+    Config setup = ContainerComponent.parseStringConfig(TromboneData.testConf);
+    Config componentConf = setup.getConfig("container.components." + componentName);
+
+    HcdInfo testInfo = JComponentSup.hcdInfo(componentName, trombonePrefix, componentClassName, JComponent.DoNotRegister,
+      Collections.singleton(AkkaType), FiniteDuration.create(1, "second"));
+    HcdInfo hcdInfo = JContainerComponent.parseHcd(componentName, componentConf).orElse(testInfo);
+
+    LocationService.initInterface();
+
+    System.out.println("Starting TromboneHCD: " + hcdInfo);
+
+    Supervisor.create(hcdInfo);
+  }
 }
+
+
 
 
 
