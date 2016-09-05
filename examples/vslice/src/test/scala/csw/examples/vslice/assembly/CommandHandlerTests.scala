@@ -6,6 +6,8 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.TromboneCommandHandler.ExecSequential
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.services.ccs.CommandStatus2.ExecResults
+import csw.services.ccs.CurrentStateReceiver
+import csw.services.ccs.CurrentStateReceiver.AddPublisher
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, TestLocationService}
@@ -66,6 +68,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
       //info("Running")
 
       val currentStateReceiver = system.actorOf(CurrentStateReceiver.props)
+      currentStateReceiver ! AddPublisher(tromboneHCD)
 
 
       val ch: TestActorRef[TromboneCommandHandler] = TestActorRef(TromboneCommandHandler.props(Set(hcdConnection), currentStateReceiver, Some(fakeAssembly.ref)))
@@ -81,6 +84,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
 
       val msg = fakeAssembly.expectMsgClass(35.seconds, classOf[ExecResults])
       println("Final: " + msg)
+
     }
 
     it("should allow a move") {
@@ -96,7 +100,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
       //info("Running")
 
       val currentStateReceiver = system.actorOf(CurrentStateReceiver.props)
-
+      currentStateReceiver ! AddPublisher(tromboneHCD)
 
       val ch: TestActorRef[TromboneCommandHandler] = TestActorRef(TromboneCommandHandler.props(Set(hcdConnection), currentStateReceiver, Some(fakeAssembly.ref)))
 
@@ -123,7 +127,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
       //info("Running")
 
       val currentStateReceiver = system.actorOf(CurrentStateReceiver.props)
-
+      currentStateReceiver ! AddPublisher(tromboneHCD)
 
       val ch: TestActorRef[TromboneCommandHandler] = TestActorRef(TromboneCommandHandler.props(Set(hcdConnection), currentStateReceiver, Some(fakeAssembly.ref)))
 

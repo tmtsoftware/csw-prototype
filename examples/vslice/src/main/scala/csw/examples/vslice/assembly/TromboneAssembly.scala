@@ -1,13 +1,13 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{ActorLogging, ActorRef, Props}
 
 import scala.language.postfixOps
 import com.typesafe.config.Config
 import csw.examples.vslice.assembly.CalculationActor.CalculationConfig
 import csw.examples.vslice.assembly.TromboneControl.TromboneControlConfig
 import csw.services.ccs.Validation.{Invalid, OtherIssue, Valid, Validation}
-import csw.services.ccs.{AssemblyController2, CommandStatus}
+import csw.services.ccs.{AssemblyController2, CommandStatus, CurrentStateReceiver}
 import csw.services.events.EventServiceSettings
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentType, Connection, LocationService, TestLocationService}

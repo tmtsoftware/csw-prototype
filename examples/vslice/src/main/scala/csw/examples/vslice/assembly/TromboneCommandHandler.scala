@@ -1,16 +1,19 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.CommandStatus2._
-import csw.services.ccs.{CommandStatus2, HcdController, HcdSingleStatusMatcherActor}
+import csw.services.ccs.SingleStateMatcherActor.StartMatch
+import csw.services.ccs.{CommandStatus2, HcdController, SingleStateMatcherActor}
 import csw.services.loc.Connection
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 import csw.util.config.StateVariable._
-import csw.util.config.{RunId, StateVariable}
+
+import scala.concurrent.Future
+import akka.pattern.{ask, pipe}
+import akka.util.Timeout
 
 import scala.concurrent.duration._
 
@@ -51,11 +54,10 @@ class TromboneCommandHandler(val connections: Set[Connection], currentStateRecei
     case cs@NoLongerValid(issue) =>
       log.info(s"Received complete for cmd: $issue + $cs" )
 
-    case CommandStatus2.Completed =>
-      log.info("WTF")
+    case cs@CommandStatus2.Completed =>
 
       // Save record of sequential successes
-      val cstatusOut = cstatusIn //.:+(configsIn.head, cs)
+      val cstatusOut = cstatusIn :+(configsIn.head, cs)
       val configsOut = configsIn.tail
       if (configsOut.isEmpty) {
         // If there are no more in the sequence, return the completion for all and be done
@@ -64,6 +66,7 @@ class TromboneCommandHandler(val connections: Set[Connection], currentStateRecei
       } else {
         // If there are more, start the next one and pass the completion status to the next execution
         context.become(st(sca, configsOut, tromboneHCD, cstatusOut))
+        println("Doing Start")
         self ! Start(configsOut.head)
       }
 
@@ -78,10 +81,10 @@ class TromboneCommandHandler(val connections: Set[Connection], currentStateRecei
   def doStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]): Unit = {
 
     sc.configKey match {
-      case `initCK` => initStart(sc, tromboneHCD, Some(context.self))
-      case `datumCK` => datumStart(sc, tromboneHCD, Some(context.self))
+      case `initCK` => initStart(sc, tromboneHCD, Some(self))
+      case `datumCK` => datumStart(sc, tromboneHCD, Some(self))
       case `stopCK` => stopStart(sc)
-      case `moveCK` => moveStart(sc, tromboneHCD, Some(context.self))
+      case `moveCK` => moveStart(sc, tromboneHCD, Some(self))
       case `positionCK` => positionStart(sc)
       case `setElevationCK` => setElevationStart(sc)
       case `setAngleCK` => setAngleStart(sc)
@@ -90,48 +93,66 @@ class TromboneCommandHandler(val connections: Set[Connection], currentStateRecei
     }
   }
 
-
   def movingMatcher(demand: DemandState, current: CurrentState): Boolean =
     demand.prefix == current.prefix && current(stateKey).head == TromboneHCD.AXIS_IDLE
 
   def movingPosMatcher(demand: DemandState, current: CurrentState): Boolean =
     demand.prefix == current.prefix && current(stateKey).head == TromboneHCD.AXIS_IDLE && demand(positionKey).head == current(positionKey).head
 
-  def matchDemandState(demandState: DemandState, hcd: ActorRef, replyTo: Option[ActorRef], runId: RunId,
-                        timeout: Timeout = Timeout(60.seconds),
-                        matcher: Matcher = StateVariable.defaultMatcher): Unit = {
-    var stateMatcherActor: Option[ActorRef] = None
+  def matchDemandState(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(60.seconds)): ActorRef = {
     // Cancel any previous state matching, so that no timeout errors are sent to the replyTo actor
-    replyTo.foreach { actorRef =>
-      // Wait for the demand states to match the current states, then reply to the sender with the command status
-      val props = HcdSingleStatusMatcherActor.props(demandState, hcd, actorRef, runId, timeout, matcher)
-      stateMatcherActor = Some(context.actorOf(props))
-    }
+    // Wait for the demand states to match the current states, then reply to the sender with the command status
+    val props = SingleStateMatcherActor.props(currentStateReceiver, timeout)
+    val stateMatcherActor = context.actorOf(props)
+    stateMatcherActor
   }
 
   def initStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]):Unit = {
+    import context.dispatcher
+
     val ds = DemandState(axisStateCK)
-    matchDemandState(ds, tromboneHCD.get, Some(context.self), RunId("test"), 5.seconds, movingMatcher)
+    implicit val timeout = Timeout(5.seconds)
+    //matchDemandState(ds, tromboneHCD.get, Some(context.self), RunId("test"), 5.seconds, movingMatcher)
+    val x = matchDemandState(currentStateReceiver, 10.seconds)
+    val f:Future[CommandStatus2] = (x ? StartMatch(ds, movingMatcher)).mapTo[CommandStatus2]
+    replyTo.foreach(f.pipeTo(_))
   }
   def datumStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]) = {
+    import context.dispatcher
+
     if (cmd == cmdUninitialized) println("Invalid")
     val ds = DemandState(axisStateCK)
     log.debug(s"Forwarding $sc to $tromboneHCD")
     state(cmd = cmdBusy, move=moveIndexing)
     tromboneHCD.foreach(_ ! HcdController.Submit(SetupConfig(axisDatumCK)))
-    matchDemandState(ds, tromboneHCD.get, replyTo, RunId("test"), 10.seconds, movingMatcher)
+    implicit val timeout = Timeout(5.seconds)
+    val x = matchDemandState(currentStateReceiver, 10.seconds)
+    val f:Future[CommandStatus2] = (x ? StartMatch(ds, movingMatcher)).mapTo[CommandStatus2]
+    replyTo.foreach(f.pipeTo(_))
+    state(cmd = cmdReady, move=moveIndexed)
   }
-  def stopStart(sc: SetupConfig) = ???
+
+
 
   def moveStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]) = {
+    import context.dispatcher
+
     val newPosition = sc(stagePositionKey).head.toInt
     val ds = DemandState(axisStateCK).add(positionKey -> newPosition)
     log.info("DS: " + ds)
     log.debug(s"Forwarding $sc to $tromboneHCD")
+
+    state(cmd = cmdBusy, move=moveMoving)
     tromboneHCD.foreach(_ ! HcdController.Submit(SetupConfig(axisMoveCK).add(positionKey -> newPosition)))
-    matchDemandState(ds, tromboneHCD.get, replyTo, RunId(s"test$moveCnt"), 10.seconds, movingPosMatcher)
+    implicit val timeout = Timeout(5.seconds)
+    val x = matchDemandState(currentStateReceiver, 10.seconds)
+    val f:Future[CommandStatus2] = (x ? StartMatch(ds, movingPosMatcher)).mapTo[CommandStatus2]
+    replyTo.foreach(f.pipeTo(_))
+    state(cmd = cmdReady, move=moveIndexed)
     moveCnt += 1
   }
+
+  def stopStart(sc: SetupConfig) = ???
   def positionStart(sc: SetupConfig) = ???
   def setElevationStart(sc: SetupConfig) = ???
   def setAngleStart(sc: SetupConfig) = ???
