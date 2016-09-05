@@ -13,6 +13,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * Tests the Java API to the config classes
@@ -44,6 +45,7 @@ public class JItemTests {
     assertNotEquals(k1, k2);
   }
 
+  @SuppressWarnings("ConstantConditions")
   @Test
   public void testBooleanItem() {
     // should allow setting from boolean
@@ -72,8 +74,8 @@ public class JItemTests {
 
   @Test
   public void testByteArrayItem() {
-    byte[] a1 = {1,2,3,4,5};
-    byte[] a2 = {10,20,30,40,50};
+    byte[] a1 = {1, 2, 3, 4, 5};
+    byte[] a2 = {10, 20, 30, 40, 50};
 
     ByteArray ba1 = ByteArray(a1);
     ByteArray ba2 = ByteArray(a2);
@@ -124,8 +126,8 @@ public class JItemTests {
   @Test
   public void testByteMatrixItem() {
 
-    byte[][] m1 = {{1,2,3},{4,5,6},{7,8,9}};
-    byte[][] m2 = {{1,2,3,4,5},{10,20,30,40,50}};
+    byte[][] m1 = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    byte[][] m2 = {{1, 2, 3, 4, 5}, {10, 20, 30, 40, 50}};
 
     ByteMatrix bm1 = ByteMatrix(m1);
     ByteMatrix bm2 = ByteMatrix(m2);
@@ -222,8 +224,8 @@ public class JItemTests {
 
   @Test
   public void testDoubleArrayKey() {
-    double[] a1 = {1.,2.,3.,4.,5.};
-    double[] a2 = {10.,20.,30.,40.,50.};
+    double[] a1 = {1., 2., 3., 4., 5.};
+    double[] a2 = {10., 20., 30., 40., 50.};
 
     DoubleArray da1 = DoubleArray(a1);
     DoubleArray da2 = DoubleArray(a2);
@@ -272,8 +274,8 @@ public class JItemTests {
 
   @Test
   public void testDoubleMatrixKey() {
-    double[][] m1 = {{1.,2.,3.},{4.,5.,6.},{7.,8.,9.}};
-    double[][] m2 = {{1.,2.,3.,4.,5.},{10.,20.,30.,40.,50.}};
+    double[][] m1 = {{1., 2., 3.}, {4., 5., 6.}, {7., 8., 9.}};
+    double[][] m2 = {{1., 2., 3., 4., 5.}, {10., 20., 30., 40., 50.}};
 
     DoubleMatrix dm1 = DoubleMatrix(m1);
     DoubleMatrix dm2 = DoubleMatrix(m2);
@@ -350,8 +352,8 @@ public class JItemTests {
 
   @Test
   public void testFloatArrayKey() {
-    float[] a1 = {1.f,2.f,3.f,4.f,5.f};
-    float[] a2 = {10.f,20.f,30.f,40.f,50.f};
+    float[] a1 = {1.f, 2.f, 3.f, 4.f, 5.f};
+    float[] a2 = {10.f, 20.f, 30.f, 40.f, 50.f};
 
     FloatArray fa1 = FloatArray(a1);
     FloatArray fa2 = FloatArray(a2);
@@ -402,8 +404,8 @@ public class JItemTests {
   @Test
   public void testFloatMatrixKey() {
 
-    float[][] m1 = {{1.f,2.f,3.f},{4.f,5.f,6.f},{7.f,8.f,9.f}};
-    float[][] m2 = {{1.f,2.f,3.f,4.f,5.f},{10.f,20.f,30.f,40.f,50.f}};
+    float[][] m1 = {{1.f, 2.f, 3.f}, {4.f, 5.f, 6.f}, {7.f, 8.f, 9.f}};
+    float[][] m2 = {{1.f, 2.f, 3.f, 4.f, 5.f}, {10.f, 20.f, 30.f, 40.f, 50.f}};
 
     FloatMatrix fm1 = FloatMatrix(m1);
     FloatMatrix fm2 = FloatMatrix(m2);
@@ -475,7 +477,7 @@ public class JItemTests {
     assertTrue(v.equals(1));
 
     v = jvalue(a, 0);
-    assert(v == 1);
+    assert (v == 1);
     v = jvalue(a, 1);
     assertTrue(v == 2);
     v = jvalue(a, 2);
@@ -496,8 +498,8 @@ public class JItemTests {
 
   @Test
   public void testIntArrayKey() {
-    int[] a1 = {1,2,3,4,5};
-    int[] a2 = {10,20,30,40,50};
+    int[] a1 = {1, 2, 3, 4, 5};
+    int[] a2 = {10, 20, 30, 40, 50};
 
     IntArray ia1 = IntArray(a1);
     IntArray ia2 = IntArray(a2);
@@ -549,8 +551,8 @@ public class JItemTests {
   @Test
   public void testIntMatrixKey() {
 
-    int[][] m1 = {{1,2,3},{4,5,6},{7,8,9}};
-    int[][] m2 = {{1,2,3,4,5},{10,20,30,40,50}};
+    int[][] m1 = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    int[][] m2 = {{1, 2, 3, 4, 5}, {10, 20, 30, 40, 50}};
 
     IntMatrix im1 = IntMatrix(m1);
     IntMatrix im2 = IntMatrix(m2);
@@ -623,8 +625,8 @@ public class JItemTests {
 
   @Test
   public void testLongArrayKey() {
-    long[] a1 = {1,2,3,4,5};
-    long[] a2 = {10,20,30,40,50};
+    long[] a1 = {1, 2, 3, 4, 5};
+    long[] a2 = {10, 20, 30, 40, 50};
 
     LongArray la1 = LongArray(a1);
     LongArray la2 = LongArray(a2);
@@ -675,8 +677,8 @@ public class JItemTests {
   @Test
   public void testLongMatrixKey() {
 
-    long[][] m1 = {{1,2,3},{4,5,6},{7,8,9}};
-    long[][] m2 = {{1,2,3,4,5},{10,20,30,40,50}};
+    long[][] m1 = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    long[][] m2 = {{1, 2, 3, 4, 5}, {10, 20, 30, 40, 50}};
 
     LongMatrix lm1 = LongMatrix(m1);
     LongMatrix lm2 = LongMatrix(m2);
@@ -734,7 +736,7 @@ public class JItemTests {
     assertTrue(jget(si, 0).get() == sval);
 
     // Test with list, withUnits
-    List<Short> sval2 = Arrays.asList((short)12, (short)24);
+    List<Short> sval2 = Arrays.asList((short) 12, (short) 24);
     ShortItem si2 = jset(ik, sval2).withUnits(JUnitsOfMeasure.degrees);
     assertSame(si2.units(), JUnitsOfMeasure.degrees);
     assertEquals(jvalue(si2, 1), sval2.get(1));
@@ -749,8 +751,8 @@ public class JItemTests {
 
   @Test
   public void testShortArrayKey() {
-    short[] a1 = {1,2,3,4,5};
-    short[] a2 = {10,20,30,40,50};
+    short[] a1 = {1, 2, 3, 4, 5};
+    short[] a2 = {10, 20, 30, 40, 50};
 
     ShortArray sa1 = ShortArray(a1);
     ShortArray sa2 = ShortArray(a2);
@@ -800,8 +802,8 @@ public class JItemTests {
   @Test
   public void testShortMatrixKey() {
 
-    short[][] m1 = {{1,2,3},{4,5,6},{7,8,9}};
-    short[][] m2 = {{1,2,3,4,5},{10,20,30,40,50}};
+    short[][] m1 = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    short[][] m2 = {{1, 2, 3, 4, 5}, {10, 20, 30, 40, 50}};
 
     ShortMatrix sm1 = ShortMatrix(m1);
     ShortMatrix sm2 = ShortMatrix(m2);
@@ -865,7 +867,7 @@ public class JItemTests {
     Boolean exFlag = false;
     try {
       String val3 = jvalue(si, 3);
-    } catch(IndexOutOfBoundsException ex) {
+    } catch (IndexOutOfBoundsException ex) {
       exFlag = true;
     }
     assertTrue(exFlag);
@@ -888,5 +890,53 @@ public class JItemTests {
     assertEquals(jvalues(b), Arrays.asList("100", "200"));
   }
 
+
+  @Test
+  public void testChoiceItem() {
+    // should allow creating with Choices object
+    {
+      // Choices as object with String input
+      Choices choices = Choices.from("A", "B", "C");
+
+      ChoiceKey ci1 = new ChoiceKey("mode", choices);
+      assertEquals(ci1.choices(), choices);
+      assertEquals(ci1.keyName(), "mode");
+
+      ChoiceItem ci = jset(ci1, Choice("A"));
+      assertEquals(jvalue(ci), Choice("A"));
+      // Check that non-choice fails
+      assertThatThrownBy(() -> jset(ci1, Choice("D"))).isInstanceOf(AssertionError.class);
+    }
+
+    // should allow creating with varargs of Strings
+    {
+      // Create directly with keyname, and Choice names
+      ChoiceKey ci2 = ChoiceKey("test", "A", "B");
+      assertEquals(ci2.choices(), Choices.from("A", "B"));
+      assertEquals(ci2.keyName(), "test");
+
+      ChoiceItem ci = jset(ci2, Choice("A"));
+      assertEquals(jvalue(ci), Choice("A"));
+      // Check that non-choice fails
+      assertThatThrownBy(() -> jset(ci2, Choice("C"))).isInstanceOf(AssertionError.class);
+    }
+
+    // should allow creation with individual Choice items
+    {
+      // Now create with individual Choice items
+      Choice uninitialized = Choice("uninitialized");
+      Choice ready = Choice("ready");
+      Choice busy = Choice("busy");
+      Choice continuous = Choice("continuous");
+      Choice error = Choice("error");
+
+      ChoiceKey cmd = new ChoiceKey("cmd", Choices.fromChoices(uninitialized, ready, busy, continuous, error));
+      assertEquals(cmd.choices(), Choices.fromChoices(uninitialized, ready, busy, continuous, error));
+
+      // setting values
+      ChoiceItem ci = jset(cmd, ready);
+      assertEquals(jvalue(ci), ready);
+    }
+  }
 }
 
