@@ -2,7 +2,9 @@ package csw.services.ts
 
 import java.time._
 
-import akka.actor._
+import akka.actor.{AbstractActor, _}
+
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 /**
  * TMT Prototype CSW Time Service
@@ -87,6 +89,17 @@ object TimeService {
    */
   val ZoneIdOfTMTLocation: ZoneId = ZoneId.of("US/Hawaii")
 
+  // This converts java.time data into Akka FiniteDuration
+  // Assumes startTime is in the future
+  private def toStartDuration(startTime: LocalTime): FiniteDuration = {
+    val now = LocalTime.now.toNanoOfDay
+    val t1 = startTime.toNanoOfDay
+    val futureTimeNano = math.max(t1 - now, 0L)
+    FiniteDuration(futureTimeNano, NANOSECONDS)
+  }
+
+
+
   /**
    * TimeServiceSchedule provides a component actor with timed messages
    * <p>
@@ -102,15 +115,6 @@ object TimeService {
     import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
     implicit val ec = context.system.dispatcher
-
-    // This converts java.time data into Akka FiniteDuration
-    // Assumes startTime is in the future
-    private def toStartDuration(startTime: LocalTime): FiniteDuration = {
-      val now = LocalTime.now.toNanoOfDay
-      val t1 = startTime.toNanoOfDay
-      val futureTimeNano = math.max(t1 - now, 0L)
-      FiniteDuration(futureTimeNano, NANOSECONDS)
-    }
 
     /**
      * Schedule a message to be sent once to an actor at a future time.
@@ -148,7 +152,13 @@ object TimeService {
 }
 
 /**
- * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]]
+ * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]].
+  * This version is based on [[UntypedActor]]. See [[AbstractTimeServiceScheduler]]
+  * for an alternate version based on [[AbstractActor]].
  */
 abstract class JavaTimeServiceScheduler extends UntypedActor with TimeService.TimeServiceScheduler
 
+/**
+  * An alternate version of a Java TimeServiceScheduler for use with Akka Java8 lambda syntax
+  */
+abstract class AbstractTimeServiceScheduler extends AbstractActor with TimeService.TimeServiceScheduler

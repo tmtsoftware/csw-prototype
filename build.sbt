@@ -221,3 +221,12 @@ lazy val vslice = Project(id = "VerticalSlice", base = file("examples/vslice"))
     compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaTest, specs2, akkaTestKit)
   ).dependsOn(pkg, cs, ccs, loc, ts, events, util)
+
+// EndToEnd Example project Java version
+lazy val vsliceJava = Project(id = "VerticalSliceJava", base = file("examples/vsliceJava"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(packageSettings("VerticalSliceJava", "Vertical Slice Java Example", "More complicated example showing CSW Java features"): _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor, akkaRemote, akkaHttp) ++
+      test(akkaTestKit, junit, junitInterface, scalaJava8Compat)
+  ).dependsOn(javacsw)
