@@ -936,7 +936,7 @@ public class JItems {
   }
 
   public static SetupConfig SetupConfig(ConfigKey key) {
-    return new SetupConfig(key, scala.collection.immutable.Nil.toSet());
+    return new SetupConfig(key, new scala.collection.immutable.HashSet<>());
   }
 
   public static ObserveConfig ObserveConfig(String name) {

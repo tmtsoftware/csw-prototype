@@ -1,31 +1,73 @@
 package csw.examples.vsliceJava.hcd;
 
-//import akka.actor.{ActorRef, ActorSystem, PoisonPill}
-//import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-//
-//import scala.concurrent.duration._
-//
-///**
-//  * TMT Source Code: 7/19/16.
-//  */
-//class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) with ImplicitSender
-//  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
-//
-//  override def afterAll = TestKit.shutdownActorSystem(system)
-//
-//  def expectLLMoveMsgs(diagFlag: Boolean = false): Vector[MotionWorkerMsgs] = {
-//    // Get AxisStarted
-//    var allMsgs:Vector[MotionWorkerMsgs] = Vector(expectMsg(Start))
-//    // Receive updates until axis idle then get the last one
-//    val moveMsgs = receiveWhile(5.seconds) {
-//      case t@Tick(current) => t
-//    }
-//    val endMsg = expectMsgClass(classOf[End]) // last one
-//    allMsgs =  allMsgs ++ moveMsgs :+ endMsg
-//    if (diagFlag) info(s"LLMoveMsgs: $allMsgs")
-//    allMsgs
-//  }
-//
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.testkit.JavaTestKit;
+import akka.util.Timeout;
+import csw.services.loc.LocationService;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
+import csw.examples.vsliceJava.hcd.MotionWorker.MotionWorkerMsgs;
+
+import java.util.Collections;
+import java.util.Vector;
+import java.util.concurrent.TimeUnit;
+
+import static javacsw.util.config.JUnitsOfMeasure.seconds;
+
+public class SingleAxisSimulatorTests {
+  private static ActorSystem system;
+  Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));
+
+  @BeforeClass
+  public static void setup() {
+    LocationService.initInterface();
+    system = ActorSystem.create();
+  }
+
+  @AfterClass
+  public static void teardown() {
+    JavaTestKit.shutdownActorSystem(system);
+    system = null;
+  }
+
+  Vector<MotionWorkerMsgs> expectLLMoveMsgs(boolean diagFlag) {
+    Vector<MotionWorkerMsgs> allMsgs = new Vector<>();
+    new JavaTestKit(system) {{
+      // Get AxisStarted
+      allMsgs.add(expectMsgEquals(MotionWorker.Start.instance));
+      // Receive updates until axis idle then get the last one
+      final MotionWorkerMsgs[] moveMsgs =
+        new ReceiveWhile<MotionWorker.Tick>(MotionWorker.Tick.class, duration("5 second")) {
+          protected MotionWorker.Tick match(Object in) {
+            if (in instanceof MotionWorker.Tick) {
+              return (MotionWorker.Tick)in;
+            } else {
+              throw noMatch();
+            }
+          }
+        }.get(); // this extracts the received messages
+
+      MotionWorkerMsgs endMsg = expectMsgClass(MotionWorker.End.class); // last one
+      Collections.addAll(allMsgs, moveMsgs);
+      allMsgs.add(endMsg);
+
+      if (diagFlag) System.out.println("LLMoveMsgs: " + allMsgs);
+    }};
+    return allMsgs;
+  }
+
+
+
+  @Test
+  public void xxx() throws Exception {
+
+  }
+
+}
+
 //  def expectMoveMsgs(diagFlag: Boolean = false): Seq[AxisUpdate] = {
 //    // Get AxisStarted
 //    expectMsg(AxisStarted)

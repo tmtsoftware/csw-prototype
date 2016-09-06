@@ -7,7 +7,7 @@ import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 
 import scala.util.{Failure, Success}
 
-class    Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorRef]) extends Actor with ActorLogging {
+class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorRef]) extends Actor with ActorLogging {
 
   import scala.concurrent.duration._
   import SupervisorExternal._

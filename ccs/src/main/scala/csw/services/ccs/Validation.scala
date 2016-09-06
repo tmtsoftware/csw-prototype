@@ -1,10 +1,9 @@
 package csw.services.ccs
 
 /**
-  * TMT Source Code: 8/25/16.
-  */
+ * TMT Source Code: 8/25/16.
+ */
 object Validation {
-
 
   sealed trait ValidationIssue { def reason: String }
   final case class MissingKeyIssue(reason: String) extends ValidationIssue
@@ -18,19 +17,19 @@ object Validation {
   final case class OtherIssue(reason: String) extends ValidationIssue
 
   /**
-    * Base trait for the results of validating incoming configs
-    */
+   * Base trait for the results of validating incoming configs
+   */
   trait Validation
 
   /**
-    * Indicates a valid input config
-    */
+   * Indicates a valid input config
+   */
   case object Valid extends Validation
 
   /**
-    * Indicates an invalid input config
-    *
-    */
+   * Indicates an invalid input config
+   *
+   */
   case class Invalid(issue: ValidationIssue) extends Validation
 
 }

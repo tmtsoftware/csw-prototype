@@ -98,8 +98,6 @@ object TimeService {
     FiniteDuration(futureTimeNano, NANOSECONDS)
   }
 
-
-
   /**
    * TimeServiceSchedule provides a component actor with timed messages
    * <p>
@@ -153,12 +151,12 @@ object TimeService {
 
 /**
  * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]].
-  * This version is based on [[UntypedActor]]. See [[AbstractTimeServiceScheduler]]
-  * for an alternate version based on [[AbstractActor]].
+ * This version is based on [[UntypedActor]]. See [[AbstractTimeServiceScheduler]]
+ * for an alternate version based on [[AbstractActor]].
  */
 abstract class JavaTimeServiceScheduler extends UntypedActor with TimeService.TimeServiceScheduler
 
 /**
-  * An alternate version of a Java TimeServiceScheduler for use with Akka Java8 lambda syntax
-  */
+ * An alternate version of a Java TimeServiceScheduler for use with Akka Java8 lambda syntax
+ */
 abstract class AbstractTimeServiceScheduler extends AbstractActor with TimeService.TimeServiceScheduler

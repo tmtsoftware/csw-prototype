@@ -17,6 +17,16 @@ object Configurations {
    */
   case class ConfigKey(subsystem: Subsystem, prefix: String) {
     override def toString = s"[$subsystem, $prefix]"
+
+    /**
+     * Creates a ConfigKey from the given string
+     *
+     * @return a ConfigKey object parsed for the subsystem and prefix
+     */
+    def this(prefix: String) {
+      this(ConfigKey.subsystem(prefix), prefix)
+    }
+
   }
 
   /**
@@ -30,12 +40,12 @@ object Configurations {
      *
      * @return a ConfigKey object parsed for the subsystem and prefix
      */
-    implicit def stringToConfigKey(prefix: String): ConfigKey = {
-      assert(prefix != null)
-      ConfigKey(subsystem(prefix), prefix)
-    }
+    implicit def stringToConfigKey(prefix: String): ConfigKey = new ConfigKey(prefix)
 
-    private def subsystem(keyText: String): Subsystem = Subsystem.lookup(keyText.splitAt(keyText.indexOf(SEPARATOR))._1).getOrElse(Subsystem.BAD)
+    private def subsystem(keyText: String): Subsystem = {
+      assert(keyText != null)
+      Subsystem.lookup(keyText.splitAt(keyText.indexOf(SEPARATOR))._1).getOrElse(Subsystem.BAD)
+    }
   }
 
   type ConfigData = Set[Item[_]]

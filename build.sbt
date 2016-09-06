@@ -214,7 +214,7 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
   .dependsOn(pkg, ts, hcdExample)
 
 // EndToEnd Example project
-lazy val vslice = Project(id = "VerticalSlice", base = file("examples/vslice"))
+lazy val vslice = Project(id = "vslice", base = file("examples/vslice"))
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("VerticalSlice", "Vertical Slice Example", "More complicated example showing CSW features"): _*)
   .settings(libraryDependencies ++=
@@ -223,7 +223,7 @@ lazy val vslice = Project(id = "VerticalSlice", base = file("examples/vslice"))
   ).dependsOn(pkg, cs, ccs, loc, ts, events, util)
 
 // EndToEnd Example project Java version
-lazy val vsliceJava = Project(id = "VerticalSliceJava", base = file("examples/vsliceJava"))
+lazy val vsliceJava = Project(id = "vsliceJava", base = file("examples/vsliceJava"))
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("VerticalSliceJava", "Vertical Slice Java Example", "More complicated example showing CSW Java features"): _*)
   .settings(libraryDependencies ++=

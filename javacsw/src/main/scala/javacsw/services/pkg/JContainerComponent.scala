@@ -8,8 +8,8 @@ import csw.services.pkg.ContainerComponent
 import scala.compat.java8.OptionConverters._
 
 /**
-  * A Java API to the ContainerComponent scala class.
-  */
+ * A Java API to the ContainerComponent scala class.
+ */
 object JContainerComponent {
 
   def parseHcd(name: String, conf: Config): Optional[HcdInfo] = {

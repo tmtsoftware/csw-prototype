@@ -4,30 +4,30 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.util.config.StateVariable.CurrentState
 
 /**
-  * This class distributes CurrentState events within the single ActorSystem of a component allowing "handlers"
-  * to access a single stream of CurrentState events.
-  *
-  * Example:
-  * <pre>
-  *   import CurrentStateReceiver._
-  *
-  *   val stateReceiver = system.actorOf(CurrentStateReceiver.props)
-  *
-  *   // Add an HCD publisher
-  *   stateReceiver ! AddPublisher(hcdActorRef)
-  *
-  *   // An actor wishing to receive CurrentState uses
-  *   stateReceiver ! AddCurrentStateHandler(handlerActorRef)
-  *
-  *   // Later, it can stop receiving CurrentState using
-  *   stateReceiver ! RemoveCurrentStateHandler(handlerActorRef)
-  * </pre>
-  *
-  */
-class CurrentStateReceiver()  extends Actor with ActorLogging {
+ * This class distributes CurrentState events within the single ActorSystem of a component allowing "handlers"
+ * to access a single stream of CurrentState events.
+ *
+ * Example:
+ * <pre>
+ *   import CurrentStateReceiver._
+ *
+ *   val stateReceiver = system.actorOf(CurrentStateReceiver.props)
+ *
+ *   // Add an HCD publisher
+ *   stateReceiver ! AddPublisher(hcdActorRef)
+ *
+ *   // An actor wishing to receive CurrentState uses
+ *   stateReceiver ! AddCurrentStateHandler(handlerActorRef)
+ *
+ *   // Later, it can stop receiving CurrentState using
+ *   stateReceiver ! RemoveCurrentStateHandler(handlerActorRef)
+ * </pre>
+ *
+ */
+class CurrentStateReceiver() extends Actor with ActorLogging {
   import CurrentStateReceiver._
 
-  def receive:Receive = {
+  def receive: Receive = {
     case AddPublisher(publisher) =>
       publisher ! HcdController.Subscribe
     case RemovePublisher(publisher) =>
@@ -36,7 +36,7 @@ class CurrentStateReceiver()  extends Actor with ActorLogging {
       context.system.eventStream.subscribe(handler, classOf[CurrentState])
     case RemoveCurrentStateHandler(handler: ActorRef) =>
       context.system.eventStream.unsubscribe(handler)
-    case cs:CurrentState =>
+    case cs: CurrentState =>
       context.system.eventStream.publish(cs)
     case x => log.error(s"StateReceive received an unknown message: $x")
   }
