@@ -4,8 +4,8 @@ import csw.util.config.UnitsOfMeasure.{degrees, meters, seconds}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
-  * TMT Source Code: 7/7/16.
-  */
+ * TMT Source Code: 7/7/16.
+ */
 class ItemsTests extends FunSpec with ShouldMatchers {
 
   private val s1: String = "encoder"
@@ -889,7 +889,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val ci = ci1.set("A")
       ci.head should equal(Choice("A"))
       // Check that non-choice fails
-      an [AssertionError] should be thrownBy(ci1.set("D"))
+      an[AssertionError] should be thrownBy (ci1.set("D"))
     }
 
     it("should allow creating with varargs of Strings") {
@@ -901,7 +901,7 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       val ci = ci2.set("A")
       ci.head should equal(Choice("A"))
       // Check that non-choice fails
-      an [AssertionError] should be thrownBy(ci2.set("C"))
+      an[AssertionError] should be thrownBy (ci2.set("C"))
     }
 
     it("should allow creation with individual Choice items") {

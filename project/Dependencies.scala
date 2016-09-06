@@ -65,6 +65,7 @@ object Dependencies {
   val junit = "com.novocode" % "junit-interface" % "0.11" // Two-clause BSD-style license
   val junitInterface = "com.novocode" % "junit-interface" % "0.11"
   val specs2 = "org.specs2" %% "specs2" % "3.7" // MIT-style
+  val assertj = "org.assertj" % "assertj-core" % "3.5.2" // ApacheV2
 
   // REPL dependencies
   val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion // Scala License: BSD 3-Clause
