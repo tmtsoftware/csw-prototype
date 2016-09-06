@@ -72,6 +72,13 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
 
   }
 
+  // Short-cut to forward a messaage to the optional replyTo actor
+  void update(Optional<ActorRef> replyTo, Object msg) {
+    if (replyTo.isPresent()) {
+      replyTo.get().tell(msg, self());
+    }
+  }
+
   // Actor state while working (after receiving the initial PublisherInfo message)
   PartialFunction<Object, BoxedUnit> idleReceive() {
     return ReceiveBuilder
@@ -256,24 +263,24 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     AXIS_ERROR,
   }
 
-  interface AxisRequest {
+  public interface AxisRequest {
   }
 
-  static class Home implements AxisRequest {
+  public static class Home implements AxisRequest {
     public static final Home instance = new Home();
 
     private Home() {
     }
   }
 
-  static class Datum implements AxisRequest {
+  public static class Datum implements AxisRequest {
     public static final Datum instance = new Datum();
 
     private Datum() {
     }
   }
 
-  static class Move implements AxisRequest {
+  public static class Move implements AxisRequest {
     int position;
     boolean diagFlag;
 
@@ -284,7 +291,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   @SuppressWarnings("unused")
-  static class CancelMove implements AxisRequest {
+  public static class CancelMove implements AxisRequest {
     public static final CancelMove instance = new CancelMove();
 
     private CancelMove() {
@@ -292,7 +299,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   @SuppressWarnings("unused")
-  static class GetStatistics implements AxisRequest {
+  public static class GetStatistics implements AxisRequest {
     public static final GetStatistics instance = new GetStatistics();
 
     private GetStatistics() {
@@ -300,10 +307,10 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
 
-  interface AxisResponse {
+  public interface AxisResponse {
   }
 
-  static class AxisStarted implements AxisResponse {
+  public static class AxisStarted implements AxisResponse {
     static final AxisStarted instance = new AxisStarted();
 
     private AxisStarted() {
@@ -311,14 +318,14 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   @SuppressWarnings("unused")
-  static class AxisFinished implements AxisResponse {
+  public static class AxisFinished implements AxisResponse {
     static final AxisFinished instance = new AxisFinished();
 
     private AxisFinished() {
     }
   }
 
-  static class AxisUpdate implements AxisResponse {
+  public static class AxisUpdate implements AxisResponse {
     String axisName;
     AxisState state;
     int current;
@@ -337,7 +344,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   @SuppressWarnings("unused")
-  static class AxisFailure implements AxisResponse {
+  public static class AxisFailure implements AxisResponse {
     String reason;
 
     public AxisFailure(String reason) {
@@ -345,7 +352,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     }
   }
 
-  static class AxisStatistics implements AxisResponse {
+  public static class AxisStatistics implements AxisResponse {
     String axisName;
     int initCount;
     int moveCount;
@@ -381,17 +388,17 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   // Internal
-  interface InternalMessages {
+  public interface InternalMessages {
   }
 
-  static class DatumComplete implements InternalMessages {
+  public static class DatumComplete implements InternalMessages {
     static final DatumComplete instance = new DatumComplete();
 
     private DatumComplete() {
     }
   }
 
-  static class HomeComplete implements InternalMessages {
+  public static class HomeComplete implements InternalMessages {
     int position;
 
     public HomeComplete(int position) {
@@ -399,7 +406,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     }
   }
 
-  static class MoveComplete implements InternalMessages {
+  public static class MoveComplete implements InternalMessages {
     int position;
 
     public MoveComplete(int position) {
@@ -407,7 +414,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     }
   }
 
-  static class InitialState implements InternalMessages {
+  public static class InitialState implements InternalMessages {
     static final InitialState instance = new InitialState();
 
     private InitialState() {
@@ -415,7 +422,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   @SuppressWarnings("unused")
-  static class InitialStatistics implements InternalMessages {
+  public static class InitialStatistics implements InternalMessages {
     static final InitialStatistics instance = new InitialStatistics();
 
     private InitialStatistics() {
@@ -424,28 +431,21 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
 
   // Helper functions in object for testing
   // limitMove clamps the request value to the hard limits
-  static int limitMove(AxisConfig ac, int request) {
+  public static int limitMove(AxisConfig ac, int request) {
     return Math.max(Math.min(request, ac.highLimit), ac.lowLimit);
   }
 
   // Check to see if position is in the "limit" zones
-  static boolean isHighLimit(AxisConfig ac, int current) {
+  public static boolean isHighLimit(AxisConfig ac, int current) {
     return current >= ac.highUser;
   }
 
-  static boolean isLowLimit(AxisConfig ac, int current) {
+  public static boolean isLowLimit(AxisConfig ac, int current) {
     return current <= ac.lowUser;
   }
 
-  static boolean isHomed(AxisConfig ac, int current) {
+  public static boolean isHomed(AxisConfig ac, int current) {
     return current == ac.home;
-  }
-
-  // Short-cut to forward a messaage to the optional replyTo actor
-  void update(Optional<ActorRef> replyTo, Object msg) {
-    if (replyTo.isPresent()) {
-      replyTo.get().tell(msg, self());
-    }
   }
 }
 
@@ -548,17 +548,17 @@ class MotionWorker extends AbstractTimeServiceScheduler {
     });
   }
 
-  interface MotionWorkerMsgs {
+  public interface MotionWorkerMsgs {
   }
 
-  static class Start implements MotionWorkerMsgs {
+  public static class Start implements MotionWorkerMsgs {
     public final static Start instance = new Start();
 
     private Start() {
     }
   }
 
-  static class End implements MotionWorkerMsgs {
+  public static class End implements MotionWorkerMsgs {
     int finalpos;
 
     public End(int finalpos) {
@@ -566,7 +566,7 @@ class MotionWorker extends AbstractTimeServiceScheduler {
     }
   }
 
-  static class Tick implements MotionWorkerMsgs {
+  public static class Tick implements MotionWorkerMsgs {
     int current;
 
     public Tick(int current) {
@@ -574,7 +574,7 @@ class MotionWorker extends AbstractTimeServiceScheduler {
     }
   }
 
-  static class MoveUpdate implements MotionWorkerMsgs {
+  public static class MoveUpdate implements MotionWorkerMsgs {
     int destination;
 
     public MoveUpdate(int destination) {
@@ -582,14 +582,14 @@ class MotionWorker extends AbstractTimeServiceScheduler {
     }
   }
 
-  static class Cancel implements MotionWorkerMsgs {
+  public static class Cancel implements MotionWorkerMsgs {
     public final static Cancel instance = new Cancel();
 
     private Cancel() {
     }
   }
 
-  int calcNumSteps(int start, int end) {
+  public static int calcNumSteps(int start, int end) {
     int diff = Math.abs(start - end);
     if (diff <= 5) return 1;
     if (diff <= 20) return 2;
@@ -597,15 +597,15 @@ class MotionWorker extends AbstractTimeServiceScheduler {
     return 10;
   }
 
-  int calcStepSize(int current, int destination, int steps) {
+  public static int calcStepSize(int current, int destination, int steps) {
     return (destination - current) / steps;
   }
 
-  int calcDistance(int current, int destination) {
+  public static int calcDistance(int current, int destination) {
     return Math.abs(current - destination);
   }
 
-  boolean lastStep(int current, int destination, int stepSize) {
+  public static boolean lastStep(int current, int destination, int stepSize) {
     return calcDistance(current, destination) <= Math.abs(stepSize);
   }
 }

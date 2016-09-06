@@ -2,20 +2,25 @@ package csw.examples.vsliceJava.hcd;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.testkit.JavaTestKit;
+import akka.testkit.TestActorRef;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
-import csw.examples.vsliceJava.hcd.MotionWorker.MotionWorkerMsgs;
+import csw.examples.vsliceJava.hcd.SingleAxisSimulator.*;
 
 import java.util.Collections;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 
-import static javacsw.util.config.JUnitsOfMeasure.seconds;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_MOVING;
+import static org.junit.Assert.*;
+import static csw.examples.vsliceJava.hcd.MotionWorker.*;
+
 
 public class SingleAxisSimulatorTests {
   private static ActorSystem system;
@@ -33,122 +38,175 @@ public class SingleAxisSimulatorTests {
     system = null;
   }
 
-  Vector<MotionWorkerMsgs> expectLLMoveMsgs(boolean diagFlag) {
-    Vector<MotionWorkerMsgs> allMsgs = new Vector<>();
+//  Vector<MotionWorkerMsgs> expectLLMoveMsgs(boolean diagFlag) {
+//    Vector<MotionWorkerMsgs> allMsgs = new Vector<>();
+//    new JavaTestKit(system) {{
+//      // Get AxisStarted
+//      allMsgs.add(expectMsgEquals(Start.instance));
+//      // Receive updates until axis idle then get the last one
+//      final MotionWorkerMsgs[] moveMsgs =
+//        new ReceiveWhile<Tick>(Tick.class, duration("5 second")) {
+//          protected Tick match(Object in) {
+//            if (in instanceof Tick) {
+//              return (Tick) in;
+//            } else {
+//              throw noMatch();
+//            }
+//          }
+//        }.get(); // this extracts the received messages
+//
+//      MotionWorkerMsgs endMsg = expectMsgClass(End.class); // last one
+//      Collections.addAll(allMsgs, moveMsgs);
+//      allMsgs.add(endMsg);
+//
+//      if (diagFlag) System.out.println("LLMoveMsgs: " + allMsgs);
+//    }};
+//    return allMsgs;
+//  }
+Vector<MotionWorkerMsgs> expectLLMoveMsgs(JavaTestKit testKit, boolean diagFlag) {
+  Vector<MotionWorkerMsgs> allMsgs = new Vector<>();
+//  new JavaTestKit(system) {{
+    // Get AxisStarted
+    allMsgs.add(testKit.expectMsgEquals(Start.instance));
+    // Receive updates until axis idle then get the last one
+    final MotionWorkerMsgs[] moveMsgs =
+      new JavaTestKit.ReceiveWhile<Tick>(Tick.class, JavaTestKit.duration("5 second")) {
+        protected Tick match(Object in) {
+          if (in instanceof Tick) {
+            return (Tick) in;
+          } else {
+            throw noMatch();
+          }
+        }
+      }.get(); // this extracts the received messages
+
+    MotionWorkerMsgs endMsg = expectMsgClass(End.class); // last one
+    Collections.addAll(allMsgs, moveMsgs);
+    allMsgs.add(endMsg);
+
+    if (diagFlag) System.out.println("LLMoveMsgs: " + allMsgs);
+//  }};
+  return allMsgs;
+}
+
+
+  Vector<AxisUpdate> expectMoveMsgs(boolean diagFlag) {
+    Vector<AxisUpdate> allMsgs = new Vector<>();
     new JavaTestKit(system) {{
       // Get AxisStarted
-      allMsgs.add(expectMsgEquals(MotionWorker.Start.instance));
+      expectMsgEquals(Start.instance);
       // Receive updates until axis idle then get the last one
-      final MotionWorkerMsgs[] moveMsgs =
-        new ReceiveWhile<MotionWorker.Tick>(MotionWorker.Tick.class, duration("5 second")) {
-          protected MotionWorker.Tick match(Object in) {
-            if (in instanceof MotionWorker.Tick) {
-              return (MotionWorker.Tick)in;
+      final AxisUpdate[] msgs =
+        new ReceiveWhile<AxisUpdate>(AxisUpdate.class, duration("5 second")) {
+          protected AxisUpdate match(Object in) {
+            if (in instanceof AxisUpdate && ((AxisUpdate) in).state == AXIS_MOVING) {
+              return (AxisUpdate) in;
             } else {
               throw noMatch();
             }
           }
         }.get(); // this extracts the received messages
 
-      MotionWorkerMsgs endMsg = expectMsgClass(MotionWorker.End.class); // last one
-      Collections.addAll(allMsgs, moveMsgs);
-      allMsgs.add(endMsg);
+      AxisUpdate fmsg = expectMsgClass(AxisUpdate.class); // last one
+      Collections.addAll(allMsgs, msgs);
+      allMsgs.add(fmsg);
 
-      if (diagFlag) System.out.println("LLMoveMsgs: " + allMsgs);
+      if (diagFlag) System.out.println("MoveMsgs: " + allMsgs);
+    }};
+    return allMsgs;
+  }
+
+  Vector<AxisResponse> expectMoveMsgsWithDest(int target, boolean diagFlag) {
+    Vector<AxisResponse> allMsgs = new Vector<>();
+    new JavaTestKit(system) {{
+      // Receive updates until axis idle then get the last one
+      final AxisResponse[] msgs =
+        new ReceiveWhile<AxisResponse>(AxisResponse.class, duration("5 second")) {
+          protected AxisResponse match(Object in) {
+            if (in instanceof AxisStarted || in instanceof AxisUpdate && ((AxisUpdate) in).current != target) {
+              return (AxisResponse) in;
+            } else {
+              throw noMatch();
+            }
+          }
+        }.get(); // this extracts the received messages
+
+      AxisUpdate fmsg1 = expectMsgClass(AxisUpdate.class); // last one when target == current
+      AxisUpdate fmsg2 = expectMsgClass(AxisUpdate.class); // then the End event with the IDLE
+      Collections.addAll(allMsgs, msgs);
+      allMsgs.add(fmsg1);
+      allMsgs.add(fmsg2);
+
+      if (diagFlag) System.out.println("MoveMsgsWithDest: " + allMsgs);
     }};
     return allMsgs;
   }
 
 
-
-  @Test
-  public void xxx() throws Exception {
-
+  // Calculates the time to wait for messages with a little extra
+  FiniteDuration calcDelay(int numberSteps, int delayInSseconds) {
+    return FiniteDuration.create((numberSteps + 1) * delayInSseconds * 1000, TimeUnit.SECONDS);
   }
 
-}
+  @Test
+  public void TestingStepsCalc() throws Exception {
+    // should calculate different number of steps based on the size of the move
+    assertEquals(calcNumSteps(100, 105), 1);
+    assertEquals(calcNumSteps(100, 115), 2);
+    assertEquals(calcNumSteps(100, 500), 5);
+    assertEquals(calcNumSteps(100, 900), 10);
 
-//  def expectMoveMsgs(diagFlag: Boolean = false): Seq[AxisUpdate] = {
-//    // Get AxisStarted
-//    expectMsg(AxisStarted)
-//    // Receive updates until axis idle then get the last one
-//    val msgs = receiveWhile(5.seconds) {
-//      case m@AxisUpdate(_, axisState, current, _, _, _) if axisState == AXIS_MOVING => m
-//    }
-//    val fmsg = expectMsgClass(classOf[AxisUpdate]) // last one
-//    val allmsgs = msgs :+ fmsg
-//    if (diagFlag) info(s"MoveMsgs: $allmsgs")
-//    allmsgs
-//  }
-//
-//  def expectMoveMsgsWithDest(target: Int, diagFlag: Boolean = false): Seq[AxisResponse] = {
-//    // Receive updates until axis idle then get the last one
-//    val msgs  = receiveWhile(5.seconds) {
-//      case as@AxisStarted => as
-//      case m@AxisUpdate(_, currentState, current, _, _, _) if current != target => m
-//    }
-//    val fmsg1 = expectMsgClass(classOf[AxisUpdate]) // last one when target == current
-//    val fmsg2 = expectMsgClass(classOf[AxisUpdate]) // then the End event with the IDLE
-//    val allmsgs = msgs :+ fmsg1 :+ fmsg2
-//    if (diagFlag) info(s"MoveMsgs: $allmsgs")
-//    allmsgs
-//  }
-//
-//  // Calculates the time to wait for messages with a little extra
-//  def calcDelay(numberSteps: Int, delayInSseconds: Int): FiniteDuration = (numberSteps + 1) * delayInSseconds * 1000.seconds
-//
-//  describe("Testing steps calc") {
-//
-//    // Note that putting functions in the companion object allows them to be easily tested!
-//    it("should calculate different number of steps based on the size of the move") {
-//      calcNumSteps(100, 105) should be(1)
-//      calcNumSteps(100, 115) should be(2)
-//      calcNumSteps(100, 500) should be(5)
-//      calcNumSteps(100, 900) should be(10)
-//    }
-//
-//    it("should also work with step size") {
-//      calcStepSize(100, 105, calcNumSteps(100, 105)) should be(5)
-//      calcStepSize(100, 115, calcNumSteps(100, 115)) should be(7)
-//      calcStepSize(100, 500, calcNumSteps(100, 500)) should be(80)
-//      calcStepSize(100, 900, calcNumSteps(100, 900)) should be(80)
-//    }
-//
-//    it("should work with step size of 1 (bug found)") {
-//      val steps = calcNumSteps(870, 869)
-//      steps should be(1)
-//      calcStepSize(870, 869, steps) should be(-1)
-//    }
-//  }
-//
-//  describe("motion worker setup") {
-//    val testStart = 0
-//    val testDestination = 1000
-//    val testDelay = 100
-//
-//    it("should be initialized properly") {
-//      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
-//      val ms = TestActorRef[MotionWorker](props)
-//      val under = ms.underlyingActor
-//      under.start should equal(testStart)
-//      under.destination should equal(testDestination)
-//      under.delayInNanoSeconds should equal(testDelay * 1000000)
-//    }
-//  }
-//
-//  describe("motion worker forward") {
-//    val testStart = 0
-//    val testDestination = 1005
-//    val testDelay = 10
-//
-//    it("should allow simulation on increasing encoder steps") {
-//      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
-//      val ms = TestActorRef(props)
-//      ms ! Start
-//      val msgs = expectLLMoveMsgs()
-//      msgs.last should be(End(testDestination))
-//    }
-//  }
+
+    // should also work with step size
+    assertEquals(calcStepSize(100, 105, calcNumSteps(100, 105)), 5);
+    assertEquals(calcStepSize(100, 115, calcNumSteps(100, 115)), 7);
+    assertEquals(calcStepSize(100, 500, calcNumSteps(100, 500)), 80);
+    assertEquals(calcStepSize(100, 900, calcNumSteps(100, 900)), 80);
+
+    // should work with step size of 1 (bug found)
+    int steps = calcNumSteps(870, 869);
+    assertEquals(steps, 1);
+    assertEquals(calcStepSize(870, 869, steps), -1);
+  }
+
+  @Test
+  public void motionWorkerSetup() throws Exception {
+    new JavaTestKit(system) {
+      {
+        int testStart = 0;
+        int testDestination = 1000;
+        int testDelay = 100;
+
+        // should be initialized properly
+        Props props = props(testStart, testDestination, testDelay, getRef(), false);
+        final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+        final MotionWorker under = ms.underlyingActor();
+        assertEquals(under.start, testStart);
+        assertEquals(under.destination, testDestination);
+        assertEquals(under.delayInNanoSeconds, testDelay * 1000000);
+      }
+    };
+  }
+
+  @Test
+  public void motionWorkerForward() throws Exception {
+    new JavaTestKit(system) {
+      {
+        int testStart = 0;
+        int testDestination = 1005;
+        int testDelay = 10;
+
+        // should allow simulation on increasing encoder steps
+        Props props = props(testStart, testDestination, testDelay, getRef(), false);
+        final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+        ms.tell(Start.instance, getRef());
+        Vector<MotionWorkerMsgs> msgs = expectLLMoveMsgs(false);
+        assertEquals(msgs.lastElement(), new End(testDestination));
+      }
+    };
+  }
+
+
 //
 //  describe("motion worker reverse") {
 //    val testStart = 1000
@@ -156,7 +214,7 @@ public class SingleAxisSimulatorTests {
 //    val testDelay = 10
 //
 //    it("should allow creation based on negative encoder steps") {
-//      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
+//      val props = props(testStart, testDestination, testDelay, self, diagFlag = false)
 //      val ms = TestActorRef(props)
 //      ms ! Start
 //      val msgs = expectLLMoveMsgs(false)
@@ -170,7 +228,7 @@ public class SingleAxisSimulatorTests {
 //    val testDelay = 10
 //    it("should allow creation based on negative encoder steps") {
 //
-//      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
+//      val props = props(testStart, testDestination, testDelay, self, diagFlag = false)
 //      val ms = TestActorRef(props)
 //      ms ! Start
 //      val msgs = expectLLMoveMsgs(false)
@@ -184,7 +242,7 @@ public class SingleAxisSimulatorTests {
 //    val testDelay = 200
 //
 //    it("should allow cancelling after a few steps") {
-//      val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
+//      val props = props(testStart, testDestination, testDelay, self, diagFlag = false)
 //      val ms = TestActorRef(props)
 //      ms ! Start
 //      expectMsg(Start)
@@ -469,4 +527,5 @@ public class SingleAxisSimulatorTests {
 //      sa ! PoisonPill
 //    }
 //  }
-//}
+
+}

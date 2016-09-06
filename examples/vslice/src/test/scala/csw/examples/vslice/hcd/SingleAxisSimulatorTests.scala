@@ -51,7 +51,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     val fmsg1 = expectMsgClass(classOf[AxisUpdate]) // last one when target == current
     val fmsg2 = expectMsgClass(classOf[AxisUpdate]) // then the End event with the IDLE
     val allmsgs = msgs :+ fmsg1 :+ fmsg2
-    if (diagFlag) info(s"MoveMsgs: $allmsgs")
+    if (diagFlag) info(s"MoveMsgsWithDest: $allmsgs")
     allmsgs
   }
 
