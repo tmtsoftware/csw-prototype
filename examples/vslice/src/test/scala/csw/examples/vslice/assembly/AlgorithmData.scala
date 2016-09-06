@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import csw.examples.vslice.assembly.CalculationActor.{CalculationConfig}
+import csw.examples.vslice.assembly.FollowActor.{CalculationConfig}
 import csw.examples.vslice.assembly.TromboneControl.TromboneControlConfig
 
 /**
@@ -12,7 +12,7 @@ object AlgorithmData {
     focusErrorGain = 1.0, upperFocusLimit = 20.0, lowerFocusLimit = -20.0,
     zenithFactor = 4.0)
 
-  val TestControlConfig = TromboneControlConfig(positionScale = 60.0, minElevation = 85.0, minElevationEncoder = 180)
+  val TestControlConfig = TromboneControlConfig(positionScale = 60.0, minElevation = 85.0, minElevationEncoder = 180, minEncoderLimit = 0, maxEncoderLimit = 1200)
 
   // These are values for testing the range function
   val rangeTestValues: Vector[(Double, Double)] = Vector(

@@ -1,9 +1,9 @@
-package csw.examples.vslice.assembly
+package csw.services.ccs
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import csw.services.ccs.CurrentStateReceiver
-import csw.services.ccs.CurrentStateReceiver.{AddCurrentStateHandler, AddPublisher}
+import csw.services.ccs.CurrentStateReceiver.AddPublisher
+import csw.util.akka.PublisherActor.Subscribe
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.StateVariable.CurrentState
 import org.scalatest._
@@ -11,7 +11,7 @@ import org.scalatest._
 /**
   * TMT Source Code: 8/30/16.
   */
-class StateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests")) with ImplicitSender
+class CurrentStateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests")) with ImplicitSender
        with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   def stateReceiver = system.actorOf(CurrentStateReceiver.props)
@@ -38,7 +38,7 @@ class StateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHan
 
       sr ! AddPublisher(currentStatePublisher.ref)
 
-      sr ! AddCurrentStateHandler(handler.ref)
+      handler.send(sr, Subscribe)
 
       currentStatePublisher.send(sr, CurrentState(ckw))
 
@@ -57,8 +57,8 @@ class StateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHan
 
       sr ! AddPublisher(currentStatePublisher.ref)
 
-      sr ! AddCurrentStateHandler(handler1.ref)
-      sr ! AddCurrentStateHandler(handler2.ref)
+      handler1.send(sr, Subscribe)
+      handler2.send(sr, Subscribe)
 
       currentStatePublisher.send(sr, CurrentState(ckw))
 
@@ -79,7 +79,7 @@ class StateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHan
       sr ! AddPublisher(currentStatePublisher1.ref)
       sr ! AddPublisher(currentStatePublisher2.ref)
 
-      sr ! AddCurrentStateHandler(handler1.ref)
+      handler1.send(sr, Subscribe)
 
       currentStatePublisher1.send(sr, CurrentState(ckw))
       currentStatePublisher2.send(sr, CurrentState(ckt))
@@ -100,8 +100,8 @@ class StateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHan
       sr ! AddPublisher(currentStatePublisher1.ref)
       sr ! AddPublisher(currentStatePublisher2.ref)
 
-      sr ! AddCurrentStateHandler(handler1.ref)
-      sr ! AddCurrentStateHandler(handler2.ref)
+      handler1.send(sr, Subscribe)
+      handler2.send(sr, Subscribe)
 
       currentStatePublisher1.send(sr, CurrentState(ckw))
       currentStatePublisher2.send(sr, CurrentState(ckt))

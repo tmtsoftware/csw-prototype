@@ -61,11 +61,16 @@ object CommandStatus2 {
   final case object Completed extends CommandStatus2
 
   /**
+    * If a multi-config arg has an error, overall is set to Incomplete
+    */
+  final case object Incomplete extends CommandStatus2
+
+  /**
     * The command is currently executing or has not yet started
     * When used for overall, it indicates that some commands may be complete and some have not yet executed or are executing
     * When used for a specific command, it indicates the command has not yet executed or is currently executing
     */
-  final case object InProgress extends CommandStatus2
+  final case class InProgress(message: String) extends CommandStatus2
 
   /**
     * The command was started, but failed with the given message
@@ -74,15 +79,18 @@ object CommandStatus2 {
 
   /**
     * The command was aborted
+    * Aborted means that the command/actions were stopped immediately.
     */
   final case object Aborted extends CommandStatus2
 
   /**
     * The command was canceled
+    * Cancelled means the command/actions were stopped at the next convenient place. This is usually appropriate for
     */
   final case object Canceled extends CommandStatus2
 
-  type ExecResult = (SequenceConfig, CommandStatus2)
+  type ExecResult = (CommandStatus2, SequenceConfig)
+
   final case class ExecResults(results: List[ExecResult] = List.empty[ExecResult]) {
     def :+(pair: ExecResult) = ExecResults(results = results :+ pair)
   }
@@ -91,4 +99,5 @@ object CommandStatus2 {
     * The unique id for the command
     */
   final case class CommandResult(runId: RunId, overall: CommandStatus2, details: ExecResults)
+
 }

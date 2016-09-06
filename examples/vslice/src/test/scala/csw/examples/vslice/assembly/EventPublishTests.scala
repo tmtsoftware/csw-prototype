@@ -2,6 +2,7 @@ package csw.examples.vslice.assembly
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
 import csw.services.events.{EventService, EventServiceSettings, EventSubscriber}
 import csw.util.config.DoubleItem
 import csw.util.config.Events.{EventTime, SystemEvent}
@@ -20,6 +21,7 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
     TestKit.shutdownActorSystem(system)
   }
 
+  import Algorithms._
   import TromboneAssembly._
 
   implicit val execContext = system.dispatcher
@@ -33,12 +35,12 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
   val initialElevation = 90.0
 
 
-  def newCalculator(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[CalculationActor] = {
-    val props = CalculationActor.props(calculationConfig, tromboneControl, publisher)
+  def newCalculator(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
+    val props = FollowActor.props(calculationConfig, tromboneControl, publisher)
     TestActorRef(props)
   }
 
-  def newTestElPublisher(tromboneControl: Option[ActorRef]): TestActorRef[CalculationActor] = {
+  def newTestElPublisher(tromboneControl: Option[ActorRef]): TestActorRef[FollowActor] = {
     val testEventServiceProps = TrombonePublisher.props(Some(testEventServiceSettings))
     val publisherActorRef = system.actorOf(testEventServiceProps)
     newCalculator(tromboneControl, Some(publisherActorRef))
@@ -133,8 +135,8 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
       // Check the events received through the Event Service
       val result = expectMsgClass(classOf[Results])
       // Calculate expected events
-      val rangeExpected = CalculationActor.focusToRangeDistance(calculationConfig, 10.0)
-      val elExpected = elevationTestValues.map(_._1).map(f => CalculationActor.naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, f)).map(f => SystemEvent(aoSystemEventPrefix).madd(naLayerElevationKey -> f withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers))
+      val rangeExpected = focusToRangeDistance(calculationConfig, 10.0)
+      val elExpected = elevationTestValues.map(_._1).map(f => naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, f)).map(f => SystemEvent(aoSystemEventPrefix).madd(naLayerElevationKey -> f withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers))
 
       elExpected should equal(result.msgs)
     }
@@ -146,7 +148,7 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
       // Create the trombone publisher for publishing SystemEvents to AOESW
       val publisherActorRef = system.actorOf(TrombonePublisher.props(Some(testEventServiceSettings)))
       // Create the calculator actor and give it the actor ref of the publisher for sending calculated events
-      val calculatorActorRef = system.actorOf(CalculationActor.props(calculationConfig, None, Some(publisherActorRef)))
+      val calculatorActorRef = system.actorOf(FollowActor.props(calculationConfig, None, Some(publisherActorRef)))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
       system.actorOf(TromboneEventSubscriber.props(Some(calculatorActorRef), Some(testEventServiceSettings)))
 
@@ -173,11 +175,11 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
       // Check the events received through the Event Service
       val result = expectMsgClass(classOf[Results])
       // Calculate expected events
-      val rangeExpected = CalculationActor.focusToRangeDistance(calculationConfig, 10.0)
+      val rangeExpected = focusToRangeDistance(calculationConfig, 10.0)
       // First event is due to setting the focus error
-      val elExpected1 = SystemEvent(aoSystemEventPrefix).madd(naLayerElevationKey -> CalculationActor.naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, 0.0) withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers)
+      val elExpected1 = SystemEvent(aoSystemEventPrefix).madd(naLayerElevationKey -> naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, 0.0) withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers)
       // The others are due to going through the range of zenith angles
-      val elExpected = elExpected1 +: elevationTestValues.map(_._1).map(f => CalculationActor.naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, f)).map(f => SystemEvent(aoSystemEventPrefix).madd(naLayerElevationKey -> f withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers))
+      val elExpected = elExpected1 +: elevationTestValues.map(_._1).map(f => naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, f)).map(f => SystemEvent(aoSystemEventPrefix).madd(naLayerElevationKey -> f withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers))
 
       // Here is the test for equality - total 16 messages
       elExpected should equal(result.msgs)

@@ -3,7 +3,9 @@ package csw.examples.vslice.assembly
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.examples.vslice.assembly.TromboneControl.TromboneControlConfig
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.services.ccs.HcdController
 import csw.services.ccs.HcdController.Submit
+import csw.util.config.Configurations.SetupConfig
 import csw.util.config.DoubleItem
 import csw.util.config.UnitsOfMeasure.millimeters
 
@@ -16,7 +18,7 @@ class TromboneControl(controlConfig: TromboneControlConfig, tromboneHCD: Option[
   import TromboneHCD._
 
   def receive: Receive = {
-    case HCDTromboneUpdate(newPosition) =>
+    case RangeDistance(newPosition) =>
 
       // Convert to encoder units
       val encoderPosition = rangeDistanceTransform(controlConfig, newPosition)
@@ -27,6 +29,12 @@ class TromboneControl(controlConfig: TromboneControlConfig, tromboneHCD: Option[
 
       // Send command to HCD here
       tromboneHCD.foreach(_ ! Submit(positionSC(encoderPosition)))
+
+    case RawPosition(newPosition) =>
+      val pinnedFocusValue = Math.max(controlConfig.minEncoderLimit, Math.min(controlConfig.maxEncoderLimit, newPosition.head))
+      tromboneHCD.foreach(_ ! Submit(SetupConfig(axisMoveCK).add(positionKey -> pinnedFocusValue)))
+
+      log.info(s"Setting raw trombone position to ${pinnedFocusValue}")
 
     case x => log.error(s"Unexpected message: $x")
   }
@@ -42,9 +50,9 @@ object TromboneControl {
     *
     * @param positionScale
     * @param minElevation
-    * @param minElevationEncoder
+    * @param minEncoderLimit
     */
-  case class TromboneControlConfig(positionScale: Double, minElevation: Double, minElevationEncoder: Int)
+  case class TromboneControlConfig(positionScale: Double, minElevation: Double, minElevationEncoder: Int, minEncoderLimit: Int, maxEncoderLimit: Int)
 
   /**
     * NALayerRange = zfactor*zenithAngle + focusError

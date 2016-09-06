@@ -38,9 +38,14 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
     checkInvalid(result).issue shouldBe a [WrongNumberOfParametersIssue]
   }
 
+  def checkForOutOfRange(result: Validation): Unit = {
+    checkInvalid(result).issue shouldBe a [ParameterValueOutOfRangeIssue]
+  }
+
   def checkForOtherIssue(result: Validation): Unit = {
     checkInvalid(result).issue shouldBe a [OtherIssue]
   }
+
 
   /**
     * Test Description: This tests the validation of the init SC
@@ -138,6 +143,12 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
       // Should be valid with an extra argument in this case
       sc = sc.add(zenithAngleKey -> 0.0)
       positionValidation(sc) shouldBe Valid
+    }
+
+    it("should fail for negative range distance value") {
+      // Now  good units with neg value
+      var sc = SetupConfig(positionCK).add(naLayerRangeDistanceKey -> -22.0 withUnits naLayerRangeDistanceUnits)
+      checkForOutOfRange(positionValidation(sc))
     }
   }
 

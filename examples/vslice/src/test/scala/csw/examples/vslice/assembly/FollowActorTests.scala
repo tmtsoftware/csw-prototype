@@ -2,9 +2,10 @@ package csw.examples.vslice.assembly
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import csw.examples.vslice.assembly.FollowActor.{SetElevation, UpdatedEventData}
 import csw.util.config.DoubleItem
 import csw.util.config.Events.EventTime
-import csw.util.config.UnitsOfMeasure.kilometers
+import csw.util.config.UnitsOfMeasure.{degrees, kilometers}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
@@ -12,7 +13,7 @@ import scala.concurrent.duration._
 /**
   * TMT Source Code: 8/12/16.
   */
-class AlgorithmActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
+class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
   with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   import TromboneAssembly._
@@ -27,8 +28,8 @@ class AlgorithmActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
 
   val initialElevation = 90.0
 
-  def newCalculator(tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[CalculationActor] = {
-    val props = CalculationActor.props(calculationConfig, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
+  def newCalculator(tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
+    val props = FollowActor.props(calculationConfig, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
     TestActorRef(props)
   }
 
@@ -62,8 +63,9 @@ class AlgorithmActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
       val cal = newCalculator(fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       val newEl = initialElevationKey -> 85.0 withUnits kilometers
+      val newZenithAngle = zenithAngleKey -> 0.0 withUnits degrees
 
-      cal ! SetElevation(newEl)
+      cal ! SetElevation(newEl, newZenithAngle)
 
       cal.underlyingActor.initialElevation should be(newEl)
     }
@@ -84,7 +86,7 @@ class AlgorithmActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
       // This should result in two messages being sent, one to each actor in the given order
       cal ! UpdatedEventData(za(0), fe(0), EventTime())
 
-      fakeTC.expectMsgClass(classOf[HCDTromboneUpdate])
+      fakeTC.expectMsgClass(classOf[RangeDistance])
       fakePub.expectMsgClass(classOf[AOESWUpdate])
     }
     it("should ignore if units wrong") {
@@ -133,13 +135,13 @@ class AlgorithmActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
 
       // The following assumes we have models for what is to come out of the assembly.  Here we are just
       // reusing the actual equations to test that the events are proper
-      val rangeExpected = CalculationActor.focusToRangeDistance(calculationConfig, 10.0)
-      val elExpected = elevationTestValues.map(_._1).map(f => CalculationActor.naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, f)).map(f => AOESWUpdate(naLayerElevationKey -> f withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers))
+      val rangeExpected = Algorithms.focusToRangeDistance(calculationConfig, 10.0)
+      val elExpected = elevationTestValues.map(_._1).map(f => Algorithms.naLayerElevation(calculationConfig, calculationConfig.defaultInitialElevation, f)).map(f => AOESWUpdate(naLayerElevationKey -> f withUnits kilometers, naLayerRangeDistanceKey -> rangeExpected withUnits kilometers))
 
       elExpected should equal(aoEvts)
 
       // state position is total elevation in mm
-      val posExpected = elExpected.map(f => f.naElevation.head + f.naRange.head).map(f => HCDTromboneUpdate(stagePositionKey -> f withUnits stagePositionUnits))
+      val posExpected = elExpected.map(f => f.naElevation.head + f.naRange.head).map(f => RangeDistance(stagePositionKey -> f withUnits stagePositionUnits))
       posExpected should equal(trPos)
     }
   }

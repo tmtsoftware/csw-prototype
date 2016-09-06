@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.util.Timeout
-import csw.services.ccs.CurrentStateReceiver.{AddCurrentStateHandler, RemoveCurrentStateHandler}
+import csw.util.akka.PublisherActor.{Subscribe, Unsubscribe}
 import csw.util.config.StateVariable.{CurrentState, DemandState}
 
 import scala.concurrent.duration._
@@ -15,16 +15,19 @@ object StateMatchers {
     */
   trait StateMatcher {
     def prefix: String
-    def check(current: CurrentState):Boolean
+
+    def check(current: CurrentState): Boolean
   }
 
   /**
     * The DemandMatcherAll checks for equality between the CurrentState and the DemandState.
     * This is more inclusive than DemandMatcher and may not be used regularly
+    *
     * @param demand a DemandState that will be tested for equality with each CurrentState
     */
   case class DemandMatcherAll(demand: DemandState) extends StateMatcher {
     def prefix = demand.prefix
+
     def check(current: CurrentState): Boolean = demand.items.equals(current.items)
   }
 
@@ -33,22 +36,27 @@ object StateMatchers {
     * This version tests for equality so it may not work the best with floating point values.
     * Note: If the withUnits flag is set, the equality check with also compare units. False is the default
     * so normally units are ignored for this purpose.
-    * @param demand a DemandState that will provide the items for determining completion with the CurrentState
+    *
+    * @param demand    a DemandState that will provide the items for determining completion with the CurrentState
     * @param withUnits when True, units are compared. When false, units are not compared. Default is false.
     */
   case class DemandMatcher(demand: DemandState, withUnits: Boolean = false) extends StateMatcher {
+
     import csw.util.config.Item
+
     def prefix = demand.prefix
+
     def check(current: CurrentState): Boolean = {
       demand.items.forall { di =>
-        val foundItem:Option[Item[_]] = current.find(di)
-        foundItem.fold(false)(if(withUnits) _.equals(di) else _.values.equals(di.values))
+        val foundItem: Option[Item[_]] = current.find(di)
+        foundItem.fold(false)(if (withUnits) _.equals(di) else _.values.equals(di.values))
       }
     }
   }
 
   /**
     * PresenceMatcher only checks for the existence of a CurrentState with a given prefix.
+    *
     * @param prefix the prefix to match against the CurrentState
     */
   case class PresenceMatcher(prefix: String) extends StateMatcher {
@@ -63,13 +71,14 @@ object StateMatchers {
     * See props for a description of the arguments for the class and message that starts the match.
     */
   class SingleStateMatcherActor(currentStateReceiver: ActorRef, timeout: Timeout) extends Actor with ActorLogging {
+
     import SingleStateMatcherActor._
     import context.dispatcher
 
     def receive: Receive = waiting
 
     // Here this matcher is subscribing to the stream of CurrentState
-    currentStateReceiver ! AddCurrentStateHandler(self)
+    currentStateReceiver ! Subscribe
 
     // Waiting for all variables to match, which is the case when the results set contains
     // a matching current state for each demand state
@@ -90,13 +99,13 @@ object StateMatchers {
         if (matcher.prefix == current.prefix && matcher.check(current)) {
           timer.cancel()
           mysender ! CommandStatus2.Completed
-          currentStateReceiver ! RemoveCurrentStateHandler(self)
+          currentStateReceiver ! Unsubscribe
           context.stop(self)
         }
 
       case `timeout` =>
         mysender ! CommandStatus2.Error("Current state matching timed out")
-        currentStateReceiver ! RemoveCurrentStateHandler(self)
+        currentStateReceiver ! Unsubscribe
         context.stop(self)
 
       case x => log.error(s"SingleStateMatcherActor received an unexpected message: $x")
@@ -108,10 +117,10 @@ object StateMatchers {
       * Props used to create the HcdStatusMatcherActor actor.
       * Precondition: The matcher assumes that the status publishers have been added to the StateReceiver
       *
-      * @param currentStateReceiver  a source of CurrentState events
-      * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
+      * @param currentStateReceiver a source of CurrentState events
+      * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
       */
-    def props(currentStateReceiver: ActorRef, timeout: Timeout):Props =
+    def props(currentStateReceiver: ActorRef, timeout: Timeout): Props =
     Props(classOf[SingleStateMatcherActor], currentStateReceiver, timeout)
 
     /**
@@ -130,7 +139,7 @@ object StateMatchers {
     *
     * See props for a description of the arguments for the class and message that start the match.
     */
-  class MultiStateMatcherActor(currentStateReceiver: ActorRef, timeout: Timeout) extends Actor with ActorLogging {
+  class MultiStateMatcherActor(stateSource: ActorRef, timeout: Timeout) extends Actor with ActorLogging {
 
     import MultiStateMatcherActor._
     import context.dispatcher
@@ -138,7 +147,7 @@ object StateMatchers {
     def receive: Receive = waiting
 
     // This subscribes this
-    currentStateReceiver ! AddCurrentStateHandler(self)
+    stateSource ! Subscribe
 
     // Waiting for all variables to match, which is the case when the results set contains
     // a matching current state for each demand state
@@ -164,7 +173,7 @@ object StateMatchers {
           val newMatchers = matchers.diff(matched)
           if (newMatchers.isEmpty) {
             timer.cancel()
-            currentStateReceiver ! RemoveCurrentStateHandler(self)
+            stateSource ! Unsubscribe
             mysender ! CommandStatus2.Completed
             context.stop(self)
           } else {
@@ -176,7 +185,7 @@ object StateMatchers {
       case `timeout` =>
         log.debug(s"received timeout")
         mysender ! CommandStatus2.Error("MultiStateMatcherActor state matching timed out")
-        currentStateReceiver ! RemoveCurrentStateHandler(self)
+        stateSource ! Unsubscribe
         context.stop(self)
 
       case x => log.error(s"MultiStateMatcherActor received an unexpected message: $x")
@@ -191,7 +200,7 @@ object StateMatchers {
       * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
       */
     def props(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(60.seconds)): Props =
-            Props(classOf[MultiStateMatcherActor], currentStateReceiver, timeout)
+      Props(classOf[MultiStateMatcherActor], currentStateReceiver, timeout)
 
     /**
       * Props used to create the MultiStateMatcherActor actor.
@@ -201,7 +210,7 @@ object StateMatchers {
     case class StartMatch(matcher: List[StateMatcher])
 
     object StartMatch {
-      def apply(matchers: StateMatcher*):StartMatch = StartMatch(matchers.toList)
+      def apply(matchers: StateMatcher*): StartMatch = StartMatch(matchers.toList)
     }
 
   }
