@@ -5,9 +5,8 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestFSMRef, TestKit, TestProbe}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, MustMatchers}
 
-
 class LifecycleManager2Tests() extends TestKit(ActorSystem()) with ImplicitSender
-  with FunSpecLike with MustMatchers with BeforeAndAfterAll {
+    with FunSpecLike with MustMatchers with BeforeAndAfterAll {
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
@@ -342,11 +341,11 @@ class LifecycleManager2Tests() extends TestKit(ActorSystem()) with ImplicitSende
 
     val transitionTester = system.actorOf(Props(new Actor {
       def receive = {
-        case t@Transition(_, LifecycleWaitingForInitialized, LifecycleInitialized) =>
+        case t @ Transition(_, LifecycleWaitingForInitialized, LifecycleInitialized) =>
           waitingToInitalized = true
         case Transition(_, LifecycleInitialized, LifecycleInitialized) =>
           reachedInitialized = true
-        case s@CurrentState(_, _) =>
+        case s @ CurrentState(_, _) =>
           assert(s === CurrentState(fsm, LifecycleWaitingForInitialized))
           setup = true
       }
@@ -398,7 +397,6 @@ class LifecycleManager2Tests() extends TestKit(ActorSystem()) with ImplicitSende
 
     // Transition to waiting for shutdown
     fakesupervisor.expectMsg(Transition(fsm, LifecycleRunning, LifecycleWaitingForShutdown))
-
 
     // Now timeout for failure to respond 5 seconds + 1
     fakesupervisor.expectMsg(6.seconds, new Transition(fsm, LifecycleWaitingForShutdown, LifecycleShutdownFailure))

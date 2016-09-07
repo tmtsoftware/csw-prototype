@@ -6,8 +6,8 @@ import csw.services.ccs.SequentialExecution.SequentialExecutor.{Start, StartTheD
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 /**
-  * TMT Source Code: 9/6/16.
-  */
+ * TMT Source Code: 9/6/16.
+ */
 object SequentialExecution {
 
   class SequentialExecutor(sca: SetupConfigArg, doStart: StarterFunction, destination: ActorRef, replyTo: Option[ActorRef]) extends Actor with ActorLogging {
@@ -32,7 +32,7 @@ object SequentialExecution {
         log.info(s"Starting: $sc")
         doStart(sc, destination, Some(context.self))
 
-      case cs@NoLongerValid(issue) =>
+      case cs @ NoLongerValid(issue) =>
         log.info(s"Received complete for cmd: $issue + $cs")
         // Save record of sequential successes
         context.become(receive)
@@ -40,7 +40,7 @@ object SequentialExecution {
         replyTo.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
         context.stop(self)
 
-      case cs@CommandStatus2.Completed =>
+      case cs @ CommandStatus2.Completed =>
 
         // Save record of sequential successes
         val execResultsOut = execResultsIn :+ (cs, configsIn.head)
@@ -68,7 +68,7 @@ object SequentialExecution {
 
   object SequentialExecutor {
 
-    def props(sca: SetupConfigArg, doStart: StarterFunction, destination: ActorRef, replyTo: Option[ActorRef]):Props =
+    def props(sca: SetupConfigArg, doStart: StarterFunction, destination: ActorRef, replyTo: Option[ActorRef]): Props =
       Props(classOf[SequentialExecutor], sca, doStart, destination, replyTo)
 
     type StarterFunction = (SetupConfig, ActorRef, Option[ActorRef]) => Unit
@@ -79,6 +79,5 @@ object SequentialExecution {
 
     case class Start(sc: SetupConfig)
   }
-
 
 }

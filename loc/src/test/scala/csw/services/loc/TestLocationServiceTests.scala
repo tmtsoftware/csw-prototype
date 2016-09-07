@@ -7,10 +7,10 @@ import csw.services.loc.LocationServiceProvider.{Location, ResolvedAkkaLocation,
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 /**
-  * TMT Source Code: 8/4/16.
-  */
+ * TMT Source Code: 8/4/16.
+ */
 class TestLocationServiceTests extends TestKit(ActorSystem("TromboneTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   val comp1 = ComponentId("test1", ComponentType.HCD)
   val comp2 = ComponentId("test2", ComponentType.Assembly)
@@ -86,7 +86,6 @@ class TestLocationServiceTests extends TestKit(ActorSystem("TromboneTests")) wit
       connections.get(c2).get should be(Unresolved(c2))
     }
   }
-
 
   describe("Should allow a tracker") {
     import TestLocationService._

@@ -9,23 +9,23 @@ import csw.util.config.StateVariable.CurrentState
 import org.scalatest._
 
 /**
-  * TMT Source Code: 8/30/16.
-  */
+ * TMT Source Code: 8/30/16.
+ */
 class CurrentStateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests")) with ImplicitSender
-       with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   def stateReceiver = system.actorOf(CurrentStateReceiver.props)
 
-  val ck1:String = "wfos.blue.filter"
-  val ckw:ConfigKey = ck1
-  val ck2:String = "tcs.tckPk.zenithAngle"
-  val ckt:ConfigKey = ck2
+  val ck1: String = "wfos.blue.filter"
+  val ckw: ConfigKey = ck1
+  val ck2: String = "tcs.tckPk.zenithAngle"
+  val ckt: ConfigKey = ck2
 
   describe("Test basic operation") {
 
     it("should allow creation") {
       val sr = stateReceiver
-      sr shouldNot be (null)
+      sr shouldNot be(null)
     }
 
     it("should allow adding 1 subscriber") {

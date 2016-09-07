@@ -461,23 +461,26 @@ class MotionWorker extends AbstractTimeServiceScheduler {
   boolean diagFlag;
 
   int destination;
-  int numSteps = calcNumSteps(start, destination);
-  int stepSize = calcStepSize(start, destination, numSteps);
+  int numSteps;
+  int stepSize;
   int stepCount = 0;
   // Can be + or -
   boolean cancelFlag = false;
-  long delayInNanoSeconds = delayInMS * 1000000;
+  long delayInNanoSeconds;
   int current;
 
   private MotionWorker(int start, int destinationIn, int delayInMS, ActorRef replyTo, boolean diagFlag) {
     this.start = start;
+    current = start;
     this.destinationIn = destinationIn;
+    destination = destinationIn;
     this.delayInMS = delayInMS;
     this.replyTo = replyTo;
     this.diagFlag = diagFlag;
 
-    destination = destinationIn;
-    current = start;
+    numSteps = calcNumSteps(start, destination);
+    stepSize = calcStepSize(start, destination, numSteps);
+    delayInNanoSeconds = delayInMS * 1000000;
   }
 
   @Override
@@ -563,6 +566,21 @@ class MotionWorker extends AbstractTimeServiceScheduler {
 
     public End(int finalpos) {
       this.finalpos = finalpos;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      End end = (End) o;
+
+      return finalpos == end.finalpos;
+    }
+
+    @Override
+    public int hashCode() {
+      return finalpos;
     }
   }
 

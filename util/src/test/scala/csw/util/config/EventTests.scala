@@ -5,8 +5,8 @@ import csw.util.config.Events.{EventInfo, EventTime, SystemEvent}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
 /**
-  * TMT Source Code: 8/17/16.
-  */
+ * TMT Source Code: 8/17/16.
+ */
 class EventTests extends FunSpec with ShouldMatchers {
   private val s1: String = "encoder"
   private val s2: String = "filter"
@@ -21,7 +21,7 @@ class EventTests extends FunSpec with ShouldMatchers {
   private val ck3 = "wfos.red.detector"
 
   describe("Check equal for EventInfo") {
-    val ck1:ConfigKey = ck
+    val ck1: ConfigKey = ck
     val testtime = EventTime()
 
     it("should be equals since case class") {
@@ -57,7 +57,7 @@ class EventTests extends FunSpec with ShouldMatchers {
       ev1.info should equal(ev2.info)
 
       ev1 should equal(ev2)
-      ev1 should not equal(ev3)
+      ev1 should not equal (ev3)
     }
   }
 

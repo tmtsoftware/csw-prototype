@@ -16,7 +16,7 @@ case class SimpleTestAssembly(override val info: AssemblyInfo, override val supe
 }
 
 class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   import SupervisorExternal._
 
@@ -39,7 +39,6 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
 
     TestActorRef(props)
   }
-
 
   it("should be initialized in the Pending Initialized State") {
 

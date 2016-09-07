@@ -50,9 +50,44 @@ import java.util.Optional;
 public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+  // Initialize axis from ConfigService
+  AxisConfig axisConfig;
+
+  // Create an axis for simulating trombone motion
+  ActorRef tromboneAxis;
+
+  // Initialize values -- This causes an update to the listener
+  Timeout timeout;
+
+  // The current axis position from the hardware axis, initialize to default value
+  AxisUpdate current;
+  AxisStatistics stats;
+
+  // Keep track of the last SetupConfig to be received from external
+  SetupConfig lastReceivedSC;
+
+
   // Actor constructor: use the props() method to create the actor.
   private TromboneHCD(final HcdInfo info, ActorRef supervisor) throws Exception {
     super(info);
+
+    // Initialize axis from ConfigService
+    axisConfig = getAxisConfig();
+
+    // Create an axis for simulating trombone motion
+    tromboneAxis = setupAxis(axisConfig);
+
+    // Initialize values -- This causes an update to the listener
+    timeout = new Timeout(Duration.create(2, "seconds"));
+
+    // The current axis position from the hardware axis, initialize to default value
+    // (XXX TODO FIXME: Do we need to block here?)
+    current = (AxisUpdate) Await.result(Patterns.ask(tromboneAxis, InitialState.instance, timeout), timeout.duration());
+    stats = (AxisStatistics) Await.result(Patterns.ask(tromboneAxis, GetStatistics.instance, timeout), timeout.duration());
+
+    // Keep track of the last SetupConfig to be received from external
+    lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix);
+
 
     // Receive actor messages
     receive(initializingReceive());
@@ -63,22 +98,6 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
     Supervisor.lifecycle(supervisor(), JLifecycleManager.Startup);
   }
 
-  // Initialize axis from ConfigService
-  AxisConfig axisConfig = getAxisConfig();
-
-  // Create an axis for simulating trombone motion
-  ActorRef tromboneAxis = setupAxis(axisConfig);
-
-  // Initialize values -- This causes an update to the listener
-  Timeout timeout = new Timeout(Duration.create(2, "seconds"));
-
-  // The current axis position from the hardware axis, initialize to default value
-  // (XXX TODO FIXME: Do we need to block here?)
-  AxisUpdate current = (AxisUpdate) Await.result(Patterns.ask(tromboneAxis, InitialState.instance, timeout), timeout.duration());
-  AxisStatistics stats = (AxisStatistics) Await.result(Patterns.ask(tromboneAxis, GetStatistics.instance, timeout), timeout.duration());
-
-  // Keep track of the last SetupConfig to be received from external
-  SetupConfig lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix);
 
   PartialFunction<Object, BoxedUnit> unhandledPF() {
     return ReceiveBuilder
