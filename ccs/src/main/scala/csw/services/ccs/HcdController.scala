@@ -20,7 +20,7 @@ object HcdController {
    *
    * @param config describes the setup parameters to which the HCD should be configured
    */
-  case class Submit(config: SetupConfig) extends HcdControllerMessage
+  final case class Submit(config: SetupConfig) extends HcdControllerMessage
 
   // --- Inherited messages that this actor receives ---
 

@@ -5,22 +5,24 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.CommandStatus2._
-import csw.services.ccs.SingleStateMatcherActor.StartMatch
-import csw.services.ccs.{CommandStatus2, HcdController, SingleStateMatcherActor}
-import csw.services.loc.Connection
+import csw.services.ccs.{CommandStatus2, HcdController, SequentialExecution}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 import csw.util.config.StateVariable._
 
 import scala.concurrent.Future
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
+import csw.examples.vslice.assembly.TromboneControl.TromboneControlConfig
+import csw.services.ccs.SequentialExecution.SequentialExecutor.StartTheDamnThing
+import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
+import csw.services.ccs.StateMatchers.{DemandMatcher, MultiStateMatcherActor, StateMatcher}
 
 import scala.concurrent.duration._
 
 /**
   * TMT Source Code: 8/26/16.
   */
-class TromboneCommandHandler(val connections: Set[Connection], currentStateReceiver: ActorRef, replyTo: Option[ActorRef]) extends Actor with ActorLogging with TromboneStateHandler {
+class TromboneCommandHandler(controlConfig: TromboneControlConfig, currentStateSource: ActorRef, replyTo: Option[ActorRef]) extends Actor with ActorLogging with TromboneStateHandler {
   import TromboneAssembly._
   import TromboneCommandHandler._
   import TromboneStateHandler._
@@ -29,62 +31,116 @@ class TromboneCommandHandler(val connections: Set[Connection], currentStateRecei
 
   def receive: Receive = topLevelReceive
 
-  def topLevelReceive = stateReceive orElse topLevelReceivePF
-  def topLevelReceivePF:Receive = {
-    case ExecSequential(sca, tromboneHCD, replyTo) =>
+  def topLevelReceive = stateReceive orElse waitingReceive
+  def waitingReceive:Receive = {
+    case ExecSequential(sca, tromboneHCD) =>
+      /*
       val configs = sca.configs
       // Start the first one
       context.become(st(sca, configs, tromboneHCD, CommandStatus2.ExecResults()))
       self ! Start(configs.head)
-    case cs:ExecResults =>
-      log.info("All complete")
-      replyTo.foreach(_ ! cs)
+      */
+      val se = context.actorOf(SequentialExecution.SequentialExecutor.props(sca, doStart, tromboneHCD, replyTo))
+      se ! StartTheDamnThing
 
-    case x => log.error(s"TromboneCommandHandler received an unknown message: $x")
+    case x => log.error(s"TromboneCommandHandler:waitingReceive received an unknown message: $x")
   }
 
-  def st(sca: SetupConfigArg, configsIn: Seq[SetupConfig], tromboneHCD: Option[ActorRef], cstatusIn: ExecResults):Receive = stateReceive orElse startingReceive(sca, configsIn, tromboneHCD, cstatusIn)
+  def st(sca: SetupConfigArg, configsIn: Seq[SetupConfig], tromboneHCD: ActorRef, execResultsIn: ExecResults):Receive =
+    stateReceive orElse executingReceive(sca, configsIn, tromboneHCD, execResultsIn)
 
-  def startingReceive(sca: SetupConfigArg, configsIn: Seq[SetupConfig], tromboneHCD: Option[ActorRef], cstatusIn: ExecResults): Receive = {
+  def executingReceive(sca: SetupConfigArg, configsIn: Seq[SetupConfig], tromboneHCD: ActorRef, execResultsIn: ExecResults): Receive = {
 
     case Start(sc: SetupConfig) =>
       log.info(s"Starting: $sc")
       doStart(sc, tromboneHCD, Some(context.self))
 
-    case cs@NoLongerValid(issue) =>
+    case cs @ NoLongerValid(issue) =>
       log.info(s"Received complete for cmd: $issue + $cs" )
+      // Save record of sequential successes
+      context.become(receive)
+      val execResultsOut = execResultsIn :+ (cs, configsIn.head)
+      replyTo.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
 
     case cs@CommandStatus2.Completed =>
 
       // Save record of sequential successes
-      val cstatusOut = cstatusIn :+(configsIn.head, cs)
+      val execResultsOut = execResultsIn :+(cs, configsIn.head)
       val configsOut = configsIn.tail
       if (configsOut.isEmpty) {
         // If there are no more in the sequence, return the completion for all and be done
         context.become(receive)
-        replyTo.foreach(_ ! cstatusOut)
+        replyTo.foreach(_ ! CommandResult(sca.info.runId, Completed, execResultsOut))
       } else {
         // If there are more, start the next one and pass the completion status to the next execution
-        context.become(st(sca, configsOut, tromboneHCD, cstatusOut))
-        println("Doing Start")
+        context.become(st(sca, configsOut, tromboneHCD, execResultsOut))
         self ! Start(configsOut.head)
       }
 
     case cs:CommandStatus2.Error =>
       log.info(s"Received error: ${cs.message}")
       // Save record of sequential successes
-      val cstatusOut = cstatusIn :+ (configsIn.head, cs)
+      val execResultsOut = execResultsIn :+ (cs, configsIn.head)
       context.become(receive)
-      replyTo.foreach(_ ! cstatusOut)
+      replyTo.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
   }
 
-  def doStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]): Unit = {
+
+  def doStart(sc: SetupConfig, tromboneHCD: ActorRef, replyTo: Option[ActorRef]): Unit = {
+    import context.dispatcher
 
     sc.configKey match {
-      case `initCK` => initStart(sc, tromboneHCD, Some(self))
-      case `datumCK` => datumStart(sc, tromboneHCD, Some(self))
-      case `stopCK` => stopStart(sc)
-      case `moveCK` => moveStart(sc, tromboneHCD, Some(self))
+      case `initCK` =>
+        if (cmd == cmdUninitialized) println("Invalid")
+
+        log.debug(s"Forwarding $sc to $tromboneHCD")
+        state(cmd = cmdBusy, move=moveIndexing)
+        executeOne(tromboneHCD, SetupConfig(initCK), idleMatcher, replyTo)
+        state(cmd = cmdReady, move=moveIndexed, sodiumLayer=false, nss = false)
+
+      case `datumCK` =>
+        if (cmd == cmdUninitialized) println("Invalid")
+
+        state(cmd = cmdBusy, move=moveIndexing)
+        executeOne(tromboneHCD, SetupConfig(axisDatumCK), idleMatcher, replyTo)
+        state(cmd = cmdReady, move=moveIndexed, sodiumLayer=false, nss = false)
+
+      case `stopCK` =>
+        if (cmd == cmdUninitialized) println("Invalid")
+
+        val currentMove = move
+        state(cmd = cmdBusy)
+        executeOne(tromboneHCD, cancelSC, idleMatcher, replyTo)
+        val finalMoveState = currentMove match {
+          case `moveIndexing` => moveUnindexed
+          case `moveMoving` => moveIndexed
+          case _ => moveUnindexed // Error
+        }
+        state(cmd = cmdReady, move = finalMoveState)
+
+
+      case `moveCK` =>
+        // Move moves the trombone state in mm but not encoder units
+        if (cmd == cmdUninitialized) println("Invalid")
+
+        val stagePosition = sc(stagePositionKey)
+
+        // Convert to encoder units
+        val encoderPosition = Algorithms.rangeDistanceTransform(controlConfig, stagePosition)
+        // First convert the
+        assert(encoderPosition > 0 && encoderPosition < 1500)
+
+        log.info(s"Setting trombone current to: ${encoderPosition}")
+
+        val stateMatcher = posMatcher(encoderPosition)
+        // Position key is encoder units
+        val scOut = SetupConfig(axisMoveCK).add(positionKey -> encoderPosition)
+        state(cmd = cmdBusy, move=moveMoving)
+        executeOne(tromboneHCD, scOut, stateMatcher, replyTo)
+        state(cmd = cmdReady, move=moveIndexed)
+        moveCnt += 1
+        log.info(s"Done with move at: $moveCnt")
+
       case `positionCK` => positionStart(sc)
       case `setElevationCK` => setElevationStart(sc)
       case `setAngleCK` => setAngleStart(sc)
@@ -93,78 +149,55 @@ class TromboneCommandHandler(val connections: Set[Connection], currentStateRecei
     }
   }
 
-  def movingMatcher(demand: DemandState, current: CurrentState): Boolean =
-    demand.prefix == current.prefix && current(stateKey).head == TromboneHCD.AXIS_IDLE
+  def executeOne(destination: ActorRef, setupConfig: SetupConfig, stateMatcher: StateMatcher, replyTo: Option[ActorRef] = None, timeout: Timeout = Timeout(5.seconds)) = {
+    import context.dispatcher
+    implicit val timeout = Timeout(10.seconds)
 
-  def movingPosMatcher(demand: DemandState, current: CurrentState): Boolean =
-    demand.prefix == current.prefix && current(stateKey).head == TromboneHCD.AXIS_IDLE && demand(positionKey).head == current(positionKey).head
-
-  def matchDemandState(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(60.seconds)): ActorRef = {
-    // Cancel any previous state matching, so that no timeout errors are sent to the replyTo actor
-    // Wait for the demand states to match the current states, then reply to the sender with the command status
-    val props = SingleStateMatcherActor.props(currentStateReceiver, timeout)
-    val stateMatcherActor = context.actorOf(props)
-    stateMatcherActor
+    destination ! HcdController.Submit(setupConfig)
+    val matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout))
+    replyTo.foreach( rt => (matcher ? StartMatch(stateMatcher)).mapTo[CommandStatus2].pipeTo(rt))
   }
 
-  def initStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]):Unit = {
+
+  def idleMatcher:DemandMatcher = DemandMatcher(DemandState(axisStateCK).add(stateKey -> TromboneHCD.AXIS_IDLE))
+
+  def posMatcher(position: Int):DemandMatcher =
+    DemandMatcher(DemandState(axisStateCK).madd(stateKey -> TromboneHCD.AXIS_IDLE, positionKey -> position))
+
+
+  def initStart(sc: SetupConfig, tromboneHCD: ActorRef, replyTo: Option[ActorRef]):Unit = {
     import context.dispatcher
 
-    val ds = DemandState(axisStateCK)
     implicit val timeout = Timeout(5.seconds)
-    //matchDemandState(ds, tromboneHCD.get, Some(context.self), RunId("test"), 5.seconds, movingMatcher)
-    val x = matchDemandState(currentStateReceiver, 10.seconds)
-    val f:Future[CommandStatus2] = (x ? StartMatch(ds, movingMatcher)).mapTo[CommandStatus2]
+
+    val matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout))
+    val f:Future[CommandStatus2] = (matcher ? StartMatch(idleMatcher)).mapTo[CommandStatus2]
     replyTo.foreach(f.pipeTo(_))
   }
-  def datumStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]) = {
-    import context.dispatcher
 
+  def stopStart(sc: SetupConfig) = {
     if (cmd == cmdUninitialized) println("Invalid")
-    val ds = DemandState(axisStateCK)
-    log.debug(s"Forwarding $sc to $tromboneHCD")
-    state(cmd = cmdBusy, move=moveIndexing)
-    tromboneHCD.foreach(_ ! HcdController.Submit(SetupConfig(axisDatumCK)))
-    implicit val timeout = Timeout(5.seconds)
-    val x = matchDemandState(currentStateReceiver, 10.seconds)
-    val f:Future[CommandStatus2] = (x ? StartMatch(ds, movingMatcher)).mapTo[CommandStatus2]
-    replyTo.foreach(f.pipeTo(_))
-    state(cmd = cmdReady, move=moveIndexed)
+    if (move != moveIndexed && move != moveMoving) println("Invalid")
+
   }
-
-
-
-  def moveStart(sc: SetupConfig, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef]) = {
-    import context.dispatcher
-
-    val newPosition = sc(stagePositionKey).head.toInt
-    val ds = DemandState(axisStateCK).add(positionKey -> newPosition)
-    log.info("DS: " + ds)
-    log.debug(s"Forwarding $sc to $tromboneHCD")
-
-    state(cmd = cmdBusy, move=moveMoving)
-    tromboneHCD.foreach(_ ! HcdController.Submit(SetupConfig(axisMoveCK).add(positionKey -> newPosition)))
-    implicit val timeout = Timeout(5.seconds)
-    val x = matchDemandState(currentStateReceiver, 10.seconds)
-    val f:Future[CommandStatus2] = (x ? StartMatch(ds, movingPosMatcher)).mapTo[CommandStatus2]
-    replyTo.foreach(f.pipeTo(_))
-    state(cmd = cmdReady, move=moveIndexed)
-    moveCnt += 1
-  }
-
-  def stopStart(sc: SetupConfig) = ???
   def positionStart(sc: SetupConfig) = ???
-  def setElevationStart(sc: SetupConfig) = ???
-  def setAngleStart(sc: SetupConfig) = ???
+  def setElevationStart(sc: SetupConfig) = {
+    if (cmd == cmdUninitialized) println("Invalid")
+
+  }
+  def setAngleStart(sc: SetupConfig) = {
+    if (cmd == cmdUninitialized) println("Invalid")
+
+  }
   def followStart(sc: SetupConfig) = ???
 }
 
 object TromboneCommandHandler extends LazyLogging {
 
-  def props(connections: Set[Connection], currentStateReceiver: ActorRef, replyTo: Option[ActorRef]) = Props(new TromboneCommandHandler(connections, currentStateReceiver, replyTo))
+  def props(controlConfig: TromboneControlConfig, currentStateReceiver: ActorRef, replyTo: Option[ActorRef]) = Props(new TromboneCommandHandler(controlConfig, currentStateReceiver, replyTo))
 
   // Messages received by TromboneCommandHandler
-  case class ExecSequential(sca: SetupConfigArg, tromboneHCD: Option[ActorRef], replyTo: Option[ActorRef])
+  case class ExecSequential(sca: SetupConfigArg, tromboneHCD: ActorRef)
 
   case class Start(sc: SetupConfig)
 /*

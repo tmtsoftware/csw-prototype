@@ -1,10 +1,10 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.actor.{ActorRef, Props}
 
 import scala.language.postfixOps
 import com.typesafe.config.Config
-import csw.examples.vslice.assembly.CalculationActor.CalculationConfig
+import csw.examples.vslice.assembly.FollowActor.CalculationConfig
 import csw.examples.vslice.assembly.TromboneControl.TromboneControlConfig
 import csw.services.ccs.Validation.{Invalid, OtherIssue, Valid, Validation}
 import csw.services.ccs.{AssemblyController2, CommandStatus, CurrentStateReceiver}
@@ -13,7 +13,6 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentType, Connection, LocationService, TestLocationService}
 import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister}
 import csw.services.pkg.ContainerComponent._
-import csw.services.pkg.Supervisor3.{apply => _, _}
 import csw.services.pkg.{Assembly, ContainerComponent, Supervisor3}
 import csw.util.config.Configurations.{ConfigKey, SetupConfig, SetupConfigArg}
 import csw.util.config.Events.EventTime
@@ -27,6 +26,7 @@ class TromboneAssembly(override val info: AssemblyInfo, supervisor: ActorRef) ex
 
   import TromboneAssembly._
   import TromboneStateHandler._
+  import Supervisor3._
 
   log.info(s"Assembly: ${info.componentName}\nComponent Type:${info.componentType}\nClassName: ${info.componentClassName}\nPrefix: ${info.prefix}")
 
@@ -48,7 +48,7 @@ class TromboneAssembly(override val info: AssemblyInfo, supervisor: ActorRef) ex
 
   val tromboneControl: ActorRef = context.actorOf(TromboneControl.props(controlConfig, None))
   val eventPublisher = context.actorOf(TrombonePublisher.props(Some(testEventServiceSettings)))
-  val calculatorActor:ActorRef = context.actorOf(CalculationActor.props(calculatorConfig, Some(tromboneControl), Some(eventPublisher)))
+  val calculatorActor:ActorRef = context.actorOf(FollowActor.props(calculatorConfig, Some(tromboneControl), Some(eventPublisher)))
 
   val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
 
@@ -145,7 +145,9 @@ class TromboneAssembly(override val info: AssemblyInfo, supervisor: ActorRef) ex
     val positionScale = getConfigDouble("control-config.positionScale")
     val minElevation = getConfigDouble("control-config.minElevation")
     val minElevationEncoder = getConfigInt("control-config.minElevationEncoder")
-    TromboneControlConfig(positionScale, minElevation, minElevationEncoder)
+    val minEncoderLimit = getConfigInt("control-config.minEncoderLimit")
+    val maxEncoderLimit = getConfigInt("control-config.maxEncoderLimit")
+    TromboneControlConfig(positionScale, minElevation, minElevationEncoder, minEncoderLimit, maxEncoderLimit)
   }
 
   def getConfigDouble(name: String):Double = context.system.settings.config.getDouble(s"csw.examples.Trombone.assembly.$name")
@@ -199,7 +201,7 @@ object TromboneAssembly {
   // Follow submit command
   val followPrefix = s"$componentPrefix.follow"
   val followCK: ConfigKey = followPrefix
-
+  val nssInUseKey = BooleanKey("nssInUse")
 
   // Shared key values --
   // Used by setElevation, setAngle
@@ -224,7 +226,7 @@ object TromboneAssembly {
   val stagePositionKey = DoubleKey("stagePosition")
   val stagePositionUnits = millimeters
 
-  val nssInUseKey = BooleanKey("nssInUse")
+
 
   // ---------- Keys used by TromboneEventSubscriber
   // This is the zenith angle from TCS
@@ -236,17 +238,23 @@ object TromboneAssembly {
 
 
   // --------- Keys/Messages used by TromboneControl
-  val hcdTrombonePositionKey = DoubleKey("hcdTrombonePosition")
+  val hcdTrombonePositionKey = DoubleKey("hcdTromboneAxisPosition")
+
+  // Used to send a position that requries transformaton from range distance
+  case class RangeDistance(position: DoubleItem)
+
+  // Used to send a raw position in mm
+  case class RawPosition(position: IntItem)
 
   // --------- Keys/Messages used by CalculatorActor
-  case class HCDTromboneUpdate(position: DoubleItem)
+
 
   case class AOESWUpdate(naElevation: DoubleItem, naRange: DoubleItem)
 
   case class EngrUpdate(rtcFocusError: DoubleItem, stagePosition: DoubleItem, zenithAngle: DoubleItem)
 
-  // Messages received by the TromboneAssembly and TromboneSubscriber
-  case class UsingNSS(inUse: Boolean)
+  // This is used to send data for the system event for AOESW to publisher
+ // case class NALayerInfo(naLayerRangeDistance: DoubleItem, naLayerElevation: DoubleItem)
 
   // ----------- Keys, etc. used by trombonePublisher, calculator, comamnds
 
@@ -257,18 +265,7 @@ object TromboneAssembly {
 
   // --------  Keys/Messages for CalculationActor ---------
 
-  // External message to set an initial elevation
-  // Messages received by csw.examples.e2e.CalculationActor
-  // Update from subscribers
-  trait CalculatorMessages
 
-  case class UpdatedEventData(zenithAngle: DoubleItem, focusError: DoubleItem, time: EventTime) extends CalculatorMessages
-
-  // Messages to Calculation Actor
-  case class SetElevation(elevation: DoubleItem) extends CalculatorMessages
-
-  // This is used to send data for the system event for AOESW to publisher
-  case class NALayerInfo(naLayerRangeDistance: DoubleItem, naLayerElevation: DoubleItem)
 
   // Testable functions
   // Validates a SetupConfigArg for Trombone Assembly

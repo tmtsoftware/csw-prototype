@@ -89,13 +89,16 @@ object ConfigValidation {
       // Check for correct key and type -- only checks that essential key is present, not strict
       if (!sc.exists(naLayerRangeDistanceKey)) {
         Invalid(MissingKeyIssue(s"The position SetupConfig must have a DoubleItem named: $naLayerRangeDistanceKey"))
-      } else
-      if (!sc(naLayerRangeDistanceKey).isInstanceOf[DoubleItem]) {
+      } else if (!sc(naLayerRangeDistanceKey).isInstanceOf[DoubleItem]) {
         Invalid(WrongItemTypeIssue(s"The position SetupConfig must have a DoubleItem named: $naLayerRangeDistanceKey"))
-      } else
-      if (sc(naLayerRangeDistanceKey).units != naLayerRangeDistanceUnits) {
+      } else if (sc(naLayerRangeDistanceKey).units != naLayerRangeDistanceUnits) {
         Invalid(WrongUnitsIssue(s"The position SetupConfig parameter: $naLayerRangeDistanceKey must have units of: $naLayerRangeDistanceUnits"))
-      } else Valid
+      } else {
+        val el = sc(naLayerRangeDistanceKey).head
+        if (el < 0) {
+          Invalid(ParameterValueOutOfRangeIssue(s"Range distance value of $el for position must be greater than or equal 0 km."))
+        } else Valid
+      }
     }
   }
 

@@ -5,7 +5,7 @@ import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.CommandStatus2.{CommandStatus2, Completed, Error}
-import csw.services.ccs.CurrentStateReceiver.{AddCurrentStateHandler, AddPublisher, RemovePublisher}
+import csw.services.ccs.CurrentStateReceiver.{AddPublisher, RemovePublisher}
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.IntKey
 import csw.util.config.UnitsOfMeasure.encoder
@@ -13,6 +13,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 import csw.util.config.StateVariable.{CurrentState, DemandState}
 import akka.pattern.{ask, pipe}
 import csw.services.ccs.StateMatchers.{DemandMatcher, MultiStateMatcherActor, PresenceMatcher, SingleStateMatcherActor}
+import csw.util.akka.PublisherActor.Subscribe
 
 import scala.language.reflectiveCalls
 import scala.concurrent.duration._
@@ -87,7 +88,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val sr = stateReceiver
 
       val fakeMatcher = TestProbe()
-      sr ! AddCurrentStateHandler(fakeMatcher.ref)
+      fakeMatcher.send(sr, Subscribe)
 
       writeStates(listOfPosStates, sr)
 

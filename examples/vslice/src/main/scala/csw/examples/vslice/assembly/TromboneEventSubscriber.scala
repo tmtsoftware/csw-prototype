@@ -1,6 +1,7 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{ActorRef, Props}
+import csw.examples.vslice.assembly.FollowActor.{UpdatedEventData, UsingNSS}
 import csw.examples.vslice.assembly.TromboneAssembly._
 import csw.services.events.{EventServiceSettings, EventSubscriber}
 import csw.util.config.Events.{EventTime, SystemEvent}
@@ -47,8 +48,7 @@ class TromboneEventSubscriber(calculationActor: Option[ActorRef], eventServiceSe
           updateCalculator(event.info.time)
       }
 
-    case UsingNSS(inUse) =>
-      NSSinUse = inUse
+    case UsingNSS(inUse) => NSSinUse = inUse
 
     case x => log.error(s"TromboneEventSubscriber received an unknown message: $x")
   }

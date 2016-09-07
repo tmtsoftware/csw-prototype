@@ -6,7 +6,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
   * These are tests of the calculations in the Calculation Actor
   */
 class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
-
+  import Algorithms._
   import AlgorithmData._
 
   def ~=(x: Double, y: Double, precision: Double) = {
@@ -18,7 +18,7 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
   val initialElevation = calculationConfig.defaultInitialElevation
 
   describe("Testing the algorithms for correctness without actor") {
-    import CalculationActor._
+    import FollowActor._
     import TromboneAssembly._
 
     val maxRD = focusToRangeDistance(calculationConfig, calculationConfig.upperFocusLimit)
