@@ -23,13 +23,13 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
 
-  private final AxisConfig axisConfig;
+  final AxisConfig axisConfig;
   private final Optional<ActorRef> replyTo;
 
   // The following are state information for the axis. These values are updated while the axis runs
   // This is safe because there is no way to change the variables other than within this actor
   // When created, the current is set to the start current
-  private int current;
+  int current;
   private boolean inLowLimit = false;
   private boolean inHighLimit = false;
   private boolean inHome = false;
@@ -63,9 +63,9 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     current = axisConfig.startPosition;
 
     // Check that the home position is not in a limit area - with this check it is not necessary to check for limits after homing
-    if (axisConfig.home > axisConfig.lowUser)
+    if (axisConfig.home <= axisConfig.lowUser)
       throw new AssertionError("home position must be greater than lowUser value: " + axisConfig.lowUser);
-    if (axisConfig.home < axisConfig.highUser)
+    if (axisConfig.home >= axisConfig.highUser)
       throw new AssertionError("home position must be less than highUser value: " + axisConfig.highUser);
 
     getContext().become(idleReceive());
