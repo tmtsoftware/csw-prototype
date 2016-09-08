@@ -28,6 +28,11 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
   private static ActorSystem system;
   Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));
 
+  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
+  ActorRef self() {
+    return getTestActor();
+  };
+
   public SingleAxisSimulatorTests() {
     super(system);
   }
@@ -153,7 +158,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     int testDelay = 100;
 
     // should be initialized properly
-    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    Props props = props(testStart, testDestination, testDelay, self(), false);
     final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
     final MotionWorker under = ms.underlyingActor();
     assertEquals(under.start, testStart);
@@ -168,9 +173,9 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     int testDelay = 10;
 
     // should allow simulation on increasing encoder steps
-    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    Props props = props(testStart, testDestination, testDelay, self(), false);
     final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-    ms.tell(Start.instance, getTestActor());
+    ms.tell(Start.instance, self());
     Vector<MotionWorkerMsgs> msgs = expectLLMoveMsgs(testStart, testDestination, testDelay, false);
     assertEquals(msgs.lastElement(), new End(testDestination));
   }
@@ -182,9 +187,9 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     int testDelay = 10;
 
     // should allow creation based on negative encoder steps
-    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    Props props = props(testStart, testDestination, testDelay, self(), false);
     final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-    ms.tell(Start.instance, getTestActor());
+    ms.tell(Start.instance, self());
     Vector<MotionWorkerMsgs> msgs = expectLLMoveMsgs(testStart, testDestination, testDelay, false);
     assertEquals(msgs.lastElement(), new End(testDestination));
   }
@@ -195,9 +200,9 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     int testDestination = 600;
     int testDelay = 10;
 
-    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    Props props = props(testStart, testDestination, testDelay, self(), false);
     final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-    ms.tell(Start.instance, getTestActor());
+    ms.tell(Start.instance, self());
     Vector<MotionWorkerMsgs> msgs = expectLLMoveMsgs(testStart, testDestination, testDelay, false);
     assertEquals(msgs.lastElement(), new End(testDestination));
   }
@@ -209,13 +214,13 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     int testDelay = 200;
 
     // should allow cancelling after a few steps
-    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    Props props = props(testStart, testDestination, testDelay, self(), false);
     final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-    ms.tell(Start.instance, getTestActor());
+    ms.tell(Start.instance, self());
     expectMsgEquals(Start.instance);
     // Wait 3 messages
     receiveN(3, calcDelay(3, testDelay));
-    ms.tell(Cancel.instance, getTestActor());
+    ms.tell(Cancel.instance, self());
     // One more move
     receiveN(1);
     expectMsgClass(End.class);
@@ -253,7 +258,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
       assertEquals(sa.underlyingActor().axisConfig, defaultAxisConfig);
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
 
     // limitMove should clamp value
@@ -288,13 +293,13 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       // Expect an initial axis status message
       // AxisUpdate one = expectMsgClass(AxisUpdate.class);
 
-      sa.tell(Datum.instance, getTestActor());
+      sa.tell(Datum.instance, self());
       expectMsgEquals(AxisStarted.instance);
       AxisUpdate upd = expectMsgClass(AxisUpdate.class);
       assertEquals(upd.state, AXIS_IDLE);
       assertEquals(upd.current, defaultAxisConfig.startPosition + 1);
 
-      sa.tell(GetStatistics.instance, getTestActor());
+      sa.tell(GetStatistics.instance, self());
       AxisStatistics stats1 = expectMsgClass(AxisStatistics.class);
       assertEquals(stats1.initCount, 1);
       assertEquals(stats1.moveCount, 1);
@@ -304,14 +309,14 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(stats1.failureCount, 0);
       assertEquals(stats1.cancelCount, 0);
 
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
 
     // Should home properly
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
-      sa.tell(Home.instance, getTestActor());
+      sa.tell(Home.instance, self());
 
 
       Vector<AxisUpdate> allMsgs = new Vector<>();
@@ -340,7 +345,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
 
       assertEquals(sa.underlyingActor().current, defaultAxisConfig.home);
 
-      sa.tell(GetStatistics.instance, getTestActor());
+      sa.tell(GetStatistics.instance, self());
       AxisStatistics stats1 = expectMsgClass(AxisStatistics.class);
       assertEquals(stats1.initCount, 0);
       assertEquals(stats1.moveCount, 1);
@@ -350,18 +355,18 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(stats1.failureCount, 0);
       assertEquals(stats1.cancelCount, 0);
 
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
 
     // Should move properly
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
-      sa.tell(new Move(500, false), getTestActor());
+      sa.tell(new Move(500, false), self());
       Vector<AxisUpdate> msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().state, AXIS_IDLE);
       assertEquals(msgs.lastElement().current, 500);
       assertEquals(sa.underlyingActor().current, 500);
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
 
 
@@ -370,15 +375,15 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
       // Sleeps are to try and not do all the updates up front before movement starts
-      sa.tell(new Move(360), getTestActor());
+      sa.tell(new Move(360), self());
       Thread.sleep(30);
-      sa.tell(new Move(365), getTestActor());
+      sa.tell(new Move(365), self());
       Thread.sleep(20);
-      sa.tell(new Move(390), getTestActor());
+      sa.tell(new Move(390), self());
       Thread.sleep(30);
-      sa.tell(new Move(420), getTestActor());
+      sa.tell(new Move(420), self());
       Thread.sleep(20);
-      sa.tell(new Move(425), getTestActor());
+      sa.tell(new Move(425), self());
 
       Vector<AxisResponse> msgs = expectMoveMsgsWithDest(425, false);
       assertTrue(msgs.lastElement() instanceof AxisUpdate);
@@ -386,25 +391,25 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(last.state, AXIS_IDLE);
       assertEquals(last.current, 425);
 
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
 
     // Should allow a cancel
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
-      sa.tell(new Move(850), getTestActor());
+      sa.tell(new Move(850), self());
       expectMsgEquals(AxisStarted.instance);
       // Wait 2 updates
       receiveN(2);
-      sa.tell(CancelMove.instance, getTestActor());
+      sa.tell(CancelMove.instance, self());
       // One more update due to algo
       Object lastmsg = receiveN(1);
       AxisUpdate end = expectMsgClass(AxisUpdate.class);
       assertEquals(end.state, AXIS_IDLE);
       assertEquals(end.current, 650);
 
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
 
     // should limit out-of-range moves"
@@ -412,7 +417,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
       // Position starts out at 0
-      sa.tell(new Move(0), getTestActor());
+      sa.tell(new Move(0), self());
       Vector<AxisUpdate> msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().state, AXIS_IDLE);
       assertEquals(msgs.lastElement().current, 100);
@@ -422,7 +427,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(sa.underlyingActor().inLowLimit, true);
       assertEquals(sa.underlyingActor().inHighLimit, false);
 
-      sa.tell(GetStatistics.instance, getTestActor());
+      sa.tell(GetStatistics.instance, self());
       AxisStatistics stats1 = expectMsgClass(AxisStatistics.class);
       assertEquals(stats1.initCount, 0);
       assertEquals(stats1.moveCount, 1);
@@ -432,7 +437,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(stats1.failureCount, 0);
       assertEquals(stats1.cancelCount, 0);
 
-      sa.tell(new Move(2000), getTestActor());
+      sa.tell(new Move(2000), self());
       Vector<AxisUpdate> msgs2 = expectMoveMsgs(false);
       assertEquals(msgs2.lastElement().state, AXIS_IDLE);
       assertEquals(msgs2.lastElement().current, 1300);
@@ -443,7 +448,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(sa.underlyingActor().inLowLimit, false);
       assertEquals(sa.underlyingActor().inHighLimit, true);
 
-      sa.tell(GetStatistics.instance, getTestActor());
+      sa.tell(GetStatistics.instance, self());
       AxisStatistics stats2 = expectMsgClass(AxisStatistics.class);
       assertEquals(stats2.initCount, 0);
       assertEquals(stats2.moveCount, 2);
@@ -453,7 +458,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(stats2.failureCount, 0);
       assertEquals(stats2.cancelCount, 0);
 
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
 
     // should support a complex example
@@ -461,35 +466,35 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
       // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
-      sa.tell(Datum.instance, getTestActor());
+      sa.tell(Datum.instance, self());
       Vector<AxisUpdate> msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().current, defaultAxisConfig.startPosition + 1);
 
-      sa.tell(Home.instance, getTestActor());
+      sa.tell(Home.instance, self());
       msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().current, defaultAxisConfig.home);
 
-      sa.tell(new Move(423), getTestActor());
+      sa.tell(new Move(423), self());
       msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().current, 423);
 
-      sa.tell(new Move(800), getTestActor());
+      sa.tell(new Move(800), self());
       msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().current, 800);
 
-      sa.tell(new Move(560), getTestActor());
+      sa.tell(new Move(560), self());
       msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().current, 560);
 
-      sa.tell(new Move(1240), getTestActor());
+      sa.tell(new Move(1240), self());
       msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().current, 1240);
 
-      sa.tell(Home.instance, getTestActor());
+      sa.tell(Home.instance, self());
       msgs = expectMoveMsgs(false);
       assertEquals(msgs.lastElement().current, defaultAxisConfig.home);
 
-      sa.tell(GetStatistics.instance, getTestActor());
+      sa.tell(GetStatistics.instance, self());
       AxisStatistics stats2 = expectMsgClass(AxisStatistics.class);
       assertEquals(stats2.initCount, 1);
       assertEquals(stats2.moveCount, 7);
@@ -499,7 +504,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       assertEquals(stats2.failureCount, 0);
       assertEquals(stats2.cancelCount, 0);
 
-      sa.tell(PoisonPill.getInstance(), getTestActor());
+      sa.tell(PoisonPill.getInstance(), self());
     }
   }
 }
