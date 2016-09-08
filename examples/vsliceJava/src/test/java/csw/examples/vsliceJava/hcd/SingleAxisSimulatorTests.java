@@ -98,6 +98,7 @@ public class SingleAxisSimulatorTests {
 //    return allMsgs;
 //  }
 
+
   Vector<AxisResponse> expectMoveMsgsWithDest(int target, boolean diagFlag) {
     Vector<AxisResponse> allMsgs = new Vector<>();
     new JavaTestKit(system) {{
@@ -317,6 +318,8 @@ public class SingleAxisSimulatorTests {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getRef());
 
       sa.tell(Home.instance, getRef());
+
+
       Vector<AxisUpdate> allMsgs = new Vector<>();
       // Get AxisStarted
       expectMsgEquals(AxisStarted.instance);
@@ -331,10 +334,11 @@ public class SingleAxisSimulatorTests {
             }
           }
         }.get(); // this extracts the received messages
-
       AxisUpdate fmsg = expectMsgClass(AxisUpdate.class); // last one
       Collections.addAll(allMsgs, msgs);
       allMsgs.add(fmsg);
+
+
 
       // System.out.println("MoveMsgs: " + allMsgs);
 
@@ -357,41 +361,20 @@ public class SingleAxisSimulatorTests {
       sa.tell(PoisonPill.getInstance(), getRef());
     }};
 
-
-    //
-//    it("Should home properly") {
-//      val sa = defaultAxis(testActor)
-//
-//      sa ! Home
-//      val msgs = expectMoveMsgs()
+//    // Should move properly
+//    new JavaTestKit(system) {{
+//      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getRef());
+//      sa.tell(new Move(500, false), getRef());
+//      val msgs = expectMoveMsgs();
 //      msgs.last.state should be(AXIS_IDLE)
-//      msgs.last.inHomed should be(true)
-//      msgs.last.current should be(defaultAxisConfig.home)
+//      msgs.last.current should be(500)
 //
-//      sa.underlyingActor.current should be(defaultAxisConfig.home)
+//      sa.underlyingActor.current should be(500)
 //
-//      sa ! GetStatistics
-//      val stats1: AxisStatistics = expectMsgClass(classOf[AxisStatistics])
-//      stats1.initCount should be(0)
-//      stats1.moveCount should be(1)
-//      stats1.homeCount should be(1)
-//      stats1.limitCount should be(0)
-//      stats1.successCount should be(1)
-//      stats1.failureCount should be(0)
-//      stats1.cancelCount should be(0)
-//
-//      sa ! PoisonPill
-//    }
+//      sa.tell(PoisonPill.getInstance(), getRef());
+//    }};
 
 
-//
-//    it("Should move properly") {
-//      val sa = defaultAxis(testActor)
-//
-//      // Expect an initial axis status message
-//      //val one = expectMsgClass(classOf[AxisUpdate])
-//      //one.current should equal(defaultAxisConfig.startPosition)
-//
 //      sa ! Move(500, diagFlag = false)
 //      val msgs = expectMoveMsgs()
 //      msgs.last.state should be(AXIS_IDLE)
@@ -401,6 +384,10 @@ public class SingleAxisSimulatorTests {
 //
 //      sa ! PoisonPill
 //    }
+
+
+
+
 //
 //    it("Should move and update") {
 //      val sa = defaultAxis(testActor)
