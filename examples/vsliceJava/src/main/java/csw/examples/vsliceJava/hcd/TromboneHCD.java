@@ -31,6 +31,7 @@ import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JConfigDSL.*;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
+import static javacsw.services.pkg.JSupervisor3.*;
 
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState;
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStarted;
@@ -66,10 +67,15 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   // Keep track of the last SetupConfig to be received from external
   SetupConfig lastReceivedSC;
 
+  // XXX TODO FIXME: This overrides the supervisor inherited from Component
+  final ActorRef supervisor;
+
 
   // Actor constructor: use the props() method to create the actor.
   private TromboneHCD(final HcdInfo info, ActorRef supervisor) throws Exception {
     super(info);
+
+    this.supervisor = supervisor;
 
     // Initialize axis from ConfigService
     axisConfig = getAxisConfig();
@@ -94,10 +100,9 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 
     // Required setup for Lifecycle in order to get messages
     // XXX TODO: Do we need to send Initialize and Startup?
-    Supervisor.lifecycle(supervisor(), JLifecycleManager.Initialize);
-    Supervisor.lifecycle(supervisor(), JLifecycleManager.Startup);
+    supervisor.tell(Initialized, self());
+    supervisor.tell(Started, self());
   }
-
 
   PartialFunction<Object, BoxedUnit> unhandledPF() {
     return ReceiveBuilder
@@ -107,7 +112,7 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 
   PartialFunction<Object, BoxedUnit> initializingReceive() {
     return ReceiveBuilder
-      .matchEquals(JSupervisor3.Running, e -> {
+      .matchEquals(Running, e -> {
         // When Running is received, transition to running Receive
         context().become(runningReceive);
       })
@@ -171,20 +176,20 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 
   PartialFunction<Object, BoxedUnit> lifecycleReceivePF() {
     return ReceiveBuilder
-      .matchEquals(JSupervisor3.Running, e -> {
-        log.info("Received running");
+      .matchEquals(Running, e -> {
+        log.info("Received Running");
         context().become(runningReceive);
       })
-      .matchEquals(JSupervisor3.RunningOffline, e -> {
-        log.info("Received running offline");
+      .matchEquals(RunningOffline, e -> {
+        log.info("Received RunningOffline");
       })
-      .matchEquals(JSupervisor3.DoRestart, e -> {
-        log.info("Received dorestart");
+      .matchEquals(DoRestart, e -> {
+        log.info("Received DoRestart");
       })
-      .matchEquals(JSupervisor3.DoShutdown, e -> {
-        log.info("Received Received doshutdown");
+      .matchEquals(DoShutdown, e -> {
+        log.info("Received DoShutdown");
         // Just say complete for now
-        supervisor().tell(JSupervisor3.ShutdownComplete, self());
+        supervisor.tell(ShutdownComplete, self());
       })
       .match(Supervisor3.LifecycleFailureInfo.class, e -> {
         log.info("Received failed state: " + e.state() + " for reason: " + e.reason());

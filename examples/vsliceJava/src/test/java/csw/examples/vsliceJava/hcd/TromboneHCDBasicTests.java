@@ -1,60 +1,128 @@
 package csw.examples.vsliceJava.hcd;
 
-//import akka.actor.{ActorRef, ActorSystem, Props}
-//import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-//import csw.services.loc.ConnectionType.AkkaType
-//import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-//import csw.services.pkg.Supervisor3
-//import csw.services.pkg.Supervisor3._
-//import csw.util.config.Configurations.SetupConfig
-//import csw.util.config.StateVariable.CurrentState
-//
-//import scala.concurrent.Await
-//import scala.concurrent.duration._
-//
-///**
-//  * TMT Source Code: 7/18/16.
-//  */
-//class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with ImplicitSender
-//  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
-//
-//  override def afterAll = TestKit.shutdownActorSystem(system)
-//
-//  val troboneAssemblyPrefix = "nfiraos.ncc.trombone"
-//
-//  val testInfo = HcdInfo(TromboneHCD.componentName,
-//    TromboneHCD.trombonePrefix,
-//    TromboneHCD.componentClassName,
-//    DoNotRegister, Set(AkkaType), 1.second)
-//
-//
-//  def getTromboneProps(hcdInfo: HcdInfo, supervisorIn: Option[ActorRef]): Props = {
-//    supervisorIn match {
-//      case None => TromboneHCD.props(hcdInfo, TestProbe().ref)
-//      case Some(actorRef) => TromboneHCD.props(hcdInfo, actorRef)
-//    }
-//  }
-//
-//  def newTrombone(hcdInfo: HcdInfo = testInfo): (TestProbe, ActorRef) = {
-//    val supervisor = TestProbe()
-//    val props = getTromboneProps(hcdInfo, Some(supervisor.ref))
-//    (supervisor, system.actorOf(props))
-//  }
-//
-//  def newTestTrombone(hcdInfo: HcdInfo = testInfo): (TestProbe, TestActorRef[TromboneHCD]) = {
-//    val supervisor = TestProbe()
-//    val props = getTromboneProps(hcdInfo, Some(supervisor.ref))
-//    (supervisor, TestActorRef(props))
-//  }
-//
-//  def lifecycleStart(supervisor: TestProbe, tla: ActorRef): Unit = {
-//    supervisor.expectMsg(Initialized)
-//    supervisor.expectMsg(Started)
-//
-//    supervisor.send(tla, Running)
-//  }
-//
-//  def waitForMoveMsgs: Seq[CurrentState] = {
+import akka.actor.ActorRef;
+import akka.testkit.TestActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.testkit.JavaTestKit;
+import akka.testkit.TestProbe;
+import akka.util.Timeout;
+import csw.services.loc.LocationService;
+import csw.services.pkg.Component.HcdInfo;
+import csw.util.config.StateVariable;
+import csw.util.config.StateVariable.CurrentState;
+import javacsw.services.loc.JConnectionType;
+import javacsw.services.pkg.JComponent;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
+import static javacsw.util.config.JItems.*;
+import static javacsw.util.config.JConfigDSL.*;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static javacsw.services.pkg.JSupervisor3.*;
+import static javacsw.util.config.JUnitsOfMeasure.seconds;
+import static org.junit.Assert.*;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.*;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_IDLE;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_MOVING;
+
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+public class TromboneHCDBasicTests extends JavaTestKit {
+  private static ActorSystem system;
+  Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));
+
+  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
+  ActorRef self() {
+    return getTestActor();
+  }
+
+  // For compatibility with Scala tests
+  void it(String s) {
+    System.out.println(s);
+  }
+
+  public TromboneHCDBasicTests() {
+    super(system);
+  }
+
+  @BeforeClass
+  public static void setup() {
+    LocationService.initInterface();
+    system = ActorSystem.create();
+  }
+
+  @AfterClass
+  public static void teardown() {
+    JavaTestKit.shutdownActorSystem(system);
+    system = null;
+  }
+
+  String troboneAssemblyPrefix = "nfiraos.ncc.trombone";
+
+  HcdInfo testInfo = JComponent.hcdInfo(
+    TromboneHCD.componentName,
+    TromboneHCD.trombonePrefix,
+    TromboneHCD.componentClassName,
+    JComponent.DoNotRegister,
+    Collections.singleton(JConnectionType.AkkaType),
+    FiniteDuration.create(1, "second"));
+
+
+  Props getTromboneProps(HcdInfo hcdInfo, Optional<ActorRef> supervisorIn) {
+    if (supervisorIn.isPresent())
+      return TromboneHCD.props(hcdInfo, supervisorIn.get());
+    else
+      return TromboneHCD.props(hcdInfo, new TestProbe(system).ref());
+  }
+
+  // In place of Scala pair...
+  static class TestProbeActorRefPair {
+    TestProbe testProbe;
+    ActorRef actorRef;
+
+    public TestProbeActorRefPair(TestProbe testProbe, ActorRef actorRef) {
+      this.testProbe = testProbe;
+      this.actorRef = actorRef;
+    }
+  }
+
+  TestProbeActorRefPair newTrombone() {
+    HcdInfo hcdInfo = testInfo;
+    TestProbe supervisor = new TestProbe(system);
+    Props props = getTromboneProps(hcdInfo, Optional.of(supervisor.ref()));
+    return new TestProbeActorRefPair(supervisor, system.actorOf(props));
+  }
+
+  // In place of Scala pair...
+  static class TestProbeTestActorRefPair {
+    TestProbe testProbe;
+    TestActorRef<TromboneHCD> testActorRef;
+
+    public TestProbeTestActorRefPair(TestProbe testProbe, TestActorRef<TromboneHCD> testActorRef) {
+      this.testProbe = testProbe;
+      this.testActorRef = testActorRef;
+    }
+  }
+
+  TestProbeTestActorRefPair newTestTrombone() {
+    HcdInfo hcdInfo = testInfo;
+    TestProbe supervisor = new TestProbe(system);
+    Props props = getTromboneProps(hcdInfo, Optional.of(supervisor.ref()));
+    return new TestProbeTestActorRefPair(supervisor, TestActorRef.create(system, props));
+  }
+
+  void lifecycleStart(TestProbe supervisor, ActorRef tla) {
+    supervisor.expectMsg(Initialized);
+    supervisor.expectMsg(Started);
+
+    supervisor.send(tla, Running);
+  }
+
+  //  def waitForMoveMsgs: Seq[CurrentState] = {
 //    val msgs = receiveWhile(5.seconds) {
 //      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
 //      // This is present to pick up the first status message
@@ -64,58 +132,98 @@ package csw.examples.vsliceJava.hcd;
 //    val allmsgs = msgs :+ fmsg
 //    allmsgs
 //  }
-//
-//  def waitForAllMsgs: Seq[CurrentState] = {
-//    val msgs = receiveWhile(5.seconds) {
-//      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) => m
-//      // This is present to pick up the first status message
-//      case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
-//    }
-//    val fmsg = expectMsgClass(classOf[CurrentState]) // last one
-//    val allmsgs = msgs :+ fmsg
-//    allmsgs
-//  }
-//
-//  describe("low-level instrumented trombone HCD tests") {
-//    import csw.services.ccs.HcdController._
-//
-//    it("should initialize the trombone axis simulator") {
-//
-//      val (_, tla) = newTestTrombone()
-//      val ua = tla.underlyingActor
-//
-//      ua.tromboneAxis should not be null
-//
-//      // Should have initialized the current values in HCD from Axis
-//      ua.current.current should be(ua.axisConfig.startPosition)
-//      ua.current.state should be(SingleAxisSimulator.AXIS_IDLE) // This is simulator value
-//      ua.current.inHighLimit should be(false)
-//      ua.current.inLowLimit should be(false)
-//      ua.current.inHomed should be(false)
-//
-//      // Should initialize the statistics
-//      ua.stats.limitCount should be(0)
-//      ua.stats.cancelCount should be(0)
-//      ua.stats.failureCount should be(0)
-//      ua.stats.homeCount should be(0)
-//      ua.stats.initCount should be(0)
-//      ua.stats.moveCount should be(0)
-//      ua.stats.successCount should be(0)
-//    }
-//
-//    it("should lifecycle properly with a fake supervisor") {
-//      val (supervisor, tla) = newTestTrombone()
-//
-//      supervisor.expectMsg(Initialized)
-//      supervisor.expectMsg(Started)
-//
-//      supervisor.send(tla, Running)
-//
-//      supervisor.send(tla, DoShutdown)
-//      supervisor.expectMsg(ShutdownComplete)
-//
-//    }
-//
+  List<CurrentState> waitForMoveMsgs() {
+    final CurrentState[] msgs =
+      new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
+        protected CurrentState match(Object in) {
+          if (in instanceof CurrentState) {
+            CurrentState cs = (CurrentState)in;
+            if (cs.prefix().contains(TromboneHCD.axisStatePrefix) && jvalue(jitem(cs, TromboneHCD.stateKey)).equals(TromboneHCD.AXIS_MOVING)) {
+              return cs;
+            }
+            // This is present to pick up the first status message
+            if (cs.prefix().equals(TromboneHCD.axisStatsPrefix)) {
+              return cs;
+            }
+          }
+          throw noMatch();
+        }
+      }.get(); // this extracts the received messages
+
+    CurrentState fmsg = expectMsgClass(CurrentState.class); // last one
+
+    List<CurrentState> allmsgs = Arrays.asList(msgs);
+    allmsgs.add(fmsg);
+    return allmsgs;
+  }
+
+  List<CurrentState> waitForAllMsgs() {
+    final CurrentState[] msgs =
+      new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
+        protected CurrentState match(Object in) {
+          if (in instanceof CurrentState) {
+            CurrentState cs = (CurrentState)in;
+            if (cs.prefix().contains(TromboneHCD.axisStatePrefix)) {
+              return cs;
+            }
+            // This is present to pick up the first status message
+            if (cs.prefix().equals(TromboneHCD.axisStatsPrefix)) {
+              return cs;
+            }
+          }
+          throw noMatch();
+        }
+      }.get(); // this extracts the received messages
+
+    CurrentState fmsg = expectMsgClass(CurrentState.class); // last one
+
+    List<CurrentState> allmsgs = Arrays.asList(msgs);
+    allmsgs.add(fmsg);
+    return allmsgs;
+  }
+
+  @Test
+  public void lowLevelInstrumentedTromboneHcdTests() throws Exception {
+
+    it("should initialize the trombone axis simulator");
+    {
+      TestActorRef<TromboneHCD> tla = newTestTrombone().testActorRef;
+      TromboneHCD ua = tla.underlyingActor();
+
+      assertNotNull(ua.tromboneAxis);
+
+      // Should have initialized the current values in HCD from Axis
+      assertEquals(ua.current.current, ua.axisConfig.startPosition);
+      assertEquals(ua.current.state, AXIS_IDLE); // This is simulator value
+      assertEquals(ua.current.inHighLimit, false);
+      assertEquals(ua.current.inLowLimit, false);
+      assertEquals(ua.current.inHomed, false);
+
+      // Should initialize the statistics
+      assertEquals(ua.stats.limitCount, 0);
+      assertEquals(ua.stats.cancelCount, 0);
+      assertEquals(ua.stats.failureCount, 0);
+      assertEquals(ua.stats.homeCount, 0);
+      assertEquals(ua.stats.initCount, 0);
+      assertEquals(ua.stats.moveCount, 0);
+      assertEquals(ua.stats.successCount, 0);
+    }
+
+    it("should lifecycle properly with a fake supervisor");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+      supervisor.expectMsg(Initialized);
+      supervisor.expectMsg(Started);
+
+      supervisor.send(tla, Running);
+
+      supervisor.send(tla, DoShutdown);
+      supervisor.expectMsg(ShutdownComplete);
+    }
+
 //    it("should allow fetching config") {
 //
 //      val (supervisor, tla) = newTestTrombone()
@@ -127,13 +235,13 @@ package csw.examples.vsliceJava.hcd;
 //      val config = expectMsgClass(classOf[CurrentState])
 //      //println("AxisStats: " + config)
 //      config(axisNameKey).head equals tla.underlyingActor.axisConfig.axisName
-//      config(lowLimitKey).head should be(tla.underlyingActor.axisConfig.lowLimit)
-//      config(lowUserKey).head should be(tla.underlyingActor.axisConfig.lowUser)
-//      config(highUserKey).head should be(tla.underlyingActor.axisConfig.highUser)
-//      config(highLimitKey).head should be(tla.underlyingActor.axisConfig.highLimit)
-//      config(homeValueKey).head should be(tla.underlyingActor.axisConfig.home)
-//      config(startValueKey).head should be(tla.underlyingActor.axisConfig.startPosition)
-//      config(stepDelayMSKey).head should be(tla.underlyingActor.axisConfig.stepDelayMS)
+//      config(lowLimitKey).head, tla.underlyingActor.axisConfig.lowLimit)
+//      config(lowUserKey).head, tla.underlyingActor.axisConfig.lowUser)
+//      config(highUserKey).head, tla.underlyingActor.axisConfig.highUser)
+//      config(highLimitKey).head, tla.underlyingActor.axisConfig.highLimit)
+//      config(homeValueKey).head, tla.underlyingActor.axisConfig.home)
+//      config(startValueKey).head, tla.underlyingActor.axisConfig.startPosition)
+//      config(stepDelayMSKey).head, tla.underlyingActor.axisConfig.stepDelayMS)
 //
 //      tla ! Unsubscribe
 //
@@ -150,13 +258,13 @@ package csw.examples.vsliceJava.hcd;
 //
 //      val stats = expectMsgClass(classOf[CurrentState])
 //      //println("AxisStats: " + stats)
-//      stats(datumCountKey).head should be(0)
-//      stats(moveCountKey).head should be(0)
-//      stats(homeCountKey).head should be(0)
-//      stats(limitCountKey).head should be(0)
-//      stats(successCountKey).head should be(0)
-//      stats(failureCountKey).head should be(0)
-//      stats(cancelCountKey).head should be(0)
+//      stats(datumCountKey).head, 0)
+//      stats(moveCountKey).head, 0)
+//      stats(homeCountKey).head, 0)
+//      stats(limitCountKey).head, 0)
+//      stats(successCountKey).head, 0)
+//      stats(failureCountKey).head, 0)
+//      stats(cancelCountKey).head, 0)
 //
 //      tla ! Unsubscribe
 //
@@ -228,8 +336,8 @@ package csw.examples.vsliceJava.hcd;
 //
 //      val msgs = waitForMoveMsgs
 //      // Check the last message
-//      msgs.last(positionKey).head should be(testPos)
-//      msgs.last(stateKey).head should be(AXIS_IDLE)
+//      msgs.last(positionKey).head, testPos)
+//      msgs.last(stateKey).head, AXIS_IDLE)
 //
 //      //info("Msgs: " + msgs)
 //      tla ! Unsubscribe
@@ -251,16 +359,16 @@ package csw.examples.vsliceJava.hcd;
 //      // Move 2
 //      tla ! Submit(homeSC)
 //      var msgs = waitForMoveMsgs
-//      msgs.last(inHomeKey).head should be(true)
+//      msgs.last(inHomeKey).head, true)
 //
 //      encoderTestValues.foreach { testPos =>
 //        tla ! Submit(positionSC(testPos))
 //        //val msgs = waitForMoveMsgs
 //      }
 //      waitForMoveMsgs
-//
-//    }
-//
+
+    }
+
 //    describe("place into the low limit") {
 //      import csw.services.ccs.HcdController._
 //
@@ -277,8 +385,8 @@ package csw.examples.vsliceJava.hcd;
 //
 //        val msgs = waitForMoveMsgs
 //        // Check the last message
-//        msgs.last(stateKey).head should be(AXIS_IDLE)
-//        msgs.last(positionKey).head should be(testActual)
+//        msgs.last(stateKey).head, AXIS_IDLE)
+//        msgs.last(positionKey).head, testActual)
 //        msgs.last(inLowLimitKey).head should equal(true)
 //        msgs.last(inHighLimitKey).head should equal(false)
 //
@@ -305,8 +413,8 @@ package csw.examples.vsliceJava.hcd;
 //
 //        val msgs = waitForMoveMsgs
 //        // Check the last message
-//        msgs.last(stateKey).head should be(AXIS_IDLE)
-//        msgs.last(positionKey).head should be(testActual)
+//        msgs.last(stateKey).head, AXIS_IDLE)
+//        msgs.last(positionKey).head, testActual)
 //        msgs.last(inLowLimitKey).head should equal(false)
 //        msgs.last(inHighLimitKey).head should equal(true)
 //
@@ -332,48 +440,48 @@ package csw.examples.vsliceJava.hcd;
 //        // Move 1
 //        tla ! Submit(SetupConfig(axisDatumPrefix)) // Could use ones in TromboneHCD
 //        var msgs = waitForMoveMsgs
-//        msgs.last(inHomeKey).head should be(false)
+//        msgs.last(inHomeKey).head, false)
 //
 //        // Move 2
 //        tla ! Submit(homeSC)
 //        msgs = waitForMoveMsgs
-//        msgs.last(inHomeKey).head should be(true)
+//        msgs.last(inHomeKey).head, true)
 //
 //        // Move 3
 //        var testPos = 423
 //        tla ! Submit(positionSC(testPos))
 //        msgs = waitForMoveMsgs
 //        // Check the last message
-//        msgs.last(positionKey).head should be(testPos)
-//        msgs.last(stateKey).head should be(AXIS_IDLE)
-//        msgs.last(inHomeKey).head should be(false)
-//        msgs.last(inLowLimitKey).head should be(false)
-//        msgs.last(inHighLimitKey).head should be(false)
+//        msgs.last(positionKey).head, testPos)
+//        msgs.last(stateKey).head, AXIS_IDLE)
+//        msgs.last(inHomeKey).head, false)
+//        msgs.last(inLowLimitKey).head, false)
+//        msgs.last(inHighLimitKey).head, false)
 //
 //        // Move 4
 //        testPos = 800
 //        tla ! Submit(positionSC(testPos))
 //        msgs = waitForMoveMsgs
 //        // Check the last message
-//        msgs.last(positionKey).head should be(testPos)
-//        msgs.last(stateKey).head should be(AXIS_IDLE)
+//        msgs.last(positionKey).head, testPos)
+//        msgs.last(stateKey).head, AXIS_IDLE)
 //
 //        // Move 5
 //        testPos = 1240
 //        tla ! Submit(positionSC(testPos))
 //        msgs = waitForMoveMsgs
 //        // Check the last message
-//        msgs.last(positionKey).head should be(testPos)
-//        msgs.last(stateKey).head should be(AXIS_IDLE)
-//        msgs.last(inLowLimitKey).head should be(false)
-//        msgs.last(inHighLimitKey).head should be(true)
+//        msgs.last(positionKey).head, testPos)
+//        msgs.last(stateKey).head, AXIS_IDLE)
+//        msgs.last(inLowLimitKey).head, false)
+//        msgs.last(inHighLimitKey).head, true)
 //
 //        // Move 6
 //        tla ! Submit(homeSC)
 //        msgs = waitForMoveMsgs
-//        msgs.last(inHomeKey).head should be(true)
-//        msgs.last(inLowLimitKey).head should be(false)
-//        msgs.last(inHighLimitKey).head should be(false)
+//        msgs.last(inHomeKey).head, true)
+//        msgs.last(inLowLimitKey).head, false)
+//        msgs.last(inHighLimitKey).head, false)
 //
 //        // Get summary stats
 //        tla ! GetAxisStats
@@ -385,8 +493,8 @@ package csw.examples.vsliceJava.hcd;
 //        stats.item(homeCountKey).head should equal(2)
 //        stats.item(limitCountKey).head should equal(1)
 //        stats.item(successCountKey).head should equal(6)
-//        stats.item(failureCountKey).head should be(0)
-//        stats.item(cancelCountKey).head should be(0)
+//        stats.item(failureCountKey).head, 0)
+//        stats.item(cancelCountKey).head, 0)
 //
 //        tla ! Unsubscribe
 //
@@ -412,7 +520,7 @@ package csw.examples.vsliceJava.hcd;
 //        tla ! Submit(cancelSC)
 //        val msgs = waitForMoveMsgs
 //        // Check the last message
-//        msgs.last(stateKey).head should be(AXIS_IDLE)
+//        msgs.last(stateKey).head, AXIS_IDLE)
 //        info("Msgs: " + msgs)
 //
 //        // Get summary stats
@@ -422,7 +530,7 @@ package csw.examples.vsliceJava.hcd;
 //        stats.configKey should equal(TromboneHCD.axisStatsCK)
 //        stats.item(moveCountKey).head should equal(1)
 //        stats.item(successCountKey).head should equal(1)
-//        stats.item(cancelCountKey).head should be(1)
+//        stats.item(cancelCountKey).head, 1)
 //
 //        tla ! Unsubscribe
 //
@@ -451,4 +559,5 @@ package csw.examples.vsliceJava.hcd;
 //    }
 //
 //  }
-//}
+
+}

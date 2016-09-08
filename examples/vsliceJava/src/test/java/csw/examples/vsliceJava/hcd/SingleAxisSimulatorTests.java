@@ -31,7 +31,12 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
   // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
   ActorRef self() {
     return getTestActor();
-  };
+  }
+
+  // For compatibility with Scala tests
+  void it(String s) {
+    System.out.println(s);
+  }
 
   public SingleAxisSimulatorTests() {
     super(system);
@@ -213,17 +218,19 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     int testDestination = 1000;
     int testDelay = 200;
 
-    // should allow cancelling after a few steps
-    Props props = props(testStart, testDestination, testDelay, self(), false);
-    final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-    ms.tell(Start.instance, self());
-    expectMsgEquals(Start.instance);
-    // Wait 3 messages
-    receiveN(3, calcDelay(3, testDelay));
-    ms.tell(Cancel.instance, self());
-    // One more move
-    receiveN(1);
-    expectMsgClass(End.class);
+    it("should allow cancelling after a few steps");
+    {
+      Props props = props(testStart, testDestination, testDelay, self(), false);
+      final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+      ms.tell(Start.instance, self());
+      expectMsgEquals(Start.instance);
+      // Wait 3 messages
+      receiveN(3, calcDelay(3, testDelay));
+      ms.tell(Cancel.instance, self());
+      // One more move
+      receiveN(1);
+      expectMsgClass(End.class);
+    }
   }
 
 
@@ -254,14 +261,14 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
 
   @Test
   public void testSingleAxis() throws Exception {
-    // should be creatable and initialize
+    it("should be creatable and initialize");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
       assertEquals(sa.underlyingActor().axisConfig, defaultAxisConfig);
       sa.tell(PoisonPill.getInstance(), self());
     }
 
-    // limitMove should clamp value
+    it("limitMove should clamp value");
     {
       AxisConfig ac = defaultAxisConfig;
 
@@ -287,7 +294,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       isHomed(ac, ac.home);
     }
 
-    // Should init properly
+    it("Should init properly");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
       // Expect an initial axis status message
@@ -312,7 +319,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       sa.tell(PoisonPill.getInstance(), self());
     }
 
-    // Should home properly
+    it("Should home properly");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
@@ -358,7 +365,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       sa.tell(PoisonPill.getInstance(), self());
     }
 
-    // Should move properly
+    it("Should move properly");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
       sa.tell(new Move(500, false), self());
@@ -370,7 +377,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     }
 
 
-    // Should move and update
+    it("Should move and update");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
@@ -394,7 +401,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       sa.tell(PoisonPill.getInstance(), self());
     }
 
-    // Should allow a cancel
+    it("Should allow a cancel");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
@@ -412,7 +419,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       sa.tell(PoisonPill.getInstance(), self());
     }
 
-    // should limit out-of-range moves"
+    it("should limit out-of-range moves");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
@@ -461,7 +468,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
       sa.tell(PoisonPill.getInstance(), self());
     }
 
-    // should support a complex example
+    it("should support a complex example");
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 

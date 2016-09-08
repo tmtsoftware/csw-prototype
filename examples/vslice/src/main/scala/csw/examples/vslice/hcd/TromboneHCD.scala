@@ -22,7 +22,7 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 /**
-  * TMT Source Code: 6/20/16.
+  * XXX TODO FIXME: supervisor arg overrides the supervisor inherited from Component
   */
 class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController {
 
