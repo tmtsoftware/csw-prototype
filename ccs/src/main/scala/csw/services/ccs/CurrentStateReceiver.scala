@@ -4,31 +4,31 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import csw.util.config.StateVariable.CurrentState
 
 /**
-  * This class distributes CurrentState events within the single ActorSystem of a component allowing "handlers"
-  * to access a single stream of CurrentState events. The subscribe/unsubscriber messages are the same as the
-  * ones used in HcdController
-  *
-  * Example:
-  * <pre>
-  *   import CurrentStateReceiver._
-  *
-  *   val stateReceiver = system.actorOf(CurrentStateReceiver.props)
-  *
-  *   // Add an HCD publisher
-  *   stateReceiver ! AddPublisher(hcdActorRef)
-  *
-  *   // An actor wishing to receive CurrentState uses
-  *   stateReceiver ! AddCurrentStateHandler(handlerActorRef)
-  *
-  *   // Later, it can stop receiving CurrentState using
-  *   stateReceiver ! RemoveCurrentStateHandler(handlerActorRef)
-  * </pre>
-  *
-  */
-class CurrentStateReceiver()  extends Actor with ActorLogging {
+ * This class distributes CurrentState events within the single ActorSystem of a component allowing "handlers"
+ * to access a single stream of CurrentState events. The subscribe/unsubscriber messages are the same as the
+ * ones used in HcdController
+ *
+ * Example:
+ * <pre>
+ *   import CurrentStateReceiver._
+ *
+ *   val stateReceiver = system.actorOf(CurrentStateReceiver.props)
+ *
+ *   // Add an HCD publisher
+ *   stateReceiver ! AddPublisher(hcdActorRef)
+ *
+ *   // An actor wishing to receive CurrentState uses
+ *   stateReceiver ! AddCurrentStateHandler(handlerActorRef)
+ *
+ *   // Later, it can stop receiving CurrentState using
+ *   stateReceiver ! RemoveCurrentStateHandler(handlerActorRef)
+ * </pre>
+ *
+ */
+class CurrentStateReceiver() extends Actor with ActorLogging {
   import CurrentStateReceiver._
 
-  def receive:Receive = {
+  def receive: Receive = {
     case AddPublisher(publisher) =>
       publisher ! HcdController.Subscribe
     case RemovePublisher(publisher) =>
@@ -38,7 +38,7 @@ class CurrentStateReceiver()  extends Actor with ActorLogging {
       context.system.eventStream.subscribe(sender(), classOf[CurrentState])
     case HcdController.Unsubscribe =>
       unsubscribe(sender())
-    case cs:CurrentState =>
+    case cs: CurrentState =>
       context.system.eventStream.publish(cs)
     case Terminated(actorRef) =>
       unsubscribe(actorRef)

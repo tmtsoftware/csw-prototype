@@ -184,7 +184,7 @@ object TromboneAssembly {
   // Move submit command
   val movePrefix = s"$componentPrefix.move"
   val moveCK:ConfigKey = movePrefix
-  def moveSC(position: Int):SetupConfig = SetupConfig(moveCK).add(stagePositionKey -> position withUnits stagePositionUnits)
+  def moveSC(position: Double):SetupConfig = SetupConfig(moveCK).add(stagePositionKey -> position withUnits stagePositionUnits)
 
     // Position submit command
   val positionPrefix = s"$componentPrefix.position"

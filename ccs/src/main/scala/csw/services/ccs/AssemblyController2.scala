@@ -162,7 +162,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    * @param replyTo   if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def setup(configArg: SetupConfigArg, replyTo:   Option[ActorRef]): Validation = Valid
+  protected def setup(configArg: SetupConfigArg, replyTo: Option[ActorRef]): Validation = Valid
 
   /**
    * Called to process the observe config and reply to the given actor with the command status.

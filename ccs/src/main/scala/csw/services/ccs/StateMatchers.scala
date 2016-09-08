@@ -10,9 +10,9 @@ import scala.concurrent.duration._
 object StateMatchers {
 
   /**
-    * A StateMatcher provides a prefix and a check method that checks the CurrentState and returns
-    * a boolean if completion has occured or false in no completion
-    */
+   * A StateMatcher provides a prefix and a check method that checks the CurrentState and returns
+   * a boolean if completion has occured or false in no completion
+   */
   trait StateMatcher {
     def prefix: String
 
@@ -20,11 +20,11 @@ object StateMatchers {
   }
 
   /**
-    * The DemandMatcherAll checks for equality between the CurrentState and the DemandState.
-    * This is more inclusive than DemandMatcher and may not be used regularly
-    *
-    * @param demand a DemandState that will be tested for equality with each CurrentState
-    */
+   * The DemandMatcherAll checks for equality between the CurrentState and the DemandState.
+   * This is more inclusive than DemandMatcher and may not be used regularly
+   *
+   * @param demand a DemandState that will be tested for equality with each CurrentState
+   */
   case class DemandMatcherAll(demand: DemandState) extends StateMatcher {
     def prefix = demand.prefix
 
@@ -32,14 +32,14 @@ object StateMatchers {
   }
 
   /**
-    * The DemandMatcher checks the CurrentStatus for equality with the items in the DemandState.
-    * This version tests for equality so it may not work the best with floating point values.
-    * Note: If the withUnits flag is set, the equality check with also compare units. False is the default
-    * so normally units are ignored for this purpose.
-    *
-    * @param demand    a DemandState that will provide the items for determining completion with the CurrentState
-    * @param withUnits when True, units are compared. When false, units are not compared. Default is false.
-    */
+   * The DemandMatcher checks the CurrentStatus for equality with the items in the DemandState.
+   * This version tests for equality so it may not work the best with floating point values.
+   * Note: If the withUnits flag is set, the equality check with also compare units. False is the default
+   * so normally units are ignored for this purpose.
+   *
+   * @param demand    a DemandState that will provide the items for determining completion with the CurrentState
+   * @param withUnits when True, units are compared. When false, units are not compared. Default is false.
+   */
   case class DemandMatcher(demand: DemandState, withUnits: Boolean = false) extends StateMatcher {
 
     import csw.util.config.Item
@@ -55,21 +55,21 @@ object StateMatchers {
   }
 
   /**
-    * PresenceMatcher only checks for the existence of a CurrentState with a given prefix.
-    *
-    * @param prefix the prefix to match against the CurrentState
-    */
+   * PresenceMatcher only checks for the existence of a CurrentState with a given prefix.
+   *
+   * @param prefix the prefix to match against the CurrentState
+   */
   case class PresenceMatcher(prefix: String) extends StateMatcher {
     def check(current: CurrentState) = true
   }
 
   /**
-    * Subscribes to the current state values of a single HCD through the CurrentStateReceiver and notifies the
-    * sender with the command status when the strea matches the demand state,
-    * or with an error status message if the given timeout expires.
-    *
-    * See props for a description of the arguments for the class and message that starts the match.
-    */
+   * Subscribes to the current state values of a single HCD through the CurrentStateReceiver and notifies the
+   * sender with the command status when the strea matches the demand state,
+   * or with an error status message if the given timeout expires.
+   *
+   * See props for a description of the arguments for the class and message that starts the match.
+   */
   class SingleStateMatcherActor(currentStateReceiver: ActorRef, timeout: Timeout) extends Actor with ActorLogging {
 
     import SingleStateMatcherActor._
@@ -114,31 +114,31 @@ object StateMatchers {
 
   object SingleStateMatcherActor {
     /**
-      * Props used to create the HcdStatusMatcherActor actor.
-      * Precondition: The matcher assumes that the status publishers have been added to the StateReceiver
-      *
-      * @param currentStateReceiver a source of CurrentState events
-      * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
-      */
+     * Props used to create the HcdStatusMatcherActor actor.
+     * Precondition: The matcher assumes that the status publishers have been added to the StateReceiver
+     *
+     * @param currentStateReceiver a source of CurrentState events
+     * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
+     */
     def props(currentStateReceiver: ActorRef, timeout: Timeout): Props =
-    Props(classOf[SingleStateMatcherActor], currentStateReceiver, timeout)
+      Props(classOf[SingleStateMatcherActor], currentStateReceiver, timeout)
 
     /**
-      * Message class used to start off the execution of the state matcher
-      *
-      * @param matcher the function used to compare the demand and current states extends StateMatcher trait.
-      */
+     * Message class used to start off the execution of the state matcher
+     *
+     * @param matcher the function used to compare the demand and current states extends StateMatcher trait.
+     */
     case class StartMatch(matcher: StateMatcher)
 
   }
 
   /**
-    * Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
-    * sender with the command status when they all match the respective demand states,
-    * or with an error status message if the given timeout expires.
-    *
-    * See props for a description of the arguments for the class and message that start the match.
-    */
+   * Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
+   * sender with the command status when they all match the respective demand states,
+   * or with an error status message if the given timeout expires.
+   *
+   * See props for a description of the arguments for the class and message that start the match.
+   */
   class MultiStateMatcherActor(stateSource: ActorRef, timeout: Timeout) extends Actor with ActorLogging {
 
     import MultiStateMatcherActor._
@@ -192,21 +192,75 @@ object StateMatchers {
     }
   }
 
+  /**
+   * Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
+   * sender with the command status when they all match the respective demand states,
+   * This version does not time out and relies on a higher level future to timeout.
+   *
+   * See props for a description of the arguments for the class and message that start the match.
+   */
+  class MultiStateMatcherActor2(stateSource: ActorRef) extends Actor with ActorLogging {
+
+    import MultiStateMatcherActor._
+    import context.dispatcher
+
+    def receive: Receive = waiting
+
+    // This subscribes this
+    stateSource ! Subscribe
+
+    // Waiting for all variables to match, which is the case when the results set contains
+    // a matching current state for each demand state
+    def waiting: Receive = {
+      case StartMatch(matchers) =>
+        val mysender = sender()
+        context.become(executing(matchers, mysender))
+
+      case x => log.error(s"MultiStateMatcherActor2 received an unexpected message: $x")
+    }
+
+    // Waiting for all variables to match, which is the case when the results set contains
+    // a matching current state for each demand state
+    def executing(matchers: List[StateMatcher], mysender: ActorRef): Receive = {
+      case current: CurrentState =>
+        log.debug(s"received current state: $current")
+        // filter the matchers first on prefix and then on check function to get only matchers that succeed
+        val matched = matchers.filter(_.prefix == current.prefix).filter(_.check(current))
+        if (matched.nonEmpty) {
+          log.debug("MultiStateMatcherActor2 matched")
+          // Note that this accomodates the case when more than one matcher match on the same prefix!
+          val newMatchers = matchers.diff(matched)
+          if (newMatchers.isEmpty) {
+            stateSource ! Unsubscribe
+            mysender ! CommandStatus2.Completed
+            context.stop(self)
+          } else {
+            // Call again with a smaller list of matchers!
+            context.become(executing(newMatchers, mysender))
+          }
+        }
+
+      case x => log.error(s"MultiStateMatcherActor2 received an unexpected message: $x")
+    }
+  }
+
   object MultiStateMatcherActor {
     /**
-      * Props used to create the HcdStatusMultiMatcherActor actor.
-      *
-      * @param currentStateReceiver a source of CurrentState events
-      * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
-      */
-    def props(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(60.seconds)): Props =
+     * Props used to create the HcdStatusMultiMatcherActor actor.
+     *
+     * @param currentStateReceiver a source of CurrentState events
+     * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
+     */
+    def props(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(10.seconds)): Props =
       Props(classOf[MultiStateMatcherActor], currentStateReceiver, timeout)
 
+    def props2(currentStateReceiver: ActorRef): Props = Props(classOf[MultiStateMatcherActor2], currentStateReceiver)
+
     /**
-      * Props used to create the MultiStateMatcherActor actor.
-      *
-      * @param matcher the a list of StateMatcher instances used to compare the demand and current states
-      */
+     * Props used to create the MultiStateMatcherActor actor.
+     *
+     * @param matcher the a list of StateMatcher instances used to compare the demand and current states
+     */
     case class StartMatch(matcher: List[StateMatcher])
 
     object StartMatch {

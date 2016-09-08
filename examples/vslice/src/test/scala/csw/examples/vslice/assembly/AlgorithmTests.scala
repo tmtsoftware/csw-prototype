@@ -1,5 +1,7 @@
 package csw.examples.vslice.assembly
 
+import csw.util.config.DoubleItem
+import csw.util.config.UnitsOfMeasure.millimeters
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
 
 /**
@@ -14,6 +16,7 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
   }
 
   val calculationConfig = TestCalculationConfig
+  val controlConfig = TestControlConfig
 
   val initialElevation = calculationConfig.defaultInitialElevation
 
@@ -29,6 +32,9 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
 
     val typRD = focusToRangeDistance(calculationConfig, 0)
     val typTotal = typRD + naLayerElevation(calculationConfig, initialElevation, 0)
+
+    val minReasonableAltitude = 85.0
+    val maxReasonableAltitude = 100.0
 
     it("should test focusToRangeDistance") {
       val result = rangeTestValues.map(_._1).map(f => focusToRangeDistance(calculationConfig, f))
@@ -47,8 +53,8 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
 
     it("total should be reasonable") {
       // Total values are at limits with +20 error and 0 zenith angle
-      maxTotal should be < 100.0
-      minTotal should be > 85.0
+      maxTotal should be < maxReasonableAltitude
+      minTotal should be > minReasonableAltitude
       info(s"m/m: + $minTotal/$maxTotal")
       info(s"Typ: $typTotal")
     }
@@ -64,6 +70,17 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       verifyZenithAngle(zenithAngleKey -> 0.0) should be(true)
       verifyZenithAngle(zenithAngleKey -> -1.0) should be(false)
       verifyZenithAngle(zenithAngleKey -> 92.0) should be(false)
+    }
+
+    def pos(p: Double):DoubleItem = stagePositionKey -> p withUnits millimeters
+
+    it("should work with range transform") {
+      val p = pos(90.0)
+      val minEncoder = Algorithms.rangeDistanceTransform(controlConfig, pos(minReasonableAltitude))
+      val maxEncoder = Algorithms.rangeDistanceTransform(controlConfig, pos(maxReasonableAltitude))
+
+      println("R: " + minEncoder)
+      println("Max: " + maxEncoder)
     }
   }
 

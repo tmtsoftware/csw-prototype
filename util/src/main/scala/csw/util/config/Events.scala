@@ -38,7 +38,7 @@ object Events {
         case that: EventInfo =>
           // Ignore the event ID && time to allow comparing events.  Is this right?
           this.source == that.source && this.obsId == that.obsId // && this.time == that.time
-        case _               => false
+        case _ => false
       }
     }
   }

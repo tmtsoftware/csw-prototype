@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.TromboneCommandHandler.ExecSequential
+import csw.examples.vslice.assembly.TromboneStateHandler.TromboneState
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.services.ccs.CommandStatus2.{CommandResult, ExecResults}
 import csw.services.ccs.CurrentStateReceiver
@@ -45,6 +46,10 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
   val hcdCompID = ComponentId(TromboneHCD.componentName, ComponentType.HCD)
   val hcdConnection = AkkaConnection(hcdCompID)
 
+  def writeState(ts: TromboneState) = {
+    system.eventStream.publish(ts)
+  }
+
   def fixture =
     new {
       initInterface()
@@ -79,7 +84,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
 
       ch ! ExecSequential(sca, tromboneHCD)
 
-      val msg = fakeAssembly.expectMsgClass(35.seconds, classOf[ExecResults])
+      val msg = fakeAssembly.expectMsgClass(35.seconds, classOf[CommandResult])
       println("Final: " + msg)
 
     }
@@ -99,10 +104,12 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
       val currentStateReceiver = system.actorOf(CurrentStateReceiver.props)
       currentStateReceiver ! AddPublisher(tromboneHCD)
 
+
       val ch: TestActorRef[TromboneCommandHandler] = TestActorRef(TromboneCommandHandler.props(TestControlConfig, currentStateReceiver, Some(fakeAssembly.ref)))
 
+      writeState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false)))
 
-      val sca = Configurations.createSetupConfigArg("testobsId", moveSC(500))
+      val sca = Configurations.createSetupConfigArg("testobsId", moveSC(90.0))
 
       ch ! ExecSequential(sca, tromboneHCD)
 
@@ -127,7 +134,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
 
       val ch: TestActorRef[TromboneCommandHandler] = TestActorRef(TromboneCommandHandler.props(TestControlConfig, currentStateReceiver, Some(fakeAssembly.ref)))
 
-      val sca = Configurations.createSetupConfigArg("testobsId", moveSC(500), moveSC(700))
+      val sca = Configurations.createSetupConfigArg("testobsId", moveSC(86.0), moveSC(87.1))
 
       ch ! ExecSequential(sca, tromboneHCD)
 

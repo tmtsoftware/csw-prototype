@@ -105,13 +105,13 @@ object Configurations {
     def get[S, I <: Item[S]](key: Key[S, I]): Option[I] = getByKeyname[I](items, key.keyName)
 
     /**
-      * Returns an Option with the item for the key if found, otherwise None. Access with keyname rather
-      * than Key
-      * @param keyName the keyname to be used for the lookup
-      * @tparam S the item for the key, if found
-      * @tparam I the Scala value type
-      * @return I the item type for Scala value S
-      */
+     * Returns an Option with the item for the key if found, otherwise None. Access with keyname rather
+     * than Key
+     * @param keyName the keyname to be used for the lookup
+     * @tparam S the item for the key, if found
+     * @tparam I the Scala value type
+     * @return I the item type for Scala value S
+     */
     def getByName[I <: Item[_]](keyName: String): Option[I] = getByKeyname[I](items, keyName)
     def find[I <: Item[_]](item: I): Option[I] = getByKeyname[I](items, item.keyName)
 
