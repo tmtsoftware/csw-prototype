@@ -192,6 +192,58 @@ object StateMatchers {
     }
   }
 
+  /**
+   * Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
+   * sender with the command status when they all match the respective demand states,
+   * This version does not time out and relies on a higher level future to timeout.
+   *
+   * See props for a description of the arguments for the class and message that start the match.
+   */
+  class MultiStateMatcherActor2(stateSource: ActorRef) extends Actor with ActorLogging {
+
+    import MultiStateMatcherActor._
+    import context.dispatcher
+
+    def receive: Receive = waiting
+
+    // This subscribes this
+    stateSource ! Subscribe
+
+    // Waiting for all variables to match, which is the case when the results set contains
+    // a matching current state for each demand state
+    def waiting: Receive = {
+      case StartMatch(matchers) =>
+        val mysender = sender()
+        context.become(executing(matchers, mysender))
+
+      case x => log.error(s"MultiStateMatcherActor2 received an unexpected message: $x")
+    }
+
+    // Waiting for all variables to match, which is the case when the results set contains
+    // a matching current state for each demand state
+    def executing(matchers: List[StateMatcher], mysender: ActorRef): Receive = {
+      case current: CurrentState =>
+        log.debug(s"received current state: $current")
+        // filter the matchers first on prefix and then on check function to get only matchers that succeed
+        val matched = matchers.filter(_.prefix == current.prefix).filter(_.check(current))
+        if (matched.nonEmpty) {
+          log.debug("MultiStateMatcherActor2 matched")
+          // Note that this accomodates the case when more than one matcher match on the same prefix!
+          val newMatchers = matchers.diff(matched)
+          if (newMatchers.isEmpty) {
+            stateSource ! Unsubscribe
+            mysender ! CommandStatus2.Completed
+            context.stop(self)
+          } else {
+            // Call again with a smaller list of matchers!
+            context.become(executing(newMatchers, mysender))
+          }
+        }
+
+      case x => log.error(s"MultiStateMatcherActor2 received an unexpected message: $x")
+    }
+  }
+
   object MultiStateMatcherActor {
     /**
      * Props used to create the HcdStatusMultiMatcherActor actor.
@@ -199,8 +251,10 @@ object StateMatchers {
      * @param currentStateReceiver a source of CurrentState events
      * @param timeout              the amount of time to wait for a match before giving up and replying with a Timeout message
      */
-    def props(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(60.seconds)): Props =
+    def props(currentStateReceiver: ActorRef, timeout: Timeout = Timeout(10.seconds)): Props =
       Props(classOf[MultiStateMatcherActor], currentStateReceiver, timeout)
+
+    def props2(currentStateReceiver: ActorRef): Props = Props(classOf[MultiStateMatcherActor2], currentStateReceiver)
 
     /**
      * Props used to create the MultiStateMatcherActor actor.

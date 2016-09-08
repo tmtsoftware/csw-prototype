@@ -5,6 +5,8 @@ import csw.services.ccs.CommandStatus2._
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{Start, StartTheDamnThing, StarterFunction}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
+import scala.concurrent.Future
+
 /**
  * TMT Source Code: 9/6/16.
  */
@@ -33,7 +35,7 @@ object SequentialExecution {
         doStart(sc, destination, Some(context.self))
 
       case cs @ NoLongerValid(issue) =>
-        log.info(s"Received complete for cmd: $issue + $cs")
+        log.info(s"Received complete for cmd: $issue + ${configsIn.head}")
         // Save record of sequential successes
         context.become(receive)
         val execResultsOut = execResultsIn :+ (cs, configsIn.head)
@@ -67,6 +69,12 @@ object SequentialExecution {
   }
 
   object SequentialExecutor {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    def seqExc(sca: SetupConfigArg, destination: ActorRef, doStart: StarterFunction): Future[CommandStatus2] = {
+      sca.configs.map(doStart(_, destination, None))
+      Future(Completed)
+    }
 
     def props(sca: SetupConfigArg, doStart: StarterFunction, destination: ActorRef, replyTo: Option[ActorRef]): Props =
       Props(classOf[SequentialExecutor], sca, doStart, destination, replyTo)
