@@ -30,25 +30,25 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   // This is safe because there is no way to change the variables other than within this actor
   // When created, the current is set to the start current
   int current;
-  private boolean inLowLimit = false;
-  private boolean inHighLimit = false;
-  private boolean inHome = false;
-  private AxisState axisState = AXIS_IDLE;
+  boolean inLowLimit = false;
+  boolean inHighLimit = false;
+  boolean inHome = false;
+  AxisState axisState = AXIS_IDLE;
 
   // Statistics for status
-  private int initCount = 0;
+  int initCount = 0;
   // Number of init requests
-  private int moveCount = 0;
+  int moveCount = 0;
   // Number of move requests
-  private int homeCount = 0;
+  int homeCount = 0;
   // Number of home requests
-  private int limitCount = 0;
+  int limitCount = 0;
   // Number of times in a limit
-  private int successCount = 0;
+  int successCount = 0;
   // Number of successful requests
-  private int failureCount = 0;
+  int failureCount = 0;
   // Number of failed requests
-  private int cancelCount = 0; // Number of times a move has been cancelled
+  int cancelCount = 0; // Number of times a move has been cancelled
 
 
   /**
@@ -288,6 +288,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
       this.position = position;
       this.diagFlag = diagFlag;
     }
+
     public Move(int position) {
       this.position = position;
       this.diagFlag = false;

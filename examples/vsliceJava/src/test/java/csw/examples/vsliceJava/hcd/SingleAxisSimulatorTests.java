@@ -365,8 +365,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     }
 
 
-
-    // Should move and update 
+    // Should move and update
     {
       TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
@@ -383,134 +382,124 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
 
       Vector<AxisResponse> msgs = expectMoveMsgsWithDest(425, false);
       assertTrue(msgs.lastElement() instanceof AxisUpdate);
-      AxisUpdate last = (AxisUpdate)msgs.lastElement();
+      AxisUpdate last = (AxisUpdate) msgs.lastElement();
       assertEquals(last.state, AXIS_IDLE);
       assertEquals(last.current, 425);
 
       sa.tell(PoisonPill.getInstance(), getTestActor());
     }
-//
-//    it("Should allow a cancel") {
-//      val sa = defaultAxis(testActor)
-//
-//      // Expect an initial axis status message
-//      //val one = expectMsgClass(classOf[AxisUpdate])
-//      //one.current should equal(defaultAxisConfig.startPosition)
-//
-//      sa ! Move(850, diagFlag = false)
-//      expectMsg(AxisStarted)
-//      // Wait 2 updates
-//      receiveN(2)
-//      sa ! CancelMove
-//      // One more update due to algo
-//      val lastmsg = receiveN(1)
-//      val end = expectMsgClass(classOf[AxisUpdate])
-//      end.state, AXIS_IDLE)
-//      end.current, 650)
-//
-//      sa ! PoisonPill
-//    }
-//
-//    it("should limit out-of-range moves") {
-//      val sa = defaultAxis(testActor)
-//
-//      // Expect an initial axis status message
-//      //val one = expectMsgClass(classOf[AxisUpdate])
-//      //one.current should equal(defaultAxisConfig.startPosition)
-//
-//      // Position starts out at 350
-//      sa ! Move(0)
-//      val msgs = expectMoveMsgs(false)
-//      msgs.last.state, AXIS_IDLE)
-//      msgs.last.current, 100)
-//      msgs.last.inLowLimit, true)
-//
-//      sa.underlyingActor.current, defaultAxisConfig.lowLimit)
-//      sa.underlyingActor.inLowLimit, true)
-//      sa.underlyingActor.inHighLimit, false)
-//
-//      sa ! GetStatistics
-//      val stats1: AxisStatistics = expectMsgClass(classOf[AxisStatistics])
-//      stats1.initCount, 0)
-//      stats1.moveCount, 1)
-//      stats1.homeCount, 0)
-//      stats1.limitCount, 1)
-//      stats1.successCount, 1)
-//      stats1.failureCount, 0)
-//      stats1.cancelCount, 0)
-//
-//      sa ! Move(2000)
-//      val msgs2 = expectMoveMsgs(false)
-//      msgs2.last.state, AXIS_IDLE)
-//      msgs2.last.current, 1300)
-//      msgs2.last.inLowLimit, false)
-//      msgs2.last.inHighLimit, true)
-//
-//      sa.underlyingActor.current, defaultAxisConfig.highLimit)
-//      sa.underlyingActor.inLowLimit, false)
-//      sa.underlyingActor.inHighLimit, true)
-//
-//      sa ! GetStatistics
-//      val stats2 = expectMsgClass(classOf[AxisStatistics])
-//      stats2.initCount, 0)
-//      stats2.moveCount, 2)
-//      stats2.homeCount, 0)
-//      stats2.limitCount, 2)
-//      stats2.successCount, 2)
-//      stats2.failureCount, 0)
-//      stats2.cancelCount, 0)
-//
-//      sa ! PoisonPill
-//    }
-//
-//    it("should support a complex example") {
-//      val sa = defaultAxis(testActor)
-//
-//      // Expect an initial axis status message
-//      //val one = expectMsgClass(classOf[AxisUpdate])
-//      //one.current should equal(defaultAxisConfig.startPosition)
-//
-//      // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
-//      sa ! Datum
-//      var msgs = expectMoveMsgs()
-//      msgs.last.current, defaultAxisConfig.startPosition + 1)
-//
-//      sa ! Home
-//      msgs = expectMoveMsgs()
-//      msgs.last.current, defaultAxisConfig.home)
-//
-//      sa ! Move(423)
-//      msgs = expectMoveMsgs()
-//      msgs.last.current, 423)
-//
-//      sa ! Move(800)
-//      msgs = expectMoveMsgs()
-//      msgs.last.current, 800)
-//
-//      sa ! Move(560)
-//      msgs = expectMoveMsgs()
-//      msgs.last.current, 560)
-//
-//      sa ! Move(1240)
-//      msgs = expectMoveMsgs()
-//      msgs.last.current, 1240)
-//
-//      sa ! Home
-//      msgs = expectMoveMsgs()
-//      msgs.last.current, defaultAxisConfig.home)
-//
-//      sa ! GetStatistics
-//      val stats2 = expectMsgClass(classOf[AxisStatistics])
-//      stats2.initCount, 1)
-//      stats2.moveCount, 7)
-//      stats2.homeCount, 2)
-//      stats2.limitCount, 1)
-//      stats2.successCount, 7)
-//      stats2.failureCount, 0)
-//      stats2.cancelCount, 0)
-//
-//      sa ! PoisonPill
-//    }
-//  }
+
+    // Should allow a cancel
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
+
+      sa.tell(new Move(850), getTestActor());
+      expectMsgEquals(AxisStarted.instance);
+      // Wait 2 updates
+      receiveN(2);
+      sa.tell(CancelMove.instance, getTestActor());
+      // One more update due to algo
+      Object lastmsg = receiveN(1);
+      AxisUpdate end = expectMsgClass(AxisUpdate.class);
+      assertEquals(end.state, AXIS_IDLE);
+      assertEquals(end.current, 650);
+
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
+
+    // should limit out-of-range moves"
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
+
+      // Position starts out at 0
+      sa.tell(new Move(0), getTestActor());
+      Vector<AxisUpdate> msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().state, AXIS_IDLE);
+      assertEquals(msgs.lastElement().current, 100);
+      assertEquals(msgs.lastElement().inLowLimit, true);
+
+      assertEquals(sa.underlyingActor().current, defaultAxisConfig.lowLimit);
+      assertEquals(sa.underlyingActor().inLowLimit, true);
+      assertEquals(sa.underlyingActor().inHighLimit, false);
+
+      sa.tell(GetStatistics.instance, getTestActor());
+      AxisStatistics stats1 = expectMsgClass(AxisStatistics.class);
+      assertEquals(stats1.initCount, 0);
+      assertEquals(stats1.moveCount, 1);
+      assertEquals(stats1.homeCount, 0);
+      assertEquals(stats1.limitCount, 1);
+      assertEquals(stats1.successCount, 1);
+      assertEquals(stats1.failureCount, 0);
+      assertEquals(stats1.cancelCount, 0);
+
+      sa.tell(new Move(2000), getTestActor());
+      Vector<AxisUpdate> msgs2 = expectMoveMsgs(false);
+      assertEquals(msgs2.lastElement().state, AXIS_IDLE);
+      assertEquals(msgs2.lastElement().current, 1300);
+      assertEquals(msgs2.lastElement().inLowLimit, false);
+      assertEquals(msgs2.lastElement().inHighLimit, true);
+
+      assertEquals(sa.underlyingActor().current, defaultAxisConfig.highLimit);
+      assertEquals(sa.underlyingActor().inLowLimit, false);
+      assertEquals(sa.underlyingActor().inHighLimit, true);
+
+      sa.tell(GetStatistics.instance, getTestActor());
+      AxisStatistics stats2 = expectMsgClass(AxisStatistics.class);
+      assertEquals(stats2.initCount, 0);
+      assertEquals(stats2.moveCount, 2);
+      assertEquals(stats2.homeCount, 0);
+      assertEquals(stats2.limitCount, 2);
+      assertEquals(stats2.successCount, 2);
+      assertEquals(stats2.failureCount, 0);
+      assertEquals(stats2.cancelCount, 0);
+
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
+
+    // should support a complex example
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
+
+      // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
+      sa.tell(Datum.instance, getTestActor());
+      Vector<AxisUpdate> msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().current, defaultAxisConfig.startPosition + 1);
+
+      sa.tell(Home.instance, getTestActor());
+      msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().current, defaultAxisConfig.home);
+
+      sa.tell(new Move(423), getTestActor());
+      msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().current, 423);
+
+      sa.tell(new Move(800), getTestActor());
+      msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().current, 800);
+
+      sa.tell(new Move(560), getTestActor());
+      msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().current, 560);
+
+      sa.tell(new Move(1240), getTestActor());
+      msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().current, 1240);
+
+      sa.tell(Home.instance, getTestActor());
+      msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().current, defaultAxisConfig.home);
+
+      sa.tell(GetStatistics.instance, getTestActor());
+      AxisStatistics stats2 = expectMsgClass(AxisStatistics.class);
+      assertEquals(stats2.initCount, 1);
+      assertEquals(stats2.moveCount, 7);
+      assertEquals(stats2.homeCount, 2);
+      assertEquals(stats2.limitCount, 1);
+      assertEquals(stats2.successCount, 7);
+      assertEquals(stats2.failureCount, 0);
+      assertEquals(stats2.cancelCount, 0);
+
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
   }
 }
