@@ -288,6 +288,10 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
       this.position = position;
       this.diagFlag = diagFlag;
     }
+    public Move(int position) {
+      this.position = position;
+      this.diagFlag = false;
+    }
   }
 
   @SuppressWarnings("unused")

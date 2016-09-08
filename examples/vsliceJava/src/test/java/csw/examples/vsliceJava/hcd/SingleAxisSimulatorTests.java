@@ -24,9 +24,13 @@ import static csw.examples.vsliceJava.hcd.MotionWorker.*;
 
 
 @SuppressWarnings("unused")
-public class SingleAxisSimulatorTests {
+public class SingleAxisSimulatorTests extends JavaTestKit {
   private static ActorSystem system;
   Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));
+
+  public SingleAxisSimulatorTests() {
+    super(system);
+  }
 
   @BeforeClass
   public static void setup() {
@@ -43,85 +47,75 @@ public class SingleAxisSimulatorTests {
   Vector<MotionWorkerMsgs> expectLLMoveMsgs(final int start, final int destinationIn, final int delayInMS,
                                             final boolean diagFlag) {
     Vector<MotionWorkerMsgs> allMsgs = new Vector<>();
-    new JavaTestKit(system) {{
-      Props props = props(start, destinationIn, delayInMS, getRef(), diagFlag);
-      final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-      ms.tell(Start.instance, getRef());
-
-      // Get AxisStarted
-      allMsgs.add(expectMsgEquals(Start.instance));
-      // Receive updates until axis idle then get the last one
-      final MotionWorkerMsgs[] moveMsgs =
-        new ReceiveWhile<Tick>(Tick.class, duration("5 seconds")) {
-          protected Tick match(Object in) {
-            if (in instanceof Tick) {
-              return (Tick) in;
-            } else {
-              throw noMatch();
-            }
+    // Get AxisStarted
+    allMsgs.add(expectMsgEquals(Start.instance));
+    // Receive updates until axis idle then get the last one
+    final MotionWorkerMsgs[] moveMsgs =
+      new ReceiveWhile<Tick>(Tick.class, duration("5 seconds")) {
+        protected Tick match(Object in) {
+          if (in instanceof Tick) {
+            return (Tick) in;
+          } else {
+            throw noMatch();
           }
-        }.get(); // this extracts the received messages
+        }
+      }.get(); // this extracts the received messages
 
-      MotionWorkerMsgs endMsg = expectMsgClass(End.class); // last one
-      Collections.addAll(allMsgs, moveMsgs);
-      allMsgs.add(endMsg);
+    MotionWorkerMsgs endMsg = expectMsgClass(End.class); // last one
+    Collections.addAll(allMsgs, moveMsgs);
+    allMsgs.add(endMsg);
 
-      if (diagFlag) System.out.println("LLMoveMsgs: " + allMsgs);
-    }};
+    if (diagFlag) System.out.println("LLMoveMsgs: " + allMsgs);
     return allMsgs;
   }
 
 
-//  Vector<AxisUpdate> expectMoveMsgs(boolean diagFlag) {
-//    Vector<AxisUpdate> allMsgs = new Vector<>();
-//    new JavaTestKit(system) {{
-//      // Get AxisStarted
-//      expectMsgEquals(AxisStarted.instance);
-//      // Receive updates until axis idle then get the last one
-//      final AxisUpdate[] msgs =
-//        new ReceiveWhile<AxisUpdate>(AxisUpdate.class, duration("5 second")) {
-//          protected AxisUpdate match(Object in) {
-//            if (in instanceof AxisUpdate && ((AxisUpdate) in).state == AXIS_MOVING) {
-//              return (AxisUpdate) in;
-//            } else {
-//              throw noMatch();
-//            }
-//          }
-//        }.get(); // this extracts the received messages
-//
-//      AxisUpdate fmsg = expectMsgClass(AxisUpdate.class); // last one
-//      Collections.addAll(allMsgs, msgs);
-//      allMsgs.add(fmsg);
-//
-//      if (diagFlag) System.out.println("MoveMsgs: " + allMsgs);
-//    }};
-//    return allMsgs;
-//  }
+  Vector<AxisUpdate> expectMoveMsgs(boolean diagFlag) {
+    Vector<AxisUpdate> allMsgs = new Vector<>();
+    // Get AxisStarted
+    expectMsgEquals(AxisStarted.instance);
+    // Receive updates until axis idle then get the last one
+    final AxisUpdate[] msgs =
+      new ReceiveWhile<AxisUpdate>(AxisUpdate.class, duration("5 second")) {
+        protected AxisUpdate match(Object in) {
+          if (in instanceof AxisUpdate && ((AxisUpdate) in).state == AXIS_MOVING) {
+            return (AxisUpdate) in;
+          } else {
+            throw noMatch();
+          }
+        }
+      }.get(); // this extracts the received messages
+
+    AxisUpdate fmsg = expectMsgClass(AxisUpdate.class); // last one
+    Collections.addAll(allMsgs, msgs);
+    allMsgs.add(fmsg);
+
+    if (diagFlag) System.out.println("MoveMsgs: " + allMsgs);
+    return allMsgs;
+  }
 
 
   Vector<AxisResponse> expectMoveMsgsWithDest(int target, boolean diagFlag) {
     Vector<AxisResponse> allMsgs = new Vector<>();
-    new JavaTestKit(system) {{
-      // Receive updates until axis idle then get the last one
-      final AxisResponse[] msgs =
-        new ReceiveWhile<AxisResponse>(AxisResponse.class, duration("5 second")) {
-          protected AxisResponse match(Object in) {
-            if (in instanceof AxisStarted || in instanceof AxisUpdate && ((AxisUpdate) in).current != target) {
-              return (AxisResponse) in;
-            } else {
-              throw noMatch();
-            }
+    // Receive updates until axis idle then get the last one
+    final AxisResponse[] msgs =
+      new ReceiveWhile<AxisResponse>(AxisResponse.class, duration("5 second")) {
+        protected AxisResponse match(Object in) {
+          if (in instanceof AxisStarted || in instanceof AxisUpdate && ((AxisUpdate) in).current != target) {
+            return (AxisResponse) in;
+          } else {
+            throw noMatch();
           }
-        }.get(); // this extracts the received messages
+        }
+      }.get(); // this extracts the received messages
 
-      AxisUpdate fmsg1 = expectMsgClass(AxisUpdate.class); // last one when target == current
-      AxisUpdate fmsg2 = expectMsgClass(AxisUpdate.class); // then the End event with the IDLE
-      Collections.addAll(allMsgs, msgs);
-      allMsgs.add(fmsg1);
-      allMsgs.add(fmsg2);
+    AxisUpdate fmsg1 = expectMsgClass(AxisUpdate.class); // last one when target == current
+    AxisUpdate fmsg2 = expectMsgClass(AxisUpdate.class); // then the End event with the IDLE
+    Collections.addAll(allMsgs, msgs);
+    allMsgs.add(fmsg1);
+    allMsgs.add(fmsg2);
 
-      if (diagFlag) System.out.println("MoveMsgsWithDest: " + allMsgs);
-    }};
+    if (diagFlag) System.out.println("MoveMsgsWithDest: " + allMsgs);
     return allMsgs;
   }
 
@@ -154,21 +148,17 @@ public class SingleAxisSimulatorTests {
 
   @Test
   public void motionWorkerSetup() throws Exception {
-    new JavaTestKit(system) {
-      {
-        int testStart = 0;
-        int testDestination = 1000;
-        int testDelay = 100;
+    int testStart = 0;
+    int testDestination = 1000;
+    int testDelay = 100;
 
-        // should be initialized properly
-        Props props = props(testStart, testDestination, testDelay, getRef(), false);
-        final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-        final MotionWorker under = ms.underlyingActor();
-        assertEquals(under.start, testStart);
-        assertEquals(under.destination, testDestination);
-        assertEquals(under.delayInNanoSeconds, testDelay * 1000000);
-      }
-    };
+    // should be initialized properly
+    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+    final MotionWorker under = ms.underlyingActor();
+    assertEquals(under.start, testStart);
+    assertEquals(under.destination, testDestination);
+    assertEquals(under.delayInNanoSeconds, testDelay * 1000000);
   }
 
   @Test
@@ -178,6 +168,9 @@ public class SingleAxisSimulatorTests {
     int testDelay = 10;
 
     // should allow simulation on increasing encoder steps
+    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+    ms.tell(Start.instance, getTestActor());
     Vector<MotionWorkerMsgs> msgs = expectLLMoveMsgs(testStart, testDestination, testDelay, false);
     assertEquals(msgs.lastElement(), new End(testDestination));
   }
@@ -189,6 +182,9 @@ public class SingleAxisSimulatorTests {
     int testDelay = 10;
 
     // should allow creation based on negative encoder steps
+    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+    ms.tell(Start.instance, getTestActor());
     Vector<MotionWorkerMsgs> msgs = expectLLMoveMsgs(testStart, testDestination, testDelay, false);
     assertEquals(msgs.lastElement(), new End(testDestination));
   }
@@ -199,6 +195,9 @@ public class SingleAxisSimulatorTests {
     int testDestination = 600;
     int testDelay = 10;
 
+    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+    ms.tell(Start.instance, getTestActor());
     Vector<MotionWorkerMsgs> msgs = expectLLMoveMsgs(testStart, testDestination, testDelay, false);
     assertEquals(msgs.lastElement(), new End(testDestination));
   }
@@ -210,18 +209,16 @@ public class SingleAxisSimulatorTests {
     int testDelay = 200;
 
     // should allow cancelling after a few steps
-    new JavaTestKit(system) {{
-      Props props = props(testStart, testDestination, testDelay, getRef(), false);
-      final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
-      ms.tell(Start.instance, getRef());
-      expectMsgEquals(Start.instance);
-      // Wait 3 messages
-      receiveN(3, calcDelay(3, testDelay));
-      ms.tell(Cancel.instance, getRef());
-      // One more move
-      receiveN(1);
-      expectMsgClass(End.class);
-    }};
+    Props props = props(testStart, testDestination, testDelay, getTestActor(), false);
+    final TestActorRef<MotionWorker> ms = TestActorRef.create(system, props);
+    ms.tell(Start.instance, getTestActor());
+    expectMsgEquals(Start.instance);
+    // Wait 3 messages
+    receiveN(3, calcDelay(3, testDelay));
+    ms.tell(Cancel.instance, getTestActor());
+    // One more move
+    receiveN(1);
+    expectMsgClass(End.class);
   }
 
 
@@ -253,13 +250,11 @@ public class SingleAxisSimulatorTests {
   @Test
   public void testSingleAxis() throws Exception {
     // should be creatable and initialize
-    new JavaTestKit(system) {{
-      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getRef());
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
       assertEquals(sa.underlyingActor().axisConfig, defaultAxisConfig);
-      // Expect an initial axis status message
-      // AxisUpdate one = expectMsgClass(FiniteDuration.create(1, "second"), AxisUpdate.class);
-      // assertEquals(one.current, defaultAxisConfig.startPosition);
-    }};
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
 
     // limitMove should clamp value
     {
@@ -288,18 +283,18 @@ public class SingleAxisSimulatorTests {
     }
 
     // Should init properly
-    new JavaTestKit(system) {{
-      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getRef());
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
       // Expect an initial axis status message
       // AxisUpdate one = expectMsgClass(AxisUpdate.class);
 
-      sa.tell(Datum.instance, getRef());
+      sa.tell(Datum.instance, getTestActor());
       expectMsgEquals(AxisStarted.instance);
       AxisUpdate upd = expectMsgClass(AxisUpdate.class);
       assertEquals(upd.state, AXIS_IDLE);
       assertEquals(upd.current, defaultAxisConfig.startPosition + 1);
 
-      sa.tell(GetStatistics.instance, getRef());
+      sa.tell(GetStatistics.instance, getTestActor());
       AxisStatistics stats1 = expectMsgClass(AxisStatistics.class);
       assertEquals(stats1.initCount, 1);
       assertEquals(stats1.moveCount, 1);
@@ -309,15 +304,14 @@ public class SingleAxisSimulatorTests {
       assertEquals(stats1.failureCount, 0);
       assertEquals(stats1.cancelCount, 0);
 
-      sa.tell(PoisonPill.getInstance(), getRef());
-    }};
-
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
 
     // Should home properly
-    new JavaTestKit(system) {{
-      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getRef());
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
-      sa.tell(Home.instance, getRef());
+      sa.tell(Home.instance, getTestActor());
 
 
       Vector<AxisUpdate> allMsgs = new Vector<>();
@@ -338,8 +332,6 @@ public class SingleAxisSimulatorTests {
       Collections.addAll(allMsgs, msgs);
       allMsgs.add(fmsg);
 
-
-
       // System.out.println("MoveMsgs: " + allMsgs);
 
       assertEquals(allMsgs.lastElement().state, AXIS_IDLE);
@@ -348,7 +340,7 @@ public class SingleAxisSimulatorTests {
 
       assertEquals(sa.underlyingActor().current, defaultAxisConfig.home);
 
-      sa.tell(GetStatistics.instance, getRef());
+      sa.tell(GetStatistics.instance, getTestActor());
       AxisStatistics stats1 = expectMsgClass(AxisStatistics.class);
       assertEquals(stats1.initCount, 0);
       assertEquals(stats1.moveCount, 1);
@@ -358,59 +350,45 @@ public class SingleAxisSimulatorTests {
       assertEquals(stats1.failureCount, 0);
       assertEquals(stats1.cancelCount, 0);
 
-      sa.tell(PoisonPill.getInstance(), getRef());
-    }};
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
 
-//    // Should move properly
-//    new JavaTestKit(system) {{
-//      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getRef());
-//      sa.tell(new Move(500, false), getRef());
-//      val msgs = expectMoveMsgs();
-//      msgs.last.state should be(AXIS_IDLE)
-//      msgs.last.current should be(500)
-//
-//      sa.underlyingActor.current should be(500)
-//
-//      sa.tell(PoisonPill.getInstance(), getRef());
-//    }};
-
-
-//      sa ! Move(500, diagFlag = false)
-//      val msgs = expectMoveMsgs()
-//      msgs.last.state should be(AXIS_IDLE)
-//      msgs.last.current should be(500)
-//
-//      sa.underlyingActor.current should be(500)
-//
-//      sa ! PoisonPill
-//    }
+    // Should move properly
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
+      sa.tell(new Move(500, false), getTestActor());
+      Vector<AxisUpdate> msgs = expectMoveMsgs(false);
+      assertEquals(msgs.lastElement().state, AXIS_IDLE);
+      assertEquals(msgs.lastElement().current, 500);
+      assertEquals(sa.underlyingActor().current, 500);
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
 
 
 
+    // Should move and update 
+    {
+      TestActorRef<SingleAxisSimulator> sa = defaultAxis(getTestActor());
 
-//
-//    it("Should move and update") {
-//      val sa = defaultAxis(testActor)
-//
-//      // Sleeps are to try and not do all the updates up front before movement starts
-//      sa ! Move(360)
-//      Thread.sleep(30)
-//      sa ! Move(365)
-//      Thread.sleep(20)
-//      sa ! Move(390)
-//      Thread.sleep(30)
-//      sa ! Move(420)
-//      Thread.sleep(20)
-//      sa ! Move(425)
-//
-//      val msgs = expectMoveMsgsWithDest(425)
-//      msgs.last.isInstanceOf[AxisUpdate]
-//      val last:AxisUpdate = msgs.last.asInstanceOf[AxisUpdate]
-//      last.state should be(AXIS_IDLE)
-//      last.current should be(425)
-//
-//      sa ! PoisonPill
-//    }
+      // Sleeps are to try and not do all the updates up front before movement starts
+      sa.tell(new Move(360), getTestActor());
+      Thread.sleep(30);
+      sa.tell(new Move(365), getTestActor());
+      Thread.sleep(20);
+      sa.tell(new Move(390), getTestActor());
+      Thread.sleep(30);
+      sa.tell(new Move(420), getTestActor());
+      Thread.sleep(20);
+      sa.tell(new Move(425), getTestActor());
+
+      Vector<AxisResponse> msgs = expectMoveMsgsWithDest(425, false);
+      assertTrue(msgs.lastElement() instanceof AxisUpdate);
+      AxisUpdate last = (AxisUpdate)msgs.lastElement();
+      assertEquals(last.state, AXIS_IDLE);
+      assertEquals(last.current, 425);
+
+      sa.tell(PoisonPill.getInstance(), getTestActor());
+    }
 //
 //    it("Should allow a cancel") {
 //      val sa = defaultAxis(testActor)
@@ -427,8 +405,8 @@ public class SingleAxisSimulatorTests {
 //      // One more update due to algo
 //      val lastmsg = receiveN(1)
 //      val end = expectMsgClass(classOf[AxisUpdate])
-//      end.state should be(AXIS_IDLE)
-//      end.current should be(650)
+//      end.state, AXIS_IDLE)
+//      end.current, 650)
 //
 //      sa ! PoisonPill
 //    }
@@ -443,44 +421,44 @@ public class SingleAxisSimulatorTests {
 //      // Position starts out at 350
 //      sa ! Move(0)
 //      val msgs = expectMoveMsgs(false)
-//      msgs.last.state should be(AXIS_IDLE)
-//      msgs.last.current should be(100)
-//      msgs.last.inLowLimit should be(true)
+//      msgs.last.state, AXIS_IDLE)
+//      msgs.last.current, 100)
+//      msgs.last.inLowLimit, true)
 //
-//      sa.underlyingActor.current should be(defaultAxisConfig.lowLimit)
-//      sa.underlyingActor.inLowLimit should be(true)
-//      sa.underlyingActor.inHighLimit should be(false)
+//      sa.underlyingActor.current, defaultAxisConfig.lowLimit)
+//      sa.underlyingActor.inLowLimit, true)
+//      sa.underlyingActor.inHighLimit, false)
 //
 //      sa ! GetStatistics
 //      val stats1: AxisStatistics = expectMsgClass(classOf[AxisStatistics])
-//      stats1.initCount should be(0)
-//      stats1.moveCount should be(1)
-//      stats1.homeCount should be(0)
-//      stats1.limitCount should be(1)
-//      stats1.successCount should be(1)
-//      stats1.failureCount should be(0)
-//      stats1.cancelCount should be(0)
+//      stats1.initCount, 0)
+//      stats1.moveCount, 1)
+//      stats1.homeCount, 0)
+//      stats1.limitCount, 1)
+//      stats1.successCount, 1)
+//      stats1.failureCount, 0)
+//      stats1.cancelCount, 0)
 //
 //      sa ! Move(2000)
 //      val msgs2 = expectMoveMsgs(false)
-//      msgs2.last.state should be(AXIS_IDLE)
-//      msgs2.last.current should be(1300)
-//      msgs2.last.inLowLimit should be(false)
-//      msgs2.last.inHighLimit should be(true)
+//      msgs2.last.state, AXIS_IDLE)
+//      msgs2.last.current, 1300)
+//      msgs2.last.inLowLimit, false)
+//      msgs2.last.inHighLimit, true)
 //
-//      sa.underlyingActor.current should be(defaultAxisConfig.highLimit)
-//      sa.underlyingActor.inLowLimit should be(false)
-//      sa.underlyingActor.inHighLimit should be(true)
+//      sa.underlyingActor.current, defaultAxisConfig.highLimit)
+//      sa.underlyingActor.inLowLimit, false)
+//      sa.underlyingActor.inHighLimit, true)
 //
 //      sa ! GetStatistics
 //      val stats2 = expectMsgClass(classOf[AxisStatistics])
-//      stats2.initCount should be(0)
-//      stats2.moveCount should be(2)
-//      stats2.homeCount should be(0)
-//      stats2.limitCount should be(2)
-//      stats2.successCount should be(2)
-//      stats2.failureCount should be(0)
-//      stats2.cancelCount should be(0)
+//      stats2.initCount, 0)
+//      stats2.moveCount, 2)
+//      stats2.homeCount, 0)
+//      stats2.limitCount, 2)
+//      stats2.successCount, 2)
+//      stats2.failureCount, 0)
+//      stats2.cancelCount, 0)
 //
 //      sa ! PoisonPill
 //    }
@@ -495,41 +473,41 @@ public class SingleAxisSimulatorTests {
 //      // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
 //      sa ! Datum
 //      var msgs = expectMoveMsgs()
-//      msgs.last.current should be(defaultAxisConfig.startPosition + 1)
+//      msgs.last.current, defaultAxisConfig.startPosition + 1)
 //
 //      sa ! Home
 //      msgs = expectMoveMsgs()
-//      msgs.last.current should be(defaultAxisConfig.home)
+//      msgs.last.current, defaultAxisConfig.home)
 //
 //      sa ! Move(423)
 //      msgs = expectMoveMsgs()
-//      msgs.last.current should be(423)
+//      msgs.last.current, 423)
 //
 //      sa ! Move(800)
 //      msgs = expectMoveMsgs()
-//      msgs.last.current should be(800)
+//      msgs.last.current, 800)
 //
 //      sa ! Move(560)
 //      msgs = expectMoveMsgs()
-//      msgs.last.current should be(560)
+//      msgs.last.current, 560)
 //
 //      sa ! Move(1240)
 //      msgs = expectMoveMsgs()
-//      msgs.last.current should be(1240)
+//      msgs.last.current, 1240)
 //
 //      sa ! Home
 //      msgs = expectMoveMsgs()
-//      msgs.last.current should be(defaultAxisConfig.home)
+//      msgs.last.current, defaultAxisConfig.home)
 //
 //      sa ! GetStatistics
 //      val stats2 = expectMsgClass(classOf[AxisStatistics])
-//      stats2.initCount should be(1)
-//      stats2.moveCount should be(7)
-//      stats2.homeCount should be(2)
-//      stats2.limitCount should be(1)
-//      stats2.successCount should be(7)
-//      stats2.failureCount should be(0)
-//      stats2.cancelCount should be(0)
+//      stats2.initCount, 1)
+//      stats2.moveCount, 7)
+//      stats2.homeCount, 2)
+//      stats2.limitCount, 1)
+//      stats2.successCount, 7)
+//      stats2.failureCount, 0)
+//      stats2.cancelCount, 0)
 //
 //      sa ! PoisonPill
 //    }
