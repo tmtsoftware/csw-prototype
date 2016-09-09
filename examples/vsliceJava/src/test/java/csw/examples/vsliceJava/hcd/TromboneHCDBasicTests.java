@@ -9,7 +9,7 @@ import akka.testkit.TestProbe;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component.HcdInfo;
-import csw.util.config.StateVariable;
+import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.StateVariable.CurrentState;
 import javacsw.services.ccs.JHcdController;
 import javacsw.services.loc.JConnectionType;
@@ -29,11 +29,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.pkg.JSupervisor3.*;
-import static javacsw.util.config.JUnitsOfMeasure.seconds;
 import static org.junit.Assert.*;
-import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.*;
-import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_IDLE;
-import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_MOVING;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 public class TromboneHCDBasicTests extends JavaTestKit {
@@ -127,16 +123,6 @@ public class TromboneHCDBasicTests extends JavaTestKit {
     supervisor.send(tla, Running);
   }
 
-  //  def waitForMoveMsgs: Seq[CurrentState] = {
-//    val msgs = receiveWhile(5.seconds) {
-//      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
-//      // This is present to pick up the first status message
-//      case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
-//    }
-//    val fmsg = expectMsgClass(classOf[CurrentState]) // last one
-//    val allmsgs = msgs :+ fmsg
-//    allmsgs
-//  }
   Vector<CurrentState> waitForMoveMsgs() {
     final CurrentState[] msgs =
       new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
@@ -199,7 +185,7 @@ public class TromboneHCDBasicTests extends JavaTestKit {
 
       // Should have initialized the current values in HCD from Axis
       assertEquals(ua.current.current, ua.axisConfig.startPosition);
-      assertEquals(ua.current.state, AXIS_IDLE); // This is simulator value
+      assertEquals(ua.current.state, SingleAxisSimulator.AxisState.AXIS_IDLE); // This is simulator value
       assertEquals(ua.current.inHighLimit, false);
       assertEquals(ua.current.inLowLimit, false);
       assertEquals(ua.current.inHomed, false);
@@ -309,109 +295,121 @@ public class TromboneHCDBasicTests extends JavaTestKit {
       system.stop(tla);
     }
 
-//    it("should allow homing") {
-//
-//      // Note there is no test actor ref
-//      val (supervisor, tla) = newTrombone()
-//      lifecycleStart(supervisor, tla)
-//
-//      tla ! Subscribe
-//      // Being done this way to ensure ConfigKey equality works
-//      val sc = SetupConfig(axisHomePrefix)
-//      tla ! Submit(sc)
-//
-//      val msgs = waitForMoveMsgs
-//      //info("Msgs: " + msgs)
-//      msgs.last(positionKey).head should equal(300)
-//      msgs.last(inHomeKey).head should equal(true)
-//      msgs.last(inLowLimitKey).head should equal(false)
-//      msgs.last(inHighLimitKey).head should equal(false)
-//
-//      tla ! GetAxisStats
-//      val stats = expectMsgClass(classOf[CurrentState])
-//      //info(s"Stats: $stats")
-//      stats.configKey should equal(TromboneHCD.axisStatsCK)
-//      stats.item(homeCountKey).head should equal(1)
-//      stats.item(moveCountKey).head should equal(1)
-//
-//      tla ! Unsubscribe
-//
-//      system.stop(tla)
-//    }
-//
-//    it("should allow a short move") {
-//
-//      val (supervisor, tla) = newTrombone()
-//      lifecycleStart(supervisor, tla)
-//
-//      val testPos = 500
-//
-//      tla ! Subscribe
-//      tla ! Submit(positionSC(testPos))
-//
-//      val msgs = waitForMoveMsgs
-//      // Check the last message
-//      msgs.last(positionKey).head, testPos)
-//      msgs.last(stateKey).head, AXIS_IDLE)
-//
-//      //info("Msgs: " + msgs)
-//      tla ! Unsubscribe
-//
-//      system.stop(tla)
-//    }
-//
-//
-//    it("should allow continuous short values") {
-//
-//      val encoderTestValues: Vector[Int] = Vector(
-//        460, 465, 470, 475, 480, 485, 490, 400
-//      )
-//
-//      val (supervisor, tla) = newTrombone()
-//      lifecycleStart(supervisor, tla)
-//
-//      tla ! Subscribe
-//      // Move 2
-//      tla ! Submit(homeSC)
-//      var msgs = waitForMoveMsgs
-//      msgs.last(inHomeKey).head, true)
-//
-//      encoderTestValues.foreach { testPos =>
-//        tla ! Submit(positionSC(testPos))
-//        //val msgs = waitForMoveMsgs
-//      }
-//      waitForMoveMsgs
+    it("should allow homing");
+    {
+      // Note there is no test actor ref
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
 
+      lifecycleStart(supervisor, tla);
+
+      tla.tell(JHcdController.Subscribe, self());
+      // Being done this way to ensure ConfigKey equality works
+      SetupConfig sc = SetupConfig(axisHomePrefix);
+      tla.tell(new Submit(sc), self());
+
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      //info("Msgs: " + msgs)
+
+      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), 300);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+
+      tla.tell(GetAxisStats, self());
+      CurrentState stats = expectMsgClass(CurrentState.class);
+      //info(s"Stats: $stats")
+      assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+      assertEquals(stats.item(homeCountKey).head(), 1);
+      assertEquals(stats.item(moveCountKey).head(), 1);
+
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
     }
 
-//    describe("place into the low limit") {
-//      import csw.services.ccs.HcdController._
-//
-//      it("should show entering a low limit") {
-//
-//        val (supervisor, tla) = newTestTrombone()
-//        lifecycleStart(supervisor, tla)
-//
-//        val testPos = 0
-//        val testActual = tla.underlyingActor.axisConfig.lowLimit
-//
-//        tla ! Subscribe
-//        tla ! Submit(positionSC(testPos))
-//
-//        val msgs = waitForMoveMsgs
-//        // Check the last message
-//        msgs.last(stateKey).head, AXIS_IDLE)
-//        msgs.last(positionKey).head, testActual)
-//        msgs.last(inLowLimitKey).head should equal(true)
-//        msgs.last(inHighLimitKey).head should equal(false)
-//
-//        //info("Msgs: " + msgs)
-//        tla ! Unsubscribe
-//
-//        system.stop(tla)
-//      }
-//    }
-//
+    it("should allow a short move");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+      lifecycleStart(supervisor, tla);
+
+      int testPos = 500;
+
+      tla.tell(JHcdController.Subscribe, self());
+      tla.tell(new Submit(positionSC(testPos)), self());
+
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      // Check the last message
+      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+
+
+      //info("Msgs: " + msgs)
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
+    }
+
+
+    it("should allow continuous short values");
+    {
+      int[] encoderTestValues = new int[]{460, 465, 470, 475, 480, 485, 490, 400};
+
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+      lifecycleStart(supervisor, tla);
+
+      tla.tell(JHcdController.Subscribe, self());
+      // Move 2
+      tla.tell(new Submit(homeSC), self());
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+
+      for (int testPos : encoderTestValues) {
+        tla.tell(new Submit(positionSC(testPos)), self());
+        //val msgs = waitForMoveMsgs
+      }
+      waitForMoveMsgs();
+
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
+    }
+  }
+
+  @Test
+  public void placeIntoTheLowLimit() throws Exception {
+
+      it("should show entering a low limit");
+      {
+        TestProbeTestActorRefPair t = newTestTrombone();
+        TestProbe supervisor = t.testProbe;
+        TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+        lifecycleStart(supervisor, tla);
+
+        int testPos = 0;
+        int testActual = tla.underlyingActor().axisConfig.lowLimit;
+
+        tla.tell(JHcdController.Subscribe, self());
+        tla.tell(new Submit(positionSC(testPos)), self());
+
+        Vector<CurrentState> msgs = waitForMoveMsgs();
+        // Check the last message
+        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), true);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+
+        //info("Msgs: " + msgs)
+        tla.tell(JHcdController.Unsubscribe, self());
+        system.stop(tla);
+      }
+    }
+
 //    describe("place into the high limit") {
 //      import csw.services.ccs.HcdController._
 //
