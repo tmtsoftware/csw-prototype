@@ -160,7 +160,7 @@
 //  // Assembly Info
 //  val componentName = "lgsTrombone"
 //  val componentType = ComponentType.Assembly
-//  val componentClassName = "csw.examples.vslice.assembly.TromboneAssembly"
+//  val componentClassName = "csw.examples.vsliceJava.assembly.TromboneAssembly"
 //  val componentPrefix = "nfiraos.ncc.trombone"
 //  val fullName = s"$componentPrefix.$componentName"
 //

@@ -15,7 +15,7 @@ public class TromboneData {
       "  components {",
       "    lgsTrombone {",
       "      type = Assembly",
-      "      class = csw.examples.vslice.assembly.TromboneAssembly",
+      "      class = csw.examples.vsliceJava.assembly.TromboneAssembly",
       "      prefix = nfiraos.ncc.trombone",
       "      connectionType: [akka]",
       "      connections = [",

@@ -5,7 +5,63 @@ import csw.services.pkg.Supervisor3.*;
 /**
  * Java API for some of the static defs in the Supervisor3 Scala class
  */
+@SuppressWarnings("unused")
 public class JSupervisor3 {
+
+
+  // The following are states used for the Supervisor lifecycle manager
+
+  /**
+   * State of the Supervisor when started and waiting for the first lifecycle message from the component.
+   */
+  public static final LifecycleState LifecycleWaitingForInitialized =  LifecycleWaitingForInitialized$.MODULE$;
+
+  /**
+   * State of the Supervisor when Initialized after receiving the [[csw.services.pkg.Supervisor3.Initialized]]
+   * message (first) from the component
+   */
+  public static final LifecycleState LifecycleInitialized =  LifecycleInitialized$.MODULE$;
+
+  /**
+   * State of the Supervisor after receiving the [[csw.services.pkg.Supervisor3.Started]]
+   * message (second) from the component. Component is Running and Online at this point.
+   * Component receives a [[csw.services.pkg.Supervisor3.Running]] message indicating this.
+   */
+  public static final LifecycleState LifecycleRunning =  LifecycleRunning$.MODULE$;
+
+  /**
+   * State of the Supervisor/component after receiving an [[csw.services.pkg.SupervisorExternal.ExComponentOffline]]
+   * message to place the component offline. The component receives the [[csw.services.pkg.Supervisor3.RunningOffline]]
+   * message indicating this.
+   */
+  public static final LifecycleState LifecycleRunningOffline =  LifecycleRunningOffline$.MODULE$;
+
+  /**
+   * State of the Supervisor/component after receiving an [[csw.services.pkg.SupervisorExternal.ExComponentShutdown]]
+   * message to shutdown the component. The component receives the [[csw.services.pkg.Supervisor3.DoShutdown]]
+   * message indicating this.
+   */
+  public static final LifecycleState LifecyclePreparingToShutdown =  LifecyclePreparingToShutdown$.MODULE$;
+
+  /**
+   * State of the Supervisor/component after the component has indicated it could not initialize or startup
+   * successfully.
+   */
+  public static final LifecycleState LifecycleFailure =  LifecycleFailure$.MODULE$;
+
+  /**
+   * State of the Supervisor/component after the component has indicated it is ready to shutdown after receiving
+   * the [[csw.services.pkg.Supervisor3.ShutdownComplete]] message.
+   */
+  public static final LifecycleState LifecycleShutdown =  LifecycleShutdown$.MODULE$;
+
+  /**
+   * State of the Supervisor/component when the component indicated it could not get ready to shutdown or failed
+   * to notify the Supervisor with the [[csw.services.pkg.Supervisor3.ShutdownComplete]] message within the
+   * timeout.
+   */
+  public static final LifecycleState LifecycleShutdownFailure =  LifecycleShutdownFailure$.MODULE$;
+
 
   // --- Messages sent to components to notify of lifecycle changes ---
 

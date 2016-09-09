@@ -1,119 +1,183 @@
 package csw.examples.vsliceJava.hcd;
 
-//import akka.actor.{ActorRef, ActorSystem, PoisonPill}
-//import akka.testkit.TestProbe
-//import com.typesafe.scalalogging.slf4j.LazyLogging
-//import csw.services.loc.ConnectionType.AkkaType
-//import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-//import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
-//import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
-//import csw.services.pkg.{Supervisor, Supervisor3}
-//import csw.util.config.Configurations.SetupConfig
-//import csw.util.config.StateVariable.CurrentState
-//
-//import scala.concurrent.Await
-//import scala.concurrent.duration.{FiniteDuration, _}
-//
-///**
-//  * TMT Source Code: 7/27/16.
-//  */
-//class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging with BeforeAndAfterAll {
-//
-//  import csw.services.ccs.HcdController._
-//
-//  override def afterAll = system.terminate()
-//
-//  implicit val system = ActorSystem("TestSystem")
-//
-//  val testInfo = HcdInfo(TromboneHCD.componentName,
-//    TromboneHCD.trombonePrefix,
-//    TromboneHCD.componentClassName,
-//    DoNotRegister, Set(AkkaType), 1.second)
-//
-//  val troboneAssemblyPrefix = TromboneAssembly.componentPrefix
-//
-//  def startHCD: ActorRef = {
-//    val testInfo = HcdInfo(TromboneHCD.componentName,
-//      TromboneHCD.trombonePrefix,
-//      TromboneHCD.componentClassName,
-//      DoNotRegister, Set(AkkaType), 1.second)
-//
-//    Supervisor3(testInfo)
-//  }
-//
-//  def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
-//    val msgs = tp.receiveWhile(5.seconds) {
-//      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
-//      // This is present to pick up the first status message
-//      case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
-//    }
-//    val fmsg = tp.expectMsgClass(classOf[CurrentState]) // last one
-//    val allmsgs = msgs :+ fmsg
-//    allmsgs
-//  }
-//
-//
-//  describe("component level external public interface tests") {
-//
-//    it("should allow fetching stats") {
-//      val hcd = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      hcd ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//      info("Running")
-//
-//      fakeAssembly.send(hcd, Subscribe)
-//
-//      fakeAssembly.send(hcd, GetAxisStats)
-//
-//      val stats: CurrentState = fakeAssembly.expectMsgClass(classOf[CurrentState])
-//      println("AxisStats: " + stats)
-//      stats(datumCountKey).head should be(0)
-//      stats(moveCountKey).head should be(0)
-//      stats(homeCountKey).head should be(0)
-//      stats(limitCountKey).head should be(0)
-//      stats(successCountKey).head should be(0)
-//      stats(failureCountKey).head should be(0)
-//      stats(cancelCountKey).head should be(0)
-//
-//      hcd ! Unsubscribe
-//
-//      hcd ! PoisonPill
-//      info("Done")
-//    }
-//
-//
-//    it("should allow fetching config") {
-//      val hcd = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      hcd ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//      info("Running")
-//
-//      fakeAssembly.send(hcd, Subscribe)
-//      fakeAssembly.send(hcd, GetAxisConfig)
-//
-//      // The values are hard-coded because we can't look at the config inside the actor, will fail if config changes
-//      val config: CurrentState = fakeAssembly.expectMsgClass(classOf[CurrentState])
-//      println("AxisConfig: " + config)
-//      config(axisNameKey).head equals TromboneHCD.tromboneAxisName
-//      config(lowLimitKey).head should be(100)
-//      config(lowUserKey).head should be(200)
-//      config(highUserKey).head should be(1200)
-//      config(highLimitKey).head should be(1300)
-//      config(homeValueKey).head should be(300)
-//      config(startValueKey).head should be(350)
-//
-//      fakeAssembly.send(hcd, Unsubscribe)
-//    }
-//
-//
+
+import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.testkit.TestActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.testkit.JavaTestKit;
+import akka.testkit.TestProbe;
+import akka.util.Timeout;
+import csw.services.ccs.HcdController;
+import csw.services.loc.LocationService;
+import csw.services.pkg.Component.HcdInfo;
+import csw.services.pkg.Supervisor3;
+import csw.services.pkg.SupervisorExternal;
+import csw.services.pkg.SupervisorExternal.*;
+import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.StateVariable.CurrentState;
+import javacsw.services.ccs.JHcdController;
+import javacsw.services.loc.JConnectionType;
+import javacsw.services.pkg.JComponent;
+import javacsw.services.pkg.JSupervisor3;
+import javacsw.services.pkg.JSupervisor3.*;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
+
+import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisConfig;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
+import static javacsw.util.config.JItems.*;
+
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static javacsw.services.pkg.JSupervisor3.*;
+import static org.junit.Assert.*;
+
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
+public class TromboneHCDCompTests extends JavaTestKit {
+  private static LoggingAdapter log;
+  private static ActorSystem system;
+  Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));
+
+  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
+  ActorRef self() {
+    return getTestActor();
+  }
+
+  // For compatibility with Scala tests
+  void it(String s) {
+    System.out.println(s);
+  }
+
+  public TromboneHCDCompTests() {
+    super(system);
+    log = Logging.getLogger(system, this);
+  }
+
+  @BeforeClass
+  public static void setup() {
+    LocationService.initInterface();
+    system = ActorSystem.create();
+  }
+
+  @AfterClass
+  public static void teardown() {
+    JavaTestKit.shutdownActorSystem(system);
+    system = null;
+  }
+
+  HcdInfo testInfo = JComponent.hcdInfo(
+    TromboneHCD.componentName,
+    TromboneHCD.trombonePrefix,
+    TromboneHCD.componentClassName,
+    JComponent.DoNotRegister,
+    Collections.singleton(JConnectionType.AkkaType),
+    FiniteDuration.create(1, "second"));
+
+  String troboneAssemblyPrefix = "nfiraos.ncc.trombone";
+
+
+  ActorRef startHCD() {
+    return Supervisor3.apply(testInfo);
+  }
+
+  Vector<CurrentState> waitForMoveMsgs() {
+    final CurrentState[] msgs =
+      new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
+        protected CurrentState match(Object in) {
+          if (in instanceof CurrentState) {
+            CurrentState cs = (CurrentState)in;
+            if (cs.prefix().contains(TromboneHCD.axisStatePrefix) && jvalue(jitem(cs, stateKey)).name().equals(AXIS_MOVING.name())) {
+              return cs;
+            }
+            // This is present to pick up the first status message
+            if (cs.prefix().equals(TromboneHCD.axisStatsPrefix)) {
+              return cs;
+            }
+          }
+          throw noMatch();
+        }
+      }.get(); // this extracts the received messages
+
+    CurrentState fmsg = expectMsgClass(CurrentState.class); // last one
+
+    Vector<CurrentState> allmsgs = new Vector<>(Arrays.asList(msgs));
+    allmsgs.add(fmsg);
+    return allmsgs;
+  }
+
+  @Test
+  public void componentLevelExternalPublicInterfaceTests() throws Exception {
+
+    it("should allow fetching stats");
+    {
+      ActorRef hcd = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      hcd.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+      log.info("Running");
+
+      fakeAssembly.send(hcd, JHcdController.Subscribe);
+      fakeAssembly.send(hcd, GetAxisStats);
+
+      CurrentState stats = fakeAssembly.expectMsgClass(CurrentState.class);
+      System.out.println("AxisStats: " + stats);
+      assertEquals(jvalue(jitem(stats, datumCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, moveCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, homeCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, limitCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, successCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, failureCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, cancelCountKey)).intValue(), 0);
+
+      hcd.tell(JHcdController.Unsubscribe, self());
+
+      hcd.tell(PoisonPill.getInstance(), self());
+      log.info("Done");
+    }
+
+
+    it("should allow fetching config");
+    {
+      ActorRef hcd = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      hcd.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+      log.info("Running");
+
+      fakeAssembly.send(hcd, JHcdController.Subscribe);
+      fakeAssembly.send(hcd, GetAxisConfig);
+
+      // The values are hard-coded because we can't look at the config inside the actor, will fail if config changes
+      CurrentState config = fakeAssembly.expectMsgClass(CurrentState.class);
+      System.out.println("AxisConfig: " + config);
+      assertEquals(jvalue(jitem(config, axisNameKey)), TromboneHCD.tromboneAxisName);
+      assertEquals(jvalue(jitem(config, lowLimitKey)).intValue(), 100);
+      assertEquals(jvalue(jitem(config, lowUserKey)).intValue(), 200);
+      assertEquals(jvalue(jitem(config, highUserKey)).intValue(), 1200);
+      assertEquals(jvalue(jitem(config, highLimitKey)).intValue(), 1300);
+      assertEquals(jvalue(jitem(config, homeValueKey)).intValue(), 300);
+      assertEquals(jvalue(jitem(config, startValueKey)).intValue(), 350);
+
+      fakeAssembly.send(hcd, JHcdController.Unsubscribe);
+      hcd.tell(PoisonPill.getInstance(), self());
+      log.info("Done");
+    }
+
+
 //    it("should accept an init") {
 //      val hcd = startHCD
 //
@@ -122,7 +186,7 @@ package csw.examples.vsliceJava.hcd;
 //      fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//      info("Running")
+//      log.info("Running")
 //      // Currently can't subscribe unless in Running state because controllerReceive has process
 //      fakeAssembly.send(hcd, Subscribe)
 //
@@ -130,7 +194,7 @@ package csw.examples.vsliceJava.hcd;
 //
 //      val msgs = waitForMoveMsgs(fakeAssembly)
 //      //msgs.last(positionKey).head should equal(tla.underlyingActor.axisConfig.startPosition + 1) // Init position is one off the start position
-//      info("Msgs: " + msgs)
+//      log.info("Msgs: " + msgs)
 //
 //      fakeAssembly.send(hcd, GetAxisStats)
 //      val stats = fakeAssembly.expectMsgClass(classOf[CurrentState])
@@ -146,7 +210,7 @@ package csw.examples.vsliceJava.hcd;
 //            hcd ! PoisonPill
 //            probe.expectTerminated(hcd)
 //            */
-//      info("Done")
+//      log.info("Done")
 //    }
 //
 //
@@ -158,7 +222,7 @@ package csw.examples.vsliceJava.hcd;
 //      fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//      info("Running")
+//      log.info("Running")
 //
 //      // Currently can't subscribe unless in Running state because controllerReceive has process
 //      fakeAssembly.send(hcd, Subscribe)
@@ -168,7 +232,7 @@ package csw.examples.vsliceJava.hcd;
 //      fakeAssembly.send(hcd, Submit(sc))
 //
 //      val msgs = waitForMoveMsgs(fakeAssembly)
-//      info("Msgs: " + msgs)
+//      log.info("Msgs: " + msgs)
 //      msgs.last(positionKey).head should equal(300)
 //      msgs.last(inHomeKey).head should equal(true)
 //      msgs.last(inLowLimitKey).head should equal(false)
@@ -176,7 +240,7 @@ package csw.examples.vsliceJava.hcd;
 //
 //      fakeAssembly.send(hcd, GetAxisStats)
 //      val stats = fakeAssembly.expectMsgClass(classOf[CurrentState])
-//      info(s"Stats: $stats")
+//      log.info(s"Stats: $stats")
 //      stats.configKey should equal(TromboneHCD.axisStatsCK)
 //      stats.item(homeCountKey).head should equal(1)
 //      stats.item(moveCountKey).head should equal(1)
@@ -194,7 +258,7 @@ package csw.examples.vsliceJava.hcd;
 //    fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
 //    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
 //    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//    info("Running")
+//    log.info("Running")
 //
 //    fakeAssembly.send(hcd, Subscribe)
 //    // Being done this way to ensure ConfigKey equality works
@@ -232,7 +296,7 @@ package csw.examples.vsliceJava.hcd;
 //    msgs.last(inLowLimitKey).head should equal(true)
 //    msgs.last(inHighLimitKey).head should equal(false)
 //
-//    //info("Msgs: " + msgs)
+//    //log.info("Msgs: " + msgs)
 //    fakeAssembly.send(hcd, Unsubscribe)
 //
 //  }
@@ -260,7 +324,7 @@ package csw.examples.vsliceJava.hcd;
 //    msgs.last(inLowLimitKey).head should equal(false)
 //    msgs.last(inHighLimitKey).head should equal(true)
 //
-//    //info("Msgs: " + msgs)
+//    //log.info("Msgs: " + msgs)
 //    fakeAssembly.send(hcd, Unsubscribe)
 //  }
 //
@@ -447,14 +511,6 @@ package csw.examples.vsliceJava.hcd;
 //    msgs.last(inHighLimitKey).head should be(true)
 //  }
 //
-//  def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
-//    //system.scheduler.scheduleOnce(timeout) {
-//    println("STOPPING")
-//    Supervisor.haltComponent(supervisor)
-//    Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-//    //system.terminate()
-//    System.exit(0)
-//    //}
-//  }
-//
-//}
+  }
+
+}
