@@ -11,12 +11,17 @@ import csw.services.loc.LocationService;
 import csw.services.pkg.Component.HcdInfo;
 import csw.util.config.StateVariable;
 import csw.util.config.StateVariable.CurrentState;
+import javacsw.services.ccs.JHcdController;
 import javacsw.services.loc.JConnectionType;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
+
+import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisConfig;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JConfigDSL.*;
 
@@ -30,7 +35,7 @@ import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.*;
 import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_IDLE;
 import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_MOVING;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 public class TromboneHCDBasicTests extends JavaTestKit {
   private static ActorSystem system;
   Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));
@@ -132,13 +137,13 @@ public class TromboneHCDBasicTests extends JavaTestKit {
 //    val allmsgs = msgs :+ fmsg
 //    allmsgs
 //  }
-  List<CurrentState> waitForMoveMsgs() {
+  Vector<CurrentState> waitForMoveMsgs() {
     final CurrentState[] msgs =
       new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
         protected CurrentState match(Object in) {
           if (in instanceof CurrentState) {
             CurrentState cs = (CurrentState)in;
-            if (cs.prefix().contains(TromboneHCD.axisStatePrefix) && jvalue(jitem(cs, TromboneHCD.stateKey)).equals(TromboneHCD.AXIS_MOVING)) {
+            if (cs.prefix().contains(TromboneHCD.axisStatePrefix) && jvalue(jitem(cs, stateKey)).name().equals(AXIS_MOVING.name())) {
               return cs;
             }
             // This is present to pick up the first status message
@@ -152,7 +157,7 @@ public class TromboneHCDBasicTests extends JavaTestKit {
 
     CurrentState fmsg = expectMsgClass(CurrentState.class); // last one
 
-    List<CurrentState> allmsgs = Arrays.asList(msgs);
+    Vector<CurrentState> allmsgs = new Vector<>(Arrays.asList(msgs));
     allmsgs.add(fmsg);
     return allmsgs;
   }
@@ -224,76 +229,86 @@ public class TromboneHCDBasicTests extends JavaTestKit {
       supervisor.expectMsg(ShutdownComplete);
     }
 
-//    it("should allow fetching config") {
-//
-//      val (supervisor, tla) = newTestTrombone()
-//      lifecycleStart(supervisor, tla)
-//
-//      tla ! Subscribe
-//      tla ! GetAxisConfig
-//
-//      val config = expectMsgClass(classOf[CurrentState])
-//      //println("AxisStats: " + config)
-//      config(axisNameKey).head equals tla.underlyingActor.axisConfig.axisName
-//      config(lowLimitKey).head, tla.underlyingActor.axisConfig.lowLimit)
-//      config(lowUserKey).head, tla.underlyingActor.axisConfig.lowUser)
-//      config(highUserKey).head, tla.underlyingActor.axisConfig.highUser)
-//      config(highLimitKey).head, tla.underlyingActor.axisConfig.highLimit)
-//      config(homeValueKey).head, tla.underlyingActor.axisConfig.home)
-//      config(startValueKey).head, tla.underlyingActor.axisConfig.startPosition)
-//      config(stepDelayMSKey).head, tla.underlyingActor.axisConfig.stepDelayMS)
-//
-//      tla ! Unsubscribe
-//
-//      tla.underlyingActor.context.stop(tla)
-//    }
-//
-//    it("should allow fetching stats") {
-//
-//      val (supervisor, tla) = newTestTrombone()
-//      lifecycleStart(supervisor, tla)
-//
-//      tla ! Subscribe
-//      tla ! GetAxisStats
-//
-//      val stats = expectMsgClass(classOf[CurrentState])
-//      //println("AxisStats: " + stats)
-//      stats(datumCountKey).head, 0)
-//      stats(moveCountKey).head, 0)
-//      stats(homeCountKey).head, 0)
-//      stats(limitCountKey).head, 0)
-//      stats(successCountKey).head, 0)
-//      stats(failureCountKey).head, 0)
-//      stats(cancelCountKey).head, 0)
-//
-//      tla ! Unsubscribe
-//
-//      tla.underlyingActor.context.stop(tla)
-//    }
-//
-//    it("should allow external init when running") {
-//
-//      val (supervisor, tla) = newTestTrombone()
-//      lifecycleStart(supervisor, tla)
-//
-//      tla ! Subscribe
-//      tla ! Submit(datumSC)
-//
-//      val msgs = waitForMoveMsgs
-//      msgs.last(positionKey).head should equal(tla.underlyingActor.axisConfig.startPosition + 1) // Init position is one off the start position
-//      //info("Msgs: " + msgs)
-//
-//      tla ! GetAxisStats
-//      val stats = expectMsgClass(classOf[CurrentState])
-//      //println("Stats: " + stats)
-//      stats.configKey should equal(TromboneHCD.axisStatsCK)
-//      stats.item(datumCountKey).head should equal(1)
-//      stats.item(moveCountKey).head should equal(1)
-//
-//      tla ! Unsubscribe
-//      system.stop(tla)
-//    }
-//
+    it("should allow fetching config");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+      lifecycleStart(supervisor, tla);
+
+      tla.tell(JHcdController.Subscribe, self());
+      tla.tell(GetAxisConfig, self());
+
+      CurrentState config = expectMsgClass(CurrentState.class);
+      //System.out.println("AxisStats: " + config)
+      assertEquals(jvalue(jitem(config, axisNameKey)), tla.underlyingActor().axisConfig.axisName);
+      assertEquals(jvalue(jitem(config, lowLimitKey)).intValue(), tla.underlyingActor().axisConfig.lowLimit);
+      assertEquals(jvalue(jitem(config, highUserKey)).intValue(), tla.underlyingActor().axisConfig.highUser);
+      assertEquals(jvalue(jitem(config, highLimitKey)).intValue(), tla.underlyingActor().axisConfig.highLimit);
+      assertEquals(jvalue(jitem(config, homeValueKey)).intValue(), tla.underlyingActor().axisConfig.home);
+      assertEquals(jvalue(jitem(config, startValueKey)).intValue(), tla.underlyingActor().axisConfig.startPosition);
+      assertEquals(jvalue(jitem(config, stepDelayMSKey)).intValue(), tla.underlyingActor().axisConfig.stepDelayMS);
+
+      tla.tell(JHcdController.Unsubscribe, self());
+
+      tla.underlyingActor().context().stop(tla);
+    }
+
+    it("should allow fetching stats");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+      lifecycleStart(supervisor, tla);
+
+      tla.tell(JHcdController.Subscribe, self());
+      tla.tell(GetAxisStats, self());
+
+      CurrentState stats = expectMsgClass(CurrentState.class);
+      //System.out.println("AxisStats: " + stats);
+      assertEquals(jvalue(jitem(stats, datumCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, moveCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, homeCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, limitCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, successCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, failureCountKey)).intValue(), 0);
+      assertEquals(jvalue(jitem(stats, cancelCountKey)).intValue(), 0);
+
+      tla.tell(JHcdController.Unsubscribe, self());
+
+      tla.underlyingActor().context().stop(tla);
+    }
+
+    it("should allow external init when running");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+      lifecycleStart(supervisor, tla);
+
+      tla.tell(JHcdController.Subscribe, self());
+      tla.tell(new Submit(datumSC), self());
+
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      assertEquals(
+        jvalue(jitem(msgs.lastElement(), positionKey)).intValue(),
+        tla.underlyingActor().axisConfig.startPosition + 1); // Init position is one off the start position
+      //info("Msgs: " + msgs)
+
+      tla.tell(GetAxisStats, self());
+      CurrentState stats = expectMsgClass(CurrentState.class);
+      //println("Stats: " + stats)
+      assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+      assertEquals(stats.item(datumCountKey).head(), 1);
+      assertEquals(stats.item(moveCountKey).head(), 1);
+
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
+    }
+
 //    it("should allow homing") {
 //
 //      // Note there is no test actor ref
