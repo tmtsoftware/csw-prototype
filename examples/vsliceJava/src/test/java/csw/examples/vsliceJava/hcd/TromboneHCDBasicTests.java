@@ -23,7 +23,6 @@ import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxi
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
 import static javacsw.util.config.JItems.*;
-import static javacsw.util.config.JConfigDSL.*;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -410,167 +409,149 @@ public class TromboneHCDBasicTests extends JavaTestKit {
       }
     }
 
-//    describe("place into the high limit") {
-//      import csw.services.ccs.HcdController._
-//
-//      it("should show entering a high limit") {
-//
-//        val (supervisor, tla) = newTestTrombone()
-//        lifecycleStart(supervisor, tla)
-//
-//        val testPos = 3000
-//        val testActual = tla.underlyingActor.axisConfig.highLimit
-//
-//        tla ! Subscribe
-//        tla ! Submit(positionSC(testPos))
-//
-//        val msgs = waitForMoveMsgs
-//        // Check the last message
-//        msgs.last(stateKey).head, AXIS_IDLE)
-//        msgs.last(positionKey).head, testActual)
-//        msgs.last(inLowLimitKey).head should equal(false)
-//        msgs.last(inHighLimitKey).head should equal(true)
-//
-//        //info("Msgs: " + msgs)
-//        tla ! Unsubscribe
-//
-//        system.stop(tla)
-//      }
-//    }
-//
-//    describe("Should support a more complex series of moves") {
-//      import csw.services.ccs.HcdController._
-//
-//      it("should allow complex series of moves") {
-//        // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
-//
-//        val (supervisor, tla) = newTrombone()
-//        lifecycleStart(supervisor, tla)
-//
-//        // Get state events
-//        tla ! Subscribe
-//
-//        // Move 1
-//        tla ! Submit(SetupConfig(axisDatumPrefix)) // Could use ones in TromboneHCD
-//        var msgs = waitForMoveMsgs
-//        msgs.last(inHomeKey).head, false)
-//
-//        // Move 2
-//        tla ! Submit(homeSC)
-//        msgs = waitForMoveMsgs
-//        msgs.last(inHomeKey).head, true)
-//
-//        // Move 3
-//        var testPos = 423
-//        tla ! Submit(positionSC(testPos))
-//        msgs = waitForMoveMsgs
-//        // Check the last message
-//        msgs.last(positionKey).head, testPos)
-//        msgs.last(stateKey).head, AXIS_IDLE)
-//        msgs.last(inHomeKey).head, false)
-//        msgs.last(inLowLimitKey).head, false)
-//        msgs.last(inHighLimitKey).head, false)
-//
-//        // Move 4
-//        testPos = 800
-//        tla ! Submit(positionSC(testPos))
-//        msgs = waitForMoveMsgs
-//        // Check the last message
-//        msgs.last(positionKey).head, testPos)
-//        msgs.last(stateKey).head, AXIS_IDLE)
-//
-//        // Move 5
-//        testPos = 1240
-//        tla ! Submit(positionSC(testPos))
-//        msgs = waitForMoveMsgs
-//        // Check the last message
-//        msgs.last(positionKey).head, testPos)
-//        msgs.last(stateKey).head, AXIS_IDLE)
-//        msgs.last(inLowLimitKey).head, false)
-//        msgs.last(inHighLimitKey).head, true)
-//
-//        // Move 6
-//        tla ! Submit(homeSC)
-//        msgs = waitForMoveMsgs
-//        msgs.last(inHomeKey).head, true)
-//        msgs.last(inLowLimitKey).head, false)
-//        msgs.last(inHighLimitKey).head, false)
-//
-//        // Get summary stats
-//        tla ! GetAxisStats
-//        val stats = expectMsgClass(classOf[CurrentState])
-//        //println("Stats: " + stats)
-//        stats.configKey should equal(TromboneHCD.axisStatsCK)
-//        stats.item(datumCountKey).head should equal(1)
-//        stats.item(moveCountKey).head should equal(6)
-//        stats.item(homeCountKey).head should equal(2)
-//        stats.item(limitCountKey).head should equal(1)
-//        stats.item(successCountKey).head should equal(6)
-//        stats.item(failureCountKey).head, 0)
-//        stats.item(cancelCountKey).head, 0)
-//
-//        tla ! Unsubscribe
-//
-//        system.stop(tla)
-//      }
-//    }
-//
-//    describe("Should handle a cancel of a motion") {
-//      import csw.services.ccs.HcdController._
-//
-//      it("start up a move and cancel it") {
-//
-//        val (supervisor, tla) = newTrombone()
-//        lifecycleStart(supervisor, tla)
-//
-//        val testPos = 1000
-//
-//        tla ! Subscribe
-//        tla ! Submit(positionSC(testPos))
-//
-//        // wait for 2 updates
-//        receiveN(2)
-//        tla ! Submit(cancelSC)
-//        val msgs = waitForMoveMsgs
-//        // Check the last message
-//        msgs.last(stateKey).head, AXIS_IDLE)
-//        info("Msgs: " + msgs)
-//
-//        // Get summary stats
-//        tla ! GetAxisStats
-//        val stats = expectMsgClass(classOf[CurrentState])
-//        //println("Stats: " + stats)
-//        stats.configKey should equal(TromboneHCD.axisStatsCK)
-//        stats.item(moveCountKey).head should equal(1)
-//        stats.item(successCountKey).head should equal(1)
-//        stats.item(cancelCountKey).head, 1)
-//
-//        tla ! Unsubscribe
-//
-//        system.stop(tla)
-//      }
-//    }
-//
-//    /*
-//      def startHCD: ActorRef = {
-//        val testInfo = HcdInfo(TromboneHCD.componentName,
-//          TromboneHCD.trombonePrefix,
-//          TromboneHCD.componentClassName,
-//          DoNotRegister, Set(AkkaType), 1.second)
-//        Supervisor3(testInfo)
-//      }
-//    */
-//
-//    def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
-//      //system.scheduler.scheduleOnce(timeout) {
-//      println("STOPPING")
-//      Supervisor3.haltComponent(supervisor)
-//      Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-//      system.terminate()
-//      System.exit(0)
-//      //}
-//    }
-//
-//  }
+  @Test
+  public void placeIntoTheHighLimit() throws Exception {
+      it("should show entering a high limit");
+      {
+        TestProbeTestActorRefPair t = newTestTrombone();
+        TestProbe supervisor = t.testProbe;
+        TestActorRef<TromboneHCD> tla = t.testActorRef;
 
+        lifecycleStart(supervisor, tla);
+
+        int testPos = 3000;
+        int testActual = tla.underlyingActor().axisConfig.highLimit;
+
+        tla.tell(JHcdController.Subscribe, self());
+        tla.tell(new Submit(positionSC(testPos)), self());
+
+        Vector<CurrentState> msgs = waitForMoveMsgs();
+        // Check the last message
+        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), true);
+
+        //info("Msgs: " + msgs)
+        tla.tell(JHcdController.Unsubscribe, self());
+        system.stop(tla);
+      }
+    }
+
+  @Test
+  public void ShouldSupportAMoreComplexSeriesOfMoves() throws Exception {
+      it("should allow complex series of moves");
+      {
+        // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
+
+        TestProbeTestActorRefPair t = newTestTrombone();
+        TestProbe supervisor = t.testProbe;
+        TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+        lifecycleStart(supervisor, tla);
+
+        // Get state events
+        tla.tell(JHcdController.Subscribe, self());
+
+        // Move 1
+        tla.tell(new Submit(SetupConfig(axisDatumPrefix)), self()); // Could use ones in TromboneHCD
+        Vector<CurrentState> msgs = waitForMoveMsgs();
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), false);
+
+        // Move 2
+        tla.tell(new Submit(homeSC), self());
+        msgs = waitForMoveMsgs();
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+
+        // Move 3
+        int testPos = 423;
+        tla.tell(new Submit(positionSC(testPos)), self());
+        msgs = waitForMoveMsgs();
+        // Check the last message
+        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), false);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+
+        // Move 4
+        testPos = 800;
+        tla.tell(new Submit(positionSC(testPos)), self());
+        msgs = waitForMoveMsgs();
+        // Check the last message
+        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+
+        // Move 5
+        testPos = 1240;
+        tla.tell(new Submit(positionSC(testPos)), self());
+        msgs = waitForMoveMsgs();
+        // Check the last message
+        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), true);
+
+        // Move 6
+        tla.tell(new Submit(homeSC), self());
+        msgs = waitForMoveMsgs();
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+
+        // Get summary stats
+        tla.tell(GetAxisStats, self());
+        CurrentState stats = expectMsgClass(CurrentState.class);
+        //println("Stats: " + stats)
+        assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+        assertEquals(stats.item(datumCountKey).head(), 1);
+        assertEquals(stats.item(moveCountKey).head(), 6);
+        assertEquals(stats.item(homeCountKey).head(), 2);
+        assertEquals(stats.item(limitCountKey).head(), 1);
+        assertEquals(stats.item(successCountKey).head(), 6);
+        assertEquals(stats.item(failureCountKey).head(), 0);
+        assertEquals(stats.item(cancelCountKey).head(), 0);
+
+        tla.tell(JHcdController.Unsubscribe, self());
+        system.stop(tla);
+      }
+    }
+
+
+  @Test
+  public void ShouldHandleACancelOfAMotion() throws Exception {
+      it("start up a move and cancel it");
+      {
+        TestProbeTestActorRefPair t = newTestTrombone();
+        TestProbe supervisor = t.testProbe;
+        TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+        lifecycleStart(supervisor, tla);
+
+        int testPos = 1000;
+
+        tla.tell(JHcdController.Subscribe, self());
+        tla.tell(new Submit(positionSC(testPos)), self());
+
+        // wait for 2 updates
+        receiveN(2);
+        tla.tell(new Submit(cancelSC), self());
+        Vector<CurrentState> msgs = waitForMoveMsgs();
+        // Check the last message
+        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+        // info("Msgs: " + msgs)
+
+        // Get summary stats
+        tla.tell(GetAxisStats, self());
+        CurrentState stats = expectMsgClass(CurrentState.class);
+        //println("Stats: " + stats)
+        assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+        assertEquals(stats.item(moveCountKey).head(), 1);
+        assertEquals(stats.item(successCountKey).head(), 1);
+        assertEquals(stats.item(cancelCountKey).head(), 1);
+
+        tla.tell(JHcdController.Unsubscribe, self());
+        system.stop(tla);
+      }
+    }
 }
