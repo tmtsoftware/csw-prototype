@@ -5,8 +5,8 @@ import csw.services.events.{EventService, EventServiceSettings}
 import csw.util.config.Events.{StatusEvent, SystemEvent}
 
 /**
-  * TMT Source Code: 8/16/16.
-  */
+ * TMT Source Code: 8/16/16.
+ */
 class TrombonePublisher(settings: Option[EventServiceSettings]) extends Actor with ActorLogging with TromboneStateHandler {
   import TromboneAssembly._
   import TromboneStateHandler._
@@ -22,7 +22,7 @@ class TrombonePublisher(settings: Option[EventServiceSettings]) extends Actor wi
       val te = StatusEvent(telStatusEventPrefix).madd(rtcFocusError, stagePosition, zenithAngle)
       log.info(s"Status publish: $te")
       eventService.publish(te)
-    case ts:TromboneState =>
+    case ts: TromboneState =>
       // We can do this for convenience rather than using TromboneStateHandler's stateReceive
       val te = StatusEvent(telStatusEventPrefix).madd(ts.cmd, ts.move, ts.sodiumLayer, ts.nss)
       log.info(s"Status publish: $ts")

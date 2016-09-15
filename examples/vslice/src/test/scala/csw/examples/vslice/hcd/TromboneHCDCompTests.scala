@@ -17,8 +17,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration.{FiniteDuration, _}
 
 /**
-  * TMT Source Code: 7/27/16.
-  */
+ * TMT Source Code: 7/27/16.
+ */
 class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging with BeforeAndAfterAll {
 
   import TromboneHCD._
@@ -28,33 +28,36 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
   implicit val system = ActorSystem("TestSystem")
 
-  val testInfo = HcdInfo(TromboneHCD.componentName,
+  val testInfo = HcdInfo(
+    TromboneHCD.componentName,
     TromboneHCD.trombonePrefix,
     TromboneHCD.componentClassName,
-    DoNotRegister, Set(AkkaType), 1.second)
+    DoNotRegister, Set(AkkaType), 1.second
+  )
 
   val troboneAssemblyPrefix = TromboneAssembly.componentPrefix
 
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(TromboneHCD.componentName,
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second)
+      DoNotRegister, Set(AkkaType), 1.second
+    )
 
     Supervisor3(testInfo)
   }
 
   def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
     val msgs = tp.receiveWhile(5.seconds) {
-      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
+      case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
       // This is present to pick up the first status message
-      case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+      case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
     }
     val fmsg = tp.expectMsgClass(classOf[CurrentState]) // last one
     val allmsgs = msgs :+ fmsg
     allmsgs
   }
-
 
   describe("component level external public interface tests") {
 
@@ -88,7 +91,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       info("Done")
     }
 
-
     it("should allow fetching config") {
       val hcd = startHCD
 
@@ -115,7 +117,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
       fakeAssembly.send(hcd, Unsubscribe)
     }
-
 
     it("should accept an init") {
       val hcd = startHCD
@@ -152,7 +153,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       info("Done")
     }
 
-
     it("should allow homing") {
       val hcd = startHCD
 
@@ -187,7 +187,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       fakeAssembly.send(hcd, Unsubscribe)
     }
   }
-
 
   it("should allow a short move") {
     val hcd = startHCD

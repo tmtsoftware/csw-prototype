@@ -1,8 +1,8 @@
 package csw.examples.vslice.shared
 
 /**
-  * TMT Source Code: 7/15/16.
-  */
+ * TMT Source Code: 7/15/16.
+ */
 object TromboneData {
 
   val testConf =

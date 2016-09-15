@@ -8,23 +8,23 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 7/19/16.
-  */
+ * TMT Source Code: 7/19/16.
+ */
 class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
   import SingleAxisSimulator._
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
   def expectLLMoveMsgs(diagFlag: Boolean = false): Vector[MotionWorkerMsgs] = {
     // Get AxisStarted
-    var allMsgs:Vector[MotionWorkerMsgs] = Vector(expectMsg(Start))
+    var allMsgs: Vector[MotionWorkerMsgs] = Vector(expectMsg(Start))
     // Receive updates until axis idle then get the last one
     val moveMsgs = receiveWhile(5.seconds) {
-      case t@Tick(current) => t
+      case t @ Tick(current) => t
     }
     val endMsg = expectMsgClass(classOf[End]) // last one
-    allMsgs =  allMsgs ++ moveMsgs :+ endMsg
+    allMsgs = allMsgs ++ moveMsgs :+ endMsg
     if (diagFlag) info(s"LLMoveMsgs: $allMsgs")
     allMsgs
   }
@@ -34,7 +34,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     expectMsg(AxisStarted)
     // Receive updates until axis idle then get the last one
     val msgs = receiveWhile(5.seconds) {
-      case m@AxisUpdate(_, axisState, current, _, _, _) if axisState == AXIS_MOVING => m
+      case m @ AxisUpdate(_, axisState, current, _, _, _) if axisState == AXIS_MOVING => m
     }
     val fmsg = expectMsgClass(classOf[AxisUpdate]) // last one
     val allmsgs = msgs :+ fmsg
@@ -44,9 +44,9 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
 
   def expectMoveMsgsWithDest(target: Int, diagFlag: Boolean = false): Seq[AxisResponse] = {
     // Receive updates until axis idle then get the last one
-    val msgs  = receiveWhile(5.seconds) {
-      case as@AxisStarted => as
-      case m@AxisUpdate(_, currentState, current, _, _, _) if current != target => m
+    val msgs = receiveWhile(5.seconds) {
+      case as @ AxisStarted => as
+      case m @ AxisUpdate(_, currentState, current, _, _, _) if current != target => m
     }
     val fmsg1 = expectMsgClass(classOf[AxisUpdate]) // last one when target == current
     val fmsg2 = expectMsgClass(classOf[AxisUpdate]) // then the End event with the IDLE
@@ -169,14 +169,16 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
   val defaultStepDelayMS = 5
   val defaultStatusPrefix = "test.axisStatus"
 
-  val defaultAxisConfig = AxisConfig(defaultAxisName,
+  val defaultAxisConfig = AxisConfig(
+    defaultAxisName,
     defaultLowLimit,
     defaultLowUser,
     defaultHighUser,
     defaultHighLimit,
     defaultHome,
     defaultStartPosition,
-    defaultStepDelayMS)
+    defaultStepDelayMS
+  )
 
   def defaultAxis(replyTo: ActorRef): TestActorRef[SingleAxisSimulator] = {
     val props = SingleAxisSimulator.props(defaultAxisConfig, Some(replyTo))
@@ -232,7 +234,6 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       val upd = expectMsgClass(classOf[AxisUpdate])
       upd.state should equal(AXIS_IDLE)
       upd.current should equal(defaultAxisConfig.startPosition + 1)
-
 
       sa ! GetStatistics
       val stats1: AxisStatistics = expectMsgClass(classOf[AxisStatistics])
@@ -304,7 +305,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
 
       val msgs = expectMoveMsgsWithDest(425)
       msgs.last.isInstanceOf[AxisUpdate]
-      val last:AxisUpdate = msgs.last.asInstanceOf[AxisUpdate]
+      val last: AxisUpdate = msgs.last.asInstanceOf[AxisUpdate]
       last.state should be(AXIS_IDLE)
       last.current should be(425)
 

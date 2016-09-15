@@ -8,8 +8,8 @@ import csw.util.config.Events.{EventTime, SystemEvent}
 import csw.util.config._
 
 /**
-  * TMT Source Code: 6/20/16.
-  */
+ * TMT Source Code: 6/20/16.
+ */
 class TromboneEventSubscriber(calculationActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings]) extends EventSubscriber(eventServiceSettings) {
 
   // If state of NSS is false, then subscriber provides 0 for zenith distance with updates to subscribers
@@ -50,15 +50,15 @@ class TromboneEventSubscriber(calculationActor: Option[ActorRef], eventServiceSe
 
     case UsingNSS(inUse) => NSSinUse = inUse
 
-    case x => log.error(s"TromboneEventSubscriber received an unknown message: $x")
+    case x               => log.error(s"TromboneEventSubscriber received an unknown message: $x")
   }
 
   /**
-    * This function is called whenever a new event arrives. The function takes the current information consisting of
-    * the zenithAngle and focusError which is actor state and forwards it to the CalculationActor
-    *
-    * @param eventTime - the time of the last event update
-    */
+   * This function is called whenever a new event arrives. The function takes the current information consisting of
+   * the zenithAngle and focusError which is actor state and forwards it to the CalculationActor
+   *
+   * @param eventTime - the time of the last event update
+   */
   def updateCalculator(eventTime: EventTime) = {
     calculationActor.map(_ ! UpdatedEventData(zenithAngle, focusError, eventTime))
   }

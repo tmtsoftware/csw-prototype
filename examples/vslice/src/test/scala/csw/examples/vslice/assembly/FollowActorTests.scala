@@ -11,10 +11,10 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 8/12/16.
-  */
+ * TMT Source Code: 8/12/16.
+ */
 class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   import TromboneAssembly._
 
@@ -32,7 +32,6 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
     val props = FollowActor.props(calculationConfig, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
     TestActorRef(props)
   }
-
 
   describe("Basic tests for connectivity") {
     val fakeTC = TestProbe()

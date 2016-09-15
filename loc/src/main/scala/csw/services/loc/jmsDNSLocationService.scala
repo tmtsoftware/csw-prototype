@@ -182,18 +182,16 @@ object jmsDNSLocationService extends LocationServiceProvider {
   private def getActorUri(actorRef: ActorRef, system: ActorSystem): URI =
     new URI(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
-  /**
-   * Convenience method that gets the location service information for a given set of services.
-   *
-   * @param connections set of requested connections
-   * @param system      the caller's actor system
-   * @return a future object describing the services found
-   */
-  /*
-  def resolve(connections: Set[Connection])(implicit system: ActorRefFactory, timeout: Timeout): Future[LocationsReady] = {
-    import akka.pattern.ask
-    val actorRef = system.actorOf(LocationTrackerWorker.props(None))
-    (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]
-  }
-*/
+  //  /**
+  //   * Convenience method that gets the location service information for a given set of services.
+  //   *
+  //   * @param connections set of requested connections
+  //   * @param system      the caller's actor system
+  //   * @return a future object describing the services found
+  //   */
+  //  def resolve(connections: Set[Connection])(implicit system: ActorRefFactory, timeout: Timeout): Future[LocationsReady] = {
+  //    import akka.pattern.ask
+  //    val actorRef = system.actorOf(LocationTrackerWorker.props(None))
+  //    (actorRef ? LocationTrackerWorker.TrackConnections(connections)).mapTo[LocationsReady]
+  //  }
 }

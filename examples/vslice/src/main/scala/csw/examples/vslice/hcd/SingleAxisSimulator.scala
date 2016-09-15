@@ -6,11 +6,11 @@ import csw.services.ts.TimeService
 import csw.services.ts.TimeService._
 
 /**
-  * This class provides a simulator of a single axis device for the purpose of testing TMT HCDs and Assemblies.
-  *
-  * @param axisConfig an AxisConfig object that contains a description of the axis
-  * @param replyTo    an actor that will be updated with information while the axis executes
-  */
+ * This class provides a simulator of a single axis device for the purpose of testing TMT HCDs and Assemblies.
+ *
+ * @param axisConfig an AxisConfig object that contains a description of the axis
+ * @param replyTo    an actor that will be updated with information while the axis executes
+ */
 class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef]) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
 
   import MotionWorker._
@@ -266,7 +266,7 @@ class MotionWorker(val start: Int, val destinationIn: Int, val delayInMS: Int, r
     case Cancel =>
       if (diagFlag) log.debug("Worker received cancel")
       cancelFlag = true // Will cause to leave on next Tick
-    case end@End(finalpos) =>
+    case end @ End(finalpos) =>
       replyTo ! end
       if (diagFlag) diag("End", finalpos, numSteps)
       // When the actor has nothing else to do, it should stop
@@ -296,11 +296,11 @@ object MotionWorker {
     else 10
   }
 
-  def calcStepSize(current: Int, destination: Int, steps: Int):Int = (destination - current) / steps
+  def calcStepSize(current: Int, destination: Int, steps: Int): Int = (destination - current) / steps
 
   //def stepNumber(stepCount: Int, numSteps: Int) = numSteps - stepCount
 
-  def calcDistance(current: Int, destination: Int):Int = Math.abs(current - destination)
-  def lastStep(current: Int, destination: Int, stepSize: Int):Boolean = calcDistance(current, destination) <= Math.abs(stepSize)
+  def calcDistance(current: Int, destination: Int): Int = Math.abs(current - destination)
+  def lastStep(current: Int, destination: Int, stepSize: Int): Boolean = calcDistance(current, destination) <= Math.abs(stepSize)
 
 }

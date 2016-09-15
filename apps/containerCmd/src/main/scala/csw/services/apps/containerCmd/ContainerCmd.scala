@@ -35,6 +35,9 @@ object ContainerCmd {
     arg[File]("<file>") optional () maxOccurs 1 action { (x, c) =>
       c.copy(file = Some(x))
     } text "optional container config file to override the default"
+
+    help("help")
+    version("version")
   }
 
   private def parse(name: String, args: Seq[String]): Option[Config] = parser(name).parse(args, Config())

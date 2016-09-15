@@ -5,8 +5,8 @@ import csw.util.config.UnitsOfMeasure.millimeters
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
 
 /**
-  * These are tests of the calculations in the Calculation Actor
-  */
+ * These are tests of the calculations in the Calculation Actor
+ */
 class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
   import Algorithms._
   import AlgorithmData._
@@ -59,7 +59,6 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       info(s"Typ: $typTotal")
     }
 
-
     it("should verify focuserror values") {
       verifyFocusError(focusErrorKey -> 0.0) should be(true)
       verifyFocusError(focusErrorKey -> -21.0) should be(false)
@@ -72,7 +71,7 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       verifyZenithAngle(zenithAngleKey -> 92.0) should be(false)
     }
 
-    def pos(p: Double):DoubleItem = stagePositionKey -> p withUnits millimeters
+    def pos(p: Double): DoubleItem = stagePositionKey -> p withUnits millimeters
 
     it("should work with range transform") {
       val p = pos(90.0)
@@ -83,6 +82,5 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       println("Max: " + maxEncoder)
     }
   }
-
 
 }

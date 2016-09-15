@@ -12,23 +12,25 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 8/23/16.
-  */
+ * TMT Source Code: 8/23/16.
+ */
 class TromboneAssemblyBasicTests extends TestKit(ActorSystem("TromboneTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
   val troboneAssemblyPrefix = "nfiraos.ncc.trombone"
 
-  val testInfo = AssemblyInfo(TromboneAssembly.componentName,
+  val testInfo = AssemblyInfo(
+    TromboneAssembly.componentName,
     TromboneAssembly.componentPrefix,
     TromboneAssembly.componentClassName,
-    DoNotRegister, Set(AkkaType), Set.empty[Connection])
+    DoNotRegister, Set(AkkaType), Set.empty[Connection]
+  )
 
   def getTromboneProps(assemblyInfo: AssemblyInfo, supervisorIn: Option[ActorRef]): Props = {
     supervisorIn match {
-      case None => TromboneAssembly.props(assemblyInfo, TestProbe().ref)
+      case None           => TromboneAssembly.props(assemblyInfo, TestProbe().ref)
       case Some(actorRef) => TromboneAssembly.props(assemblyInfo, actorRef)
     }
   }

@@ -5,8 +5,8 @@ import csw.examples.vslice.assembly.BusyFSM.{AssemblyActivity, AssemblyState}
 import csw.services.pkg.Assembly
 
 /**
-  * TMT Source Code: 6/11/16.
-  */
+ * TMT Source Code: 6/11/16.
+ */
 
 object BusyFSM {
 

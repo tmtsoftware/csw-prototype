@@ -6,12 +6,14 @@ import csw.examples.vslice.assembly.FollowActor.CalculationConfig
 import csw.util.config.Events.EventTime
 
 /**
-  * TMT Source Code: 6/21/16.
-  */
-class FollowActor(calculationConfig: CalculationConfig,
-                  val tromboneControl: Option[ActorRef],
-                  val aoPublisher: Option[ActorRef],
-                  val engPublisher: Option[ActorRef]) extends Actor with ActorLogging {
+ * TMT Source Code: 6/21/16.
+ */
+class FollowActor(
+  calculationConfig:   CalculationConfig,
+  val tromboneControl: Option[ActorRef],
+  val aoPublisher:     Option[ActorRef],
+  val engPublisher:    Option[ActorRef]
+) extends Actor with ActorLogging {
 
   import TromboneAssembly._
   import FollowActor._
@@ -20,13 +22,12 @@ class FollowActor(calculationConfig: CalculationConfig,
   // Set to default so it's not necessary to always send a set initial message
   var initialElevation: DoubleItem = initialElevationKey -> calculationConfig.defaultInitialElevation withUnits initialElevationUnits
 
-  var inNSSMode:Boolean = false
+  var inNSSMode: Boolean = false
   val nSSModeZenithAngle = zenithAngleKey -> 0.0 withUnits zenithAngleUnits
-
 
   def receive: Receive = {
 
-    case UsingNSS(inUse) => inNSSMode = inUse     // True if NSS is in use
+    case UsingNSS(inUse) => inNSSMode = inUse // True if NSS is in use
 
     case UpdatedEventData(zenithAngleIn, focusError, time) =>
       // If inNSSMode is true, then we use angle 0.0
@@ -50,20 +51,22 @@ class FollowActor(calculationConfig: CalculationConfig,
 
         // I just send the total of these two as the trombone state position to the trombone HCD after changing it to an encoder position
         val newTotalElevation = newElevation + newRangeDistance
-        val newTrombonePosition:DoubleItem = stagePositionKey -> newTotalElevation withUnits stagePositionUnits
+        val newTrombonePosition: DoubleItem = stagePositionKey -> newTotalElevation withUnits stagePositionUnits
 
         // Send the new trombone stage position to the HCD
         sendTrombonePosition(newTrombonePosition)
         // Post a SystemEvent for AOESW
-        sendAOESWUpdate(naLayerElevationKey -> newElevation withUnits naLayerElevationUnits,
-                        naLayerRangeDistanceKey -> newRangeDistance withUnits naLayerRangeDistanceUnits)
+        sendAOESWUpdate(
+          naLayerElevationKey -> newElevation withUnits naLayerElevationUnits,
+          naLayerRangeDistanceKey -> newRangeDistance withUnits naLayerRangeDistanceUnits
+        )
         // Post a StatusEvent for telemetry updates
         sendEngrUpdate(focusError, newTrombonePosition, zenithAngle)
       }
 
     case SetElevation(elevation, zenithAngle) => initialElevation = elevation
 
-    case x => log.error(s"Unexpected message in TromboneAssembly:CalculationActor: $x")
+    case x                                    => log.error(s"Unexpected message in TromboneAssembly:CalculationActor: $x")
   }
 
   //
@@ -86,26 +89,25 @@ class FollowActor(calculationConfig: CalculationConfig,
 object FollowActor {
   // Props for creating the calculation actor
   def props(calculationConfig: CalculationConfig, tromboneControl: Option[ActorRef] = None,
-            aoPublisher: Option[ActorRef] = None,
+            aoPublisher:  Option[ActorRef] = None,
             engPublisher: Option[ActorRef] = None) = Props(classOf[FollowActor], calculationConfig, tromboneControl, aoPublisher, engPublisher)
 
   /**
-    * Configuration class
-    *
-    * @param defaultInitialElevation a default initial eleveation (possibly remove once workign)
-    * @param focusErrorGain gain value for focus error
-    * @param upperFocusLimit check for maximum focus error
-    * @param lowerFocusLimit check for minimum focus error
-    * @param zenithFactor an algorithm value for scaling zenith angle term
-    */
+   * Configuration class
+   *
+   * @param defaultInitialElevation a default initial eleveation (possibly remove once workign)
+   * @param focusErrorGain gain value for focus error
+   * @param upperFocusLimit check for maximum focus error
+   * @param lowerFocusLimit check for minimum focus error
+   * @param zenithFactor an algorithm value for scaling zenith angle term
+   */
   case class CalculationConfig(defaultInitialElevation: Double, focusErrorGain: Double,
                                upperFocusLimit: Double, lowerFocusLimit: Double, zenithFactor: Double)
 
-
   /**
-    * Messages received by csw.examples.vslice.FollowActor
-    * Update from subscribers
-    */
+   * Messages received by csw.examples.vslice.FollowActor
+   * Update from subscribers
+   */
   trait FollowActorMessages
 
   case class UpdatedEventData(zenithAngle: DoubleItem, focusError: DoubleItem, time: EventTime) extends FollowActorMessages

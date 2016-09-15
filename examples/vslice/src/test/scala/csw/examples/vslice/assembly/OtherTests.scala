@@ -5,10 +5,10 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import org.scalatest.{BeforeAndAfterAll, Inspectors, _}
 
 /**
-  * TMT Source Code: 8/28/16.
-  */
+ * TMT Source Code: 8/28/16.
+ */
 class OtherTests extends TestKit(ActorSystem("OtherTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
 
   import TromboneStateHandler._
 
@@ -49,8 +49,8 @@ class OtherTests extends TestKit(ActorSystem("OtherTests")) with ImplicitSender
   }
 
   /**
-    * Test Description: Ensure that publisher and subscribers are all updated properly
-    */
+   * Test Description: Ensure that publisher and subscribers are all updated properly
+   */
   describe("Testing the trait approach") {
     it("should get updated") {
       // Test subscriber

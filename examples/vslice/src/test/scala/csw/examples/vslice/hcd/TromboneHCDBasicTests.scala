@@ -14,24 +14,25 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 7/18/16.
-  */
+ * TMT Source Code: 7/18/16.
+ */
 class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
   val troboneAssemblyPrefix = "nfiraos.ncc.trombone"
 
-  val testInfo = HcdInfo(TromboneHCD.componentName,
+  val testInfo = HcdInfo(
+    TromboneHCD.componentName,
     TromboneHCD.trombonePrefix,
     TromboneHCD.componentClassName,
-    DoNotRegister, Set(AkkaType), 1.second)
-
+    DoNotRegister, Set(AkkaType), 1.second
+  )
 
   def getTromboneProps(hcdInfo: HcdInfo, supervisorIn: Option[ActorRef]): Props = {
     supervisorIn match {
-      case None => TromboneHCD.props(hcdInfo, TestProbe().ref)
+      case None           => TromboneHCD.props(hcdInfo, TestProbe().ref)
       case Some(actorRef) => TromboneHCD.props(hcdInfo, actorRef)
     }
   }
@@ -57,9 +58,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
   def waitForMoveMsgs: Seq[CurrentState] = {
     val msgs = receiveWhile(5.seconds) {
-      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
+      case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
       // This is present to pick up the first status message
-      case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+      case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
     }
     val fmsg = expectMsgClass(classOf[CurrentState]) // last one
     val allmsgs = msgs :+ fmsg
@@ -68,9 +69,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
   def waitForAllMsgs: Seq[CurrentState] = {
     val msgs = receiveWhile(5.seconds) {
-      case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) => m
+      case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) => m
       // This is present to pick up the first status message
-      case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+      case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix)  => st
     }
     val fmsg = expectMsgClass(classOf[CurrentState]) // last one
     val allmsgs = msgs :+ fmsg
@@ -238,7 +239,6 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
       system.stop(tla)
     }
-
 
     it("should allow continuous short values") {
 

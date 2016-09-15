@@ -19,8 +19,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 8/26/16.
-  */
+ * TMT Source Code: 8/26/16.
+ */
 class TromboneCommandHandler(controlConfig: TromboneControlConfig, currentStateSource: ActorRef, replyTo: Option[ActorRef]) extends Actor with ActorLogging with TromboneStateHandler {
 
   import TromboneAssembly._
@@ -65,7 +65,6 @@ class TromboneCommandHandler(controlConfig: TromboneControlConfig, currentStateS
           }
         }
 
-
       case `datumCK` =>
         if (cmd != cmdUninitialized) {
           replyTo.foreach(_ ! CommandStatus2.NoLongerValid(OtherIssue("what")))
@@ -92,8 +91,8 @@ class TromboneCommandHandler(controlConfig: TromboneControlConfig, currentStateS
             case Completed =>
               val finalMoveState = currentMove match {
                 case `moveIndexing` => moveUnindexed
-                case `moveMoving` => moveIndexed
-                case _ => moveUnindexed // Error
+                case `moveMoving`   => moveIndexed
+                case _              => moveUnindexed // Error
               }
               state(cmd = cmdReady, move = finalMoveState)
             case Error(message) =>
@@ -133,17 +132,15 @@ class TromboneCommandHandler(controlConfig: TromboneControlConfig, currentStateS
           }
         }
 
-      case `positionCK` => positionStart(sc)
+      case `positionCK`     => positionStart(sc)
       case `setElevationCK` => setElevationStart(sc)
-      case `setAngleCK` => setAngleStart(sc)
-      case `followCK` => followStart(sc)
-      case x => log.error(s"TromboneCommandHandler:doStart received an unknown message: $x")
+      case `setAngleCK`     => setAngleStart(sc)
+      case `followCK`       => followStart(sc)
+      case x                => log.error(s"TromboneCommandHandler:doStart received an unknown message: $x")
     }
   }
 
-
-
-/*
+  /*
     def validate(testCondition: => Validation)(trueCodeBlock: => Unit) = {
       /*
       testCondition match {
@@ -158,7 +155,6 @@ class TromboneCommandHandler(controlConfig: TromboneControlConfig, currentStateS
       }
     }
 */
-
 
   def executeOne4(destination: ActorRef, setupConfig: SetupConfig, stateMatcher: StateMatcher, replyTo: Option[ActorRef] = None,
                   timeout: Timeout = Timeout(5.seconds))(codeBlock: PartialFunction[CommandStatus2, Unit]): Unit = {
@@ -196,12 +192,10 @@ class TromboneCommandHandler(controlConfig: TromboneControlConfig, currentStateS
     }
   }
 
-
   def idleMatcher: DemandMatcher = DemandMatcher(DemandState(axisStateCK).add(stateKey -> TromboneHCD.AXIS_IDLE))
 
   def posMatcher(position: Int): DemandMatcher =
     DemandMatcher(DemandState(axisStateCK).madd(stateKey -> TromboneHCD.AXIS_IDLE, positionKey -> position))
-
 
   def initStart(sc: SetupConfig, tromboneHCD: ActorRef, replyTo: Option[ActorRef]): Unit = {
     import context.dispatcher
@@ -253,14 +247,14 @@ object TromboneCommandHandler extends LazyLogging {
 }
 
 /**
-  * This method can be called from the setup method to distribute parts of the configs to HCDs based on the
-  * prefix. If the prefix of a SetupConfig matches the one for the HCD, it is sent to that HCD.
-  *
-  * @param locationsResolved true if the locations of all the assembly's required services (HCDs) have been resolved
-  * @param configArg         contains one or more configs
-  * @param replyTo           send the command status (Completed) to this actor when all the configs are "matched" or an error status if a timeout occurs
-  * @return Valid if locationsResolved, otherwise Invalid
-  */
+ * This method can be called from the setup method to distribute parts of the configs to HCDs based on the
+ * prefix. If the prefix of a SetupConfig matches the one for the HCD, it is sent to that HCD.
+ *
+ * @param locationsResolved true if the locations of all the assembly's required services (HCDs) have been resolved
+ * @param configArg         contains one or more configs
+ * @param replyTo           send the command status (Completed) to this actor when all the configs are "matched" or an error status if a timeout occurs
+ * @return Valid if locationsResolved, otherwise Invalid
+ */
 /*
   protected def distributeSetupConfigs(locationsResolved: Boolean, configArg: SetupConfigArg,
                                        replyTo: Option[ActorRef]): Validation = {
@@ -359,4 +353,4 @@ def executeOne(destination: ActorRef, setupConfig: SetupConfig, stateMatcher: St
     val matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout))
     replyTo.foreach(rt => (matcher ? StartMatch(stateMatcher)).mapTo[CommandStatus2].pipeTo(rt))
   }
- */
+ */ 

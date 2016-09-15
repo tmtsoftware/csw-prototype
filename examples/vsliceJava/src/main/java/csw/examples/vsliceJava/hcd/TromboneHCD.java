@@ -362,7 +362,7 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   }
 
   /**
-   * Starts Assembly as a standalone application.
+   * Starts HCD as a standalone application.
    */
   public static void main(String[] argv) {
 

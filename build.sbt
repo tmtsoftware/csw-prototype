@@ -30,7 +30,8 @@ val csw = (project in file("."))
       "DOCROOT" -> "latest/api/index.html"
     )
   ).aggregate(util, support, log, events, event_old, alarms, loc, ccs, cs, pkg, ts,
-  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, asConsole, sysControl, javacsw)
+              containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample,
+              trackLocation, asConsole, sysControl, javacsw, vslice, vsliceJava)
 
 // Utility classes
 lazy val util = project
@@ -220,7 +221,7 @@ lazy val vslice = Project(id = "vslice", base = file("examples/vslice"))
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaTest, specs2, akkaTestKit)
-  ).dependsOn(pkg, cs, ccs, loc, ts, events, util)
+  ).dependsOn(pkg, cs, ccs, loc, ts, events, util, containerCmd)
 
 // EndToEnd Example project Java version
 lazy val vsliceJava = Project(id = "vsliceJava", base = file("examples/vsliceJava"))

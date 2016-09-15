@@ -12,10 +12,10 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 8/17/16.
-  */
+ * TMT Source Code: 8/17/16.
+ */
 class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
@@ -33,7 +33,6 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
   def eventConnection: EventService = EventService(testEventServiceSettings)
 
   val initialElevation = 90.0
-
 
   def newCalculator(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
     val props = FollowActor.props(calculationConfig, tromboneControl, publisher)

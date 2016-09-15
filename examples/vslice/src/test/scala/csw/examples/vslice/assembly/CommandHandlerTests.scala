@@ -23,20 +23,21 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.language.reflectiveCalls
 import scala.concurrent.duration._
 /**
-  * TMT Source Code: 8/26/16.
-  */
+ * TMT Source Code: 8/26/16.
+ */
 class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneAssembly._
   import csw.services.loc.TestLocationService._
 
-
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(TromboneHCD.componentName,
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second)
+      DoNotRegister, Set(AkkaType), 1.second
+    )
 
     Supervisor3(testInfo)
   }
@@ -78,7 +79,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
 
       val ch: TestActorRef[TromboneCommandHandler] = TestActorRef(TromboneCommandHandler.props(TestControlConfig, currentStateReceiver, Some(fakeAssembly.ref)))
 
-      ch ! TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false) )
+      ch ! TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
 
       val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(datumCK))
 
@@ -103,7 +104,6 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
 
       val currentStateReceiver = system.actorOf(CurrentStateReceiver.props)
       currentStateReceiver ! AddPublisher(tromboneHCD)
-
 
       val ch: TestActorRef[TromboneCommandHandler] = TestActorRef(TromboneCommandHandler.props(TestControlConfig, currentStateReceiver, Some(fakeAssembly.ref)))
 

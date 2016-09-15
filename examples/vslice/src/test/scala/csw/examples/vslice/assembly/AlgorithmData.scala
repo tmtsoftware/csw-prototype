@@ -4,13 +4,15 @@ import csw.examples.vslice.assembly.FollowActor.{CalculationConfig}
 import csw.examples.vslice.assembly.TromboneControl.TromboneControlConfig
 
 /**
-  * TMT Source Code: 8/12/16.
-  */
+ * TMT Source Code: 8/12/16.
+ */
 object AlgorithmData {
 
-  val TestCalculationConfig = CalculationConfig(defaultInitialElevation = 90.0,
+  val TestCalculationConfig = CalculationConfig(
+    defaultInitialElevation = 90.0,
     focusErrorGain = 1.0, upperFocusLimit = 20.0, lowerFocusLimit = -20.0,
-    zenithFactor = 4.0)
+    zenithFactor = 4.0
+  )
 
   val TestControlConfig = TromboneControlConfig(positionScale = 60.0, minElevation = 85.0, minElevationEncoder = 180, minEncoderLimit = 0, maxEncoderLimit = 1200)
 
@@ -45,7 +47,6 @@ object AlgorithmData {
     (65.0, 91.69),
     (70.0, 91.36) */
   )
-
 
   // These values take a total el + range to encoder value
   val encoderTestValues: Vector[(Double, Int)] = Vector(

@@ -10,8 +10,8 @@ import csw.util.config.DoubleItem
 import csw.util.config.UnitsOfMeasure.millimeters
 
 /**
-  * TMT Source Code: 7/15/16.
-  */
+ * TMT Source Code: 7/15/16.
+ */
 class TromboneControl(controlConfig: TromboneControlConfig, tromboneHCD: Option[ActorRef]) extends Actor with ActorLogging {
   import TromboneControl._
   import TromboneAssembly._
@@ -46,22 +46,22 @@ object TromboneControl {
   def props(controlConfig: TromboneControlConfig, tromboneHCD: Option[ActorRef]) = Props(classOf[TromboneControl], controlConfig, tromboneHCD)
 
   /**
-    * Configuration class
-    *
-    * @param positionScale
-    * @param minElevation
-    * @param minEncoderLimit
-    */
+   * Configuration class
+   *
+   * @param positionScale
+   * @param minElevation
+   * @param minEncoderLimit
+   */
   case class TromboneControlConfig(positionScale: Double, minElevation: Double, minElevationEncoder: Int, minEncoderLimit: Int, maxEncoderLimit: Int)
 
   /**
-    * NALayerRange = zfactor*zenithAngle + focusError
-    *
-    * zfactor is read from configuration
-    *
-    * @param newPosition is the value of the stage position in millimeters (currently the total NA elevation)
-    * @return DoubleItem with key naTrombonePosition and units of enc
-    */
+   * NALayerRange = zfactor*zenithAngle + focusError
+   *
+   * zfactor is read from configuration
+   *
+   * @param newPosition is the value of the stage position in millimeters (currently the total NA elevation)
+   * @return DoubleItem with key naTrombonePosition and units of enc
+   */
   def rangeDistanceTransform(controlConfig: TromboneControlConfig, newPosition: DoubleItem): Int = {
     assert(newPosition.units == millimeters)
     // Scale value to be between 200 and 1000 encoder
