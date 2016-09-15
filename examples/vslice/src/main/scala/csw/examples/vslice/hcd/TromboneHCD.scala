@@ -271,31 +271,3 @@ object TromboneHCD {
 
   case object GetAxisConfig extends TromboneEngineering
 }
-
-///**
-// * Starts HCD as a standalone application.
-// */
-//object TromboneHCDApp extends App {
-//  private val a = args // Required to avoid null args below
-//  ContainerCmd("lgsTromboneHCD", a, Some("lgsTromboneHCD.conf"))
-//}
-
-///**
-//  * Starts HCD as a standalone application.
-//  */
-//object TromboneHCDApp extends App {
-//
-//  import TromboneHCD._
-//  import csw.examples.vslice.shared.TromboneData._
-//
-//  val setup = ContainerComponent.parseStringConfig(testConf)
-//  val componentConf = setup.getConfig(s"container.components.$componentName")
-//  val testInfo = HcdInfo(componentName, trombonePrefix, componentClassName, DoNotRegister, Set(AkkaType), 1.second)
-//  val hcdInfo = parseHcd(s"$componentName", componentConf).getOrElse(testInfo)
-//
-//  LocationService.initInterface()
-//
-//  println("Starting TromboneHCD: " + hcdInfo)
-//
-//  val supervisor = Supervisor(hcdInfo)
-//}
