@@ -9,7 +9,6 @@ import akka.japi.pf.ReceiveBuilder;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
-import csw.examples.vsliceJava.shared.TromboneData;
 import csw.services.loc.ComponentType;
 import csw.services.loc.LocationService;
 import csw.services.pkg.ContainerComponent;
@@ -359,25 +358,6 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   enum TromboneEngineering {
     GetAxisStats,
     GetAxisConfig
-  }
-
-  /**
-   * Starts HCD as a standalone application.
-   */
-  public static void main(String[] argv) {
-
-    Config setup = ContainerComponent.parseStringConfig(TromboneData.testConf);
-    Config componentConf = setup.getConfig("container.components." + componentName);
-
-    HcdInfo testInfo = JComponentSup.hcdInfo(componentName, trombonePrefix, componentClassName, JComponent.DoNotRegister,
-      Collections.singleton(AkkaType), FiniteDuration.create(1, "second"));
-    HcdInfo hcdInfo = JContainerComponent.parseHcd(componentName, componentConf).orElse(testInfo);
-
-    LocationService.initInterface();
-
-    System.out.println("Starting TromboneHCD: " + hcdInfo);
-
-    Supervisor.create(hcdInfo);
   }
 }
 

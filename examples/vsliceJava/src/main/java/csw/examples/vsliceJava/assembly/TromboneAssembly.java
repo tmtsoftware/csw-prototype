@@ -291,23 +291,3 @@
 //
 //}
 //
-///**
-//  * Starts Assembly as a standalone application.
-//  */
-//object TromboneAssemblyApp extends App {
-//
-//  import TromboneAssembly._
-//
-//  private def setup: Config = ContainerComponent.parseStringConfig(testConf)
-//
-//  val assemblyConf = setup.getConfig(s"container.components.$componentName")
-//  val defaultInfo = AssemblyInfo(TromboneAssembly.componentName,
-//    TromboneAssembly.componentPrefix, TromboneAssembly.componentClassName, DoNotRegister, Set(AkkaType), Set.empty[Connection])
-//  val assemblyInfo = parseAssembly(s"$componentName", assemblyConf).getOrElse(defaultInfo)
-//
-//  LocationService.initInterface()
-//
-//  println("Starting TromboneAssembly: " + assemblyInfo)
-//
-//  val supervisor = Supervisor3(assemblyInfo)
-//}

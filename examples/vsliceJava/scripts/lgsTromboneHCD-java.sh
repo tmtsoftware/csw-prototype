@@ -2,7 +2,7 @@
 exec scala "$0" "$@"
 !#
 
-// Demonstrates starting a container with the lgsTrombone HCD using config files retrieved from the config service,
+// Demonstrates starting a container with the java version of the lgsTrombone HCD using config files retrieved from the config service,
 // a file passed on the command line, or a resource file.
 // This script should be run from this dir (csw/install/bin)
 // and assumes that it is in the shell path.
@@ -20,8 +20,8 @@ val config = "../../csw/cs/src/test/resources/test.conf"
 s"cs --delete --config $config".run
 
 // Create the container config files in the config service
-s"csclient create vslice/lgsTromboneHCD.conf --config $config -i ../../csw/examples/vslice/src/main/resources/lgsTromboneHCD.conf".!
+s"csclient create vslice/lgsTromboneHCD.conf --config $config -i ../../csw/examples/vsliceJava/src/main/resources/lgsTromboneHCD.conf".!
 
 // Since the files are not found locally, they will be fetched from the config service
-s"vslice hcd vslice/lgsTromboneHCD.conf --config $config".run
+s"vslicejava hcd vslice/lgsTromboneHCD.conf --config $config".run
 

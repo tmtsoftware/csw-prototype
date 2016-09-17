@@ -23,7 +23,8 @@ for i in bin lib ; do
 done
 
 cp examples/vslice/scripts/lgsTromboneHCD.sh $dir/bin
-chmod ugo +x $dir/bin/*.sh
+cp examples/vsliceJava/scripts/lgsTromboneHCD-java.sh $dir/bin
+chmod +x $dir/bin/*.sh
 
 rm -rf $dir/doc/*
 cp -r target/javaunidoc/ $dir/doc/java
@@ -34,4 +35,4 @@ rm -f $dir/bin/*.log.* $dir/bin/*.bat
 # create the scalas script, for scala scriping (see http://www.scala-sbt.org/release/docs/Scripts.html)
 # Note: This depends on the sbt version declared in project/build.properties (0.13.8).
 echo 'sbt -Dsbt.main.class=sbt.ScriptMain "$@"' > $dir/bin/scalas
-chmod ugo+x $dir/bin/scalas
+chmod +x $dir/bin/scalas
