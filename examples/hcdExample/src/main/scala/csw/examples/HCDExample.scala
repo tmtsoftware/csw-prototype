@@ -1,12 +1,12 @@
 package csw.examples
 
-import akka.actor.{Actor, ActorLogging, Cancellable, Props}
+import akka.actor.{Actor, ActorRef, Cancellable, Props}
 import csw.services.ccs.HcdController
 import csw.services.events.{EventServiceSettings, EventSubscriber, TelemetryService}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
-import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
+import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor3}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.config.Configurations.SetupConfig
@@ -111,15 +111,15 @@ object HCDExample {
   }
 }
 
-class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
+class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
   import HCDExample._
   import PosGenerator._
   import HCDExample._
-  import Supervisor._
+  import Supervisor3._
 
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")
-  lifecycle(supervisor)
+  lifecycle(supervisor, Initialized)
 
   // Create an actor to generate position events
   val posEventGenerator = context.actorOf(PosGenerator.props(prefix))
@@ -149,6 +149,6 @@ object HCDExampleApp extends App {
   println("Starting!")
   val componentId = ComponentId(HCDExample.hcdName, ComponentType.HCD)
   val hcdInfo = HcdInfo(hcdName, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
-  val supervisor = Supervisor(hcdInfo)
+  val supervisor = Supervisor3(hcdInfo)
 }
 

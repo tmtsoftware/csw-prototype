@@ -72,8 +72,6 @@ object ConfigService extends App {
       case None       => ConfigServiceSettings(system)
     }
 
-    logger.debug(s"Config Service(${settings.name}}): using local repo: ${settings.localRepository}, remote repo: ${settings.mainRepository}")
-
     if (options.init) {
       if (settings.mainRepository.getScheme != "file") {
         logger.error(s"Please specify a file URI for csw.services.cs.main-repository for testing")
@@ -84,10 +82,10 @@ object ConfigService extends App {
       if (options.delete) {
         // Note: both blocks do the same thing...
         if (settings.useSvn) {
+          logger.debug(s"Config Service(${settings.name}}): using svn repository: ${settings.mainRepository}")
           SvnConfigManager.deleteDirectoryRecursively(mainRepo)
-          val svnLocalRepo = new File(settings.localRepository.getPath)
-          SvnConfigManager.deleteDirectoryRecursively(svnLocalRepo)
         } else {
+          logger.debug(s"Config Service(${settings.name}}): using local git repository: ${settings.localRepository}, remote repository: ${settings.mainRepository}")
           GitConfigManager.deleteDirectoryRecursively(mainRepo)
           val gitLocalRepo = new File(settings.localRepository.getPath)
           GitConfigManager.deleteDirectoryRecursively(gitLocalRepo)

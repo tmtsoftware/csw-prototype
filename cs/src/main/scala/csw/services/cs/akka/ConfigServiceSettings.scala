@@ -31,9 +31,9 @@ case class ConfigServiceSettings(config: Config) extends Extension {
   /**
    * Name of this config service
    */
-  val name = config.getString(s"$prefix.name")
+  val name: String = config.getString(s"$prefix.name")
 
-  val useSvn = config.getBoolean(s"$prefix.use-svn")
+  val useSvn: Boolean = if (config.hasPath(s"$prefix.use-svn")) config.getBoolean(s"$prefix.use-svn") else true
 
   /**
    * URI for the main svn or git repository to use
@@ -53,17 +53,17 @@ case class ConfigServiceSettings(config: Config) extends Extension {
   /**
    * If true, the config service http server is started
    */
-  val startHttpServer = config.getBoolean(s"$prefix.http.enabled")
+  val startHttpServer: Boolean = if (config.hasPath(s"$prefix.http.enabled")) config.getBoolean(s"$prefix.http.enabled") else false
 
   /**
    * The interface (hostname or IP) to listen on for the http server
    */
-  val httpInterface = if (startHttpServer) config.getString(s"$prefix.http.interface") else ""
+  val httpInterface: String = if (startHttpServer) config.getString(s"$prefix.http.interface") else ""
 
   /**
    * The port to listen on for the http server
    */
-  val httpPort = if (config.hasPath(s"$prefix.http.port")) config.getInt(s"$prefix.http.port") else 0
+  val httpPort: Int = if (config.hasPath(s"$prefix.http.port")) config.getInt(s"$prefix.http.port") else 0
 
   // Do any required substitution on the setting values
   def subst(s: String): String = {

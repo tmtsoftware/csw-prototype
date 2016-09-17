@@ -7,7 +7,7 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
 import csw.services.pkg.Supervisor._
-import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
+import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor3}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 import scala.concurrent.Await
@@ -18,7 +18,7 @@ import scala.concurrent.duration._
  *
  * @param info contains information about the assembly and the components it depends on
  */
-class AssemblyExample(override val info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
+class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
 
@@ -83,13 +83,13 @@ object AssemblyExampleApp extends App {
   val hcdConnections: Set[Connection] = Set(targetHcdConnection)
   val prefix = "tcs.mobie.blue.filter"
   val assemblyInfo = AssemblyInfo(assemblyName, prefix, className, RegisterOnly, Set(AkkaType), hcdConnections)
-  val (supervisorSystem, supervisor) = Supervisor.create(assemblyInfo)
+  val (supervisorSystem, supervisor) = Supervisor3.create(assemblyInfo)
 
   // The code below shows how you could shut down the assembly
   if (false) {
     import supervisorSystem.dispatcher
     supervisorSystem.scheduler.scheduleOnce(15.seconds) {
-      Supervisor.haltComponent(supervisor)
+      Supervisor3.haltComponent(supervisor)
       Await.ready(supervisorSystem.whenTerminated, 5.seconds)
       System.exit(0)
     }

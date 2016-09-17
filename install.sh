@@ -22,6 +22,9 @@ for i in bin lib ; do
     done
 done
 
+cp examples/vslice/scripts/lgsTromboneHCD.sh $dir/bin
+chmod ugo +x $dir/bin/*.sh
+
 rm -rf $dir/doc/*
 cp -r target/javaunidoc/ $dir/doc/java
 cp -r target/scala-2.11/unidoc/ $dir/doc/scala

@@ -230,7 +230,7 @@ object ContainerComponent {
   private[pkg] def parseDuration(name: String, configName: String, conf: Config, defaultDuration: FiniteDuration): FiniteDuration = {
     import scala.concurrent.duration._
     val t = Try(FiniteDuration(conf.getDuration(configName).getSeconds, TimeUnit.SECONDS))
-    if (t.isFailure) logger.debug(s"Container $configName for $name is missing or not valid, returning: $defaultDuration.")
+//    if (t.isFailure) logger.debug(s"Container $configName for $name is missing or not valid, returning: $defaultDuration.")
     t.getOrElse(defaultDuration)
   }
 
@@ -414,7 +414,7 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
         log.error(s"In supervisor ${info.componentName}, component ${componentInfo.componentName} already exists")
         None
       case None =>
-        val supervisor = Supervisor(componentInfo)
+        val supervisor = Supervisor3(componentInfo)
         Some(SupervisorInfo(supervisor, componentInfo))
     }
   }

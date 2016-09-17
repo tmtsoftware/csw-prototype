@@ -12,9 +12,6 @@ exec scala "$0" "$@"
 
 import scala.sys.process._
 
-// Start the config service annex, which stores large/binary files (not needed here)
-"configserviceannex".run
-
 // config file describing the name and location of the config service repo
 val config = "../../csw/cs/src/test/resources/test.conf"
 
@@ -26,5 +23,5 @@ s"cs --delete --config $config".run
 s"csclient create vslice/lgsTromboneHCD.conf --config $config -i ../../csw/examples/vslice/src/main/resources/lgsTromboneHCD.conf".!
 
 // Since the files are not found locally, they will be fetched from the config service
-s"lgsTromboneHCD vslice/lgsTromboneHCD.conf -c $config".run
+s"vslice hcd vslice/lgsTromboneHCD.conf -c $config".run
 
