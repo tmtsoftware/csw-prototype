@@ -6,7 +6,7 @@ import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
-import csw.services.pkg.Supervisor._
+import csw.services.pkg.Supervisor3.{Initialized, Started}
 import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor3}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
@@ -22,7 +22,8 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
 
   import AssemblyController._
 
-  lifecycle(supervisor)
+  supervisor ! Initialized
+  supervisor ! Started
 
   // Get the connection to the HCD this assembly uses and track it
   trackConnections(info.connections)

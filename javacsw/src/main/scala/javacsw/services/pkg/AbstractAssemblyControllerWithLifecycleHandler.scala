@@ -109,7 +109,7 @@ abstract class AbstractAssemblyControllerWithLifecycleHandler(override val info:
     jrequest(locationsResolved, config).toScala
 
   /**
-   * Java API: Called for Request messages. Derived Java classes should override this method (instead of the [[request]] method) to handle
+   * Java API: Called for Request messages. Derived Java classes should override this method (instead of the request method) to handle
    * Request messages. the default is to return an error response.
    *
    * @param locationsResolved indicates if all the Assemblies connections are resolved

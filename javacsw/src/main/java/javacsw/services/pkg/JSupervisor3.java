@@ -1,5 +1,8 @@
 package javacsw.services.pkg;
 
+import akka.actor.ActorRef;
+import csw.services.pkg.Component;
+import csw.services.pkg.Supervisor3;
 import csw.services.pkg.Supervisor3.*;
 
 /**
@@ -8,6 +11,15 @@ import csw.services.pkg.Supervisor3.*;
 @SuppressWarnings("unused")
 public class JSupervisor3 {
 
+  /**
+   * Returns a new supervisor actor managing the components described in the argument
+   *
+   * @param componentInfo describes the components to create and manage
+   * @return the actorRef for the supervisor (parent actor of the top level component)
+   */
+  public static ActorRef create(Component.ComponentInfo componentInfo) {
+    return Supervisor3.apply(componentInfo);
+  }
 
   // The following are states used for the Supervisor lifecycle manager
 

@@ -132,6 +132,11 @@ lazy val ts = project
 // Java APIs
 lazy val javacsw = project
   .settings(defaultSettings: _*)
+    .settings( // fix problems with javadoc errors?
+      publishArtifact in (Compile, packageDoc) := false,
+      publishArtifact in packageDoc := false,
+      sources in (Compile,doc) := Seq.empty
+    )
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(akkaTestKit, junit, junitInterface, scalaJava8Compat, assertj)

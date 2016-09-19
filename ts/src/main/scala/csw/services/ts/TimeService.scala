@@ -151,7 +151,7 @@ object TimeService {
 
 /**
  * A java friendly version of [[csw.services.ts.TimeService.TimeServiceScheduler]].
- * This version is based on [[UntypedActor]]. See [[AbstractTimeServiceScheduler]]
+ * This version is based on UntypedActor. See [[AbstractTimeServiceScheduler]]
  * for an alternate version based on [[AbstractActor]].
  */
 abstract class JavaTimeServiceScheduler extends UntypedActor with TimeService.TimeServiceScheduler

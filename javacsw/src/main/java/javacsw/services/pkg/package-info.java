@@ -12,8 +12,8 @@
  * the container to the create() method. The {@link javacsw.services.pkg.JComponent} class provides
  * a Java API for creating ContainerInfo objects for HCDs, assemblies and containers.
  * <p>
- * Components are controlled by a Supervisor ({@link csw.services.pkg.Supervisor},
- * {@link javacsw.services.pkg.JSupervisor}) actor that
+ * Components are controlled by a Supervisor ({@link csw.services.pkg.Supervisor3},
+ * {@link javacsw.services.pkg.JSupervisor3}) actor that
  * handles <em>lifecycle messages</em> to determine the state of the component
  * (Components that are not in the *Running* state, do not receive commands, for example).
  * <p>

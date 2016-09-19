@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import csw.services.ccs.AssemblyController
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
+import csw.services.pkg.Supervisor3.{Initialized, Started}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
@@ -17,9 +18,9 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
   extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
-  import Supervisor._
 
-  lifecycle(context.parent)
+  supervisor ! Initialized
+  supervisor ! Started
 
   // Get the connections to the HCDs this assembly uses and track them
   trackConnections(info.connections)

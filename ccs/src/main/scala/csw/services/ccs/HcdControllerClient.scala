@@ -8,7 +8,7 @@ import csw.util.config.Configurations.SetupConfig
 /**
  * A client API for the HcdController actor.
  *
- * Note that Subscribers to the HCD's state will receive [[csw.util.config.StateVariable.CurrentState]] messages
+ * Note that Subscribers to the HCD's state will receive CurrentState messages
  * whenever the HCD's state changes.
  *
  * @param hcdActorRef the HcdController actor ref

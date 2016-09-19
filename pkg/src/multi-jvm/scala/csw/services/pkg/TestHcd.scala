@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorRef, Props}
 import csw.services.ccs.HcdController
 import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.HcdInfo
+import csw.services.pkg.Supervisor3.{Initialized, Started}
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 
@@ -22,9 +23,8 @@ object TestHcd {
 case class TestHcd(info: HcdInfo, supervisor: ActorRef)
   extends Hcd with HcdController with LifecycleHandler {
 
-  import Supervisor._
-
-  lifecycle(context.parent)
+  supervisor ! Initialized
+  supervisor ! Started
 
   log.info("Message from TestHcd")
 

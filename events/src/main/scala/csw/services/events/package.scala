@@ -54,7 +54,7 @@ import csw.util.config.Events.EventServiceEvent
  *
  * {{{
  *      def listener(ev: Event): Unit = {
- *        logger.info(s"Listener received event: $ev")
+ *        // ...
  *      }
  *
  *      val monitor = eventService.subscribe(None, Some(listener), prefix)

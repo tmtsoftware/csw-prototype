@@ -9,8 +9,8 @@ package csw.services
  * === Based on Redis ===
  *
  * There is no Alarm Service executable. The Alarm Service consists of an instance of Redis
- * that is registered with the [[csw.services.loc.LocationService `CSW Location Service`]]
- * using the [[csw.services.trackLocation.TrackLocation `trackLocation`]].
+ * that is registered with the [[csw.services.loc.LocationService]]
+ * using the [[csw.services.trackLocation.TrackLocation]].
  * For example, the following command could be used to start a dedicated Redis instance for the Alarm Service on port 7777:
  *
  * {{{

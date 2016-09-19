@@ -26,7 +26,7 @@ object HcdController {
 
   /**
    * Message to subscribe the sender to the HCD's state.
-   * The sender will receive [[CurrentState]] messages from the HCD whenever it's state changes.
+   * The sender will receive CurrentState messages from the HCD whenever it's state changes.
    */
   val Subscribe = PublisherActor.Subscribe
 

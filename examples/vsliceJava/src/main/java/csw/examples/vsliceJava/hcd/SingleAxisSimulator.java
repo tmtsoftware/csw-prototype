@@ -223,6 +223,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
    *
    * @param axisConfig an AxisConfig object that contains a description of the axis
    * @param replyTo    an actor that will be updated with information while the axis executes
+   * @return the props to use to create the actor
    */
   public static Props props(final AxisConfig axisConfig, final Optional<ActorRef> replyTo) {
     return Props.create(new Creator<SingleAxisSimulator>() {

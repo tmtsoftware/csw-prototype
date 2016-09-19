@@ -52,7 +52,6 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   }
 
   // Required setup for Lifecycle in order to get messages
-  // XXX TODO: Do we need to send Initialize and Startup?
   supervisor ! Initialized
   supervisor ! Started
 

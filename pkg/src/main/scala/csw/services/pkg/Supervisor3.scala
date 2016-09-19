@@ -341,8 +341,8 @@ object Supervisor3 {
    * Returns a new supervisor actor managing the components described in the argument
    *
    * @param componentInfo describes the components to create and manage
-   * @return the [[akka.actor.ActorRef]] for the supervisor (parent actor of the top level component)
-   *         and the component's new [[akka.actor.ActorSystem]] as a tuple.
+   * @return the ActorRef for the supervisor (parent actor of the top level component)
+   *         and the component's new ActorSystem as a tuple.
    */
   def apply(componentInfo: ComponentInfo): ActorRef = {
     val system = makeActorSystem(componentInfo)
