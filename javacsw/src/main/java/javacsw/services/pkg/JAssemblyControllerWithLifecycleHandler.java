@@ -1,10 +1,7 @@
 package javacsw.services.pkg;
 
-import javacsw.services.pkg.AbstractAssemblyControllerWithLifecycleHandler;
-import csw.services.ccs.AssemblyController.*;
 import akka.actor.ActorRef;
 import csw.util.config.Configurations;
-import csw.services.pkg.Component.AssemblyInfo;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;

@@ -165,12 +165,12 @@ object Component {
 
 trait Component extends Actor with PrefixedActorLogging {
   def info: ComponentInfo
-  override def prefix = info.prefix
+  override def prefix: String = info.prefix
 
-  /**
-   * A reference to this component's supervisor actor
-   */
-  def supervisor = context.parent
+  //  /**
+  //   * A reference to this component's supervisor actor
+  //   */
+  //  def supervisor
 
 }
 

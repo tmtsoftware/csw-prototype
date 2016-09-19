@@ -26,7 +26,7 @@ trait LifecycleHandler {
   import LifecycleHandler._
   import context.dispatcher
 
-  val componentName = self.path.name
+  val componentName: String = self.path.name
 
   /**
    * This implements additional behavior (used in receive method of ccs controller actors)

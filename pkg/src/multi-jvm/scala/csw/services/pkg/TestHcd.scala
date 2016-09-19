@@ -1,6 +1,6 @@
 package csw.services.pkg
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import csw.services.ccs.HcdController
 import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.HcdInfo
@@ -19,7 +19,7 @@ object TestHcd {
 /**
  * Test HCD
  */
-case class TestHcd(info: HcdInfo)
+case class TestHcd(info: HcdInfo, supervisor: ActorRef)
   extends Hcd with HcdController with LifecycleHandler {
 
   import Supervisor._

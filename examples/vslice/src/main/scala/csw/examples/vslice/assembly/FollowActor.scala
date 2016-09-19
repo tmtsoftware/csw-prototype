@@ -9,10 +9,10 @@ import csw.util.config.Events.EventTime
  * TMT Source Code: 6/21/16.
  */
 class FollowActor(
-  calculationConfig:   CalculationConfig,
-  val tromboneControl: Option[ActorRef],
-  val aoPublisher:     Option[ActorRef],
-  val engPublisher:    Option[ActorRef]
+    calculationConfig:   CalculationConfig,
+    val tromboneControl: Option[ActorRef],
+    val aoPublisher:     Option[ActorRef],
+    val engPublisher:    Option[ActorRef]
 ) extends Actor with ActorLogging {
 
   import TromboneAssembly._

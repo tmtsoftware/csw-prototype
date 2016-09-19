@@ -13,7 +13,7 @@ import scala.concurrent.Future
   *
   * @param info contains information about the assembly and the components it depends on
   */
-case class TestAssembly(info: AssemblyInfo)
+case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
   extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._

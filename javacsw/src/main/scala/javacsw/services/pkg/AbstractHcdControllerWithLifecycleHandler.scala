@@ -1,6 +1,6 @@
 package javacsw.services.pkg
 
-import akka.actor.AbstractActor
+import akka.actor.{AbstractActor, ActorRef}
 import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.{Hcd, LifecycleHandler}
@@ -16,7 +16,7 @@ abstract class AbstractHcdControllerWithLifecycleHandler(override val info: HcdI
   /**
    * The default actor receive method
    */
-  def defaultReceive = controllerReceive orElse lifecycleHandlerReceive
+  def defaultReceive: PartialFunction[Any, Unit] = controllerReceive orElse lifecycleHandlerReceive
 
   // -- These methods use Java types (Set, List, Optional, BiFunction) rather than the Scala counterparts --
 

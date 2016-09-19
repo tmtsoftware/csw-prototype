@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorRef}
 import akka.util.Timeout
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.LocationTrackerClientActor
@@ -241,7 +241,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
    */
   protected def subscribe(locations: Set[Location], subscriber: ActorRef = self): Unit = {
     val x = locations.collect {
-      case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) => actorRefOpt
+      case ResolvedAkkaLocation(_, _, _, actorRefOpt) => actorRefOpt
     }
     val hcds = x.flatten
     hcds.foreach(_ ! PublisherActor.Subscribe)

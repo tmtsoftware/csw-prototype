@@ -7,12 +7,12 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
 
-case class SimpleTestHcd(override val info: HcdInfo, override val supervisor: ActorRef) extends Hcd with LifecycleHandler {
-  def receive = lifecycleHandlerReceive
+case class SimpleTestHcd(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with LifecycleHandler {
+  def receive: Receive = lifecycleHandlerReceive
 }
 
-case class SimpleTestAssembly(override val info: AssemblyInfo, override val supervisor: ActorRef) extends Assembly with LifecycleHandler {
-  def receive = lifecycleHandlerReceive
+case class SimpleTestAssembly(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with LifecycleHandler {
+  def receive: Receive = lifecycleHandlerReceive
 }
 
 class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSender
@@ -20,7 +20,7 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
 
   import SupervisorExternal._
 
-  override def afterAll = TestKit.shutdownActorSystem(system)
+  override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
   import Supervisor3._
 
