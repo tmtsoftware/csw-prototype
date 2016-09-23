@@ -23,5 +23,5 @@ s"cs --delete --config $config".run
 s"csclient create vslice/lgsTromboneHCD.conf --config $config -i ../../csw/examples/vsliceJava/src/main/resources/lgsTromboneHCD.conf".!
 
 // Since the files are not found locally, they will be fetched from the config service
-s"vslicejava hcd vslice/lgsTromboneHCD.conf --config $config".run
+s"vslicejava --start hcd --config $config vslice/lgsTromboneHCD.conf".run
 
