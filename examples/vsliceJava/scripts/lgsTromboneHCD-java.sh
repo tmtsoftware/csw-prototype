@@ -12,16 +12,13 @@ exec scala "$0" "$@"
 
 import scala.sys.process._
 
-// config file describing the name and location of the config service repo
-val config = "../../csw/cs/src/test/resources/test.conf"
-
 // Start the config service, creating temporary main and local repositories (TODO: add -config option)
 // (The -delete and -init options tell it to delete and create the local and main Git repos, so we start with a clean repo)
-s"cs --delete --config $config".run
+s"cs --delete --noannex --nohttp".run
 
 // Create the container config files in the config service
-s"csclient create vslice/lgsTromboneHCD.conf --config $config -i ../../csw/examples/vsliceJava/src/main/resources/lgsTromboneHCD.conf".!
+s"csclient create vslice/lgsTromboneHCD.conf -i ../../csw/examples/vsliceJava/src/main/resources/lgsTromboneHCD.conf".!
 
 // Since the files are not found locally, they will be fetched from the config service
-s"vslicejava --start hcd --config $config vslice/lgsTromboneHCD.conf".run
+s"vslicejava --start hcd vslice/lgsTromboneHCD.conf".run
 

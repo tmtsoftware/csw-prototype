@@ -24,7 +24,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
   import TromboneHCD._
   import csw.services.ccs.HcdController._
 
-  override def afterAll = system.terminate()
+  override def afterAll: Unit = system.terminate()
 
   implicit val system = ActorSystem("TestSystem")
 
@@ -35,7 +35,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     DoNotRegister, Set(AkkaType), 1.second
   )
 
-  val troboneAssemblyPrefix = TromboneAssembly.componentPrefix
+  val troboneAssemblyPrefix: String = TromboneAssembly.componentPrefix
 
   def startHCD: ActorRef = {
     val testInfo = HcdInfo(
@@ -50,9 +50,9 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
   def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
     val msgs = tp.receiveWhile(5.seconds) {
-      case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
+      case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
       // This is present to pick up the first status message
-      case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+      case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
     }
     val fmsg = tp.expectMsgClass(classOf[CurrentState]) // last one
     val allmsgs = msgs :+ fmsg
@@ -449,7 +449,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     msgs.last(inHighLimitKey).head should be(true)
   }
 
-  def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
+  def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration): Unit = {
     //system.scheduler.scheduleOnce(timeout) {
     println("STOPPING")
     Supervisor3.haltComponent(supervisor)

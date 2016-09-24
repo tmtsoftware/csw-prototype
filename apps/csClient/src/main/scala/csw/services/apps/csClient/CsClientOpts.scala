@@ -11,7 +11,6 @@ object CsClientOpts {
    * Command line options
    */
   case class Options(
-    config:     Option[File]   = None,
     csName:     Option[String] = None,
     subcmd:     String         = "",
     path:       File           = null,
@@ -24,10 +23,6 @@ object CsClientOpts {
 
   private val parser = new scopt.OptionParser[Options]("csclient") {
     head("csclient", System.getProperty("CSW_VERSION"))
-
-    opt[File]("config") action { (x, c) =>
-      c.copy(config = Some(x))
-    } text "optional config file to use for config service settings"
 
     opt[String]("cs-name") action { (x, c) =>
       c.copy(csName = Some(x))

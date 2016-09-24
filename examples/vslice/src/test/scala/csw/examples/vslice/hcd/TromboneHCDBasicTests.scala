@@ -4,13 +4,11 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3._
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
@@ -19,7 +17,7 @@ import scala.concurrent.duration._
 class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
-  override def afterAll = TestKit.shutdownActorSystem(system)
+  override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
   val troboneAssemblyPrefix = "nfiraos.ncc.trombone"
 
@@ -58,9 +56,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
   def waitForMoveMsgs: Seq[CurrentState] = {
     val msgs = receiveWhile(5.seconds) {
-      case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
+      case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
       // This is present to pick up the first status message
-      case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+      case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
     }
     val fmsg = expectMsgClass(classOf[CurrentState]) // last one
     val allmsgs = msgs :+ fmsg
@@ -69,9 +67,9 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
 
   def waitForAllMsgs: Seq[CurrentState] = {
     val msgs = receiveWhile(5.seconds) {
-      case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) => m
+      case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) => m
       // This is present to pick up the first status message
-      case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix)  => st
+      case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix)  => st
     }
     val fmsg = expectMsgClass(classOf[CurrentState]) // last one
     val allmsgs = msgs :+ fmsg
@@ -252,7 +250,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       tla ! Subscribe
       // Move 2
       tla ! Submit(homeSC)
-      var msgs = waitForMoveMsgs
+      val msgs = waitForMoveMsgs
       msgs.last(inHomeKey).head should be(true)
 
       encoderTestValues.foreach { testPos =>
@@ -436,25 +434,23 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       }
     }
 
-    /*
-      def startHCD: ActorRef = {
-        val testInfo = HcdInfo(TromboneHCD.componentName,
-          TromboneHCD.trombonePrefix,
-          TromboneHCD.componentClassName,
-          DoNotRegister, Set(AkkaType), 1.second)
-        Supervisor3(testInfo)
-      }
-    */
+    //      def startHCD: ActorRef = {
+    //        val testInfo = HcdInfo(TromboneHCD.componentName,
+    //          TromboneHCD.trombonePrefix,
+    //          TromboneHCD.componentClassName,
+    //          DoNotRegister, Set(AkkaType), 1.second)
+    //        Supervisor3(testInfo)
+    //      }
 
-    def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
-      //system.scheduler.scheduleOnce(timeout) {
-      println("STOPPING")
-      Supervisor3.haltComponent(supervisor)
-      Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-      system.terminate()
-      System.exit(0)
-      //}
-    }
+    //    def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
+    //      //system.scheduler.scheduleOnce(timeout) {
+    //      println("STOPPING")
+    //      Supervisor3.haltComponent(supervisor)
+    //      Await.ready(supervisorSystem.whenTerminated, 5.seconds)
+    //      system.terminate()
+    //      System.exit(0)
+    //      //}
+    //    }
 
   }
 }

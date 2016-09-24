@@ -1,7 +1,6 @@
 package csw.examples.vslice.hcd
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import csw.examples.vslice.hcd.SingleAxisSimulator.AxisConfig
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService._
 
@@ -23,34 +22,34 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
   // The following are state information for the axis. These values are updated while the axis runs
   // This is safe because there is no way to change the variables other than within this actor
   // When created, the current is set to the start current
-  var current = axisConfig.startPosition
-  var inLowLimit = false
-  var inHighLimit = false
-  var inHome = false
-  var axisState: AxisState = AXIS_IDLE
+  private[hcd] var current = axisConfig.startPosition
+  private[hcd] var inLowLimit = false
+  private[hcd] var inHighLimit = false
+  private[hcd] var inHome = false
+  private[hcd] var axisState: AxisState = AXIS_IDLE
 
   // Statistics for status
-  var initCount = 0
+  private[hcd] var initCount = 0
   // Number of init requests
-  var moveCount = 0
+  private[hcd] var moveCount = 0
   // Number of move requests
-  var homeCount = 0
+  private[hcd] var homeCount = 0
   // Number of home requests
-  var limitCount = 0
+  private[hcd] var limitCount = 0
   // Number of times in a limit
-  var successCount = 0
+  private[hcd] var successCount = 0
   // Number of successful requests
-  var failureCount = 0
+  private[hcd] var failureCount = 0
   // Number of failed requests
-  var cancelCount = 0 // Number of times a move has been cancelled
+  private[hcd] var cancelCount = 0 // Number of times a move has been cancelled
 
   // Set initially to the idle receive
-  def receive = idleReceive
+  def receive: Receive = idleReceive
 
   // Short-cut to forward a messaage to the optional replyTo actor
-  def update(replyTo: Option[ActorRef], msg: AnyRef) = replyTo.foreach(_ ! msg)
+  private def update(replyTo: Option[ActorRef], msg: AnyRef) = replyTo.foreach(_ ! msg)
 
-  def idleReceive: Receive = {
+  private def idleReceive: Receive = {
     case InitialState =>
       // Send the inital position for its state to the caller directly
       sender() ! getState
@@ -128,7 +127,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
   }
 
   // This receive is used when executing a Home command
-  def homeReceive(worker: ActorRef): Receive = {
+  private def homeReceive(worker: ActorRef): Receive = {
     case Start =>
       log.debug("Home Start")
     case Tick(currentIn) =>
@@ -141,7 +140,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case x => log.error(s"Unexpected message in homeReceive: $x")
   }
 
-  def moveReceive(worker: ActorRef): Receive = {
+  private def moveReceive(worker: ActorRef): Receive = {
     case Start =>
       log.debug("Move Start")
     case CancelMove =>
@@ -163,7 +162,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case x => log.error(s"Unexpected message in moveReceive: $x")
   }
 
-  def calcLimitsAndStats(): Unit = {
+  private def calcLimitsAndStats(): Unit = {
     inHighLimit = isHighLimit(axisConfig, current)
     inLowLimit = isLowLimit(axisConfig, current)
     if (inHighLimit || inLowLimit) limitCount += 1
@@ -171,13 +170,13 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     if (inHome) homeCount += 1
   }
 
-  def getState = AxisUpdate(axisConfig.axisName, axisState, current, inLowLimit, inHighLimit, inHome)
+  private def getState = AxisUpdate(axisConfig.axisName, axisState, current, inLowLimit, inHighLimit, inHome)
 }
 
 object SingleAxisSimulator {
   def props(axisConfig: AxisConfig, replyTo: Option[ActorRef] = None) = Props(classOf[SingleAxisSimulator], axisConfig, replyTo)
 
-  case class AxisConfig(axisName: String, lowLimit: Int, lowUser: Int, highUser: Int, highLimit: Int, home: Int, startPosition: Int, stepDelayMS: Int)
+  //  case class AxisConfig(axisName: String, lowLimit: Int, lowUser: Int, highUser: Int, highLimit: Int, home: Int, startPosition: Int, stepDelayMS: Int)
 
   trait AxisState
   case object AXIS_IDLE extends AxisState
@@ -210,7 +209,7 @@ object SingleAxisSimulator {
 
   // Helper functions in object for testing
   // limitMove clamps the request value to the hard limits
-  def limitMove(ac: AxisConfig, request: Int) = Math.max(Math.min(request, ac.highLimit), ac.lowLimit)
+  def limitMove(ac: AxisConfig, request: Int): Int = Math.max(Math.min(request, ac.highLimit), ac.lowLimit)
 
   // Check to see if position is in the "limit" zones
   def isHighLimit(ac: AxisConfig, current: Int): Boolean = current >= ac.highUser
@@ -226,17 +225,17 @@ class MotionWorker(val start: Int, val destinationIn: Int, val delayInMS: Int, r
   import MotionWorker._
   import TimeService._
 
-  var destination = destinationIn
+  private[hcd] var destination = destinationIn
 
-  var numSteps = calcNumSteps(start, destination)
-  var stepSize = calcStepSize(start, destination, numSteps)
-  var stepCount = 0
+  private var numSteps = calcNumSteps(start, destination)
+  private var stepSize = calcStepSize(start, destination, numSteps)
+  private var stepCount = 0
   // Can be + or -
-  var cancelFlag = false
-  val delayInNanoSeconds: Long = delayInMS * 1000000
-  var current = start
+  private var cancelFlag = false
+  private[hcd] val delayInNanoSeconds: Long = delayInMS * 1000000
+  private var current = start
 
-  def receive: Receive = {
+  override def receive: Receive = {
     case Start =>
       if (diagFlag) diag("Starting", start, numSteps)
       replyTo ! Start
@@ -275,7 +274,7 @@ class MotionWorker(val start: Int, val destinationIn: Int, val delayInMS: Int, r
     case x ⇒ log.error(s"Unexpected message in MotionWorker: $x")
   }
 
-  def diag(hint: String, current: Int, stepValue: Int) = log.info(s"$hint: start=$start, dest=$destination, totalSteps: $stepValue, current=$current")
+  def diag(hint: String, current: Int, stepValue: Int): Unit = log.info(s"$hint: start=$start, dest=$destination, totalSteps: $stepValue, current=$current")
 }
 
 object MotionWorker {

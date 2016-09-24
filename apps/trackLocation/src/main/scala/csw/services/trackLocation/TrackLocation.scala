@@ -6,7 +6,7 @@ import java.net.ServerSocket
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
-import csw.services.cs.akka.{BlockingConfigServiceClient, ConfigServiceSettings}
+import csw.services.cs.akka.BlockingConfigServiceClient
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 
 import scala.concurrent.Await
@@ -30,7 +30,6 @@ object TrackLocation extends App {
    */
   private case class Options(
     name:          Option[String] = None,
-    csName:        Option[String] = None,
     command:       Option[String] = None,
     port:          Option[Int]    = None,
     appConfigFile: Option[File]   = None,
@@ -45,10 +44,6 @@ object TrackLocation extends App {
       c.copy(name = Some(x))
     } text "Required: The name used to register the application (also root name in config file)"
 
-    opt[String]("cs-name") action { (x, c) =>
-      c.copy(csName = Some(x))
-    } text "optional name of the config service to use (for fetching the application config file)"
-
     opt[String]('c', "command") valueName "<name>" action { (x, c) =>
       c.copy(command = Some(x))
     } text "The command that starts the target application: use %port to insert the port number (default: use $name.command from config file: Required)"
@@ -61,7 +56,7 @@ object TrackLocation extends App {
       c.copy(appConfigFile = Some(x))
     } text "optional config file in HOCON format (Options specified as: $name.command, $name.port, etc. Fetched from config service if path does not exist)"
 
-    opt[Unit]("no-exit") action { (x, c) =>
+    opt[Unit]("no-exit") action { (_, c) =>
       c.copy(noExit = true)
     } text "for testing: prevents application from exiting after running command"
 
@@ -90,22 +85,17 @@ object TrackLocation extends App {
 
   // Gets the application config from the file, if it exists, or from the config service, if it exists there.
   // If neither exist, an error is reported.
-  private def getAppConfig(file: File, csName: Option[String]): Config = {
+  private def getAppConfig(file: File): Config = {
     if (file.exists())
       ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem())
     else
-      getFromConfigService(file, csName)
+      getFromConfigService(file)
   }
 
   // Gets the named config file from the config service or reports an error if it does not exist.
   // Uses the given config service name to find the config service, if not empty.
-  private def getFromConfigService(file: File, csName: Option[String]): Config = {
-    val name = csName match {
-      case Some(s) => s
-      case None    => ConfigServiceSettings(system).name
-    }
-
-    val configOpt = BlockingConfigServiceClient.getConfigFromConfigService(name, file)
+  private def getFromConfigService(file: File): Config = {
+    val configOpt = BlockingConfigServiceClient.getConfigFromConfigService(file)
     if (configOpt.isEmpty)
       error(s"$file not found locally or from the config service")
     configOpt.get
@@ -117,7 +107,7 @@ object TrackLocation extends App {
     val name = options.name.get
 
     //. Get the app config file, if given
-    val appConfig = options.appConfigFile.map(getAppConfig(_, options.csName))
+    val appConfig = options.appConfigFile.map(getAppConfig)
 
     // Gets the String value of an option from the command line or the app's config file, or None if not found
     def getStringOpt(opt: String, arg: Option[String] = None, required: Boolean = true): Option[String] = {

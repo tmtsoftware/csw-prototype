@@ -2,7 +2,6 @@ package csw.services.apps.csClient
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import com.typesafe.config.{ConfigFactory, ConfigResolveOptions}
 import csw.services.cs.akka.{ConfigServiceActor, ConfigServiceClient, ConfigServiceSettings}
 import csw.services.cs.core.{ConfigData, ConfigId, ConfigManager}
 import csw.services.loc.LocationService
@@ -30,11 +29,7 @@ object CsClient extends App {
   private def run(options: CsClientOpts.Options): Unit = {
     val csName = options.csName match {
       case Some(s) => s
-      case None =>
-        if (options.config.nonEmpty) {
-          val config = ConfigFactory.parseFile(options.config.get).resolve(ConfigResolveOptions.noSystem())
-          ConfigServiceSettings(config).name
-        } else ConfigServiceSettings(system).name
+      case None    => ConfigServiceSettings(system).name
     }
 
     val f = for {

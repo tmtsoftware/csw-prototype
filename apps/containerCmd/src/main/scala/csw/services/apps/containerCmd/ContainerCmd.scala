@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.typesafe.config.{ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.cs.akka.{ConfigServiceClient, ConfigServiceSettings}
+import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.LocationService
 import csw.services.pkg.ContainerComponent
 import org.slf4j.LoggerFactory
@@ -18,19 +18,14 @@ object ContainerCmd {
   LocationService.initInterface()
 
   /**
-   * Command line options: [--config config] file
+   * Command line options: file
    *
-   * @param csConfig optional config file to use for config service settings, if needed
    * @param file optional container config file to override the default
    */
-  private case class Config(csConfig: Option[File] = None, file: Option[File] = None)
+  private case class Config(file: Option[File] = None)
 
   private def parser(name: String): scopt.OptionParser[Config] = new scopt.OptionParser[Config](name) {
     head(name, System.getProperty("CSW_VERSION"))
-
-    opt[File]('c', "config") action { (x, c) =>
-      c.copy(csConfig = Some(x))
-    } text "optional config file to use for config service settings"
 
     arg[File]("<file>") optional () maxOccurs 1 action { (x, c) =>
       c.copy(file = Some(x))
@@ -69,7 +64,7 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
           ContainerComponent.create(ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem()))
         } else {
           logger.debug(s" Attempting to get '$file' from the config service")
-          initFromConfigService(file, options.csConfig)
+          initFromConfigService(file)
         }
 
       case None =>
@@ -84,18 +79,14 @@ case class ContainerCmd(name: String, args: Array[String], resource: Option[Stri
   }
 
   // Gets the named config file from the config service and uses it to initialize the container
-  private def initFromConfigService(file: File, csConfig: Option[File]): Future[Unit] = {
+  private def initFromConfigService(file: File): Future[Unit] = {
+    // XXX TODO: Should we try to reuse this ActorSystem instead of creating a new one for the component?
     implicit val system = ActorSystem()
     import system.dispatcher
 
     implicit val timeout: Timeout = 30.seconds
-    val settings = csConfig match {
-      case Some(csConfigFile) => ConfigServiceSettings(ConfigFactory.parseFile(csConfigFile))
-      case None               => ConfigServiceSettings(system)
-    }
-
     val f = for {
-      configOpt <- ConfigServiceClient.getConfigFromConfigService(settings.name, file)
+      configOpt <- ConfigServiceClient.getConfigFromConfigService(file)
     } yield {
       if (configOpt.isEmpty) logger.error(s"$file not found in config service")
       configOpt.map(ContainerComponent.create)

@@ -14,14 +14,14 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
   import SingleAxisSimulator._
 
-  override def afterAll = TestKit.shutdownActorSystem(system)
+  override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
   def expectLLMoveMsgs(diagFlag: Boolean = false): Vector[MotionWorkerMsgs] = {
     // Get AxisStarted
     var allMsgs: Vector[MotionWorkerMsgs] = Vector(expectMsg(Start))
     // Receive updates until axis idle then get the last one
     val moveMsgs = receiveWhile(5.seconds) {
-      case t @ Tick(current) => t
+      case t: Tick => t
     }
     val endMsg = expectMsgClass(classOf[End]) // last one
     allMsgs = allMsgs ++ moveMsgs :+ endMsg
@@ -34,7 +34,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     expectMsg(AxisStarted)
     // Receive updates until axis idle then get the last one
     val msgs = receiveWhile(5.seconds) {
-      case m @ AxisUpdate(_, axisState, current, _, _, _) if axisState == AXIS_MOVING => m
+      case m @ AxisUpdate(_, axisState, _, _, _, _) if axisState == AXIS_MOVING => m
     }
     val fmsg = expectMsgClass(classOf[AxisUpdate]) // last one
     val allmsgs = msgs :+ fmsg
@@ -46,7 +46,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     // Receive updates until axis idle then get the last one
     val msgs = receiveWhile(5.seconds) {
       case as @ AxisStarted => as
-      case m @ AxisUpdate(_, currentState, current, _, _, _) if current != target => m
+      case m @ AxisUpdate(_, _, current, _, _, _) if current != target => m
     }
     val fmsg1 = expectMsgClass(classOf[AxisUpdate]) // last one when target == current
     val fmsg2 = expectMsgClass(classOf[AxisUpdate]) // then the End event with the IDLE
@@ -59,7 +59,6 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
   def calcDelay(numberSteps: Int, delayInSseconds: Int): FiniteDuration = (numberSteps + 1) * delayInSseconds * 1000.seconds
 
   describe("Testing steps calc") {
-    import SingleAxisSimulator._
 
     // Note that putting functions in the companion object allows them to be easily tested!
     it("should calculate different number of steps based on the size of the move") {
@@ -236,7 +235,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       upd.current should equal(defaultAxisConfig.startPosition + 1)
 
       sa ! GetStatistics
-      val stats1: AxisStatistics = expectMsgClass(classOf[AxisStatistics])
+      val stats1 = expectMsgClass(classOf[AxisStatistics])
       stats1.initCount should be(1)
       stats1.moveCount should be(1)
       stats1.homeCount should be(0)
@@ -325,7 +324,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       receiveN(2)
       sa ! CancelMove
       // One more update due to algo
-      val lastmsg = receiveN(1)
+      receiveN(1)
       val end = expectMsgClass(classOf[AxisUpdate])
       end.state should be(AXIS_IDLE)
       end.current should be(650)

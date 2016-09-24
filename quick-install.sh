@@ -20,6 +20,10 @@ for i in bin lib ; do
     done
 done
 
+cp examples/vslice/scripts/lgsTromboneHCD.sh $dir/bin
+cp examples/vsliceJava/scripts/lgsTromboneHCD-java.sh $dir/bin
+chmod +x $dir/bin/*.sh
+
 rm -f $dir/bin/*.log.* $dir/bin/*.bat
 
 # create the scalas script, for scala scriping (see http://www.scala-sbt.org/release/docs/Scripts.html)

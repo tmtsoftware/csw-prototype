@@ -22,6 +22,8 @@ object ConfigServiceSettings extends ExtensionId[ConfigServiceSettings] with Ext
   override def createExtension(system: ExtendedActorSystem): ConfigServiceSettings = new ConfigServiceSettings(system.settings.config)
 
   def getConfigServiceSettings(system: ActorSystem): ConfigServiceSettings = ConfigServiceSettings(system)
+
+  val defaultName = "Config Service"
 }
 
 case class ConfigServiceSettings(config: Config) extends Extension {
