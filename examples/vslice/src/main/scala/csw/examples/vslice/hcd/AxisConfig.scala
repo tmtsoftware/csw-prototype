@@ -6,10 +6,10 @@ import com.typesafe.config.Config
  * Axis configuration
  */
 object AxisConfig {
-  // Main prefix for keys used below
-  val prefix = "csw.examples.Trombone.hcd"
-
   def apply(config: Config): AxisConfig = {
+    // Main prefix for keys used below
+    val prefix = "csw.examples.Trombone.hcd"
+
     val axisName: String = config.getString(s"$prefix.axis-config.axisName")
     val lowLimit: Int = config.getInt(s"$prefix.axis-config.lowLimit")
     val lowUser: Int = config.getInt(s"$prefix.axis-config.lowUser")

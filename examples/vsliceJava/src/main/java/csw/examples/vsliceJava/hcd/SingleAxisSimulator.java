@@ -236,28 +236,6 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     });
   }
 
-  public static class AxisConfig {
-    String axisName;
-    int lowLimit;
-    int lowUser;
-    int highUser;
-    int highLimit;
-    int home;
-    int startPosition;
-    int stepDelayMS;
-
-    public AxisConfig(String axisName, int lowLimit, int lowUser, int highUser, int highLimit, int home, int startPosition, int stepDelayMS) {
-      this.axisName = axisName;
-      this.lowLimit = lowLimit;
-      this.lowUser = lowUser;
-      this.highUser = highUser;
-      this.highLimit = highLimit;
-      this.home = home;
-      this.startPosition = startPosition;
-      this.stepDelayMS = stepDelayMS;
-    }
-  }
-
   public enum AxisState {
     AXIS_IDLE,
     AXIS_MOVING,

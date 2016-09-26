@@ -67,15 +67,24 @@ object ConfigServiceClient {
    *
    * @param path the path of the file in the config service
    * @param id optional id of a specific version of the file
+   * @param resource optional resource file to use in case the file can't be retrieved from the config service for some reason
    * @param system actor system needed to access config service
    * @param timeout time to wait for a reply
    * @return the future config, parsed from the file
    */
-  def getConfigFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[Config]] = {
+  def getConfigFromConfigService(path: File, id: Option[ConfigId] = None, resource: Option[File] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[Config]] = {
     import system.dispatcher
-    for {
+
+    def getFromResource: Option[Config] = try {
+      resource.map(f => ConfigFactory.parseResources(f.getPath))
+    } catch {
+      case ex: Exception => None
+    }
+
+    val f = for {
       s <- getStringFromConfigService(path, id)
     } yield s.map(ConfigFactory.parseString(_).resolve(ConfigResolveOptions.noSystem()))
+    f.recover { case _ => getFromResource }
   }
 }
 

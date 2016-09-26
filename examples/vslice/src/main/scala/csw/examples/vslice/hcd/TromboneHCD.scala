@@ -187,26 +187,10 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     implicit val system = context.system
     val sysConfig = context.system.settings.config
 
-    def getFromResource: Config = {
-      log.debug("Using default axis config from resources/trombone.conf")
-      ConfigFactory.parseResources("trombone.conf")
-    }
-
-    val tromboneConfigFileName = sysConfig.getString("csw.examples.Trombone.configFile")
-
-    ConfigServiceClient.getConfigFromConfigService(new File(tromboneConfigFileName))
-      .recover {
-        // fall back to resource file
-        case _ => Some(getFromResource)
-      }
-      .map {
-        case Some(config) =>
-          log.debug(s"Using axis config from the config service ($tromboneConfigFileName)")
-          config
-        case None =>
-          getFromResource
-      }
-      .map(AxisConfig(_))
+    // Get the trombone config file from the config service, or use the given resource file if that doesn't work
+    val tromboneConfigFile = new File(sysConfig.getString("csw.examples.Trombone.configFile"))
+    val resource = new File("trombone.conf")
+    ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, None, Some(resource)).map(x => AxisConfig(x.get))
   }
 }
 

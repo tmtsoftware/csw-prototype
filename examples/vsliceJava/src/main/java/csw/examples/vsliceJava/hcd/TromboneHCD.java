@@ -10,23 +10,19 @@ import akka.pattern.Patterns;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
 import csw.services.loc.ComponentType;
-import csw.services.loc.LocationService;
-import csw.services.pkg.ContainerComponent;
-import csw.services.pkg.Supervisor;
 import csw.services.pkg.Supervisor3;
 import csw.util.config.*;
 import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.Configurations.ConfigKey;
 import csw.util.config.StateVariable.CurrentState;
+import javacsw.services.cs.akka.JConfigServiceClient;
 import javacsw.services.loc.JComponentType;
 import javacsw.services.pkg.*;
 import scala.PartialFunction;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
-import scala.concurrent.duration.FiniteDuration;
 import scala.runtime.BoxedUnit;
 
-import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JConfigDSL.*;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
@@ -36,17 +32,17 @@ import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState;
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStarted;
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStatistics;
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisUpdate;
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisConfig;
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.InitialState;
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.GetStatistics;
 
-import java.util.Collections;
+import java.io.File;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * TMT Source Code: 6/20/16.
  */
-@SuppressWarnings({"unused", "CodeBlock2Expr"})
+@SuppressWarnings({"unused", "CodeBlock2Expr", "OptionalUsedAsFieldOrParameterType"})
 public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
@@ -57,7 +53,8 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   ActorRef tromboneAxis;
 
   // Initialize values -- This causes an update to the listener
-  Timeout timeout;
+  Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+
 
   // The current axis position from the hardware axis, initialize to default value
   AxisUpdate current;
@@ -66,7 +63,6 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   // Keep track of the last SetupConfig to be received from external
   SetupConfig lastReceivedSC;
 
-  // XXX TODO FIXME: This overrides the supervisor inherited from Component
   final ActorRef supervisor;
 
 
@@ -76,29 +72,28 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 
     this.supervisor = supervisor;
 
+    // Note: The scala version initializes the following variables in a non-blocking way using a for comprehension.
+    // It should be possible to do something similar in Java, but it would be more complicated.
+
     // Initialize axis from ConfigService
-    axisConfig = getAxisConfig();
+    axisConfig = getAxisConfig().get();
 
     // Create an axis for simulating trombone motion
     tromboneAxis = setupAxis(axisConfig);
 
-    // Initialize values -- This causes an update to the listener
-    timeout = new Timeout(Duration.create(2, "seconds"));
-
     // The current axis position from the hardware axis, initialize to default value
-    // (XXX TODO FIXME: Do we need to block here?)
     current = (AxisUpdate) Await.result(Patterns.ask(tromboneAxis, InitialState.instance, timeout), timeout.duration());
     stats = (AxisStatistics) Await.result(Patterns.ask(tromboneAxis, GetStatistics.instance, timeout), timeout.duration());
 
     // Keep track of the last SetupConfig to be received from external
     lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix);
 
+    // --
 
     // Receive actor messages
     receive(initializingReceive());
 
     // Required setup for Lifecycle in order to get messages
-    // XXX TODO: Do we need to send Initialize and Startup?
     supervisor.tell(Initialized, self());
     supervisor.tell(Started, self());
   }
@@ -230,26 +225,17 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
     return context().actorOf(SingleAxisSimulator.props(ac, Optional.of(self())), "Test1");
   }
 
-  // Utility functions
-  AxisConfig getAxisConfig() {
-    // Will be obtained from the
-    String name = getConfigString("axis-config.axisName");
-    int lowLimit = getConfigInt("axis-config.lowLimit");
-    int lowUser = getConfigInt("axis-config.lowUser");
-    int highUser = getConfigInt("axis-config.highUser");
-    int highLimit = getConfigInt("axis-config.highLimit");
-    int home = getConfigInt("axis-config.home");
-    int startPosition = getConfigInt("axis-config.startPosition");
-    int stepDelayMS = getConfigInt("axis-config.stepDelayMS");
-    return new AxisConfig(name, lowLimit, lowUser, highUser, highLimit, home, startPosition, stepDelayMS);
-  }
+  // -- Utility functions
 
-  String getConfigString(String name) {
-    return context().system().settings().config().getString("csw.examples.Trombone.hcd." + name);
-  }
+  // Gets the trombone config file from the config service, or uses the trombone.conf resource file if that doesn't work
+  private CompletableFuture<AxisConfig> getAxisConfig() {
+    Config sysConfig = context().system().settings().config();
 
-  int getConfigInt(String name) {
-    return context().system().settings().config().getInt("csw.examples.Trombone.hcd." + name);
+    File tromboneConfigFile = new File(sysConfig.getString("csw.examples.Trombone.configFile"));
+    File resource = new File("trombone.conf");
+    //noinspection OptionalGetWithoutIsPresent
+    return JConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, Optional.empty(), Optional.of(resource), context().system(), timeout)
+      .thenApply(config -> new AxisConfig(config.get()));
   }
 
   // --- Static defs ---
