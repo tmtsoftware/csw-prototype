@@ -83,8 +83,15 @@ object ConfigServiceClient {
 
     val f = for {
       s <- getStringFromConfigService(path, id)
-    } yield s.map(ConfigFactory.parseString(_).resolve(ConfigResolveOptions.noSystem()))
-    f.recover { case _ => getFromResource }
+    } yield {
+      s match {
+        case Some(x) => Some(ConfigFactory.parseString(x).resolve(ConfigResolveOptions.noSystem()))
+        case None    => getFromResource
+      }
+    }
+    f.recover {
+      case _ => getFromResource
+    }
   }
 }
 

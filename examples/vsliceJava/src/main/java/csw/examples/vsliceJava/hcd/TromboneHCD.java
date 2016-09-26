@@ -98,12 +98,6 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
     supervisor.tell(Started, self());
   }
 
-  PartialFunction<Object, BoxedUnit> unhandledPF() {
-    return ReceiveBuilder
-      .matchAny(x -> log.warning("Unexpected message in TromboneHCD:unhandledPF: " + x))
-      .build();
-  }
-
   PartialFunction<Object, BoxedUnit> initializingReceive() {
     return ReceiveBuilder
       .matchEquals(Running, e -> {
@@ -114,9 +108,8 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
       .build();
   }
 
-  PartialFunction<Object, BoxedUnit> runningReceive2 = lifecycleReceivePF().orElse(unhandledPF());
 
-  PartialFunction<Object, BoxedUnit> runningReceivePF() {
+  PartialFunction<Object, BoxedUnit> runningReceive1() {
     return ReceiveBuilder
       .matchEquals(TromboneEngineering.GetAxisStats, e -> {
         tromboneAxis.tell(GetStatistics.instance, self());
@@ -164,12 +157,6 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
         );
         notifySubscribers(tromboneStats);
       })
-      .build();
-  }
-
-
-  PartialFunction<Object, BoxedUnit> lifecycleReceivePF() {
-    return ReceiveBuilder
       .matchEquals(Running, e -> {
         log.info("Received Running");
         context().become(runningReceive);
@@ -188,13 +175,11 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
       .match(Supervisor3.LifecycleFailureInfo.class, e -> {
         log.info("Received failed state: " + e.state() + " for reason: " + e.reason());
       })
+      .matchAny(x -> log.warning("Unexpected message in TromboneHCD:unhandledPF: " + x))
       .build();
   }
 
-  // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
-  PartialFunction<Object, BoxedUnit> runningReceive1 = runningReceivePF().orElse(runningReceive2);
-
-  PartialFunction<Object, BoxedUnit> runningReceive = defaultReceive().orElse(runningReceive1);
+  PartialFunction<Object, BoxedUnit> runningReceive = defaultReceive().orElse(runningReceive1());
 
   /**
    * @param sc the config received

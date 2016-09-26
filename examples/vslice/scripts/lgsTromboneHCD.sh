@@ -19,6 +19,9 @@ s"cs --delete --noannex --nohttp".run
 // Create the container config files in the config service
 s"csclient create vslice/lgsTromboneHCD.conf -i ../../csw/examples/vslice/src/main/resources/lgsTromboneHCD.conf".!
 
+// Create the trombone config file in the config service
+s"csclient create trombone/hcd/trombone.conf -i ../../csw/examples/vslice/src/main/resources/trombone.conf".!
+
 // Since the files are not found locally, they will be fetched from the config service
 s"vslice --start hcd vslice/lgsTromboneHCD.conf".run
 
