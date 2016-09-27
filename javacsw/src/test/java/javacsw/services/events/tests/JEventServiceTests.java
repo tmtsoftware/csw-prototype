@@ -60,12 +60,28 @@ public class JEventServiceTests {
     EventMonitor monitor = eventService.subscribe(Optional.empty(), Optional.of(eventHandler), prefix);
     try {
       Thread.sleep(500); // wait for actor to start
-      eventService.publish(event);
-      Thread.sleep(500); // wait for redis to react
+      eventService.publish(event).get();
       assertTrue(eventReceived.isPresent());
       assertTrue(eventReceived.get().equals(event));
     } finally {
       monitor.stop();
     }
- }
+  }
+
+  @Test
+  public void TestSubscribeAfterPublish() throws Exception {
+    String prefix = "tcs.test5";
+    StatusEvent event = StatusEvent(prefix)
+      .add(jset(infoValue, 5))
+      .add(jset(infoStr, "info 5"));
+    eventService.publish(event).get();
+    EventMonitor monitor = eventService.subscribe(Optional.empty(), Optional.of(eventHandler), prefix);
+    Thread.sleep(500); // wait for actor to start
+    try {
+      assertTrue(eventReceived.isPresent());
+      assertTrue(eventReceived.get().equals(event));
+    } finally {
+      monitor.stop();
+    }
+  }
 }
