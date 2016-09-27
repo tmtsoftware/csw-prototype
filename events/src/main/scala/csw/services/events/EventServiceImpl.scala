@@ -31,24 +31,35 @@ object EventServiceImpl {
 
   // Actor used to subscribe to events for given prefixes and then notify the actor or call the function
   private object EventMonitorActor {
-    def props(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): Props =
-      Props(classOf[EventMonitorActor], subscriber, callback, prefixes)
+    def props(subscriber: Option[ActorRef], callback: Option[Event => Unit],
+              currentEvents: Future[Seq[Event]], prefixes: String*): Props =
+      Props(classOf[EventMonitorActor], subscriber, callback, currentEvents: Future[Seq[Event]], prefixes)
   }
 
-  private class EventMonitorActor(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*) extends EventSubscriber {
+  private class EventMonitorActor(subscriber: Option[ActorRef], callback: Option[Event => Unit],
+                                  currentEvents: Future[Seq[Event]], prefixes: String*) extends EventSubscriber {
     import context.dispatcher
-    subscribe(prefixes: _*)
+
+    // First send the subscribers the current values for the events
+    currentEvents.onSuccess {
+      case events => events.foreach(notifySubscribers)
+    }
+    // Then subscribe to future events
+    currentEvents.onComplete(_ => subscribe(prefixes: _*))
 
     def receive: Receive = {
-      case event: Event =>
-        subscriber.foreach(_ ! event)
-        callback.foreach { f =>
-          Future {
-            f(event)
-          }.onFailure {
-            case ex => log.error("Event callback failed: ", ex)
-          }
+      case event: Event => notifySubscribers(event)
+    }
+
+    private def notifySubscribers(event: Event): Unit = {
+      subscriber.foreach(_ ! event)
+      callback.foreach { f =>
+        Future {
+          f(event)
+        }.onFailure {
+          case ex => log.error("Event callback failed: ", ex)
         }
+      }
     }
   }
 }
@@ -69,7 +80,10 @@ private[events] case class EventServiceImpl(host: String, port: Int)(implicit _s
   protected val redis = RedisClient(host, port)
   implicit val execContext = _system.dispatcher
 
-  override def publish(event: Event, history: Int): Future[Unit] = {
+  override def publish(event: Event): Future[Unit] = publish(event, 0)
+
+  // Publishes the event and keeps the given number of previous values
+  def publish(event: Event, history: Int): Future[Unit] = {
     // Serialize the event
     val formatter = implicitly[ByteStringFormatter[Event]]
     val bs = formatter.serialize(event) // only do this once
@@ -85,18 +99,23 @@ private[events] case class EventServiceImpl(host: String, port: Int)(implicit _s
     Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
   }
 
-  override def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor =
-    EventMonitorImpl(_system.actorOf(EventMonitorActor.props(subscriber, callback, prefixes: _*)))
+  override def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor = {
+    val currentEvents = Future.sequence(prefixes.map(get)).map(_.flatten)
+    EventMonitorImpl(_system.actorOf(EventMonitorActor.props(subscriber, callback, currentEvents, prefixes: _*)))
+  }
 
-  override def get(prefix: String): Future[Option[Event]] = redis.lindex(prefix, 0)
+  // gets the current value for the given prefix
+  def get(prefix: String): Future[Option[Event]] = redis.lindex(prefix, 0)
 
-  override def getHistory(prefix: String, n: Int): Future[Seq[Event]] = redis.lrange(prefix, 0, n - 1)
+  // Gets the last n values for the given prefix
+  def getHistory(prefix: String, n: Int): Future[Seq[Event]] = redis.lrange(prefix, 0, n - 1)
 
-  override def delete(prefix: String*): Future[Long] = redis.del(prefix: _*)
+  // deletes the saved value for the given prefix
+  def delete(prefix: String*): Future[Long] = redis.del(prefix: _*)
 
-  def disconnect(): Future[Unit] = redis.quit().map(_ => ())
+  override def disconnect(): Future[Unit] = redis.quit().map(_ => ())
 
-  def shutdown(): Future[Unit] = {
+  override def shutdown(): Future[Unit] = {
     val f = redis.shutdown().map(_ => ())
     redis.stop()
     f.recover {

@@ -44,10 +44,9 @@ trait EventService {
    * Publishes the given event
    *
    * @param event   the event to publish
-   * @param history the max number of history events to keep (default: 0, no history)
    * @return the future result (indicates if and when the operation completed, may be ignored)
    */
-  def publish(event: Event, history: Int = 0): Future[Unit]
+  def publish(event: Event): Future[Unit]
 
   /**
    * Subscribes an actor or callback function to events matching the given prefixes
@@ -58,29 +57,6 @@ trait EventService {
    * @param prefixes   one or more prefixes of events, may include wildcard
    */
   def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor
-
-  /**
-   * Gets the (most recent) event published with the given event prefix
-   *
-   * @param prefix the key
-   * @return the future result, None if the key was not found
-   */
-  def get(prefix: String): Future[Option[Event]]
-
-  /**
-   * Returns a list containing up to the last n events published with the given prefix
-   *
-   * @param prefix the prefix for an event
-   * @param n      max number of history events to return
-   */
-  def getHistory(prefix: String, n: Int): Future[Seq[Event]]
-
-  /**
-   * Deletes the events with the given prefixes from the store
-   *
-   * @return the future number of events that were deleted
-   */
-  def delete(prefix: String*): Future[Long]
 
   /**
    * Disconnects from the key/value store server

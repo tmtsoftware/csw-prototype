@@ -27,22 +27,11 @@ case class JEventService(settings: EventServiceSettings, system: ActorRefFactory
 
   private val eventService = EventService(settings)
 
-  override def publish(event: EventServiceEvent): CompletableFuture[Unit] = eventService.publish(event).toJava.toCompletableFuture
-
-  override def publish(event: EventServiceEvent, n: Int): CompletableFuture[Unit] =
-    eventService.publish(event, n).toJava.toCompletableFuture
+  override def publish(event: EventServiceEvent): CompletableFuture[Unit] =
+    eventService.publish(event).toJava.toCompletableFuture
 
   override def subscribe(subscriber: Optional[ActorRef], callback: Optional[EventHandler], prefixes: String*): EventMonitor =
     eventService.subscribe(subscriber.asScala, callback.asScala.map(_.handleEvent), prefixes: _*)
-
-  override def get(prefix: String): CompletableFuture[Optional[EventServiceEvent]] =
-    eventService.get(prefix).map(_.asJava).toJava.toCompletableFuture
-
-  override def getHistory(prefix: String, n: Int): CompletableFuture[java.util.List[EventServiceEvent]] =
-    eventService.getHistory(prefix, n).map(_.asJava).toJava.toCompletableFuture
-
-  override def delete(key: String): CompletableFuture[java.lang.Boolean] =
-    eventService.delete(key).map(_ == 1L).map(Boolean.box).toJava.toCompletableFuture
 
   override def disconnect: CompletableFuture[Unit] =
     eventService.disconnect().toJava.toCompletableFuture

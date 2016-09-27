@@ -2,9 +2,11 @@ package javacsw.services.events
 
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
+import javacsw.services.events.IEventService.EventHandler
 
-import akka.actor.ActorRefFactory
-import csw.services.events.{EventServiceSettings, JAbstractSubscriber, TelemetryService}
+import akka.actor.{ActorRef, ActorRefFactory}
+import csw.services.events.EventService.EventMonitor
+import csw.services.events.{EventServiceSettings, TelemetryService}
 import csw.util.config.Events._
 
 import scala.collection.JavaConverters._
@@ -30,6 +32,10 @@ case class JTelemetryService(settings: EventServiceSettings, system: ActorRefFac
 
   @Override
   def publish(status: StatusEvent, history: Int = 0): CompletableFuture[Unit] = ts.publish(status, history).toJava.toCompletableFuture
+
+  override def subscribe(subscriber: Optional[ActorRef], callback: Optional[ITelemetryService.TelemetryHandler],
+                         prefixes: String*): EventMonitor =
+    ts.subscribe(subscriber.asScala, callback.asScala.map(_.handleEvent), prefixes: _*)
 
   @Override
   def get(prefix: String): CompletableFuture[Optional[StatusEvent]] = ts.get(prefix).map(_.asJava).toJava.toCompletableFuture

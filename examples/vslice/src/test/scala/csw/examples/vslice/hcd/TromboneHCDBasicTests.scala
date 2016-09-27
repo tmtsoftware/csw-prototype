@@ -7,13 +7,14 @@ import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3._
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
-import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
+import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
 
 /**
  * TMT Source Code: 7/18/16.
  */
+@DoNotDiscover
 class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 

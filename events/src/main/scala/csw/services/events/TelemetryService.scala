@@ -26,7 +26,7 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
   import _system.dispatcher
   import TelemetryService._
 
-  private val eventService = EventService(settings)
+  private val eventService = EventServiceImpl(settings.redisHostname, settings.redisPort)
 
   /**
    * Publishes the status event (key is based on the event's prefix)
@@ -90,7 +90,8 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
  * @param ts a reference to the telemetry service to use
  * @param context environment needed for futures
  */
-case class BlockingTelemetryService(timeout: Duration, ts: TelemetryService)(implicit val context: ActorRefFactory) {
+case class BlockingTelemetryService(timeout: Duration, settings: EventServiceSettings)(implicit val context: ActorRefFactory) {
+  val ts = TelemetryService(settings)
 
   /**
    * Publishes the value for the status event (key is based on the event's prefix)

@@ -23,7 +23,6 @@ import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -62,12 +61,12 @@ public class JBlockingTelemetryServiceTest {
 
     @Test
     public void testSetandGet() throws Exception {
-        String prefix1 = "tcs.test1";
+        String prefix1 = "tcs.telem.test1";
         StatusEvent event1 = StatusEvent(prefix1)
           .add(jset(infoValue, 1))
           .add(jset(infoStr, "info 1"));
 
-        String prefix2 = "tcs.test2";
+        String prefix2 = "tcs.telem.test2";
         StatusEvent event2 = StatusEvent(prefix2)
           .add(jset(infoValue, 2))
           .add(jset(infoStr, "info 2"));
@@ -92,7 +91,7 @@ public class JBlockingTelemetryServiceTest {
 
     @Test
     public void TestSetGetAndGetHistory() throws Exception {
-        String prefix = "tcs.testPrefix";
+        String prefix = "tcs.telem.testPrefix";
         StatusEvent event = StatusEvent(prefix)
           .add(jset(exposureTime, 2.0));
 
@@ -121,8 +120,8 @@ public class JBlockingTelemetryServiceTest {
     // Test subscribing to telemetry using a subscriber actor to receive status events
     @Test
     public void TestSubscribingToTelemetry() throws Exception {
-        final String prefix1 = "tcs.test1";
-        final String prefix2 = "tcs.test2";
+        final String prefix1 = "tcs.telem.test1";
+        final String prefix2 = "tcs.telem.test2";
 
         final StatusEvent event1 = StatusEvent(prefix1)
           .add(jset(infoValue, 1))

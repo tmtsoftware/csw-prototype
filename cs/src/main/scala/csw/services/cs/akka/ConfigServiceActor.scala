@@ -175,8 +175,8 @@ object ConfigServiceActor {
    *
    * @param name   the name of the config service (set in the config file, property csw.services.cs.name)
    * @param system the actor system
-    * @param timeout amount of time to alow for looking up config service with location service
-    * @return a future reference to the named config service actor
+   * @param timeout amount of time to alow for looking up config service with location service
+   * @return a future reference to the named config service actor
    */
   def locateConfigService(name: String = "")(implicit system: ActorSystem, timeout: Timeout): Future[ActorRef] = {
     import system.dispatcher

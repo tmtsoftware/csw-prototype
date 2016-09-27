@@ -1,7 +1,9 @@
 package javacsw.services.events;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
+import csw.services.events.EventService;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.Events.StatusEvent;
 import scala.Unit;
@@ -13,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Java API for the telemetry service
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
 public interface ITelemetryService {
     /**
      * Publishes the value for the status event (key is based on the event's prefix)
@@ -31,6 +33,23 @@ public interface ITelemetryService {
      * @return a future indicating if/when the operation has completed
      */
     CompletableFuture<Unit> publish(StatusEvent status, int history);
+
+    /**
+     * API to handle a telemetry event (StatusEvent) from the telemetry service
+     */
+    interface TelemetryHandler {
+        void handleEvent(StatusEvent event);
+    }
+
+    /**
+     * Subscribes an actor or callback function to telemetry events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param subscriber an optional actor to receive StatusEvent messages
+     * @param callback   an optional callback which will be called with StatusEvent objects (in another thread)
+     * @param prefixes   one or more prefixes of events, may include wildcard
+     */
+    EventService.EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<TelemetryHandler> callback, String... prefixes);
 
     /**
      * Gets the value for the given status event prefix

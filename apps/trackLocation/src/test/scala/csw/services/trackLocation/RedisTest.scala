@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.events.{BlockingTelemetryService, EventServiceSettings, TelemetryService}
+import csw.services.events.{BlockingTelemetryService, EventServiceSettings}
 import csw.services.loc.Connection.HttpConnection
 import csw.services.loc.ConnectionType.HttpType
 import csw.services.loc.LocationService.ResolvedHttpLocation
@@ -56,8 +56,8 @@ class RedisTest extends TestKit(RedisTest.system) with FunSuiteLike with LazyLog
     assert(loc.connection.componentId.name == name)
     val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
 
-    val kvsSettings = EventServiceSettings(redisHostname = httpLoc.uri.getHost, redisPort = httpLoc.uri.getPort)
-    val telemetryService = BlockingTelemetryService(timeout.duration, TelemetryService(kvsSettings))
+    val settings = EventServiceSettings(redisHostname = httpLoc.uri.getHost, redisPort = httpLoc.uri.getPort)
+    val telemetryService = BlockingTelemetryService(timeout.duration, settings)
     val key = StringKey("testKey")
     val e1 = StatusEvent("test").add(key.set("Test Passed"))
     telemetryService.publish(e1)

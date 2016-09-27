@@ -45,14 +45,6 @@ public interface IEventService {
     CompletableFuture<Unit> publish(EventServiceEvent event);
 
     /**
-     * Sets (and publishes) the value for the given key
-     *
-     * @param event the value to store
-     * @param n     the max number of history values to keep (0 means no history)
-     */
-    CompletableFuture<Unit> publish(EventServiceEvent event, int n);
-
-    /**
      * API to handle an event from the event service
      */
     interface EventHandler {
@@ -68,32 +60,6 @@ public interface IEventService {
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
     EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<EventHandler> callback, String... prefixes);
-
-    /**
-     * Gets the value of the given key
-     *
-     * @param key the key
-     * @return the result, None if the key was not found
-     */
-    CompletableFuture<Optional<EventServiceEvent>> get(String key);
-
-    /**
-     * Returns a list containing up to the last n values for the given key
-     *
-     * @param key the key to use
-     * @param n   max number of history values to return
-     * @return list of the last n values
-     */
-    CompletableFuture<List<EventServiceEvent>> getHistory(String key, int n);
-
-    /**
-     * Deletes the given key(s) from the store
-     *
-     * @param key the key to delete
-     * @return the number of keys that were deleted
-     */
-    CompletableFuture<Boolean> delete(String key);
-
 
     /**
      * Disconnects from the key/value store server

@@ -12,10 +12,6 @@
  *  trackLocation application to register a
  *  Redis instance with the location service and then look up the host and port to use for it.
  * <p>
- *  The {@link javacsw.services.events.IBlockingEventService} interface
- *  provides factory methods to create an event service instance. This API blocks while waiting for replies from
- *  the server.
- * <p>
  *  The {@link javacsw.services.events.IEventService} interface also provides factory
  *  methods to create an event service instance, but provides a non-blocking API based on futures.
  * <p>
