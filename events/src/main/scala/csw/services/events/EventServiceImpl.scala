@@ -47,6 +47,10 @@ object EventServiceImpl {
     // Then subscribe to future events
     currentEvents.onComplete(_ => subscribe(prefixes: _*))
 
+    override def postStop(): Unit = {
+      unsubscribe(prefixes: _*)
+    }
+
     def receive: Receive = {
       case event: Event => notifySubscribers(event)
     }
