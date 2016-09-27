@@ -175,14 +175,14 @@ object ConfigServiceActor {
    *
    * @param name   the name of the config service (set in the config file, property csw.services.cs.name)
    * @param system the actor system
-   * @return a future reference to the named config service actor
+    * @param timeout amount of time to alow for looking up config service with location service
+    * @return a future reference to the named config service actor
    */
-  def locateConfigService(name: String = "")(implicit system: ActorSystem): Future[ActorRef] = {
+  def locateConfigService(name: String = "")(implicit system: ActorSystem, timeout: Timeout): Future[ActorRef] = {
     import system.dispatcher
     val csName = if (name.nonEmpty) name else ConfigServiceSettings.getConfigServiceSettings(system).name
     val componentId = ComponentId(csName, ComponentType.Service)
     val connection = AkkaConnection(componentId)
-    implicit val timeout: Timeout = 60.seconds
     LocationService.resolve(Set(connection)).map(_.locations.head).mapTo[ResolvedAkkaLocation].map(_.actorRef.get)
   }
 }

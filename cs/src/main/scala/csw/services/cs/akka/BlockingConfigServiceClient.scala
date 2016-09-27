@@ -20,9 +20,9 @@ object BlockingConfigServiceClient {
    * then fetching the contents of the file using a config service client.
    * (Use only for small files.)
    *
-   * @param path the path of the file in the config service
-   * @param id optional id of a specific version of the file
-   * @param system actor system needed to access config service
+   * @param path    the path of the file in the config service
+   * @param id      optional id of a specific version of the file
+   * @param system  actor system needed to access config service
    * @param timeout time to wait for a reply
    * @return the contents of the file as a ConfigData object, if found
    */
@@ -35,9 +35,9 @@ object BlockingConfigServiceClient {
    * then fetching the contents of the file using a config service client.
    * (Use only for small files.)
    *
-   * @param path the path of the file in the config service
-   * @param id optional id of a specific version of the file
-   * @param system actor system needed to access config service
+   * @param path    the path of the file in the config service
+   * @param id      optional id of a specific version of the file
+   * @param system  actor system needed to access config service
    * @param timeout time to wait for a reply
    * @return the contents of the file as a string, if the file was found
    */
@@ -51,14 +51,15 @@ object BlockingConfigServiceClient {
    * Finally, the file contents is parsed as a Typesafe config file and the
    * Config object returned.
    *
-   * @param path the path of the file in the config service
-   * @param id optional id of a specific version of the file
-   * @param system actor system needed to access config service
-   * @param timeout time to wait for a reply
+   * @param path     the path of the file in the config service
+   * @param id       optional id of a specific version of the file
+   * @param resource optional resource file to use in case the file can't be retrieved from the config service for some reason
+   * @param system   actor system needed to access config service
+   * @param timeout  time to wait for a reply
    * @return the future config, parsed from the file
    */
-  def getConfigFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Option[Config] =
-    Await.result(ConfigServiceClient.getConfigFromConfigService(path, id), timeout.duration)
+  def getConfigFromConfigService(path: File, id: Option[ConfigId] = None, resource: Option[File] = None)(implicit system: ActorSystem, timeout: Timeout): Option[Config] =
+    Await.result(ConfigServiceClient.getConfigFromConfigService(path, id, resource), timeout.duration)
 }
 
 /**

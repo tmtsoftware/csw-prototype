@@ -110,8 +110,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
       log.info(s"Received failed state: $state for reason: $reason")
 
     case GetAxisStats =>
-      //      tromboneAxis ! GetStatistics
-      tromboneAxis.tell(GetStatistics, sender())
+         tromboneAxis ! GetStatistics
 
     case AxisStarted =>
     //println("Axis Started")

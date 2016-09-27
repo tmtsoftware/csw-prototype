@@ -36,7 +36,7 @@ public class JConfigServiceFactory {
      */
     public static JConfigServiceClient getConfigServiceClient(String name, ActorSystem system, Timeout timeout)
             throws ExecutionException, InterruptedException {
-        ActorRef configServiceActor = JConfigService.locateConfigService(name, system).get();
+        ActorRef configServiceActor = JConfigService.locateConfigService(name, system, timeout).get();
         return getConfigServiceClient(configServiceActor, system, timeout);
     }
 
@@ -50,7 +50,7 @@ public class JConfigServiceFactory {
      */
     public static JConfigServiceClient getConfigServiceClient( ActorSystem system, Timeout timeout)
             throws ExecutionException, InterruptedException {
-        ActorRef configServiceActor = JConfigService.locateConfigService(system).get();
+        ActorRef configServiceActor = JConfigService.locateConfigService(system, timeout).get();
         return getConfigServiceClient(configServiceActor, system, timeout);
     }
 
@@ -78,7 +78,7 @@ public class JConfigServiceFactory {
      */
     public static JBlockingConfigServiceClient getBlockingConfigServiceClient(String name, ActorSystem system, Timeout timeout)
             throws ExecutionException, InterruptedException {
-        ActorRef configServiceActor = JConfigService.locateConfigService(name, system).get();
+        ActorRef configServiceActor = JConfigService.locateConfigService(name, system, timeout).get();
         return getBlockingConfigServiceClient(configServiceActor, system, timeout);
     }
 
@@ -92,7 +92,7 @@ public class JConfigServiceFactory {
      */
     public static JBlockingConfigServiceClient getBlockingConfigServiceClient(ActorSystem system, Timeout timeout)
             throws ExecutionException, InterruptedException {
-        ActorRef configServiceActor = JConfigService.locateConfigService(system).get();
+        ActorRef configServiceActor = JConfigService.locateConfigService(system, timeout).get();
         return getBlockingConfigServiceClient(configServiceActor, system, timeout);
     }
 }

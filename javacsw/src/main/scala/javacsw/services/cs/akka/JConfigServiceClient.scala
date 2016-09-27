@@ -95,17 +95,16 @@ class JBlockingConfigServiceClient(client: ConfigServiceClient)(implicit context
  * Contains Java API helper methods related to the Scala ConfigServiceActor class
  */
 object JConfigService {
-  val timeout = 60.seconds
-
   /**
    * Java API: Locate the config service with the given name using the location service.
    *
    * @param name   the name the config service was registered with
    * @param system the actor system to use
+   * @param timeout amount of time to alow for looking up config service with location service
    * @return the future ActorRef for the config service (May throw an exception if not found)
    */
-  def locateConfigService(name: String, system: ActorSystem): CompletableFuture[ActorRef] =
-    ConfigServiceActor.locateConfigService(name)(system).toJava.toCompletableFuture
+  def locateConfigService(name: String, system: ActorSystem, timeout: Timeout): CompletableFuture[ActorRef] =
+    ConfigServiceActor.locateConfigService(name)(system, timeout).toJava.toCompletableFuture
 
   /**
    * Java API: Locate the default config service using the location service
@@ -113,6 +112,6 @@ object JConfigService {
    * @param system the actor system to use
    * @return the future ActorRef for the config service (May throw an exception if not found)
    */
-  def locateConfigService(system: ActorSystem): CompletableFuture[ActorRef] =
-    ConfigServiceActor.locateConfigService()(system).toJava.toCompletableFuture
+  def locateConfigService(system: ActorSystem, timeout: Timeout): CompletableFuture[ActorRef] =
+    ConfigServiceActor.locateConfigService()(system, timeout).toJava.toCompletableFuture
 }
