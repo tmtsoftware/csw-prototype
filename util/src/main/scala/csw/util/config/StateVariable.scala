@@ -36,7 +36,7 @@ object StateVariable {
    * @param items     an optional initial set of items (keys with values)
    */
   case class DemandState(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
-      extends ConfigType[DemandState] with StateVariable {
+      extends ConfigType[DemandState] with ConfigKeyType with StateVariable {
 
     override def create(data: ConfigData) = DemandState(configKey, data)
 
@@ -65,7 +65,7 @@ object StateVariable {
    * @param items     an optional initial set of items (keys with values)
    */
   case class CurrentState(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
-      extends ConfigType[CurrentState] with StateVariable {
+      extends ConfigType[CurrentState] with ConfigKeyType with StateVariable {
 
     override def create(data: ConfigData) = CurrentState(configKey, data)
 

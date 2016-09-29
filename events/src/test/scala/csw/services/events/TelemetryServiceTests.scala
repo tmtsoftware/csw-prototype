@@ -194,8 +194,8 @@ class TelemetryServiceTests
   // --
 
   test("Test subscribing to telemetry using a subscriber actor to receive status events") {
-    val prefix1 = "tcs.test1"
-    val prefix2 = "tcs.test2"
+    val prefix1 = "tcs.telem.test1"
+    val prefix2 = "tcs.telem.test2"
 
     val event1 = StatusEvent(prefix1)
       .add(infoValue.set(1))

@@ -26,11 +26,9 @@ final case class StructKey(nameIn: String) extends Key[Struct, StructItem](nameI
  */
 case class Struct(key: String, items: ConfigData = Set.empty[Item[_]]) extends ConfigType[Struct] {
 
-  override val configKey = ConfigKey(Subsystem.TEST, key) // Could be a new Struct subsystem?
-
   override def create(data: ConfigData) = Struct(key, data)
 
   def dataToString1 = items.mkString("(", ", ", ")")
 
-  override def toString = s"${configKey.prefix}$dataToString1"
+  override def toString = s"$key: $dataToString1"
 }

@@ -40,10 +40,28 @@ object ConfigJSON extends DefaultJsonProtocol {
   implicit val choiceItemFormat = jsonFormat4(ChoiceItem.apply)
 
   implicit def structFormat: JsonFormat[Struct] = new JsonFormat[Struct] {
-    def write(obj: Struct): JsValue = writeConfig(obj)
+    def write(s: Struct): JsValue = JsObject(
+      "configType" -> JsString(s.typeName),
+      "key" -> JsString(s.key),
+      "items" -> s.items.toJson
+    )
 
-    def read(value: JsValue): Struct = readConfig[Struct](value)
+    def read(json: JsValue): Struct = {
+      json match {
+        case JsObject(fields) =>
+          (fields("configType"), fields("key"), fields("items")) match {
+            case (JsString(typeName), JsString(key), items) =>
+              typeName match {
+                case `structType` => Struct(key, itemsFormat.read(items))
+                case _            => unexpectedJsValueError(json)
+              }
+            case _ => unexpectedJsValueError(json)
+          }
+        case _ => unexpectedJsValueError(json)
+      }
+    }
   }
+
   implicit val structItemFormat = jsonFormat3(StructItem.apply)
 
   implicit def subsystemFormat: JsonFormat[Subsystem] = new JsonFormat[Subsystem] {
@@ -192,26 +210,11 @@ object ConfigJSON extends DefaultJsonProtocol {
    * @tparam A the type of the config (implied)
    * @return a JsValue object representing the config
    */
-  def writeConfig[A <: ConfigType[_]](config: A): JsValue = {
+  def writeConfig[A <: ConfigType[_] with ConfigKeyType](config: A): JsValue = {
     JsObject(
       "configType" -> JsString(config.typeName),
       "configKey" -> configKeyFormat.write(config.configKey),
       "items" -> config.items.toJson
-    )
-  }
-
-  /**
-   * Writes an event to JSON
-   *
-   * @param event any instance of EventType
-   * @tparam A the type of the event (implied)
-   * @return a JsValue object representing the event
-   */
-  def writeEvent[A <: EventType[_]](event: A): JsValue = {
-    JsObject(
-      "eventType" -> JsString(event.typeName),
-      "eventInfo" -> eventInfoFormat.write(event.info),
-      "items" -> event.items.toJson
     )
   }
 
@@ -234,13 +237,27 @@ object ConfigJSON extends DefaultJsonProtocol {
               case `waitConfigType`    => WaitConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
               case `curentStateType`   => CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
               case `demandStateType`   => DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
-              case `structType`        => Struct(ck.prefix, itemsFormat.read(items)).asInstanceOf[A]
               case _                   => unexpectedJsValueError(json)
             }
           case _ => unexpectedJsValueError(json)
         }
       case _ => unexpectedJsValueError(json)
     }
+  }
+
+  /**
+   * Writes an event to JSON
+   *
+   * @param event any instance of EventType
+   * @tparam A the type of the event (implied)
+   * @return a JsValue object representing the event
+   */
+  def writeEvent[A <: EventType[_]](event: A): JsValue = {
+    JsObject(
+      "eventType" -> JsString(event.typeName),
+      "eventInfo" -> eventInfoFormat.write(event.info),
+      "items" -> event.items.toJson
+    )
   }
 
   /**

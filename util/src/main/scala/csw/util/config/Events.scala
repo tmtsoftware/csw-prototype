@@ -68,7 +68,7 @@ object Events {
    *
    * @tparam T the subclass of ConfigType
    */
-  sealed trait EventType[T <: EventType[T]] extends ConfigType[T] {
+  sealed trait EventType[T <: EventType[T]] extends ConfigType[T] with ConfigKeyType {
     self: T =>
 
     /**

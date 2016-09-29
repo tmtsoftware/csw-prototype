@@ -51,6 +51,30 @@ object Configurations {
   type ConfigData = Set[Item[_]]
 
   /**
+   * A trait to be mixed in with ConfigType that provides a configKey item, subsystem and prefix
+   */
+  trait ConfigKeyType {
+    self: ConfigType[_] =>
+    /**
+     * Returns an object providing the subsystem and prefix for the config
+     */
+    def configKey: ConfigKey
+
+    /**
+     * The subsystem for the config
+     */
+    final def subsystem: Subsystem = configKey.subsystem
+
+    /**
+     * The prefix for the config
+     */
+    final def prefix: String = configKey.prefix
+
+    override def toString = s"$typeName[$subsystem, $prefix]$dataToString"
+
+  }
+
+  /**
    * The base trait for various configuration types (command configurations or events)
    *
    * @tparam T the subclass of ConfigType
@@ -63,11 +87,6 @@ object Configurations {
      * This is used in the JSON and toString output.
      */
     def typeName: String = getClass.getSimpleName
-
-    /**
-     * Returns an object providing the subsystem and prefix for the config
-     */
-    def configKey: ConfigKey
 
     /**
      * Holds the items for this config
@@ -118,11 +137,10 @@ object Configurations {
      * Returns an Option with the item for the key if found, otherwise None. Access with keyname rather
      * than Key
      * @param keyName the keyname to be used for the lookup
-     * @tparam S the item for the key, if found
-     * @tparam I the Scala value type
-     * @return I the item type for Scala value S
+     * @tparam I the value type
      */
     def getByName[I <: Item[_]](keyName: String): Option[I] = getByKeyname[I](items, keyName)
+
     def find[I <: Item[_]](item: I): Option[I] = getByKeyname[I](items, item.keyName)
 
     /**
@@ -212,27 +230,13 @@ object Configurations {
       itemsIn.find(_.equals(item)).asInstanceOf[Option[I]]
 
     /**
-     * The subsystem for the config
-     */
-    final def subsystem: Subsystem = configKey.subsystem
-
-    /**
-     * The prefix for the config
-     */
-    final def prefix: String = configKey.prefix
-
-    /**
      * Method called by subclass to create a copy with the same key (or other fields) and new items
      */
     protected def create(data: ConfigData): T
 
     protected def dataToString = items.mkString("(", ",", ")")
 
-    // XXX
-    // XXX
-    // XXX
-    // XXX
-    override def toString = s"$typeName[$subsystem, $prefix]$dataToString"
+    override def toString = s"$typeName$dataToString"
 
     /**
      * Returns true if the data contains the given key
@@ -275,7 +279,7 @@ object Configurations {
    * @param items     an optional initial set of items (keys with values)
    */
   case class SetupConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
-      extends ConfigType[SetupConfig] with SequenceConfig with ControlConfig {
+      extends ConfigType[SetupConfig] with ConfigKeyType with SequenceConfig with ControlConfig {
 
     override def create(data: ConfigData) = SetupConfig(configKey, data)
 
@@ -296,7 +300,7 @@ object Configurations {
    * @param items     an optional initial set of items (keys with values)
    */
   case class ObserveConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
-      extends ConfigType[ObserveConfig] with SequenceConfig with ControlConfig {
+      extends ConfigType[ObserveConfig] with ConfigKeyType with SequenceConfig with ControlConfig {
 
     override def create(data: ConfigData) = ObserveConfig(configKey, data)
 
@@ -317,7 +321,7 @@ object Configurations {
    * @param items     an optional initial set of items (keys with values)
    */
   case class WaitConfig(configKey: ConfigKey, items: ConfigData = Set.empty[Item[_]])
-      extends ConfigType[WaitConfig] with SequenceConfig {
+      extends ConfigType[WaitConfig] with ConfigKeyType with SequenceConfig {
 
     override def create(data: ConfigData) = WaitConfig(configKey, data)
 
@@ -338,7 +342,7 @@ object Configurations {
     // A filter type for various ConfigData
     type ConfigFilter[A] = A => Boolean
 
-    def prefixes(configs: Seq[ConfigType[_]]): Set[String] = configs.map(_.prefix).toSet
+    def prefixes(configs: Seq[ConfigKeyType]): Set[String] = configs.map(_.prefix).toSet
 
     def onlySetupConfigs(configs: Seq[SequenceConfig]): Seq[SetupConfig] = configs.collect { case ct: SetupConfig => ct }
 
@@ -346,15 +350,15 @@ object Configurations {
 
     def onlyWaitConfigs(configs: Seq[SequenceConfig]): Seq[WaitConfig] = configs.collect { case ct: WaitConfig => ct }
 
-    val prefixStartsWithFilter: String => ConfigFilter[ConfigType[_]] = query => sc => sc.prefix.startsWith(query)
-    val prefixContainsFilter: String => ConfigFilter[ConfigType[_]] = query => sc => sc.prefix.contains(query)
-    val prefixIsSubsystem: Subsystem => ConfigFilter[ConfigType[_]] = query => sc => sc.subsystem.equals(query)
+    val prefixStartsWithFilter: String => ConfigFilter[ConfigKeyType] = query => sc => sc.prefix.startsWith(query)
+    val prefixContainsFilter: String => ConfigFilter[ConfigKeyType] = query => sc => sc.prefix.contains(query)
+    val prefixIsSubsystem: Subsystem => ConfigFilter[ConfigKeyType] = query => sc => sc.subsystem.equals(query)
 
-    def prefixStartsWith(query: String, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixStartsWithFilter(query))
+    def prefixStartsWith(query: String, configs: Seq[ConfigKeyType]): Seq[ConfigKeyType] = configs.filter(prefixStartsWithFilter(query))
 
-    def prefixContains(query: String, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixContainsFilter(query))
+    def prefixContains(query: String, configs: Seq[ConfigKeyType]): Seq[ConfigKeyType] = configs.filter(prefixContainsFilter(query))
 
-    def prefixIsSubsystem(query: Subsystem, configs: Seq[ConfigType[_]]): Seq[ConfigType[_]] = configs.filter(prefixIsSubsystem(query))
+    def prefixIsSubsystem(query: Subsystem, configs: Seq[ConfigKeyType]): Seq[ConfigKeyType] = configs.filter(prefixIsSubsystem(query))
   }
 
   // --- Config args ---

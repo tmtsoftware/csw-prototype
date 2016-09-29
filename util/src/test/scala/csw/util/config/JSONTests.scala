@@ -540,8 +540,8 @@ class JSONTests extends FunSpec {
 
       val sc1out = ConfigJSON.writeConfig(sc1)
 
-//      val s = sc1out.prettyPrint
-//      println(s"XXX $s")
+      //      val s = sc1out.prettyPrint
+      //      println(s"XXX $s")
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))
