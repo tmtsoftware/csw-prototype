@@ -921,4 +921,19 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     }
 
   }
+
+  describe("testing StructItem") {
+    it("should allow creating Struct items") {
+      val skey = StructKey("myStruct")
+
+      val ra = StringKey("ra")
+      val dec = StringKey("dec")
+      val epoch = DoubleKey("epoch")
+      val sc1 = Struct("probe1").madd(ra.set("12:13:14.1"), dec.set("32:33:34.4"), epoch.set(1950.0))
+
+      val citem = skey.set(sc1)
+
+      println(citem)
+    }
+  }
 }

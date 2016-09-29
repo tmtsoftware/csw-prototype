@@ -39,6 +39,13 @@ object ConfigJSON extends DefaultJsonProtocol {
   implicit val choicesFormat = jsonFormat1(Choices.apply)
   implicit val choiceItemFormat = jsonFormat4(ChoiceItem.apply)
 
+  implicit def structFormat: JsonFormat[Struct] = new JsonFormat[Struct] {
+    def write(obj: Struct): JsValue = writeConfig(obj)
+
+    def read(value: JsValue): Struct = readConfig[Struct](value)
+  }
+  implicit val structItemFormat = jsonFormat3(StructItem.apply)
+
   implicit def subsystemFormat: JsonFormat[Subsystem] = new JsonFormat[Subsystem] {
     def write(obj: Subsystem) = JsString(obj.name)
 
@@ -98,6 +105,7 @@ object ConfigJSON extends DefaultJsonProtocol {
   private val longMatrixType = classOf[LongMatrixItem].getSimpleName
   private val longArrayType = classOf[LongArrayItem].getSimpleName
   private val choiceType = classOf[ChoiceItem].getSimpleName
+  private val structItemType = classOf[StructItem].getSimpleName
 
   // config and event type JSON tags
   private val setupConfigType = classOf[SetupConfig].getSimpleName
@@ -108,6 +116,7 @@ object ConfigJSON extends DefaultJsonProtocol {
   private val systemEventType = classOf[SystemEvent].getSimpleName
   private val curentStateType = classOf[CurrentState].getSimpleName
   private val demandStateType = classOf[DemandState].getSimpleName
+  private val structType = classOf[Struct].getSimpleName
 
   private def unexpectedJsValueError(x: JsValue) = deserializationError(s"Unexpected JsValue: $x")
 
@@ -135,6 +144,7 @@ object ConfigJSON extends DefaultJsonProtocol {
       case i: LongMatrixItem   => (JsString(longMatrixType), longMatrixItemFormat.write(i))
       case i: LongArrayItem    => (JsString(longArrayType), longArrayItemFormat.write(i))
       case i: ChoiceItem       => (JsString(choiceType), choiceItemFormat.write(i))
+      case i: StructItem       => (JsString(structItemType), structItemFormat.write(i))
       case i: GenericItem[S]   => (JsString(i.typeName), i.toJson)
     }
     JsObject("itemType" -> result._1, "item" -> result._2)
@@ -164,6 +174,7 @@ object ConfigJSON extends DefaultJsonProtocol {
         case (JsString(`longMatrixType`), item)   => longMatrixItemFormat.read(item)
         case (JsString(`longArrayType`), item)    => longArrayItemFormat.read(item)
         case (JsString(`choiceType`), item)       => choiceItemFormat.read(item)
+        case (JsString(`structItemType`), item)   => structItemFormat.read(item)
         case (JsString(typeTag), item) =>
           GenericItem.lookup(typeTag) match {
             case Some(jsonReaderFunc) => jsonReaderFunc(item)
@@ -223,6 +234,7 @@ object ConfigJSON extends DefaultJsonProtocol {
               case `waitConfigType`    => WaitConfig(ck, itemsFormat.read(items)).asInstanceOf[A]
               case `curentStateType`   => CurrentState(ck, itemsFormat.read(items)).asInstanceOf[A]
               case `demandStateType`   => DemandState(ck, itemsFormat.read(items)).asInstanceOf[A]
+              case `structType`        => Struct(ck.prefix, itemsFormat.read(items)).asInstanceOf[A]
               case _                   => unexpectedJsValueError(json)
             }
           case _ => unexpectedJsValueError(json)
