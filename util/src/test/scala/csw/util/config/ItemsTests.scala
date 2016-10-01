@@ -933,7 +933,12 @@ class ItemsTests extends FunSpec with ShouldMatchers {
 
       val citem = skey.set(sc1)
 
-      println(citem)
+      assert(citem.size == 1)
+      assert(citem.head.size == 3)
+      assert(citem.head.get(ra).head.head == "12:13:14.1")
+      assert(citem.head.get(dec).head.head == "32:33:34.4")
+      assert(citem.head.get(epoch).head.head == 1950.0)
+
     }
   }
 }

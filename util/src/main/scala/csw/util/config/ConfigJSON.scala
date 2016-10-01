@@ -42,17 +42,17 @@ object ConfigJSON extends DefaultJsonProtocol {
   implicit def structFormat: JsonFormat[Struct] = new JsonFormat[Struct] {
     def write(s: Struct): JsValue = JsObject(
       "configType" -> JsString(s.typeName),
-      "key" -> JsString(s.key),
+      "name" -> JsString(s.name),
       "items" -> s.items.toJson
     )
 
     def read(json: JsValue): Struct = {
       json match {
         case JsObject(fields) =>
-          (fields("configType"), fields("key"), fields("items")) match {
-            case (JsString(typeName), JsString(key), items) =>
+          (fields("configType"), fields("name"), fields("items")) match {
+            case (JsString(typeName), JsString(name), items) =>
               typeName match {
-                case `structType` => Struct(key, itemsFormat.read(items))
+                case `structType` => Struct(name, itemsFormat.read(items))
                 case _            => unexpectedJsValueError(json)
               }
             case _ => unexpectedJsValueError(json)

@@ -5,7 +5,7 @@ import akka.actor._
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.util.config.DoubleKey
-import csw.util.config.Events.StatusEvent
+import csw.util.config.Events.SystemEvent
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -20,7 +20,7 @@ class PubSubTests extends TestKit(ActorSystem("Test"))
   val subscriber = system.actorOf(Props(classOf[TestSubscriber], "Subscriber-1"))
   val publisher = system.actorOf(Props(classOf[TestPublisher], self, numSecs))
 
-  // Test runs for numSecs seconds, continuously publishing StatusEvent objects and
+  // Test runs for numSecs seconds, continuously publishing SystemEvent objects and
   // receiving them in the subscriber.
   test("Test subscriber") {
     within(numSecs + 2 seconds) {
@@ -64,9 +64,9 @@ object PubSubTests {
       Thread.`yield`() // don't want to hog the cpu here
     }
 
-    def nextEvent(): StatusEvent = {
+    def nextEvent(): SystemEvent = {
       nextId = nextId + 1
-      StatusEvent(prefix).add(exposureTime.set(expTime)) // XXX change to be a Duration
+      SystemEvent(prefix).add(exposureTime.set(expTime)) // XXX change to be a Duration
     }
 
     override def receive: Receive = {
@@ -81,7 +81,7 @@ object PubSubTests {
     subscribe("tcs.mobie.red.dat.*")
 
     override def receive: Receive = {
-      case event: StatusEvent =>
+      case event: SystemEvent =>
         count = count + 1
         if (count % 10000 == 0)
           log.debug(s"Received $count events so far: $event")

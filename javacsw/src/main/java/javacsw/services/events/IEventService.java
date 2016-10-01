@@ -30,7 +30,7 @@ public interface IEventService {
     /**
      * @param settings Redis server settings
      * @param system   Akka env required by RedisClient
-     * @return a new IEventService for StatusEvent objects
+     * @return a new IEventService
      */
     static IEventService getEventService(EventServiceSettings settings, ActorRefFactory system) {
         return new JEventService(settings, system);

@@ -4,6 +4,7 @@ import csw.util.config.Configurations.*;
 import csw.util.config.Item;
 import csw.util.config.StateVariable;
 import csw.util.config.StateVariable.*;
+import csw.util.config.Struct;
 
 import static javacsw.util.config.JItems.*;
 
@@ -45,5 +46,14 @@ public class JConfigDSL {
      */
     public static DemandState ds(String configKey, Item<?>... items) {
         return jadd((new DemandState(configKey)), items);
+    }
+
+    /**
+     * Returns a new DemandState
+     * @param name the name of the struct
+     * @param items one or more items (keys with values and units)
+     */
+    public static Struct struct(String name, Item<?>... items) {
+        return jadd((new Struct(name)), items);
     }
 }

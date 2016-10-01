@@ -938,5 +938,26 @@ public class JItemTests {
       assertEquals(jvalue(ci), ready);
     }
   }
+
+  @Test
+  public void testingStructItem() {
+    // should allow creating Struct items
+    StructKey skey = new StructKey("myStruct");
+
+    StringKey ra = StringKey("ra");
+    StringKey dec = StringKey("dec");
+    DoubleKey epoch = DoubleKey("epoch");
+    Struct sc1 = jadd(new Struct("probe1"), jset(ra, "12:13:14.1"), jset(dec, "32:33:34.4"), jset(epoch, 1950.0));
+
+    StructItem citem = jset(skey, sc1);
+
+    assertEquals(citem.size(), 1);
+    Struct s = jvalue(citem);
+    assertEquals(s.size(), 3);
+    assertEquals(jvalue(jitem(s, ra)), "12:13:14.1");
+    assertEquals(jvalue(jitem(s, dec)), "32:33:34.4");
+    assertEquals(jvalue(jitem(s, epoch)), 1950.0, 0.001);
+  }
 }
+
 

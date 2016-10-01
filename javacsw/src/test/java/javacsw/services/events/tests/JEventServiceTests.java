@@ -53,25 +53,8 @@ public class JEventServiceTests {
 
   @Test
   public void TestSubscribeMethod() throws Exception {
-    String prefix = "tcs.test4";
-    StatusEvent event = StatusEvent(prefix)
-      .add(jset(infoValue, 4))
-      .add(jset(infoStr, "info 4"));
-    EventMonitor monitor = eventService.subscribe(Optional.empty(), Optional.of(eventHandler), prefix);
-    try {
-      Thread.sleep(500); // wait for actor to start
-      eventService.publish(event).get();
-      assertTrue(eventReceived.isPresent());
-      assertTrue(eventReceived.get().equals(event));
-    } finally {
-      monitor.stop();
-    }
-  }
-
-  @Test
-  public void TestSubscribeAfterPublish() throws Exception {
     String prefix = "tcs.test5";
-    StatusEvent event = StatusEvent(prefix)
+    SystemEvent event = SystemEvent(prefix)
       .add(jset(infoValue, 5))
       .add(jset(infoStr, "info 5"));
     eventService.publish(event).get();

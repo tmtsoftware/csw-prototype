@@ -928,6 +928,39 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
+  // StructItem
+  public static StructKey StructKey(String name) {
+    return new StructKey(name);
+  }
+
+  public static Struct jvalue(StructItem item) {
+    return JavaHelpers.jvalue(item);
+  }
+
+  public static Struct jvalue(StructItem item, int index) {
+    return JavaHelpers.jvalue(item, index);
+  }
+
+  public static List<Struct> jvalues(StructItem item) {
+    return JavaHelpers.jvalues(item);
+  }
+
+  public static Optional<Struct> jget(StructItem item, int index) {
+    return JavaHelpers.jget(item, index);
+  }
+
+  public static StructItem jset(StructKey key, java.util.List<Struct> v) {
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
+  }
+
+  public static StructItem jset(StructKey key, java.util.List<Struct> v, UnitsOfMeasure.Units units) {
+    return JavaHelpers.jset(key, v, units);
+  }
+
+  public static StructItem jset(StructKey key, Struct... v) {
+    return JavaHelpers.jset(key, v);
+  }
+
 
   // ---------------- Configuration level
 

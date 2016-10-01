@@ -36,35 +36,6 @@ class EventServiceTests
   val eventService = EventService(settings)
 
   test("Test subscribing to events via subscribe method") {
-    val prefix = "tcs.test4"
-    val event = SystemEvent(prefix)
-      .add(infoValue.set(4))
-      .add(infoStr.set("info 4"))
-      .add(boolValue.set(true))
-    var eventReceived: Option[Event] = None
-
-    def listener(ev: Event): Unit = {
-      eventReceived = Some(ev)
-      logger.info(s"Listener received event: $ev")
-    }
-
-    val probe = TestProbe(prefix)
-    val monitor = eventService.subscribe(Some(probe.ref), Some(listener), prefix)
-    try {
-      Thread.sleep(500) // wait for actor to start
-      Await.ready(eventService.publish(event), 2.seconds)
-      val e = probe.expectMsgType[SystemEvent](2.seconds)
-      logger.info(s"Actor received event: $e")
-      assert(e == event)
-      Thread.sleep(500) // wait redis to react?
-      assert(eventReceived.isDefined)
-      assert(e == eventReceived.get)
-    } finally {
-      monitor.stop()
-    }
-  }
-
-  test("Test that subscriber receives previously published value") {
     val prefix = "tcs.test5"
     val event = SystemEvent(prefix)
       .add(infoValue.set(5))
