@@ -39,11 +39,11 @@ object LocationService {
   private var initialized = false
 
   /**
-   * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
+   * Sets the "akka.remote.artery.canonical.hostname" and net.mdns.interface system properties, if not already
    * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
    * This method should be called before creating any actors or web services that depend on the location service.
    *
-   * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
+   * Note that calling this method overrides any setting for akka.remote.artery.canonical.hostname in the akka config file.
    * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
    * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
    */
@@ -71,7 +71,7 @@ object LocationService {
         addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
       }
 
-      val akkaKey = "akka.remote.netty.tcp.hostname"
+      val akkaKey = "akka.remote.artery.canonical.hostname"
       val mdnsKey = "net.mdns.interface"
       //    val config = ConfigFactory.load()
       val mdnsHost = Option(System.getProperty(mdnsKey))
@@ -89,7 +89,7 @@ object LocationService {
   // Get JmDNS instance
   private def getRegistry: JmDNS = {
     if (!initialized) logger.warn("LocationService.initInterface() should be called once before using this class or starting any actors!")
-    val hostname = Option(System.getProperty("akka.remote.netty.tcp.hostname"))
+    val hostname = Option(System.getProperty("akka.remote.artery.canonical.hostname"))
     val registry = if (hostname.isDefined) {
       val addr = InetAddress.getByName(hostname.get)
       JmDNS.create(addr, hostname.get)
@@ -438,7 +438,7 @@ object LocationService {
 
     private def getAkkaUri(uriStr: String, userInfo: String): Option[URI] = try {
       val uri = new URI(uriStr)
-      Some(new URI("akka.tcp", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))
+      Some(new URI("akka", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))
     } catch {
       case e: Exception =>
         // some issue with ipv6 addresses?

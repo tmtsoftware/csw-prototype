@@ -29,11 +29,11 @@ import static scala.compat.java8.FutureConverters.*;
 public class JLocationService {
 
     /**
-     * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
+     * Sets the "akka.remote.artery.canonical.hostname" and net.mdns.interface system properties, if not already
      * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
      * This method should be called before creating any actors or web services that depend on the location service.
      * <p>
-     * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
+     * Note that calling this method overrides any setting for akka.remote.artery.canonical.hostname in the akka config file.
      * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
      * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
      */

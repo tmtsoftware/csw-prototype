@@ -6,8 +6,8 @@ object Dependencies {
 
   val scalaVersion = "2.11.8"
 
-  val akkaVersion = "2.4.7"
-  val akkaStreamsVersion = "2.4.7"
+  val akkaVersion = "2.4.11"
+  val akkaStreamsVersion = "2.4.11"
 
   val hornetqVersion = "2.4.7.Final"
 
