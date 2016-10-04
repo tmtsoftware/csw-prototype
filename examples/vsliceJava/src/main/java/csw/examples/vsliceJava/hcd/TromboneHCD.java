@@ -214,10 +214,9 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 
   // Gets the trombone config file from the config service, or uses the trombone.conf resource file if that doesn't work
   private CompletableFuture<AxisConfig> getAxisConfig() {
-    Config sysConfig = context().system().settings().config();
+    File tromboneConfigFile = new File("trombone/hcd/trombone.conf");
+    File resource = new File("tromboneHCD.conf");
 
-    File tromboneConfigFile = new File(sysConfig.getString("csw.examples.Trombone.configFile"));
-    File resource = new File("trombone.conf");
     //noinspection OptionalGetWithoutIsPresent
     return JConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, Optional.empty(), Optional.of(resource), context().system(), timeout)
       .thenApply(config -> new AxisConfig(config.get()));

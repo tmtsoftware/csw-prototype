@@ -24,6 +24,6 @@ public class TromboneApp {
     m.put("", "tromboneContainer.conf"); // default value
 
     // Parse command line args for the application (app name is vslice, like the sbt project)
-    JContainerCmd.createContainerCmd("vsliceJava", args, m);
+    JContainerCmd.createContainerCmd("vslicejava", args, m);
   }
 }

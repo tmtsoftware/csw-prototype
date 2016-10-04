@@ -8,6 +8,6 @@ import collection.JavaConverters._
  */
 object JContainerCmd {
   def createContainerCmd(name: String, args: Array[String], resources: java.util.Map[String, String]): ContainerCmd = {
-    ContainerCmd(name, args, resources.asScala.toMap)
+    ContainerCmd(name.toLowerCase(), args, resources.asScala.toMap)
   }
 }

@@ -187,7 +187,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
 
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
     val tromboneConfigFile = new File("trombone/hcd/trombone.conf")
-    val resource = new File("trombone.conf")
+    val resource = new File("tromboneHCD.conf")
     val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
 
     // Convert the future (optional) config to an AxisConfig
