@@ -244,7 +244,7 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   }
 
   // HCD Info
-  public static final String componentName = "lgsTromboneHCD";
+  public static final String componentName = "tromboneHCD";
   public static final ComponentType componentType = JComponentType.HCD;
   public static final String componentClassName = "csw.examples.vsliceJava.hcd.TromboneHCD";
   public static final String trombonePrefix = "nfiraos.ncc.tromboneHCD";

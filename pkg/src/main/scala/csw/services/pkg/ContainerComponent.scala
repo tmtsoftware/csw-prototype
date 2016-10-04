@@ -82,6 +82,14 @@ object ContainerComponent {
     parseConfigToContainerInfo(config).map(create)
   }
 
+  /**
+   * Creates the components described in the config without creating a container.
+   * @return the actorRefs for the created components
+   */
+  def createStandalone(config: Config): Try[List[ActorRef]] = {
+    parseConfig(config).map(_.toList.map(Supervisor3(_)))
+  }
+
   def create(containerInfo: ContainerInfo): ActorRef = {
     val name = containerInfo.componentName
     val system = ActorSystem(s"$name-system")
@@ -256,9 +264,6 @@ object ContainerComponent {
 
   /**
    * A function that can be used to parse a container config from a string.  Primarily useful for testing.
-   *
-   * @param s
-   * @return
    */
   def parseStringConfig(s: String) = {
     val options = ConfigParseOptions.defaults().
@@ -341,7 +346,6 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
     case Stop                                  => stop(supervisors)
     case Halt                                  => halt(supervisors)
     case Restart                               => restart(supervisors)
-    //    case CreateComponents(infos)               => createComponents(infos, supervisors)
     case LifecycleStateChanged(state)          => log.debug("Received state while running: " + state)
     case Terminated(actorRef)                  => componentDied(actorRef)
     case x                                     => log.debug(s"Unhandled command in runningReceive: $x")

@@ -2,10 +2,9 @@ package csw.examples.vslice.hcd
 
 import java.io.File
 
-import akka.actor.{ActorContext, ActorRef, Props}
+import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
 import csw.services.ccs.HcdController
 import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ComponentType
@@ -53,7 +52,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   // and then wait for the Running message from the supervisor before going to the running state.
   for {
     // Initialize axis from ConfigService
-    axisConfig <- getAxisConfig(context)
+    axisConfig <- getAxisConfig
 
     // Create an axis for simulating trombone motion
     tromboneAxis <- Future.successful(setupAxis(axisConfig))
@@ -182,14 +181,17 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   private def setupAxis(ac: AxisConfig): ActorRef = context.actorOf(SingleAxisSimulator.props(ac, Some(self)), "Test1")
 
   // Utility functions
-  private def getAxisConfig(context: ActorContext): Future[AxisConfig] = {
+  private def getAxisConfig: Future[AxisConfig] = {
+    // This is required by the ConfigServiceClient
     implicit val system = context.system
-    val sysConfig = context.system.settings.config
 
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
-    val tromboneConfigFile = new File(sysConfig.getString("csw.examples.Trombone.configFile"))
+    val tromboneConfigFile = new File("trombone/hcd/trombone.conf")
     val resource = new File("trombone.conf")
-    ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, None, Some(resource)).map(x => AxisConfig(x.get))
+    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
+
+    // Convert the future (optional) config to an AxisConfig
+    f.map(configOpt => AxisConfig(configOpt.get))
   }
 }
 
@@ -197,7 +199,7 @@ object TromboneHCD {
   def props(hcdInfo: HcdInfo, supervisor: ActorRef) = Props(classOf[TromboneHCD], hcdInfo, supervisor)
 
   // HCD Info
-  val componentName = "lgsTromboneHCD"
+  val componentName = "tromboneHCD"
   val componentType = ComponentType.HCD
   val componentClassName = "csw.examples.vslice.hcd.TromboneHCD"
   val trombonePrefix = "nfiraos.ncc.tromboneHCD"

@@ -346,7 +346,6 @@ object Supervisor3 {
    */
   def apply(componentInfo: ComponentInfo): ActorRef = {
     val system = makeActorSystem(componentInfo)
-    //println("System done")
     system.actorOf(props(componentInfo), s"${componentInfo.componentName}-supervisorx")
   }
 

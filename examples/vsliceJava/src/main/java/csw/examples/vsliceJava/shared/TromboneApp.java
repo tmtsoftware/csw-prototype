@@ -4,6 +4,8 @@ package csw.examples.vsliceJava.shared;
 import javacsw.services.apps.containerCmd.JContainerCmd;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -13,21 +15,15 @@ import java.util.Optional;
  */
 public class TromboneApp {
   public static void main(String[] args) {
-    if (args.length >= 2) {
-      String opt = args[0];
-      String arg = args[1].toLowerCase();
-      if ("-s".equals(opt) || "--start".equals(opt)) {
-        if ("hcd".equals(arg)) {
-          JContainerCmd.createContainerCmd("lgsTromboneHCD", Arrays.copyOfRange(args, 2, args.length-1), Optional.of("lgsTromboneHCD.conf"));
-        } else if ("assembly".equals(arg)) {
-          JContainerCmd.createContainerCmd("lgsTromboneAssembly", Arrays.copyOfRange(args, 2, args.length-1), Optional.of("lgsTromboneAssembly.conf"));
-        } else {
-          System.out.println("Error: value of -s or --start option should be 'hcd' or 'assembly'");
-          System.exit(1);
-        }
-      } else {
-        JContainerCmd.createContainerCmd("lgsTromboneContainer", args, Optional.of("lgsTromboneContainer.conf"));
-      }
-    }
+
+    // This defines the names that can be used with the --start option and the config files used ("" is the default entry)
+    Map<String, String> m = new HashMap<>();
+    m.put("hcd", "tromboneHCD.conf");
+    m.put("assembly", "tromboneAssembly.conf");
+    m.put("both", "tromboneContainer.conf");
+    m.put("", "tromboneContainer.conf"); // default value
+
+    // Parse command line args for the application (app name is vslice, like the sbt project)
+    JContainerCmd.createContainerCmd("vsliceJava", args, m);
   }
 }
