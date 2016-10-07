@@ -10,7 +10,7 @@ import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, Hea
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.LocationService
-import org.scalatest.FunSuiteLike
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -24,7 +24,7 @@ object AlarmServiceTests {
 /**
  * Test the Alarm Service API
  */
-class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteLike with LazyLogging {
+class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   implicit val sys = AlarmServiceTests.system
 
   import system.dispatcher
@@ -35,13 +35,21 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
   val url = getClass.getResource("/test-alarms.conf")
   val ascf = Paths.get(url.toURI).toFile
 
-  test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
+  val asName = "Alarm Service Test"
+
+  override protected def beforeAll(): Unit = {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
-    val asName = "Alarm Service Test"
     AlarmAdmin.startAlarmService(asName)
+  }
+
+  override protected def afterAll(): Unit = {
+
+  }
+
+  test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
 
     // Set a low refresh rate for the test
     val refreshSecs = 1
@@ -214,8 +222,9 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       // Stop the actors monitoring the alarm and health
       healthMonitor.stop()
     } finally {
-      // Shutdown Redis
+      // Shutdown Redis (Only do this in tests that also started the server)
       Await.ready(alarmAdmin.shutdown(), timeout.duration)
     }
   }
+
 }

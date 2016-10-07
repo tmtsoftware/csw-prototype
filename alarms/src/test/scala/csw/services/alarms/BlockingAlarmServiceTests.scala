@@ -10,11 +10,9 @@ import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, Hea
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.LocationService
-import csw.services.trackLocation.TrackLocation
-import org.scalatest.FunSuiteLike
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 object BlockingAlarmServiceTests {
@@ -25,7 +23,7 @@ object BlockingAlarmServiceTests {
 /**
  * Test the blocking Alarm Service API
  */
-class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system) with FunSuiteLike with LazyLogging {
+class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system) with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   implicit val sys = BlockingAlarmServiceTests.system
 
   import system.dispatcher
@@ -35,15 +33,17 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
   // Get the test alarm service config file (ascf)
   val url = getClass.getResource("/test-alarms.conf")
   val ascf = Paths.get(url.toURI).toFile
+  val asName = "Blocking Alarm Service Test"
 
-  test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
+  override protected def beforeAll(): Unit = {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Alarm Service Test" --command "redis-server"
-    val asName = "Blocking Alarm Service Test"
+    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
     AlarmAdmin.startAlarmService(asName)
+  }
 
+  test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
     // Set a low refresh rate for the test
     val refreshSecs = 1
     //    val refreshSecs = 5
