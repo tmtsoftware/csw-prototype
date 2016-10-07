@@ -1,6 +1,5 @@
 package javacsw.services.alarms
 
-import java.io.File
 import java.util
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
@@ -159,9 +158,6 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
 
   override def refreshSecs(): Int = alarmService.refreshSecs
 
-  override def initAlarms(inputFile: File, reset: Boolean): CompletableFuture[util.List[Problem]] =
-    alarmService.initAlarms(inputFile, reset).map(_.asJava).toJava.toCompletableFuture
-
   override def getAlarms(alarmKey: AlarmKey): CompletableFuture[util.List[AlarmModel]] =
     alarmService.getAlarms(alarmKey).map(_.asJava).toJava.toCompletableFuture
 
@@ -204,8 +200,6 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
       notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)),
       notifyAll)
   }
-
-  override def shutdown(): Unit = alarmService.shutdown()
 }
 
 /**

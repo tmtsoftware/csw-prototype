@@ -14,7 +14,7 @@ import csw.services.trackLocation.TrackLocation
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 object BlockingAlarmServiceTests {
@@ -30,7 +30,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
 
   import system.dispatcher
 
-  implicit val timeout = Timeout(60.seconds)
+  implicit val timeout = Timeout(15.seconds)
 
   // Get the test alarm service config file (ascf)
   val url = getClass.getResource("/test-alarms.conf")
@@ -42,9 +42,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server"
     val asName = "Blocking Alarm Service Test"
-    Future {
-      TrackLocation.main(Array("--name", asName, "--command", "redis-server --port %port", "--no-exit"))
-    }
+    AlarmAdmin.startAlarmService(asName)
 
     // Set a low refresh rate for the test
     val refreshSecs = 1
@@ -63,10 +61,11 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     // Get the alarm service by looking up the name with the location service.
     // (using a small value for refreshSecs for testing)
     val alarmService = BlockingAlarmService(asName, refreshSecs = refreshSecs)
+    val alarmAdmin = BlockingAlarmAdmin(alarmService)
 
     try {
-      // initialize the list of alarms in Redis
-      val problems = alarmService.initAlarms(ascf)
+      // initialize the list of alarms in Redis (This is only for the test and should not be done by normal clients)
+      val problems = alarmAdmin.initAlarms(ascf)
       Problem.printProblems(problems)
       assert(Problem.errorCount(problems) == 0)
 
@@ -206,7 +205,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
       healthMonitor.stop()
     } finally {
       // Shutdown Redis
-      alarmService.shutdown()
+      alarmAdmin.shutdown()
     }
   }
 }

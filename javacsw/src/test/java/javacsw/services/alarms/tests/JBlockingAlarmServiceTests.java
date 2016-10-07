@@ -7,17 +7,14 @@ import akka.testkit.JavaTestKit;
 import akka.util.Timeout;
 import csw.services.alarms.AlarmKey;
 import csw.services.alarms.AscfValidation;
+import javacsw.services.alarms.*;
 import javacsw.services.alarms.IAlarmService.*;
-import javacsw.services.alarms.IBlockingAlarmService;
-import javacsw.services.alarms.JAlarmKey;
 import javacsw.services.alarms.JAlarmModel.*;
 import javacsw.services.alarms.JAlarmState.*;
 import csw.services.alarms.AlarmModel;
 import csw.services.alarms.AlarmModel.*;
 import csw.services.alarms.AlarmService.*;
 import csw.services.loc.LocationService;
-import csw.services.trackLocation.TrackLocation;
-import javacsw.services.alarms.JProblem;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,7 +40,7 @@ public class JBlockingAlarmServiceTests {
   private static ActorSystem system;
   private static LoggingAdapter logger;
   private static IBlockingAlarmService alarmService;
-  private static Timeout timeout = new Timeout(FiniteDuration.create(60, TimeUnit.SECONDS));
+  private static Timeout timeout = new Timeout(FiniteDuration.create(15, TimeUnit.SECONDS));
 
   // Set a low refresh rate for the test
   private static int refreshSecs = 1;
@@ -71,13 +68,7 @@ public class JBlockingAlarmServiceTests {
     // Start redis on a random port and register it with the location service.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Blocking Alarm Service Test" --command "redis-server --port %port" --no-exit
-    Runnable task = () -> TrackLocation.main(new String[]{
-      "--name", asName,
-      "--command", "redis-server --port %port",
-      "--no-exit"
-    });
-    Thread thread = new Thread(task);
-    thread.start();
+    IAlarmAdmin.startAlarmService(asName, true, system.dispatcher());
 
     // Later, in another JVM...,
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)
@@ -86,7 +77,8 @@ public class JBlockingAlarmServiceTests {
 
   @AfterClass
   public static void teardown() {
-    alarmService.shutdown();
+    IBlockingAlarmAdmin admin = new JBlockingAlarmAdmin(alarmService, timeout, system);
+    admin.shutdown();
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }
@@ -124,7 +116,8 @@ public class JBlockingAlarmServiceTests {
     File ascf = Paths.get(url.toURI()).toFile();
 
     // initialize the list of alarms in Redis
-    List<AscfValidation.Problem> problems = alarmService.initAlarms(ascf, false);
+    IBlockingAlarmAdmin admin = new JBlockingAlarmAdmin(alarmService, timeout, system);
+    List<AscfValidation.Problem> problems = admin.initAlarms(ascf, false);
     JProblem.printProblems(problems);
     assertTrue(JProblem.errorCount(problems) == 0);
 

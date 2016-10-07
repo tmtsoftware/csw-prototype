@@ -1,21 +1,17 @@
 package csw.services.alarms
 
-import java.io._
-
 import akka.actor.{ActorRef, ActorRefFactory, PoisonPill}
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
-import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.HttpConnection
 import csw.services.loc.LocationService.ResolvedHttpLocation
 import org.slf4j.LoggerFactory
 import redis._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 /**
  * Static definitions for the Alarm Service
@@ -73,26 +69,26 @@ object AlarmService {
     }
   }
 
-  //  /**
-  //   * Returns an AlarmService instance using the Redis instance at the given host and port,
-  //   * using the default "127.0.0.1:6379 if not given.
-  //   *
-  //   * @param host      the Redis host name or IP address
-  //   * @param port      the Redis port
-  //   * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
-  //   *                    to "Disconnected" (after three missed refreshes)
-  //   * @return a new AlarmService instance
-  //   */
-  //  def get(host: String = "127.0.0.1", port: Int = 6379, refreshSecs: Int = defaultRefreshSecs)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
-  //    import system.dispatcher
-  //    val redisClient = RedisClient(host, port)
-  //    for {
-  //      ok <- redisClient.configSet("notify-keyspace-events", "KEA")
-  //    } yield {
-  //      if (!ok) logger.error("redis configSet notify-keyspace-events failed")
-  //      AlarmServiceImpl(redisClient, refreshSecs)
-  //    }
-  //  }
+  /**
+   * Returns an AlarmService instance using the Redis instance at the given host and port,
+   * using the default "127.0.0.1:6379 if not given.
+   *
+   * @param host        the Redis host name or IP address
+   * @param port        the Redis port
+   * @param refreshSecs alarm severity should be reset every refreshSecs seconds to avoid being expired and set
+   *                    to "Disconnected" (after three missed refreshes)
+   * @return a new AlarmService instance
+   */
+  def get(host: String = "127.0.0.1", port: Int = 6379, refreshSecs: Int = defaultRefreshSecs)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
+    import system.dispatcher
+    val redisClient = RedisClient(host, port)
+    for {
+      ok <- redisClient.configSet("notify-keyspace-events", "KEA")
+    } yield {
+      if (!ok) logger.error("redis configSet notify-keyspace-events failed")
+      AlarmServiceImpl(redisClient, refreshSecs)
+    }
+  }
 
   /**
    * Type of return value from the monitorAlarms or monitorHealth methods
@@ -133,15 +129,6 @@ trait AlarmService {
    * Alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
    */
   def refreshSecs: Int
-
-  /**
-   * Initialize the alarm data in the database using the given file
-   *
-   * @param inputFile the alarm service config file containing info about all the alarms
-   * @param reset     if true, delete the current alarms before importing (default: false)
-   * @return a future list of problems that occurred while validating the config file or ingesting the data into the database
-   */
-  def initAlarms(inputFile: File, reset: Boolean = false): Future[List[Problem]]
 
   /**
    * Gets the alarm information from the database for any matching alarms
@@ -256,11 +243,6 @@ trait AlarmService {
     notifyHealth: Option[HealthStatus => Unit] = None,
     notifyAll:    Boolean                      = false
   ): AlarmMonitor
-
-  /**
-   * Shuts down the the database server (For use in test cases that started the database themselves)
-   */
-  def shutdown(): Unit
 }
 
 /**
@@ -274,54 +256,6 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
 
   import AlarmService._
   import system.dispatcher
-
-  // If reset is true, deletes all alarm data in Redis. (Note: DEL does not take wildcards!)
-  private def checkReset(reset: Boolean): Future[Unit] = {
-    def deleteKeys(keys: Seq[String]): Future[Unit] = {
-      if (keys.nonEmpty) redisClient.del(keys: _*).map(_ => ()) else Future.successful(())
-    }
-
-    if (reset) {
-      val pattern1 = s"${AlarmKey.alarmKeyPrefix}*"
-      val pattern2 = s"${AlarmKey.severityKeyPrefix}*"
-      val pattern3 = s"${AlarmKey.alarmStateKeyPrefix}*"
-      val f1 = redisClient.keys(pattern1).flatMap(deleteKeys)
-      val f2 = redisClient.keys(pattern2).flatMap(deleteKeys)
-      val f3 = redisClient.keys(pattern3).flatMap(deleteKeys)
-      Future.sequence(List(f1, f2, f3)).map(_ => ())
-    } else Future.successful(())
-  }
-
-  override def initAlarms(inputFile: File, reset: Boolean): Future[List[Problem]] = {
-    import net.ceedubs.ficus.Ficus._
-    // Use JSON schema to validate the file
-    val inputConfig = ConfigFactory.parseFile(inputFile).resolve(ConfigResolveOptions.noSystem())
-    val jsonSchema = ConfigFactory.parseResources("alarms-schema.conf")
-    val problems = AscfValidation.validate(inputConfig, jsonSchema, inputFile.getName)
-    if (Problem.errorCount(problems) != 0) {
-      Future.successful(problems)
-    } else {
-      val alarmConfigs = inputConfig.as[List[Config]]("alarms")
-      val alarms = alarmConfigs.map(AlarmModel(_))
-      // Reset the db if requested, then initialize the alarm db (Nil means return No problems...)
-      checkReset(reset).flatMap(_ => initAlarms(alarms).map(_ => Nil))
-    }
-  }
-
-  // Initialize the Redis db with the given list of alarms
-  private def initAlarms(alarms: List[AlarmModel]): Future[Unit] = {
-    val fList = alarms.map { alarm =>
-      val alarmKey = AlarmKey(alarm)
-      logger.debug(s"Adding alarm: subsystem: ${alarm.subsystem}, component: ${alarm.component}, ${alarm.name}")
-      // store the static alarm data, alarm state, and the initial severity in redis
-      for {
-        _ <- redisClient.hmset(alarmKey.key, alarm.asMap())
-        _ <- redisClient.hmset(alarmKey.stateKey, AlarmState().asMap())
-        _ <- setSeverity(alarmKey, SeverityLevel.Disconnected) // XXX could simplify this on init and do simple set?
-      } yield ()
-    }
-    Future.sequence(fList).map(_ => ())
-  }
 
   override def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]] = {
     val pattern = alarmKey.key
@@ -449,7 +383,6 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   override def acknowledgeAlarm(alarmKey: AlarmKey): Future[Unit] = {
     for {
       alarmState <- getAlarmState(alarmKey)
-      currentSeverity <- getSeverity(alarmKey)
       result <- acknowledgeAlarm(alarmKey, alarmState)
     } yield result
   }
@@ -466,7 +399,6 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   override def resetAlarm(alarmKey: AlarmKey): Future[Unit] = {
     for {
       alarmState <- getAlarmState(alarmKey)
-      currentSeverity <- getSeverity(alarmKey)
       result <- resetAlarm(alarmKey, alarmState)
     } yield result
   }
@@ -554,11 +486,5 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     val actorRef = system.actorOf(HealthMonitorActor.props(this, alarmKey, subscriberOpt, notifyAlarm, notifyHealth, notifyAll)
       .withDispatcher("rediscala.rediscala-client-worker-dispatcher"))
     AlarmMonitorImpl(actorRef)
-  }
-
-  override def shutdown(): Unit = {
-    val f = redisClient.shutdown()
-    redisClient.stop()
-    Await.ready(f, timeout.duration)
   }
 }

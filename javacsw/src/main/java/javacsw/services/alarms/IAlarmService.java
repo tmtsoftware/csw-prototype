@@ -17,21 +17,12 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Defines the Java API to the Alarm Service
  */
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "SameParameterValue"})
 public interface IAlarmService {
     /**
      * Alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
      */
     int refreshSecs();
-
-    /**
-     * Initializes the alarm data in the database using the given file
-     *
-     * @param inputFile the alarm service config file containing info about all the alarms
-     * @param reset     if true, delete the current alarms before importing (default: false)
-     * @return a future list of problems that occurred while validating the config file or ingesting the data into the database
-     */
-    CompletableFuture<List<AscfValidation.Problem>> initAlarms(File inputFile, boolean reset);
 
     /**
      * Gets the alarm information from the database for any matching alarms
@@ -153,12 +144,6 @@ public interface IAlarmService {
             Optional<HealthHandler> notifyHealth,
             boolean notifyAll
     );
-
-    /**
-     * Shuts down the the database server (For use in test cases that started the database themselves)
-     */
-    void shutdown();
-
 
     // --- Static factory methods to create an IAlarmService instance --
 

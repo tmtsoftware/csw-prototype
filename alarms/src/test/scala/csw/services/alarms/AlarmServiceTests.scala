@@ -10,11 +10,10 @@ import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, Hea
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.LocationService
-import csw.services.trackLocation.TrackLocation
 import org.scalatest.FunSuiteLike
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.util.Try
 
 object AlarmServiceTests {
@@ -30,7 +29,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
 
   import system.dispatcher
 
-  implicit val timeout = Timeout(60.seconds)
+  implicit val timeout = Timeout(10.seconds)
 
   // Get the test alarm service config file (ascf)
   val url = getClass.getResource("/test-alarms.conf")
@@ -42,9 +41,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
     val asName = "Alarm Service Test"
-    Future {
-      TrackLocation.main(Array("--name", asName, "--command", "redis-server --port %port", "--no-exit"))
-    }
+    AlarmAdmin.startAlarmService(asName)
 
     // Set a low refresh rate for the test
     val refreshSecs = 1
@@ -63,10 +60,11 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
     // Get the alarm service by looking up the name with the location service.
     // (using a small value for refreshSecs for testing)
     val alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)
+    val alarmAdmin = AlarmAdmin(alarmService)
 
     try {
-      // initialize the list of alarms in Redis
-      val problems = Await.result(alarmService.initAlarms(ascf), timeout.duration)
+      // initialize the list of alarms in Redis (This is only for the test and should not be done by normal clients)
+      val problems = Await.result(alarmAdmin.initAlarms(ascf), timeout.duration)
       Problem.printProblems(problems)
       assert(Problem.errorCount(problems) == 0)
 
@@ -217,7 +215,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       healthMonitor.stop()
     } finally {
       // Shutdown Redis
-      alarmService.shutdown()
+      Await.ready(alarmAdmin.shutdown(), timeout.duration)
     }
   }
 }

@@ -1,6 +1,5 @@
 package javacsw.services.alarms
 
-import java.io.File
 import java.util
 import java.util.Optional
 
@@ -10,7 +9,6 @@ import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, Hea
 import csw.services.alarms.AlarmService.AlarmMonitor
 import csw.services.alarms.{AlarmKey, AlarmModel, AlarmService, AlarmState}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
-import csw.services.alarms.AscfValidation.Problem
 import javacsw.services.alarms.IAlarmService.{AlarmHandler, HealthHandler}
 
 import scala.collection.JavaConverters._
@@ -58,7 +56,7 @@ private[alarms] object JBlockingAlarmService {
     import system.dispatcher
     implicit val sys = system
     implicit val t = timeout
-    Await.result(AlarmService(asName, refreshSecs).map(JBlockingAlarmService(_, timeout, sys).asInstanceOf[IBlockingAlarmService]), timeout.duration)
+    Await.result(AlarmService(asName, refreshSecs).map(alarmService => JBlockingAlarmService(alarmService, timeout, sys).asInstanceOf[IBlockingAlarmService]), timeout.duration)
   }
 }
 
@@ -70,9 +68,6 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
   import system.dispatcher
 
   override def refreshSecs(): Int = alarmService.refreshSecs
-
-  override def initAlarms(inputFile: File, reset: Boolean): util.List[Problem] =
-    Await.result(alarmService.initAlarms(inputFile, reset).map(_.asJava), timeout.duration)
 
   override def getAlarms(alarmKey: AlarmKey): util.List[AlarmModel] =
     Await.result(alarmService.getAlarms(alarmKey).map(_.asJava), timeout.duration)
@@ -116,7 +111,5 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
       notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)),
       notifyAll)
   }
-
-  override def shutdown(): Unit = alarmService.shutdown()
 }
 

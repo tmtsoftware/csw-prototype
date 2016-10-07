@@ -138,7 +138,7 @@ package csw.services
  *
  * === Command Line Application: asconsole ===
  *
- * The [[csw.services.asconsole.AsConsole asconsole application]] can be used from the command line to work with and test the Alarm Service.
+ * The asconsole application can be used from the command line to work with and test the Alarm Service.
  * It can be used to initialize the alarm data, set and get an alarm's severity, monitor alarms, etc.
  *
  *

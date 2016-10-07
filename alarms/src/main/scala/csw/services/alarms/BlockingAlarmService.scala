@@ -1,12 +1,9 @@
 package csw.services.alarms
 
-import java.io.File
-
 import akka.actor.{ActorRef, ActorRefFactory}
 import akka.util.Timeout
 import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
-import csw.services.alarms.AscfValidation.Problem
 import AlarmService._
 
 import scala.concurrent.Await
@@ -28,7 +25,8 @@ object BlockingAlarmService {
    * @return a new BlockingAlarmService instance
    */
   def apply(asName: String = defaultName, refreshSecs: Int = defaultRefreshSecs)(implicit system: ActorRefFactory, timeout: Timeout): BlockingAlarmService = {
-    BlockingAlarmService(Await.result(AlarmService(asName, refreshSecs), timeout.duration))
+    val alarmService = Await.result(AlarmService(asName, refreshSecs), timeout.duration)
+    BlockingAlarmService(alarmService)
   }
 }
 
@@ -41,16 +39,6 @@ case class BlockingAlarmService(alarmService: AlarmService)(implicit val timeout
    * Alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes)
    */
   def refreshSecs: Int = alarmService.refreshSecs
-
-  /**
-   * Initialize the alarm data in the database using the given file
-   *
-   * @param inputFile the alarm service config file containing info about all the alarms
-   * @param reset     if true, delete the current alarms before importing (default: false)
-   * @return a list of problems that occurred while validating the config file or ingesting the data into the database
-   */
-  def initAlarms(inputFile: File, reset: Boolean = false): List[Problem] =
-    Await.result(alarmService.initAlarms(inputFile, reset), timeout.duration)
 
   /**
    * Gets the alarm information from the database for any matching alarms
@@ -168,10 +156,4 @@ case class BlockingAlarmService(alarmService: AlarmService)(implicit val timeout
     notifyAll:    Boolean                      = false
   ): AlarmMonitor =
     alarmService.monitorHealth(alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll)
-
-  /**
-   * Shuts down the the database server (For use in test cases that started the database themselves)
-   */
-  def shutdown(): Unit = alarmService.shutdown()
-
 }

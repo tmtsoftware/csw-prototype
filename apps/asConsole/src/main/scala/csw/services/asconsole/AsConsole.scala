@@ -7,7 +7,7 @@ import akka.util.Timeout
 import csw.services.loc.LocationService
 import ch.qos.logback.classic._
 import csw.services.alarms.AlarmModel.{AlarmStatus, HealthStatus, SeverityLevel}
-import csw.services.alarms.{AlarmJson, AlarmKey, AlarmRefreshActor, AlarmService}
+import csw.services.alarms._
 import org.slf4j.LoggerFactory
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
@@ -184,7 +184,8 @@ object AsConsole extends App {
 
     if (options.shutdown) {
       println(s"Shutting down the alarm service")
-      alarmService.shutdown()
+      val admin = AlarmAdmin(alarmService)
+      admin.shutdown()
     }
 
     // Shutdown and exit, unless an option was given that indicates keep running
@@ -204,7 +205,8 @@ object AsConsole extends App {
 
   // Handle the --init option
   private def init(alarmService: AlarmService, file: File, options: Options): Unit = {
-    val problems = Await.result(alarmService.initAlarms(file, options.delete), timeout.duration)
+    val admin = AlarmAdmin(alarmService)
+    val problems = Await.result(admin.initAlarms(file, options.delete), timeout.duration)
     Problem.printProblems(problems)
     if (Problem.errorCount(problems) != 0) error(s"Failed to initialize Alarm Service with $file")
   }
