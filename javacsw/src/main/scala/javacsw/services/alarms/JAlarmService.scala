@@ -191,11 +191,11 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
   override def getHealth(alarmKey: AlarmKey): CompletableFuture[Health] =
     alarmService.getHealth(alarmKey).toJava.toCompletableFuture
 
-  override def monitorHealth(alarmKey: AlarmKey, subscriber: Optional[ActorRef],
+  override def monitorAlarms(alarmKey: AlarmKey, subscriber: Optional[ActorRef],
                              notifyAlarm:  Optional[AlarmHandler],
                              notifyHealth: Optional[HealthHandler],
                              notifyAll:    Boolean): AlarmMonitor = {
-    alarmService.monitorHealth(alarmKey, subscriber.asScala,
+    alarmService.monitorAlarms(alarmKey, subscriber.asScala,
       notifyAlarm.asScala.map(f => (alarmStatus: AlarmStatus) => f.handleAlarmStatus(alarmStatus)),
       notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)),
       notifyAll)

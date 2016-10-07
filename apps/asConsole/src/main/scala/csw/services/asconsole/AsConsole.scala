@@ -280,7 +280,7 @@ object AsConsole extends App {
 
   // Handle the --monitor* options
   private def monitor(alarmService: AlarmService, options: Options): Unit = {
-    alarmService.monitorHealth(
+    alarmService.monitorAlarms(
       AlarmKey(options.subsystem, options.component, options.name),
       None,
       options.monitorAlarms.map(alarmStatusCallback),

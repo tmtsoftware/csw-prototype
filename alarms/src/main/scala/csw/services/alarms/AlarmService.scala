@@ -91,7 +91,7 @@ object AlarmService {
   }
 
   /**
-   * Type of return value from the monitorAlarms or monitorHealth methods
+   * Type of return value from the monitorAlarms methods
    */
   trait AlarmMonitor {
     /**
@@ -236,7 +236,7 @@ trait AlarmService {
    *                     and where the latched severity or calculated health actually changed
    * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
    */
-  def monitorHealth(
+  def monitorAlarms(
     alarmKey:     AlarmKey,
     subscriber:   Option[ActorRef]             = None,
     notifyAlarm:  Option[AlarmStatus => Unit]  = None,
@@ -476,7 +476,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     else Health.Good
   }
 
-  override def monitorHealth(
+  override def monitorAlarms(
     alarmKey:      AlarmKey,
     subscriberOpt: Option[ActorRef]             = None,
     notifyAlarm:   Option[AlarmStatus => Unit]  = None,

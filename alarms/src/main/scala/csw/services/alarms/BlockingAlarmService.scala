@@ -148,12 +148,12 @@ case class BlockingAlarmService(alarmService: AlarmService)(implicit val timeout
    *                     and where the latched severity or calculated health actually changed
    * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
    */
-  def monitorHealth(
+  def monitorAlarms(
     alarmKey:     AlarmKey,
     subscriber:   Option[ActorRef]             = None,
     notifyAlarm:  Option[AlarmStatus => Unit]  = None,
     notifyHealth: Option[HealthStatus => Unit] = None,
     notifyAll:    Boolean                      = false
   ): AlarmMonitor =
-    alarmService.monitorHealth(alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll)
+    alarmService.monitorAlarms(alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll)
 }

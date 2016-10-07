@@ -137,7 +137,7 @@ public interface IAlarmService {
      *                     and where the latched severity or calculated health actually changed
      * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
      */
-    AlarmMonitor monitorHealth(
+    AlarmMonitor monitorAlarms(
             AlarmKey alarmKey,
             Optional<ActorRef> subscriber,
             Optional<AlarmHandler> notifyAlarm,

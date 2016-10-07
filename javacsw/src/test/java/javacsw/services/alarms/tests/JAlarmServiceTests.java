@@ -132,7 +132,7 @@ public class JAlarmServiceTests {
     AlarmKey key2 = new AlarmKey("NFIRAOS", "envCtrl", "minTemperature");
     AlarmKey key3 = new AlarmKey("NFIRAOS", "envCtrl", "maxTemperature");
 
-    AlarmMonitor alarmMonitor = alarmService.monitorHealth(key1,
+    AlarmMonitor alarmMonitor = alarmService.monitorAlarms(key1,
       Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler), false);
     Thread.sleep(shortDelayMs); // make sure actor has started
 
@@ -196,7 +196,7 @@ public class JAlarmServiceTests {
     // Test health monitor
     alarmMonitor.stop();
     AlarmKey nfKey = JAlarmKey.create(Optional.of("NFIRAOS"));
-    AlarmMonitor healthMonitor = alarmService.monitorHealth(nfKey,
+    AlarmMonitor healthMonitor = alarmService.monitorAlarms(nfKey,
       Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler), false);
     Thread.sleep(shortDelayMs); // make sure actor has started
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();

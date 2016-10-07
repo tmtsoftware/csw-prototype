@@ -122,7 +122,7 @@ public interface IBlockingAlarmService {
    *                     and where the latched severity or calculated health actually changed
    * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
    */
-  AlarmMonitor monitorHealth(
+  AlarmMonitor monitorAlarms(
     AlarmKey alarmKey,
     Optional<ActorRef> subscriber,
     // XXX TODO: Add code to convert Java void to Scala Unit?

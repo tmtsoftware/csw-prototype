@@ -116,7 +116,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
       val badKey = AlarmKey("XXX", "xxx", "xxx")
 
-      val alarmMonitor = alarmService.monitorHealth(key1, None, Some(printAlarmStatus _), Some(printHealthStatus _))
+      val alarmMonitor = alarmService.monitorAlarms(key1, None, Some(printAlarmStatus _), Some(printHealthStatus _))
       Thread.sleep(shortDelayMs) // make sure actor has started
 
       Await.ready(alarmService.setSeverity(key1, SeverityLevel.Critical), timeout.duration)
@@ -183,7 +183,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
       alarmMonitor.stop()
       Thread.sleep(shortDelayMs)
       val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
-      val healthMonitor = alarmService.monitorHealth(nfKey, None, Some(printAlarmStatus _), Some(printHealthStatus _))
+      val healthMonitor = alarmService.monitorAlarms(nfKey, None, Some(printAlarmStatus _), Some(printHealthStatus _))
       Thread.sleep(shortDelayMs) // make sure actor has started
       Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)
       Await.ready(alarmService.setSeverity(key3, SeverityLevel.Okay), timeout.duration)
