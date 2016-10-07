@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
  * Java admin API for the alarm service.
  */
 @SuppressWarnings("SameParameterValue")
-public interface IAlarmAdmin {
+public interface IAlarmServiceAdmin {
   /**
    * Initializes the alarm data in the database using the given file
    *
@@ -46,6 +46,6 @@ public interface IAlarmAdmin {
    * @return a future that completes when the redis server exits
    */
   static CompletableFuture<BoxedUnit> startAlarmService(String name, Boolean noExit, ExecutionContext ec) {
-    return JAlarmAdmin.startAlarmService(name, noExit, ec);
+    return JAlarmServiceAdmin.startAlarmService(name, noExit, ec);
   }
 }

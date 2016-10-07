@@ -40,7 +40,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
-    AlarmAdmin.startAlarmService(asName)
+    AlarmServiceAdmin.startAlarmService(asName)
   }
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {

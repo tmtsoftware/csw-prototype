@@ -5,14 +5,14 @@ import java.util
 import java.util.concurrent.CompletableFuture
 
 import akka.actor.ActorRefFactory
-import csw.services.alarms.{AlarmAdmin, AlarmService}
+import csw.services.alarms.AlarmServiceAdmin
 import csw.services.alarms.AscfValidation.Problem
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
-object JAlarmAdmin {
+object JAlarmServiceAdmin {
   /**
    * Starts a redis instance on a random free port (redis-server must be in your shell path)
    * and registers it with the location service.
@@ -30,19 +30,19 @@ object JAlarmAdmin {
    * @return a future that completes when the redis server exits
    */
   def startAlarmService(name: String, noExit: Boolean, ec: ExecutionContext): CompletableFuture[Unit] = {
-    AlarmAdmin.startAlarmService(name, noExit)(ec).toJava.toCompletableFuture
+    AlarmServiceAdmin.startAlarmService(name, noExit)(ec).toJava.toCompletableFuture
   }
 }
 
 /**
  * Implements the java admin API for Alarm Service
  */
-class JAlarmAdmin(alarmService: IAlarmService, system: ActorRefFactory) extends IAlarmAdmin {
+class JAlarmServiceAdmin(alarmService: IAlarmService, system: ActorRefFactory) extends IAlarmServiceAdmin {
 
   import system.dispatcher
   implicit val sys = system
 
-  val alarmAdmin = AlarmAdmin(alarmService.asInstanceOf[JAlarmService].alarmService)
+  val alarmAdmin = AlarmServiceAdmin(alarmService.asInstanceOf[JAlarmService].alarmService)
 
   override def initAlarms(inputFile: File, reset: Boolean): CompletableFuture[util.List[Problem]] =
     alarmAdmin.initAlarms(inputFile, reset).map(_.asJava).toJava.toCompletableFuture

@@ -62,7 +62,7 @@ lazy val events = project
   .settings(libraryDependencies ++=
     compile(akkaActor, redisScala, logback) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(util, log)
+  ) dependsOn(util, log, loc, trackLocation)
 
 // Alarm Service
 lazy val alarms = project
@@ -178,7 +178,7 @@ lazy val trackLocation = Project(id = "trackLocation", base = file("apps/trackLo
   .settings(libraryDependencies ++=
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(loc, log, cs % "test->test;compile->compile", events % "test->test")
+  ) dependsOn(loc, log, cs % "test->test;compile->compile")
 
 // Track the location of an external application
 lazy val asConsole = Project(id = "asConsole", base = file("apps/asConsole"))

@@ -68,7 +68,7 @@ public class JBlockingAlarmServiceTests {
     // Start redis on a random port and register it with the location service.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Blocking Alarm Service Test" --command "redis-server --port %port" --no-exit
-    IAlarmAdmin.startAlarmService(asName, true, system.dispatcher());
+    IAlarmServiceAdmin.startAlarmService(asName, true, system.dispatcher());
 
     // Later, in another JVM...,
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)

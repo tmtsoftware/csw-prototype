@@ -67,7 +67,7 @@ public class JAlarmServiceTests {
     // Start redis on a random port and register it with the location service.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port" --no-exit
-    IAlarmAdmin.startAlarmService("Alarm Service Test", true, system.dispatcher());
+    IAlarmServiceAdmin.startAlarmService("Alarm Service Test", true, system.dispatcher());
 
     // Later, in another JVM...,
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)
@@ -76,7 +76,7 @@ public class JAlarmServiceTests {
 
   @AfterClass
   public static void teardown() {
-    IAlarmAdmin admin = new JAlarmAdmin(alarmService, system);
+    IAlarmServiceAdmin admin = new JAlarmServiceAdmin(alarmService, system);
     admin.shutdown();
     JavaTestKit.shutdownActorSystem(system);
     system = null;
@@ -115,7 +115,7 @@ public class JAlarmServiceTests {
     File ascf = Paths.get(url.toURI()).toFile();
 
     // initialize the list of alarms in Redis (This is only for the test and should not be done by normal clients)
-    IAlarmAdmin admin = new JAlarmAdmin(alarmService, system);
+    IAlarmServiceAdmin admin = new JAlarmServiceAdmin(alarmService, system);
     List<AscfValidation.Problem> problems = admin.initAlarms(ascf, false).get();
     JProblem.printProblems(problems);
     assertTrue(JProblem.errorCount(problems) == 0);

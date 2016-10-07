@@ -42,7 +42,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
-    AlarmAdmin.startAlarmService(asName)
+    AlarmServiceAdmin.startAlarmService(asName)
   }
 
   override protected def afterAll(): Unit = {
@@ -68,7 +68,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
     // Get the alarm service by looking up the name with the location service.
     // (using a small value for refreshSecs for testing)
     val alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)
-    val alarmAdmin = AlarmAdmin(alarmService)
+    val alarmAdmin = AlarmServiceAdmin(alarmService)
 
     try {
       // initialize the list of alarms in Redis (This is only for the test and should not be done by normal clients)

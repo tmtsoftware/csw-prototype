@@ -184,7 +184,7 @@ object AsConsole extends App {
 
     if (options.shutdown) {
       println(s"Shutting down the alarm service")
-      val admin = AlarmAdmin(alarmService)
+      val admin = AlarmServiceAdmin(alarmService)
       admin.shutdown()
     }
 
@@ -205,7 +205,7 @@ object AsConsole extends App {
 
   // Handle the --init option
   private def init(alarmService: AlarmService, file: File, options: Options): Unit = {
-    val admin = AlarmAdmin(alarmService)
+    val admin = AlarmServiceAdmin(alarmService)
     val problems = Await.result(admin.initAlarms(file, options.delete), timeout.duration)
     Problem.printProblems(problems)
     if (Problem.errorCount(problems) != 0) error(s"Failed to initialize Alarm Service with $file")

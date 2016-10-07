@@ -3,6 +3,7 @@ package csw.services.events
 import akka.actor.{ActorRef, ActorRefFactory}
 import csw.services.events.EventService.EventMonitor
 import csw.util.config.Events.StatusEvent
+import redis.RedisClient
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -26,7 +27,7 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
   import _system.dispatcher
   import TelemetryService._
 
-  private val eventService = EventServiceImpl(settings.redisHostname, settings.redisPort)
+  private val eventService = EventServiceImpl(RedisClient(settings.redisHostname, settings.redisPort))
 
   /**
    * Publishes the status event (key is based on the event's prefix)

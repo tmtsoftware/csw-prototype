@@ -14,16 +14,16 @@ import scala.concurrent.Await
 object BlockingAlarmAdmin {
 
   def apply(alarmService: BlockingAlarmService)(implicit system: ActorRefFactory, timeout: Timeout): BlockingAlarmAdmin =
-    BlockingAlarmAdmin(AlarmAdmin(alarmService.alarmService))
+    BlockingAlarmAdmin(AlarmServiceAdmin(alarmService.alarmService))
 
   def apply(alarmService: AlarmService)(implicit system: ActorRefFactory, timeout: Timeout): BlockingAlarmAdmin =
-    BlockingAlarmAdmin(AlarmAdmin(alarmService))
+    BlockingAlarmAdmin(AlarmServiceAdmin(alarmService))
 }
 
 /**
  * A Blocking API to the alarm service admin methods
  */
-case class BlockingAlarmAdmin(alarmAdmin: AlarmAdmin)(implicit system: ActorRefFactory, timeout: Timeout) {
+case class BlockingAlarmAdmin(alarmAdmin: AlarmServiceAdmin)(implicit system: ActorRefFactory, timeout: Timeout) {
 
   /**
    * Initialize the alarm data in the database using the given file

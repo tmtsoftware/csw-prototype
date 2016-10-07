@@ -3,21 +3,19 @@ package csw.services.alarms
 import java.io._
 
 import akka.actor.ActorRefFactory
-import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.alarms.AlarmModel.SeverityLevel
 import csw.services.alarms.AscfValidation.Problem
 import csw.services.trackLocation.TrackLocation
 import org.slf4j.LoggerFactory
-import redis._
 
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Admin API for the alarm service.
  */
-object AlarmAdmin {
+object AlarmServiceAdmin {
 
   /**
    * Starts a redis instance on a random free port (redis-server must be in your shell path)
@@ -42,14 +40,14 @@ object AlarmAdmin {
     }
   }
 
-  def apply(alarmService: AlarmService)(implicit system: ActorRefFactory): AlarmAdmin =
-    AlarmAdminImpl(alarmService)
+  def apply(alarmService: AlarmService)(implicit system: ActorRefFactory): AlarmServiceAdmin =
+    AlarmServiceAdminImpl(alarmService)
 }
 
 /**
  * Defines the admin API for Alarm Service
  */
-trait AlarmAdmin {
+trait AlarmServiceAdmin {
 
   /**
    * Initialize the alarm data in the database using the given file
@@ -71,8 +69,8 @@ trait AlarmAdmin {
  *
  * @param alarmService used to set the inial alarm severity
  */
-private[alarms] case class AlarmAdminImpl(alarmService: AlarmService)(implicit system: ActorRefFactory)
-    extends AlarmAdmin with ByteStringSerializerLowPriority {
+private[alarms] case class AlarmServiceAdminImpl(alarmService: AlarmService)(implicit system: ActorRefFactory)
+    extends AlarmServiceAdmin {
 
   import system.dispatcher
 
