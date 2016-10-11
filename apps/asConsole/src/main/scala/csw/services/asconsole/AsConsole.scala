@@ -265,14 +265,12 @@ object AsConsole extends App {
     }
   }
 
-  // XXX TODO: make option execute a shell command
   private def alarmStatusCallback(cmd: String)(alarmStatus: AlarmStatus): Unit = {
     import scala.sys.process._
     val a = alarmStatus.alarmKey
     s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.currentSeverity.latched}".run()
   }
 
-  // XXX TODO: make option execute a shell command
   private def healthStatusCallback(cmd: String)(healthStatus: HealthStatus): Unit = {
     import scala.sys.process._
     s"$cmd ${healthStatus.health}".run()

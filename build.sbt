@@ -41,6 +41,22 @@ lazy val util = project
       test(scalaTest, junit)
   ) dependsOn log
 
+// AAS- Authorization and Authentication service
+lazy val aas = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor) ++
+      test(scalaTest, junit)
+  ) dependsOn log
+
+// Database service
+lazy val dbs = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(slick, postgresql, HikariCP) ++
+      test(scalaTest, junit)
+  ) dependsOn log
+
 // Supporting classes
 lazy val support = project
   .settings(defaultSettings: _*)

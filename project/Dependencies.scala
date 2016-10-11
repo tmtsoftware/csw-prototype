@@ -40,6 +40,9 @@ object Dependencies {
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
   val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11" // TMate Open Source License
 
+  val slick = "com.typesafe.slick" % "slick_2.11" % "3.1.1" // BSD 3-clause
+  val postgresql = "org.postgresql" % "postgresql" % "9.4.1211" // POSTGRESQL
+  val HikariCP = "com.zaxxer" % "HikariCP" % "2.5.1" // ApacheV2
 
   val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0" // ApacheV2
 
@@ -52,7 +55,7 @@ object Dependencies {
   val scopt = "com.github.scopt" %% "scopt" % "3.3.0"//  MIT License
   val jsonSchemaValidator = "com.github.fge" % "json-schema-validator" % "2.2.6"  // LGPL/ASL
 
-  val jmdns = "javax.jmdns" % "jmdns" % "3.4.1" // ApacheV2
+  val jmdns = "org.jmdns" % "jmdns" % "3.5.1" // ApacheV2
 
   // Test dependencies
   val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion // ApacheV2

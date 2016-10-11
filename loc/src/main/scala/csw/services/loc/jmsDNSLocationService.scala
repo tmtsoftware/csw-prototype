@@ -87,7 +87,7 @@ object jmsDNSLocationService extends LocationServiceProvider {
     } else {
       JmDNS.create()
     }
-    logger.debug(s"Using host = ${registry.getHostName} (${registry.getInterface})")
+    logger.debug(s"Using host = ${registry.getHostName} (${registry.getInetAddress})")
     sys.addShutdownHook(registry.close())
     registry
   }
