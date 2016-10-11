@@ -414,7 +414,6 @@ object LocationService {
 
         info.getURLs(connection.connectionType.name).toList.flatMap(getUri).foreach {
           uri =>
-            log.debug(s"Resolve service: resolve URI = $uri")
             connection match {
               case ac: AkkaConnection =>
                 val prefix = info.getPropertyString(PREFIX_KEY)
@@ -482,8 +481,9 @@ object LocationService {
       // Result of sending an Identify message to the actor's URI (actorSelection)
       case ActorIdentity(id, actorRefOpt) =>
         id match {
-          case rs: ResolvedAkkaLocation => actorIdentified(actorRefOpt, rs)
-          case _                        => log.warning(s"Received unexpected ActorIdentity id: $id")
+          case rs: ResolvedAkkaLocation =>
+            actorIdentified(actorRefOpt, rs)
+          case _ => log.warning(s"Received unexpected ActorIdentity id: $id")
         }
 
       case TrackConnection(connection: Connection) =>

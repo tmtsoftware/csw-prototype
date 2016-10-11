@@ -71,8 +71,8 @@ trait Item[S] {
    */
   def withUnits(units: Units): Item[S]
 
-  //def valuesToString = values.mkString("(", ",", ")")
-  //override def toString = s"$keyName(" + valuesToString + s", $units)"
+  def valuesToString = values.mkString("(", ",", ")")
+  override def toString = s"$keyName(${valuesToString}$units)"
 }
 
 /**

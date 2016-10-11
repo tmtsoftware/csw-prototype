@@ -13,10 +13,12 @@ trait TromboneStateHandler {
   private val sodiumLayerDefault = sodiumKey -> false
   private val nssDefault = nssKey -> false
 
-  private var tromboneState = TromboneState(cmdDefault, moveDefault, sodiumLayerDefault, nssDefault)
+  private var _tromboneState = TromboneState(cmdDefault, moveDefault, sodiumLayerDefault, nssDefault)
 
   // This actor subscribes to TromboneState using the EventBus
   context.system.eventStream.subscribe(self, classOf[TromboneState])
+
+  def unsubscribeState() = context.system.eventStream.unsubscribe(self, classOf[TromboneState])
 
   /**
    * This stateReceive must be added to the actor's receive chain.
@@ -26,7 +28,8 @@ trait TromboneStateHandler {
    */
   def stateReceive: Receive = {
     case ts: TromboneState =>
-      tromboneState = ts
+      //log.info(s">>>>>>>>>>>>>>>>>>>>>>          Got State Update: $ts")
+      _tromboneState = ts.copy()
   }
 
   /**
@@ -54,21 +57,24 @@ trait TromboneStateHandler {
   def nss: Boolean = getNss
 
   // This bit is so that I can have a get and set that is the same allowing me to test for changes
-  private def getCmd = tromboneState.cmd.head
+  private def getCmd = _tromboneState.cmd.head
 
-  private def getMove: Choice = tromboneState.move.head
+  private def getMove: Choice = _tromboneState.move.head
 
-  private def getSodiumLayer: Boolean = tromboneState.sodiumLayer.head
+  private def getSodiumLayer: Boolean = _tromboneState.sodiumLayer.head
 
-  private def getNss: Boolean = tromboneState.nss.head
+  private def getNss: Boolean = _tromboneState.nss.head
+
+  def tromboneState = _tromboneState.copy()
 
   def state(cmd: Choice = cmd, move: Choice = move, sodiumLayer: Boolean = sodiumLayer, nss: Boolean = nss): Unit = {
     val update = getCmd != cmd || getMove != move || getSodiumLayer != sodiumLayer || getNss != nss
     if (update) {
-      tromboneState = TromboneState(cmdItem(cmd), moveItem(move), sodiumKey.set(sodiumLayer), nssKey.set(nss))
+      _tromboneState = TromboneState(cmdItem(cmd), moveItem(move), sodiumKey.set(sodiumLayer), nssKey.set(nss))
       context.system.eventStream.publish(tromboneState)
     }
   }
+
 }
 
 object TromboneStateHandler {

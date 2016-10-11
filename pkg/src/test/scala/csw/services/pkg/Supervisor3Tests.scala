@@ -7,26 +7,26 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
 
-case class SimpleTestHcd(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with LifecycleHandler {
-  def receive: Receive = lifecycleHandlerReceive
+case class SimpleTestHcd(override val info: HcdInfo, val supervisor: ActorRef) extends Hcd with LifecycleHandler {
+  def receive = lifecycleHandlerReceive
 }
 
-case class SimpleTestAssembly(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with LifecycleHandler {
-  def receive: Receive = lifecycleHandlerReceive
+case class SimpleTestAssembly(override val info: AssemblyInfo, val supervisor: ActorRef) extends Assembly with LifecycleHandler {
+  def receive = lifecycleHandlerReceive
 }
 
 class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   import SupervisorExternal._
 
-  override def afterAll: Unit = TestKit.shutdownActorSystem(system)
+  override def afterAll = TestKit.shutdownActorSystem(system)
 
   import Supervisor3._
 
-  type MyTestFsm = TestActorRef[Supervisor3]
+  type TestSupervisor = TestActorRef[Supervisor3]
 
-  def newHcdFSM(implicit system: ActorSystem, component: ActorRef): MyTestFsm = {
+  def newHcdFSM(implicit system: ActorSystem, component: ActorRef): TestSupervisor = {
     import scala.concurrent.duration._
 
     val name = "test1"
@@ -39,6 +39,7 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
 
     TestActorRef(props)
   }
+
 
   it("should be initialized in the Pending Initialized State") {
 
@@ -93,7 +94,7 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
     failedStartupFromInitialize(fsm, component)
   }
 
-  def failedInitialize(fsm: MyTestFsm, component: TestProbe) = {
+  def failedInitialize(fsm: TestSupervisor, component: TestProbe) = {
     fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
 
     component.send(fsm, InitializeFailure("Failure"))
@@ -106,7 +107,7 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
     component.expectMsg(LifecycleFailureInfo(LifecycleWaitingForInitialized, failReason))
   }
 
-  def successfulStartupFromInitilzed(fsm: MyTestFsm, component: TestProbe) = {
+  def successfulStartupFromInitilzed(fsm: TestSupervisor, component: TestProbe) = {
     // First ensure we are in Initialized state
     fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
 
@@ -117,7 +118,7 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
     component.expectMsg(Running)
   }
 
-  def failedStartupFromInitialize(fsm: MyTestFsm, component: TestProbe) = {
+  def failedStartupFromInitialize(fsm: TestSupervisor, component: TestProbe) = {
     fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
 
     val failReason = "StartupFailure"
@@ -151,7 +152,7 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
     successfulRestartFromRunning(fsm, component)
   }
 
-  def successfulRestartFromRunning(fsm: MyTestFsm, component: TestProbe) = {
+  def successfulRestartFromRunning(fsm: TestSupervisor, component: TestProbe) = {
     fsm ! ExComponentRestart
 
     fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
@@ -228,7 +229,7 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
     fsm.underlyingActor.lifecycleState should be(LifecycleShutdown)
   }
 
-  def successfulExShutdownFromOnline(fsm: MyTestFsm, component: TestProbe) = {
+  def successfulExShutdownFromOnline(fsm: TestSupervisor, component: TestProbe) = {
     fsm ! ExComponentShutdown
     fsm.underlyingActor.lifecycleState should be(LifecyclePreparingToShutdown)
 
@@ -306,21 +307,21 @@ class Supervisor3Tests() extends TestKit(ActorSystem("mytests")) with ImplicitSe
     //system.stop(supervisor)
   }
 
-  def successfulOfflineFromOnline(fsm: MyTestFsm, component: TestProbe) = {
+  def successfulOfflineFromOnline(fsm: TestSupervisor, component: TestProbe) = {
     fsm ! ExComponentOffline
     fsm.underlyingActor.lifecycleState should be(LifecycleRunningOffline)
 
     component.expectMsg(RunningOffline)
   }
 
-  def successfulExRestartFromOnline(fsm: MyTestFsm, component: TestProbe) = {
+  def successfulExRestartFromOnline(fsm: TestSupervisor, component: TestProbe) = {
     fsm ! ExComponentRestart
     fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
 
     component.expectMsg(DoRestart)
   }
 
-  def successfulOnlineFromOffline(fsm: MyTestFsm, component: TestProbe) = {
+  def successfulOnlineFromOffline(fsm: TestSupervisor, component: TestProbe) = {
     fsm ! ExComponentOnline
     // No change
     fsm.underlyingActor.lifecycleState should be(LifecycleRunning)

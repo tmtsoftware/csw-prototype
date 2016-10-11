@@ -285,7 +285,7 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
   // Partial function combined with others to receive common messages
   def commonMessagesPF: Receive = {
     case SubscribeLifecycleCallback(actorRef) =>
-      log.info("Adding listener: " + actorRef)
+      log.debug("Adding listener: " + actorRef)
       addListener(actorRef)
     case UnsubscribeLifecycleCallback(actorRef) ⇒
       removeListener(actorRef)
@@ -326,7 +326,7 @@ class Supervisor3(val componentInfo: ComponentInfo, testComponent: Option[ActorR
    * @param msg a message to send to all listeners
    */
   private def notifyListeners(msg: Any): Unit = {
-    log.info("Listeners: " + listeners)
+    //log.info("Listeners: " + listeners)
     listeners.foreach(_ ! msg)
   }
 }

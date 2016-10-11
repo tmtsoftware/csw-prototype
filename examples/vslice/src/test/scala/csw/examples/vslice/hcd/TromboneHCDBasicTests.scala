@@ -2,6 +2,7 @@ package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3._
@@ -285,6 +286,49 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
         msgs.last(inHighLimitKey).head should equal(false)
 
         //info("Msgs: " + msgs)
+        tla ! Unsubscribe
+
+        system.stop(tla)
+      }
+    }
+
+    describe("place show off low limit after low limit") {
+      import TromboneHCD._
+      import csw.services.ccs.HcdController._
+
+      it("should show entering a low limit") {
+
+        val (supervisor, tla) = newTestTrombone()
+        lifecycleStart(supervisor, tla)
+
+        var testPos = 0
+        val testActual = tla.underlyingActor.axisConfig.lowLimit
+
+        tla ! Subscribe
+        tla ! Submit(positionSC(testPos))
+
+        var msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+        msgs.last(positionKey).head should be(testActual)
+        msgs.last(inLowLimitKey).head should equal(true)
+        msgs.last(inHighLimitKey).head should equal(false)
+
+        // Now move off low limt
+        testPos = tla.underlyingActor.axisConfig.lowUser+20
+        tla ! Submit(positionSC(testPos))
+
+        msgs = waitForMoveMsgs
+        // Check the last message
+        msgs.last(stateKey).head should be(AXIS_IDLE)
+        msgs.last(positionKey).head should be(testPos)
+        msgs.last(inLowLimitKey).head should equal(false)
+        msgs.last(inHighLimitKey).head should equal(false)
+
+        // Get the first one that is greater than the limit to see that it is false
+        var firstOffLimit = msgs.filter(cs => cs(positionKey).head >= tla.underlyingActor.axisConfig.lowUser)
+        firstOffLimit.head(lowLimitKey).head shouldBe false
+
         tla ! Unsubscribe
 
         system.stop(tla)
