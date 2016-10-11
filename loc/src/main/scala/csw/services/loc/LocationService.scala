@@ -65,7 +65,7 @@ object LocationService {
       def getIpAddress: String = {
         import scala.collection.JavaConversions._
         val addresses = for {
-          i <- NetworkInterface.getNetworkInterfaces
+          i <- NetworkInterface.getNetworkInterfaces.filter(iface => iface.isUp && iface.supportsMulticast)
           a <- i.getInetAddresses
         } yield Addr(i.getIndex, a)
         addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
@@ -96,7 +96,7 @@ object LocationService {
     } else {
       JmDNS.create()
     }
-    logger.debug(s"Using host = ${registry.getHostName} (${registry.getInterface})")
+    logger.debug(s"Using host = ${registry.getHostName} (${registry.getInetAddress})")
     sys.addShutdownHook(registry.close())
     registry
   }

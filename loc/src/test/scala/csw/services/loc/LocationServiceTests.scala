@@ -284,6 +284,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     assert(r1.connection == ac)
 
     val f2 = LocationService.registerHttpConnection(componentId, testPort)
+    Await.ready(f2, 3.seconds) // XXX
     val r2 = testProbe.expectMsgClass(t, classOf[ResolvedHttpLocation])
     assert(r2.connection == hc)
 
