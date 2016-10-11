@@ -1,6 +1,6 @@
 package csw.examples
 
-import akka.actor.{Actor, ActorLogging, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import csw.services.ccs.HcdController
 import csw.services.events.{EventServiceSettings, EventSubscriber, TelemetryService}
 import csw.services.loc.ConnectionType.AkkaType
@@ -111,7 +111,7 @@ object HCDExample {
   }
 }
 
-class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
+class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
   import HCDExample._
   import PosGenerator._
   import HCDExample._

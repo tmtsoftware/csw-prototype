@@ -12,19 +12,20 @@ import scala.concurrent.duration._
   */
 class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) with ImplicitSender
   with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+
   import SingleAxisSimulator._
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
   def expectLLMoveMsgs(diagFlag: Boolean = false): Vector[MotionWorkerMsgs] = {
     // Get AxisStarted
-    var allMsgs:Vector[MotionWorkerMsgs] = Vector(expectMsg(Start))
+    var allMsgs: Vector[MotionWorkerMsgs] = Vector(expectMsg(Start))
     // Receive updates until axis idle then get the last one
     val moveMsgs = receiveWhile(5.seconds) {
       case t@Tick(current) => t
     }
     val endMsg = expectMsgClass(classOf[End]) // last one
-    allMsgs =  allMsgs ++ moveMsgs :+ endMsg
+    allMsgs = allMsgs ++ moveMsgs :+ endMsg
     if (diagFlag) info(s"LLMoveMsgs: $allMsgs")
     allMsgs
   }
@@ -44,7 +45,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
 
   def expectMoveMsgsWithDest(target: Int, diagFlag: Boolean = false): Seq[AxisResponse] = {
     // Receive updates until axis idle then get the last one
-    val msgs  = receiveWhile(5.seconds) {
+    val msgs = receiveWhile(5.seconds) {
       case as@AxisStarted => as
       case m@AxisUpdate(_, currentState, current, _, _, _) if current != target => m
     }
@@ -59,7 +60,6 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
   def calcDelay(numberSteps: Int, delayInSseconds: Int): FiniteDuration = (numberSteps + 1) * delayInSseconds * 1000.seconds
 
   describe("Testing steps calc") {
-    import SingleAxisSimulator._
 
     // Note that putting functions in the companion object allows them to be easily tested!
     it("should calculate different number of steps based on the size of the move") {
@@ -131,7 +131,6 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     val testDestination = 600
     val testDelay = 10
     it("should allow creation based on negative encoder steps") {
-
       val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef(props)
       ms ! Start
@@ -250,6 +249,9 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
     it("Should home properly") {
       val sa = defaultAxis(testActor)
 
+      sa ! GetStatistics
+      val stats2:AxisStatistics = expectMsgClass(classOf[AxisStatistics])
+
       sa ! Home
       val msgs = expectMoveMsgs()
       msgs.last.state should be(AXIS_IDLE)
@@ -304,7 +306,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
 
       val msgs = expectMoveMsgsWithDest(425)
       msgs.last.isInstanceOf[AxisUpdate]
-      val last:AxisUpdate = msgs.last.asInstanceOf[AxisUpdate]
+      val last: AxisUpdate = msgs.last.asInstanceOf[AxisUpdate]
       last.state should be(AXIS_IDLE)
       last.current should be(425)
 
@@ -324,7 +326,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       receiveN(2)
       sa ! CancelMove
       // One more update due to algo
-      val lastmsg = receiveN(1)
+      receiveN(1)
       val end = expectMsgClass(classOf[AxisUpdate])
       end.state should be(AXIS_IDLE)
       end.current should be(650)
@@ -382,6 +384,52 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       stats2.cancelCount should be(0)
 
       sa ! PoisonPill
+    }
+
+    it("should unset limit as soon as it is not in limit -- BUG found!") {
+
+      val sa = defaultAxis(testActor)
+
+      // Position starts out at 350
+      sa ! Move(0)
+      var msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(defaultAxisConfig.lowLimit)
+      msgs.last.inLowLimit should be(true)
+
+      sa.underlyingActor.current should be(defaultAxisConfig.lowLimit)
+      sa.underlyingActor.inLowLimit should be(true)
+      sa.underlyingActor.inHighLimit should be(false)
+
+      // Move just off limit
+      var newPos = defaultAxisConfig.lowUser + 20
+      sa ! Move(newPos)
+      msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(newPos)
+      msgs.last.inLowLimit should be(false)
+
+      // Get the first one that is greater than the limit to see that it is false
+      var firstOffLimit = msgs.filter(_.current >= defaultAxisConfig.lowUser).head
+      firstOffLimit.inLowLimit shouldBe false
+
+      // Now check the upper limit
+      sa ! Move(2000)
+      msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(defaultAxisConfig.highLimit)
+      msgs.last.inHighLimit should be(true)
+
+      newPos = defaultAxisConfig.highUser - 20
+      sa ! Move(newPos)
+      msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(newPos)
+      msgs.last.inHighLimit should be(false)
+
+      // Get the first one that is greater than the limit to see that it is false
+      firstOffLimit = msgs.filter(_.current <= defaultAxisConfig.highUser).head
+      firstOffLimit.inHighLimit shouldBe false
     }
 
     it("should support a complex example") {

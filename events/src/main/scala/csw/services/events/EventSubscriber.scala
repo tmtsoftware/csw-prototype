@@ -30,7 +30,6 @@ abstract class EventSubscriber(settingsIn: Option[EventServiceSettings] = None) 
    * @param prefixes the top level keys for the events you want to subscribe to.
    */
   def subscribe(prefixes: String*): Unit = {
-    log.info(s"Subscribe to: $prefixes")
     val (patterns, channels) = prefixes.partition(_.endsWith("*"))
     if (patterns.nonEmpty) redis ! PSUBSCRIBE(patterns: _*)
     if (channels.nonEmpty) redis ! SUBSCRIBE(channels: _*)

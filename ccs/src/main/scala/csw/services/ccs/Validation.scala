@@ -20,7 +20,7 @@ object Validation {
   final case class WrongUnitsIssue(reason: String) extends ValidationIssue
 
   // Returned when a configuration does not have the correct number of parameters
-  final case class WrongNumberOfParametersIssue(reason: String) extends ValidationIssue
+  final case class WrongNumberOfItemsIssue(reason: String) extends ValidationIssue
 
   // Returned when an Assembly receives a ConfigArg with multiple configs, but it can only execute one at a time
   final case class SingleConfigOnlyIssue(reason: String) extends ValidationIssue
@@ -32,25 +32,46 @@ object Validation {
   final case class UnresolvedLocationsIssue(reason: String) extends ValidationIssue
 
   // Parameter of a configuration is out of range
-  final case class ParameterValueOutOfRangeIssue(reason: String) extends ValidationIssue
+  final case class ItemValueOutOfRangeIssue(reason: String) extends ValidationIssue
+
+  // The component is in the wrong internal state to handle a configuratio
+  final case class WrongInternalStateIssue(reason: String) extends ValidationIssue
+
+  // A command is unsupported in the current state
+  final case class UnsupportedCommandInStateIssue(reason: String) extends ValidationIssue
+
+  // A command is unsupported by component
+  final case class UnsupportedCommandIssue(reason: String) extends ValidationIssue
 
   // Some other issue!
   final case class OtherIssue(reason: String) extends ValidationIssue
 
   /**
+   * A type created for a list of Validation results
+   */
+  type ValidationList = List[Validation]
+
+  /**
+   * Test that all validations in a list of Validation are Valid
+   * @param validations a ValidationList from validation of a list of configurations
+   * @return True if all validations are Valid, else false
+   */
+  def isAllValid(validations: ValidationList): Boolean = validations.filter(_ != Validation.Valid).isEmpty
+
+  /**
    * Base trait for the results of validating incoming configs
+   * Only a subset of CommandStatus2 entries are also Validation (Valid, Invalid)
    */
-  trait Validation
+  sealed trait Validation
 
   /**
-   * Indicates a valid input config
+   * The configuration or set of configurations was not valid before starting
+   * @param issue
    */
-  case object Valid extends Validation
+  final case class Invalid(issue: ValidationIssue) extends Validation
 
   /**
-   * Indicates an invalid input config
-   *
+   * The configuration or set of configurations was valid and started
    */
-  case class Invalid(issue: ValidationIssue) extends Validation
-
+  final case object Valid extends Validation
 }

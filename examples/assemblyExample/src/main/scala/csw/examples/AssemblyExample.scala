@@ -18,7 +18,7 @@ import scala.concurrent.duration._
  *
  * @param info contains information about the assembly and the components it depends on
  */
-class AssemblyExample(override val info: AssemblyInfo) extends Assembly with AssemblyController with LifecycleHandler {
+class AssemblyExample(override val info: AssemblyInfo, val supervisor: ActorRef) extends Assembly with AssemblyController with LifecycleHandler {
 
   import AssemblyController._
 

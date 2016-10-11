@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.TestProbe
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.TromboneAssembly
+import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -33,7 +34,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     TromboneHCD.componentClassName,
     DoNotRegister, Set(AkkaType), 1.second)
 
-  val troboneAssemblyPrefix = TromboneAssembly.componentPrefix
+  //val tromboneAssemblyPrefix = TromboneAssembly.componentPrefix
 
   def startHCD: ActorRef = {
     val testInfo = HcdInfo(TromboneHCD.componentName,
@@ -66,14 +67,14 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       hcd ! SubscribeLifecycleCallback(fakeAssembly.ref)
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-      info("Running")
+      //info("Running")
 
       fakeAssembly.send(hcd, Subscribe)
 
       fakeAssembly.send(hcd, GetAxisStats)
 
       val stats: CurrentState = fakeAssembly.expectMsgClass(classOf[CurrentState])
-      println("AxisStats: " + stats)
+      //info("AxisStats: " + stats)
       stats(datumCountKey).head should be(0)
       stats(moveCountKey).head should be(0)
       stats(homeCountKey).head should be(0)
@@ -85,7 +86,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       hcd ! Unsubscribe
 
       hcd ! PoisonPill
-      info("Done")
     }
 
 
@@ -97,14 +97,14 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       hcd ! SubscribeLifecycleCallback(fakeAssembly.ref)
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-      info("Running")
+      //info("Running")
 
       fakeAssembly.send(hcd, Subscribe)
       fakeAssembly.send(hcd, GetAxisConfig)
 
       // The values are hard-coded because we can't look at the config inside the actor, will fail if config changes
       val config: CurrentState = fakeAssembly.expectMsgClass(classOf[CurrentState])
-      println("AxisConfig: " + config)
+      //info("AxisConfig: " + config)
       config(axisNameKey).head equals TromboneHCD.tromboneAxisName
       config(lowLimitKey).head should be(100)
       config(lowUserKey).head should be(200)
@@ -125,19 +125,18 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-      info("Running")
+      //info("Running")
       // Currently can't subscribe unless in Running state because controllerReceive has process
       fakeAssembly.send(hcd, Subscribe)
 
       fakeAssembly.send(hcd, Submit(datumSC))
 
       val msgs = waitForMoveMsgs(fakeAssembly)
-      //msgs.last(positionKey).head should equal(tla.underlyingActor.axisConfig.startPosition + 1) // Init position is one off the start position
-      info("Msgs: " + msgs)
+      //info("Msgs: " + msgs)
 
       fakeAssembly.send(hcd, GetAxisStats)
       val stats = fakeAssembly.expectMsgClass(classOf[CurrentState])
-      println("Stats: " + stats)
+      //info("Stats: " + stats)
       stats.configKey should equal(TromboneHCD.axisStatsCK)
       stats.item(datumCountKey).head should equal(1)
       stats.item(moveCountKey).head should equal(1)
@@ -149,7 +148,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
             hcd ! PoisonPill
             probe.expectTerminated(hcd)
             */
-      info("Done")
     }
 
 
@@ -161,7 +159,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-      info("Running")
+      //info("Running")
 
       // Currently can't subscribe unless in Running state because controllerReceive has process
       fakeAssembly.send(hcd, Subscribe)
@@ -171,7 +169,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       fakeAssembly.send(hcd, Submit(sc))
 
       val msgs = waitForMoveMsgs(fakeAssembly)
-      info("Msgs: " + msgs)
       msgs.last(positionKey).head should equal(300)
       msgs.last(inHomeKey).head should equal(true)
       msgs.last(inLowLimitKey).head should equal(false)
@@ -179,7 +176,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
       fakeAssembly.send(hcd, GetAxisStats)
       val stats = fakeAssembly.expectMsgClass(classOf[CurrentState])
-      info(s"Stats: $stats")
+      //info(s"Stats: $stats")
       stats.configKey should equal(TromboneHCD.axisStatsCK)
       stats.item(homeCountKey).head should equal(1)
       stats.item(moveCountKey).head should equal(1)
@@ -197,7 +194,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
     fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
     fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-    info("Running")
+    //info("Running")
 
     fakeAssembly.send(hcd, Subscribe)
     // Being done this way to ensure ConfigKey equality works
@@ -212,6 +209,41 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
     fakeAssembly.send(hcd, Unsubscribe)
   }
+
+
+  it("should allow getting axis status for engineering and testing") {
+    val hcd = startHCD
+
+    val fakeAssembly = TestProbe()
+
+    fakeAssembly.send(hcd, SubscribeLifecycleCallback(fakeAssembly.ref))
+    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
+    //info("Running")
+
+    fakeAssembly.send(hcd, Subscribe)
+    // Being done this way to ensure ConfigKey equality works
+    val testPos = 1300  // out of range
+
+    fakeAssembly.send(hcd, Submit(positionSC(testPos)))
+
+    val msgs = waitForMoveMsgs(fakeAssembly)
+    // Check the last message
+    msgs.last(positionKey).head should be(testPos)
+    msgs.last(stateKey).head should be(AXIS_IDLE)
+
+    fakeAssembly.send(hcd, Unsubscribe)
+
+    // This tests GetAxisUpdate, an engineering command that can be used to check unit tests -- it sends to the sender not through subscribe channel
+    fakeAssembly.send(hcd, GetAxisUpdateNow)
+    val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
+    upd.current should equal(testPos)
+    upd.state should be (SingleAxisSimulator.AXIS_IDLE)
+    upd.inHighLimit shouldBe(true)
+    upd.inLowLimit shouldBe(false)
+    upd.inHomed shouldBe(false)
+  }
+
 
   it("should show entering a low limit") {
     val hcd = startHCD
@@ -237,7 +269,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
     //info("Msgs: " + msgs)
     fakeAssembly.send(hcd, Unsubscribe)
-
   }
 
   it("should show entering a high limit") {
@@ -401,7 +432,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     val finish = 500
     val stepSize = 10
     for (loops <- 1 to 2) {
-      logger.info(s"Loop: $loops")
+      //logger.info(s"Loop: $loops")
       for (testPos <- start to finish by stepSize) {
         fakeAssembly.send(hcd, Submit(positionSC(testPos)))
         msgs = waitForMoveMsgs(fakeAssembly)
@@ -448,16 +479,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     msgs.last(stateKey).head should be(AXIS_IDLE)
     msgs.last(inLowLimitKey).head should be(false)
     msgs.last(inHighLimitKey).head should be(true)
-  }
-
-  def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
-    //system.scheduler.scheduleOnce(timeout) {
-    println("STOPPING")
-    Supervisor.haltComponent(supervisor)
-    Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-    //system.terminate()
-    System.exit(0)
-    //}
   }
 
 }

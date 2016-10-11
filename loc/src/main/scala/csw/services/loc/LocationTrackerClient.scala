@@ -83,8 +83,12 @@ trait LocationTrackerClientActor {
    */
   protected def trackerClientReceive: Receive = {
     case loc: Location =>
+      println("Got Location: " + loc)
       trackerClient = trackerClient.locationUpdate(loc)
-      if (allResolved) allResolved(getLocations)
+      if (allResolved) {
+        println("ALL RESOLVED")
+        allResolved(getLocations)
+      }
 
     case TrackConnection(connection) =>
       trackConnection(connection)

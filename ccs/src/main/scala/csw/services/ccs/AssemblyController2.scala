@@ -2,8 +2,9 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef}
 import akka.util.Timeout
+import csw.services.ccs.Validation.{UnresolvedLocationsIssue, Validation}
 import csw.services.loc.LocationServiceProvider.{Location, ResolvedAkkaLocation}
-import csw.services.loc.LocationTrackerClientActor3
+import csw.services.loc.LocationTrackerClientActor
 import csw.services.log.PrefixedActorLogging
 import csw.util.akka.PublisherActor
 import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfig, SetupConfigArg}
@@ -42,74 +43,15 @@ object AssemblyController2 {
    */
   case class OneWay(config: ControlConfigArg) extends AssemblyControllerMessage
 
-  /**
-   * Message to make a request of the assembly.
-   * The assembly should reply with a Response(SetupConfig) containing the reply to the request.
-   *
-   * @param config describes the request
-   */
-  case class Request(config: SetupConfig) extends AssemblyControllerMessage
-
-  /**
-   * Response to a Request message.
-   *
-   * @param status set to the completion status of the request (Invalid, RequestFaild, RequestCompleted)
-   * @param resp   if valid, the body of the response to the Request message
-   */
-  case class RequestResult(status: RequestStatus, resp: Option[SetupConfig])
-
-  /*
-  /**
-   * Base trait for the results of validating incoming configs
-   */
-  sealed trait Validation {
-    def isValid: Boolean = true
-  }
-
-  /**
-   * Indicates a valid input config
-   */
-  case object Valid extends Validation
-
-  /**
-   * Indicates an invalid input config
-   *
-   * @param reason a description of why the config is invalid
-   */
-  case class Invalid(reason: String) extends Validation {
-    override def isValid: Boolean = false
-  }
-*/
-  /**
-   * The completion status of a request
-   */
-  sealed trait RequestStatus {
-    def isSuccess: Boolean = true
-  }
-
-  /**
-   * The request completed successfully
-   */
-  case object RequestOK extends RequestStatus
-
-  /**
-   * The request failed
-   *
-   * @param reason the reason for the failure
-   */
-  case class RequestFailed(reason: String) extends RequestStatus {
-    override def isSuccess: Boolean = false
-  }
-
 }
 
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
-trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTrackerClientActor3 {
+trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTrackerClientActor {
   this: Actor with PrefixedActorLogging =>
 
-  import Validation._
+  import CommandStatus2._
   import AssemblyController2._
   import context.dispatcher
 
@@ -120,39 +62,47 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    * Receive actor messages
    */
   protected def controllerReceive: Receive = publisherReceive orElse {
-    case Submit(configArg) => submit(configArg, oneway = false, sender())
+    case Submit(configArg) =>
+      configArg match {
+        case sca: SetupConfigArg   => setupSubmit(sca, oneway = false, sender())
+        case oca: ObserveConfigArg => observeSubmit(oca, oneway = false, sender())
+      }
 
-    case OneWay(configArg) => submit(configArg, oneway = true, sender())
-
-    case Request(config) =>
-      val replyTo = sender()
-      request(config).onComplete {
-        case Success(resp) =>
-          replyTo ! resp
-        case Failure(ex) =>
-          replyTo ! RequestResult(RequestFailed(ex.toString), None)
+    case OneWay(configArg) =>
+      configArg match {
+        case sca: SetupConfigArg   => setupSubmit(sca, oneway = true, sender())
+        case oca: ObserveConfigArg => observeSubmit(oca, oneway = true, sender())
       }
   }
 
   /**
    * Called for Submit messages
    *
-   * @param config  the config received
+   * @param sca  the SetupConfigArg received
    * @param oneway  true if no completed response is needed
    * @param replyTo actorRef of the actor that submitted the config
    */
-  private def submit(config: ControlConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
+  private def setupSubmit(sca: SetupConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
     val statusReplyTo = if (oneway) None else Some(replyTo)
-    val valid = config match {
-      case sc: SetupConfigArg   => setup(sc, statusReplyTo)
-      case ob: ObserveConfigArg => observe(ob, statusReplyTo)
-    }
-    valid match {
-      case Valid =>
-        replyTo ! CommandStatus.Accepted(config.info.runId)
-      case Invalid(problem) =>
-        replyTo ! CommandStatus.Error(config.info.runId, problem.reason)
-    }
+    val validations = setup(sca, statusReplyTo)
+    // The result for validation is sent here for oneway and submit
+    val validationCommandResult = validationsToCommandResult(sca.info.runId, sca.configs, validations)
+    replyTo ! validationCommandResult
+  }
+
+  /**
+   * Called for Submit messages with observe config arg
+   *
+   * @param oca  the ObserveConfigArg received
+   * @param oneway  true if no completed response is needed
+   * @param replyTo actorRef of the actor that submitted the config
+   */
+  private def observeSubmit(oca: ObserveConfigArg, oneway: Boolean, replyTo: ActorRef): Unit = {
+    val statusReplyTo = if (oneway) None else Some(replyTo)
+    val validations = observe(oca, statusReplyTo)
+
+    val validationCommandResult = validationsToCommandResult(oca.info.runId, oca.configs, validations)
+    replyTo ! validationCommandResult
   }
 
   /**
@@ -162,7 +112,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    * @param replyTo   if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def setup(configArg: SetupConfigArg, replyTo: Option[ActorRef]): Validation = Valid
+  protected def setup(configArg: SetupConfigArg, replyTo: Option[ActorRef]): List[Validation] = List.empty[Validation]
 
   /**
    * Called to process the observe config and reply to the given actor with the command status.
@@ -171,7 +121,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    * @param replyTo   if defined, the actor that should receive the final command status.
    * @return a validation object that indicates if the received config is valid
    */
-  protected def observe(configArg: ObserveConfigArg, replyTo: Option[ActorRef]): Validation = Valid
+  protected def observe(configArg: ObserveConfigArg, replyTo: Option[ActorRef]): List[Validation] = List.empty[Validation]
 
   /**
    * Convenience method that can be used to monitor a set of state variables and reply to
@@ -196,13 +146,14 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
       stateMatcherActor = Some(context.actorOf(props))
     }
   }
-
+  /*
   protected def getActorRefs(targetPrefix: String): Set[ActorRef] = {
     val x = getLocations.collect {
       case r @ ResolvedAkkaLocation(connection, uri, prefix, actorRefOpt) if prefix == targetPrefix => actorRefOpt
     }
     x.flatten
   }
+  */
   /**
    * This method can be called from the setup method to distribute parts of the configs to HCDs based on the
    * prefix. If the prefix of a SetupConfig matches the one for the HCD, it is sent to that HCD.
@@ -214,7 +165,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    */
 
   protected def distributeSetupConfigs(locationsResolved: Boolean, configArg: SetupConfigArg,
-                                       replyTo: Option[ActorRef]): Validation = {
+                                       replyTo: Option[ActorRef]): CommandStatus2 = {
     if (locationsResolved) {
       val pairs = for {
         config <- configArg.configs
@@ -257,8 +208,8 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    * @param config the request
    * @return a future response, which will be sent to the sender of the request
    */
-  protected def request(config: SetupConfig): Future[RequestResult] = {
-    Future.successful(RequestResult(RequestFailed("Assembly controller 'request' method not implemented"), None))
-  }
+  //  protected def request(config: SetupConfig): Future[RequestResult] = {
+  //    Future.successful(RequestResult(RequestFailed("Assembly controller 'request' method not implemented"), None))
+  //  }
 
 }

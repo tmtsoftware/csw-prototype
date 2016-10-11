@@ -170,7 +170,7 @@ trait Component extends Actor with PrefixedActorLogging {
   /**
    * A reference to this component's supervisor actor
    */
-  def supervisor = context.parent
+  //def supervisor = context.parent
 
 }
 

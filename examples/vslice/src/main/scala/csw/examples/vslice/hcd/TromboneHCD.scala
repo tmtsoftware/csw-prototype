@@ -4,14 +4,15 @@ import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.Config
+import csw.examples.vslice.hcd.TromboneHCD.GetAxisUpdate
 import csw.services.ccs.HcdController
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentType, LocationService}
-import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
+import csw.services.pkg.Component.{DoNotRegister, HcdInfo, RegisterAndTrackServices, RegisterOnly}
 import csw.services.pkg.ContainerComponent._
 import csw.services.pkg.Supervisor.{apply => _}
 import csw.services.pkg.Supervisor3.{apply => _, _}
-import csw.services.pkg.{ContainerComponent, Hcd, Supervisor}
+import csw.services.pkg.{ContainerComponent, Hcd, Supervisor, Supervisor3}
 import csw.util.config.Configurations.{ConfigKey, SetupConfig}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.UnitsOfMeasure.encoder
@@ -22,8 +23,8 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 /**
-  * TMT Source Code: 6/20/16.
-  */
+ * TMT Source Code: 6/20/16.
+ */
 class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController {
 
   import SingleAxisSimulator._
@@ -69,8 +70,14 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     case GetAxisStats =>
       tromboneAxis ! GetStatistics
 
+    case GetAxisUpdate =>
+      tromboneAxis ! PublishAxisUpdate
+
+    case GetAxisUpdateNow =>
+      sender() ! current
+
     case AxisStarted =>
-    //println("Axis Started")
+    //log.debug("Axis Started")
 
     case GetAxisConfig =>
       val axisConfigState = defaultConfigState.madd(
@@ -84,7 +91,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
       )
       notifySubscribers(axisConfigState)
 
-    case au@AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
+    case au @ AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
       //log.info(s"Axis Update: $au")
       // Update actor state
       current = au
@@ -98,7 +105,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
       notifySubscribers(tromboneAxisState)
 
     case as: AxisStatistics =>
-      log.debug(s"AxisStatus: $as")
+      //log.info(s"AxisStatus: $as")
       // Update actor statistics
       stats = as
       val tromboneStats = defaultStatsState.madd(
@@ -134,8 +141,8 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   }
 
   /**
-    * @param sc the config received
-    */
+   * @param sc the config received
+   */
   protected def process(sc: SetupConfig): Unit = {
     import TromboneHCD._
 
@@ -202,6 +209,7 @@ object TromboneHCD {
   val AXIS_ERROR = Choice(SingleAxisSimulator.AXIS_ERROR.toString)
   val stateKey = ChoiceKey("axisState", AXIS_IDLE, AXIS_MOVING, AXIS_ERROR)
   val positionKey = IntKey("position")
+  val positionUnits = encoder
   val inLowLimitKey = BooleanKey("lowLimit")
   val inHighLimitKey = BooleanKey("highLimit")
   val inHomeKey = BooleanKey("homed")
@@ -214,6 +222,11 @@ object TromboneHCD {
     inHighLimitKey -> false,
     inHomeKey -> false
   )
+  /*
+  def axisState(state: Choice = AXIS_IDLE, position: Int = 0, lowLimit: Boolean, highLimit: Boolean, inHome: Boolean):CurrentState = {
+    CurrentState(axisStateCK).madd(stateKey -> state, positionKey -> position, lowLimitKey -> lowLimit, highLimitKey -> highLimit, inHighLimitKey -> inHome)
+  }
+  */
 
   val axisStatsPrefix = s"$trombonePrefix.axisStats"
   val axisStatsCK: ConfigKey = axisStatsPrefix
@@ -252,7 +265,7 @@ object TromboneHCD {
 
   val axisMovePrefix = s"$trombonePrefix.move"
   val axisMoveCK: ConfigKey = axisMovePrefix
-  def positionSC(value: Int):SetupConfig = SetupConfig(axisMoveCK).add(positionKey -> value withUnits encoder)
+  def positionSC(value: Int): SetupConfig = SetupConfig(axisMoveCK).add(positionKey -> value withUnits encoder)
 
   val axisDatumPrefix = s"$trombonePrefix.datum"
   val axisDatumCK: ConfigKey = axisDatumPrefix
@@ -271,26 +284,36 @@ object TromboneHCD {
 
   case object GetAxisStats extends TromboneEngineering
 
+  /**
+   * Returns an AxisUpdate through subscribers
+   */
+  case object GetAxisUpdate extends TromboneEngineering
+
+  /**
+   * Directly returns an AxisUpdate to sender
+   */
+  case object GetAxisUpdateNow extends TromboneEngineering
+
   case object GetAxisConfig extends TromboneEngineering
 }
 
 /**
-  * Starts Assembly as a standalone application.
-  */
+ * Starts Assembly as a standalone application.
+ */
 object TromboneHCDApp extends App {
 
   import TromboneHCD._
   import csw.examples.vslice.shared.TromboneData._
 
+  LocationService.initInterface()
+
   private def setup: Config = ContainerComponent.parseStringConfig(testConf)
 
   val componentConf = setup.getConfig(s"container.components.$componentName")
-  val testInfo = HcdInfo(componentName, trombonePrefix, componentClassName, DoNotRegister, Set(AkkaType), 1.second)
+  val testInfo = HcdInfo(componentName, trombonePrefix, componentClassName, RegisterOnly, Set(AkkaType), 1.second)
   val hcdInfo = parseHcd(s"$componentName", componentConf).getOrElse(testInfo)
-
-  LocationService.initInterface()
 
   println("Starting TromboneHCD: " + hcdInfo)
 
-  val supervisor = Supervisor(hcdInfo)
+  val supervisor = Supervisor3(hcdInfo)
 }

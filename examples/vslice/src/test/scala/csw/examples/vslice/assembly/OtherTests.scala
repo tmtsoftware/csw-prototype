@@ -1,7 +1,7 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{Actor, ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import org.scalatest.{BeforeAndAfterAll, Inspectors, _}
 
 /**
@@ -34,14 +34,14 @@ class OtherTests extends TestKit(ActorSystem("OtherTests")) with ImplicitSender
 
   }
 
-  class TestSubscriber(input: Int) extends Actor with TromboneStateHandler {
+  class TestSubscriber(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
 
     def receive: Receive = stateReceive orElse {
       case x => println(s"Got a bad message: $x")
     }
   }
 
-  class TestPublisher(input: Int) extends Actor with TromboneStateHandler {
+  class TestPublisher(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
 
     def receive: Receive = stateReceive orElse {
       case x => println(s"Got a bad message: $x")

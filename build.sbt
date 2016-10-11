@@ -220,4 +220,4 @@ lazy val vslice = Project(id = "VerticalSlice", base = file("examples/vslice"))
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaTest, specs2, akkaTestKit)
-  ).dependsOn(pkg, cs, ccs, loc, ts, events, util)
+  ).dependsOn(pkg, cs, ccs, alarms, loc, ts, events, util, trackLocation % "test->test")

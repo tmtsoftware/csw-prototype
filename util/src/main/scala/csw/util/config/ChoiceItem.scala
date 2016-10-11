@@ -57,6 +57,8 @@ final case class ChoiceItem(keyName: String, choices: Choices, values: Vector[Ch
   override def withUnits(unitsIn: Units) = copy(units = unitsIn)
 
   def choice(name: String): Option[Choice] = choices.values.find(_.name == name)
+
+  override def toString = s"ChoiceItem($keyName,${values.toString},${units.toString})"
 }
 
 /**

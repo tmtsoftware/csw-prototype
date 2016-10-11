@@ -6,11 +6,11 @@ import csw.services.ts.TimeService
 import csw.services.ts.TimeService._
 
 /**
-  * This class provides a simulator of a single axis device for the purpose of testing TMT HCDs and Assemblies.
-  *
-  * @param axisConfig an AxisConfig object that contains a description of the axis
-  * @param replyTo    an actor that will be updated with information while the axis executes
-  */
+ * This class provides a simulator of a single axis device for the purpose of testing TMT HCDs and Assemblies.
+ *
+ * @param axisConfig an AxisConfig object that contains a description of the axis
+ * @param replyTo    an actor that will be updated with information while the axis executes
+ */
 class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef]) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
 
   import MotionWorker._
@@ -69,7 +69,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_IDLE
       // Power on causes motion of one unit!
       current += 1
-      calcLimitsAndStats()
+      checkLimits()
       // Stats
       successCount += 1
       // Send Update
@@ -77,6 +77,9 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
 
     case GetStatistics =>
       sender() ! AxisStatistics(axisConfig.axisName, initCount, moveCount, homeCount, limitCount, successCount, failureCount, cancelCount)
+
+    case PublishAxisUpdate =>
+      update(replyTo, getState)
 
     case Home =>
       axisState = AXIS_MOVING
@@ -94,7 +97,8 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_IDLE
       current = finalPosition
       // Set limits
-      calcLimitsAndStats()
+      checkLimits()
+      if (inHome) homeCount += 1
       // Stats
       successCount += 1
       // Send Update
@@ -118,11 +122,18 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_IDLE
       current = finalPosition
       // Set limits
-      calcLimitsAndStats()
+      checkLimits()
+      // Do the count of limits
+      if (inHighLimit || inLowLimit) limitCount += 1
       // Stats
       successCount += 1
       // Send Update
       update(replyTo, getState)
+
+    case CancelMove =>
+      log.debug("Received Cancel Move while idle :-(")
+      // Stats
+      cancelCount += 1
 
     case x => log.error(s"Unexpected message in idleReceive: $x")
   }
@@ -133,6 +144,8 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       log.debug("Home Start")
     case Tick(currentIn) =>
       current = currentIn
+      // Set limits - this was a bug - need to do this after every step
+      checkLimits()
       // Send Update
       update(replyTo, getState)
     case End(finalpos) =>
@@ -145,6 +158,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case Start =>
       log.debug("Move Start")
     case CancelMove =>
+      log.debug("Cancel MOVE")
       worker ! Cancel
       // Stats
       cancelCount += 1
@@ -154,6 +168,8 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case Tick(currentIn) =>
       current = currentIn
       log.debug("Move Update")
+      // Set limits - this was a bug - need to do this after every step
+      checkLimits()
       // Send Update to caller
       update(replyTo, getState)
     case End(finalpos) =>
@@ -163,12 +179,10 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case x => log.error(s"Unexpected message in moveReceive: $x")
   }
 
-  def calcLimitsAndStats(): Unit = {
+  def checkLimits(): Unit = {
     inHighLimit = isHighLimit(axisConfig, current)
     inLowLimit = isLowLimit(axisConfig, current)
-    if (inHighLimit || inLowLimit) limitCount += 1
     inHome = isHomed(axisConfig, current)
-    if (inHome) homeCount += 1
   }
 
   def getState = AxisUpdate(axisConfig.axisName, axisState, current, inLowLimit, inHighLimit, inHome)
@@ -190,11 +204,19 @@ object SingleAxisSimulator {
   case class Move(position: Int, diagFlag: Boolean = false) extends AxisRequest
   case object CancelMove extends AxisRequest
   case object GetStatistics extends AxisRequest
+  case object PublishAxisUpdate extends AxisRequest
 
   trait AxisResponse
   case object AxisStarted extends AxisResponse
   case object AxisFinished extends AxisResponse
-  case class AxisUpdate(axisName: String, state: AxisState, current: Int, inLowLimit: Boolean, inHighLimit: Boolean, inHomed: Boolean) extends AxisResponse
+  case class AxisUpdate(
+    axisName:    String,
+    state:       AxisState,
+    current:     Int,
+    inLowLimit:  Boolean,
+    inHighLimit: Boolean,
+    inHomed:     Boolean
+  ) extends AxisResponse
   case class AxisFailure(reason: String) extends AxisResponse
   case class AxisStatistics(axisName: String, initCount: Int, moveCount: Int, homeCount: Int, limitCount: Int, successCount: Int, failureCount: Int, cancelCount: Int) extends AxisResponse {
     override def toString = s"name: $axisName, inits: $initCount, moves: $moveCount, homes: $homeCount, limits: $limitCount, success: $successCount, fails: $failureCount, cancels: $cancelCount"
@@ -241,6 +263,7 @@ class MotionWorker(val start: Int, val destinationIn: Int, val delayInMS: Int, r
       if (diagFlag) diag("Starting", start, numSteps)
       replyTo ! Start
       scheduleOnce(localTimeNow.plusNanos(delayInNanoSeconds), context.self, Tick(start + stepSize))
+
     case Tick(currentIn) =>
       replyTo ! Tick(currentIn)
 
@@ -258,15 +281,18 @@ class MotionWorker(val start: Int, val destinationIn: Int, val delayInMS: Int, r
 
       if (!done && !cancelFlag) scheduleOnce(localTimeNow.plusNanos(delayInNanoSeconds), context.self, Tick(nextPos))
       else self ! End(current)
+
     case MoveUpdate(destinationUpdate) =>
       destination = destinationUpdate
       numSteps = calcNumSteps(current, destination)
       stepSize = calcStepSize(current, destination, numSteps)
-      log.info(s"NEW dest: $destination, numSteps: $numSteps, stepSize: $stepSize")
+      log.debug(s"NEW dest: $destination, numSteps: $numSteps, stepSize: $stepSize")
+
     case Cancel =>
       if (diagFlag) log.debug("Worker received cancel")
       cancelFlag = true // Will cause to leave on next Tick
-    case end@End(finalpos) =>
+
+    case end @ End(finalpos) =>
       replyTo ! end
       if (diagFlag) diag("End", finalpos, numSteps)
       // When the actor has nothing else to do, it should stop
@@ -296,11 +322,9 @@ object MotionWorker {
     else 10
   }
 
-  def calcStepSize(current: Int, destination: Int, steps: Int):Int = (destination - current) / steps
+  def calcStepSize(current: Int, destination: Int, steps: Int): Int = (destination - current) / steps
 
-  //def stepNumber(stepCount: Int, numSteps: Int) = numSteps - stepCount
-
-  def calcDistance(current: Int, destination: Int):Int = Math.abs(current - destination)
-  def lastStep(current: Int, destination: Int, stepSize: Int):Boolean = calcDistance(current, destination) <= Math.abs(stepSize)
+  def calcDistance(current: Int, destination: Int): Int = Math.abs(current - destination)
+  def lastStep(current: Int, destination: Int, stepSize: Int): Boolean = calcDistance(current, destination) <= Math.abs(stepSize)
 
 }

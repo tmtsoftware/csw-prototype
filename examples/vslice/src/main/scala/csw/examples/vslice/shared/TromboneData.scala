@@ -1,8 +1,8 @@
 package csw.examples.vslice.shared
 
 /**
-  * TMT Source Code: 7/15/16.
-  */
+ * TMT Source Code: 7/15/16.
+ */
 object TromboneData {
 
   val testConf =
@@ -31,7 +31,7 @@ object TromboneData {
       |      }
       |      lgsTromboneHCD {
       |        type = HCD
-      |        class = "csw.examples.e2e.hcd.TromboneHCD"
+      |        class = "csw.examples.vslice.hcd.TromboneHCD"
       |        prefix = nfiraos.ncc.tromboneHCD
       |        connectionType: [akka]
       |        rate = 1 second
