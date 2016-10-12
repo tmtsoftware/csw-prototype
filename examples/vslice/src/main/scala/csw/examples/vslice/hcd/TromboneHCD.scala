@@ -5,6 +5,7 @@ import java.io.File
 import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import csw.services.ccs.HcdController
 import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ComponentType
@@ -196,7 +197,12 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
     val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
     val resource = new File("tromboneHCD.conf")
-    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
+
+    // XXX FIXME: the time it takes to determine that the config service is not running breaks the assembly tests!
+    //    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
+    val f = Future {
+      Some(ConfigFactory.parseResources(resource.getPath))
+    }
 
     // Convert the future (optional) config to an AxisConfig
     f.map(configOpt => AxisConfig(configOpt.get))

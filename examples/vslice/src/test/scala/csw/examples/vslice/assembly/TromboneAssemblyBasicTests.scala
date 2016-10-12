@@ -77,6 +77,8 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     it("should get initialized with configs from files (same as AlgorithmData") {
       val (_, tla) = newTestTrombone()
 
+      Thread.sleep(3000) // XXX allow for timeout if config service not running
+
       tla.underlyingActor.controlConfig.stageZero should be(AssemblyTestData.TestControlConfig.stageZero)
       tla.underlyingActor.controlConfig.positionScale should be(AssemblyTestData.TestControlConfig.positionScale)
       tla.underlyingActor.controlConfig.minStageEncoder should be(AssemblyTestData.TestControlConfig.minStageEncoder)

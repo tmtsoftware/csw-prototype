@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorRefFactory, Props}
 import akka.util.Timeout
 
 import scala.language.postfixOps
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.services.ccs.{AssemblyController2, CommandStatus2, CurrentStateReceiver, Validation}
@@ -28,30 +28,32 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 6/10/16.
-  */
+ * TMT Source Code: 6/10/16.
+ */
 class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with TromboneStateHandler with AssemblyController2 {
 
   import Supervisor3._
   import TromboneStateHandler._
 
-  // Get the assembly configuration from the config service or resource file
-    val (calculationConfig, controlConfig) = getAssemblyConfigs
+  implicit val timeout = Timeout(10.seconds)
 
-    val ac = AssemblyContext(info, calculationConfig, controlConfig)
-//
-  // Initialize HCD for testing (XXX allan: look up with location service!)
-//  def startHCD: ActorRef = {
-//    val testInfo = HcdInfo(
-//      TromboneHCD.componentName,
-//      TromboneHCD.trombonePrefix,
-//      TromboneHCD.componentClassName,
-//      RegisterAndTrackServices, Set(AkkaType), 1.second
-//    )
-//
-//    Supervisor3(testInfo)
-//  }
-//  val tromboneHCD = startHCD // XXX TODO: Look up with location service
+  // Get the assembly configuration from the config service or resource file (XXX TODO: Change to be non-blocking like the HCD version)
+  val (calculationConfig, controlConfig) = getAssemblyConfigs
+  implicit val ac = AssemblyContext(info, calculationConfig, controlConfig)
+
+  // Initialize HCD for testing (XXX allan: change to look up with location service!)
+  def startHCD: ActorRef = {
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
+      TromboneHCD.trombonePrefix,
+      TromboneHCD.componentClassName,
+      RegisterAndTrackServices, Set(AkkaType), 1.second
+    )
+
+    Supervisor3(testInfo)
+  }
+
+  val tromboneHCD = startHCD // XXX TODO: Look up with location service
 
   def receive = initializingReceive
 
@@ -81,10 +83,10 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
 
   /**
-    * This contains only commands that can be received during intialization
-    *
-    * @return Receive is a partial function
-    */
+   * This contains only commands that can be received during intialization
+   *
+   * @return Receive is a partial function
+   */
   def initializingReceive: Receive = trackerClientReceive orElse {
     case Running =>
       // When Running is received, transition to running Receive
@@ -98,7 +100,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   supervisor ! Initialized
   supervisor ! Started
 
-  implicit val timeout = Timeout(10.seconds)
   val xx = locateHCD()
 
   // Lookup the alarm service redis instance with the location service
@@ -139,8 +140,8 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   }
 
   /**
-    * Validates a received config arg and returns the first
-    */
+   * Validates a received config arg and returns the first
+   */
   private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
     // Are all of the configs really for us and correctly formatted, etc?
     ConfigValidation.validateTromboneSetupConfigArg(sca)
@@ -164,26 +165,31 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
 
-
   // Gets the assembly configurations from the config service, or a resource file, if not found and
   // returns the two parsed objects.
   private def getAssemblyConfigs: (TromboneCalculationConfig, TromboneControlConfig) = {
+    import system.dispatcher
     // This is required by the ConfigServiceClient
     implicit val system = context.system
 
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
     val tromboneConfigFile = new File("trombone/tromboneAssembly.conf")
     val resource = new File("tromboneAssembly.conf")
-    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
 
-    // Convert the future (optional) config to an AxisConfig, waiting for the result (for simplicity here)
-    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), timeout.duration)
+    // XXX TODO: Use config service (deal with timeout issues, if not running: Note: tests wait for 3 seconds...)
+    //    implicit val timeout = Timeout(1.seconds)
+    //    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
+    //    // parse the future (optional) config (XXX waiting for the result for now, need to wait longer than the timeout: FIXME)
+    //    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), 2.seconds)
+
+    val config = ConfigFactory.parseResources(resource.getPath)
+    (TromboneCalculationConfig(config), TromboneControlConfig(config))
   }
 }
 
 /**
-  * All assembly messages are indicated here
-  */
+ * All assembly messages are indicated here
+ */
 object TromboneAssembly {
   // Should get this from the config file?
   val componentPrefix = "nfiraos.ncc.trombone"
@@ -192,10 +198,10 @@ object TromboneAssembly {
 
   // --------- Keys/Messages used by Multiple Components
   /**
-    * The message is used within the Assembly to update actors when the Trombone HCD goes up and down and up again
-    *
-    * @param tromboneHCD the ActorRef of the tromboneHCD or None
-    */
+   * The message is used within the Assembly to update actors when the Trombone HCD goes up and down and up again
+   *
+   * @param tromboneHCD the ActorRef of the tromboneHCD or None
+   */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
 
 }

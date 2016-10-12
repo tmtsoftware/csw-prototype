@@ -87,6 +87,8 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
       val (_, tla) = newTestTrombone()
       val ua = tla.underlyingActor
 
+      Thread.sleep(3000) // XXX allow for timeout if config service not running
+
       ua.tromboneAxis should not be null
 
       // Should have initialized the current values in HCD from Axis

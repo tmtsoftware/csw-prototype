@@ -8,8 +8,8 @@ import csw.util.config.UnitsOfMeasure.{degrees, kilometers, micrometers, millime
 import csw.util.config.{BooleanKey, DoubleItem, DoubleKey, StringKey}
 
 /**
-  * TMT Source Code: 10/4/16.
-  */
+ * TMT Source Code: 10/4/16.
+ */
 case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalculationConfig, controlConfig: TromboneControlConfig) {
   // Assembly Info
   // These first three are set from the config file
@@ -123,21 +123,23 @@ case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalcul
 object AssemblyContext {
 
   /**
-    * Configuration class
-    *
-    * @param positionScale   value used to scale
-    * @param stageZero       zero point in stage conversion
-    * @param minStageEncoder minimum
-    * @param minEncoderLimit minimum
-    */
-  case class TromboneControlConfig(positionScale: Double,
-                                   stageZero: Double, minStageEncoder: Int,
-                                    minEncoderLimit: Int, maxEncoderLimit: Int)
+   * Configuration class
+   *
+   * @param positionScale   value used to scale
+   * @param stageZero       zero point in stage conversion
+   * @param minStageEncoder minimum
+   * @param minEncoderLimit minimum
+   */
+  case class TromboneControlConfig(
+    positionScale: Double,
+    stageZero:     Double, minStageEncoder: Int,
+    minEncoderLimit: Int, maxEncoderLimit: Int
+  )
 
   object TromboneControlConfig {
     def apply(config: Config): TromboneControlConfig = {
       // Main prefix for keys used below
-      val prefix = "csw.examples.Trombone.assembly"
+      val prefix = "csw.examples.trombone.assembly"
 
       val positionScale = config.getDouble(s"$prefix.control-config.positionScale")
       val stageZero = config.getDouble(s"$prefix.control-config.stageZero")
@@ -149,21 +151,21 @@ object AssemblyContext {
   }
 
   /**
-    * Configuration class
-    *
-    * @param defaultInitialElevation a default initial eleveation (possibly remove once workign)
-    * @param focusErrorGain          gain value for focus error
-    * @param upperFocusLimit         check for maximum focus error
-    * @param lowerFocusLimit         check for minimum focus error
-    * @param zenithFactor            an algorithm value for scaling zenith angle term
-    */
+   * Configuration class
+   *
+   * @param defaultInitialElevation a default initial eleveation (possibly remove once workign)
+   * @param focusErrorGain          gain value for focus error
+   * @param upperFocusLimit         check for maximum focus error
+   * @param lowerFocusLimit         check for minimum focus error
+   * @param zenithFactor            an algorithm value for scaling zenith angle term
+   */
   case class TromboneCalculationConfig(defaultInitialElevation: Double, focusErrorGain: Double,
                                        upperFocusLimit: Double, lowerFocusLimit: Double, zenithFactor: Double)
 
   object TromboneCalculationConfig {
     def apply(config: Config): TromboneCalculationConfig = {
       // Main prefix for keys used below
-      val prefix = "csw.examples.Trombone.assembly"
+      val prefix = "csw.examples.trombone.assembly"
 
       val defaultInitialElevation = config.getDouble(s"$prefix.calculation-config.defaultInitialElevation")
       val focusGainError = config.getDouble(s"$prefix.calculation-config.focusErrorGain")
