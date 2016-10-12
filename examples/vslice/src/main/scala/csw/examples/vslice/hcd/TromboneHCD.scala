@@ -47,6 +47,8 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   // Keep track of the last SetupConfig to be received from external
   private var lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix)
 
+  // XXX TODO allan: change this to block for simplicity?  XXX
+
   // Get the axis config file from the config service, then use it to start the tromboneAxis actor
   // and get the current values. Once that is done, we can tell the supervisor actor that we are ready
   // and then wait for the Running message from the supervisor before going to the running state.
@@ -192,7 +194,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     implicit val system = context.system
 
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
-    val tromboneConfigFile = new File("trombone/hcd/trombone.conf")
+    val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
     val resource = new File("tromboneHCD.conf")
     val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
 

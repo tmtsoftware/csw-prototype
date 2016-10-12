@@ -1,6 +1,6 @@
 package csw.services.loc
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import akka.actor.{Actor, ActorLogging, ActorRef, Terminated}
 import csw.services.loc.LocationService.{Location, LocationTracker, TrackConnection, UntrackConnection}
 
 /**
@@ -35,13 +35,14 @@ import csw.services.loc.LocationService.{Location, LocationTracker, TrackConnect
  * </pre>
  *
  */
-class TrackerSubscriber() extends Actor with ActorLogging {
+trait TrackerSubscriber {
+  this: Actor with ActorLogging =>
 
   import TrackerSubscriber._
 
   private val tracker = context.actorOf(LocationTracker.props(Some(self)))
 
-  def receive: Receive = {
+  def trackerSubscriberReceive: Receive = {
     case Subscribe =>
       context.watch(sender())
       context.system.eventStream.subscribe(sender(), classOf[Location])
@@ -74,12 +75,9 @@ class TrackerSubscriber() extends Actor with ActorLogging {
 
 object TrackerSubscriber {
 
-  def props = Props[TrackerSubscriber]()
-
   sealed trait TrackerSubscriberMessages
 
   case object Subscribe extends TrackerSubscriberMessages
 
   case object Unsubscribe extends TrackerSubscriberMessages
-
 }

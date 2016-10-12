@@ -1,5 +1,7 @@
 package csw.examples.vslice.assembly
 
+import java.io.File
+
 import akka.actor.{ActorRef, ActorRefFactory, Props}
 import akka.util.Timeout
 
@@ -11,6 +13,7 @@ import csw.services.ccs.{AssemblyController2, CommandStatus2, CurrentStateReceiv
 import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{StartTheSequence, StopCurrentCommand}
 import csw.services.ccs.Validation.{Validation, ValidationList}
+import csw.services.cs.akka.ConfigServiceClient
 import csw.services.events.EventServiceSettings
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
@@ -21,30 +24,34 @@ import csw.services.pkg.ContainerComponent._
 import csw.services.pkg.{Assembly, ContainerComponent, Supervisor3}
 import csw.util.config.Configurations.SetupConfigArg
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 /**
- * TMT Source Code: 6/10/16.
- */
+  * TMT Source Code: 6/10/16.
+  */
 class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with TromboneStateHandler with AssemblyController2 {
 
   import Supervisor3._
   import TromboneStateHandler._
 
-  // Initialize HCD for testing
-  def startHCD: ActorRef = {
-    val testInfo = HcdInfo(
-      TromboneHCD.componentName,
-      TromboneHCD.trombonePrefix,
-      TromboneHCD.componentClassName,
-      RegisterAndTrackServices, Set(AkkaType), 1.second
-    )
+  // Get the assembly configuration from the config service or resource file
+    val (calculationConfig, controlConfig) = getAssemblyConfigs
 
-    Supervisor3(testInfo)
-  }
-  val tromboneHCD = startHCD
-  //val tromboneHCD = context.system.deadLetters
+    val ac = AssemblyContext(info, calculationConfig, controlConfig)
+//
+  // Initialize HCD for testing (XXX allan: look up with location service!)
+//  def startHCD: ActorRef = {
+//    val testInfo = HcdInfo(
+//      TromboneHCD.componentName,
+//      TromboneHCD.trombonePrefix,
+//      TromboneHCD.componentClassName,
+//      RegisterAndTrackServices, Set(AkkaType), 1.second
+//    )
+//
+//    Supervisor3(testInfo)
+//  }
+//  val tromboneHCD = startHCD // XXX TODO: Look up with location service
 
   def receive = initializingReceive
 
@@ -61,11 +68,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
 
   val tracker = context.actorOf(TestLocationService.trackerProps(Some(context.self)))
 
-  val calculationConfig = getCalculationConfig
-  val controlConfig = getTromboneControlConfig
-
-  implicit val ac = AssemblyContext(info, calculationConfig, controlConfig)
-
   // This actor handles all telemetry and system event publishing
   val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
   // This actor makes a single connection to the
@@ -79,9 +81,10 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
 
   /**
-   * This contains only commands that can be received during intialization
-   * @return Receive is a partial function
-   */
+    * This contains only commands that can be received during intialization
+    *
+    * @return Receive is a partial function
+    */
   def initializingReceive: Receive = trackerClientReceive orElse {
     case Running =>
       // When Running is received, transition to running Receive
@@ -134,9 +137,10 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   def unhandledPF: Receive = {
     case x => log.error(s"Unexpected message in TromboneAssembly:unhandledPF: $x")
   }
+
   /**
-   * Validates a received config arg and returns the first
-   */
+    * Validates a received config arg and returns the first
+    */
   private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
     // Are all of the configs really for us and correctly formatted, etc?
     ConfigValidation.validateTromboneSetupConfigArg(sca)
@@ -160,33 +164,26 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
 
-  // The configuration for the calculator that provides reasonable values
-  def getCalculationConfig: TromboneCalculationConfig = {
-    val defaultInitialElevation = getConfigDouble("calculation-config.defaultInitialElevation")
-    val focusGainError = getConfigDouble("calculation-config.focusErrorGain")
-    val upperFocusLimit = getConfigDouble("calculation-config.upperFocusLimit")
-    val lowerFocusLimit = getConfigDouble("calculation-config.lowerFocusLimit")
-    val zenithFactor = getConfigDouble("calculation-config.zenithFactor")
-    TromboneCalculationConfig(defaultInitialElevation, focusGainError, upperFocusLimit, lowerFocusLimit, zenithFactor)
-  }
 
-  // The configuration for the trombone position mm to encoder
-  def getTromboneControlConfig: TromboneControlConfig = {
-    val positionScale = getConfigDouble("control-config.positionScale")
-    val stageZero = getConfigDouble("control-config.stageZero")
-    val minStageEncoder = getConfigInt("control-config.minStageEncoder")
-    val minEncoderLimit = getConfigInt("control-config.minEncoderLimit")
-    val maxEncoderLimit = getConfigInt("control-config.maxEncoderLimit")
-    TromboneControlConfig(positionScale, stageZero, minStageEncoder, minEncoderLimit, maxEncoderLimit)
-  }
+  // Gets the assembly configurations from the config service, or a resource file, if not found and
+  // returns the two parsed objects.
+  private def getAssemblyConfigs: (TromboneCalculationConfig, TromboneControlConfig) = {
+    // This is required by the ConfigServiceClient
+    implicit val system = context.system
 
-  def getConfigDouble(name: String): Double = context.system.settings.config.getDouble(s"csw.examples.Trombone.assembly.$name")
-  def getConfigInt(name: String): Int = context.system.settings.config.getInt(s"csw.examples.Trombone.assembly.$name")
+    // Get the trombone config file from the config service, or use the given resource file if that doesn't work
+    val tromboneConfigFile = new File("trombone/tromboneAssembly.conf")
+    val resource = new File("tromboneAssembly.conf")
+    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
+
+    // Convert the future (optional) config to an AxisConfig, waiting for the result (for simplicity here)
+    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), timeout.duration)
+  }
 }
 
 /**
- * All assembly messages are indicated here
- */
+  * All assembly messages are indicated here
+  */
 object TromboneAssembly {
   // Should get this from the config file?
   val componentPrefix = "nfiraos.ncc.trombone"
@@ -195,9 +192,10 @@ object TromboneAssembly {
 
   // --------- Keys/Messages used by Multiple Components
   /**
-   * The message is used within the Assembly to update actors when the Trombone HCD goes up and down and up again
-   * @param tromboneHCD the ActorRef of the tromboneHCD or None
-   */
+    * The message is used within the Assembly to update actors when the Trombone HCD goes up and down and up again
+    *
+    * @param tromboneHCD the ActorRef of the tromboneHCD or None
+    */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
 
 }

@@ -31,13 +31,12 @@ class AsConsoleTests extends TestKit(AsConsoleTests.system) with FunSuiteLike wi
   val ascf = Paths.get(url.toURI).toFile
 
   test("Test initializing the alarm service and then listing the alarms") {
-    // Start redis and register it with the location service on port 7777.
+    // Start redis and register it with the location service on a random port.
     // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Alarm Service Test" --command "redis-server --port 7777" --port 7777
+    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
     val asName = "Alarm Service Test"
-    val port = 7777
     Future {
-      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --port $port", "--port", port.toString, "--no-exit"))
+      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --port %port", "--no-exit"))
     }
 
     // Later, in another JVM, run the asconsole command to initialize the Redis database from the alarm service config file.
