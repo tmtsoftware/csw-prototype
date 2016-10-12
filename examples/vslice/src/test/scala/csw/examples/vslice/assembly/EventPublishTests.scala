@@ -10,10 +10,10 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 8/17/16.
-  */
+ * TMT Source Code: 8/17/16.
+ */
 class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
@@ -75,8 +75,8 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
     import TestSubscriber._
 
     /**
-      * Test Description: This test just creates a publisher and checks initialization
-      */
+     * Test Description: This test just creates a publisher and checks initialization
+     */
     it("should allow me to create actors without error") {
 
       val fakeTC = TestProbe()
@@ -88,12 +88,12 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
     }
 
     /**
-      * Test Description: This test uses a "fakeSubscriber" which is simulating the subscription to TCS and RTC
-      * events and ships UpdatedEventData messages to the FollowActor which calculates trombone positions and
-      * other things and publishes events. This one checks for the events for AOESW in the form of
-      * the System event for AOESW. One event for zenith angle 0 and focus error 0 is used for testing.
-      * In this case range distance and elevation are the same, which is initial elevation in this case.
-      */
+     * Test Description: This test uses a "fakeSubscriber" which is simulating the subscription to TCS and RTC
+     * events and ships UpdatedEventData messages to the FollowActor which calculates trombone positions and
+     * other things and publishes events. This one checks for the events for AOESW in the form of
+     * the System event for AOESW. One event for zenith angle 0 and focus error 0 is used for testing.
+     * In this case range distance and elevation are the same, which is initial elevation in this case.
+     */
     it("should allow publishing one event simulating event from fake TromboneEventSubscriber") {
       // Create a new publisher with no trombone position actor
       val ap = newTestElPublisher(None)
@@ -117,10 +117,10 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
     }
 
     /**
-      * Test Description: This test is similar to the last but a set of events are used that vary the zenith angle while holding
-      * the focus error constant to see that multiple events are generated. The computed, expected values are computed with
-      * AlgorithmData. If you change the algorithm you need to update the test helpers.
-      */
+     * Test Description: This test is similar to the last but a set of events are used that vary the zenith angle while holding
+     * the focus error constant to see that multiple events are generated. The computed, expected values are computed with
+     * AlgorithmData. If you change the algorithm you need to update the test helpers.
+     */
     it("should allow publishing several events with fake tromboneEventSubscriber") {
       import AssemblyTestData._
 
@@ -156,12 +156,12 @@ class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationT
     }
 
     /**
-      * Test Description: This takes it one step further and replaced the fakeTromboneSubscriber with the actual TromboneEventSubscriber
-      * and uses the event service to publish events. The focus error of 10 is published then the set of data varying the zenith angle.
-      * The TromboneEventSubscriber receives the events forwards them to the follow actor which then receives the events in the resultSubscriber.
-      * Note that the EventSubscriber and FollowActor are separate so that the FollowActor can be tested as a standalone actor without the
-      * event service as is done in this and the previous tests.
-      */
+     * Test Description: This takes it one step further and replaced the fakeTromboneSubscriber with the actual TromboneEventSubscriber
+     * and uses the event service to publish events. The focus error of 10 is published then the set of data varying the zenith angle.
+     * The TromboneEventSubscriber receives the events forwards them to the follow actor which then receives the events in the resultSubscriber.
+     * Note that the EventSubscriber and FollowActor are separate so that the FollowActor can be tested as a standalone actor without the
+     * event service as is done in this and the previous tests.
+     */
     it("should allow publishing several events through the event service") {
       import AssemblyTestData._
       // Ignoring the messages for TrombonePosition

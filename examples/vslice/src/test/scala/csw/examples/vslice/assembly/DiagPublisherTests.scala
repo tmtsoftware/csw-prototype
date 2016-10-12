@@ -21,21 +21,23 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.concurrent.duration._
 
 /**
-  * Diag Pubisher Tests
-  */
+ * Diag Pubisher Tests
+ */
 object DiagPublisherTests {
   LocationService.initInterface()
   val system = ActorSystem("DiagPublisherSystem")
 
 }
 class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(TromboneHCD.componentName,
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second)
+      DoNotRegister, Set(AkkaType), 1.second
+    )
 
     Supervisor3(testInfo)
   }
@@ -51,7 +53,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
   def eventConnection: EventService = EventService(testEventServiceSettings)
 
-  def newDiagPublisher(currentStateReceiver:ActorRef, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]):TestActorRef[DiagPublisher] = {
+  def newDiagPublisher(currentStateReceiver: ActorRef, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[DiagPublisher] = {
     val props = DiagPublisher.props(currentStateReceiver, tromboneHCD, eventPublisher)
     TestActorRef[DiagPublisher](props)
   }
@@ -68,9 +70,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
   }
 
   /**
-    * Test event service client, subscribes to some event
-    * @param prefix the prefix that will be subscribed to
-    */
+   * Test event service client, subscribes to some event
+   * @param prefix the prefix that will be subscribed to
+   */
   class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
 
     import TestSubscriber._
@@ -89,17 +91,16 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
         statmsgs = statmsgs :+ event
         log.debug(s"Received status event: $event")
 
-      case GetSysResults => sender() ! SysResults(sysmsgs)
+      case GetSysResults    => sender() ! SysResults(sysmsgs)
       case GetStatusResults => sender() ! StatusResults(statmsgs)
     }
   }
 
-
   describe("basic diag tests") {
 
     /**
-      * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations state.
-      */
+     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations state.
+     */
     it("should see one type of messages sent to publisher in operations mode") {
       val tromboneHCD = startHCD
 
@@ -131,9 +132,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     }
 
     /**
-      * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations mode.
-      * This test shows that in operations state the skip count is 5
-      */
+     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations mode.
+     * This test shows that in operations state the skip count is 5
+     */
     it("should see one state message sent to publisher in operations mode for every skipCount messages") {
       val tromboneHCD = startHCD
 
@@ -169,9 +170,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     }
 
     /**
-      * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in diagnostic mode.
-      * This test shows that in diagnostic state the skip count is 2
-      */
+     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in diagnostic mode.
+     * This test shows that in diagnostic state the skip count is 2
+     */
     it("should see one state message sent to publisher in diagnostics mode for every update message") {
       val tromboneHCD = startHCD
 
@@ -209,9 +210,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     }
 
     /**
-      * Test Description: This test shows that in diagnostic state there is also a stats event once/second.
-      * This test waits for one message demonstrating that stats events are published
-      */
+     * Test Description: This test shows that in diagnostic state there is also a stats event once/second.
+     * This test waits for one message demonstrating that stats events are published
+     */
     it("should see one stats message sent to publisher in diagnostics mode every second (current spec)") {
       val tromboneHCD = startHCD
 
@@ -235,9 +236,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     }
 
     /**
-      * Test Description: Demonstrate that stats events are published once/second by waiting for 3 seconds
-      * The end of the test demonstrates that the stats events are turned off properl in operations state
-      */
+     * Test Description: Demonstrate that stats events are published once/second by waiting for 3 seconds
+     * The end of the test demonstrates that the stats events are turned off properl in operations state
+     */
     it("should generate several timed events in diagnostic mode") {
       val tromboneHCD = startHCD
 
@@ -258,11 +259,11 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
       // Wait for a bit over 3 seconds
       fakeEventPublisher.receiveWhile(3200.milli) {
-        case asu:AxisStatsUpdate =>
+        case asu: AxisStatsUpdate =>
           msgs = asu +: msgs
       }
       msgs.size shouldBe 3
-      msgs.head shouldBe a [AxisStatsUpdate]
+      msgs.head shouldBe a[AxisStatsUpdate]
 
       // Now turn them off
       dp ! OperationsState
@@ -274,9 +275,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     }
 
     /**
-      * Test Description: Test that updating the HCD actorRef during operations works properly by
-      * first setting the HCD to None and then resetting it.
-      */
+     * Test Description: Test that updating the HCD actorRef during operations works properly by
+     * first setting the HCD to None and then resetting it.
+     */
     it("tromboneHCD update should work properly impacting timed events which contact the HCD") {
       val tromboneHCD = startHCD
 
@@ -310,14 +311,14 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
   }
 
   /**
-    * These tests tie the Event Service to the DiagPublisher and verify that real events are published as needed
-    */
+   * These tests tie the Event Service to the DiagPublisher and verify that real events are published as needed
+   */
   describe("functionality tests using Event Service") {
 
     /**
-      * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
-      * The diag publisher is in operations state so it requires 6 updates
-      */
+     * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
+     * The diag publisher is in operations state so it requires 6 updates
+     */
     it("should receive status events in operations mode") {
       import TestSubscriber._
 
@@ -367,9 +368,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     }
 
     /**
-      * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
-      * The diag publisher is in diagnostic state so it publishes an event every 2 updates
-      */
+     * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
+     * The diag publisher is in diagnostic state so it publishes an event every 2 updates
+     */
     it("should receive status events in diagnostic mode") {
       import TestSubscriber._
 
@@ -428,10 +429,10 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     }
 
     /**
-      * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
-      * This test is checking that the 1 per second stats events are published properly in diagnostic state
-      * It is also testing for concurrent generation of axis state events
-      */
+     * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
+     * This test is checking that the 1 per second stats events are published properly in diagnostic state
+     * It is also testing for concurrent generation of axis state events
+     */
     it("should also receive stats events in diagnostic mode") {
       import TestSubscriber._
 

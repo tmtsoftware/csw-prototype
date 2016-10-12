@@ -9,52 +9,50 @@ import csw.util.config.{Configurations, DoubleKey}
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
 
 /**
-  * TMT Source Code: 8/25/16.
-  */
+ * TMT Source Code: 8/25/16.
+ */
 class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
   import ConfigValidation._
-
 
   implicit val ac = AssemblyTestData.TestAssemblyContext
   import ac._
 
-  def checkInvalid(result: Validation):Invalid = {
-    result shouldBe a [Invalid]
+  def checkInvalid(result: Validation): Invalid = {
+    result shouldBe a[Invalid]
     result.asInstanceOf[Invalid]
   }
 
-  def checkForWrongConfigKey(result: Validation):Unit = {
-    checkInvalid(result).issue shouldBe a [WrongConfigKeyIssue]
+  def checkForWrongConfigKey(result: Validation): Unit = {
+    checkInvalid(result).issue shouldBe a[WrongConfigKeyIssue]
   }
 
-  def checkForMissingKeys(result: Validation):Unit = {
-    checkInvalid(result).issue shouldBe a [MissingKeyIssue]
+  def checkForMissingKeys(result: Validation): Unit = {
+    checkInvalid(result).issue shouldBe a[MissingKeyIssue]
   }
 
-  def checkForWrongItemType(result: Validation):Unit = {
-    checkInvalid(result).issue shouldBe a [WrongItemTypeIssue]
+  def checkForWrongItemType(result: Validation): Unit = {
+    checkInvalid(result).issue shouldBe a[WrongItemTypeIssue]
   }
 
   def checkForWrongUnits(result: Validation): Unit = {
-    checkInvalid(result).issue shouldBe a [WrongUnitsIssue]
+    checkInvalid(result).issue shouldBe a[WrongUnitsIssue]
   }
 
   def checkForWrongNumberOfParameters(result: Validation): Unit = {
-    checkInvalid(result).issue shouldBe a [WrongNumberOfItemsIssue]
+    checkInvalid(result).issue shouldBe a[WrongNumberOfItemsIssue]
   }
 
   def checkForOutOfRange(result: Validation): Unit = {
-    checkInvalid(result).issue shouldBe a [ItemValueOutOfRangeIssue]
+    checkInvalid(result).issue shouldBe a[ItemValueOutOfRangeIssue]
   }
 
   def checkForOtherIssue(result: Validation): Unit = {
-    checkInvalid(result).issue shouldBe a [OtherIssue]
+    checkInvalid(result).issue shouldBe a[OtherIssue]
   }
 
-
   /**
-    * Test Description: This tests the validation of the init SC
-    */
+   * Test Description: This tests the validation of the init SC
+   */
   describe("testing validation for init command") {
 
     it("should fail if not an init") {
@@ -89,8 +87,8 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
   }
 
   /**
-    * Test Description: This tests the validation of the move SC
-    */
+   * Test Description: This tests the validation of the move SC
+   */
   describe("testing validation of move setupconfig") {
     it("should fail if not a move") {
       val sc = SetupConfig(positionCK)
@@ -123,8 +121,8 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
   }
 
   /**
-    * Test Description: This tests the validation of the position SC
-    */
+   * Test Description: This tests the validation of the position SC
+   */
   describe("testing validation of position setupconfig") {
     it("should fail if not a position") {
       val sc = SetupConfig(moveCK)
@@ -158,8 +156,8 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
   }
 
   /**
-    * Test Description: This tests the validation of the setElevation SC
-    */
+   * Test Description: This tests the validation of the setElevation SC
+   */
   describe("testing validation for setElevation command") {
 
     it("should fail if not a setElevation") {
@@ -198,8 +196,8 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
   }
 
   /**
-    * Test Description: Test tests the validation of a setAngle SC
-    */
+   * Test Description: Test tests the validation of a setAngle SC
+   */
   describe("testing validation of setAngle setupconfig") {
     it("should fail if not a setAngle") {
       val sc = SetupConfig(moveCK)
@@ -234,8 +232,8 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
   }
 
   /**
-    * Test Description: This tests the validation of a follow SC
-    */
+   * Test Description: This tests the validation of a follow SC
+   */
   describe("testing validation of follow setupconfig") {
     it("should fail if not a follow") {
       val sc = SetupConfig(moveCK)
@@ -262,8 +260,8 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
   }
 
   /**
-    * Test Description: This is a test of the SetupConfigARg validation routine in TromboneAssembly
-    */
+   * Test Description: This is a test of the SetupConfigARg validation routine in TromboneAssembly
+   */
   describe("Test of TromboneAssembly validation") {
     //implicit val tc = AssemblyTestData.TestAssemblyContext
 
@@ -277,7 +275,7 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
     it("should show a single issue") {
       // positionCK requires an argument
       val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(positionCK))
-      val issues:Seq[Invalid] = invalidsInTromboneSetupConfigArg(sca)
+      val issues: Seq[Invalid] = invalidsInTromboneSetupConfigArg(sca)
       issues should not be empty
       issues.size should be(1)
       checkForMissingKeys(issues.head)
@@ -300,7 +298,7 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
       val t1 = Invalid(WrongConfigKeyIssue(testmessage))
 
       val c1 = CommandStatus2.Invalid(t1)
-      c1.issue shouldBe a [WrongConfigKeyIssue]
+      c1.issue shouldBe a[WrongConfigKeyIssue]
       c1.issue.reason should equal(testmessage)
 
     }
@@ -312,8 +310,8 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
       val validations = ConfigValidation.validateTromboneSetupConfigArg(sca)
       validations.size should equal(sca.configs.size)
       validations.head shouldBe Valid
-      validations(1) shouldBe a [Invalid]
-      validations(2) shouldBe a [Invalid]
+      validations(1) shouldBe a[Invalid]
+      validations(2) shouldBe a[Invalid]
 
       // Convert to pairs
       val cresult = CommandStatus2.validationsToCommandResultPairs(sca.configs, validations)
@@ -321,10 +319,10 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
       cresult.head._1 shouldBe CommandStatus2.Valid
       cresult.head._2 should equal(sca.configs.head)
 
-      cresult(1)._1 shouldBe a [CommandStatus2.Invalid]
+      cresult(1)._1 shouldBe a[CommandStatus2.Invalid]
       cresult(1)._2 should equal(sca.configs(1))
 
-      cresult(2)._1 shouldBe a [CommandStatus2.Invalid]
+      cresult(2)._1 shouldBe a[CommandStatus2.Invalid]
       cresult(2)._2 should equal(sca.configs(2))
 
       // Is correct overall returned
@@ -336,12 +334,9 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
       val validations2 = ConfigValidation.validateTromboneSetupConfigArg(sca2)
       isAllValid(validations2) shouldBe true
 
-
     }
 
   }
-
-
 
 }
 

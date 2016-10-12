@@ -24,10 +24,10 @@ import org.scalatest.{FunSpecLike, _}
 import scala.concurrent.duration._
 
 /**
-  * These tests are about testing the calculated values for the trombone position when following.
-  */
+ * These tests are about testing the calculated values for the trombone position when following.
+ */
 class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
   import Algorithms._
   import TromboneAssembly._
 
@@ -42,7 +42,7 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
 
   val initialElevation = 90.0
 
-  def pos(position: Double):DoubleItem = stagePositionKey -> position withUnits stagePositionUnits
+  def pos(position: Double): DoubleItem = stagePositionKey -> position withUnits stagePositionUnits
 
   def newFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
     val props = FollowActor.props(assemblyContext, setNssInUse(false), tromboneControl, publisher)
@@ -56,17 +56,17 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
   }
 
   /**
-    * Shortcut for creating zenith angle DoubleItem
-    * @param angle angle in degrees
-    * @return DoubleItem with value and degrees
-    */
+   * Shortcut for creating zenith angle DoubleItem
+   * @param angle angle in degrees
+   * @return DoubleItem with value and degrees
+   */
   def za(angle: Double): DoubleItem = zenithAngleKey -> angle withUnits degrees
 
   /**
-    * Shortcut for creating focus error DoubleItem
-    * @param error focus error in millimeters
-    * @return DoubleItem with value and millimeters units
-    */
+   * Shortcut for creating focus error DoubleItem
+   * @param error focus error in millimeters
+   * @return DoubleItem with value and millimeters units
+   */
   def fe(error: Double): DoubleItem = focusErrorKey -> error withUnits micrometers
 
   // Test subscriber actor for telemetry
@@ -97,40 +97,37 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
     }
   }
 
-
   /**
-    * Test Description: This test tests the CalculatorActor to a fake TromboneHCD to inspect the messages
-    * provided by the CalculatorActor.  fakeTromboneEventSubscriber sends an UpdatedEventData event to
-    * CalculatorActor, which after performing a calculation provides an HCDTromboneUpdate message to the
-    * fakeTrombonePublisher. This tests input/output of CalculatorActor.
-    */
+   * Test Description: This test tests the CalculatorActor to a fake TromboneHCD to inspect the messages
+   * provided by the CalculatorActor.  fakeTromboneEventSubscriber sends an UpdatedEventData event to
+   * CalculatorActor, which after performing a calculation provides an HCDTromboneUpdate message to the
+   * fakeTrombonePublisher. This tests input/output of CalculatorActor.
+   */
   describe("connect output of calculator actor to the trombone publisher") {
     import AssemblyTestData._
     import Algorithms._
 
-      it("tests total RD to encoder is within values") {
-        val maxEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(maxTotalRD))
-        val minEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(minTotalRD))
+    it("tests total RD to encoder is within values") {
+      val maxEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(maxTotalRD))
+      val minEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(minTotalRD))
 
-        minEncoder shouldBe > (controlConfig.minEncoderLimit)
-        maxEncoder shouldBe < (controlConfig.maxEncoderLimit)
-      }
+      minEncoder shouldBe >(controlConfig.minEncoderLimit)
+      maxEncoder shouldBe <(controlConfig.maxEncoderLimit)
+    }
 
+    // This isn't a great test, but a real system would know this transformation and test it
+    // Using expected encoder values for test inputs
+    it("encoder values should test") {
+      val result = encoderTestValues.map(_._1).map(f => stagePositionToEncoder(controlConfig, f))
+      val answers = encoderTestValues.map(_._2)
 
-      // This isn't a great test, but a real system would know this transformation and test it
-      // Using expected encoder values for test inputs
-      it("encoder values should test") {
-        val result = encoderTestValues.map(_._1).map(f => stagePositionToEncoder(controlConfig, f))
-        val answers = encoderTestValues.map(_._2)
-
-        result should equal(answers)
-      }
-
+      result should equal(answers)
+    }
 
     /**
-      * Test Description: This test uses a fake trombone event subscriber to send an UpdatedEventData message to the
-      * followActor to see that it generates a RangeDistance message to send to the trombone hardware HCD
-      */
+     * Test Description: This test uses a fake trombone event subscriber to send an UpdatedEventData message to the
+     * followActor to see that it generates a RangeDistance message to send to the trombone hardware HCD
+     */
     it("should allow one update") {
 
       val fakeTromboneControl = TestProbe()
@@ -149,9 +146,9 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
     }
 
     /**
-      * Test Description: Similar to previous test, but with many values to test calculation and event flow.
-      * Values are precalculated to it's not testing algorithms, it's testing the flow from input events to output
-      */
+     * Test Description: Similar to previous test, but with many values to test calculation and event flow.
+     * Values are precalculated to it's not testing algorithms, it's testing the flow from input events to output
+     */
     it("should create a proper set of HCDPositionUpdate messages") {
 
       val fakeTromboneControl = TestProbe()
@@ -185,9 +182,9 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
     }
 
     /**
-      * Test Description: This adds the use of the Event Service. The test sends Zenith Angle updates from the
-      * "TCS" through event service and generates trombone positions that are received by the fakeTromboneControl.
-      */
+     * Test Description: This adds the use of the Event Service. The test sends Zenith Angle updates from the
+     * "TCS" through event service and generates trombone positions that are received by the fakeTromboneControl.
+     */
     it("should create a proper published events from fake TCS flowing through Event Service to produce HCD encoder motion updates") {
 
       // Fake actor that handles sending to HCD
@@ -234,9 +231,9 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
   }
 
   /**
-    * Test Description: This test sends one upate through FollowActor to a fakeTromboneHCD,
-    * through the actual TromboneControl actor that converts stage position to encoder units and commands for HCD.
-    */
+   * Test Description: This test sends one upate through FollowActor to a fakeTromboneHCD,
+   * through the actual TromboneControl actor that converts stage position to encoder units and commands for HCD.
+   */
   describe("check output of follow actor to the TromboneHCD through the trombone control sending one event") {
     import AssemblyTestData._
 
@@ -268,12 +265,11 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
       msg should equal(Submit(SetupConfig(axisMoveCK).add(positionKey -> expectedEnc withUnits positionUnits)))
     }
 
-
     /**
-      * Test Description: This test creates a set of UpdatedEventData messages, sends them to FollowActor, which
-      * passes them to the TromboneControl which creates the Submit messages for the HCD which are received by
-      * a "fake" HCD and tested
-      */
+     * Test Description: This test creates a set of UpdatedEventData messages, sends them to FollowActor, which
+     * passes them to the TromboneControl which creates the Submit messages for the HCD which are received by
+     * a "fake" HCD and tested
+     */
     it("should create a proper set of Submit messages for the fakeTromboneHCD") {
       import TromboneHCD._
 
@@ -292,7 +288,8 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
 
       // This should result in two messages being sent, one to each actor in the given order
       val fakeTromboneSubscriber = TestProbe()
-      updateMessages.foreach { ev => fakeTromboneSubscriber.send(followActor, ev)
+      updateMessages.foreach { ev =>
+        fakeTromboneSubscriber.send(followActor, ev)
         // This allows the processed messages to interleave
         Thread.sleep(5)
       }
@@ -314,26 +311,27 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
     // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
     // The following are used to start a tromboneHCD for testing purposes
     def startHCD: ActorRef = {
-      val testInfo = HcdInfo(TromboneHCD.componentName,
+      val testInfo = HcdInfo(
+        TromboneHCD.componentName,
         TromboneHCD.trombonePrefix,
         TromboneHCD.componentClassName,
-        DoNotRegister, Set(AkkaType), 1.second)
+        DoNotRegister, Set(AkkaType), 1.second
+      )
 
       Supervisor3(testInfo)
     }
 
-
     /**
-      * This will accept CurrentState messages until a state value is AXIS_IDLE
-      * This is useful when you know there is one move and it will end without being updated
-      * @param tp TestProbe that is the destination of the CurrentState messages
-      * @return a Sequence of CurrentState messages
-      */
+     * This will accept CurrentState messages until a state value is AXIS_IDLE
+     * This is useful when you know there is one move and it will end without being updated
+     * @param tp TestProbe that is the destination of the CurrentState messages
+     * @return a Sequence of CurrentState messages
+     */
     def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
       val msgs = tp.receiveWhile(5.seconds) {
-        case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
+        case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
         // This is present to pick up the first status message
-        case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+        case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
       }
       val fmsg = tp.expectMsgClass(classOf[CurrentState]) // last one -- with AXIS_IDLE
       val allmsgs = msgs :+ fmsg
@@ -341,17 +339,17 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
     }
 
     /**
-      * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
-      * Then it collects the one where it is the destination and the end message
-      * @param tp TestProbe that is receiving the CurrentState messages
-      * @param dest a TestProbe acting as the assembly
-      * @return A sequence of CurrentState messages
-      */
+     * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
+     * Then it collects the one where it is the destination and the end message
+     * @param tp TestProbe that is receiving the CurrentState messages
+     * @param dest a TestProbe acting as the assembly
+     * @return A sequence of CurrentState messages
+     */
     def expectMoveMsgsWithDest(tp: TestProbe, dest: Int): Seq[CurrentState] = {
       val msgs = tp.receiveWhile(5.seconds) {
-        case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
+        case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
         // This is present to pick up the first status message
-        case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+        case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
       }
       val fmsg1 = tp.expectMsgClass(classOf[CurrentState]) // last one with current == target
       val fmsg2 = tp.expectMsgClass(classOf[CurrentState]) // the the end event with IDLE
@@ -359,15 +357,14 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
       allmsgs
     }
 
-
     /**
-      * Test Description: This test creates a trombone HCD to receive events from the CalculatorActor.
-      * The first part is about starting the HCD and waiting for it to reach the running lifecycle state where it can receive events
-      * UpdatedEventData messages are constructed and sent to the CalculatorActor, which uses them to create position updates.
-      * A fake TCS sends Zenith Angle SystemEvents to the CalculatorActor which receives them
-      * processes them, and sends them to the HCD which replies with CurrentState updates.
-      * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion and other purposes.
-      */
+     * Test Description: This test creates a trombone HCD to receive events from the CalculatorActor.
+     * The first part is about starting the HCD and waiting for it to reach the running lifecycle state where it can receive events
+     * UpdatedEventData messages are constructed and sent to the CalculatorActor, which uses them to create position updates.
+     * A fake TCS sends Zenith Angle SystemEvents to the CalculatorActor which receives them
+     * processes them, and sends them to the HCD which replies with CurrentState updates.
+     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion and other purposes.
+     */
     it("should create a proper set of HCDPositionUpdate messages for zenith angle changes through to HCD instance") {
 
       // startHCD creates an instance of the HCD
@@ -426,14 +423,14 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
     }
 
     /**
-      * Test Description: This test is similar to the previous test, but it simulates changes to the focus error
-      * rather than changes to the zenith angle.
-      * This test creates a trombone HCD to receive events from the CalculatorActor.
-      * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-      * A fake RTC sends focus error events to the CalculatorActor which receives them, processes them, calculates new values,
-      * and sends commands to the HCD which replies with CurrentState updates.
-      * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
-      */
+     * Test Description: This test is similar to the previous test, but it simulates changes to the focus error
+     * rather than changes to the zenith angle.
+     * This test creates a trombone HCD to receive events from the CalculatorActor.
+     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+     * A fake RTC sends focus error events to the CalculatorActor which receives them, processes them, calculates new values,
+     * and sends commands to the HCD which replies with CurrentState updates.
+     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
+     */
     it("should create a proper set of HCDPositionUpdate messages for focus error changes through HCD") {
 
       // startHCD creates an instance of the HCD
@@ -462,7 +459,7 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
 
       // This should result in two messages being sent, one to each actor in the given order
       val fakeTromboneSubscriber = TestProbe()
-      updateMessages.foreach {ev =>
+      updateMessages.foreach { ev =>
         fakeTromboneSubscriber.send(followActor, ev)
         // This delay is not needed, but makes the timing more challenging for the HCD motions
         Thread.sleep(10)
@@ -489,13 +486,13 @@ class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulatio
     }
 
     /**
-      * Test Description: This test creates a trombone HCD to receive events from the FollowActor.
-      * This tests the entire path with fake TCS sending events through Event Service, which are received by
-      * TromboneSubscriber and then processed by FollowActor, and sends them to TromboneControl
-      * which sends them to the TromboneHCD, which replies with StateUpdates.
-      * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-      * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
-      */
+     * Test Description: This test creates a trombone HCD to receive events from the FollowActor.
+     * This tests the entire path with fake TCS sending events through Event Service, which are received by
+     * TromboneSubscriber and then processed by FollowActor, and sends them to TromboneControl
+     * which sends them to the TromboneHCD, which replies with StateUpdates.
+     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
+     */
     it("creates fake TCS/RTC events with Event Service through calculator and back to HCD instance") {
 
       val tromboneHCD = startHCD

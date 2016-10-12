@@ -111,6 +111,12 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     case GetAxisStats =>
       tromboneAxis ! GetStatistics
 
+    case GetAxisUpdate =>
+      tromboneAxis ! PublishAxisUpdate
+
+    case GetAxisUpdateNow =>
+      sender() ! current
+
     case AxisStarted =>
     //println("Axis Started")
 
@@ -214,6 +220,7 @@ object TromboneHCD {
   val AXIS_ERROR = Choice(SingleAxisSimulator.AXIS_ERROR.toString)
   val stateKey = ChoiceKey("axisState", AXIS_IDLE, AXIS_MOVING, AXIS_ERROR)
   val positionKey = IntKey("position")
+  val positionUnits = encoder
   val inLowLimitKey = BooleanKey("lowLimit")
   val inHighLimitKey = BooleanKey("highLimit")
   val inHomeKey = BooleanKey("homed")
@@ -283,6 +290,16 @@ object TromboneHCD {
   trait TromboneEngineering
 
   case object GetAxisStats extends TromboneEngineering
+
+  /**
+   * Returns an AxisUpdate through subscribers
+   */
+  case object GetAxisUpdate extends TromboneEngineering
+
+  /**
+   * Directly returns an AxisUpdate to sender
+   */
+  case object GetAxisUpdateNow extends TromboneEngineering
 
   case object GetAxisConfig extends TromboneEngineering
 

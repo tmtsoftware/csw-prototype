@@ -24,10 +24,10 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 8/12/16.
-  */
+ * TMT Source Code: 8/12/16.
+ */
 class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   //import TromboneAssembly._
 
@@ -38,13 +38,11 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
   val controlConfig = assemblyContext.controlConfig
   import assemblyContext._
 
-
-
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
   val initialElevation = 90.0
 
-  def newFollower(usingNSS:BooleanItem, tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
+  def newFollower(usingNSS: BooleanItem, tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
     val props = FollowActor.props(assemblyContext, usingNSS, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
     TestActorRef(props)
   }
@@ -78,7 +76,6 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
       case GetResults => sender() ! Results(msgs)
     }
   }
-
 
   describe("Basic tests for connectivity") {
     val fakeTC = TestProbe()
@@ -121,10 +118,12 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
   // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
   // The following are used to start a tromboneHCD for testing purposes
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(TromboneHCD.componentName,
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second)
+      DoNotRegister, Set(AkkaType), 1.second
+    )
 
     Supervisor3(testInfo)
   }
@@ -168,13 +167,13 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
   }
 
   /**
-    * Test Description: This test provides simulated UpdatedEventData events to the FollowActor and then tests that the
-    * FollowActor sends the expected messages out including:
-    * Events for AOESW
-    * Positions for Trombone Stage
-    * Engineering Status event
-    * The events are received by "fake" actors played by TestProbes
-    */
+   * Test Description: This test provides simulated UpdatedEventData events to the FollowActor and then tests that the
+   * FollowActor sends the expected messages out including:
+   * Events for AOESW
+   * Positions for Trombone Stage
+   * Engineering Status event
+   * The events are received by "fake" actors played by TestProbes
+   */
   describe("Test for reasonable results when setNssInUse(false)") {
     import AssemblyTestData._
     import Algorithms._
@@ -260,19 +259,18 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
       engExpected should equal(engMsgs)
     }
 
-
     /**
-      * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
-      * Then it collects the one where it is the destination and the end message
-      * @param tp TestProbe that is receiving the CurrentState messages
-      * @param dest a TestProbe acting as the assembly
-      * @return A sequence of CurrentState messages
-      */
+     * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
+     * Then it collects the one where it is the destination and the end message
+     * @param tp TestProbe that is receiving the CurrentState messages
+     * @param dest a TestProbe acting as the assembly
+     * @return A sequence of CurrentState messages
+     */
     def expectMoveMsgsWithDest(tp: TestProbe, dest: Int): Seq[CurrentState] = {
       val msgs = tp.receiveWhile(5.seconds) {
-        case m@CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
+        case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
         // This is present to pick up the first status message
-        case st@CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+        case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
       }
       val fmsg1 = tp.expectMsgClass(classOf[CurrentState]) // last one with current == target
       val fmsg2 = tp.expectMsgClass(classOf[CurrentState]) // the the end event with IDLE
@@ -281,14 +279,14 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
     }
 
     /**
-      * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
-      * This tests the entire path with fake TCS sending events through Event Service, which are received by
-      * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
-      * which sends them to the TromboneHCD, which replies with StateUpdates.
-      * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
-      * and subscribed to by test clients, that collect their events for checking at the end
-      * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-      */
+     * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
+     * This tests the entire path with fake TCS sending events through Event Service, which are received by
+     * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
+     * which sends them to the TromboneHCD, which replies with StateUpdates.
+     * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
+     * and subscribed to by test clients, that collect their events for checking at the end
+     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+     */
     it("creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance") {
       import TestSubscriber._
 
@@ -344,7 +342,7 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
         tcsRtc.publish(f)
         // The following is not required, but is added to make the event timing more interesting
         // Varying this delay from 50 to 10 shows completion of moves and at 10 update of move positions before finishing
-        Thread.sleep(500)  // 500 makes it seem more interesting to watch, but is not needed for proper operation
+        Thread.sleep(500) // 500 makes it seem more interesting to watch, but is not needed for proper operation
       }
 
       // ---- Everything from here on is about gathering the data and checking
@@ -401,6 +399,5 @@ class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTe
     }
 
   }
-
 
 }

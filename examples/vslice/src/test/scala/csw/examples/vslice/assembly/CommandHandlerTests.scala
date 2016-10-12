@@ -22,10 +22,10 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 9/21/16.
-  */
+ * TMT Source Code: 9/21/16.
+ */
 class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests"))
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneStateHandler._
 
@@ -42,17 +42,19 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
   }
 
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(TromboneHCD.componentName,
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second)
+      DoNotRegister, Set(AkkaType), 1.second
+    )
 
     Supervisor3(testInfo)
   }
 
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None) = {
-   //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
-   //thandler
+    //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
+    //thandler
     system.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, allEventPublisher))
   }
 
@@ -127,7 +129,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     val monitor = TestProbe()
     monitor.watch(ch)
     monitor.watch(tromboneHCD)
-    system.stop(ch)  // ch ! PoisonPill
+    system.stop(ch) // ch ! PoisonPill
     monitor.expectTerminated(ch)
     system.stop(tromboneHCD) //tromboneHCD ! PoisonPill
     monitor.expectTerminated(tromboneHCD, 4.seconds)
@@ -381,7 +383,6 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     system.stop(tromboneHCD)
   }
 
-
   it("should allow follow and a stop") {
 
     val tromboneHCD = startHCD
@@ -476,7 +477,6 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     //logger.info(s"Upd2: $upd")
     upd.current should equal(expectedEncoderValue)
-
 
     sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(ac.stopCK))
     val se4 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))

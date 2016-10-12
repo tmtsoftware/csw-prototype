@@ -12,10 +12,10 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 9/17/16.
-  */
+ * TMT Source Code: 9/17/16.
+ */
 class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
@@ -43,9 +43,9 @@ class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulati
 
       val es = newTestEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref))
 
-      es.underlyingActor.nssZenithAngle should equal (za(0.0))
-      es.underlyingActor.initialFocusError should equal (fe(0.0))
-      es.underlyingActor.initialZenithAngle should equal (za(0.0))
+      es.underlyingActor.nssZenithAngle should equal(za(0.0))
+      es.underlyingActor.initialFocusError should equal(fe(0.0))
+      es.underlyingActor.initialZenithAngle should equal(za(0.0))
       es.underlyingActor.nssInUseGlobal shouldBe setNssInUse(false)
 
       es ! StopFollowing
@@ -72,9 +72,9 @@ class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulati
 
       val msg = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
 
-      msg.focusError should equal (fe(testFE))
+      msg.focusError should equal(fe(testFE))
       // 0.0 is the default value as well as nssZenithAngle
-      msg.zenithAngle should equal (za(0.0))
+      msg.zenithAngle should equal(za(0.0))
 
       system.stop(es)
 
@@ -132,7 +132,7 @@ class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulati
 
       feEvents.map(f => tcsRtc.publish(f))
 
-      val feEventMsgs:Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
+      val feEventMsgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
       feEventMsgs.size should equal(feEvents.size)
       val fevals = feEventMsgs.map(f => f.focusError.head)
       // Should equal test vals
@@ -145,7 +145,7 @@ class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulati
       tcsEvents.map(f => tcsRtc.publish(f))
 
       // Should get several and the zenith angles should match since nssInUse was false
-      val msgs:Vector[UpdatedEventData] = fakeFollowActor.receiveN(tcsEvents.size).asInstanceOf[Vector[UpdatedEventData]]
+      val msgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(tcsEvents.size).asInstanceOf[Vector[UpdatedEventData]]
       val zavals = msgs.map(f => f.zenithAngle.head)
       // Should equal input za
       zavals should equal(testZenithAngles)
@@ -188,7 +188,7 @@ class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulati
 
       val testZA = 45.0
       tcsRtc.publish(SystemEvent(zenithAnglePrefix).add(za(testZA)))
-      val one:UpdatedEventData = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
+      val one: UpdatedEventData = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
       one.zenithAngle.head shouldBe testZA
 
       // Now follow with nssInUse and send feEvents, should have 0.0 as ZA
@@ -196,7 +196,7 @@ class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulati
 
       // Now send the events
       feEvents.map(f => tcsRtc.publish(f))
-      val msgs2:Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
+      val msgs2: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
       // Each zenith angle with the message should be 0.0 now, not 45.0
       val zavals = msgs2.map(f => f.zenithAngle.head)
       zavals.filter(_ != 0.0) shouldBe empty

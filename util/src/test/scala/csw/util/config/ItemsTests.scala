@@ -926,7 +926,6 @@ class ItemsTests extends FunSpec with ShouldMatchers {
     it("should allow creating one of them") {
       val skey = StructKey("myStruct")
 
-
       val ra = StringKey("ra")
       val dec = StringKey("dec")
       val epoch = DoubleKey("epoch")

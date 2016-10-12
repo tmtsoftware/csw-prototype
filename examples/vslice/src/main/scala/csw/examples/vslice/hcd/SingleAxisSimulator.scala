@@ -68,7 +68,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_IDLE
       // Power on causes motion of one unit!
       current += 1
-      calcLimitsAndStats()
+      checkLimits()
       // Stats
       successCount += 1
       // Send Update
@@ -76,6 +76,9 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
 
     case GetStatistics =>
       sender() ! AxisStatistics(axisConfig.axisName, initCount, moveCount, homeCount, limitCount, successCount, failureCount, cancelCount)
+
+    case PublishAxisUpdate =>
+      update(replyTo, getState)
 
     case Home =>
       axisState = AXIS_MOVING
@@ -93,7 +96,8 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_IDLE
       current = finalPosition
       // Set limits
-      calcLimitsAndStats()
+      checkLimits()
+      if (inHome) homeCount += 1
       // Stats
       successCount += 1
       // Send Update
@@ -117,11 +121,18 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_IDLE
       current = finalPosition
       // Set limits
-      calcLimitsAndStats()
+      checkLimits()
+      // Do the count of limits
+      if (inHighLimit || inLowLimit) limitCount += 1
       // Stats
       successCount += 1
       // Send Update
       update(replyTo, getState)
+
+    case CancelMove =>
+      log.debug("Received Cancel Move while idle :-(")
+      // Stats
+      cancelCount += 1
 
     case x => log.error(s"Unexpected message in idleReceive: $x")
   }
@@ -132,6 +143,8 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       log.debug("Home Start")
     case Tick(currentIn) =>
       current = currentIn
+      // Set limits - this was a bug - need to do this after every step
+      checkLimits()
       // Send Update
       update(replyTo, getState)
     case End(finalpos) =>
@@ -144,6 +157,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case Start =>
       log.debug("Move Start")
     case CancelMove =>
+      log.debug("Cancel MOVE")
       worker ! Cancel
       // Stats
       cancelCount += 1
@@ -153,6 +167,8 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case Tick(currentIn) =>
       current = currentIn
       log.debug("Move Update")
+      // Set limits - this was a bug - need to do this after every step
+      checkLimits()
       // Send Update to caller
       update(replyTo, getState)
     case End(finalpos) =>
@@ -162,12 +178,10 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
     case x => log.error(s"Unexpected message in moveReceive: $x")
   }
 
-  private def calcLimitsAndStats(): Unit = {
+  private def checkLimits(): Unit = {
     inHighLimit = isHighLimit(axisConfig, current)
     inLowLimit = isLowLimit(axisConfig, current)
-    if (inHighLimit || inLowLimit) limitCount += 1
     inHome = isHomed(axisConfig, current)
-    if (inHome) homeCount += 1
   }
 
   private def getState = AxisUpdate(axisConfig.axisName, axisState, current, inLowLimit, inHighLimit, inHome)
@@ -189,6 +203,7 @@ object SingleAxisSimulator {
   case class Move(position: Int, diagFlag: Boolean = false) extends AxisRequest
   case object CancelMove extends AxisRequest
   case object GetStatistics extends AxisRequest
+  case object PublishAxisUpdate extends AxisRequest
 
   trait AxisResponse
   case object AxisStarted extends AxisResponse

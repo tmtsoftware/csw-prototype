@@ -52,7 +52,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   log.info("Connections: " + info.connections)
   trackConnections(info.connections)
 
-  override def allResolved(locs: Set[Location]):Unit = {
+  override def allResolved(locs: Set[Location]): Unit = {
     log.info(s"RESOLVED: $locs")
 
   }
@@ -99,7 +99,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   val xx = locateHCD()
 
   // Lookup the alarm service redis instance with the location service
-  private def locateHCD(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout):Future[ResolvedAkkaLocation]  = {
+  private def locateHCD(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[ResolvedAkkaLocation] = {
     import context.dispatcher
     val connection = AkkaConnection(ComponentId("lgsTromboneHCD", ComponentType.HCD))
     LocationService.resolve(Set(connection)).map { locationsReady =>
@@ -157,7 +157,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     validations
   }
 
-
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
 
@@ -189,6 +188,8 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
  * All assembly messages are indicated here
  */
 object TromboneAssembly {
+  // Should get this from the config file?
+  val componentPrefix = "nfiraos.ncc.trombone"
 
   def props(assemblyInfo: AssemblyInfo, supervisor: ActorRef) = Props(classOf[TromboneAssembly], assemblyInfo, supervisor)
 
@@ -199,39 +200,4 @@ object TromboneAssembly {
    */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
 
-}
-
-/**
- * Starts Assembly as a standalone application.
- */
-object TromboneAssemblyApp extends App {
-  import csw.examples.vslice.shared.TromboneData._
-
-  LocationService.initInterface()
-
-  // Assembly Info
-  // These first three are set from the config file
-  var componentName: String = "lgsTrombone"
-  var componentClassName: String = "csw.examples.vslice.assembly.TromboneAssembly"
-  var componentPrefix: String = "nfiraos.ncc.trombone"
-  val componentType = ComponentType.Assembly
-  val fullName = s"$componentPrefix.$componentName"
-
-  private def setup: Config = ContainerComponent.parseStringConfig(testConf)
-
-  val assemblyConf = setup.getConfig(s"container.components.$componentName")
-  val hcdId = ComponentId("lgsTromboneHCD", ComponentType.HCD)
-  println("Hcd Component ID: " + hcdId)
-  val defaultInfo = AssemblyInfo(
-    componentName,
-    componentPrefix,
-    componentClassName,
-    RegisterAndTrackServices,
-    Set(AkkaType),
-    Set(AkkaConnection(hcdId)))
-  val assemblyInfo = parseAssembly(s"$componentName", assemblyConf).getOrElse(defaultInfo)
-
-  println("Starting TromboneAssembly: " + assemblyInfo)
-
-  val supervisor = Supervisor3(assemblyInfo)
 }

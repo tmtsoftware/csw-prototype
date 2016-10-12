@@ -315,7 +315,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with I
         msgs.last(inHighLimitKey).head should equal(false)
 
         // Now move off low limt
-        testPos = tla.underlyingActor.axisConfig.lowUser+20
+        testPos = tla.underlyingActor.axisConfig.lowUser + 20
         tla ! Submit(positionSC(testPos))
 
         msgs = waitForMoveMsgs

@@ -29,17 +29,19 @@ object TromboneAssemblyBasicTests {
 }
 
 /**
-  * TMT Source Code: 8/23/16.
-  */
+ * TMT Source Code: 8/23/16.
+ */
 class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   // Initialize HCD for testing
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(TromboneHCD.componentName,
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      RegisterAndTrackServices, Set(AkkaType), 1.second)
+      RegisterAndTrackServices, Set(AkkaType), 1.second
+    )
 
     Supervisor3(testInfo)
   }
@@ -53,7 +55,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
   def getTromboneProps(assemblyInfo: AssemblyInfo, supervisorIn: Option[ActorRef]): Props = {
     supervisorIn match {
-      case None => TromboneAssembly.props(assemblyInfo, TestProbe().ref)
+      case None           => TromboneAssembly.props(assemblyInfo, TestProbe().ref)
       case Some(actorRef) => TromboneAssembly.props(assemblyInfo, actorRef)
     }
   }
@@ -109,7 +111,6 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       //val config = ConfigFactory.parseFileAnySyntax(new File("tromboneAssembly.conf"))
       val config = ConfigFactory.parseResources("tromboneAssembly.conf")
 
-
       info("Its: " + config)
 
       val name = config.getString("csw.examples.trombone.assembly.name")
@@ -163,8 +164,8 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       // This should fail due to wrong internal state
       val completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
       completeMsg.overall shouldBe Incomplete
-      completeMsg.details.status(0) shouldBe a [NoLongerValid]
-      completeMsg.details.status(0).asInstanceOf[NoLongerValid].issue shouldBe a [WrongInternalStateIssue]
+      completeMsg.details.status(0) shouldBe a[NoLongerValid]
+      completeMsg.details.status(0).asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
     }
 
     it("should allow a datum then 2 moves") {

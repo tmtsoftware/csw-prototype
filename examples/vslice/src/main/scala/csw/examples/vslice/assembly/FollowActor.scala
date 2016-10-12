@@ -33,11 +33,11 @@ import csw.util.config.Events.EventTime
  * @param engPublisher an actorRef as [[scala.Option]] of the actor that publishes the eng telemetry event
  */
 class FollowActor(
-  ac:                  AssemblyContext,
-  val inNSSMode:       BooleanItem,
-  val tromboneControl: Option[ActorRef],
-  val aoPublisher:     Option[ActorRef],
-  val engPublisher:    Option[ActorRef]
+    ac:                  AssemblyContext,
+    val inNSSMode:       BooleanItem,
+    val tromboneControl: Option[ActorRef],
+    val aoPublisher:     Option[ActorRef],
+    val engPublisher:    Option[ActorRef]
 ) extends Actor with ActorLogging {
 
   import FollowActor._

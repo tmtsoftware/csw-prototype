@@ -6,15 +6,15 @@ import csw.util.config.DoubleItem
 
 /**
  * This object contains functions that implement this test version of the trombone assembly algorithms.
-  *
-  * These algorithms are representative in spirit, but not technically correct. The actual code will be
-  * a closed loop and continually recalculate the elevation. Since the correctness of the algorithms was
-  * not really the focus of the vertical slice, I wanted to just get something that sort of did the
-  * right things and had the same variables.
-  *
-  * The algorithms here are implemented in an object so they can be tested independently.  I think this is
-  * a good strategy.  Then they are called from the FollowActor and other places. The method names are
-  * representative of their function: rangeDistanceToElevation for instance.
+ *
+ * These algorithms are representative in spirit, but not technically correct. The actual code will be
+ * a closed loop and continually recalculate the elevation. Since the correctness of the algorithms was
+ * not really the focus of the vertical slice, I wanted to just get something that sort of did the
+ * right things and had the same variables.
+ *
+ * The algorithms here are implemented in an object so they can be tested independently.  I think this is
+ * a good strategy.  Then they are called from the FollowActor and other places. The method names are
+ * representative of their function: rangeDistanceToElevation for instance.
  */
 object Algorithms extends LazyLogging {
 
@@ -35,12 +35,12 @@ object Algorithms extends LazyLogging {
   def verifyFocusError(calculationConfig: TromboneCalculationConfig, focusError: DoubleItem): Boolean = focusError.head >= calculationConfig.lowerFocusLimit && focusError.head <= calculationConfig.upperFocusLimit
 
   /**
-    *
-    * @param calculationConfig
-    * @param elevation
-    * @param zenithAngle
-    * @return
-    */
+   *
+   * @param calculationConfig
+   * @param elevation
+   * @param zenithAngle
+   * @return
+   */
   def zenithAngleToRangeDistance(elevation: Double, zenithAngle: Double): Double = elevation / Math.cos(Math.toRadians(zenithAngle))
 
   def rangeDistanceToElevation(rangeDistance: Double, zenithAngle: Double): Double = Math.cos(Math.toRadians(zenithAngle)) * rangeDistance

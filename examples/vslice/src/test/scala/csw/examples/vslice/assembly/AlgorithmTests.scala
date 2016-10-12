@@ -3,8 +3,8 @@ package csw.examples.vslice.assembly
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
 
 /**
-  * These are tests of the calculations in the Calculation Actor
-  */
+ * These are tests of the calculations in the Calculation Actor
+ */
 class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
   import Algorithms._
   import AssemblyTestData._
@@ -29,11 +29,11 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       val rde = testFocusError.map(focusErrorToRangeError(calculationConfig, _))
       // Verify reasonableness
       // range distances should be the same at 0 za
-      rde.head shouldBe > (minReasonableRangeError)
-      rde.last shouldBe < (maxReasonableRangeError)
+      rde.head shouldBe >(minReasonableRangeError)
+      rde.last shouldBe <(maxReasonableRangeError)
     }
 
-    def round(din: Double):Double = Math.rint(din*100)/100
+    def round(din: Double): Double = Math.rint(din * 100) / 100
 
     it("should have good zenith angle to range distance - good") {
 
@@ -43,8 +43,8 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
 
       // Verify reasonableness
       // range distances should be the same at 0 za
-      rds.head shouldBe > (minTotalRD)
-      rds.last shouldBe < (maxTotalRD)
+      rds.head shouldBe >(minTotalRD)
+      rds.last shouldBe <(maxTotalRD)
     }
 
     // This is the approach used to find the new elevation after adding the range error
@@ -66,22 +66,22 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       val fe1 = 0.0
       val p1 = testZenithAngles.map(focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe1, _))
       //info("P1: " + p1)
-      p1.head._1 should equal (p1.head._2)
-      p1.head._1 should equal (calculationConfig.defaultInitialElevation)
-      p1.last._1 should equal (maxRD)
-      p1.last._2 should equal (calculationConfig.defaultInitialElevation)
+      p1.head._1 should equal(p1.head._2)
+      p1.head._1 should equal(calculationConfig.defaultInitialElevation)
+      p1.last._1 should equal(maxRD)
+      p1.last._2 should equal(calculationConfig.defaultInitialElevation)
 
       val fe2 = calculationConfig.lowerFocusLimit
       val p2 = testZenithAngles.map(focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe2, _))
       //info("P2: " + p2)
-      p2.head._1 should equal (p2.head._2)
-      p2.head._1 should equal (calculationConfig.defaultInitialElevation + minRDError)
+      p2.head._1 should equal(p2.head._2)
+      p2.head._1 should equal(calculationConfig.defaultInitialElevation + minRDError)
 
       val fe3 = calculationConfig.upperFocusLimit
       val p3 = testZenithAngles.map(focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe3, _))
       //info("P3: " + p3)
-      p3.head._1 should equal (p3.head._2)
-      p3.head._1 should equal (calculationConfig.defaultInitialElevation + maxRDError)
+      p3.head._1 should equal(p3.head._2)
+      p3.head._1 should equal(calculationConfig.defaultInitialElevation + maxRDError)
     }
 
     it("should verify focuserror values") {
@@ -97,15 +97,15 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       verifyZenithAngle(zenithAngleKey -> 92.0) should be(false)
     }
 
-    it ("should take a range distance and provide a reasonable stage position") {
+    it("should take a range distance and provide a reasonable stage position") {
       val minStage = rangeDistanceToStagePosition(minRD)
       val maxStage = rangeDistanceToStagePosition(maxRD)
 
-      minStage shouldBe > (minReasonableStage)
-      maxStage shouldBe < (maxReasonableStage)
+      minStage shouldBe >(minReasonableStage)
+      maxStage shouldBe <(maxReasonableStage)
     }
 
-    it ("should provide a reasonable encoder value") {
+    it("should provide a reasonable encoder value") {
       val minStage = rangeDistanceToStagePosition(minRD)
       val maxStage = rangeDistanceToStagePosition(maxRD)
 
@@ -116,8 +116,8 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       //info(s"minEnc/maxEnc: $minEncoder/$maxEncoder")
       //info(s"zero: ${stagePositionToEncoder(controlConfig, 0.0)}")
 
-      minEncoder shouldBe > (controlConfig.minEncoderLimit)
-      maxEncoder shouldBe < (controlConfig.maxEncoderLimit)
+      minEncoder shouldBe >(controlConfig.minEncoderLimit)
+      maxEncoder shouldBe <(controlConfig.maxEncoderLimit)
     }
 
     it("should give good data") {
@@ -130,8 +130,6 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       println("Test4: " + calculatedTestData(calculationConfig, controlConfig, -20.0))
     }
 
-
   }
-
 
 }

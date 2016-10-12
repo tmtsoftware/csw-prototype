@@ -243,7 +243,7 @@ lazy val vslice = Project(id = "vslice", base = file("examples/vslice"))
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaTest, specs2, akkaTestKit)
-  ).dependsOn(pkg, cs, ccs, loc, ts, events, util, containerCmd)
+  ).dependsOn(pkg, cs, ccs, loc, ts, events, util, alarms, containerCmd)
 
 // EndToEnd Example project Java version
 lazy val vsliceJava = Project(id = "vsliceJava", base = file("examples/vsliceJava"))
