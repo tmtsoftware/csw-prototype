@@ -47,7 +47,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
   }
 
   override def afterAll = {
-    TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
+    //    TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
   }
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext
@@ -77,7 +77,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     it("should get initialized with configs from files (same as AlgorithmData") {
       val (_, tla) = newTestTrombone()
 
-      Thread.sleep(3000) // XXX allow for timeout if config service not running
+      //      Thread.sleep(3000) // XXX allow for timeout if config service not running
 
       tla.underlyingActor.controlConfig.stageZero should be(AssemblyTestData.TestControlConfig.stageZero)
       tla.underlyingActor.controlConfig.positionScale should be(AssemblyTestData.TestControlConfig.positionScale)

@@ -74,7 +74,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     system.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, allEventPublisher))
   }
 
-  override def afterAll = TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
+  override def afterAll = TestKit.shutdownActorSystem(AlarmMonitorTests.system)
 
   // Test Low Limit
   val testLowLimitEvent = CurrentState(TromboneHCD.axisStateCK).madd(

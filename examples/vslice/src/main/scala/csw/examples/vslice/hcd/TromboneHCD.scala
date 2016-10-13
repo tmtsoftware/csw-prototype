@@ -48,12 +48,10 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   // Keep track of the last SetupConfig to be received from external
   private var lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix)
 
-  // XXX TODO allan: change this to block for simplicity?  XXX
-
   // Get the axis config file from the config service, then use it to start the tromboneAxis actor
   // and get the current values. Once that is done, we can tell the supervisor actor that we are ready
   // and then wait for the Running message from the supervisor before going to the running state.
-  val xxx = for {
+  for {
     // Initialize axis from ConfigService
     axisConfig <- getAxisConfig
 
@@ -76,7 +74,6 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     supervisor ! Initialized
     supervisor ! Started
   }
-  Await.ready(xxx, 2.seconds) // XXX allan FIXME TEMP TEST
 
   // Receive actor methods
   override def receive: Receive = publisherReceive orElse {
