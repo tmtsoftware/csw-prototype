@@ -11,6 +11,7 @@ import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.HcdController._
 import csw.services.events.{Event, EventService, EventServiceSettings, EventSubscriber}
 import csw.services.loc.ConnectionType.AkkaType
+import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -23,10 +24,15 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
 
+object FollowActorTests {
+  LocationService.initInterface()
+  val system = ActorSystem("FollowActorTests")
+}
+
 /**
  * TMT Source Code: 8/12/16.
  */
-class FollowActorTests extends TestKit(ActorSystem("FollowActorTests")) with ImplicitSender
+class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   //import TromboneAssembly._

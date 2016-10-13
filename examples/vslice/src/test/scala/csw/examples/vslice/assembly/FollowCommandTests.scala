@@ -9,6 +9,7 @@ import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.HcdController._
 import csw.services.events.{EventSubscriber, _}
 import csw.services.loc.ConnectionType.AkkaType
+import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -20,10 +21,15 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.duration._
 
+object FollowCommandTests {
+  LocationService.initInterface()
+  val system = ActorSystem("FollowCommandTests")
+}
+
 /**
  * TMT Source Code: 9/21/16.
  */
-class FollowCommandTests extends TestKit(ActorSystem("FollowCommandTests")) with ImplicitSender
+class FollowCommandTests extends TestKit(FollowCommandTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   override def afterAll(): Unit = {

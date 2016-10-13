@@ -2,12 +2,18 @@ package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, Inspectors, _}
+
+object OtherTests {
+  LocationService.initInterface()
+  val system = ActorSystem("OtherTests")
+}
 
 /**
  * TMT Source Code: 8/28/16.
  */
-class OtherTests extends TestKit(ActorSystem("OtherTests")) with ImplicitSender
+class OtherTests extends TestKit(OtherTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
 
   import TromboneStateHandler._

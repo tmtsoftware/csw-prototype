@@ -10,6 +10,7 @@ import csw.services.ccs.CommandStatus2._
 import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{ExecuteOne, StartTheSequence}
 import csw.services.loc.ConnectionType.AkkaType
+import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -21,10 +22,15 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.duration._
 
+object CommandHandlerTests {
+  LocationService.initInterface()
+  val system = ActorSystem("TromboneAssemblyCommandHandlerTests")
+}
+
 /**
  * TMT Source Code: 9/21/16.
  */
-class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests"))
+class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneStateHandler._

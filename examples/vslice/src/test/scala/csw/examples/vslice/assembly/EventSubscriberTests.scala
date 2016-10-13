@@ -5,16 +5,22 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData}
 import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
 import csw.services.events.{EventService, EventServiceSettings}
+import csw.services.loc.LocationService
 import csw.util.config.BooleanItem
 import csw.util.config.Events.SystemEvent
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.duration._
 
+object EventSubscriberTests {
+  LocationService.initInterface()
+  val system = ActorSystem("EventSubscriberTests")
+}
+
 /**
  * TMT Source Code: 9/17/16.
  */
-class EventSubscriberTests extends TestKit(ActorSystem("EventSubscriberTests")) with ImplicitSender
+class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = {

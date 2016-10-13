@@ -4,15 +4,20 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
 import csw.services.events.{EventService, EventServiceSettings, EventSubscriber}
+import csw.services.loc.LocationService
 import csw.util.config.Events.{EventTime, SystemEvent}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.duration._
 
+object EventPublishTests {
+  LocationService.initInterface()
+  val system = ActorSystem("EventPublishTests")
+}
 /**
  * TMT Source Code: 8/17/16.
  */
-class EventPublishTests extends TestKit(ActorSystem("EventPublishTests")) with ImplicitSender
+class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = TestKit.shutdownActorSystem(system)

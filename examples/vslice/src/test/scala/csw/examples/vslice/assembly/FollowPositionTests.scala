@@ -10,6 +10,7 @@ import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.HcdController._
 import csw.services.events.{EventService, EventServiceSettings, EventSubscriber}
 import csw.services.loc.ConnectionType.AkkaType
+import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -23,10 +24,15 @@ import org.scalatest.{FunSpecLike, _}
 
 import scala.concurrent.duration._
 
+object FollowPositionTests {
+  LocationService.initInterface()
+  val system = ActorSystem("FollowPositionTests")
+}
+
 /**
  * These tests are about testing the calculated values for the trombone position when following.
  */
-class FollowPositionTests extends TestKit(ActorSystem("FollowPositionTests")) with ImplicitSender
+class FollowPositionTests extends TestKit(FollowPositionTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
   import Algorithms._
   import TromboneAssembly._
