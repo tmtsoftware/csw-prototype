@@ -47,7 +47,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
   }
 
   override def afterAll = {
-    //    TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
+    TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
   }
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext
