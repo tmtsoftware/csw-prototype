@@ -16,7 +16,7 @@ object AssemblyTestData {
   val testZenithAngles = 0.0 to 60.0 by 5.0
 
   val TestAssemblyInfo = AssemblyInfo(
-    "lgsTrombone",
+    "tromboneAssembly",
     "nfiraos.ncc.trombone",
     "csw.examples.vslice.assembly.TromboneAssembly",
     DoNotRegister, Set(AkkaType), Set.empty[Connection]

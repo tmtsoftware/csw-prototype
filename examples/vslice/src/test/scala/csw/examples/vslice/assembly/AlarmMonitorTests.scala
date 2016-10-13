@@ -31,10 +31,12 @@ object AlarmMonitorTests {
   val system = ActorSystem("AlarmMonitorTests")
 }
 
+// XXX TODO FIXME: Start alarm service and init with test-alarms.conf before tests!
+
 /**
  * AlarmMonitorTests
  */
-class AlarmMonitorTests extends TestKit(TromboneAssemblyBasicTests.system) with ImplicitSender
+class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneAlarmMonitor._
@@ -120,7 +122,7 @@ class AlarmMonitorTests extends TestKit(TromboneAssemblyBasicTests.system) with 
 
       // Create an alarm monitor
       val am = system.actorOf(TromboneAlarmMonitor.props(fakeTromboneHCD.ref))
-      expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
+      expectNoMsg(500.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // the fake trombone HCD sends a CurrentState event that has the low limit sent
       fakeTromboneHCD.send(am, testLowLimitEvent)

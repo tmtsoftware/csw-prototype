@@ -17,7 +17,7 @@ import csw.util.config.StateVariable.CurrentState
 import csw.util.config.UnitsOfMeasure.encoder
 import csw.util.config._
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.language.implicitConversions
 
@@ -53,7 +53,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   // Get the axis config file from the config service, then use it to start the tromboneAxis actor
   // and get the current values. Once that is done, we can tell the supervisor actor that we are ready
   // and then wait for the Running message from the supervisor before going to the running state.
-  for {
+  val xxx = for {
     // Initialize axis from ConfigService
     axisConfig <- getAxisConfig
 
@@ -65,7 +65,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     current <- (tromboneAxis ? InitialState).mapTo[AxisUpdate]
     stats <- (tromboneAxis ? GetStatistics).mapTo[AxisStatistics]
 
-  } {
+  } yield {
     this.tromboneAxis = tromboneAxis
     this.axisConfig = axisConfig
     this.current = current
@@ -76,6 +76,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     supervisor ! Initialized
     supervisor ! Started
   }
+  Await.ready(xxx, 2.seconds) // XXX allan FIXME TEMP TEST
 
   // Receive actor methods
   override def receive: Receive = publisherReceive orElse {
@@ -95,7 +96,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   private def runningReceive: Receive = controllerReceive orElse {
     case Running =>
       log.info("Received running")
-      context.become(runningReceive)
+    //      context.become(runningReceive)
 
     case RunningOffline =>
       log.info("Received running offline")
@@ -138,7 +139,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     case au @ AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
       // Update actor state
       this.current = au
-      context.become(runningReceive)
+      //      context.become(runningReceive)
       val tromboneAxisState = defaultAxisState.madd(
         positionKey -> currentPosition withUnits encoder,
         stateKey -> axisState.toString,
@@ -152,7 +153,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
       log.debug(s"AxisStatus: $as")
       // Update actor statistics
       this.stats = as
-      context.become(runningReceive)
+      //      context.become(runningReceive)
       val tromboneStats = defaultStatsState.madd(
         datumCountKey -> as.initCount,
         moveCountKey -> as.moveCount,

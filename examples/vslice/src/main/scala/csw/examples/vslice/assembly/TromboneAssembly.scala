@@ -105,7 +105,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   // Lookup the alarm service redis instance with the location service
   private def locateHCD(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[ResolvedAkkaLocation] = {
     import context.dispatcher
-    val connection = AkkaConnection(ComponentId("lgsTromboneHCD", ComponentType.HCD))
+    val connection = AkkaConnection(ComponentId("tromboneHCD", ComponentType.HCD))
     LocationService.resolve(Set(connection)).map { locationsReady =>
       val loc = locationsReady.locations.head.asInstanceOf[ResolvedAkkaLocation]
       loc

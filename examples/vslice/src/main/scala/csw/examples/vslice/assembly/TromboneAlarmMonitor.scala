@@ -13,7 +13,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 /**
- * Actor manages Trombone alarms and provies the assembly interface to the TMT Alarm Service.
+ * Actor manages Trombone alarms and provides the assembly interface to the TMT Alarm Service.
  *
  * Trombone has two alarms tied to reaching encoder limits, which would indicate abnormal behavior requiring an operator's attention.
  * The two alarms are highLimitAlarm and lowLimitAlarm indicating the axis has reached the high user limit and low user limit respectively.
