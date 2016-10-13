@@ -16,7 +16,7 @@ import scala.concurrent.duration._
  * TMT Source Code: 7/18/16.
  */
 @DoNotDiscover
-class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneTests")) with ImplicitSender
+class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneHCDBasicTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll: Unit = TestKit.shutdownActorSystem(system)

@@ -26,7 +26,7 @@ import scala.concurrent.duration._
 /**
  * These tests are about testing the calculated values for the trombone position when following.
  */
-class FollowPositionTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
+class FollowPositionTests extends TestKit(ActorSystem("FollowPositionTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
   import Algorithms._
   import TromboneAssembly._

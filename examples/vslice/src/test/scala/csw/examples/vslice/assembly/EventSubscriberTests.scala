@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 9/17/16.
  */
-class EventSubscriberTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
+class EventSubscriberTests extends TestKit(ActorSystem("EventSubscriberTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = {

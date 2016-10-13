@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 8/17/16.
  */
-class EventPublishTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
+class EventPublishTests extends TestKit(ActorSystem("EventPublishTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def afterAll = TestKit.shutdownActorSystem(system)

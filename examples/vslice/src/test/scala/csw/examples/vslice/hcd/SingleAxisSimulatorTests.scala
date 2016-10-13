@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 7/19/16.
  */
-class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) with ImplicitSender
+class SingleAxisSimulatorTests extends TestKit(ActorSystem("SingleAxisSimulatorTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
   import SingleAxisSimulator._
 

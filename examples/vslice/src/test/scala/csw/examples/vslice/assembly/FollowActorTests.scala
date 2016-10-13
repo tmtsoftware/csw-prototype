@@ -26,7 +26,7 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 8/12/16.
  */
-class FollowActorTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
+class FollowActorTests extends TestKit(ActorSystem("FollowActorTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   //import TromboneAssembly._

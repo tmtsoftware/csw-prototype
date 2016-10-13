@@ -23,7 +23,7 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 9/21/16.
  */
-class FollowCommandTests extends TestKit(ActorSystem("TromboneAssemblyCalulationTests")) with ImplicitSender
+class FollowCommandTests extends TestKit(ActorSystem("FollowCommandTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   override def afterAll(): Unit = {
