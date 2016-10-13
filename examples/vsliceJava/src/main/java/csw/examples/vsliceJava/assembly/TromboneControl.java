@@ -3,58 +3,56 @@
 //import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 //import csw.services.ccs.HcdController.Submit
 //import csw.util.config.DoubleItem
-//import csw.util.config.UnitsOfMeasure.millimeters
 //
 ///**
-//  * TMT Source Code: 7/15/16.
-//  */
-//class TromboneControl(controlConfig: TromboneControlConfig, tromboneHCD: Option[ActorRef]) extends Actor with ActorLogging {
-//  import TromboneAssembly._
-//  import TromboneControl._
+// * An actor dedicated to converting stage position values to encoder units and writing in a oneway fashion to
+// * the trombone HCD.
+// *
+// * Other actors, primarily the FollowActor write stage positions with units of millimeters. This actor uses the
+// * function in algorithms to convert this to encoder units. It then uses the Submit command of CCS to send the
+// * SetupConfig to the trombone HCD.
+// *
+// * Note that the actor receive method is parameterized with an optional HCD actor ref. It is set initially when
+// * the actor is created and may be updated if the actor goes down or up. The actor ref is an [[scala.Option]] so
+// * that if the actor ref is set to None, no message will be sent, but the actor can operator normally.
+// *
+// * @param ac the trombone AssemblyContext contains important shared values and useful function
+// * @param tromboneHCDIn the actor reference to the trombone HCD as a [[scala.Option]]
+// */
+//class TromboneControl(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef]) extends Actor with ActorLogging {
 //
-//  def receive: Receive = {
-//    case HCDTromboneUpdate(newPosition) =>
+//  def receive = controlReceive(tromboneHCDIn)
+//
+//  def controlReceive(tromboneHCD: Option[ActorRef]): Receive = {
+//    case GoToStagePosition(newPosition) =>
+//
+//      // It should be correct, but check
+//      assert(newPosition.units == ac.stagePositionUnits)
 //
 //      // Convert to encoder units
-//      val encoderPosition = rangeDistanceTransform(controlConfig, newPosition)
-//      // First convert the
-//      assert(encoderPosition > 0 && encoderPosition < 1500)
+//      val encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, newPosition.head)
 //
-//      log.info(s"Setting trombone current to: ${encoderPosition}")
+//      // Final check before sending off to hardware
+//      assert(encoderPosition > ac.controlConfig.minEncoderLimit && encoderPosition < ac.controlConfig.maxEncoderLimit)
+//
+//      log.debug(s"Setting trombone axis to stage position: ${newPosition.head} and encoder: $encoderPosition")
 //
 //      // Send command to HCD here
-//      tromboneHCD.foreach(_ ! Submit(positionSC(encoderPosition)))
+//      tromboneHCD.foreach(_ ! Submit(TromboneHCD.positionSC(encoderPosition)))
 //
-//    case x => log.error(s"Unexpected message: $x")
+//    case UpdateTromboneHCD(tromboneHCDUpdate) =>
+//      context.become(controlReceive(tromboneHCDUpdate))
+//
+//    case x => log.error(s"Unexpected message received in TromboneControl:controlReceive: $x")
 //  }
 //
 //}
 //
 //object TromboneControl {
 //  // Props for creating the TromboneControl actor
-//  def props(controlConfig: TromboneControlConfig, tromboneHCD: Option[ActorRef]) = Props(classOf[TromboneControl], controlConfig, tromboneHCD)
+//  def props(assemblyContext: AssemblyContext, tromboneHCD: Option[ActorRef] = None) = Props(classOf[TromboneControl], assemblyContext, tromboneHCD)
 //
-//  /**
-//    * Configuration class
-//    *
-//    * @param positionScale
-//    * @param minElevation
-//    * @param minElevationEncoder
-//    */
-//  case class TromboneControlConfig(positionScale: Double, minElevation: Double, minElevationEncoder: Int)
-//
-//  /**
-//    * NALayerRange = zfactor*zenithAngle + focusError
-//    *
-//    * zfactor is read from configuration
-//    *
-//    * @param newPosition is the value of the stage position in millimeters (currently the total NA elevation)
-//    * @return DoubleItem with key naTrombonePosition and units of enc
-//    */
-//  def rangeDistanceTransform(controlConfig: TromboneControlConfig, newPosition: DoubleItem): Int = {
-//    assert(newPosition.units == millimeters)
-//    // Scale value to be between 200 and 1000 encoder
-//    (controlConfig.positionScale * (newPosition.head - controlConfig.minElevation) + controlConfig.minElevationEncoder).toInt
-//  }
+//  // Used to send a position that requries transformaton from
+//  case class GoToStagePosition(stagePosition: DoubleItem)
 //
 //}

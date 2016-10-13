@@ -1,13 +1,19 @@
-package csw.examples.vsliceJava.assembly;
-
-//import akka.actor.{Actor, ActorSystem, Props}
+//package csw.examples.vsliceJava.assembly
+//
+//import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 //import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+//import csw.services.loc.LocationService
+//
+//object OtherTests {
+//  LocationService.initInterface()
+//  val system = ActorSystem("OtherTests")
+//}
 //
 ///**
-//  * TMT Source Code: 8/28/16.
-//  */
-//class OtherTests extends TestKit(ActorSystem("OtherTests")) with ImplicitSender
-//  with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
+// * TMT Source Code: 8/28/16.
+// */
+//class OtherTests extends TestKit(OtherTests.system) with ImplicitSender
+//    with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
 //
 //  describe("Testing state item") {
 //    it("should allow creation") {
@@ -31,14 +37,14 @@ package csw.examples.vsliceJava.assembly;
 //
 //  }
 //
-//  class TestSubscriber(input: Int) extends Actor with TromboneStateHandler {
+//  class TestSubscriber(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
 //
 //    def receive: Receive = stateReceive orElse {
 //      case x => println(s"Got a bad message: $x")
 //    }
 //  }
 //
-//  class TestPublisher(input: Int) extends Actor with TromboneStateHandler {
+//  class TestPublisher(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
 //
 //    def receive: Receive = stateReceive orElse {
 //      case x => println(s"Got a bad message: $x")
@@ -46,8 +52,8 @@ package csw.examples.vsliceJava.assembly;
 //  }
 //
 //  /**
-//    * Test Description: Ensure that publisher and subscribers are all updated properly
-//    */
+//   * Test Description: Ensure that publisher and subscribers are all updated properly
+//   */
 //  describe("Testing the trait approach") {
 //    it("should get updated") {
 //      // Test subscriber

@@ -2,71 +2,126 @@
 //
 //import akka.actor.{ActorRef, Props}
 //import csw.services.events.{EventServiceSettings, EventSubscriber}
+//import csw.util.config.Configurations.ConfigKey
 //import csw.util.config.Events.{EventTime, SystemEvent}
 //import csw.util.config._
 //
 ///**
-//  * TMT Source Code: 6/20/16.
-//  */
-//class TromboneEventSubscriber(calculationActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings]) extends EventSubscriber(eventServiceSettings) {
+// * TMT Source Code: 6/20/16.
+// */
+//class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings]) extends EventSubscriber(eventServiceSettings) {
+//
+//  import ac._
 //
 //  // If state of NSS is false, then subscriber provides 0 for zenith distance with updates to subscribers
-//  var NSSinUse = false
+//
 //  // This value is used when NSS is in Use
-//  val NSSzenithAngle: DoubleItem = zenithAngleKey.set(0.0f).withUnits(focusErrorUnits)
+//  final val nssZenithAngle: DoubleItem = za(0.0)
 //
 //  // Kim possibly set these initial values from config or get them from telemetry store
 //  // These vars are needed since updates from RTC and TCS will happen at different times and we need both values
-//  // Could have two events but that requries calculator to keep values
-//  var zenithAngle: DoubleItem = zenithAngleKey.set(0.0f).withUnits(zenithAngleUnits)
-//  var focusError: DoubleItem = focusErrorKey.set(0.0f).withUnits(focusErrorUnits)
+//  // Could have two events but that requries follow actor to keep values
+//  val initialZenithAngle: DoubleItem = if (nssInUseIn.head) nssZenithAngle else za(0.0)
+//  val initialFocusError: DoubleItem = fe(0.0)
+//  // This is used to keep track since it can be updated
+//  var nssInUseGlobal = nssInUseIn
 //
-//  log.info(s"Subscribing to ${zConfigKey.prefix}, ${focusConfigKey.prefix}")
-//  subscribe(zConfigKey.prefix, focusConfigKey.prefix)
+//  override def preStart(): Unit = {
+//    // Allways subscribe to focus error
+//    subscribeKeys(feConfigKey)
 //
-//  def receive: Receive = {
+//    log.info("nssInuse: " + nssInUseIn)
+//
+//    // But only subscribe to ZA if nss is not in use
+//    if (!nssInUseIn.head) {
+//      // NSS not inuse so subscribe to ZA
+//      subscribeKeys(zaConfigKey)
+//    }
+//  }
+//
+//  def receive: Receive = subscribeReceive(nssInUseIn, initialZenithAngle, initialFocusError)
+//
+//  def subscribeReceive(cNssInUse: BooleanItem, cZenithAngle: DoubleItem, cFocusError: DoubleItem): Receive = {
 //
 //    case event: SystemEvent =>
 //      event.info.source match {
-//        case `zConfigKey` =>
-//          // Update for zenith distance state then update calculator, however
-//          // only update calculator when NSS is not in use
-//          if (NSSinUse) {
-//            zenithAngle = NSSzenithAngle // This sets zenithANgle to 0 as per spec
-//          } else {
-//            zenithAngle = event(zenithAngleKey)
-//            log.info(s"Receved ZA: $event")
-//            updateCalculator(event.info.time)
-//          }
+//        case `zaConfigKey` =>
+//          val newZenithAngle = event(zenithAngleKey)
+//          log.info(s"Received ZA: $event")
+//          updateFollowActor(newZenithAngle, cFocusError, event.info.time)
+//          // Pass the new values to the next message
+//          context.become(subscribeReceive(cNssInUse, newZenithAngle, cFocusError))
 //
-//        case `focusConfigKey` =>
+//        case `feConfigKey` =>
 //          // Update focusError state and then update calculator
-//          log.info(s"Receved FE: $event")
-//          focusError = event(focusErrorKey)
-//          updateCalculator(event.info.time)
+//          log.info(s"Received FE: $event")
+//          val newFocusError = event(focusErrorKey)
+//          updateFollowActor(cZenithAngle, newFocusError, event.info.time)
+//          // Pass the new values to the next message
+//          context.become(subscribeReceive(cNssInUse, cZenithAngle, newFocusError))
 //      }
 //
-//    case UsingNSS(inUse) =>
-//      NSSinUse = inUse
+//    case StopFollowing =>
+//      // Kill this subscriber
+//      context.stop(self)
 //
-//    case x => log.error(s"TromboneEventSubscriber received an unknown message: $x")
+//    // This is an engineering command to allow checking subscriber
+//    case UpdateNssInUse(nssInUseUpdate) =>
+//      if (nssInUseUpdate != cNssInUse) {
+//        if (nssInUseUpdate.head) {
+//          unsubscribeKeys(zaConfigKey)
+//          context.become(subscribeReceive(nssInUseUpdate, nssZenithAngle, cFocusError))
+//        } else {
+//          subscribeKeys(zaConfigKey)
+//          context.become(subscribeReceive(nssInUseUpdate, cZenithAngle, cFocusError))
+//        }
+//        // Need to update the global for shutting down event subscriptions
+//        nssInUseGlobal = nssInUseUpdate
+//      }
+//
+//    case x => log.error(s"Unexpected message received in TromboneEventSubscriber:subscribeReceive: $x")
+//  }
+//
+//  def unsubscribeKeys(configKeys: ConfigKey*): Unit = {
+//    log.info(s"Unsubscribing to: $configKeys")
+//    unsubscribe(configKeys.map(_.prefix): _*)
+//  }
+//
+//  def subscribeKeys(configKeys: ConfigKey*): Unit = {
+//    log.info(s"Subscribing to: $configKeys")
+//    subscribe(configKeys.map(_.prefix): _*)
+//  }
+//
+//  override def postStop(): Unit = {
+//    if (!nssInUseGlobal.head) {
+//      unsubscribeKeys(zaConfigKey)
+//    }
+//    unsubscribeKeys(feConfigKey)
 //  }
 //
 //  /**
-//    * This function is called whenever a new event arrives. The function takes the current information consisting of
-//    * the zenithAngle and focusError which is actor state and forwards it to the CalculationActor
-//    *
-//    * @param eventTime - the time of the last event update
-//    */
-//  def updateCalculator(eventTime: EventTime) = {
-//    calculationActor.map(_ ! UpdatedEventData(zenithAngle, focusError, eventTime))
+//   * This function is called whenever a new event arrives. The function takes the current information consisting of
+//   * the zenithAngle and focusError which is actor state and forwards it to the FoolowActor if present
+//   *
+//   * @param eventTime - the time of the last event update
+//   */
+//  def updateFollowActor(zenithAngle: DoubleItem, focusError: DoubleItem, eventTime: EventTime) = {
+//    followActor.foreach(_ ! UpdatedEventData(zenithAngle, focusError, eventTime))
 //  }
 //
 //}
 //
 //object TromboneEventSubscriber {
 //
-//  def props(actorRef: Option[ActorRef] = None, eventServiceSettings: Option[EventServiceSettings] = None) = Props(classOf[TromboneEventSubscriber], actorRef, eventServiceSettings)
+//  /**
+//   * props for the TromboneEventSubscriber
+//   * @param followActor a FollowActor as an Option[ActorRef]
+//   * @param eventServiceSettings for testing, an event Service Settings can be provided
+//   * @return Props for TromboneEventSubscriber
+//   */
+//  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, followActor: Option[ActorRef] = None, eventServiceSettings: Option[EventServiceSettings] = None) =
+//    Props(classOf[TromboneEventSubscriber], assemblyContext, nssInUse, followActor, eventServiceSettings)
 //
+//  case class UpdateNssInUse(nssInUse: BooleanItem)
 //}
 //
