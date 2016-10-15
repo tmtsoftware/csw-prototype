@@ -15,33 +15,39 @@ import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
 import csw.services.ccs.StateMatchers.{DemandMatcher, MultiStateMatcherActor, StateMatcher}
 import csw.services.ccs.Validation.{UnsupportedCommandInStateIssue, WrongInternalStateIssue}
 import csw.services.events.EventServiceSettings
+import csw.services.loc.LocationService._
+import csw.services.loc.TrackerSubscriberClient
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.DemandState
 import csw.util.config.UnitsOfMeasure.encoder
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+
 
 /**
  * TMT Source Code: 9/21/16.
  */
-class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TromboneStateHandler {
+class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef], allEventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TrackerSubscriberClient with TromboneStateHandler {
 
   import TromboneStateHandler._
 
-  var moveCnt = 0
-  // Diags
-  var tromboneHCD: ActorRef = tromboneHCDIn
+  var tromboneHCD: ActorRef = tromboneHCDIn.getOrElse(context.system.deadLetters)
 
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //currentStateReceiver ! AddPublisher(tromboneHCD)
+
+  // Indicate we want location updates
+  subscribeToLocationUpdates()
 
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
   def receive = noFollowReceive()
 
   def noFollowReceive(): Receive = stateReceive orElse {
+
+    case l:Location =>
+      log.info("CommandHandler: " + l)
+      lookatLocations(l)
 
     case ExecuteOne(sc, commandOriginator) =>
 
@@ -91,12 +97,28 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
             commandOriginator.foreach(_ ! Completed)
           }
 
+
+
         case otherCommand =>
-          log.error(s"TromboneCommandHandler2:noFollowReceive received an unknown command: $otherCommand")
+          log.error(s"TromboneCommandHandler:noFollowReceive received an unknown command: $otherCommand")
           commandOriginator.foreach(_ ! Invalid(UnsupportedCommandInStateIssue(s"""Trombone assembly does not support the command \"${otherCommand.prefix}\" in the current state.""")))
       }
 
-    case x => log.error(s"TromboneCommandHandler2:noFollowReceive received an unknown message: $x")
+    case x => log.error(s"TromboneCommandHandler:noFollowReceive received an unknown message: $x")
+  }
+
+  def lookatLocations(location:Location):Unit = {
+    location match {
+      case l:ResolvedAkkaLocation =>
+        log.info(s"Got actorRef: ${l.actorRef}")
+        tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
+      case h:ResolvedHttpLocation =>
+        log.info(s"HTTP: ${h.connection}")
+      case u:Unresolved =>
+        log.info(s"Unresolved: ${u.connection}")
+      case ut:UnTrackedLocation =>
+        log.info(s"UnTracked: ${ut.connection}")
+    }
   }
 
   def followReceive(followActor: ActorRef): Receive = stateReceive orElse {
@@ -174,7 +196,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
       log.debug("actorExecutingReceive: Stop CK")
       closeDownMotionCommand(currentCommand, commandOriginator)
 
-    case x => log.error(s"TromboneCommandHandler2:actorExecutingReceive received an unknown message: $x")
+    case x => log.error(s"TromboneCommandHandler:actorExecutingReceive received an unknown message: $x")
   }
 
   private def closeDownMotionCommand(currentCommand: ActorRef, commandOriginator: Option[ActorRef]): Unit = {
@@ -236,8 +258,6 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
           executeMatch(context, stateMatcher, tromboneHCD, Some(mySender)) {
             case Completed =>
               state(cmd = cmdReady, move = moveIndexed)
-              moveCnt += 1
-              log.info(s"Done with move at: $moveCnt")
             case Error(message) =>
               log.error(s"Move command failed with message: $message")
           }
@@ -280,8 +300,6 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
           executeMatch(context, stateMatcher, tromboneHCD, Some(mySender)) {
             case Completed =>
               state(cmd = cmdReady, move = moveIndexed)
-              moveCnt += 1
-              log.info(s"Done with position at: $moveCnt")
             case Error(message) =>
               log.error(s"Position command failed with message: $message")
           }
@@ -319,25 +337,11 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
   def posMatcher(position: Int): DemandMatcher =
     DemandMatcher(DemandState(axisStateCK).madd(stateKey -> TromboneHCD.AXIS_IDLE, positionKey -> position))
 
-  def executeMatch2(context: ActorContext, stateMatcher: StateMatcher, currentStateSource: ActorRef, replyTo: Option[ActorRef] = None,
-                    timeout: Timeout = Timeout(5.seconds))(codeBlock: PartialFunction[CommandStatus2, Unit]): Unit = {
-    import context.dispatcher
-    implicit val t = Timeout(timeout.duration + 1.seconds)
-
-    val matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout))
-    val cmdStatusF: Future[CommandStatus2] = (matcher ? StartMatch(stateMatcher)).mapTo[CommandStatus2]
-    cmdStatusF.onComplete {
-      case Success(cmdStatus) =>
-        codeBlock(cmdStatus)
-      case Failure(e) =>
-        log.error("Failure of matcher most likely due to timeout")
-    }
-  }
 }
 
 object TromboneCommandHandler {
 
-  def props(assemblyContext: AssemblyContext, tromboneHCDIn: ActorRef, allEventPublisher: Option[ActorRef]) =
+  def props(assemblyContext: AssemblyContext, tromboneHCDIn: Option[ActorRef], allEventPublisher: Option[ActorRef]) =
     Props(new TromboneCommandHandler(assemblyContext, tromboneHCDIn, allEventPublisher))
 
 }

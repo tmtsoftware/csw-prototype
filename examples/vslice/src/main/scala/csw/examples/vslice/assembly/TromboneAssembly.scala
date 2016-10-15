@@ -13,18 +13,17 @@ import csw.services.ccs.{AssemblyController2, CommandStatus2, CurrentStateReceiv
 import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{StartTheSequence, StopCurrentCommand}
 import csw.services.ccs.Validation.{Validation, ValidationList}
-import csw.services.cs.akka.ConfigServiceClient
 import csw.services.events.EventServiceSettings
-import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
+import csw.services.loc.LocationService._
 import csw.services.loc._
 import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister, HcdInfo, RegisterAndTrackServices}
 import csw.services.pkg.ContainerComponent._
 import csw.services.pkg.{Assembly, ContainerComponent, Supervisor3}
 import csw.util.config.Configurations.SetupConfigArg
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -35,87 +34,103 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   import Supervisor3._
   import TromboneStateHandler._
 
-  implicit val timeout = Timeout(10.seconds)
+  println("INFO: " + info)
+  var tromboneHCD = context.system.deadLetters
 
+  log.info("Connections: " + info.connections)
+
+  val calculationConfig = getCalculationConfig
+  log.info("Calc: " + calculationConfig)
+  val controlConfig = getTromboneControlConfig
+  log.info("Control: " + controlConfig)
   // Get the assembly configuration from the config service or resource file (XXX TODO: Change to be non-blocking like the HCD version)
-  val (calculationConfig, controlConfig) = getAssemblyConfigs
+  //val (calculationConfig, controlConfig) = getAssemblyConfigs
   implicit val ac = AssemblyContext(info, calculationConfig, controlConfig)
 
-  // Initialize HCD for testing (XXX allan: change to look up with location service!)
-  def startHCD: ActorRef = {
-    val testInfo = HcdInfo(
-      TromboneHCD.componentName,
-      TromboneHCD.trombonePrefix,
-      TromboneHCD.componentClassName,
-      RegisterAndTrackServices, Set(AkkaType), 1.second
-    )
-
-    Supervisor3(testInfo)
-  }
-
-  val tromboneHCD = startHCD // XXX TODO: Look up with location service
 
   def receive = initializingReceive
 
   // Start tracking the components we command
   log.info("Connections: " + info.connections)
-  trackConnections(info.connections)
 
-  override def allResolved(locs: Set[Location]): Unit = {
-    log.info(s"RESOLVED: $locs")
+  val trackerSubscriber = context.actorOf(TrackerSubscriberActor.props)
+  trackerSubscriber ! TrackerSubscriberActor.Subscribe
+  TrackerSubscriberActor.trackConnections(info.connections, trackerSubscriber)
 
-  }
+  val c1 = HttpConnection(ComponentId("Alarm Service", ComponentType.Service))
+  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
+
+
 
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
-  val tracker = context.actorOf(TestLocationService.trackerProps(Some(context.self)))
+
 
   // This actor handles all telemetry and system event publishing
   val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
   // This actor makes a single connection to the
   val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
-  log.info("CurrentStateReceiver: " + currentStateReceiver)
+  //log.info("CurrentStateReceiver: " + currentStateReceiver)
 
   // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
-  val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, Some(eventPublisher)))
+  val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), Some(eventPublisher)))
 
   // This sets up the diagnostic data publisher
   val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
 
+  supervisor ! Initialized
+
   /**
    * This contains only commands that can be received during intialization
-   *
    * @return Receive is a partial function
    */
-  def initializingReceive: Receive = trackerClientReceive orElse {
+  def initializingReceive: Receive = {
+
+    case location:Location => //lookatLocations(l)
+      location match {
+        case l: ResolvedAkkaLocation =>
+          log.info(s"Got actorRef: ${l.actorRef}")
+          tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
+          supervisor ! Started
+        case h: ResolvedHttpLocation =>
+          log.info(s"HTTP Service Damn it: ${h.connection}")
+        case u: Unresolved =>
+          log.info(s"Unresolved: ${u.connection}")
+        case ut: UnTrackedLocation =>
+          log.info(s"UnTracked: ${ut.connection}")
+      }
+
     case Running =>
       // When Running is received, transition to running Receive
       log.info("becoming runningReceive")
       // Set the operational cmd state to "ready" according to spec-this is propagated to other actors
       state(cmd = cmdReady)
       context.become(runningReceive)
+
     case x => log.error(s"Unexpected message in TromboneAssembly:initializingReceive: $x")
   }
 
-  supervisor ! Initialized
-  supervisor ! Started
-
-  val xx = locateHCD()
-
-  // Lookup the alarm service redis instance with the location service
-  private def locateHCD(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[ResolvedAkkaLocation] = {
-    import context.dispatcher
-    val connection = AkkaConnection(ComponentId("tromboneHCD", ComponentType.HCD))
-    LocationService.resolve(Set(connection)).map { locationsReady =>
-      val loc = locationsReady.locations.head.asInstanceOf[ResolvedAkkaLocation]
-      loc
+  def lookatLocations(location:Location):Unit = {
+    location match {
+      case l:ResolvedAkkaLocation =>
+        log.info(s"Got actorRef: ${l.actorRef}")
+        tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
+      case h:ResolvedHttpLocation =>
+        log.info(s"HTTP: ${h.connection}")
+      case u:Unresolved =>
+        log.info(s"Unresolved: ${u.connection}")
+      case ut:UnTrackedLocation =>
+        log.info(s"UnTracked: ${ut.connection}")
     }
   }
 
-  log.info("Locations: " + getLocations)
+  def locationReceive:Receive = {
+    case l:Location =>
+      lookatLocations(l)
+  }
 
   // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
-  def runningReceive: Receive = trackerClientReceive orElse stateReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
+  def runningReceive:Receive = locationReceive orElse stateReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
 
   def lifecycleReceivePF: Receive = {
     case Running =>
@@ -138,7 +153,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   def unhandledPF: Receive = {
     case x => log.error(s"Unexpected message in TromboneAssembly:unhandledPF: $x")
   }
-
   /**
    * Validates a received config arg and returns the first
    */
@@ -162,8 +176,32 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     validations
   }
 
+
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
+
+  // The configuration for the calculator that provides reasonable values
+  def getCalculationConfig: TromboneCalculationConfig = {
+    val defaultInitialElevation = getConfigDouble("calculation-config.defaultInitialElevation")
+    val focusGainError = getConfigDouble("calculation-config.focusErrorGain")
+    val upperFocusLimit = getConfigDouble("calculation-config.upperFocusLimit")
+    val lowerFocusLimit = getConfigDouble("calculation-config.lowerFocusLimit")
+    val zenithFactor = getConfigDouble("calculation-config.zenithFactor")
+    TromboneCalculationConfig(defaultInitialElevation, focusGainError, upperFocusLimit, lowerFocusLimit, zenithFactor)
+  }
+
+  // The configuration for the trombone position mm to encoder
+  def getTromboneControlConfig: TromboneControlConfig = {
+    val positionScale = getConfigDouble("control-config.positionScale")
+    val stageZero = getConfigDouble("control-config.stageZero")
+    val minStageEncoder = getConfigInt("control-config.minStageEncoder")
+    val minEncoderLimit = getConfigInt("control-config.minEncoderLimit")
+    val maxEncoderLimit = getConfigInt("control-config.maxEncoderLimit")
+    TromboneControlConfig(positionScale, stageZero, minStageEncoder, minEncoderLimit, maxEncoderLimit)
+  }
+
+  def getConfigDouble(name: String): Double = context.system.settings.config.getDouble(s"csw.examples.Trombone.assembly.$name")
+  def getConfigInt(name: String): Int = context.system.settings.config.getInt(s"csw.examples.Trombone.assembly.$name")
 
   // Gets the assembly configurations from the config service, or a resource file, if not found and
   // returns the two parsed objects.
@@ -183,6 +221,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     //    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), 2.seconds)
 
     val config = ConfigFactory.parseResources(resource.getPath)
+    println("Config: " + config)
     (TromboneCalculationConfig(config), TromboneControlConfig(config))
   }
 }
@@ -191,17 +230,49 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
  * All assembly messages are indicated here
  */
 object TromboneAssembly {
-  // Should get this from the config file?
-  val componentPrefix = "nfiraos.ncc.trombone"
 
   def props(assemblyInfo: AssemblyInfo, supervisor: ActorRef) = Props(classOf[TromboneAssembly], assemblyInfo, supervisor)
 
   // --------- Keys/Messages used by Multiple Components
   /**
    * The message is used within the Assembly to update actors when the Trombone HCD goes up and down and up again
-   *
    * @param tromboneHCD the ActorRef of the tromboneHCD or None
    */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
 
+}
+
+/**
+ * Starts Assembly as a standalone application.
+ */
+object TromboneAssemblyApp extends App {
+  import csw.examples.vslice.shared.TromboneData._
+
+  LocationService.initInterface()
+
+  // Assembly Info
+  // These first three are set from the config file
+  var componentName: String = "lgsTrombone"
+  var componentClassName: String = "csw.examples.vslice.assembly.TromboneAssembly"
+  var componentPrefix: String = "nfiraos.ncc.trombone"
+  val componentType = ComponentType.Assembly
+  val fullName = s"$componentPrefix.$componentName"
+
+  private def setup: Config = ContainerComponent.parseStringConfig(testConf)
+
+  val assemblyConf = setup.getConfig(s"container.components.$componentName")
+  val hcdId = ComponentId("lgsTromboneHCD", ComponentType.HCD)
+  println("Hcd Component ID: " + hcdId)
+  val defaultInfo = AssemblyInfo(
+    componentName,
+    componentPrefix,
+    componentClassName,
+    RegisterAndTrackServices,
+    Set(AkkaType),
+    Set(AkkaConnection(hcdId)))
+  val assemblyInfo = parseAssembly(s"$componentName", assemblyConf).getOrElse(defaultInfo)
+
+  println("Starting TromboneAssembly: " + assemblyInfo)
+
+  val supervisor = Supervisor3(assemblyInfo)
 }

@@ -24,20 +24,18 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * These tests are for the Trombone AlarmMonitor.
- */
+  * These tests are for the Trombone AlarmMonitor.
+  */
 object AlarmMonitorTests {
   LocationService.initInterface()
   val system = ActorSystem("AlarmMonitorTests")
 }
 
-// XXX TODO FIXME: Start alarm service and init with test-alarms.conf before tests!
-
 /**
- * AlarmMonitorTests
- */
-class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+  * AlarmMonitorTests
+  */
+class AlarmMonitorTests extends TestKit(TromboneAssemblyBasicTests.system) with ImplicitSender
+  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneAlarmMonitor._
   import TromboneStateHandler._
@@ -47,6 +45,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   val ac = AssemblyTestData.TestAssemblyContext
 
   import ac._
+
 
   def setupState(ts: TromboneState) = {
     // These times are important to allow time for test actors to get and process the state updates when running tests
@@ -58,12 +57,10 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   // Initialize HCD for testing
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(
-      TromboneHCD.componentName,
+    val testInfo = HcdInfo(TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      RegisterAndTrackServices, Set(AkkaType), 1.second
-    )
+      RegisterAndTrackServices, Set(AkkaType), 1.second)
 
     Supervisor3(testInfo)
   }
@@ -71,10 +68,10 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None) = {
     //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
     //thandler
-    system.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, allEventPublisher))
+    system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
   }
 
-  override def afterAll = TestKit.shutdownActorSystem(AlarmMonitorTests.system)
+  override def afterAll = TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
 
   // Test Low Limit
   val testLowLimitEvent = CurrentState(TromboneHCD.axisStateCK).madd(
@@ -103,17 +100,18 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     inHomeKey -> false
   )
 
+
   describe("Basic alarm monitor tests with test alarm service running") {
     // Note that the Alarm Service redis instance must be started with TrackLocation under this name
     // tracklocation --name "Alarm Service" --command "redis-server --protected-mode no --port %port" --port 7777
     val asName = "Alarm Service"
 
     /**
-     * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
-     * This causes the monitor to send the warning severity to the Alarm Service
-     * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
-     * the monitor actually did set the alarm severity.
-     */
+      * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
+      * This causes the monitor to send the warning severity to the Alarm Service
+      * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
+      * the monitor actually did set the alarm severity.
+      */
     it("monitor should set a low alarm when receiving simulated encoder low limit") {
 
       val alarmService = Await.result(AlarmService(asName), timeout.duration)
@@ -122,7 +120,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
       // Create an alarm monitor
       val am = system.actorOf(TromboneAlarmMonitor.props(fakeTromboneHCD.ref))
-      expectNoMsg(500.milli) // A delay waiting for monitor to find AlarmService with LocationService
+      expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // the fake trombone HCD sends a CurrentState event that has the low limit sent
       fakeTromboneHCD.send(am, testLowLimitEvent)
@@ -144,11 +142,11 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     }
 
     /**
-     * Test Description: this uses a fake trombone HCD to send  a CurrentState with high limit set.
-     * This causes the monitor to send the warning severity to the Alarm Service
-     * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
-     * the monitor actually did set the alarm severity.
-     */
+      * Test Description: this uses a fake trombone HCD to send  a CurrentState with high limit set.
+      * This causes the monitor to send the warning severity to the Alarm Service
+      * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
+      * the monitor actually did set the alarm severity.
+      */
     it("monitor should set a low alarm when receiving simulated encoder high limit") {
 
       val alarmService = Await.result(AlarmService(asName), timeout.duration)
@@ -179,9 +177,9 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     }
 
     /**
-     * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
-     * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
-     */
+      * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
+      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
+      */
     it("monitor should set a low alarm when receiving real encoder low limit using real HCD to generate data") {
       val alarmService = Await.result(AlarmService(asName), timeout.duration)
 
@@ -234,10 +232,11 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       alarmValue.reported shouldBe Okay
     }
 
+
     /**
-     * Test Description: This test uses the actual HCD to drive the axis to the high limit and verify that the high
-     * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
-     */
+      * Test Description: This test uses the actual HCD to drive the axis to the high limit and verify that the high
+      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
+      */
     it("monitor should set a high alarm when receiving real encoder high limit using real HCD to generate data") {
       val alarmService = Await.result(AlarmService(asName), timeout.duration)
 

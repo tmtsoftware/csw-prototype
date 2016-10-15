@@ -5,13 +5,14 @@ import java.io.File
 import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import csw.services.ccs.HcdController
 import csw.services.cs.akka.ConfigServiceClient
-import csw.services.loc.ComponentType
-import csw.services.pkg.Component.HcdInfo
+import csw.services.loc.ConnectionType.AkkaType
+import csw.services.loc.{ComponentType, LocationService}
+import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
 import csw.services.pkg.Supervisor3._
-import csw.services.pkg.Hcd
+import csw.services.pkg.{ContainerComponent, Hcd, Supervisor3}
 import csw.util.config.Configurations.{ConfigKey, SetupConfig}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.UnitsOfMeasure.encoder
@@ -309,4 +310,26 @@ object TromboneHCD {
 
   case object GetAxisConfig extends TromboneEngineering
 
+}
+
+
+/**
+  * Starts Assembly as a standalone application.
+  */
+object TromboneHCDApp extends App {
+
+  import TromboneHCD._
+  import csw.examples.vslice.shared.TromboneData._
+
+  LocationService.initInterface()
+
+  private def setup: Config = ContainerComponent.parseStringConfig(testConf)
+
+  val componentConf = setup.getConfig(s"container.components.$componentName")
+  val testInfo = HcdInfo(componentName, trombonePrefix, componentClassName, RegisterOnly, Set(AkkaType), 1.second)
+  val hcdInfo = ContainerComponent.parseHcd(s"$componentName", componentConf).getOrElse(testInfo)
+
+  println("Starting TromboneHCD: " + hcdInfo)
+
+  val supervisor = Supervisor3(hcdInfo)
 }

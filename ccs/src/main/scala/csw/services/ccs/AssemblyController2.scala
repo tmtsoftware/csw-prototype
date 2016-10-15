@@ -48,7 +48,7 @@ object AssemblyController2 {
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
-trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTrackerClientActor {
+trait AssemblyController2 extends PublisherActor[CurrentStates] {
   this: Actor with PrefixedActorLogging =>
 
   import CommandStatus2._
@@ -56,7 +56,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
   import context.dispatcher
 
   // Optional actor waiting for current HCD states to match demand states
-  private var stateMatcherActor: Option[ActorRef] = None
+  //private var stateMatcherActor: Option[ActorRef] = None
 
   /**
    * Receive actor messages
@@ -135,6 +135,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    * @param timeout      amount of time to wait for states to match (default: 60 sec)
    * @param matcher      matcher to use (default: equality)
    */
+  /*
   protected def matchDemandStates(demandStates: Seq[DemandState], hcds: Set[ActorRef], replyTo: Option[ActorRef], runId: RunId,
                                   timeout: Timeout = Timeout(60.seconds),
                                   matcher: Matcher = StateVariable.defaultMatcher): Unit = {
@@ -146,6 +147,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
       stateMatcherActor = Some(context.actorOf(props))
     }
   }
+  */
   /*
   protected def getActorRefs(targetPrefix: String): Set[ActorRef] = {
     val x = getLocations.collect {
@@ -163,7 +165,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
    * @param replyTo           send the command status (Completed) to this actor when all the configs are "matched" or an error status if a timeout occurs
    * @return Valid if locationsResolved, otherwise Invalid
    */
-
+/*
   protected def distributeSetupConfigs(locationsResolved: Boolean, configArg: SetupConfigArg,
                                        replyTo: Option[ActorRef]): CommandStatus2 = {
     if (locationsResolved) {
@@ -211,5 +213,5 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] with LocationTra
   //  protected def request(config: SetupConfig): Future[RequestResult] = {
   //    Future.successful(RequestResult(RequestFailed("Assembly controller 'request' method not implemented"), None))
   //  }
-
+*/
 }

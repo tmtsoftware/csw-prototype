@@ -10,7 +10,6 @@ import csw.services.ccs.CommandStatus2._
 import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{ExecuteOne, StartTheSequence}
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -22,16 +21,11 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.duration._
 
-object CommandHandlerTests {
-  LocationService.initInterface()
-  val system = ActorSystem("TromboneAssemblyCommandHandlerTests")
-}
-
 /**
- * TMT Source Code: 9/21/16.
- */
-class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+  * TMT Source Code: 9/21/16.
+  */
+class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests"))
+  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneStateHandler._
 
@@ -48,20 +42,18 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
   }
 
   def startHCD: ActorRef = {
-    val testInfo = HcdInfo(
-      TromboneHCD.componentName,
+    val testInfo = HcdInfo(TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second
-    )
+      DoNotRegister, Set(AkkaType), 1.second)
 
     Supervisor3(testInfo)
   }
 
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None) = {
-    //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
-    //thandler
-    system.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, allEventPublisher))
+   //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
+   //thandler
+    system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
   }
 
   it("should allow running datum directly to CommandHandler") {
@@ -135,7 +127,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     val monitor = TestProbe()
     monitor.watch(ch)
     monitor.watch(tromboneHCD)
-    system.stop(ch) // ch ! PoisonPill
+    system.stop(ch)  // ch ! PoisonPill
     monitor.expectTerminated(ch)
     system.stop(tromboneHCD) //tromboneHCD ! PoisonPill
     monitor.expectTerminated(tromboneHCD, 4.seconds)
@@ -389,6 +381,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     system.stop(tromboneHCD)
   }
 
+
   it("should allow follow and a stop") {
 
     val tromboneHCD = startHCD
@@ -483,6 +476,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     //logger.info(s"Upd2: $upd")
     upd.current should equal(expectedEncoderValue)
+
 
     sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(ac.stopCK))
     val se4 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))

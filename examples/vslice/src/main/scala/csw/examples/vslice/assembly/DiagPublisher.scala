@@ -4,37 +4,39 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import csw.examples.vslice.assembly.TromboneAssembly.UpdateTromboneHCD
 import csw.examples.vslice.assembly.TrombonePublisher.{AxisStateUpdate, AxisStatsUpdate}
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.services.loc.LocationService._
+import csw.services.loc.TrackerSubscriberClient
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.akka.PublisherActor
 import csw.util.config.StateVariable.CurrentState
 
 /**
- * DiagPublisher provides diagnostic telemetry in the form of two events. DiagPublisher operaties in the 'OperationsState' or 'DiagnosticState'.
- *
- * DiagPublisher listens in on axis state updates from the HCD and publishes them as a StatusEvent through the assembly's event publisher.
- * In OperationsState, it publishes every 5'th axis state update (set with val operationsSkipCount.
- * In DiagnosticState, it publishes every other axis update (more frequent in diagnostic state).
- *
- * context.become is used to implement a state machine with two states operationsReceive and diagnosticReceive
- *
- * In DiagnosticState, it also publishes an axis statistics event every second. Every one second (diagnosticAxisStatsPeriod), it
- * sends the GetAxisStats message to the HCD. When the data arrives, it is sent to the event publisher.
- *
- * This actor demonstrates a few techniques. First, it has no variables. Each state in the actor is represented by its own
- * receive method. Each method has parameters that can be called from within the function with updated values eliminating the need
- * for variables.
- *
- * This shows how to filter events from the CurrentState stream from the HCD.
- *
- * This shows how to use the TimeService to send periodic messages and how to periodically call another actor and process its
- * response.
- *
- * @param currentStateReceiver a source for CurrentState messages. This can be the actorRef of the HCD itself, or the actorRef of
- *                             a CurrentStateReceiver
- * @param tromboneHCDIn        actorRef of the tromboneHCD as a [[scala.Option]]
- * @param eventPublisher       actorRef of an instance of the TrombonePublisher as [[scala.Option]]
- */
-class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TimeServiceScheduler {
+  * DiagPublisher provides diagnostic telemetry in the form of two events. DiagPublisher operaties in the 'OperationsState' or 'DiagnosticState'.
+  *
+  * DiagPublisher listens in on axis state updates from the HCD and publishes them as a StatusEvent through the assembly's event publisher.
+  * In OperationsState, it publishes every 5'th axis state update (set with val operationsSkipCount.
+  * In DiagnosticState, it publishes every other axis update (more frequent in diagnostic state).
+  *
+  * context.become is used to implement a state machine with two states operationsReceive and diagnosticReceive
+  *
+  * In DiagnosticState, it also publishes an axis statistics event every second. Every one second (diagnosticAxisStatsPeriod), it
+  * sends the GetAxisStats message to the HCD. When the data arrives, it is sent to the event publisher.
+  *
+  * This actor demonstrates a few techniques. First, it has no variables. Each state in the actor is represented by its own
+  * receive method. Each method has parameters that can be called from within the function with updated values eliminating the need
+  * for variables.
+  *
+  * This shows how to filter events from the CurrentState stream from the HCD.
+  *
+  * This shows how to use the TimeService to send periodic messages and how to periodically call another actor and process its
+  * response.
+  *
+  * @param currentStateReceiver a source for CurrentState messages. This can be the actorRef of the HCD itself, or the actorRef of
+  *                             a CurrentStateReceiver
+  * @param tromboneHCDIn        actorRef of the tromboneHCD as a [[scala.Option]]
+  * @param eventPublisher       actorRef of an instance of the TrombonePublisher as [[scala.Option]]
+  */
+class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TimeServiceScheduler with TrackerSubscriberClient {
 
   import DiagPublisher._
   import TromboneHCD._
@@ -53,17 +55,17 @@ class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorR
   def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCDIn: Option[ActorRef])
 
   /**
-   * The receive method in operations state.
-   *
-   * In operations state every 5th AxisUpdate message from the HCD is published as a status event. It sends an AxisStateUpdate message
-   * to the event publisher
-   *
-   * @param currentStateReceive the source for CurrentState messages
-   * @param stateMessageCounter the number of messages received by the diag publisher
-   * @param tromboneHCD         the trombone HCD ActorRef as an Option
-   *
-   * @return Receive partial function
-   */
+    * The receive method in operations state.
+    *
+    * In operations state every 5th AxisUpdate message from the HCD is published as a status event. It sends an AxisStateUpdate message
+    * to the event publisher
+    *
+    * @param currentStateReceive the source for CurrentState messages
+    * @param stateMessageCounter the number of messages received by the diag publisher
+    * @param tromboneHCD         the trombone HCD ActorRef as an Option
+    *
+    * @return Receive partial function
+    */
   def operationsReceive(currentStateReceive: ActorRef, stateMessageCounter: Int, tromboneHCD: Option[ActorRef]): Receive = {
     case cs: CurrentState if cs.configKey == TromboneHCD.axisStateCK =>
       if (stateMessageCounter % operationsSkipCount == 0) publishStateUpdate(cs)
@@ -82,19 +84,33 @@ class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorR
     case UpdateTromboneHCD(tromboneHCDUpdate) =>
       context.become(operationsReceive(currentStateReceiver, stateMessageCounter, tromboneHCDUpdate))
 
+    case location: Location =>
+      location match {
+        case l: ResolvedAkkaLocation =>
+          log.info(s"operationsReceive updated actorRef: ${l.actorRef}")
+          context.become(operationsReceive(currentStateReceive, stateMessageCounter, l.actorRef))
+        case h: ResolvedHttpLocation =>
+          log.info(s"HTTP: ${h.connection}")
+        case u: Unresolved =>
+          log.info(s"Unresolved: ${u.connection}")
+          context.become(operationsReceive(currentStateReceive, stateMessageCounter, None))
+        case ut: UnTrackedLocation =>
+          log.info(s"UnTracked: ${ut.connection}")
+      }
+
     case x => log.error(s"DiagPublisher:operationsReceive received an unexpected message: $x")
   }
 
   /**
-   * The receive method in diagnostic state
-   *
-   * @param currentStateReceive the source for CurrentState messages
-   * @param stateMessageCounter the number of messages received by the diag publisher
-   * @param tromboneHCD         the trombone HCD ActorRef as an Option
-   * @param cancelToken         a token that allows the current timer to be cancelled
-   *
-   * @return Receive partial function
-   */
+    * The receive method in diagnostic state
+    *
+    * @param currentStateReceive the source for CurrentState messages
+    * @param stateMessageCounter the number of messages received by the diag publisher
+    * @param tromboneHCD         the trombone HCD ActorRef as an Option
+    * @param cancelToken         a token that allows the current timer to be cancelled
+    *
+    * @return Receive partial function
+    */
   def diagnosticReceive(currentStateReceive: ActorRef, stateMessageCounter: Int, tromboneHCD: Option[ActorRef], cancelToken: Cancellable): Receive = {
     case cs: CurrentState if cs.configKey == TromboneHCD.axisStateCK =>
       if (stateMessageCounter % diagnosticSkipCount == 0) publishStateUpdate(cs)
