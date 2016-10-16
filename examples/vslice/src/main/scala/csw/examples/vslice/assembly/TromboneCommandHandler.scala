@@ -23,7 +23,6 @@ import csw.util.config.UnitsOfMeasure.encoder
 
 import scala.concurrent.duration._
 
-
 /**
  * TMT Source Code: 9/21/16.
  */
@@ -45,7 +44,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
 
   def noFollowReceive(): Receive = stateReceive orElse {
 
-    case l:Location =>
+    case l: Location =>
       log.info("CommandHandler: " + l)
       lookatLocations(l)
 
@@ -97,8 +96,6 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
             commandOriginator.foreach(_ ! Completed)
           }
 
-
-
         case otherCommand =>
           log.error(s"TromboneCommandHandler:noFollowReceive received an unknown command: $otherCommand")
           commandOriginator.foreach(_ ! Invalid(UnsupportedCommandInStateIssue(s"""Trombone assembly does not support the command \"${otherCommand.prefix}\" in the current state.""")))
@@ -107,16 +104,18 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
     case x => log.error(s"TromboneCommandHandler:noFollowReceive received an unknown message: $x")
   }
 
-  def lookatLocations(location:Location):Unit = {
+  def lookatLocations(location: Location): Unit = {
     location match {
-      case l:ResolvedAkkaLocation =>
+      case l: ResolvedAkkaLocation =>
         log.info(s"Got actorRef: ${l.actorRef}")
         tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
-      case h:ResolvedHttpLocation =>
+      case h: ResolvedHttpLocation =>
         log.info(s"HTTP: ${h.connection}")
-      case u:Unresolved =>
+      case t: ResolvedTcpLocation =>
+        log.info(s"Received TCP Location: ${t.connection}" )
+      case u: Unresolved =>
         log.info(s"Unresolved: ${u.connection}")
-      case ut:UnTrackedLocation =>
+      case ut: UnTrackedLocation =>
         log.info(s"UnTracked: ${ut.connection}")
     }
   }

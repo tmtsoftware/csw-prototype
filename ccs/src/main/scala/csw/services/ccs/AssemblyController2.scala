@@ -165,7 +165,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] {
    * @param replyTo           send the command status (Completed) to this actor when all the configs are "matched" or an error status if a timeout occurs
    * @return Valid if locationsResolved, otherwise Invalid
    */
-/*
+  /*
   protected def distributeSetupConfigs(locationsResolved: Boolean, configArg: SetupConfigArg,
                                        replyTo: Option[ActorRef]): CommandStatus2 = {
     if (locationsResolved) {

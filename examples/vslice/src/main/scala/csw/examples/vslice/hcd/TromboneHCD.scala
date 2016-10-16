@@ -312,10 +312,9 @@ object TromboneHCD {
 
 }
 
-
 /**
-  * Starts Assembly as a standalone application.
-  */
+ * Starts Assembly as a standalone application.
+ */
 object TromboneHCDApp extends App {
 
   import TromboneHCD._

@@ -14,7 +14,7 @@ import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{StartTheSequence, StopCurrentCommand}
 import csw.services.ccs.Validation.{Validation, ValidationList}
 import csw.services.events.EventServiceSettings
-import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService._
 import csw.services.loc._
@@ -47,7 +47,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   //val (calculationConfig, controlConfig) = getAssemblyConfigs
   implicit val ac = AssemblyContext(info, calculationConfig, controlConfig)
 
-
   def receive = initializingReceive
 
   // Start tracking the components we command
@@ -57,26 +56,22 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   trackerSubscriber ! TrackerSubscriberActor.Subscribe
   TrackerSubscriberActor.trackConnections(info.connections, trackerSubscriber)
 
-  val c1 = HttpConnection(ComponentId("Alarm Service", ComponentType.Service))
-  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
+  //val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
+  //TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
 
-
-
-  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
-
-
+  //val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
   // This actor handles all telemetry and system event publishing
-  val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
+  //val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
   // This actor makes a single connection to the
-  val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
+  //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //log.info("CurrentStateReceiver: " + currentStateReceiver)
 
   // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
-  val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), Some(eventPublisher)))
+ // val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), Some(eventPublisher)))
 
   // This sets up the diagnostic data publisher
-  val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
+  //val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
 
   supervisor ! Initialized
 
@@ -86,7 +81,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
    */
   def initializingReceive: Receive = {
 
-    case location:Location => //lookatLocations(l)
+    case location: Location => //lookatLocations(l)
       location match {
         case l: ResolvedAkkaLocation =>
           log.info(s"Got actorRef: ${l.actorRef}")
@@ -94,6 +89,8 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
           supervisor ! Started
         case h: ResolvedHttpLocation =>
           log.info(s"HTTP Service Damn it: ${h.connection}")
+        case t: ResolvedTcpLocation =>
+          log.info(s"Service resolved: ${t.connection}")
         case u: Unresolved =>
           log.info(s"Unresolved: ${u.connection}")
         case ut: UnTrackedLocation =>
@@ -110,27 +107,29 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     case x => log.error(s"Unexpected message in TromboneAssembly:initializingReceive: $x")
   }
 
-  def lookatLocations(location:Location):Unit = {
+  def lookatLocations(location: Location): Unit = {
     location match {
-      case l:ResolvedAkkaLocation =>
+      case l: ResolvedAkkaLocation =>
         log.info(s"Got actorRef: ${l.actorRef}")
         tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
-      case h:ResolvedHttpLocation =>
+      case h: ResolvedHttpLocation =>
         log.info(s"HTTP: ${h.connection}")
-      case u:Unresolved =>
+      case t: ResolvedTcpLocation =>
+        log.info(s"Service resolved: ${t.connection}")
+      case u: Unresolved =>
         log.info(s"Unresolved: ${u.connection}")
-      case ut:UnTrackedLocation =>
+      case ut: UnTrackedLocation =>
         log.info(s"UnTracked: ${ut.connection}")
     }
   }
 
-  def locationReceive:Receive = {
-    case l:Location =>
+  def locationReceive: Receive = {
+    case l: Location =>
       lookatLocations(l)
   }
 
   // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
-  def runningReceive:Receive = locationReceive orElse stateReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
+  def runningReceive: Receive = locationReceive orElse stateReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
 
   def lifecycleReceivePF: Receive = {
     case Running =>
@@ -167,15 +166,14 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     if (Validation.isAllValid(validations)) {
       if (sca.configs.size == 1 && sca.configs.head.configKey == ac.stopCK) {
         // Special handling for stop which needs to interrupt the currently executing sequence
-        commandHandler ! sca.configs.head
+        //commandHandler ! sca.configs.head
       } else {
         val executor = newExecutor(sca, commandOriginator)
-        executor ! StartTheSequence(commandHandler)
+        //executor ! StartTheSequence(commandHandler)
       }
     }
     validations
   }
-
 
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
@@ -269,7 +267,8 @@ object TromboneAssemblyApp extends App {
     componentClassName,
     RegisterAndTrackServices,
     Set(AkkaType),
-    Set(AkkaConnection(hcdId)))
+    Set(AkkaConnection(hcdId))
+  )
   val assemblyInfo = parseAssembly(s"$componentName", assemblyConf).getOrElse(defaultInfo)
 
   println("Starting TromboneAssembly: " + assemblyInfo)

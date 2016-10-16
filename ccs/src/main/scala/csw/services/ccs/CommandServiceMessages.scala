@@ -43,16 +43,15 @@ object HcdMessages {
    */
   final case class Submit(config: SetupConfig) extends HcdMessages
 
-
   /**
-    * Message to subscribe the sender to the HCD's state.
-    * The sender will receive [[csw.util.config.StateVariable.CurrentState]] messages from the HCD whenever it's state changes.
-    */
+   * Message to subscribe the sender to the HCD's state.
+   * The sender will receive [[csw.util.config.StateVariable.CurrentState]] messages from the HCD whenever it's state changes.
+   */
   final object Subscribe extends HcdMessages
 
   /**
-    * Message to unsubscribes from the HCD's state messages.
-    */
+   * Message to unsubscribes from the HCD's state messages.
+   */
   final object Unsubscribe extends HcdMessages
 
 }

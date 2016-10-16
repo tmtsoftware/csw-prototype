@@ -6,13 +6,12 @@ import javax.jmdns._
 import akka.actor._
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.LocationTrackerWorker.LocationsReady
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
-
 import collection.JavaConverters._
 
 /**
@@ -49,6 +48,7 @@ object LocationService {
    */
   def initInterface(): Unit = {
     if (!initialized) {
+      println("INIT")
       initialized = true
       case class Addr(index: Int, addr: InetAddress)
       def defaultAddr = Addr(0, InetAddress.getLocalHost)
@@ -118,6 +118,11 @@ object LocationService {
    */
   final case class HttpRegistration(connection: HttpConnection, port: Int, path: String) extends Registration
 
+  /**
+   * Represents a registered connection to a TCP based service
+   */
+  final case class TcpRegistration(connection: TcpConnection, port: Int) extends Registration
+
   // Multicast DNS service type
   private val dnsType = "_csw._tcp.local."
 
@@ -131,6 +136,12 @@ object LocationService {
 
   // Indicates the part of a command service config that this service is interested in
   private val PREFIX_KEY = "prefix"
+
+  // For a TCP service, this is the host
+  private val HOST_KEY = "host"
+
+  // For a TCP service, this is the port
+  private val PORT_KEY = "port"
 
   case class ComponentRegistered(connection: Connection, result: RegistrationResult)
 
@@ -156,6 +167,10 @@ object LocationService {
   }
 
   final case class ResolvedHttpLocation(connection: HttpConnection, uri: URI, path: String) extends Location {
+    override val isResolved = true
+  }
+
+  final case class ResolvedTcpLocation(connection: TcpConnection, host: String, port: Int) extends Location {
     override val isResolved = true
   }
 
@@ -190,11 +205,11 @@ object LocationService {
    */
   def register(reg: Registration)(implicit system: ActorSystem): Future[RegistrationResult] = {
     reg match {
-      case AkkaRegistration(connection, component, prefix) =>
-        registerAkkaConnection(connection.componentId, component, prefix)
+      case AkkaRegistration(connection, component, prefix) => registerAkkaConnection(connection.componentId, component, prefix)
 
-      case HttpRegistration(connection, port, path) =>
-        registerHttpConnection(connection.componentId, port, path)
+      case HttpRegistration(connection, port, path)        => registerHttpConnection(connection.componentId, port, path)
+
+      case TcpRegistration(connection, port)               => registerTcpConnection(connection.componentId, port)
     }
   }
 
@@ -243,6 +258,29 @@ object LocationService {
       val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.debug(s"Registered HTTP $connection")
+      RegisterResult(registry, service, componentId)
+    }
+  }
+
+  /**
+   * Registers the given service as a Service for the local host and the given port
+   * (The full name of the local host will be used)
+   *
+   * @param componentId describes the component or service
+   * @param port        the port the service is running on
+   * @return h object that can be used to close the connection and unregister the service
+   */
+  def registerTcpConnection(componentId: ComponentId, port: Int)(implicit system: ActorSystem): Future[RegistrationResult] = {
+    import system.dispatcher
+    val connection = TcpConnection(componentId)
+    Future {
+      val values = Map(
+        PATH_KEY -> ""
+      )
+      val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
+      println("Service: " + service)
+      registry.registerService(service)
+      logger.debug(s"Registered TCP $connection")
       RegisterResult(registry, service, componentId)
     }
   }
@@ -382,6 +420,7 @@ object LocationService {
 
     // Check to see if a connection is already resolved, and if so, resolve the service
     private def tryToResolve(connection: Connection): Unit = {
+      log.info("Connections: " + connections)
       connections.get(connection) match {
         case Some(Unresolved(c)) =>
           val s = Option(registry.getServiceInfo(dnsType, connection.toString))
@@ -396,7 +435,7 @@ object LocationService {
       // Gets the connection from the name and, if we are tracking the connection, resolve it
       Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc =>
         log.info(s">>>>>>>>>>>Kim added:       serviceResolved call")
-        resolveService(loc.connection, event.getInfo)
+        //resolveService(loc.connection, event.getInfo)
       })
     }
 
@@ -427,9 +466,17 @@ object LocationService {
                 val path = info.getPropertyString(PATH_KEY)
                 val rhc = ResolvedHttpLocation(hc, uri, path)
                 connections += (connection -> rhc)
-                log.debug("Resolved HTTP: " + connections.values.toList)
+                log.debug(s"Resolved HTTP: ${connections.values.toList}")
                 // Here is where the resolved message is sent for an Http Connection
                 sendLocationUpdate(rhc)
+              case tcp: TcpConnection =>
+                // A TCP-based connection is ended here
+                val host = info.getPropertyString(SYSTEM_KEY)
+                val port: Int = uri.getPort
+                val rtc = ResolvedTcpLocation(tcp, host, port)
+                connections += (connection -> rtc)
+                log.info(s"Resolved TCP: ${connections.values.toList}")
+                sendLocationUpdate(rtc)
             }
         }
       } catch {
@@ -490,14 +537,18 @@ object LocationService {
 
       case TrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, add it
+        println("Received track connection: " + connection)
+        println("test: " + connections.contains(connection))
         if (!connections.contains(connection)) {
           val unc = Unresolved(connection)
           connections += connection -> unc
           // Should we send an update here?
           sendLocationUpdate(unc)
+          println("Sending update")
+          tryToResolve(connection)
         }
-        // Note this will be called whether we are currently tracking or not, could already be resolved
-        //tryToResolve(connection)
+      // Note this will be called whether we are currently tracking or not, could already be resolved
+      //tryToResolve(connection)
 
       case UntrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, ignore it

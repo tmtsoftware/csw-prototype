@@ -28,6 +28,13 @@ object ConnectionType {
   }
 
   /**
+   * Type of a TCP connection - primarily for services with a host and port
+   */
+  case object TcpType extends ConnectionType {
+    val name = "TCP"
+  }
+
+  /**
    * Exception throws for an unknown connection type
    */
   case class UnknownConnectionTypeException(message: String) extends Exception(message)
@@ -38,6 +45,7 @@ object ConnectionType {
   def apply(name: String): Try[ConnectionType] = name match {
     case "http" => Success(HttpType)
     case "akka" => Success(AkkaType)
+    case "TCP"  => Success(TcpType)
     case x      => Failure(UnknownConnectionTypeException(x))
   }
 
