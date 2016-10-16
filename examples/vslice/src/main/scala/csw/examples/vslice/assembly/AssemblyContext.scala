@@ -13,9 +13,9 @@ import csw.util.config.{BooleanKey, DoubleItem, DoubleKey, StringKey}
 case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalculationConfig, controlConfig: TromboneControlConfig) {
   // Assembly Info
   // These first three are set from the config file
-  var componentName: String = info.componentName
-  var componentClassName: String = info.componentClassName
-  var componentPrefix: String = info.prefix
+  val componentName: String = info.componentName
+  val componentClassName: String = info.componentClassName
+  val componentPrefix: String = info.prefix
   val componentType = info.componentType
   val fullName = s"$componentPrefix.$componentName"
 

@@ -1,6 +1,5 @@
 package csw.examples.vslice.assembly
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.util.config.DoubleItem
 
@@ -16,7 +15,7 @@ import csw.util.config.DoubleItem
  * a good strategy.  Then they are called from the FollowActor and other places. The method names are
  * representative of their function: rangeDistanceToElevation for instance.
  */
-object Algorithms extends LazyLogging {
+object Algorithms {
 
   /**
    * Arbitrary check of the zenith angle to be within bounds
@@ -34,13 +33,6 @@ object Algorithms extends LazyLogging {
    */
   def verifyFocusError(calculationConfig: TromboneCalculationConfig, focusError: DoubleItem): Boolean = focusError.head >= calculationConfig.lowerFocusLimit && focusError.head <= calculationConfig.upperFocusLimit
 
-  /**
-   *
-   * @param calculationConfig
-   * @param elevation
-   * @param zenithAngle
-   * @return
-   */
   def zenithAngleToRangeDistance(elevation: Double, zenithAngle: Double): Double = elevation / Math.cos(Math.toRadians(zenithAngle))
 
   def rangeDistanceToElevation(rangeDistance: Double, zenithAngle: Double): Double = Math.cos(Math.toRadians(zenithAngle)) * rangeDistance
@@ -76,7 +68,6 @@ object Algorithms extends LazyLogging {
   def rangeDistanceToStagePosition(rangeDistance: Double): Double = rangeDistance
 
   /**
-   *
    *
    * @param stagePosition is the value of the stage position in millimeters (currently the total NA elevation)
    * @return DoubleItem with key naTrombonePosition and units of enc
