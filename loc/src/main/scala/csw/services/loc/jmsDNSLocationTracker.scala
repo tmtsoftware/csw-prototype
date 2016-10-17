@@ -4,7 +4,7 @@ import java.net.URI
 import javax.jmdns.{JmDNS, ServiceEvent, ServiceInfo, ServiceListener}
 
 import akka.actor.{Actor, ActorIdentity, ActorLogging, ActorPath, ActorRef, Identify, Props, Terminated}
-import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.LocationService._
 
 object jmsDNSLocationTracker {
@@ -119,6 +119,13 @@ case class jmsDNSLocationTracker(registry: JmDNS, replyTo: Option[ActorRef]) ext
               log.debug("Resolved HTTP: " + connections.values.toList)
               // Here is where the resolved message is sent for an Http Connection
               sendLocationUpdate(rhc)
+            case tc: TcpConnection =>
+              // A TCP connection is finished off here
+              val rtc = ResolvedTcpLocation(tc, uri.getHost, uri.getPort)
+              connections += (connection -> rtc)
+              log.debug("Resolved TCP: " + connections.values.toList)
+              // Here is where the resolved message is sent for an Http Connection
+              sendLocationUpdate(rtc)
           }
       }
     } catch {

@@ -9,9 +9,9 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.cs.akka._
 import csw.services.cs.core.ConfigData
-import csw.services.loc.Connection.HttpConnection
-import csw.services.loc.ConnectionType.HttpType
-import csw.services.loc.LocationService.ResolvedHttpLocation
+import csw.services.loc.Connection.TcpConnection
+import csw.services.loc.ConnectionType.TcpType
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import org.scalatest.FunSuiteLike
 
@@ -47,16 +47,16 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
       ))
     }
 
-    val connection = HttpConnection(ComponentId(name, ComponentType.Service))
+    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
     val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
     logger.debug(s"Found $locationsReady")
     assert(locationsReady.locations.size == 1)
     val loc = locationsReady.locations.head
     assert(loc.isResolved)
-    assert(loc.connection.connectionType == HttpType)
+    assert(loc.connection.connectionType == TcpType)
     assert(loc.connection.componentId.name == name)
-    val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
-    assert(httpLoc.uri.getPort == port)
+    val tcpLoc = loc.asInstanceOf[ResolvedTcpLocation]
+    assert(tcpLoc.port == port)
     logger.debug(s"$name passed")
     logger.debug("Test1 done")
   }
@@ -72,16 +72,16 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
       TrackLocation.main(Array("--name", name, "--no-exit", configFile))
     }
 
-    val connection = HttpConnection(ComponentId(name, ComponentType.Service))
+    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
     val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
     logger.debug(s"Found $locationsReady")
     assert(locationsReady.locations.size == 1)
     val loc = locationsReady.locations.head
     assert(loc.isResolved)
-    assert(loc.connection.connectionType == HttpType)
+    assert(loc.connection.connectionType == TcpType)
     assert(loc.connection.componentId.name == name)
-    val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
-    assert(httpLoc.uri.getPort == port)
+    val tcpLoc = loc.asInstanceOf[ResolvedTcpLocation]
+    assert(tcpLoc.port == port)
     logger.debug(s"$name passed")
     logger.debug("Test2 done")
   }
@@ -110,16 +110,16 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
       TrackLocation.main(Array("--name", name, "--no-exit", path))
     }
 
-    val connection = HttpConnection(ComponentId(name, ComponentType.Service))
+    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
     val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
     logger.debug(s"Found $locationsReady")
     assert(locationsReady.locations.size == 1)
     val loc = locationsReady.locations.head
     assert(loc.isResolved)
-    assert(loc.connection.connectionType == HttpType)
+    assert(loc.connection.connectionType == TcpType)
     assert(loc.connection.componentId.name == name)
-    val httpLoc = loc.asInstanceOf[ResolvedHttpLocation]
-    assert(httpLoc.uri.getPort == port)
+    val tcpLoc = loc.asInstanceOf[ResolvedTcpLocation]
+    assert(tcpLoc.port == port)
     logger.debug(s"$name passed")
     logger.debug("Test3 done")
   }

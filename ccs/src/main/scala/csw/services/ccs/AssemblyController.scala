@@ -2,6 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef}
 import akka.util.Timeout
+import csw.services.ccs.Validation._
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.LocationTrackerClientActor
 import csw.services.log.PrefixedActorLogging
@@ -58,26 +59,26 @@ object AssemblyController {
    */
   case class RequestResult(status: RequestStatus, resp: Option[SetupConfig])
 
-  /**
-   * Base trait for the results of validating incoming configs
-   */
-  sealed trait Validation {
-    def isValid: Boolean = true
-  }
-
-  /**
-   * Indicates a valid input config
-   */
-  case object Valid extends Validation
-
-  /**
-   * Indicates an invalid input config
-   *
-   * @param reason a description of why the config is invalid
-   */
-  case class Invalid(reason: String) extends Validation {
-    override def isValid: Boolean = false
-  }
+  //  /**
+  //   * Base trait for the results of validating incoming configs
+  //   */
+  //  sealed trait Validation {
+  //    def isValid: Boolean = true
+  //  }
+  //
+  //  /**
+  //   * Indicates a valid input config
+  //   */
+  //  case object Valid extends Validation
+  //
+  //  /**
+  //   * Indicates an invalid input config
+  //   *
+  //   * @param reason a description of why the config is invalid
+  //   */
+  //  case class Invalid(reason: String) extends Validation {
+  //    override def isValid: Boolean = false
+  //  }
 
   /**
    * The completion status of a request
@@ -151,7 +152,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
       case Valid =>
         replyTo ! CommandStatus.Accepted(config.info.runId)
       case Invalid(reason) =>
-        replyTo ! CommandStatus.Error(config.info.runId, reason)
+        replyTo ! CommandStatus.Error(config.info.runId, reason.reason)
     }
   }
 
@@ -228,7 +229,7 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
     } else {
       val s = "Unresolved locations for one or more HCDs"
       log.error(s)
-      Invalid(s)
+      Invalid(UnresolvedLocationsIssue(s))
     }
   }
 

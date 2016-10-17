@@ -21,6 +21,13 @@ object ConnectionType {
   }
 
   /**
+   * Type of a TCP based service
+   */
+  case object TcpType extends ConnectionType {
+    val name = "tcp"
+  }
+
+  /**
    * Type of an Akka actor based service
    */
   case object AkkaType extends ConnectionType {
@@ -38,6 +45,7 @@ object ConnectionType {
   def apply(name: String): Try[ConnectionType] = name match {
     case "http" => Success(HttpType)
     case "akka" => Success(AkkaType)
+    case "tcp"  => Success(TcpType)
     case x      => Failure(UnknownConnectionTypeException(x))
   }
 

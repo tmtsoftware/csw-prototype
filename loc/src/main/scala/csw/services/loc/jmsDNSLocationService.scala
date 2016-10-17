@@ -5,7 +5,7 @@ import javax.jmdns.{JmDNS, ServiceInfo}
 
 import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem, Extension, ExtensionKey}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -137,7 +137,7 @@ object jmsDNSLocationService extends LocationServiceProvider {
   }
 
   /**
-   * Registers the given service for the local host and the given port
+   * Registers the given http service for the local host and the given port
    * (The full name of the local host will be used)
    *
    * @param componentId describes the component or service
@@ -155,6 +155,25 @@ object jmsDNSLocationService extends LocationServiceProvider {
       val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.debug(s"Registered HTTP $connection")
+      JMSRegisterResult(registry, service, componentId)
+    }
+  }
+
+  /**
+   * Registers the given tcp service for the local host and the given port
+   * (The full name of the local host will be used)
+   *
+   * @param componentId describes the component or service
+   * @param port        the port the service is running on
+   * @return an object that can be used to close the connection and unregister the service
+   */
+  def registerTcpConnection[JMSRegistryResult](componentId: ComponentId, port: Int)(implicit system: ActorSystem): Future[RegistrationResult] = {
+    import system.dispatcher
+    val connection = TcpConnection(componentId)
+    Future {
+      val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, componentId.name)
+      registry.registerService(service)
+      logger.debug(s"Registered TCP $connection")
       JMSRegisterResult(registry, service, componentId)
     }
   }

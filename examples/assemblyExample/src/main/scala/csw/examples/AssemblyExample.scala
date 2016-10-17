@@ -1,6 +1,7 @@
 package csw.examples
 
 import akka.actor.ActorRef
+import csw.services.ccs.Validation._
 import csw.services.ccs.{AssemblyController, CommandStatus}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
@@ -19,16 +20,11 @@ import scala.concurrent.duration._
  * @param info contains information about the assembly and the components it depends on
  */
 class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController with LifecycleHandler {
-
-  import AssemblyController._
-
   supervisor ! Initialized
   supervisor ! Started
 
   // Get the connection to the HCD this assembly uses and track it
   trackConnections(info.connections)
-
-  log.info("XXXXXXXX Started")
 
   override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
     case x => log.error(s"Unexpected message: $x")
@@ -37,28 +33,28 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
   /**
    * Validates a received config arg
    */
-  private def validate(config: SetupConfigArg): Validation = {
+  private def validate(config: SetupConfigArg): Validation = { // XXX TODO FIXME: Return list[Validation]?
 
     // Checks a single setup config
     def validateConfig(sc: SetupConfig): Validation = {
       if (sc.configKey.prefix != HCDExample.prefix) {
-        Invalid("Wrong prefix")
+        Invalid(WrongConfigKeyIssue("Wrong prefix"))
       } else {
         val missing = sc.missingKeys(HCDExample.rateKey)
         if (missing.nonEmpty)
-          Invalid(s"Missing keys: ${missing.mkString(", ")}")
+          Invalid(MissingKeyIssue(s"Missing keys: ${missing.mkString(", ")}"))
         else Valid
       }
     }
 
-    val list = config.configs.map(validateConfig).filter(!_.isValid)
+    val list = config.configs.map(validateConfig).filter(_ != Valid)
     if (list.nonEmpty) list.head else Valid
   }
 
   override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
                                replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
-    if (valid.isValid) {
+    if (valid == Valid) {
       // Call a convenience method that will forward the config to the HCD based on the prefix
       distributeSetupConfigs(locationsResolved, configArg, None)
 

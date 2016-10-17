@@ -14,7 +14,8 @@ import csw.services.pkg.{Assembly, LifecycleHandler}
 import csw.util.config.Configurations.{ObserveConfigArg, SetupConfig, SetupConfigArg}
 import csw.util.config.RunId
 import csw.util.config.StateVariable.{CurrentState, CurrentStates, DemandState}
-import csw.services.ccs.AssemblyController.{RequestFailed, RequestResult, Validation}
+import csw.services.ccs.AssemblyController.{RequestFailed, RequestResult}
+import csw.services.ccs.Validation.Validation
 import csw.services.pkg.Component.AssemblyInfo
 
 import scala.collection.JavaConverters._

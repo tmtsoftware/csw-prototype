@@ -32,7 +32,6 @@ trait SetLogLevelActor {
       if (newLevel != null) {
         log.debug(s"Setting log level for $self to $level")
         LoggerFactory.getLogger(pkg).asInstanceOf[Logger].setLevel(newLevel)
-        log.debug(s"XXX Done setting log level for $self to $level")
       }
   }
 }

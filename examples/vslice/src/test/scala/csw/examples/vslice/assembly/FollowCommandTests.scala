@@ -173,7 +173,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       // This has HCD sending updates back to this Assembly
       fakeAssembly.send(tromboneHCD, Subscribe)
 
-      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)), "eventpublisher")
+      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)), "eventpublisher1")
       val fc = newFollowCommand(setNssInUse(false), Some(tromboneHCD), Some(eventPublisher), testEventServiceSettings)
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
@@ -286,7 +286,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       fakeAssembly.send(tromboneHCD, Subscribe)
 
       // First set it up so we can ensure initial za
-      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)), "eventpublisher")
+      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)), "eventpublisher2")
       val fc = newFollowCommand(setNssInUse(true), Some(tromboneHCD), Some(eventPublisher), testEventServiceSettings)
       // Initialize the fe and za
       val testZA = 30.0
@@ -385,7 +385,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       // This has HCD sending updates back to this Assembly
       fakeAssembly.send(tromboneHCD, Subscribe)
 
-      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)), "eventpublisher")
+      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)), "eventpublisher3")
       val fc = newFollowCommand(setNssInUse(false), Some(tromboneHCD), Some(eventPublisher), testEventServiceSettings)
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error

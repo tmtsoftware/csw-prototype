@@ -151,7 +151,7 @@ object TrackLocation extends App {
   private def startApp(name: String, command: String, port: Int, noExit: Boolean): Unit = {
     import scala.sys.process._
     val componentId = ComponentId(name, ComponentType.Service)
-    val f = LocationService.registerHttpConnection(componentId, port)
+    val f = LocationService.registerTcpConnection(componentId, port)
 
     // Run the command and wait for it to exit
     val exitCode = command.!

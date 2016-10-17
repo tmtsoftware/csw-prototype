@@ -1,8 +1,8 @@
 package csw.services.events
 
 import akka.util.Timeout
-import csw.services.loc.Connection.HttpConnection
-import csw.services.loc.LocationService.ResolvedHttpLocation
+import csw.services.loc.Connection.{HttpConnection, TcpConnection}
+import csw.services.loc.LocationService.{ResolvedHttpLocation, ResolvedTcpLocation}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import akka.actor.{ActorRef, ActorRefFactory, PoisonPill, Props}
 import akka.util.ByteString
@@ -22,10 +22,10 @@ object EventService {
   // Lookup the event service redis instance with the location service
   private def locateEventService(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
-    val connection = HttpConnection(ComponentId(name, ComponentType.Service))
+    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
     LocationService.resolve(Set(connection)).map { locationsReady =>
-      val uri = locationsReady.locations.head.asInstanceOf[ResolvedHttpLocation].uri
-      RedisClient(uri.getHost, uri.getPort)
+      val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
+      RedisClient(loc.host, loc.port)
     }
   }
 
