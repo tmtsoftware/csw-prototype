@@ -392,18 +392,13 @@ object LocationService {
     }
 
     override def serviceAdded(event: ServiceEvent): Unit = {
-
-      log.info(s"+++++++++++++++++ Listener serviceAdded: ${event.getName}")
-
       Connection(event.getName).map { connection =>
         log.info("serviceAdded connection: " + connection)
         if (!connections.contains(connection)) {
           val unc = UnTrackedLocation(connection)
           connections += connection -> unc
           // Should we send an update here?
-          //sendLocationUpdate(unc)
           log.info(s"Adding untracked for: $connection")
-          //  tryToResolve(connection)
         }
       }
 
@@ -452,8 +447,6 @@ object LocationService {
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {
       try {
         // Gets the URI, adding the akka system as user if needed
-        log.info(s">>>>>>>>>>>Kim added:            resolveService")
-
         def getUri(uriStr: String): Option[URI] = {
           connection match {
             case _: AkkaConnection =>
@@ -463,8 +456,6 @@ object LocationService {
               Some(new URI(uriStr))
           }
         }
-
-        log.info("URLS: " + info.getURLs(connection.connectionType.name).mkString(", "))
 
         info.getURLs(connection.connectionType.name).toList.flatMap(getUri).foreach {
           uri =>

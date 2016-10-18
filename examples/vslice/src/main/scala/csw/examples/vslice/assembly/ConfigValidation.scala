@@ -2,7 +2,9 @@ package csw.examples.vslice.assembly
 
 import csw.services.ccs.Validation._
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
-import csw.util.config.{BooleanItem, DoubleItem, StringItem}
+import csw.util.config.StringItem
+
+import scala.util.Try
 
 /**
  * TMT Source Code: 8/24/16.
@@ -21,8 +23,6 @@ object ConfigValidation {
 
   /**
    * Runs Trombone-specific validation on a single SetupConfig.
-   * @param sc
-   * @param ac
    * @return
    */
   def validateOneSetupConfig(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
@@ -35,7 +35,7 @@ object ConfigValidation {
       case ac.setElevationCK => setElevationValidation(sc)
       case ac.setAngleCK     => setAngleValidation(sc)
       case ac.followCK       => followValidation(sc)
-      case x                 => Invalid(OtherIssue("SetupConfig with prefix $x is not support for $componentName"))
+      case x                 => Invalid(OtherIssue(s"SetupConfig with prefix $x is not supported"))
     }
   }
 
@@ -62,7 +62,7 @@ object ConfigValidation {
       val missing = sc.missingKeys(configurationNameKey, configurationVersionKey)
       if (missing.nonEmpty)
         Invalid(MissingKeyIssue(s"The 2 parameter init SetupConfig requires keys: $configurationNameKey and $configurationVersionKey"))
-      else if (!sc(configurationNameKey).isInstanceOf[StringItem] || !sc(configurationVersionKey).isInstanceOf[StringItem])
+      else if (Try(sc(configurationNameKey)).isFailure || Try(sc(configurationVersionKey)).isFailure)
         Invalid(WrongItemTypeIssue(s"The init SetupConfig requires StringItems named: $configurationVersionKey and $configurationVersionKey"))
       else Valid
     } else Invalid(WrongNumberOfItemsIssue(s"The init configuration requires 0 or 2 items, but $size were received"))
@@ -97,9 +97,10 @@ object ConfigValidation {
       // Check for correct key and type -- only checks that essential key is present, not strict
       if (!sc.exists(ac.stagePositionKey)) {
         Invalid(MissingKeyIssue(s"The move SetupConfig must have a DoubleItem named: ${ac.stagePositionKey}"))
-      } else if (!sc(ac.stagePositionKey).isInstanceOf[DoubleItem]) {
-        Invalid(WrongItemTypeIssue(s"The move SetupConfig must have a DoubleItem named: ${ac.stagePositionKey}"))
-      } else if (sc(ac.stagePositionKey).units != ac.stagePositionUnits) {
+      }
+//      else if (!sc(ac.stagePositionKey).isInstanceOf[DoubleItem])
+//        Invalid(WrongItemTypeIssue(s"The move SetupConfig must have a DoubleItem named: ${ac.stagePositionKey}"))
+      else if (sc(ac.stagePositionKey).units != ac.stagePositionUnits) {
         Invalid(WrongUnitsIssue(s"The move SetupConfig parameter: ${ac.stagePositionKey} must have units of: ${ac.stagePositionUnits}"))
       } else Valid
     }
@@ -118,9 +119,11 @@ object ConfigValidation {
       // Check for correct key and type -- only checks that essential key is present, not strict
       if (!sc.exists(ac.naRangeDistanceKey)) {
         Invalid(MissingKeyIssue(s"The position SetupConfig must have a DoubleItem named: ${ac.naRangeDistanceKey}"))
-      } else if (!sc(ac.naRangeDistanceKey).isInstanceOf[DoubleItem]) {
-        Invalid(WrongItemTypeIssue(s"The position SetupConfig must have a DoubleItem named: ${ac.naRangeDistanceKey}"))
-      } else if (sc(ac.naRangeDistanceKey).units != ac.naRangeDistanceUnits) {
+      }
+//      else if (!sc(ac.naRangeDistanceKey).isInstanceOf[DoubleItem]) {
+//        Invalid(WrongItemTypeIssue(s"The position SetupConfig must have a DoubleItem named: ${ac.naRangeDistanceKey}"))
+//      }
+      else if (sc(ac.naRangeDistanceKey).units != ac.naRangeDistanceUnits) {
         Invalid(WrongUnitsIssue(s"The position SetupConfig parameter: ${ac.naRangeDistanceKey} must have units of: ${ac.naRangeDistanceUnits}"))
       } else {
         val el = sc(ac.naRangeDistanceKey).head
@@ -142,9 +145,11 @@ object ConfigValidation {
     } else // Check for correct key and type -- only checks that essential key is present, not strict
     if (sc.missingKeys(ac.naElevationKey).nonEmpty) {
       Invalid(MissingKeyIssue(s"The setElevation SetupConfig must have a parameter named: ${ac.naElevationKey}"))
-    } else if (!sc(ac.naElevationKey).isInstanceOf[DoubleItem]) {
-      Invalid(WrongItemTypeIssue(s"The setElevation SetupConfig must have a parameter: ${ac.naElevationKey} as a DoubleItem"))
-    } else if (sc(ac.naElevationKey).units != ac.naRangeDistanceUnits) {
+    }
+//    else if (!sc(ac.naElevationKey).isInstanceOf[DoubleItem]) {
+//      Invalid(WrongItemTypeIssue(s"The setElevation SetupConfig must have a parameter: ${ac.naElevationKey} as a DoubleItem"))
+//    }
+    else if (sc(ac.naElevationKey).units != ac.naRangeDistanceUnits) {
       Invalid(WrongUnitsIssue(s"The move SetupConfig parameter: ${ac.naElevationKey} must have units: ${ac.naElevationUnits}"))
     } else Valid
   }
@@ -160,9 +165,11 @@ object ConfigValidation {
     } else // Check for correct key and type -- only checks that essential key is present, not strict
     if (!sc.exists(ac.zenithAngleKey)) {
       Invalid(MissingKeyIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
-    } else if (!sc(ac.zenithAngleKey).isInstanceOf[DoubleItem]) {
-      Invalid(WrongItemTypeIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
-    } else if (sc(ac.zenithAngleKey).units != ac.zenithAngleUnits) {
+    }
+//    else if (!sc(ac.zenithAngleKey).isInstanceOf[DoubleItem]) {
+//      Invalid(WrongItemTypeIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
+//    }
+    else if (sc(ac.zenithAngleKey).units != ac.zenithAngleUnits) {
       Invalid(WrongUnitsIssue(s"The setAngle SetupConfig parameter: ${ac.zenithAngleKey} must have units: ${ac.zenithAngleUnits}"))
     } else Valid
   }
@@ -178,9 +185,12 @@ object ConfigValidation {
     } else // Check for correct key and type -- only checks that essential key is present, not strict
     if (!sc.exists(ac.nssInUseKey)) {
       Invalid(MissingKeyIssue(s"The follow SetupConfig must have a BooleanItem named: ${ac.nssInUseKey}"))
-    } else if (!sc(ac.nssInUseKey).isInstanceOf[BooleanItem]) {
-      Invalid(WrongItemTypeIssue(s"The follow SetupConfig must have a BooleanItem named ${ac.nssInUseKey}"))
-    } else Valid
+    }
+//    else
+//    if (!sc(ac.nssInUseKey).isInstanceOf[BooleanItem]) {
+//      Invalid(WrongItemTypeIssue(s"The follow SetupConfig must have a BooleanItem named ${ac.nssInUseKey}"))
+//    }
+    else Valid
   }
 
 }

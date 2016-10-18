@@ -7,6 +7,7 @@ import org.scalatest.FunSpec
 import spray.json.DefaultJsonProtocol
 
 import scala.collection.immutable.Vector
+import scala.util.Try
 
 object ConfigTests {
 
@@ -63,6 +64,7 @@ class ConfigTests extends FunSpec {
   describe("SC Basic Tests") {
     val k1 = IntKey("encoder")
     val k2 = StringKey("stringThing")
+    val k2bad = IntKey("stringThing")
     val k3 = IntKey("notUsed")
 
     it("Should allow adding keys using single set") {
@@ -72,6 +74,14 @@ class ConfigTests extends FunSpec {
       assert(sc1.size == 2)
       assert(sc1.exists(k1))
       assert(sc1.exists(k2))
+      assert(sc1.exists(k2bad))
+
+      // Validation of the correct type needs to be done with concrete types, outside the generic API!
+      assert(Try(sc1(k1)).isSuccess)
+      assert(Try(sc1(k2)).isSuccess)
+      assert(Try(sc1(k2bad)).isFailure)
+      assert(Try(sc1.get(k2bad).get).isFailure)
+
       assert(sc1.get(k1).head == i1)
       assert(sc1.get(k2).head == i2)
       assert(sc1.missingKeys(k1, k2, k3) == Set(k3.keyName))
