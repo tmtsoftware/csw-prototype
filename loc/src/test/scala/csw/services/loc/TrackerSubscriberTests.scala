@@ -31,6 +31,8 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
 
   val c2 = AkkaConnection(ComponentId("lgsTromboneHCD", ComponentType.HCD))
 
+  val c3 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
+
   // Test subscriber actor for telemetry
   object TestSubscriber {
     def props(): Props = Props(new TestSubscriber())
@@ -132,18 +134,20 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
 
 
       // TrackerSubscriber tracks two connections
-      //fakeAssembly.send(ts, LocationService.TrackConnection(c1))
+      fakeAssembly.send(ts, LocationService.TrackConnection(c2))
 
 
-    //  val readyResult = Await.ready(LocationService.registerTcpConnection(c1Id, 1000), Duration.Inf)
+     // val readyResult = Await.ready(LocationService.registerTcpConnection(c1Id, 1000), Duration.Inf)
 
       println("Registered")
 
+      // TrackerSubscriber tracks two connections
+      //fakeAssembly.send(ts, LocationService.TrackConnection(c1))
 
-//      fakeAssembly.send(ts, LocationService.TrackConnection(c2))
+      fakeAssembly.send(ts, LocationService.TrackConnection(c3))
 
         // Now wait a bit and see if the client has received updates
-        expectNoMsg(4.seconds)
+        expectNoMsg(20.seconds)
 
         tsc ! GetResults
         // Get the results
@@ -157,8 +161,7 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
       result.msgs.collect { case h:ResolvedTcpLocation => h }.size should be >= 1
       result.msgs.collect { case un:Unresolved => un}.size should be >= 2
 */
-      expectNoMsg(15.seconds)
-      fakeAssembly.expectNoMsg(2.seconds)
+      expectNoMsg(10.seconds)
     }
 
   }

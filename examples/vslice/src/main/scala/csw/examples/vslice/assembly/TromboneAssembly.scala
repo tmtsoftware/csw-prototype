@@ -56,19 +56,19 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   trackerSubscriber ! TrackerSubscriberActor.Subscribe
   TrackerSubscriberActor.trackConnections(info.connections, trackerSubscriber)
 
-  //val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
-  //TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
+//  val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
+//  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
 
-  //val testEventServiceSettings = EventServiceSettings("localhost", 7777)
+  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
   // This actor handles all telemetry and system event publishing
-  //val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
+  val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
   // This actor makes a single connection to the
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //log.info("CurrentStateReceiver: " + currentStateReceiver)
 
   // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
- // val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), Some(eventPublisher)))
+  val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), Some(eventPublisher)))
 
   // This sets up the diagnostic data publisher
   //val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
@@ -166,10 +166,10 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     if (Validation.isAllValid(validations)) {
       if (sca.configs.size == 1 && sca.configs.head.configKey == ac.stopCK) {
         // Special handling for stop which needs to interrupt the currently executing sequence
-        //commandHandler ! sca.configs.head
+        commandHandler ! sca.configs.head
       } else {
         val executor = newExecutor(sca, commandOriginator)
-        //executor ! StartTheSequence(commandHandler)
+        executor ! StartTheSequence(commandHandler)
       }
     }
     validations

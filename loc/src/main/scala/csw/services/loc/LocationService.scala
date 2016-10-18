@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 import collection.JavaConverters._
+import scala.concurrent.duration.FiniteDuration
+
+import scala.concurrent.duration._
 
 /**
  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
@@ -139,9 +142,6 @@ object LocationService {
 
   // For a TCP service, this is the host
   private val HOST_KEY = "host"
-
-  // For a TCP service, this is the port
-  private val PORT_KEY = "port"
 
   case class ComponentRegistered(connection: Connection, result: RegistrationResult)
 
@@ -395,7 +395,21 @@ object LocationService {
     }
 
     override def serviceAdded(event: ServiceEvent): Unit = {
-      log.info(s"Listener serviceAdded: ${event.getName}")
+
+      log.info(s"+++++++++++++++++ Listener serviceAdded: ${event.getName}")
+
+      Connection(event.getName).map { connection =>
+        log.info("serviceAdded connection: " + connection)
+        if (!connections.contains(connection)) {
+          val unc = UnTrackedLocation(connection)
+          connections += connection -> unc
+          // Should we send an update here?
+          //sendLocationUpdate(unc)
+          log.info(s"Adding untracked for: $connection")
+        //  tryToResolve(connection)
+        }
+      }
+
     }
 
     override def serviceRemoved(event: ServiceEvent): Unit = {
@@ -432,11 +446,21 @@ object LocationService {
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
+      //log.info("ServiceResolved call: " + event.getName)
+      /*
+      Connection(event.getName).filter(_.componentId.componentType == ComponentType.Service).foreach {
+        connection =>
+          log.info(s">>>>>>>>>>>Kim added:       serviceResolved for service call")
+          resolveService(connection, event.getInfo)
+      }
+      */
       // Gets the connection from the name and, if we are tracking the connection, resolve it
+      /*
       Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc =>
         log.info(s">>>>>>>>>>>Kim added:       serviceResolved call")
-        //resolveService(loc.connection, event.getInfo)
+        resolveService(loc.connection, event.getInfo)
       })
+      */
     }
 
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {
@@ -452,6 +476,8 @@ object LocationService {
               Some(new URI(uriStr))
           }
         }
+
+        log.info("URLS: " + info.getURLs(connection.connectionType.name))
 
         info.getURLs(connection.connectionType.name).toList.flatMap(getUri).foreach {
           uri =>
@@ -524,6 +550,27 @@ object LocationService {
       replyTo.getOrElse(context.parent) ! location
     }
 
+
+    case class WaitToTrack(connection: Connection)
+
+    def waitToTrack(connection: Connection):Unit = {
+      import context.dispatcher
+
+      log.info("Checking: " + connection)
+      val cvalue = connections.exists { case (c, loc) =>
+        log.info(s"c: $c and loc: $loc")
+        (loc.equals(UnTrackedLocation(connection))) }
+      log.info(s"Wait to track $connection: " + cvalue)
+      if (!cvalue) {
+        context.system.scheduler.scheduleOnce(1.second, self, WaitToTrack(connection))
+      } else {
+        log.info("Its' now in untracked: " + connection)
+        val unc = Unresolved(connection)
+        connections += (connection -> unc)
+        tryToResolve(connection)
+      }
+    }
+
     // Receive messages
     override def receive: Receive = {
 
@@ -535,18 +582,32 @@ object LocationService {
           case _ => log.warning(s"Received unexpected ActorIdentity id: $id")
         }
 
+      case WaitToTrack(connection) =>
+        log.info("WaitToTrack: " + connection)
+        waitToTrack(connection)
+
+
       case TrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, add it
-        println("Received track connection: " + connection)
-        println("test: " + connections.contains(connection))
+        log.info("----------------Received track connection: " + connection)
         if (!connections.contains(connection)) {
-          val unc = Unresolved(connection)
-          connections += connection -> unc
-          // Should we send an update here?
-          sendLocationUpdate(unc)
-          println("Sending update")
-          tryToResolve(connection)
+          waitToTrack(connection)
+        } else {
+          // In this case, there is some entry already in our table, meaning at least serviceAdded has been called
+          // There is a chance that it has already been resolved since this is shared across the JVM?
+          connections(connection) match {
+            case l: UnTrackedLocation =>
+              val unc = Unresolved(connection)
+              connections += (connection -> unc)
+              tryToResolve(connection)
+            case u: Unresolved =>
+              log.error("Should not have an Unresolved connection when initiating tracking: " + u)
+            case r@_ =>
+              sendLocationUpdate(r)
+          }
         }
+
+
       // Note this will be called whether we are currently tracking or not, could already be resolved
       //tryToResolve(connection)
 
