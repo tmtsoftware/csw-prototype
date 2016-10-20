@@ -53,6 +53,7 @@ abstract class EventSubscriber(settingsIn: Option[EventServiceSettings] = None) 
  * The subscribed actor will receive messages of type Event for the given prefixes.
  */
 abstract class JAbstractSubscriber extends AbstractActor {
+  // XXX FIXME: This class should go in javacsw or be removed (not needed, can use subscribe() method)
 
   private val settings = EventServiceSettings(context.system)
 
@@ -107,6 +108,18 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
   private var channelsSubscribed = Set[String]()
   private var patternsSubscribed = Set[String]()
 
+  override def preStart() {
+    super.preStart()
+    if(channelsSubscribed.nonEmpty){
+      write(SUBSCRIBE(channelsSubscribed.toSeq: _*).toByteString)
+      log.debug(s"Subscribed to channels ${channelsSubscribed.mkString(", ")}")
+    }
+    if(patternsSubscribed.nonEmpty){
+      write(PSUBSCRIBE(patternsSubscribed.toSeq: _*).toByteString)
+      log.debug(s"Subscribed to patterns ${patternsSubscribed.mkString(", ")}")
+    }
+  }
+
   override def writing: Receive = {
     case message: SubscribeMessage =>
       write(message.toByteString)
@@ -122,7 +135,9 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
     ByteString.empty
   }
 
-  override def onConnectionClosed() {}
+  override def onConnectionClosed(): Unit = {
+    log.debug("Connection to Redis closed")
+  }
 
   override def onWriteSent() {}
 
