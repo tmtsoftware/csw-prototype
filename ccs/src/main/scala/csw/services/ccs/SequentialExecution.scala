@@ -98,11 +98,11 @@ object SequentialExecution {
 
     case class SequentialExecute(sc: SetupConfig) extends SequenceExecutorMessages
 
-    case class ExecuteOne(sc: SetupConfig, commandOriginator: Option[ActorRef] = None)
+    case class ExecuteOne(sc: SetupConfig, commandOriginator: Option[ActorRef] = None) extends SequenceExecutorMessages
 
-    case object StopCurrentCommand
+    case object StopCurrentCommand extends SequenceExecutorMessages
 
-    case object CommandStart
+    case object CommandStart extends SequenceExecutorMessages
   }
 
 }

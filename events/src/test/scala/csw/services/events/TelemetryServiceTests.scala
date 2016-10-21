@@ -34,7 +34,7 @@ class TelemetryServiceTests
   val settings = EventServiceSettings(system)
   val ts = TelemetryService(settings)
   implicit val timeout = Timeout(5.seconds)
-  val bts = BlockingTelemetryService(timeout.duration, settings)
+  val bts = BlockingTelemetryService(TelemetryService(settings), timeout.duration)
   val exposureTime = DoubleKey("exposureTime")
 
   // --

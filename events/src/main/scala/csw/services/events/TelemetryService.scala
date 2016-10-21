@@ -1,7 +1,11 @@
 package csw.services.events
 
 import akka.actor.{ActorRef, ActorRefFactory}
+import akka.util.Timeout
 import csw.services.events.EventService.EventMonitor
+import csw.services.loc.{ComponentId, ComponentType, LocationService}
+import csw.services.loc.Connection.TcpConnection
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.util.config.Events.StatusEvent
 import redis.RedisClient
 
@@ -9,7 +13,64 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 object TelemetryService {
-  // Converts a callback that takes an Event to one that takes a StatusEvent
+
+  /**
+   * The default name that the Telemetry Service Redis instance is registered with (with the Location Service)
+   */
+  val defaultName = "Telemetry Service"
+
+  // Lookup the telemetry service redis instance with the location service
+  private def locateTelemetryService(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
+    import system.dispatcher
+    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
+    LocationService.resolve(Set(connection)).map { locationsReady =>
+      val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
+      RedisClient(loc.host, loc.port)
+    }
+  }
+
+  /**
+   * Looks up the Redis instance for the Telemetry Service with the Location Service
+   * and then returns an TelemetryService instance using it.
+   *
+   * Note: Applications using the Location Service should call LocationService.initialize() once before
+   * accessing any Akka or Location Service methods.
+   *
+   * @param name      name used to register the Redis instance with the Location Service (default: "Telemetry Service")
+   * @return a new TelemetryService instance
+   */
+  def apply(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[TelemetryService] = {
+    import system.dispatcher
+    for {
+      redisClient <- locateTelemetryService(name)
+    } yield {
+      TelemetryService(redisClient)
+    }
+  }
+
+  /**
+   * Returns aan instancee of the TelemetryService (based on Redis)
+   *
+   * @param settings contains the host and port settings from reference.conf, or application.conf
+   * @param _system  Akka env required for RedisClient
+   */
+  def apply(settings: EventServiceSettings)(implicit _system: ActorRefFactory): TelemetryService =
+    get(settings.redisHostname, settings.redisPort)
+
+  /**
+   * Returns an TelemetryService instance using the Redis instance at the given host and port,
+   * using the default "127.0.0.1:6379 if not given.
+   *
+   * @param host        the Redis host name or IP address
+   * @param port        the Redis port
+   * @return a new TelemetryService instance
+   */
+  def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorRefFactory): TelemetryService = {
+    val redisClient = RedisClient(host, port)
+    TelemetryService(redisClient)
+  }
+
+  // Converts a callback that takes an Telemetry to one that takes a StatusEvent
   private def callbackConverter(telemCallback: StatusEvent => Unit)(event: Event): Unit =
     event match {
       case s: StatusEvent => telemCallback(s)
@@ -20,14 +81,14 @@ object TelemetryService {
 /**
  * A convenience class for publishing, getting and subscribing to telemetry (StatusEvent objects).
  *
- * @param settings settings from reference.conf or application.conf with the Redis server host/port information
+ * @param redisClient used to talk to Redis
  * @param _system Akka environment needed by the implementation
  */
-case class TelemetryService(settings: EventServiceSettings)(implicit _system: ActorRefFactory) {
+case class TelemetryService(redisClient: RedisClient)(implicit _system: ActorRefFactory) {
   import _system.dispatcher
   import TelemetryService._
 
-  private val eventService = EventServiceImpl(RedisClient(settings.redisHostname, settings.redisPort))
+  private val eventService = EventServiceImpl(redisClient)
 
   /**
    * Publishes the status event (key is based on the event's prefix)
@@ -87,12 +148,11 @@ case class TelemetryService(settings: EventServiceSettings)(implicit _system: Ac
 
 /**
  * Provides a blocking, synchronous API to the telemetry service.
+ * @param ts the underlying async telemetry service to use
  * @param timeout max amount of time to wait for a result before timing out
- * @param ts a reference to the telemetry service to use
  * @param context environment needed for futures
  */
-case class BlockingTelemetryService(timeout: Duration, settings: EventServiceSettings)(implicit val context: ActorRefFactory) {
-  val ts = TelemetryService(settings)
+case class BlockingTelemetryService(ts: TelemetryService, timeout: Duration)(implicit val context: ActorRefFactory) {
 
   /**
    * Publishes the value for the status event (key is based on the event's prefix)

@@ -29,7 +29,7 @@ class BlockingTelemetryServiceTests
   import BlockingTelemetryServiceTests._
 
   val settings = EventServiceSettings(system)
-  val ts = BlockingTelemetryService(5.seconds, settings)
+  val ts = BlockingTelemetryService(TelemetryService(settings), 5.seconds)
 
   test("Test set and get") {
     val event1 = StatusEvent("tcs.telem.test1")

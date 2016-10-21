@@ -110,11 +110,11 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
 
   override def preStart() {
     super.preStart()
-    if(channelsSubscribed.nonEmpty){
+    if (channelsSubscribed.nonEmpty) {
       write(SUBSCRIBE(channelsSubscribed.toSeq: _*).toByteString)
       log.debug(s"Subscribed to channels ${channelsSubscribed.mkString(", ")}")
     }
-    if(patternsSubscribed.nonEmpty){
+    if (patternsSubscribed.nonEmpty) {
       write(PSUBSCRIBE(patternsSubscribed.toSeq: _*).toByteString)
       log.debug(s"Subscribed to patterns ${patternsSubscribed.mkString(", ")}")
     }
