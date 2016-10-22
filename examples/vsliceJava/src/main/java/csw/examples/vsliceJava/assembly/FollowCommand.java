@@ -64,7 +64,7 @@ class FollowCommand extends AbstractActor {
   private final  BooleanItem nssInUseIn;
   private final Optional<ActorRef> tromboneHCDIn;
   private final Optional<ActorRef> eventPublisher;
-  private final Optional<ActorRef> eventServiceSettings;
+  private final Optional<EventServiceSettings> eventServiceSettings;
 
   // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
   private final ActorRef tromboneControl;
@@ -82,7 +82,7 @@ class FollowCommand extends AbstractActor {
    * @param eventServiceSettings optional paramters for connecting to a testing event service
    */
   private FollowCommand(AssemblyContext ac, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
-                        Optional<ActorRef> eventPublisher, Optional<ActorRef> eventServiceSettings) {
+                        Optional<ActorRef> eventPublisher, Optional<EventServiceSettings> eventServiceSettings) {
     this.ac = ac;
     this.nssInUseIn = nssInUseIn;
     this.tromboneHCDIn = tromboneHCDIn;
@@ -157,7 +157,7 @@ class FollowCommand extends AbstractActor {
   // --- static defs ---
 
   public static Props props(AssemblyContext ac, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
-                            Optional<ActorRef> eventPublisher, Optional<ActorRef> eventServiceSettings) {
+                            Optional<ActorRef> eventPublisher, Optional<EventServiceSettings> eventServiceSettings) {
     return Props.create(new Creator<FollowCommand>() {
       private static final long serialVersionUID = 1L;
 

@@ -42,6 +42,8 @@ import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JConfigDSL.*;
 
 import java.util.Optional;
+import java.util.function.Consumer;
+
 import javacsw.services.ccs.JSequentialExecution;
 
 import static akka.pattern.PatternsCS.*;
@@ -123,9 +125,9 @@ class TromboneCommandHandler extends TromboneStateHandler {
           } else {
             // No state set during follow
             // At this point, parameters have been checked so direct access is okay
-            BooleanItem nssItem = JavaHelpers.jvalue(sc, ac.nssInUseKey);
+            BooleanItem nssItem = jitem(sc, ac.nssInUseKey);
 
-            // The event publisher may be passed in
+              // The event publisher may be passed in
             Props props = FollowCommand.props(ac, nssItem, Optional.of(tromboneHCD), allEventPublisher, Optional.of(testEventServiceSettings));
             // Follow command runs the trombone when following
             ActorRef followCommandActor = context().actorOf(props);
@@ -161,14 +163,19 @@ class TromboneCommandHandler extends TromboneStateHandler {
 
             // At this point, parameters have been checked so direct access is okay
             // Send the SetElevation to the follow actor
-            DoubleItem elevationItem = JavaHelpers.jvalue(sc, ac.naElevationKey);
+            DoubleItem elevationItem = jitem(sc, ac.naElevationKey);
             followActor.tell(new FollowActor.SetElevation(elevationItem), self());
-            executeMatch(context(), idleMatcher, tromboneHCD, commandOriginator) {
-              case Completed =>
+
+            //  private void executeMatch(ActorContext context, StateMatcher stateMatcher, ActorRef currentStateSource, Optional<ActorRef> replyTo,
+            //Timeout timeout, Consumer<CommandStatus2> codeBlock) {
+
+              Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
+              executeMatch(context(), idleMatcher(), tromboneHCD, commandOriginator, timeout, cmdStatus -> {
+              if (cmdStatus == Completed)
                 state(cmdContinuous, move(), sodiumLayer(), nss());
-              case Error(message) =>
-                log.error("setElevation command failed with message: " + message);
-            }
+              else if (cmdStatus instanceof CommandStatus2.Error)
+                log.error("setElevation command failed with message: " + ((Error)cmdStatus).message());
+            });
           } else if (configKey.equals(ac.setAngleCK)) {
             // Unclear what to really do with state here
             // Everything else is the same
@@ -176,7 +183,7 @@ class TromboneCommandHandler extends TromboneStateHandler {
 
             // At this point, parameters have been checked so direct access is okay
             // Send the SetAngle to the follow actor
-            DoubleItem zenithAngleItem = JavaHelpers.jvalue(sc, ac.zenithAngleKey);
+            DoubleItem zenithAngleItem = jitem(sc, ac.zenithAngleKey);
             followActor.tell(new FollowActor.SetZenithAngle(zenithAngleItem), self());
             executeMatch(context, idleMatcher, tromboneHCD, commandOriginator) {
               case Completed =>
@@ -300,7 +307,7 @@ class TromboneCommandHandler extends TromboneStateHandler {
             sender().tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of $cmd/$move does not allow move")), self());
           } else {
             ActorRef mySender = sender();
-            DoubleItem stagePosition = JavaHelpers.jvalue(sc, ac.stagePositionKey);
+            DoubleItem stagePosition = jitem(sc, ac.stagePositionKey);
 
             // Convert to encoder units from mm
             int encoderPosition = Algorithms.stagePositionToEncoder(controlConfig, jvalue(stagePosition));
@@ -358,86 +365,90 @@ class TromboneCommandHandler extends TromboneStateHandler {
             ActorRef mySender = sender();
 
             // Note that units have already been verified here
-            val rangeDistance = sc(ac.naRangeDistanceKey)
+            DoubleItem rangeDistance = jitem(sc, ac.naRangeDistanceKey);
 
             // Convert elevation to
             // Convert to encoder units from mm
-            val stagePosition = Algorithms.rangeDistanceToStagePosition(rangeDistance.head)
-            val encoderPosition = Algorithms.stagePositionToEncoder(controlConfig, stagePosition)
+            double stagePosition = Algorithms.rangeDistanceToStagePosition(jvalue(rangeDistance));
+            int encoderPosition = Algorithms.stagePositionToEncoder(controlConfig, stagePosition);
 
-            log.info(s"Using rangeDistance: ${rangeDistance.head} to get stagePosition: $stagePosition to encoder: $encoderPosition")
+            log.info("Using rangeDistance: " + jvalue(rangeDistance) + " to get stagePosition: "
+              + stagePosition + " to encoder: " + encoderPosition);
 
-            val stateMatcher = posMatcher(encoderPosition)
+            DemandMatcher stateMatcher = posMatcher(encoderPosition);
             // Position key is encoder units
-            SetupConfig scOut = jset(new SetupConfig(axisMoveCK.prefix()), positionKey, encoderPosition).withUnits(JUnitsOfMeasure.encoder);
+            SetupConfig scOut = jadd(sc(axisMoveCK.prefix()), jset(positionKey, encoderPosition).withUnits(JUnitsOfMeasure.encoder));
             state(cmdBusy, moveMoving, sodiumLayer(), nss());
             tromboneHCD.tell(new HcdController.Submit(scOut), self());
 
-            executeMatch(context, stateMatcher, tromboneHCD, Some(mySender)) {
+            executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender)) {
               case Completed =>
-                state(cmd = cmdReady, move = moveIndexed)
-                moveCnt += 1
-                log.info(s"Done with position at: $moveCnt")
+                state(cmdReady, moveIndexed, sodiumLayer(), nss());
+                moveCnt += 1;
+                log.info("Done with position at: " + moveCnt);
               case Error(message) =>
-                log.error(s"Position command failed with message: $message")
+                log.error("Position command failed with message: " + message);
             }
           }
         }).
         matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
-          log.info("Move command -- STOP")
-          tromboneHCD ! HcdController.Submit(cancelSC)
+          log.info("Move command -- STOP");
+          tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
         }).
         matchAny(t -> log.warning("Unknown message received: " + t)).
         build());
     }
 
-    override def postStop() {
+    @Override
+    public void postStop() {
       unsubscribeState();
     }
   }
 
-  def PositionCommand(sc: SetupConfig, tromboneHCD: ActorRef): ActorRef = {
-    context.actorOf(Props(new PositionCommandActor(ac.controlConfig, sc, tromboneHCD)))
+  private ActorRef PositionCommand(SetupConfig sc, ActorRef tromboneHCD) {
+    // XXX FIXME: Won't work in non-static class
+    return context().actorOf(Props.create(PositionCommandActor.class, ac.controlConfig, sc, tromboneHCD));
   }
 
-  def executeMatch(context: ActorContext, stateMatcher: StateMatcher, currentStateSource: ActorRef, replyTo: Option[ActorRef] = None,
-                   timeout: Timeout = Timeout(5.seconds))(codeBlock: PartialFunction[CommandStatus2, Unit]): Unit = {
-    import context.dispatcher
-    implicit val t = Timeout(timeout.duration + 1.seconds)
+  private void executeMatch(ActorContext context, StateMatcher stateMatcher, ActorRef currentStateSource, Optional<ActorRef> replyTo,
+                            Timeout timeout, Consumer<CommandStatus2> codeBlock) {
+//    implicit val t = Timeout(timeout.duration + 1.seconds)
 
-    val matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout))
-    for {
-      cmdStatus <- (matcher ? StartMatch(stateMatcher)).mapTo[CommandStatus2]
-    } {
-      codeBlock(cmdStatus)
-      replyTo.ifPresent(actorRef -> actorRef.tell( cmdStatus)
-    }
+    ActorRef matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout));
+
+    ask(matcher, new StartMatch(stateMatcher)).
+      thenApply(reply -> {
+        CommandStatus2 cmdStatus = (CommandStatus2)reply;
+        codeBlock.accept(cmdStatus);
+        replyTo.ifPresent(actorRef -> actorRef.tell(cmdStatus, context.self()));
+        return null;
+      });
   }
 
-  def idleMatcher: DemandMatcher = DemandMatcher(DemandState(axisStateCK).add(stateKey -> TromboneHCD.AXIS_IDLE))
-
-  def posMatcher(position: Int): DemandMatcher =
-    DemandMatcher(DemandState(axisStateCK).madd(stateKey -> TromboneHCD.AXIS_IDLE, positionKey -> position))
-
-  def executeMatch2(context: ActorContext, stateMatcher: StateMatcher, currentStateSource: ActorRef, replyTo: Option[ActorRef] = None,
-                    timeout: Timeout = Timeout(5.seconds))(codeBlock: PartialFunction[CommandStatus2, Unit]): Unit = {
-    import context.dispatcher
-    implicit val t = Timeout(timeout.duration + 1.seconds)
-
-    val matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout))
-    val cmdStatusF: Future[CommandStatus2] = (matcher ? StartMatch(stateMatcher)).mapTo[CommandStatus2]
-    cmdStatusF.onComplete {
-      case Success(cmdStatus) =>
-        codeBlock(cmdStatus)
-      case Failure(e) =>
-        log.error("Failure of matcher most likely due to timeout")
-    }
+  private DemandMatcher idleMatcher() {
+    DemandState ds = jadd(new DemandState(axisStateCK.prefix()), jset(stateKey, TromboneHCD.AXIS_IDLE));
+    return new DemandMatcher(ds, false);
   }
+
+  private DemandMatcher posMatcher(int position) {
+    DemandState ds = jadd(new DemandState(axisStateCK.prefix()),
+      jset(stateKey, TromboneHCD.AXIS_IDLE),
+      jset(positionKey, position));
+    return new DemandMatcher(ds, false);
+  }
+
+  // --- static defs ---
+
+  public static Props props(AssemblyContext ac, ActorRef tromboneHCDIn, Optional<ActorRef> allEventPublisher) {
+    return Props.create(new Creator<TromboneCommandHandler>() {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public TromboneCommandHandler create() throws Exception {
+        return new TromboneCommandHandler(ac, tromboneHCDIn, allEventPublisher);
+      }
+    });
+  }
+
 }
 
-object TromboneCommandHandler {
-
-  def props(assemblyContext: AssemblyContext, tromboneHCDIn: ActorRef, allEventPublisher: Option[ActorRef]) =
-    Props(new TromboneCommandHandler(assemblyContext, tromboneHCDIn, allEventPublisher))
-
-}

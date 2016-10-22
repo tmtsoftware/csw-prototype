@@ -14,6 +14,7 @@ import scala.runtime.BoxedUnit;
 
 import java.util.Optional;
 
+import static javacsw.util.config.JItems.jitem;
 import static javacsw.util.config.JItems.jvalue;
 
 /**
@@ -83,7 +84,7 @@ public class TromboneEventSubscriber extends JAbstractSubscriber {
     return ReceiveBuilder.
       match(SystemEvent.class, event -> {
         if (event.info().source().equals(ac.zaConfigKey)) {
-          DoubleItem newZenithAngle = JavaHelpers.jvalue(event, ac.zenithAngleKey);
+          DoubleItem newZenithAngle = jitem(event, ac.zenithAngleKey);
           log.info("Received ZA: " + event);
           updateFollowActor(newZenithAngle, cFocusError, event.info().time());
           // Pass the new values to the next message
@@ -91,7 +92,7 @@ public class TromboneEventSubscriber extends JAbstractSubscriber {
         } else if (event.info().source().equals(ac.feConfigKey)) {
           // Update focusError state and then update calculator
           log.info("Received FE: " + event);
-          DoubleItem newFocusError = JavaHelpers.jvalue(event, ac.focusErrorKey);
+          DoubleItem newFocusError = jitem(event, ac.focusErrorKey);
           updateFollowActor(cZenithAngle, newFocusError, event.info().time());
           // Pass the new values to the next message
           context().become(subscribeReceive(cNssInUse, cZenithAngle, newFocusError));

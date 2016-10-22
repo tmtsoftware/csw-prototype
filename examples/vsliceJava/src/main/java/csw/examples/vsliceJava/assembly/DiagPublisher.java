@@ -157,26 +157,26 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
   private void publishStateUpdate(CurrentState cs) {
     eventPublisher.ifPresent(actorRef ->
       actorRef.tell(new AxisStateUpdate(
-          JavaHelpers.jvalue(cs, axisNameKey),
-          JavaHelpers.jvalue(cs, positionKey),
-          JavaHelpers.jvalue(cs, stateKey),
-          JavaHelpers.jvalue(cs, inLowLimitKey),
-          JavaHelpers.jvalue(cs, inHighLimitKey),
-          JavaHelpers.jvalue(cs, inHomeKey)),
+          jitem(cs, axisNameKey),
+          jitem(cs, positionKey),
+          jitem(cs, stateKey),
+          jitem(cs, inLowLimitKey),
+          jitem(cs, inHighLimitKey),
+          jitem(cs, inHomeKey)),
         self()));
   }
 
   private void publishStatsUpdate(CurrentState cs) {
     eventPublisher.ifPresent(actorRef ->
       actorRef.tell(new AxisStatsUpdate(
-          JavaHelpers.jvalue(cs, axisNameKey),
-          JavaHelpers.jvalue(cs, datumCountKey),
-          JavaHelpers.jvalue(cs, moveCountKey),
-          JavaHelpers.jvalue(cs, homeCountKey),
-          JavaHelpers.jvalue(cs, limitCountKey),
-          JavaHelpers.jvalue(cs, successCountKey),
-          JavaHelpers.jvalue(cs, failureCountKey),
-          JavaHelpers.jvalue(cs, cancelCountKey)),
+          jitem(cs, axisNameKey),
+          jitem(cs, datumCountKey),
+          jitem(cs, moveCountKey),
+          jitem(cs, homeCountKey),
+          jitem(cs, limitCountKey),
+          jitem(cs, successCountKey),
+          jitem(cs, failureCountKey),
+          jitem(cs, cancelCountKey)),
         self()));
   }
 
