@@ -2,10 +2,10 @@ package csw.examples.vsliceJava.assembly;
 
 import akka.actor.*;
 import akka.util.Timeout;
-import csw.services.ccs.*;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.CommandStatus2.Invalid;
 import csw.services.ccs.CommandStatus2.NoLongerValid;
+import csw.services.ccs.CommandStatus2.Error;
 import csw.services.ccs.SequentialExecution.SequentialExecutor.*;
 import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch;
 import csw.services.ccs.StateMatchers.*;
@@ -166,14 +166,11 @@ class TromboneCommandHandler extends TromboneStateHandler {
             DoubleItem elevationItem = jitem(sc, ac.naElevationKey);
             followActor.tell(new FollowActor.SetElevation(elevationItem), self());
 
-            //  private void executeMatch(ActorContext context, StateMatcher stateMatcher, ActorRef currentStateSource, Optional<ActorRef> replyTo,
-            //Timeout timeout, Consumer<CommandStatus2> codeBlock) {
-
               Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
               executeMatch(context(), idleMatcher(), tromboneHCD, commandOriginator, timeout, cmdStatus -> {
               if (cmdStatus == Completed)
                 state(cmdContinuous, move(), sodiumLayer(), nss());
-              else if (cmdStatus instanceof CommandStatus2.Error)
+              else if (cmdStatus instanceof Error)
                 log.error("setElevation command failed with message: " + ((Error)cmdStatus).message());
             });
           } else if (configKey.equals(ac.setAngleCK)) {
@@ -215,7 +212,7 @@ class TromboneCommandHandler extends TromboneStateHandler {
         // Execute the command actor asynchronously, pass the command status back, kill the actor and go back to waiting
         ask(currentCommand, JSequentialExecution.CommandStart(), timeout.duration().toMillis()).
           thenApply(reply -> {
-            CommandStatus2 cs = (CommandStatus2) reply;
+            CommandStatus2.CommandStatus2 cs = (CommandStatus2.CommandStatus2) reply;
             commandOriginator.ifPresent(actorRef -> actorRef.tell(cs, self()));
             currentCommand.tell(PoisonPill.getInstance(), self());
             context().become(noFollowReceive());
@@ -411,7 +408,7 @@ class TromboneCommandHandler extends TromboneStateHandler {
   }
 
   private void executeMatch(ActorContext context, StateMatcher stateMatcher, ActorRef currentStateSource, Optional<ActorRef> replyTo,
-                            Timeout timeout, Consumer<CommandStatus2> codeBlock) {
+                            Timeout timeout, Consumer<CommandStatus2.CommandStatus2> codeBlock) {
 //    implicit val t = Timeout(timeout.duration + 1.seconds)
 
     ActorRef matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout));
