@@ -1,126 +1,203 @@
-//package csw.examples.vsliceJava.assembly
-//
-//import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-//import csw.services.events.EventServiceSettings
-//import csw.util.config.Events.EventTime
-//import csw.util.config.{BooleanItem, DoubleItem}
-//
-///**
-// * FollowCommand encapsulates the actors that collaborate to implement the Follow command.
-// *
-// * A FollowCommand actor is created as a side effect when the trombone assembly receives the Follow command. This actor is created
-// * and exists after the Follow command and until the Stop command is received.
-// *
-// * Follow command creates a TromboneControl actor which receives stage position updates.
-// * It creates a TromboneEventSubscriber, which subscribes to the zenith angle system events from the TCS, and the focus error system
-// * events from the RTC. The TromboneEventSubscriber forwards these updates to the follow actor, which processes them and computes new
-// * trombone stage positions as well as other events.
-// *
-// * The publisher of events is injected into the FollowCommand and injected into the FollowActor. This is done because the publisher is
-// * shared in the Assembly by other actors.
-// *
-// * The follow command acts differently depending on the value of nssInUseIn, which is true of the NFIRAOS Source Simulator is in use or not.
-// * See specs, but when in use, the Follow Actor ignores zenith angle updates. When nssInUse is true, the TromboneEventSubscriber always sends
-// * the value of 0.0 for the zenith angle no matter what.
-// *
-// * nssInUse can be updated while operational. This is only used for testing to ensure that the zero angle behavior is working (see tests).
-// * During operation, a new FollowCommand is created when the use of the NSS changes. If following, a Stop must be issued, and a new Follow
-// * command with nssInUse set accordingly.
-// *
-// * Note that the actor receive method is parameterized with an optional HCD actor ref. The HCD actor is set initially when
-// * the actor is created and may be updated if the actor goes down or up. The actor ref is an [[scala.Option]] so
-// * that if the actor ref is set to None, no message will be sent, but the actor can operator normally. FollowCommand forwards this update
-// * to the TromboneControl
-// *
-// * When the FollowCommand actor is killed, all its created actors are killed. The subscriptions to the event service and telemetry service
-// * are removed.
-// *
-// * While "following" the trombone assembly can accept the SetAngle and SetElevation commands, which are forwarded to the Follow actor
-// * that executes the algorithms for the trombone assembly.
-// *
-// * @param ac the trombone Assembly context contains shared values and functions
-// * @param nssInUseIn a BooleanItem, set to true if the NFIRAOS Source Simulator is in use, set to false if not in use
-// * @param tromboneHCDIn the actor reference to the trombone HCD as a [[scala.Option]]
-// * @param eventPublisher the actor reference to the shared TrombonePublisher actor as a [[scala.Option]]
-// * @param eventServiceSettings optional paramters for connecting to a testing event service
-// *
-// */
-//class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings] = None) extends Actor with ActorLogging {
-//  import FollowCommand._
-//
-//  // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
-//  val tromboneControl = context.actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol")
-//  // These vals are only being created to simplify typing
-//  val initialFollowActor = createFollower(nssInUseIn, tromboneControl, eventPublisher, eventPublisher)
-//  val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventServiceSettings)
-//
-//  def receive: Receive = followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn)
-//
-//  def followReceive(nssInUse: BooleanItem, followActor: ActorRef, eventSubscriber: ActorRef, tromboneHCD: Option[ActorRef]): Receive = {
-//    case StopFollowing =>
-//      log.info("Receive stop following in Follow Command")
-//      // Send this so that unsubscriptions happen, need to check if needed
-//      context.stop(eventSubscriber)
-//      context.stop(self)
-//
-//    case UpdateNssInUse(nssInUseUpdate) =>
-//      if (nssInUseUpdate != nssInUse) {
-//        // First stop the currents so we can create new ones
-//        context.stop(eventSubscriber)
-//        context.stop(followActor)
-//        // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
-//        val newFollowActor = createFollower(nssInUseUpdate, tromboneControl, eventPublisher, eventPublisher)
-//        val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventServiceSettings)
-//        // Set a new receive method with updated actor values, prefer this over vars or globals
-//        context.become(followReceive(nssInUseUpdate, newFollowActor, newEventSubscriber, tromboneHCD))
-//      }
-//
-//    case m @ SetElevation(elevation) =>
-//      // This updates the current elevation and then causes an internal update to move things
-//      log.info(s"Received setElevation, setting to: $elevation")
-//      followActor.forward(m)
-//
-//    case m @ SetZenithAngle(zenithAngle) =>
-//      log.info(s"Got angle: $zenithAngle")
-//      followActor.forward(m)
-//
-//    // Note that this is an option so it can be None
-//    case upd: UpdateTromboneHCD =>
-//      // Set a new receive method with updated actor values and new HCD, prefer this over vars or globals
-//      context.become(followReceive(nssInUse, followActor, eventSubscriber, upd.tromboneHCD))
-//      // Also update the trombone control with the new HCD reference
-//      tromboneControl ! UpdateTromboneHCD(upd.tromboneHCD)
-//
-//    case UpdateZAandFE(zenithAngleIn, focusErrorIn) =>
-//      followActor ! UpdatedEventData(zenithAngleIn, focusErrorIn, EventTime())
-//
-//    case x => log.error(s"Unexpected message received in TromboneAssembly:FollowCommand: $x")
-//  }
-//
-//  private def createFollower(nssInUse: BooleanItem, tromboneControl: ActorRef, eventPublisher: Option[ActorRef], telemetryPublisher: Option[ActorRef]): ActorRef =
-//    context.actorOf(FollowActor.props(ac, nssInUse, Some(tromboneControl), eventPublisher, eventPublisher), "follower")
-//
-//  private def createEventSubscriber(nssItem: BooleanItem, followActor: ActorRef, eventServiceSettings: Option[EventServiceSettings]): ActorRef = context.actorOf(TromboneEventSubscriber.props(ac, nssItem, Some(followActor), eventServiceSettings), "eventsubscriber")
-//
-//}
-//
-//object FollowCommand {
-//
-//  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisherIn: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings]) =
-//    Props(classOf[FollowCommand], assemblyContext, nssInUse, tromboneHCD, eventPublisherIn, eventServiceSettings)
-//
-//  trait FollowCommandMessages
-//
-//  case object StopFollowing extends FollowCommandMessages
-//
-//  case class UpdateNssInUse(nssInUse: BooleanItem) extends FollowCommandMessages
-//
-//  /**
-//   * This is an engineering and test method that is used to trigger the same kind of update as a zenith angle and focus error
-//   * events from external to the Assembly
-//   * @param zenithAngle a zenith angle in degrees as a [[csw.util.config.DoubleItem]]
-//   * @param focusError a focus error value in
-//   */
-//  case class UpdateZAandFE(zenithAngle: DoubleItem, focusError: DoubleItem)
-//
-//}
+package csw.examples.vsliceJava.assembly;
+
+import akka.actor.*;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import csw.services.events.EventServiceSettings;
+import csw.util.config.BooleanItem;
+import csw.util.config.DoubleItem;
+import csw.util.config.Events.*;
+import akka.japi.Creator;
+import akka.japi.pf.ReceiveBuilder;
+import javacsw.services.ts.JTimeService;
+import scala.PartialFunction;
+import scala.runtime.BoxedUnit;
+import csw.examples.vsliceJava.assembly.AssemblyContext.*;
+import csw.examples.vsliceJava.assembly.FollowActor.*;
+
+import java.time.Instant;
+import java.util.Optional;
+
+import static csw.examples.vsliceJava.assembly.Algorithms.*;
+import static javacsw.util.config.JItems.jset;
+import static javacsw.util.config.JItems.jvalue;
+
+/**
+ * FollowCommand encapsulates the actors that collaborate to implement the Follow command.
+ *
+ * A FollowCommand actor is created as a side effect when the trombone assembly receives the Follow command. This actor is created
+ * and exists after the Follow command and until the Stop command is received.
+ *
+ * Follow command creates a TromboneControl actor which receives stage position updates.
+ * It creates a TromboneEventSubscriber, which subscribes to the zenith angle system events from the TCS, and the focus error system
+ * events from the RTC. The TromboneEventSubscriber forwards these updates to the follow actor, which processes them and computes new
+ * trombone stage positions as well as other events.
+ *
+ * The publisher of events is injected into the FollowCommand and injected into the FollowActor. This is done because the publisher is
+ * shared in the Assembly by other actors.
+ *
+ * The follow command acts differently depending on the value of nssInUseIn, which is true of the NFIRAOS Source Simulator is in use or not.
+ * See specs, but when in use, the Follow Actor ignores zenith angle updates. When nssInUse is true, the TromboneEventSubscriber always sends
+ * the value of 0.0 for the zenith angle no matter what.
+ *
+ * nssInUse can be updated while operational. This is only used for testing to ensure that the zero angle behavior is working (see tests).
+ * During operation, a new FollowCommand is created when the use of the NSS changes. If following, a Stop must be issued, and a new Follow
+ * command with nssInUse set accordingly.
+ *
+ * Note that the actor receive method is parameterized with an optional HCD actor ref. The HCD actor is set initially when
+ * the actor is created and may be updated if the actor goes down or up. The actor ref is an [[scala.Option]] so
+ * that if the actor ref is set to None, no message will be sent, but the actor can operator normally. FollowCommand forwards this update
+ * to the TromboneControl
+ *
+ * When the FollowCommand actor is killed, all its created actors are killed. The subscriptions to the event service and telemetry service
+ * are removed.
+ *
+ * While "following" the trombone assembly can accept the SetAngle and SetElevation commands, which are forwarded to the Follow actor
+ * that executes the algorithms for the trombone assembly.
+ *
+ */
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+class FollowCommand extends AbstractActor {
+  LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+  private final AssemblyContext ac;
+  private final  BooleanItem nssInUseIn;
+  private final Optional<ActorRef> tromboneHCDIn;
+  private final Optional<ActorRef> eventPublisher;
+  private final Optional<ActorRef> eventServiceSettings;
+
+  // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
+  private final ActorRef tromboneControl;
+  // These vals are only being created to simplify typing
+  private final ActorRef initialFollowActor;
+  private final ActorRef initialEventSubscriber;
+
+  /**
+   * Constructor
+   *
+   * @param ac the trombone Assembly context contains shared values and functions
+   * @param nssInUseIn a BooleanItem, set to true if the NFIRAOS Source Simulator is in use, set to false if not in use
+   * @param tromboneHCDIn the actor reference to the trombone HCD as a [[scala.Option]]
+   * @param eventPublisher the actor reference to the shared TrombonePublisher actor as a [[scala.Option]]
+   * @param eventServiceSettings optional paramters for connecting to a testing event service
+   */
+  private FollowCommand(AssemblyContext ac, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
+                        Optional<ActorRef> eventPublisher, Optional<ActorRef> eventServiceSettings) {
+    this.ac = ac;
+    this.nssInUseIn = nssInUseIn;
+    this.tromboneHCDIn = tromboneHCDIn;
+    this.eventPublisher = eventPublisher;
+    this.eventServiceSettings = eventServiceSettings;
+
+    tromboneControl = context().actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol");
+    initialFollowActor = createFollower(nssInUseIn, tromboneControl, eventPublisher, eventPublisher);
+    initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventServiceSettings);
+
+    getContext().become(followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn));
+
+//    receive(ReceiveBuilder.
+//      matchAny(t -> log.warning("Unknown message received: " + t)).
+//      build());
+  }
+
+  PartialFunction<Object, BoxedUnit> followReceive(BooleanItem nssInUse, ActorRef followActor,
+                                                   ActorRef eventSubscriber, Optional<ActorRef> tromboneHCD) {
+    return ReceiveBuilder.
+      match(StopFollowing.class, t -> {
+        log.info("Receive stop following in Follow Command");
+        // Send this so that unsubscriptions happen, need to check if needed
+        context().stop(eventSubscriber);
+        context().stop(self());
+      }).
+      match(UpdateNssInUse.class, t -> {
+        if (t.nssInUse != nssInUse) {
+          // First stop the currents so we can create new ones
+          context().stop(eventSubscriber);
+          context().stop(followActor);
+          // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
+          ActorRef newFollowActor = createFollower(t.nssInUse, tromboneControl, eventPublisher, eventPublisher);
+          ActorRef newEventSubscriber = createEventSubscriber(t.nssInUse, newFollowActor, eventServiceSettings);
+          // Set a new receive method with updated actor values, prefer this over vars or globals
+          context().become(followReceive(t.nssInUse, newFollowActor, newEventSubscriber, tromboneHCD));
+        }
+      }).
+      match(SetElevation.class, t -> {
+        // This updates the current elevation and then causes an internal update to move things
+        log.info("Received setElevation, setting to: " + t.elevation);
+        followActor.tell(t, sender());
+      }).
+      match(SetZenithAngle.class, t -> {
+        log.info("Got angle: " + t.zenithAngle);
+        followActor.tell(t, sender());
+
+      }).
+      // Note that this is an option so it can be None
+        match(UpdateTromboneHCD.class, t -> {
+        // Set a new receive method with updated actor values and new HCD, prefer this over vars or globals
+        context().become(followReceive(nssInUse, followActor, eventSubscriber, upd.tromboneHCD));
+        // Also update the trombone control with the new HCD reference
+        tromboneControl.tell(new UpdateTromboneHCD(upd.tromboneHCD), self());
+      }).
+      match(UpdateZAandFE.class, t -> {
+        followActor.tell(new UpdatedEventData(t.zenithAngle, t.focusError, new EventTime(Instant.now())), self());
+      }).
+      matchAny(t -> log.warning("Unexpected message received in TromboneAssembly:FollowCommand: " + t)).
+      build();
+  }
+
+
+  private ActorRef createFollower(BooleanItem nssInUse, ActorRef tromboneControl, Optional<ActorRef> eventPublisher, Optional<ActorRef> telemetryPublisher) {
+    return context().actorOf(FollowActor.props(ac, nssInUse, Optional.of(tromboneControl), eventPublisher, eventPublisher), "follower");
+  }
+
+  private ActorRef createEventSubscriber(BooleanItem nssItem, ActorRef followActor, Optional<EventServiceSettings> eventServiceSettings) {
+    return context().actorOf(TromboneEventSubscriber.props(ac, nssItem, Optional.of(followActor), eventServiceSettings), "eventsubscriber");
+  }
+
+  // --- static defs ---
+
+  public static Props props(AssemblyContext ac, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
+                            Optional<ActorRef> eventPublisher, Optional<ActorRef> eventServiceSettings) {
+    return Props.create(new Creator<FollowCommand>() {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public FollowCommand create() throws Exception {
+        return new FollowCommand(ac, nssInUseIn, tromboneHCDIn, eventPublisher, eventServiceSettings);
+      }
+    });
+  }
+
+
+  interface FollowCommandMessages {}
+
+  public static class StopFollowing implements FollowCommandMessages {}
+
+  public static class UpdateNssInUse implements FollowCommandMessages {
+    public final BooleanItem nssInUse;
+
+    public UpdateNssInUse(BooleanItem nssInUse) {
+      this.nssInUse = nssInUse;
+    }
+  }
+
+  /**
+   * This is an engineering and test method that is used to trigger the same kind of update as a zenith angle and focus error
+   * events from external to the Assembly
+   */
+  public static class UpdateZAandFE {
+    public final DoubleItem zenithAngle;
+    public final DoubleItem focusError;
+
+    /**
+     * Constructor
+     * @param zenithAngle a zenith angle in degrees as a [[csw.util.config.DoubleItem]]
+     * @param focusError a focus error value in
+     */
+    public UpdateZAandFE(DoubleItem zenithAngle, DoubleItem focusError) {
+      this.zenithAngle = zenithAngle;
+      this.focusError = focusError;
+    }
+  }
+}
+

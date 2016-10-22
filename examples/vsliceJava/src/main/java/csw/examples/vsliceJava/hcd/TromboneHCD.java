@@ -325,7 +325,7 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   public static final SetupConfig cancelSC = SetupConfig(axisCancelCK);
 
   // Testing messages for TromboneHCD
-  enum TromboneEngineering {
+  public enum TromboneEngineering {
     GetAxisStats,
     GetAxisConfig
   }

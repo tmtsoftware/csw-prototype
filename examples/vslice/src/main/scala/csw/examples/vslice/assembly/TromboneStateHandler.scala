@@ -29,29 +29,29 @@ trait TromboneStateHandler {
   def stateReceive: Receive = {
     case ts: TromboneState =>
       //log.info(s">>>>>>>>>>>>>>>>>>>>>>          Got State Update: $ts")
-      _tromboneState = ts.copy()
+      _tromboneState = ts
   }
 
   /**
-   * Public method to access the current value of the cmd state choice
+   * Method for subclasses to access the current value of the cmd state choice
    * @return the cmd choice value
    */
   def cmd: Choice = getCmd
 
   /**
-   * Public method to access the current value of the move state choice
+   * Method for subclasses to access the current value of the move state choice
    * @return the move choice value
    */
   def move: Choice = getMove
 
   /**
-   * Public method to access the current value of the sodiumLayer state boolean
+   * Method for subclasses to access the current value of the sodiumLayer state boolean
    * @return a Boolean indicating if the sodium layer has been set
    */
   def sodiumLayer: Boolean = getSodiumLayer
 
   /**
-   * Public method to access the current value of the nss state Boolean
+   * Method for subclasses to access the current value of the nss state Boolean
    * @return a Boolean value inicating if the NSS is enabled
    */
   def nss: Boolean = getNss
@@ -65,7 +65,7 @@ trait TromboneStateHandler {
 
   private def getNss: Boolean = _tromboneState.nss.head
 
-  def tromboneState = _tromboneState.copy()
+  def tromboneState = _tromboneState
 
   def state(cmd: Choice = cmd, move: Choice = move, sodiumLayer: Boolean = sodiumLayer, nss: Boolean = nss): Unit = {
     val update = getCmd != cmd || getMove != move || getSodiumLayer != sodiumLayer || getNss != nss

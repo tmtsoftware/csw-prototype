@@ -50,7 +50,7 @@ class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorR
   val diagnosticAxisStatsPeriod = 1
 
   // Start in operations mode - 0 is initial stateMessageCounter value
-  def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCDIn: Option[ActorRef])
+  def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCDIn)
 
   /**
    * The receive method in operations state.
@@ -142,7 +142,7 @@ object DiagPublisher {
 
   trait DiagPublisherMessages
 
-  final case class TimeForAxisStats(periodInseconds: Int) extends DiagPublisherMessages
+  final case class TimeForAxisStats(periodInSeconds: Int) extends DiagPublisherMessages
 
   final case object DiagnosticState extends DiagPublisherMessages
 

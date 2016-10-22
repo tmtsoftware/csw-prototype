@@ -26,7 +26,7 @@ class TrombonePublisher(ac: AssemblyContext, settings: Option[EventServiceSettin
   import TromboneStateHandler._
   import ac._
 
-  val eventService = EventService(settings.getOrElse(EventServiceSettings(context.system)))
+  val eventService = EventService(settings.getOrElse(EventServiceSettings(context.system))) // XXX FIXME use loc svc
 
   def receive: Receive = publishingEnabled
 

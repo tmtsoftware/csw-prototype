@@ -42,6 +42,7 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef) extends Actor with Ac
   AlarmService().onComplete {
     case Success(alarmService) =>
       log.info("Success finding alarm service")
+      // XXX allan FIXME: need to refresh alarm state!
       // Set the alarms to okay so that the Alarm Service client will update the alarms while this actor is alive
       sendLowLimitAlarm(alarmService, Okay)
       sendHighLimitAlarm(alarmService, Okay)
@@ -105,7 +106,7 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef) extends Actor with Ac
           }
       }
 
-    case x => log.error(s"AlarmMonitor:monitorReceive received an unexpected message: $x")
+    case x => log.error(s"TromboneAlarmMonitor:inAlarmStateReceive received an unexpected message: $x")
   }
 
   /**

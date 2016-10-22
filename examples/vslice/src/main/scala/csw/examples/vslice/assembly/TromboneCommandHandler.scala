@@ -93,7 +93,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
 
         case otherCommand =>
           log.error(s"TromboneCommandHandler2:noFollowReceive received an unknown command: $otherCommand")
-          commandOriginator.foreach(_ ! Invalid(UnsupportedCommandInStateIssue(s"""Trombone assembly does not support the command \"${otherCommand.prefix}\" in the current state.""")))
+          commandOriginator.foreach(_ ! Invalid(UnsupportedCommandInStateIssue(s"Trombone assembly does not support the command \"${otherCommand.prefix}\" in the current state.")))
       }
 
     case x => log.error(s"TromboneCommandHandler2:noFollowReceive received an unknown message: $x")
@@ -184,6 +184,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
     commandOriginator.foreach(_ ! Cancelled)
   }
 
+  // XXX allan FIXME: Using a nonstatic inner actor class here. Is that OK? (sharing state with outer actor class)
   class DatumCommandActor(sc: SetupConfig, tromboneHCD: ActorRef, ts: TromboneState) extends Actor with ActorLogging {
 
     // Not using stateReceive since no state updates are needed here only writes
@@ -212,6 +213,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
   def DatumCommand(sc: SetupConfig, tromboneHCD: ActorRef): ActorRef =
     context.actorOf(Props(new DatumCommandActor(sc, tromboneHCD, tromboneState)))
 
+  // XXX TODO FIXME nonstatic static inner class actor
   class MoveCommandActor(controlConfig: TromboneControlConfig, sc: SetupConfig, tromboneHCD: ActorRef) extends Actor with ActorLogging {
     def receive = {
       case CommandStart =>

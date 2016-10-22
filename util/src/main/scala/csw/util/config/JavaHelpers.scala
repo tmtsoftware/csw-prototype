@@ -314,6 +314,14 @@ private[config] object JavaHelpers {
     }
   }
 
+  def jvalue[S, I <: Item[S], T <: ConfigType[T], J](sc: T, key: Key[S, I]): J = {
+    val item = sc.get(key)
+    item match {
+      case Some(x) => x.values(0).asInstanceOf[J]
+      case None    => throw new NoSuchElementException(s"Item: $key not found")
+    }
+  }
+
   def jvalues[S, I <: Item[S], T <: ConfigType[T], J](sc: T, key: Key[S, I]): java.util.List[J] = {
     val item = sc.get(key)
     item match {

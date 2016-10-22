@@ -82,8 +82,8 @@ public class ConfigValidation {
       if (!missing.isEmpty())
         return Invalid(MissingKeyIssue("The 2 parameter init SetupConfig requires keys: "
           + ac.configurationNameKey + " and " + ac.configurationVersionKey));
-//      if (!(JavaHelpers.jvalue(sc, ac.configurationNameKey, 0) instanceof StringItem)
-//        || !(JavaHelpers.jvalue(sc, ac.configurationVersionKey, 0) instanceof StringItem))
+//      if (!(JavaHelpers.jvalue(sc, ac.configurationNameKey) instanceof StringItem)
+//        || !(JavaHelpers.jvalue(sc, ac.configurationVersionKey) instanceof StringItem))
 //        return Invalid(WrongItemTypeIssue("The init SetupConfig requires StringItems named: "
 //          + ac.configurationVersionKey + " and " + ac.configurationVersionKey));
       return JValidation.Valid;
@@ -122,7 +122,7 @@ public class ConfigValidation {
       return Invalid(MissingKeyIssue("The move SetupConfig must have a DoubleItem named: " + ac.stagePositionKey));
     }
 
-    DoubleItem di = JavaHelpers.jvalue(sc, ac.stagePositionKey, 0);
+    DoubleItem di = JavaHelpers.jvalue(sc, ac.stagePositionKey);
 //    if (!(di instanceof DoubleItem)) {
 //      return Invalid(WrongItemTypeIssue("The move SetupConfig must have a DoubleItem named: " + ac.stagePositionKey));
 //    }
@@ -149,7 +149,7 @@ public class ConfigValidation {
       if (!sc.exists(ac.naRangeDistanceKey)) {
         return Invalid(MissingKeyIssue("The position SetupConfig must have a DoubleItem named: " + ac.naRangeDistanceKey));
       }
-      DoubleItem di = JavaHelpers.jvalue(sc, ac.naRangeDistanceKey, 0);
+      DoubleItem di = JavaHelpers.jvalue(sc, ac.naRangeDistanceKey);
 //      if (!(di instanceof DoubleItem)) {
 //        return Invalid(WrongItemTypeIssue("The position SetupConfig must have a DoubleItem named: " + ac.naRangeDistanceKey));
 //      }
@@ -185,7 +185,7 @@ public class ConfigValidation {
 //    if (!sc(ac.naElevationKey).isInstanceOf[DoubleItem]) {
 //      Invalid(WrongItemTypeIssue(s"The setElevation SetupConfig must have a parameter: ${ac.naElevationKey} as a DoubleItem"))
 //    }
-    DoubleItem di = JavaHelpers.jvalue(sc, ac.naElevationKey, 0);
+    DoubleItem di = JavaHelpers.jvalue(sc, ac.naElevationKey);
     if (di.units() != ac.naRangeDistanceUnits) {
       return Invalid(WrongUnitsIssue("The move SetupConfig parameter: "
         + ac.naElevationKey
@@ -211,7 +211,7 @@ public class ConfigValidation {
 //    if (!sc(ac.zenithAngleKey).isInstanceOf[DoubleItem]) {
 //      Invalid(WrongItemTypeIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
 //    }
-    DoubleItem di = JavaHelpers.jvalue(sc, ac.zenithAngleKey, 0);
+    DoubleItem di = JavaHelpers.jvalue(sc, ac.zenithAngleKey);
     if (di.units() != ac.zenithAngleUnits) {
       return Invalid(WrongUnitsIssue("The setAngle SetupConfig parameter: "
         + ac.zenithAngleKey
@@ -234,6 +234,8 @@ public class ConfigValidation {
     if (!sc.exists(ac.nssInUseKey)) {
       return Invalid(MissingKeyIssue("The follow SetupConfig must have a BooleanItem named: " + ac.nssInUseKey));
     }
+
+    // XXX FIXME
 //    if (!sc(ac.nssInUseKey).isInstanceOf[BooleanItem]) {
 //      Invalid(WrongItemTypeIssue(s"The follow SetupConfig must have a BooleanItem named ${ac.nssInUseKey}"))
 //    }
