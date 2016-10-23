@@ -97,9 +97,8 @@ object ConfigValidation {
       // Check for correct key and type -- only checks that essential key is present, not strict
       if (!sc.exists(ac.stagePositionKey)) {
         Invalid(MissingKeyIssue(s"The move SetupConfig must have a DoubleItem named: ${ac.stagePositionKey}"))
-      }
-//      else if (!sc(ac.stagePositionKey).isInstanceOf[DoubleItem])
-//        Invalid(WrongItemTypeIssue(s"The move SetupConfig must have a DoubleItem named: ${ac.stagePositionKey}"))
+      } else if (Try(sc(ac.stagePositionKey)).isFailure)
+        Invalid(WrongItemTypeIssue(s"The move SetupConfig must have a DoubleItem named: ${ac.stagePositionKey}"))
       else if (sc(ac.stagePositionKey).units != ac.stagePositionUnits) {
         Invalid(WrongUnitsIssue(s"The move SetupConfig parameter: ${ac.stagePositionKey} must have units of: ${ac.stagePositionUnits}"))
       } else Valid
@@ -119,11 +118,9 @@ object ConfigValidation {
       // Check for correct key and type -- only checks that essential key is present, not strict
       if (!sc.exists(ac.naRangeDistanceKey)) {
         Invalid(MissingKeyIssue(s"The position SetupConfig must have a DoubleItem named: ${ac.naRangeDistanceKey}"))
-      }
-//      else if (!sc(ac.naRangeDistanceKey).isInstanceOf[DoubleItem]) {
-//        Invalid(WrongItemTypeIssue(s"The position SetupConfig must have a DoubleItem named: ${ac.naRangeDistanceKey}"))
-//      }
-      else if (sc(ac.naRangeDistanceKey).units != ac.naRangeDistanceUnits) {
+      } else if (Try(sc(ac.naRangeDistanceKey)).isFailure) {
+        Invalid(WrongItemTypeIssue(s"The position SetupConfig must have a DoubleItem named: ${ac.naRangeDistanceKey}"))
+      } else if (sc(ac.naRangeDistanceKey).units != ac.naRangeDistanceUnits) {
         Invalid(WrongUnitsIssue(s"The position SetupConfig parameter: ${ac.naRangeDistanceKey} must have units of: ${ac.naRangeDistanceUnits}"))
       } else {
         val el = sc(ac.naRangeDistanceKey).head
@@ -142,14 +139,12 @@ object ConfigValidation {
   def setElevationValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
     if (sc.configKey != ac.setElevationCK) {
       Invalid(WrongConfigKeyIssue("The SetupConfig is not a setElevation configuration"))
-    } else // Check for correct key and type -- only checks that essential key is present, not strict
-    if (sc.missingKeys(ac.naElevationKey).nonEmpty) {
+    } else if (sc.missingKeys(ac.naElevationKey).nonEmpty) {
+      // Check for correct key and type -- only checks that essential key is present, not strict
       Invalid(MissingKeyIssue(s"The setElevation SetupConfig must have a parameter named: ${ac.naElevationKey}"))
-    }
-//    else if (!sc(ac.naElevationKey).isInstanceOf[DoubleItem]) {
-//      Invalid(WrongItemTypeIssue(s"The setElevation SetupConfig must have a parameter: ${ac.naElevationKey} as a DoubleItem"))
-//    }
-    else if (sc(ac.naElevationKey).units != ac.naRangeDistanceUnits) {
+    } else if (Try(sc(ac.naElevationKey)).isFailure) {
+      Invalid(WrongItemTypeIssue(s"The setElevation SetupConfig must have a parameter: ${ac.naElevationKey} as a DoubleItem"))
+    } else if (sc(ac.naElevationKey).units != ac.naRangeDistanceUnits) {
       Invalid(WrongUnitsIssue(s"The move SetupConfig parameter: ${ac.naElevationKey} must have units: ${ac.naElevationUnits}"))
     } else Valid
   }
@@ -165,11 +160,9 @@ object ConfigValidation {
     } else // Check for correct key and type -- only checks that essential key is present, not strict
     if (!sc.exists(ac.zenithAngleKey)) {
       Invalid(MissingKeyIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
-    }
-//    else if (!sc(ac.zenithAngleKey).isInstanceOf[DoubleItem]) {
-//      Invalid(WrongItemTypeIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
-//    }
-    else if (sc(ac.zenithAngleKey).units != ac.zenithAngleUnits) {
+    } else if (Try(sc(ac.zenithAngleKey)).isFailure) {
+      Invalid(WrongItemTypeIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
+    } else if (sc(ac.zenithAngleKey).units != ac.zenithAngleUnits) {
       Invalid(WrongUnitsIssue(s"The setAngle SetupConfig parameter: ${ac.zenithAngleKey} must have units: ${ac.zenithAngleUnits}"))
     } else Valid
   }
@@ -182,15 +175,11 @@ object ConfigValidation {
   def followValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
     if (sc.configKey != ac.followCK) {
       Invalid(WrongConfigKeyIssue("The SetupConfig is not a follow configuration"))
-    } else // Check for correct key and type -- only checks that essential key is present, not strict
-    if (!sc.exists(ac.nssInUseKey)) {
+    } else if (!sc.exists(ac.nssInUseKey)) {
+      // Check for correct key and type -- only checks that essential key is present, not strict
       Invalid(MissingKeyIssue(s"The follow SetupConfig must have a BooleanItem named: ${ac.nssInUseKey}"))
-    }
-//    else
-//    if (!sc(ac.nssInUseKey).isInstanceOf[BooleanItem]) {
-//      Invalid(WrongItemTypeIssue(s"The follow SetupConfig must have a BooleanItem named ${ac.nssInUseKey}"))
-//    }
-    else Valid
+    } else if (Try(sc(ac.nssInUseKey)).isFailure) {
+      Invalid(WrongItemTypeIssue(s"The follow SetupConfig must have a BooleanItem named ${ac.nssInUseKey}"))
+    } else Valid
   }
-
 }

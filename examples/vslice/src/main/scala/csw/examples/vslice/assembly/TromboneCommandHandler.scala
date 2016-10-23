@@ -93,7 +93,9 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: ActorRef, allEv
 
         case otherCommand =>
           log.error(s"TromboneCommandHandler2:noFollowReceive received an unknown command: $otherCommand")
-          commandOriginator.foreach(_ ! Invalid(UnsupportedCommandInStateIssue(s"Trombone assembly does not support the command \"${otherCommand.prefix}\" in the current state.")))
+          commandOriginator.foreach(_ ! Invalid(UnsupportedCommandInStateIssue(
+            s"Trombone assembly does not support the command '${otherCommand.prefix}' in the current state."
+          )))
       }
 
     case x => log.error(s"TromboneCommandHandler2:noFollowReceive received an unknown message: $x")
