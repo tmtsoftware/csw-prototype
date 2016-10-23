@@ -3,7 +3,7 @@ package csw.services.loc
 import java.net.URI
 
 import akka.actor._
-import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 
 import scala.concurrent.Future
 
@@ -73,6 +73,11 @@ object LocationServiceProvider {
   final case class HttpRegistration(connection: HttpConnection, port: Int, path: String) extends Registration
 
   /**
+   * Represents a registered connection to a TCP based service
+   */
+  final case class TcpRegistration(connection: TcpConnection, port: Int, path: String) extends Registration
+
+  /**
    * Returned from register calls so that client can close the connection and deregister the service
    */
   trait RegistrationResult {
@@ -115,5 +120,8 @@ object LocationServiceProvider {
     override val isResolved = true
   }
 
+  final case class ResolvedTcpLocation(connection: TcpConnection, uri: URI, path: String) extends Location {
+    override val isResolved = true
+  }
 }
 

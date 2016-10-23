@@ -43,7 +43,7 @@ object Connection {
   }
 
   /**
-   * A connection to a service with a host and port
+   * A connection to a remote tcp based component
    */
   final case class TcpConnection(componentId: ComponentId) extends Connection {
     val connectionType = TcpType

@@ -66,6 +66,17 @@ public class JLocationService {
     }
 
     /**
+     * Represents a registered connection to a TCP service
+     *
+     * @param connection describes the connection
+     * @param port the http port number
+     * @return the registration object
+     */
+    public static TcpRegistration getTcpRegistration(Connection.TcpConnection connection, int port) {
+        return new TcpRegistration(connection, port);
+    }
+
+    /**
      * Registers a component connection with the location sevice.
      * The component will automatically be unregistered when the vm exists or when
      * unregister() is called on the result of this method.

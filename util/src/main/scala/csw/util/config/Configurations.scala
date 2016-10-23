@@ -255,6 +255,14 @@ object Configurations {
     }
 
     /**
+     * java API: Returns a set containing the names of any of the given keys that are missing in the data
+     *
+     * @param keys one or more keys
+     */
+    @varargs
+    def jMissingKeys(keys: Key[_, _]*): java.util.Set[String] = missingKeys(keys: _*).asJava
+
+    /**
      * Returns a map based on this object where the keys and values are in string format
      * (Could be useful for exporting in a format that other languages can read).
      * Derived classes might want to add values to this map for fixed fields.

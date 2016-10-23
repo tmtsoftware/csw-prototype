@@ -10,12 +10,9 @@ import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnectio
 import csw.services.loc.LocationTrackerWorker.LocationsReady
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 import collection.JavaConverters._
-import scala.concurrent.duration.FiniteDuration
-
-import scala.concurrent.duration._
 
 /**
  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
@@ -60,6 +57,7 @@ object LocationService {
         // Don't use ipv6 addresses yet, since it seems to not be working with the current akka version
         !a.addr.isLoopbackAddress && !a.addr.isInstanceOf[Inet6Address]
       }
+
       // Get this host's primary IP address.
       // Note: The trick to getting the right one seems to be in sorting by network interface index
       // and then ignoring the loopback address.
@@ -139,9 +137,6 @@ object LocationService {
 
   // Indicates the part of a command service config that this service is interested in
   private val PREFIX_KEY = "prefix"
-
-  // For a TCP service, this is the host
-  private val HOST_KEY = "host"
 
   case class ComponentRegistered(connection: Connection, result: RegistrationResult)
 
@@ -357,7 +352,6 @@ object LocationService {
       case Failure(ex) =>
         val failed = registration.map(_.connection)
         log.error(s"Registration failed for $failed", ex)
-        // XXX allan: Shoud an error message be sent to replyTo?
         system.stop(a)
     }
 
@@ -388,6 +382,9 @@ object LocationService {
     // Private loc is for testing
     private[loc] var connections = Map.empty[Connection, Location]
 
+    // The future for this promise completes the next time the serviceResolved() method is called
+    private var updateInfo = Promise[Unit]()
+
     registry.addServiceListener(dnsType, this)
 
     override def postStop: Unit = {
@@ -406,7 +403,7 @@ object LocationService {
           // Should we send an update here?
           //sendLocationUpdate(unc)
           log.info(s"Adding untracked for: $connection")
-        //  tryToResolve(connection)
+          //  tryToResolve(connection)
         }
       }
 
@@ -429,6 +426,7 @@ object LocationService {
           sendLocationUpdate(unc)
         }
       }
+
       connections.get(connection).foreach(rm)
     }
 
@@ -436,7 +434,7 @@ object LocationService {
     private def tryToResolve(connection: Connection): Unit = {
       log.info("Connections: " + connections)
       connections.get(connection) match {
-        case Some(Unresolved(c)) =>
+        case Some(Unresolved(_)) =>
           val s = Option(registry.getServiceInfo(dnsType, connection.toString))
           log.info(s"Try to resolve connection: $connection: Result: $s")
           s.foreach(resolveService(connection, _))
@@ -446,27 +444,16 @@ object LocationService {
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
-      //log.info("ServiceResolved call: " + event.getName)
-      /*
-      Connection(event.getName).filter(_.componentId.componentType == ComponentType.Service).foreach {
-        connection =>
-          log.info(s">>>>>>>>>>>Kim added:       serviceResolved for service call")
-          resolveService(connection, event.getInfo)
-      }
-      */
-      // Gets the connection from the name and, if we are tracking the connection, resolve it
-      /*
-      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc =>
-        log.info(s">>>>>>>>>>>Kim added:       serviceResolved call")
-        resolveService(loc.connection, event.getInfo)
-      })
-      */
+      // Complete the promise so that the related future completes, in case the WaitToTrack() method is waiting for it
+      updateInfo.success(())
+      updateInfo = Promise[Unit]()
     }
 
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {
       try {
         // Gets the URI, adding the akka system as user if needed
         log.info(s">>>>>>>>>>>Kim added:            resolveService")
+
         def getUri(uriStr: String): Option[URI] = {
           connection match {
             case _: AkkaConnection =>
@@ -477,7 +464,7 @@ object LocationService {
           }
         }
 
-        log.info("URLS: " + info.getURLs(connection.connectionType.name))
+        log.info("URLS: " + info.getURLs(connection.connectionType.name).mkString(", "))
 
         info.getURLs(connection.connectionType.name).toList.flatMap(getUri).foreach {
           uri =>
@@ -497,9 +484,7 @@ object LocationService {
                 sendLocationUpdate(rhc)
               case tcp: TcpConnection =>
                 // A TCP-based connection is ended here
-                val host = info.getPropertyString(SYSTEM_KEY)
-                val port: Int = uri.getPort
-                val rtc = ResolvedTcpLocation(tcp, host, port)
+                val rtc = ResolvedTcpLocation(tcp, uri.getHost, uri.getPort)
                 connections += (connection -> rtc)
                 log.info(s"Resolved TCP: ${connections.values.toList}")
                 sendLocationUpdate(rtc)
@@ -550,24 +535,10 @@ object LocationService {
       replyTo.getOrElse(context.parent) ! location
     }
 
-
-    case class WaitToTrack(connection: Connection)
-
-    def waitToTrack(connection: Connection):Unit = {
+    def waitToTrack(connection: Connection): Unit = {
       import context.dispatcher
-
-      log.info("Checking: " + connection)
-      val cvalue = connections.exists { case (c, loc) =>
-        log.info(s"c: $c and loc: $loc")
-        (loc.equals(UnTrackedLocation(connection))) }
-      log.info(s"Wait to track $connection: " + cvalue)
-      if (!cvalue) {
-        context.system.scheduler.scheduleOnce(1.second, self, WaitToTrack(connection))
-      } else {
-        log.info("Its' now in untracked: " + connection)
-        val unc = Unresolved(connection)
-        connections += (connection -> unc)
-        tryToResolve(connection)
+      updateInfo.future.onComplete { _ =>
+        self ! TrackConnection(connection: Connection)
       }
     }
 
@@ -582,40 +553,31 @@ object LocationService {
           case _ => log.warning(s"Received unexpected ActorIdentity id: $id")
         }
 
-      case WaitToTrack(connection) =>
-        log.info("WaitToTrack: " + connection)
-        waitToTrack(connection)
-
-
       case TrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, add it
-        log.info("----------------Received track connection: " + connection)
+        println("----------------Received track connection: " + connection)
         if (!connections.contains(connection)) {
           waitToTrack(connection)
         } else {
           // In this case, there is some entry already in our table, meaning at least serviceAdded has been called
           // There is a chance that it has already been resolved since this is shared across the JVM?
           connections(connection) match {
-            case l: UnTrackedLocation =>
+            case UnTrackedLocation(_) =>
               val unc = Unresolved(connection)
               connections += (connection -> unc)
               tryToResolve(connection)
             case u: Unresolved =>
               log.error("Should not have an Unresolved connection when initiating tracking: " + u)
-            case r@_ =>
+            case r @ _ =>
               sendLocationUpdate(r)
           }
         }
-
-
-      // Note this will be called whether we are currently tracking or not, could already be resolved
-      //tryToResolve(connection)
 
       case UntrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, ignore it
         if (connections.contains(connection)) {
           // Remove from the map and send an updated Resolved List
-          connections -= connection
+          connections += (connection -> UnTrackedLocation(connection))
           // Send Untrack back so state can be updated
           replyTo.getOrElse(context.parent) ! UnTrackedLocation(connection)
         }
@@ -637,3 +599,4 @@ object LocationService {
   }
 
 }
+

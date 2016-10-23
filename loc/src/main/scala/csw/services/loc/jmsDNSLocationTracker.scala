@@ -119,13 +119,12 @@ case class jmsDNSLocationTracker(registry: JmDNS, replyTo: Option[ActorRef]) ext
               log.debug("Resolved HTTP: " + connections.values.toList)
               // Here is where the resolved message is sent for an Http Connection
               sendLocationUpdate(rhc)
-            case tcp: TcpConnection =>
-              // A TCP-based connection is ended here
-              val host = info.getPropertyString(SYSTEM_KEY)
-              val port: Int = uri.getPort
-              val rtc = ResolvedTcpLocation(tcp, host, port)
+            case tc: TcpConnection =>
+              // A TCP connection is finished off here
+              val rtc = ResolvedTcpLocation(tc, uri.getHost, uri.getPort)
               connections += (connection -> rtc)
-              log.info(s"Resolved TCP: ${connections.values.toList}")
+              log.debug("Resolved TCP: " + connections.values.toList)
+              // Here is where the resolved message is sent for an Http Connection
               sendLocationUpdate(rtc)
           }
       }

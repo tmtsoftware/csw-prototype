@@ -2,6 +2,7 @@ package csw.services.pkg
 
 import akka.actor.ActorRef
 import csw.services.ccs.AssemblyController
+import csw.services.ccs.Validation._
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
 import csw.services.pkg.Supervisor3.{Initialized, Started}
@@ -50,22 +51,22 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
     def validateConfig(sc: SetupConfig): Validation = {
       if (sc.configKey.prefix != TestConfig.testConfig1.configKey.prefix
         && sc.configKey.prefix != TestConfig.testConfig2.configKey.prefix) {
-        Invalid("Wrong prefix")
+        Invalid(WrongConfigKeyIssue("Wrong prefix"))
       } else {
         val missing = sc.missingKeys(TestConfig.posName, TestConfig.c1, TestConfig.c2, TestConfig.equinox)
         if (missing.nonEmpty)
-          Invalid(s"Missing keys: ${missing.mkString(", ")}")
+          Invalid(MissingKeyIssue(s"Missing keys: ${missing.mkString(", ")}"))
         else Valid
       }
     }
-    val list = config.configs.map(validateConfig).filter(!_.isValid)
-    if (list.nonEmpty) list.head else Valid
+    val list = config.configs.map(validateConfig).filter(_ != Valid)
+    if (list.nonEmpty) list.head else Valid // XXX TODO FIXME: Return list
   }
 
   override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
                       replyTo: Option[ActorRef]): Validation = {
     val valid = validate(configArg)
-    if (valid.isValid) {
+    if (valid == Valid) {
       // The call below just distributes the configs to the HCDs based on matching prefix,
       // but you could just as well generate new configs and send them here...
       distributeSetupConfigs(locationsResolved, configArg, replyTo)

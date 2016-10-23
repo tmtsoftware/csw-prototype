@@ -1,13 +1,27 @@
-//package csw.examples.vsliceJava.assembly
+//package csw.examples.vsliceJava.assembly;
 //
-//import csw.services.ccs.Validation._
-//import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
-//import csw.util.config.{BooleanItem, DoubleItem, StringItem}
+//import com.typesafe.config.Config;
+//import csw.services.ccs.Validation.*;
+//import csw.services.loc.ComponentType;
+//import csw.util.config.*;
+//import csw.util.config.Configurations.*;
+//
+//import static javacsw.util.config.JItems.*;
+//import static javacsw.util.config.JConfigDSL.*;
+//import static javacsw.util.config.JUnitsOfMeasure.*;
+//
+//import csw.services.pkg.Component.AssemblyInfo;
+//import javacsw.services.ccs.JValidation;
+//import javacsw.services.ccs.JValidation.*;
+//
+//import java.util.ArrayList;
+//import java.util.List;
+//import java.util.Set;
 //
 ///**
 // * TMT Source Code: 8/24/16.
 // */
-//object ConfigValidation {
+//public class ConfigValidation {
 //
 //  /**
 //   * Looks for any SetupConfigs in a SetupConfigArg that fail validation and returns as a list of only Invalid
@@ -15,57 +29,67 @@
 //   * @param ac AssemblyContext provides command names
 //   * @return scala [[List]] that includes only the Invalid configurations in the SetupConfigArg
 //   */
-//  def invalidsInTromboneSetupConfigArg(sca: SetupConfigArg)(implicit ac: AssemblyContext): List[Invalid] =
+//  public static List<Invalid> invalidsInTromboneSetupConfigArg(SetupConfigArg sca, AssemblyContext ac) {
 //    // Returns a list of all failed validations in config arg
-//    validateTromboneSetupConfigArg(sca).collect { case a: Invalid => a }
+//    validateTromboneSetupConfigArg(sca).collect {
+//    case a:
+//      Invalid =>a
+//  }
+//  }
 //
 //  /**
 //   * Runs Trombone-specific validation on a single SetupConfig.
-//   * @param sc
-//   * @param ac
-//   * @return
 //   */
-//  def validateOneSetupConfig(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
-//    sc.configKey match {
-//      case ac.initCK         => initValidation(sc)
-//      case ac.datumCK        => datumValidation(sc)
-//      case ac.stopCK         => stopValidation(sc)
-//      case ac.moveCK         => moveValidation(sc)
-//      case ac.positionCK     => positionValidation(sc)
-//      case ac.setElevationCK => setElevationValidation(sc)
-//      case ac.setAngleCK     => setAngleValidation(sc)
-//      case ac.followCK       => followValidation(sc)
-//      case x                 => Invalid(OtherIssue("SetupConfig with prefix $x is not support for $componentName"))
-//    }
+//  public static Validation validateOneSetupConfig(SetupConfig sc, AssemblyContext ac) {
+//    ConfigKey configKey = sc.configKey();
+//    if (configKey.equals(ac.initCK)) return initValidation(sc, ac);
+//    if (configKey.equals(ac.datumCK)) return datumValidation(sc);
+////      case ac.datumCK        => datumValidation(sc)
+////      case ac.stopCK         => stopValidation(sc)
+////      case ac.moveCK         => moveValidation(sc)
+////      case ac.positionCK     => positionValidation(sc)
+////      case ac.setElevationCK => setElevationValidation(sc)
+////      case ac.setAngleCK     => setAngleValidation(sc)
+////      case ac.followCK       => followValidation(sc)
+////      case x                 => Invalid(OtherIssue("SetupConfig with prefix $x is not support for $componentName"))
 //  }
 //
 //  // Validates a SetupConfigArg for Trombone Assembly
-//  def validateTromboneSetupConfigArg(sca: SetupConfigArg)(implicit ac: AssemblyContext): ValidationList =
-//    sca.configs.map(config => validateOneSetupConfig(config)).toList
+//  public static List<Validation> validateTromboneSetupConfigArg(SetupConfigArg sca, AssemblyContext ac) {
+//    List<Validation> result = new ArrayList<>();
+//    for(SetupConfig config : sca.jconfigs()) {
+//      result.add(validateOneSetupConfig(config, ac));
+//    }
+//    return result;
+//  }
 //
 //  /**
 //   * Validation for the init SetupConfig
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def initValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
+//  public static Validation initValidation(SetupConfig sc, AssemblyContext ac) {
+//    int size = sc.size();
+//    if (!sc.configKey().equals(ac.initCK))
+//      return new Invalid(new WrongConfigKeyIssue("The SetupConfig is not an init configuration"));
 //
-//    val size = sc.size
-//    if (sc.configKey != ac.initCK) Invalid(WrongConfigKeyIssue("The SetupConfig is not an init configuration"))
-//    else // If no arguments, then this is okay
-//    if (sc.size == 0)
-//      Valid
-//    else if (size == 2) {
-//      import ac._
+//    // If no arguments, then this is okay
+//    if (sc.size() == 0)
+//      return JValidation.Valid;
+//
+//    if (size == 2) {
 //      // Check for correct keys and types
 //      // This example assumes that we want only these two keys
-//      val missing = sc.missingKeys(configurationNameKey, configurationVersionKey)
-//      if (missing.nonEmpty)
-//        Invalid(MissingKeyIssue(s"The 2 parameter init SetupConfig requires keys: $configurationNameKey and $configurationVersionKey"))
-//      else if (!sc(configurationNameKey).isInstanceOf[StringItem] || !sc(configurationVersionKey).isInstanceOf[StringItem])
-//        Invalid(WrongItemTypeIssue(s"The init SetupConfig requires StringItems named: $configurationVersionKey and $configurationVersionKey"))
-//      else Valid
-//    } else Invalid(WrongNumberOfItemsIssue(s"The init configuration requires 0 or 2 items, but $size were received"))
+//      Set<String> missing = sc.jMissingKeys(ac.configurationNameKey, ac.configurationVersionKey);
+//      if (!missing.isEmpty())
+//        return new Invalid(new MissingKeyIssue("The 2 parameter init SetupConfig requires keys: "
+//          + ac.configurationNameKey + " and " + ac.configurationVersionKey));
+//      if (!(JavaHelpers.jvalue(sc, ac.configurationNameKey, 0) instanceof StringItem)
+//        || !(JavaHelpers.jvalue(sc, ac.configurationVersionKey, 0) instanceof StringItem))
+//        return new Invalid(new WrongItemTypeIssue("The init SetupConfig requires StringItems named: "
+//          + ac.configurationVersionKey + " and " + ac.configurationVersionKey));
+//      return JValidation.Valid;
+//    } else return new Invalid(new WrongNumberOfItemsIssue("The init configuration requires 0 or 2 items, but " + size + " were received"));
 //  }
 //
 //  /**
@@ -73,14 +97,14 @@
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def datumValidation(sc: SetupConfig): Validation = Valid
+//  public static Validation datumValidation(SetupConfig sc) { return JValidation.Valid; }
 //
 //  /**
 //   * Validation for the stop SetupConfig -- currently nothing to validate
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def stopValidation(sc: SetupConfig): Validation = Valid
+//  public static XXX stopValidation(sc: SetupConfig): Validation = Valid
 //
 //  /**
 //   * Validation for the move SetupConfig
@@ -88,7 +112,7 @@
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def moveValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
+//  public static XXX moveValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
 //    if (sc.configKey != ac.moveCK) {
 //      Invalid(WrongConfigKeyIssue("The SetupConfig is not a move configuration."))
 //    } else if (sc.size == 0)
@@ -110,7 +134,7 @@
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def positionValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
+//  public static XXX positionValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
 //    if (sc.configKey != ac.positionCK) {
 //      Invalid(WrongConfigKeyIssue("The SetupConfig is not a position configuration."))
 //    } else {
@@ -136,7 +160,7 @@
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def setElevationValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
+//  public static XXX setElevationValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
 //    if (sc.configKey != ac.setElevationCK) {
 //      Invalid(WrongConfigKeyIssue("The SetupConfig is not a setElevation configuration"))
 //    } else // Check for correct key and type -- only checks that essential key is present, not strict
@@ -154,7 +178,7 @@
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def setAngleValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
+//  public static XXX setAngleValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
 //    if (sc.configKey != ac.setAngleCK) {
 //      Invalid(WrongConfigKeyIssue("The SetupConfig is not a setAngle configuration"))
 //    } else // Check for correct key and type -- only checks that essential key is present, not strict
@@ -172,7 +196,7 @@
 //   * @param sc the received SetupConfig
 //   * @return Valid or Invalid
 //   */
-//  def followValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
+//  public static XXX followValidation(sc: SetupConfig)(implicit ac: AssemblyContext): Validation = {
 //    if (sc.configKey != ac.followCK) {
 //      Invalid(WrongConfigKeyIssue("The SetupConfig is not a follow configuration"))
 //    } else // Check for correct key and type -- only checks that essential key is present, not strict

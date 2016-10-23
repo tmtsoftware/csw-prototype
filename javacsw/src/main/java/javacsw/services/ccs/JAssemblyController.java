@@ -1,10 +1,8 @@
 package javacsw.services.ccs;
 
-import csw.services.ccs.AssemblyController;
 import csw.util.config.StateVariable;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
-import csw.services.ccs.AssemblyController.Validation;
 
 /**
  * Parent class of assembly controllers implemented in Java.
@@ -18,20 +16,20 @@ import csw.services.ccs.AssemblyController.Validation;
 @SuppressWarnings("unused")
 abstract public class JAssemblyController extends AbstractAssemblyController {
 
-    /**
-     * Indicates a valid config (Invalid is a class that takes a reason argument)
-     */
-    public static final Validation Valid = Valid$.MODULE$;
-
-    /**
-     * Indicates an invalid config
-     *
-     * @param reason a description of why the config is invalid
-     * @return the Invalid object
-     */
-    public static Validation Invalid(String reason) {
-        return new Invalid(reason);
-    }
+//    /**
+//     * Indicates a valid config (Invalid is a class that takes a reason argument)
+//     */
+//    public static final Validation Valid = Valid$.MODULE$;
+//
+//    /**
+//     * Indicates an invalid config
+//     *
+//     * @param reason a description of why the config is invalid
+//     * @return the Invalid object
+//     */
+//    public static Validation Invalid(String reason) {
+//        return new Invalid(reason);
+//    }
 
     /**
      * A request to the implementing actor to publish the current state value
@@ -49,10 +47,10 @@ abstract public class JAssemblyController extends AbstractAssemblyController {
         return super.controllerReceive();
     }
 
-    @Override
     /**
      * Notifies all subscribers with the given value (Need to override to keep java happy)
      */
+    @Override
     public /*protected*/ void notifySubscribers(StateVariable.CurrentStates a) {
         super.notifySubscribers(a);
     }

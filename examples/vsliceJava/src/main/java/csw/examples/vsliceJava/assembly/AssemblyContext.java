@@ -1,178 +1,334 @@
-//package csw.examples.vsliceJava.assembly
-//
-//import com.typesafe.config.Config
-//import csw.services.pkg.Component.AssemblyInfo
-//import csw.util.config.Configurations.{ConfigKey, SetupConfig}
-//import csw.util.config.UnitsOfMeasure.{degrees, kilometers, micrometers, millimeters}
-//import csw.util.config.{BooleanKey, DoubleItem, DoubleKey, StringKey}
-//
-///**
-// * TMT Source Code: 10/4/16.
-// */
-//case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalculationConfig, controlConfig: TromboneControlConfig) {
-//  // Assembly Info
-//  // These first three are set from the config file
-//  var componentName: String = info.componentName
-//  var componentClassName: String = info.componentClassName
-//  var componentPrefix: String = info.prefix
-//  val componentType = info.componentType
-//  val fullName = s"$componentPrefix.$componentName"
-//
-//  // Public command configurations
-//  // Init submit command
-//  val initPrefix = s"$componentPrefix.init"
-//  val initCK: ConfigKey = initPrefix
-//
-//  // Dataum submit command
-//  val datumPrefix = s"$componentPrefix.datum"
-//  val datumCK: ConfigKey = datumPrefix
-//
-//  // Stop submit command
-//  val stopPrefix = s"$componentPrefix.stop"
-//  val stopCK: ConfigKey = stopPrefix
-//
-//  // Move submit command
-//  val movePrefix = s"$componentPrefix.move"
-//  val moveCK: ConfigKey = movePrefix
-//
-//  def moveSC(position: Double): SetupConfig = SetupConfig(moveCK).add(stagePositionKey -> position withUnits stagePositionUnits)
-//
-//  // Position submit command
-//  val positionPrefix = s"$componentPrefix.position"
-//  val positionCK: ConfigKey = positionPrefix
-//
-//  def positionSC(rangeDistance: Double): SetupConfig = SetupConfig(positionCK).add(naRangeDistanceKey -> rangeDistance withUnits naRangeDistanceUnits)
-//
-//  // setElevation submit command
-//  val setElevationPrefix = s"$componentPrefix.setElevation"
-//  val setElevationCK: ConfigKey = setElevationPrefix
-//
-//  def setElevationSC(elevation: Double): SetupConfig = SetupConfig(setElevationCK).add(naElevationKey -> elevation withUnits naElevationUnits)
-//
-//  // setAngle submit command
-//  val setAnglePrefx = s"$componentPrefix.setAngle"
-//  val setAngleCK: ConfigKey = setAnglePrefx
-//
-//  def setAngleSC(zenithAngle: Double): SetupConfig = SetupConfig(setAngleCK).add(za(zenithAngle))
-//
-//  // Follow submit command
-//  val followPrefix = s"$componentPrefix.follow"
-//  val followCK: ConfigKey = followPrefix
-//  val nssInUseKey = BooleanKey("nssInUse")
-//
-//  def setNssInUse(value: Boolean) = nssInUseKey -> value
-//
-//  def followSC(nssInUse: Boolean): SetupConfig = SetupConfig(followCK).add(nssInUseKey -> nssInUse)
-//
-//  // A list of all commands
-//  val allCommandKeys: List[ConfigKey] = List(initCK, datumCK, stopCK, moveCK, positionCK, setElevationCK, setAngleCK, followCK)
-//
-//  // Shared key values --
-//  // Used by setElevation, setAngle
-//  val configurationNameKey = StringKey("initConfigurationName")
-//  val configurationVersionKey = StringKey("initConfigurationVersion")
-//
-//  val focusErrorKey = DoubleKey("focus")
-//  val focusErrorUnits = micrometers
-//
-//  def fe(error: Double): DoubleItem = focusErrorKey -> error withUnits focusErrorUnits
-//
-//  val zenithAngleKey = DoubleKey("zenithAngle")
-//  val zenithAngleUnits = degrees
-//
-//  def za(angle: Double): DoubleItem = zenithAngleKey -> angle withUnits zenithAngleUnits
-//
-//  val naRangeDistanceKey = DoubleKey("rangeDistance")
-//  val naRangeDistanceUnits = kilometers
-//
-//  def rd(rangedistance: Double): DoubleItem = naRangeDistanceKey -> rangedistance withUnits naRangeDistanceUnits
-//
-//  val naElevationKey = DoubleKey("elevation")
-//  val naElevationUnits = kilometers
-//
-//  def el(elevation: Double): DoubleItem = naElevationKey -> elevation withUnits naElevationUnits
-//
-//  val initialElevationKey = DoubleKey("initialElevation")
-//  val initialElevationUnits = kilometers
-//
-//  def iel(elevation: Double): DoubleItem = initialElevationKey -> elevation withUnits initialElevationUnits
-//
-//  val stagePositionKey = DoubleKey("stagePosition")
-//  val stagePositionUnits = millimeters
-//
-//  def spos(pos: Double): DoubleItem = stagePositionKey -> pos withUnits stagePositionUnits
-//
-//  // ---------- Keys used by TromboneEventSubscriber and Others
-//  // This is the zenith angle from TCS
-//  val zenithAnglePrefix = "TCS.tcsPk.zenithAngle"
-//  val zaConfigKey: ConfigKey = zenithAnglePrefix
-//
-//  // This is the focus error from RTC
-//  val focusErrorPrefix = "RTC.focusError"
-//  val feConfigKey: ConfigKey = focusErrorPrefix
-//
-//  // ----------- Keys, etc. used by trombonePublisher, calculator, comamnds
-//  val aoSystemEventPrefix = s"$componentPrefix.sodiumLayer"
-//  val engStatusEventPrefix = s"$componentPrefix.engr"
-//  val tromboneStateStatusEventPrefix = s"$componentPrefix.state"
-//  val axisStateEventPrefix = s"$componentPrefix.axis1State"
-//  val axisStatsEventPrefix = s"$componentPrefix.axis1Stats"
-//}
-//
-//object AssemblyContext {
-//
-//  /**
-//   * Configuration class
-//   *
-//   * @param positionScale   value used to scale
-//   * @param stageZero       zero point in stage conversion
-//   * @param minStageEncoder minimum
-//   * @param minEncoderLimit minimum
-//   */
-//  case class TromboneControlConfig(
-//    positionScale: Double,
-//    stageZero:     Double, minStageEncoder: Int,
-//    minEncoderLimit: Int, maxEncoderLimit: Int
-//  )
-//
-//  object TromboneControlConfig {
-//    def apply(config: Config): TromboneControlConfig = {
-//      // Main prefix for keys used below
-//      val prefix = "csw.examples.trombone.assembly"
-//
-//      val positionScale = config.getDouble(s"$prefix.control-config.positionScale")
-//      val stageZero = config.getDouble(s"$prefix.control-config.stageZero")
-//      val minStageEncoder = config.getInt(s"$prefix.control-config.minStageEncoder")
-//      val minEncoderLimit = config.getInt(s"$prefix.control-config.minEncoderLimit")
-//      val maxEncoderLimit = config.getInt(s"$prefix.control-config.maxEncoderLimit")
-//      TromboneControlConfig(positionScale, stageZero, minStageEncoder, minEncoderLimit, maxEncoderLimit)
-//    }
-//  }
-//
-//  /**
-//   * Configuration class
-//   *
-//   * @param defaultInitialElevation a default initial eleveation (possibly remove once workign)
-//   * @param focusErrorGain          gain value for focus error
-//   * @param upperFocusLimit         check for maximum focus error
-//   * @param lowerFocusLimit         check for minimum focus error
-//   * @param zenithFactor            an algorithm value for scaling zenith angle term
-//   */
-//  case class TromboneCalculationConfig(defaultInitialElevation: Double, focusErrorGain: Double,
-//                                       upperFocusLimit: Double, lowerFocusLimit: Double, zenithFactor: Double)
-//
-//  object TromboneCalculationConfig {
-//    def apply(config: Config): TromboneCalculationConfig = {
-//      // Main prefix for keys used below
-//      val prefix = "csw.examples.trombone.assembly"
-//
-//      val defaultInitialElevation = config.getDouble(s"$prefix.calculation-config.defaultInitialElevation")
-//      val focusGainError = config.getDouble(s"$prefix.calculation-config.focusErrorGain")
-//      val upperFocusLimit = config.getDouble(s"$prefix.calculation-config.upperFocusLimit")
-//      val lowerFocusLimit = config.getDouble(s"$prefix.calculation-config.lowerFocusLimit")
-//      val zenithFactor = config.getDouble(s"$prefix.calculation-config.zenithFactor")
-//      TromboneCalculationConfig(defaultInitialElevation, focusGainError, upperFocusLimit, lowerFocusLimit, zenithFactor)
-//    }
-//  }
-//
-//}
+package csw.examples.vsliceJava.assembly;
+
+import com.typesafe.config.Config;
+import csw.services.loc.ComponentType;
+import csw.util.config.*;
+import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.ConfigKey;
+
+import static javacsw.util.config.JItems.*;
+import static javacsw.util.config.JConfigDSL.*;
+import static javacsw.util.config.JUnitsOfMeasure.*;
+
+import csw.services.pkg.Component.AssemblyInfo;
+
+/**
+ * TMT Source Code: 10/4/16.
+ */
+@SuppressWarnings("unused")
+public class AssemblyContext {
+
+  public final AssemblyInfo info;
+  public final TromboneCalculationConfig calculationConfig;
+  public final TromboneControlConfig controlConfig;
+
+  // Assembly Info
+  // These first three are set from the config file
+  public final String componentName;
+  public final String componentClassName;
+  public final String componentPrefix;
+  public final ComponentType componentType;
+  public final String fullName;
+
+  // Public command configurations
+  // Init submit command
+  public final String initPrefix;
+  public final ConfigKey initCK;
+
+  // Dataum submit command
+  public final String datumPrefix;
+  public final ConfigKey datumCK;
+
+  // Stop submit command
+  public final String stopPrefix;
+  public final ConfigKey stopCK;
+
+  // Move submit command
+  public final String movePrefix;
+  public final ConfigKey moveCK;
+
+  public SetupConfig moveSC(double position) {
+    return sc(moveCK.prefix(), jset(stagePositionKey, position).withUnits(stagePositionUnits));
+  }
+
+  // Position submit command
+  public final String positionPrefix;
+  public final ConfigKey positionCK;
+
+  public SetupConfig positionSC(double rangeDistance) {
+    return sc(positionCK.prefix(), jset(naRangeDistanceKey, rangeDistance).withUnits(naRangeDistanceUnits));
+  }
+
+  // setElevation submit command
+  public final String setElevationPrefix;
+  public final ConfigKey setElevationCK;
+
+  public SetupConfig setElevationSC(double elevation) {
+    return sc(setElevationCK.prefix(), jset(naElevationKey, elevation).withUnits(naElevationUnits));
+  }
+
+  // setAngle submit command
+  public final String setAnglePrefx;
+  public final ConfigKey setAngleCK;
+
+  public SetupConfig setAngleSC(double zenithAngle) {
+    return jadd(sc(setAngleCK.prefix()), za(zenithAngle));
+  }
+
+  // Follow submit command
+  public final String followPrefix;
+  public final ConfigKey followCK;
+  public final BooleanKey nssInUseKey;
+
+  public BooleanItem setNssInUse(boolean value) {
+    return jset(nssInUseKey, value);
+  }
+
+  public SetupConfig followSC(boolean nssInUse) {
+    return sc(followCK.prefix(), jset(nssInUseKey, nssInUse));
+  }
+
+  // A list of all commands
+  public final ConfigKey[] allCommandKeys;
+
+  // Shared key values --
+  // Used by setElevation, setAngle
+  public final StringKey configurationNameKey;
+  public final StringKey configurationVersionKey;
+
+  public final DoubleKey focusErrorKey;
+  public final UnitsOfMeasure.Units focusErrorUnits;
+
+  public DoubleItem fe(double error) {
+    return jset(focusErrorKey, error).withUnits(focusErrorUnits);
+  }
+
+  public final DoubleKey zenithAngleKey;
+  public final UnitsOfMeasure.Units zenithAngleUnits;
+
+  public final DoubleItem za(double angle) {
+    return jset(zenithAngleKey, angle).withUnits(zenithAngleUnits);
+  }
+
+  public final DoubleKey naRangeDistanceKey;
+  public final UnitsOfMeasure.Units naRangeDistanceUnits;
+
+  public DoubleItem rd(double rangedistance) {
+    return jset(naRangeDistanceKey, rangedistance).withUnits(naRangeDistanceUnits);
+  }
+
+  public final DoubleKey naElevationKey;
+  public final UnitsOfMeasure.Units naElevationUnits;
+
+  public final DoubleItem el(double elevation) {
+    return jset(naElevationKey, elevation).withUnits(naElevationUnits);
+  }
+
+  public final DoubleKey initialElevationKey;
+  public final UnitsOfMeasure.Units initialElevationUnits;
+
+  public DoubleItem iel(double elevation) {
+    return jset(initialElevationKey, elevation).withUnits(initialElevationUnits);
+  }
+
+  public final DoubleKey stagePositionKey;
+  public final UnitsOfMeasure.Units stagePositionUnits;
+
+  public DoubleItem spos(double pos) {
+    return jset(stagePositionKey, pos).withUnits(stagePositionUnits);
+  }
+
+  // ---------- Keys used by TromboneEventSubscriber and Others
+  // This is the zenith angle from TCS
+  public final String zenithAnglePrefix;
+  public final ConfigKey zaConfigKey;
+
+  // This is the focus error from RTC
+  public final String focusErrorPrefix;
+  public final ConfigKey feConfigKey;
+
+  // ----------- Keys, etc. used by trombonePublisher, calculator, comamnds
+  public final String aoSystemEventPrefix;
+  public final String engStatusEventPrefix;
+  public final String tromboneStateStatusEventPrefix;
+  public final String axisStateEventPrefix;
+  public final String axisStatsEventPrefix;
+
+  // ---
+
+  public AssemblyContext(AssemblyInfo info, TromboneCalculationConfig calculationConfig, TromboneControlConfig controlConfig) {
+    this.info = info;
+    this.calculationConfig = calculationConfig;
+    this.controlConfig = controlConfig;
+
+    componentName = info.componentName();
+    componentClassName = info.componentClassName();
+    componentPrefix = info.prefix();
+    componentType = info.componentType();
+    fullName = componentPrefix + "." + componentName;
+
+    // Public command configurations
+    // Init submit command
+    initPrefix = componentPrefix + ".init";
+    initCK = new ConfigKey(initPrefix);
+
+    // Dataum submit command
+    datumPrefix = componentPrefix + ".datum";
+    datumCK = new ConfigKey(datumPrefix);
+
+    // Stop submit command
+    stopPrefix = componentPrefix + ".stop";
+    stopCK = new ConfigKey(stopPrefix);
+
+    // Move submit command
+    movePrefix = componentPrefix + ".move";
+    moveCK = new ConfigKey(movePrefix);
+
+    // Position submit command
+    positionPrefix = componentPrefix + ".position";
+    positionCK = new ConfigKey(positionPrefix);
+
+    // setElevation submit command
+    setElevationPrefix = componentPrefix + ".setElevation";
+    setElevationCK = new ConfigKey(setElevationPrefix);
+
+    // setAngle submit command
+    setAnglePrefx = componentPrefix + ".setAngle";
+    setAngleCK = new ConfigKey(setAnglePrefx);
+
+    // Follow submit command
+    followPrefix = componentPrefix + ".follow";
+    followCK = new ConfigKey(followPrefix);
+    nssInUseKey = BooleanKey("nssInUse");
+
+    // A list of all commands
+    allCommandKeys = new ConfigKey[]{initCK, datumCK, stopCK, moveCK, positionCK, setElevationCK, setAngleCK, followCK};
+
+    // Shared key values --
+    // Used by setElevation, setAngle
+    configurationNameKey = StringKey("initConfigurationName");
+    configurationVersionKey = StringKey("initConfigurationVersion");
+
+    focusErrorKey = DoubleKey("focus");
+    focusErrorUnits = micrometers;
+
+    zenithAngleKey = DoubleKey("zenithAngle");
+    zenithAngleUnits = degrees;
+
+    naRangeDistanceKey = DoubleKey("rangeDistance");
+    naRangeDistanceUnits = kilometers;
+
+    naElevationKey = DoubleKey("elevation");
+    naElevationUnits = kilometers;
+
+    initialElevationKey = DoubleKey("initialElevation");
+    initialElevationUnits = kilometers;
+
+    stagePositionKey = DoubleKey("stagePosition");
+    stagePositionUnits = millimeters;
+
+    // ---------- Keys used by TromboneEventSubscriber and Others
+    // This is the zenith angle from TCS
+    zenithAnglePrefix = "TCS.tcsPk.zenithAngle";
+    zaConfigKey = new ConfigKey(zenithAnglePrefix);
+
+    // This is the focus error from RTC
+    focusErrorPrefix = "RTC.focusError";
+    feConfigKey = new ConfigKey(focusErrorPrefix);
+
+    // ----------- Keys, etc. used by trombonePublisher, calculator, comamnds
+    aoSystemEventPrefix = componentPrefix + ".sodiumLayer";
+    engStatusEventPrefix = componentPrefix + ".engr";
+    tromboneStateStatusEventPrefix = componentPrefix + ".state";
+    axisStateEventPrefix = componentPrefix + ".axis1State";
+    axisStatsEventPrefix = componentPrefix + ".axis1Stats";
+  }
+
+
+  // --- static defs ---
+
+  /**
+   * Configuration class
+   */
+  public static class TromboneControlConfig {
+    public final double positionScale;
+    public final int minStageEncoder;
+    public final double stageZero;
+    public final int minEncoderLimit;
+    public final int maxEncoderLimit;
+
+    /**
+     * Configuration class
+     *
+     * @param positionScale   value used to scale
+     * @param stageZero       zero point in stage conversion
+     * @param minStageEncoder minimum
+     * @param minEncoderLimit minimum
+     */
+    public TromboneControlConfig(double positionScale, int minStageEncoder, double stageZero, int minEncoderLimit, int maxEncoderLimit) {
+      this.positionScale = positionScale;
+      this.minStageEncoder = minStageEncoder;
+      this.stageZero = stageZero;
+      this.minEncoderLimit = minEncoderLimit;
+      this.maxEncoderLimit = maxEncoderLimit;
+    }
+
+    /**
+     * Init from the given config
+     */
+    public TromboneControlConfig(Config config) {
+      // Main prefix for keys used below
+      String prefix = "csw.examples.trombone.assembly";
+
+      this.positionScale = config.getDouble(prefix + ".control-config.positionScale");
+      this.stageZero = config.getDouble(prefix + ".control-config.stageZero");
+      this.minStageEncoder = config.getInt(prefix + ".control-config.minStageEncoder");
+      this.minEncoderLimit = config.getInt(prefix + ".control-config.minEncoderLimit");
+      this.maxEncoderLimit = config.getInt(prefix + ".control-config.maxEncoderLimit");
+    }
+
+  }
+
+  /**
+   * Configuration class
+   */
+  @SuppressWarnings("unused")
+  public static class TromboneCalculationConfig {
+    public final double defaultInitialElevation;
+    public final double focusErrorGain;
+    public final double upperFocusLimit;
+    public final double lowerFocusLimit;
+    public final double zenithFactor;
+
+    /**
+     * Configuration class
+     *
+     * @param defaultInitialElevation a default initial eleveation (possibly remove once workign)
+     * @param focusErrorGain          gain value for focus error
+     * @param upperFocusLimit         check for maximum focus error
+     * @param lowerFocusLimit         check for minimum focus error
+     * @param zenithFactor            an algorithm value for scaling zenith angle term
+     */
+    public TromboneCalculationConfig(double defaultInitialElevation, double focusErrorGain, double upperFocusLimit, double lowerFocusLimit, double zenithFactor) {
+      this.defaultInitialElevation = defaultInitialElevation;
+      this.focusErrorGain = focusErrorGain;
+      this.upperFocusLimit = upperFocusLimit;
+      this.lowerFocusLimit = lowerFocusLimit;
+      this.zenithFactor = zenithFactor;
+    }
+
+    /**
+     * Init from the given config
+     */
+    public TromboneCalculationConfig(Config config) {
+      // Main prefix for keys used below
+      String prefix = "csw.examples.trombone.assembly";
+
+      this.defaultInitialElevation = config.getDouble(prefix + ".calculation-config.defaultInitialElevation");
+      this.focusErrorGain = config.getDouble(prefix + ".calculation-config.focusErrorGain");
+      this.upperFocusLimit = config.getDouble(prefix + ".calculation-config.upperFocusLimit");
+      this.lowerFocusLimit = config.getDouble(prefix + ".calculation-config.lowerFocusLimit");
+      this.zenithFactor = config.getDouble(prefix + ".calculation-config.zenithFactor");
+    }
+  }
+}

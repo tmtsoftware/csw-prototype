@@ -6,8 +6,8 @@ import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
-import csw.services.loc.Connection.HttpConnection
-import csw.services.loc.LocationService.ResolvedHttpLocation
+import csw.services.loc.Connection.{HttpConnection, TcpConnection}
+import csw.services.loc.LocationService.{ResolvedHttpLocation, ResolvedTcpLocation}
 import org.slf4j.LoggerFactory
 import redis._
 
@@ -39,10 +39,10 @@ object AlarmService {
   // Lookup the alarm service redis instance with the location service
   private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
-    val connection = HttpConnection(ComponentId(asName, ComponentType.Service))
+    val connection = TcpConnection(ComponentId(asName, ComponentType.Service))
     LocationService.resolve(Set(connection)).map { locationsReady =>
-      val uri = locationsReady.locations.head.asInstanceOf[ResolvedHttpLocation].uri
-      RedisClient(uri.getHost, uri.getPort)
+      val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
+      RedisClient(loc.host, loc.port)
     }
   }
 
