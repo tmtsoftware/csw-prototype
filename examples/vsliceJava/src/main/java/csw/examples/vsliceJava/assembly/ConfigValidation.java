@@ -6,6 +6,7 @@ import csw.util.config.*;
 import csw.util.config.Configurations.*;
 
 import static javacsw.services.ccs.JValidation.*;
+import static javacsw.util.config.JItems.jitem;
 import static javacsw.util.config.JItems.jvalue;
 
 import javacsw.services.ccs.JValidation;
