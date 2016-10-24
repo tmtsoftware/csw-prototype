@@ -12,6 +12,7 @@ import csw.services.alarms.AscfValidation.Problem
 import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -35,12 +36,20 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
   val ascf = Paths.get(url.toURI).toFile
   val asName = "Blocking Alarm Service Test"
 
+  // Used to start and stop the alarm service Redis instance used for the test
+  var alarmAdmin: AlarmServiceAdmin = _
+
   override protected def beforeAll(): Unit = {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
     AlarmServiceAdmin.startAlarmService(asName)
+  }
+
+  override protected def afterAll(): Unit = {
+    // Shutdown Redis (Only do this in tests that also started the server)
+    if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration)
   }
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {

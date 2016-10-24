@@ -54,7 +54,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
   }
 
-  class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
+  class TestSubscriber(prefix: String) extends EventSubscriber(testEventServiceSettings.redisHostname, testEventServiceSettings.redisPort) {
 
     import TestSubscriber._
 

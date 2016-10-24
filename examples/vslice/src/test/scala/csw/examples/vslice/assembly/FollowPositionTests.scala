@@ -93,7 +93,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
   }
 
-  class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
+  class TestSubscriber(prefix: String) extends EventSubscriber(testEventServiceSettings.redisHostname, testEventServiceSettings.redisPort) {
 
     import TestSubscriber._
 

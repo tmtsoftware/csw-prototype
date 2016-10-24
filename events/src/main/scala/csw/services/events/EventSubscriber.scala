@@ -16,11 +16,9 @@ import EventServiceImpl._
  * Adds the ability to an actor to subscribe to events from the event service.
  * The subscribed actor will receive messages of type Event for the given event prefixes.
  */
-abstract class EventSubscriber(settingsIn: Option[EventServiceSettings] = None) extends Actor with ActorLogging {
+abstract class EventSubscriber(redisHost: String, redisPort: Int) extends Actor with ActorLogging {
 
-  private val settings = settingsIn.getOrElse(EventServiceSettings(context.system))
-
-  private lazy val redis = context.actorOf(SubscribeActor.props(self, settings.redisHostname, settings.redisPort)
+  private lazy val redis = context.actorOf(SubscribeActor.props(self, redisHost, redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
 
   /**
@@ -52,12 +50,9 @@ abstract class EventSubscriber(settingsIn: Option[EventServiceSettings] = None) 
  * Helper class For Java API: Adds the ability to subscribe to events.
  * The subscribed actor will receive messages of type Event for the given prefixes.
  */
-abstract class JAbstractSubscriber extends AbstractActor {
-  // XXX FIXME: This class should go in javacsw or be removed (not needed, can use subscribe() method)
+abstract class JAbstractSubscriber(redisHost: String, redisPort: Int) extends AbstractActor {
 
-  private val settings = EventServiceSettings(context.system)
-
-  private lazy val redis = context.actorOf(SubscribeActor.props(self, settings.redisHostname, settings.redisPort)
+  private lazy val redis = context.actorOf(SubscribeActor.props(self, redisHost, redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
 
   /**
@@ -100,7 +95,7 @@ private object SubscribeActor {
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
 private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort: Int)
-    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) => ()) with DecodeReplies {
+    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (_: Boolean) => ()) with DecodeReplies {
 
   /**
    * Keep states of channels and actor in case of connection reset

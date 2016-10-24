@@ -71,7 +71,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
   }
 
-  class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
+  class TestSubscriber(prefix: String) extends EventSubscriber(testEventServiceSettings.redisHostname, testEventServiceSettings.redisPort) {
     import TestSubscriber._
 
     var msgs = Vector.empty[Event]

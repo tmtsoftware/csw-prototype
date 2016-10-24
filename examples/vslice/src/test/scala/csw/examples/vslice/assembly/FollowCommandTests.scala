@@ -83,7 +83,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
   }
 
-  class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
+  class TestSubscriber(prefix: String) extends EventSubscriber(testEventServiceSettings.redisHostname, testEventServiceSettings.redisPort) {
     import TestSubscriber._
 
     var msgs = Vector.empty[Event]
