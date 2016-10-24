@@ -55,16 +55,4 @@ case class JTelemetryService(settings: EventServiceSettings, system: ActorRefFac
    */
   @Override
   def delete(prefix: String): CompletableFuture[Unit] = ts.delete(prefix).map(_ => ()).toJava.toCompletableFuture
-
-  /**
-   * Disconnects from the key/value store server
-   */
-  @Override
-  def disconnect: CompletableFuture[Unit] = ts.disconnect().toJava.toCompletableFuture
-
-  /**
-   * Shuts the key/value store server down
-   */
-  @Override
-  def shutdown: CompletableFuture[Unit] = ts.shutdown().toJava.toCompletableFuture
 }

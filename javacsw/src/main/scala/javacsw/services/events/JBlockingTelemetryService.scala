@@ -32,8 +32,4 @@ case class JBlockingTelemetryService(timeout: FiniteDuration, settings: EventSer
   def getHistory(prefix: String, history: Int): java.util.List[StatusEvent] = ts.getHistory(prefix, history).asJava
 
   def delete(key: String): Unit = ts.delete(key)
-
-  def disconnect(): Unit = ts.disconnect()
-
-  def shutdown(): Unit = ts.shutdown()
 }

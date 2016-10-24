@@ -52,17 +52,6 @@ public interface IBlockingTelemetryService {
     void delete(String key);
 
 
-    /**
-     * Disconnects from the key/value store server
-     */
-    void  disconnect();
-
-    /**
-     * Shuts the key/value store server down
-     */
-    void shutdown();
-
-
     // --- factory methods ---
 
     /**

@@ -1,8 +1,8 @@
 package csw.services.events
 
 import akka.util.Timeout
-import csw.services.loc.Connection.{HttpConnection, TcpConnection}
-import csw.services.loc.LocationService.{ResolvedHttpLocation, ResolvedTcpLocation}
+import csw.services.loc.Connection.TcpConnection
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import akka.actor.{ActorRef, ActorRefFactory, PoisonPill, Props}
 import akka.util.ByteString
@@ -112,16 +112,6 @@ trait EventService {
    * @param prefixes   one or more prefixes of events, may include wildcard
    */
   def subscribe(subscriber: Option[ActorRef], callback: Option[Event => Unit], prefixes: String*): EventMonitor
-
-  /**
-   * Disconnects from the key/value store server
-   */
-  def disconnect(): Future[Unit]
-
-  /**
-   * Shuts the key/value store server down
-   */
-  def shutdown(): Future[Unit]
 }
 
 private[events] object EventServiceImpl {
@@ -227,17 +217,5 @@ private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _
 
   // deletes the saved value for the given prefix
   def delete(prefix: String*): Future[Long] = redisClient.del(prefix: _*)
-
-  override def disconnect(): Future[Unit] = redisClient.quit().map(_ => ())
-
-  override def shutdown(): Future[Unit] = {
-    val f = redisClient.shutdown().map(_ => ())
-    redisClient.stop()
-    f.recover {
-      case _ =>
-        //        logger.warn("Error shutting down Redis", ex)
-        ()
-    }
-  }
 }
 

@@ -44,7 +44,7 @@ object TelemetryService {
     for {
       redisClient <- locateTelemetryService(name)
     } yield {
-      TelemetryService(redisClient)
+      TelemetryServiceImpl(redisClient)
     }
   }
 
@@ -67,11 +67,11 @@ object TelemetryService {
    */
   def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorRefFactory): TelemetryService = {
     val redisClient = RedisClient(host, port)
-    TelemetryService(redisClient)
+    TelemetryServiceImpl(redisClient)
   }
 
   // Converts a callback that takes an Telemetry to one that takes a StatusEvent
-  private def callbackConverter(telemCallback: StatusEvent => Unit)(event: Event): Unit =
+  private[events] def callbackConverter(telemCallback: StatusEvent => Unit)(event: Event): Unit =
     event match {
       case s: StatusEvent => telemCallback(s)
       case _              =>
@@ -79,17 +79,9 @@ object TelemetryService {
 }
 
 /**
- * A convenience class for publishing, getting and subscribing to telemetry (StatusEvent objects).
- *
- * @param redisClient used to talk to Redis
- * @param _system Akka environment needed by the implementation
+ * API for publishing, getting and subscribing to telemetry (StatusEvent objects).
  */
-case class TelemetryService(redisClient: RedisClient)(implicit _system: ActorRefFactory) {
-  import _system.dispatcher
-  import TelemetryService._
-
-  private val eventService = EventServiceImpl(redisClient)
-
+trait TelemetryService {
   /**
    * Publishes the status event (key is based on the event's prefix)
    *
@@ -97,8 +89,7 @@ case class TelemetryService(redisClient: RedisClient)(implicit _system: ActorRef
    * @param history optional number of previous values to store
    * @return a future indicating if/when the operation has completed
    */
-  def publish(status: StatusEvent, history: Int = 0): Future[Unit] =
-    eventService.publish(status, history)
+  def publish(status: StatusEvent, history: Int = 0): Future[Unit]
 
   /**
    * Subscribes an actor or callback function to events matching the given prefixes
@@ -108,8 +99,7 @@ case class TelemetryService(redisClient: RedisClient)(implicit _system: ActorRef
    * @param callback   an optional callback which will be called with Event objects (in another thread)
    * @param prefixes   one or more prefixes of events, may include wildcard
    */
-  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor =
-    eventService.subscribe(subscriber, callback.map(callbackConverter), prefixes: _*)
+  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor
 
   /**
    * Gets the value for the given status event prefix
@@ -117,8 +107,7 @@ case class TelemetryService(redisClient: RedisClient)(implicit _system: ActorRef
    * @param prefix the prefix (key) for the event to get
    * @return the status event, if (and when) found
    */
-  def get(prefix: String): Future[Option[StatusEvent]] =
-    eventService.get(prefix).mapTo[Option[StatusEvent]]
+  def get(prefix: String): Future[Option[StatusEvent]]
 
   /**
    * Gets a list of the n most recent status event values for the given prefix
@@ -126,24 +115,40 @@ case class TelemetryService(redisClient: RedisClient)(implicit _system: ActorRef
    * @param n the max number of values to get
    * @return future sequence of status events, ordered by most recent
    */
-  def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]] =
-    eventService.getHistory(prefix, n).mapTo[Seq[StatusEvent]]
+  def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]]
 
   /**
    * Deletes the given  status event from the store
    * @return a future indicating if/when the operation has completed
    */
+  def delete(prefix: String): Future[Unit]
+}
+
+/**
+ * A class for publishing, getting and subscribing to telemetry (StatusEvent objects).
+ *
+ * @param redisClient used to talk to Redis
+ * @param _system Akka environment needed by the implementation
+ */
+case class TelemetryServiceImpl(redisClient: RedisClient)(implicit _system: ActorRefFactory) extends TelemetryService {
+  import _system.dispatcher
+  import TelemetryService._
+
+  private val eventService = EventServiceImpl(redisClient)
+
+  def publish(status: StatusEvent, history: Int = 0): Future[Unit] =
+    eventService.publish(status, history)
+
+  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber, callback.map(callbackConverter), prefixes: _*)
+
+  def get(prefix: String): Future[Option[StatusEvent]] =
+    eventService.get(prefix).mapTo[Option[StatusEvent]]
+
+  def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]] =
+    eventService.getHistory(prefix, n).mapTo[Seq[StatusEvent]]
+
   def delete(prefix: String): Future[Unit] = eventService.delete(prefix).map(_ => ())
-
-  /**
-   * Disconnects from the key/value store server
-   */
-  def disconnect(): Future[Unit] = eventService.disconnect()
-
-  /**
-   * Shuts the key/value store server down
-   */
-  def shutdown(): Future[Unit] = eventService.shutdown()
 }
 
 /**
@@ -197,15 +202,5 @@ case class BlockingTelemetryService(ts: TelemetryService, timeout: Duration)(imp
    */
   def delete(prefix: String): Unit =
     Await.result(ts.delete(prefix), timeout)
-
-  /**
-   * Disconnects from the key/value store server
-   */
-  def disconnect(): Unit = Await.result(ts.disconnect(), timeout)
-
-  /**
-   * Shuts the key/value store server down
-   */
-  def shutdown(): Unit = Await.result(ts.shutdown(), timeout)
 }
 

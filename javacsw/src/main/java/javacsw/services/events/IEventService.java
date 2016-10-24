@@ -60,14 +60,4 @@ public interface IEventService {
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
     EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<EventHandler> callback, String... prefixes);
-
-    /**
-     * Disconnects from the key/value store server
-     */
-    CompletableFuture<Unit>  disconnect();
-
-    /**
-     * Shuts the key/value store server down
-     */
-    CompletableFuture<Unit> shutdown();
 }

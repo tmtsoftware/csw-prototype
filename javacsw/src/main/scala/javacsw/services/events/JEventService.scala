@@ -32,10 +32,4 @@ case class JEventService(settings: EventServiceSettings, system: ActorRefFactory
 
   override def subscribe(subscriber: Optional[ActorRef], callback: Optional[EventHandler], prefixes: String*): EventMonitor =
     eventService.subscribe(subscriber.asScala, callback.asScala.map(_.handleEvent), prefixes: _*)
-
-  override def disconnect: CompletableFuture[Unit] =
-    eventService.disconnect().toJava.toCompletableFuture
-
-  override def shutdown: CompletableFuture[Unit] =
-    eventService.shutdown().toJava.toCompletableFuture
 }

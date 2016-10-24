@@ -74,11 +74,6 @@ public interface ITelemetryService {
     CompletableFuture<Unit> delete(String key);
 
     /**
-     * Disconnects from the key/value store server
-     */
-    CompletableFuture<Unit>  disconnect();
-
-    /**
      * Shuts the key/value store server down
      */
     CompletableFuture<Unit> shutdown();
