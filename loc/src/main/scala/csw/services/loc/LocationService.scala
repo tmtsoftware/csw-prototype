@@ -48,7 +48,6 @@ object LocationService {
    */
   def initInterface(): Unit = {
     if (!initialized) {
-      println("INIT")
       initialized = true
       case class Addr(index: Int, addr: InetAddress)
       def defaultAddr = Addr(0, InetAddress.getLocalHost)
@@ -273,7 +272,6 @@ object LocationService {
         PATH_KEY -> ""
       )
       val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
-      println("Service: " + service)
       registry.registerService(service)
       logger.debug(s"Registered TCP $connection")
       RegisterResult(registry, service, componentId)
@@ -452,8 +450,6 @@ object LocationService {
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {
       try {
         // Gets the URI, adding the akka system as user if needed
-        log.info(s">>>>>>>>>>>Kim added:            resolveService")
-
         def getUri(uriStr: String): Option[URI] = {
           connection match {
             case _: AkkaConnection =>
@@ -464,8 +460,7 @@ object LocationService {
           }
         }
 
-        log.info("URLS: " + info.getURLs(connection.connectionType.name).mkString(", "))
-
+        log.debug("URLS: " + info.getURLs(connection.connectionType.name).mkString(", "))
         info.getURLs(connection.connectionType.name).toList.flatMap(getUri).foreach {
           uri =>
             connection match {
@@ -524,7 +519,7 @@ object LocationService {
         // Watch the actor for death
         context.watch(actorRefOpt.get)
         // Here is where the resolved message is sent for an Akka Connection
-        log.info("Resolved: " + connections.values.toList)
+        log.debug("Resolved: " + connections.values.toList)
         sendLocationUpdate(newrc)
       } else {
         log.warning(s"Could not identify actor for ${rs.connection} ${rs.uri}")
@@ -538,6 +533,7 @@ object LocationService {
     def waitToTrack(connection: Connection): Unit = {
       import context.dispatcher
       updateInfo.future.onComplete { _ =>
+        log.info(s"Complete: $connection")
         self ! TrackConnection(connection: Connection)
       }
     }
@@ -555,7 +551,7 @@ object LocationService {
 
       case TrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, add it
-        println("----------------Received track connection: " + connection)
+        log.info("----------------Received track connection: " + connection)
         if (!connections.contains(connection)) {
           waitToTrack(connection)
         } else {

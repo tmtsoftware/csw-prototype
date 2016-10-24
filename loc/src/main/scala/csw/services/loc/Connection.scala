@@ -14,6 +14,11 @@ sealed trait Connection {
   def componentId: ComponentId
 
   /**
+   * Returns a connection's name
+   */
+  def name = componentId.name
+
+  /**
    * Indicates how the component is accessed (http, akka)
    */
   def connectionType: ConnectionType

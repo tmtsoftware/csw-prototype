@@ -23,6 +23,14 @@ object EventSubscriberTests {
 class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
+  // This is used for testing and insertion into components for testing
+  def eventConnection: EventService = EventService(testEventServiceSettings)
+
+  var testEventService:Option[EventService] = None
+  override def beforeAll() = {
+    testEventService = Some(eventConnection)
+  }
+
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
   }
@@ -32,13 +40,13 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
 
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
-  def newTestEventSubscriber(nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings] = Some(testEventServiceSettings)): TestActorRef[TromboneEventSubscriber] = {
-    val props = TromboneEventSubscriber.props(assemblyContext, nssInUseIn, followActor, eventServiceSettings)
+  def newTestEventSubscriber(nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]): TestActorRef[TromboneEventSubscriber] = {
+    val props = TromboneEventSubscriber.props(assemblyContext, nssInUseIn, followActor, eventService)
     TestActorRef(props)
   }
 
-  def newEventSubscriber(nssInUse: BooleanItem, followActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings] = Some(testEventServiceSettings)): ActorRef = {
-    val props = TromboneEventSubscriber.props(assemblyContext, nssInUse, followActor, eventServiceSettings)
+  def newEventSubscriber(nssInUse: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]): ActorRef = {
+    val props = TromboneEventSubscriber.props(assemblyContext, nssInUse, followActor, eventService)
     system.actorOf(props)
   }
 
@@ -47,7 +55,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
     it("should be created with no issues") {
       val fakeFollowActor = TestProbe()
 
-      val es = newTestEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref))
+      val es = newTestEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), testEventService)
 
       es.underlyingActor.nssZenithAngle should equal(za(0.0))
       es.underlyingActor.initialFocusError should equal(fe(0.0))
@@ -65,7 +73,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
     it("should make one event for an fe publish nssInUse") {
       val fakeFollowActor = TestProbe()
 
-      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref))
+      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), testEventService)
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -92,7 +100,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
     it("should make several events for an fe list publish with nssInUse but no ZA") {
       val fakeFollowActor = TestProbe()
 
-      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref))
+      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), testEventService)
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -124,7 +132,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
     it("now enable follow should make several events for za and fe list publish nssNotInUse") {
       val fakeFollowActor = TestProbe()
 
-      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref))
+      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), testEventService)
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -177,7 +185,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
       val fakeFollowActor = TestProbe()
 
       // Create with nssNotInuse so we get za events
-      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref))
+      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), testEventService)
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error

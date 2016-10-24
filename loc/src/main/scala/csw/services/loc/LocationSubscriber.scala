@@ -1,16 +1,16 @@
 package csw.services.loc
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.loc.LocationService.{Location, LocationTracker, TrackConnection, UntrackConnection}
 
 /**
- * TrackerSubscriberClient can be used to receive updates to Locations.
+ * LocationSubscriberClient can be used to receive updates to Locations.
  *
  * The message received is a LocationService.Location, which can be a ResolvedAkkLocation, ResolvedHttpLocation, or a ResolvedServiceLocation
  *
  *
  */
-trait TrackerSubscriberClient extends ActorLogging {
+trait LocationSubscriberClient extends ActorLogging {
   this: Actor =>
 
   /**
@@ -18,7 +18,7 @@ trait TrackerSubscriberClient extends ActorLogging {
    * own code.
    * @return Receive partial function
    */
-  def trackerSubscriberReceive: Receive = {
+  def locationSubscriberReceive: Receive = {
 
     case location: Location => locationUpdate(location)
 
@@ -46,6 +46,9 @@ trait TrackerSubscriberClient extends ActorLogging {
    * @param location a resolved Location; either HTTP or Akka
    */
   def locationUpdate(location: Location): Unit = {}
+
+  // Indicate we want location updates
+  subscribeToLocationUpdates()
 }
 
 /**
@@ -80,8 +83,8 @@ trait TrackerSubscriberClient extends ActorLogging {
  * </pre>
  *
  */
-class TrackerSubscriberActor() extends Actor with ActorLogging {
-  import TrackerSubscriberActor._
+class LocationSubscriberActor() extends Actor with ActorLogging {
+  import LocationSubscriberActor._
 
   // Start a LocationTracker to listen for our connections
   private val tracker = context.actorOf(LocationTracker.props(Some(self)))
@@ -92,20 +95,18 @@ class TrackerSubscriberActor() extends Actor with ActorLogging {
    */
   def receive: Receive = {
     // Message to indicate desire to be updated with Location changes
-    case Subscribe                     => context.system.eventStream.subscribe(sender(), classOf[Location])
+    case Subscribe   => context.system.eventStream.subscribe(sender(), classOf[Location])
 
     // Indicates desire to unsubscribe sender from location updates
-    case Unsubscribe                   => context.system.eventStream.unsubscribe(sender())
+    case Unsubscribe => context.system.eventStream.unsubscribe(sender())
 
     // Called when tracker sees a change in a location
-    case location: Location            =>
-      println("Got a location: " + location)
+    case location: Location =>
+      log.debug("TrackerSubscriber got aa location: " + location)
       context.system.eventStream.publish(location)
 
     // Called to indicate need to track a specific connection
-    case TrackConnection(connection)   =>
-      println("Received Track: " + connection)
-      tracker ! TrackConnection(connection)
+    case TrackConnection(connection)   => tracker ! TrackConnection(connection)
 
     // Called to stop tracking a connection
     case UntrackConnection(connection) => tracker ! UntrackConnection(connection)
@@ -114,9 +115,9 @@ class TrackerSubscriberActor() extends Actor with ActorLogging {
   }
 }
 
-object TrackerSubscriberActor {
+object LocationSubscriberActor {
 
-  def props = Props[TrackerSubscriberActor]()
+  def props = Props[LocationSubscriberActor]()
 
   def trackConnection(connection: Connection, trackerSubscriberActor: ActorRef): Unit = {
     trackerSubscriberActor ! TrackConnection(connection)
@@ -134,17 +135,17 @@ object TrackerSubscriberActor {
     connections.foreach(untrackConnection(_, trackerSubscriberActor))
   }
 
-  sealed trait TrackerSubscriberMessages
+  sealed trait LocationSubscriberMessages
 
   /**
    * Message sent to begin receiving Location events
    */
-  case object Subscribe extends TrackerSubscriberMessages
+  case object Subscribe extends LocationSubscriberMessages
 
   /**
    * Message sent to stop receiving Location events
    */
-  case object Unsubscribe extends TrackerSubscriberMessages
+  case object Unsubscribe extends LocationSubscriberMessages
 
 }
 

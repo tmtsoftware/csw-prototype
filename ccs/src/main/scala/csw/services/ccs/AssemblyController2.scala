@@ -1,10 +1,7 @@
 package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef}
-import akka.util.Timeout
 import csw.services.ccs.Validation.{UnresolvedLocationsIssue, Validation}
-import csw.services.loc.LocationServiceProvider.{Location, ResolvedAkkaLocation}
-import csw.services.loc.LocationTrackerClientActor
 import csw.services.log.PrefixedActorLogging
 import csw.util.akka.PublisherActor
 import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfig, SetupConfigArg}

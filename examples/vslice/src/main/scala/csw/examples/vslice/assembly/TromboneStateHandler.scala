@@ -1,12 +1,14 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import csw.services.log.PrefixedActorLogging
 import csw.util.config._
 
 trait TromboneStateHandler {
   this: Actor =>
 
   import TromboneStateHandler._
+  import akka.actor.ActorLogging
 
   private val cmdDefault = cmdKey -> cmdUninitialized
   private val moveDefault = moveKey -> moveUnindexed
@@ -28,7 +30,7 @@ trait TromboneStateHandler {
    */
   def stateReceive: Receive = {
     case ts: TromboneState =>
-      //log.info(s">>>>>>>>>>>>>>>>>>>>>>          Got State Update: $ts")
+      println(s">>>>>>>>>>>>>>>>>>>>>>          Got State Update: $ts")
       _tromboneState = ts.copy()
   }
 

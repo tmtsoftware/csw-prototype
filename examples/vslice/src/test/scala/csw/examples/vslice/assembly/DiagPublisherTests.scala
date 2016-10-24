@@ -1,5 +1,7 @@
 package csw.examples.vslice.assembly
 
+import java.net.URI
+
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -9,8 +11,10 @@ import csw.examples.vslice.assembly.TrombonePublisher.{AxisStateUpdate, AxisStat
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD.{GetAxisStats, GetAxisUpdate}
 import csw.services.events.{EventService, EventServiceSettings, EventSubscriber}
+import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.LocationService
+import csw.services.loc.{ComponentId, Connection, LocationService}
+import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation, Unresolved}
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
@@ -26,7 +30,6 @@ import scala.concurrent.duration._
 object DiagPublisherTests {
   LocationService.initInterface()
   val system = ActorSystem("DiagPublisherSystem")
-
 }
 class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
@@ -42,7 +45,20 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     Supervisor3(testInfo)
   }
 
-  override def afterAll = TestKit.shutdownActorSystem(system)
+
+
+  // This is used for testing and insertion into components for testing
+  def eventConnection: EventService = EventService(testEventServiceSettings)
+
+  var testEventService:Option[EventService] = None
+  override def beforeAll() = {
+    testEventService = Some(eventConnection)
+  }
+
+  override def afterAll = {
+    //testEventService.foreach(_.shutdown())
+    TestKit.shutdownActorSystem(system)
+  }
 
   implicit val execContext = system.dispatcher
 
@@ -51,10 +67,11 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
   val assemblyContext = AssemblyTestData.TestAssemblyContext
   import assemblyContext._
 
-  def eventConnection: EventService = EventService(testEventServiceSettings)
+  // This is possible since trombone HCD has only one HCD
+  val tromboneHCDConnection:AkkaConnection = assemblyContext.info.connections.head.asInstanceOf[AkkaConnection]
 
   def newDiagPublisher(currentStateReceiver: ActorRef, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[DiagPublisher] = {
-    val props = DiagPublisher.props(currentStateReceiver, tromboneHCD, eventPublisher)
+    val props = DiagPublisher.props(assemblyContext, currentStateReceiver, tromboneHCD, eventPublisher)
     TestActorRef[DiagPublisher](props)
   }
 
@@ -274,6 +291,13 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       system.stop(tromboneHCD)
     }
 
+    def setLocation(loc: Location) = {
+      // These times are important to allow time for test actors to get and process the state updates when running tests
+      expectNoMsg(20.milli)
+      system.eventStream.publish(loc)
+      // This is here to allow the destination to run and set its state
+      expectNoMsg(20.milli)
+    }
     /**
      * Test Description: Test that updating the HCD actorRef during operations works properly by
      * first setting the HCD to None and then resetting it.
@@ -296,12 +320,15 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       dp ! DiagnosticState
       // Wait for one update message
       fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
+
       // Setting HCD to None should turn off stats updates
-      dp ! UpdateTromboneHCD(None)
+      setLocation(Unresolved(tromboneHCDConnection))
+      expectNoMsg(200.milli)  // This is to let event bus and other actor work on slow machines
       fakePublisher.expectNoMsg(1.5.seconds)
 
       // Turn back on and wait for next event
-      dp ! UpdateTromboneHCD(Some(tromboneHCD))
+      val uri = new URI("http://test")  // Some fake URI for AkkaLocation
+      setLocation(ResolvedAkkaLocation(tromboneHCDConnection, uri, "", Some(tromboneHCD)))
       // Wait for one update message
       fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
 
@@ -323,7 +350,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props(axisStateEventPrefix))
@@ -375,7 +402,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props(axisStateEventPrefix))
@@ -437,7 +464,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props(axisStateEventPrefix))

@@ -3,6 +3,7 @@ package csw.examples.vslice.assembly
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.assembly.TromboneStateActor.SetState
 import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD.GetAxisUpdateNow
@@ -16,7 +17,6 @@ import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.Configurations
 import csw.util.config.Configurations.SetupConfig
-import csw.util.config.StateVariable.CurrentState
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.duration._
@@ -27,7 +27,7 @@ import scala.concurrent.duration._
 class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests"))
   with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
-  import TromboneStateHandler._
+  import TromboneStateActor._
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 
@@ -67,22 +67,27 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
     //info("Running")
 
+    val tsa = system.actorOf(TromboneStateActor.props)
+
     val ch = newCommandHandler(tromboneHCD)
 
-    ch ! TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
+    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false)))
 
     val sc = SetupConfig(ac.datumCK)
 
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 
-    val msg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
-    println("Final: " + msg)
+    val msg:CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    msg shouldBe Completed
+    //info("Final: " + msg)
 
     // Demonstrate error
     ch ! TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 
     val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    errMsg shouldBe a [NoLongerValid]
+
     val monitor = TestProbe()
     monitor.watch(ch)
     ch ! PoisonPill
@@ -111,7 +116,9 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     se ! StartTheSequence(ch)
 
     val msg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
-    println("Final: " + msg)
+    //info("Final: " + msg)
+    msg.overall shouldBe AllCompleted
+    msg.details.results.size shouldBe 1
 
     // Demonstrate error
     ch ! TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
@@ -122,7 +129,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
     errMsg.overall should equal(Incomplete)
     errMsg.details.results.head._1 shouldBe a[NoLongerValid]
-    println("Final: " + errMsg)
+    //info("Final: " + errMsg)
 
     val monitor = TestProbe()
     monitor.watch(ch)
@@ -163,6 +170,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
+
     ch ! PoisonPill
     system.stop(tromboneHCD)
     system.stop(se2)
@@ -195,6 +203,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
+
     ch ! PoisonPill
     system.stop(tromboneHCD)
   }
@@ -229,6 +238,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
+
     system.stop(ch)
     system.stop(tromboneHCD)
   }
@@ -269,6 +279,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     msg.overall shouldBe Incomplete
     msg.details.status(0) shouldBe Cancelled
     info(s"result: $msg")
+
     system.stop(ch)
     system.stop(tromboneHCD)
   }
@@ -290,7 +301,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
 
     val testRangeDistance = 94.0
     val positionConfig = ac.positionSC(testRangeDistance)
-    info("Position: " + positionConfig)
+    logger.info("Position: " + positionConfig)
     val sca = Configurations.createSetupConfigArg("testobsId", positionConfig)
 
     val se2 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
@@ -303,6 +314,7 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
+
     system.stop(ch)
     system.stop(tromboneHCD)
   }
@@ -331,7 +343,8 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     val se2 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
     se2 ! StartTheSequence(ch)
 
-    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandResult])
+    val msg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
+    //info("Final: " + msg)
 
     // Test
     val finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testRangeDistance.last)
@@ -339,9 +352,42 @@ class CommandHandlerTests extends TestKit(ActorSystem("TromboneAssemblyCommandHa
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
+
     system.stop(ch)
     system.stop(tromboneHCD)
   }
+
+  it("should allow running a setElevation without sequence") {
+    val tromboneHCD = startHCD
+    val fakeAssembly = TestProbe()
+
+    // The following is to synchronize the test with the HCD entering Running state
+    // This is boiler plate for setting up an HCD for testing
+    tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
+    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
+    //info("Running")
+
+    val ch = newCommandHandler(tromboneHCD)
+
+    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false)))
+
+    val testEl = 150.0
+    ch ! ExecuteOne(ac.setElevationSC(testEl), Some(fakeAssembly.ref))
+
+    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus2])
+    val finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testEl)
+
+    // Use the engineering GetAxisUpdate to get the current encoder for checking
+    fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
+    val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
+    upd.current should equal(finalPos)
+    info("Upd: " + upd)
+
+    ch ! PoisonPill
+    system.stop(tromboneHCD)
+  }
+
 
   it("should get error for setAngle and setElevation when not following") {
     val tromboneHCD = startHCD

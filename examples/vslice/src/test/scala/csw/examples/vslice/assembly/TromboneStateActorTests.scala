@@ -1,9 +1,8 @@
-package csw.examples.vslice
+package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
 import csw.examples.vslice.assembly.TromboneStateActor.TromboneState
-import csw.examples.vslice.assembly.{TromboneStateActor, TromboneStateClient}
 import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Inspectors, _}
 
@@ -147,5 +146,36 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
     //info("Result: " + result.msgs)
   }
 
+  def setupState(ts: TromboneState) = {
+    // These times are important to allow time for test actors to get and process the state updates when running tests
+    expectNoMsg(20.milli)
+    system.eventStream.publish(ts)
+    // This is here to allow the destination to run and set its state
+    expectNoMsg(20.milli)
+  }
+
+  it("it might work with publish directly") {
+    import TestSubscriber._
+
+    val tsub = system.actorOf(TestSubscriber.props())
+
+    val ts1 = defaultTromboneState
+
+    val ts2 = TromboneState(cmdItem(cmdReady), moveDefault, sodiumLayerDefault, nssDefault)
+
+    val ts3 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumLayerDefault, nssDefault)
+
+    val ts4 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), nssDefault)
+
+    val ts5 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), nssItem(true))
+
+
+    setupState(ts2)
+    setupState(ts3)
+
+    tsub ! GetResults
+    val result = expectMsgClass(classOf[TestSubscriber.Results])
+    info("Result: " + result)
+  }
 
 }

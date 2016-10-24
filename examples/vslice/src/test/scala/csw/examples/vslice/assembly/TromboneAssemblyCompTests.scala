@@ -36,6 +36,18 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
 
 
   describe("comp tests") {
+
+    it("should just startup") {
+      val tla = newTrombone()
+      val fakeSequencer = TestProbe()
+
+      tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
+      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
+
+      fakeSequencer.expectNoMsg(12.seconds)  // wait for connections
+    }
+
     it("should allow a datum") {
       val tla = newTrombone()
       val fakeSequencer = TestProbe()
@@ -68,7 +80,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
 
       tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
+      fakeSequencer.expectMsg(20.seconds, LifecycleStateChanged(LifecycleRunning))
 
       //fakeSequencer.expectNoMsg(12.seconds)  // wait for connections
 

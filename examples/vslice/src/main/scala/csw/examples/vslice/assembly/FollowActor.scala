@@ -78,7 +78,6 @@ class FollowActor(
 
         // Post a SystemEvent for AOESW if not inNSSMode according to spec
         if (!inNSSMode.head) {
-          log.info(">>>>>>>> PUBLISHING")
           sendAOESWUpdate(naElevationKey -> newElevation withUnits naElevationUnits, naRangeDistanceKey -> totalRangeDistance withUnits naRangeDistanceUnits)
         }
 

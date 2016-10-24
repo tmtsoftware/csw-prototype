@@ -26,7 +26,7 @@ object SequentialExecution {
     def executingReceive(configsIn: Seq[SetupConfig], commandHandler: ActorRef, execResultsIn: CommandResults): Receive = {
 
       case SequentialExecute(sc: SetupConfig) =>
-        log.debug(s"----->Executor Starting: $sc")
+        log.info(s"----->Executor Starting: $sc")
         commandHandler ! ExecuteOne(sc, Some(context.self))
 
       case StopCurrentCommand =>
@@ -36,6 +36,7 @@ object SequentialExecution {
 
       case cs @ CommandStatus2.Completed =>
         // Save record of sequential successes
+        log.info("Received Completed")
         val execResultsOut = execResultsIn :+ (cs, configsIn.head)
         val configsOut = configsIn.tail
         if (configsOut.isEmpty) {

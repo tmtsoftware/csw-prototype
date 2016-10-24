@@ -19,11 +19,20 @@ object EventService {
    */
   val defaultName = "Event Service"
 
+  /**
+   * the default EventService as a ComponentId
+   */
+  val eventServiceComponentId = ComponentId(defaultName, ComponentType.Service)
+
+  /**
+   * The default Event Service as its Connection type
+   */
+  val eventServiceConnection = TcpConnection(eventServiceComponentId)
+
   // Lookup the event service redis instance with the location service
   private def locateEventService(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
-    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
-    LocationService.resolve(Set(connection)).map { locationsReady =>
+    LocationService.resolve(Set(eventServiceConnection)).map { locationsReady =>
       val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
       RedisClient(loc.host, loc.port)
     }

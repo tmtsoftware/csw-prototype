@@ -9,11 +9,12 @@ import scala.language.postfixOps
 import com.typesafe.config.{Config, ConfigFactory}
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.services.alarms.AlarmService
 import csw.services.ccs.{AssemblyController2, CommandStatus2, CurrentStateReceiver, Validation}
 import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{StartTheSequence, StopCurrentCommand}
 import csw.services.ccs.Validation.{Validation, ValidationList}
-import csw.services.events.EventServiceSettings
+import csw.services.events.{EventService, EventServiceSettings}
 import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService._
@@ -52,17 +53,20 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   // Start tracking the components we command
   log.info("Connections: " + info.connections)
 
-  val trackerSubscriber = context.actorOf(TrackerSubscriberActor.props)
-  trackerSubscriber ! TrackerSubscriberActor.Subscribe
-  TrackerSubscriberActor.trackConnections(info.connections, trackerSubscriber)
+  val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
+  trackerSubscriber ! LocationSubscriberActor.Subscribe
+  LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
+  LocationSubscriberActor.trackConnection(TromboneAssembly.eventServiceConnection, trackerSubscriber)
+  //LocationSubscriberActor.trackConnection(TromboneAssembly.telemetryServiceConnection, trackerSubscriber)
+  LocationSubscriberActor.trackConnection(TromboneAssembly.alarmServiceConnection, trackerSubscriber)
 
-//  val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
-//  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
+  //  val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
+  //  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
 
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
   // This actor handles all telemetry and system event publishing
-  val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
+  val eventPublisher = context.actorOf(TrombonePublisher.props(ac, None))
   // This actor makes a single connection to the
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //log.info("CurrentStateReceiver: " + currentStateReceiver)
@@ -237,6 +241,14 @@ object TromboneAssembly {
    * @param tromboneHCD the ActorRef of the tromboneHCD or None
    */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
+
+  /**
+   * Services needed by Trombone Assembly
+   */
+  val eventServiceConnection: Connection = TcpConnection(ComponentId(EventService.defaultName, ComponentType.Service))
+  // Kim update when telmetry service merged
+  val telemetryServiceConnection: Connection = TcpConnection(ComponentId(EventService.defaultName, ComponentType.Service))
+  val alarmServiceConnection: Connection = TcpConnection(ComponentId(AlarmService.defaultName, ComponentType.Service))
 
 }
 
