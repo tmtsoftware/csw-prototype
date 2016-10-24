@@ -1,6 +1,5 @@
 package javacsw.services.events
 
-import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import javacsw.services.events.IEventService.EventHandler
 
@@ -9,9 +8,7 @@ import csw.services.events.EventService.EventMonitor
 import csw.services.events.{EventService, EventServiceSettings}
 import csw.util.config.Events.EventServiceEvent
 
-import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
-import scala.compat.java8.OptionConverters._
 
 /**
  * A Java wrapper API for a key/value store
@@ -30,6 +27,9 @@ case class JEventService(settings: EventServiceSettings, system: ActorRefFactory
   override def publish(event: EventServiceEvent): CompletableFuture[Unit] =
     eventService.publish(event).toJava.toCompletableFuture
 
-  override def subscribe(subscriber: Optional[ActorRef], callback: Optional[EventHandler], prefixes: String*): EventMonitor =
-    eventService.subscribe(subscriber.asScala, callback.asScala.map(_.handleEvent), prefixes: _*)
+  override def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber, prefixes: _*)
+
+  override def subscribe(callback: EventHandler, prefixes: String*): EventMonitor =
+    eventService.subscribe(callback.handleEvent _, prefixes: _*)
 }

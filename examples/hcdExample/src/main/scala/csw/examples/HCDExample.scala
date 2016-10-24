@@ -1,8 +1,8 @@
 package csw.examples
 
-import akka.actor.{Actor, ActorRef, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import csw.services.ccs.HcdController
-import csw.services.events.{EventServiceSettings, EventSubscriber, TelemetryService}
+import csw.services.events.{EventServiceSettings, TelemetryService}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
@@ -58,7 +58,8 @@ object HCDExample {
     val eventService = TelemetryService(EventServiceSettings(context.system))
 
     // Create a subscriber to positions (just for test)
-    context.actorOf(Props(classOf[EventPosSubscriber], "ev subscriber", prefix))
+    val subscriberActor = context.actorOf(Props(classOf[EventPosSubscriber]))
+    eventService.subscribe(subscriberActor, prefix)
 
     var timer = setTimer(1000)
 
@@ -85,7 +86,7 @@ object HCDExample {
     }
   }
 
-  class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
+  class EventPosSubscriber extends Actor with ActorLogging {
 
     import PosGenerator._
 
@@ -94,7 +95,6 @@ object HCDExample {
     import java.time._
 
     val startTime = Instant.now
-    subscribe(prefix)
 
     def receive: Receive = {
       case event: StatusEvent =>

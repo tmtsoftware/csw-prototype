@@ -27,18 +27,17 @@ case class JTelemetryService(settings: EventServiceSettings, system: ActorRefFac
 
   private val ts = TelemetryService(settings)
 
-  @Override
-  def publish(status: StatusEvent): CompletableFuture[Unit] = ts.publish(status).toJava.toCompletableFuture
+  override def publish(status: StatusEvent): CompletableFuture[Unit] = ts.publish(status).toJava.toCompletableFuture
 
-  @Override
-  def publish(status: StatusEvent, history: Int = 0): CompletableFuture[Unit] = ts.publish(status, history).toJava.toCompletableFuture
+  override def publish(status: StatusEvent, history: Int = 0): CompletableFuture[Unit] = ts.publish(status, history).toJava.toCompletableFuture
 
-  override def subscribe(subscriber: Optional[ActorRef], callback: Optional[ITelemetryService.TelemetryHandler],
-                         prefixes: String*): EventMonitor =
-    ts.subscribe(subscriber.asScala, callback.asScala.map(_.handleEvent), prefixes: _*)
+  override def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor =
+    ts.subscribe(subscriber, prefixes: _*)
 
-  @Override
-  def get(prefix: String): CompletableFuture[Optional[StatusEvent]] = ts.get(prefix).map(_.asJava).toJava.toCompletableFuture
+  override def subscribe(callback: ITelemetryService.TelemetryHandler, prefixes: String*): EventMonitor =
+    ts.subscribe(callback.handleEvent _, prefixes: _*)
+
+  override def get(prefix: String): CompletableFuture[Optional[StatusEvent]] = ts.get(prefix).map(_.asJava).toJava.toCompletableFuture
 
   /**
    * Gets a list of the n most recent status event values for the given prefix
@@ -46,13 +45,11 @@ case class JTelemetryService(settings: EventServiceSettings, system: ActorRefFac
    * @param n the max number of values to get
    * @return future sequence of status events, ordered by most recent
    */
-  @Override
-  def getHistory(prefix: String, n: Int): CompletableFuture[java.util.List[StatusEvent]] = ts.getHistory(prefix, n).map(_.asJava).toJava.toCompletableFuture
+  override def getHistory(prefix: String, n: Int): CompletableFuture[java.util.List[StatusEvent]] = ts.getHistory(prefix, n).map(_.asJava).toJava.toCompletableFuture
 
   /**
    * Deletes the given status event from the store
    * @return a future indicating if/when the operation has completed
    */
-  @Override
-  def delete(prefix: String): CompletableFuture[Unit] = ts.delete(prefix).map(_ => ()).toJava.toCompletableFuture
+  override  def delete(prefix: String): CompletableFuture[Unit] = ts.delete(prefix).map(_ => ()).toJava.toCompletableFuture
 }

@@ -109,7 +109,7 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
 
   def subscribeKeys(eventService: EventService, configKeys: ConfigKey*): Unit = {
     log.info(s"Subscribing to: $configKeys")
-    eventService.subscribe(Some(self), None, configKeys.map(_.prefix): _*)
+    eventService.subscribe(self, configKeys.map(_.prefix): _*)
   }
 
   /*

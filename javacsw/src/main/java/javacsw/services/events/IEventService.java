@@ -52,12 +52,20 @@ public interface IEventService {
     }
 
     /**
-     * Subscribes an actor or callback function to events matching the given prefixes
+     * Subscribes an actor to events matching the given prefixes
      * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
      *
-     * @param subscriber an optional actor to receive Event messages
-     * @param callback   an optional callback which will be called with Event objects (in another thread)
+     * @param subscriber an actor to receive Event messages
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<EventHandler> callback, String... prefixes);
+    EventMonitor subscribe(ActorRef subscriber, String... prefixes);
+
+    /**
+     * Subscribes a callback function to events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param callback   an callback which will be called with Event objects (in another thread)
+     * @param prefixes   one or more prefixes of events, may include wildcard
+     */
+    EventMonitor subscribe(EventHandler callback, String... prefixes);
 }

@@ -47,7 +47,7 @@ import csw.util.config.Events.EventServiceEvent
  *
  * === Example Event Subscriber (callback method) ===
  *
- * The EventService.subscribe method takes an optional ActorRef of an arbitrary actor and an optional callback function to be called
+ * The EventService.subscribe method takes an ActorRef of an arbitrary actor or a callback function to be called
  * when an event matching the given prefixes is received. In the example below, we only provide the callback
  * argument value. You could also provide an ActorRef of some actor that should receive the Event message.
  *

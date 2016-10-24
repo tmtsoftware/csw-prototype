@@ -42,14 +42,22 @@ public interface ITelemetryService {
     }
 
     /**
-     * Subscribes an actor or callback function to telemetry events matching the given prefixes
+     * Subscribes an actor to telemetry events matching the given prefixes
      * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
      *
-     * @param subscriber an optional actor to receive StatusEvent messages
-     * @param callback   an optional callback which will be called with StatusEvent objects (in another thread)
+     * @param subscriber an actor to receive StatusEvent messages
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventService.EventMonitor subscribe(Optional<ActorRef> subscriber, Optional<TelemetryHandler> callback, String... prefixes);
+    EventService.EventMonitor subscribe(ActorRef subscriber, String... prefixes);
+
+    /**
+     * Subscribes a callback function to telemetry events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param callback   an callback which will be called with StatusEvent objects (in another thread)
+     * @param prefixes   one or more prefixes of events, may include wildcard
+     */
+    EventService.EventMonitor subscribe(TelemetryHandler callback, String... prefixes);
 
     /**
      * Gets the value for the given status event prefix

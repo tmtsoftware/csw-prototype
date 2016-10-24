@@ -36,7 +36,7 @@ object TelemetryService {
    * Note: Applications using the Location Service should call LocationService.initialize() once before
    * accessing any Akka or Location Service methods.
    *
-   * @param name      name used to register the Redis instance with the Location Service (default: "Telemetry Service")
+   * @param name name used to register the Redis instance with the Location Service (default: "Telemetry Service")
    * @return a new TelemetryService instance
    */
   def apply(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[TelemetryService] = {
@@ -61,8 +61,8 @@ object TelemetryService {
    * Returns an TelemetryService instance using the Redis instance at the given host and port,
    * using the default "127.0.0.1:6379 if not given.
    *
-   * @param host        the Redis host name or IP address
-   * @param port        the Redis port
+   * @param host the Redis host name or IP address
+   * @param port the Redis port
    * @return a new TelemetryService instance
    */
   def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorRefFactory): TelemetryService = {
@@ -85,21 +85,31 @@ trait TelemetryService {
   /**
    * Publishes the status event (key is based on the event's prefix)
    *
-   * @param status the value to store
+   * @param status  the value to store
    * @param history optional number of previous values to store
    * @return a future indicating if/when the operation has completed
    */
   def publish(status: StatusEvent, history: Int = 0): Future[Unit]
 
   /**
-   * Subscribes an actor or callback function to events matching the given prefixes
+   * Subscribes an actor to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param subscriber an optional actor to receive Event messages
-   * @param callback   an optional callback which will be called with Event objects (in another thread)
+   * @param subscriber an actor to receive Event messages
    * @param prefixes   one or more prefixes of events, may include wildcard
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor
+  def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor
+
+  /**
+   * Subscribes a callback function to events matching the given prefixes
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+   *
+   * @param callback an callback which will be called with Event objects (in another thread)
+   * @param prefixes one or more prefixes of events, may include wildcard
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  def subscribe(callback: StatusEvent => Unit, prefixes: String*): EventMonitor
 
   /**
    * Gets the value for the given status event prefix
@@ -111,14 +121,16 @@ trait TelemetryService {
 
   /**
    * Gets a list of the n most recent status event values for the given prefix
+   *
    * @param prefix the status event's prefix
-   * @param n the max number of values to get
+   * @param n      the max number of values to get
    * @return future sequence of status events, ordered by most recent
    */
   def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]]
 
   /**
    * Deletes the given  status event from the store
+   *
    * @return a future indicating if/when the operation has completed
    */
   def delete(prefix: String): Future[Unit]
@@ -128,32 +140,37 @@ trait TelemetryService {
  * A class for publishing, getting and subscribing to telemetry (StatusEvent objects).
  *
  * @param redisClient used to talk to Redis
- * @param _system Akka environment needed by the implementation
+ * @param _system     Akka environment needed by the implementation
  */
 case class TelemetryServiceImpl(redisClient: RedisClient)(implicit _system: ActorRefFactory) extends TelemetryService {
+
   import _system.dispatcher
   import TelemetryService._
 
   private val eventService = EventServiceImpl(redisClient)
 
-  def publish(status: StatusEvent, history: Int = 0): Future[Unit] =
+  override def publish(status: StatusEvent, history: Int = 0): Future[Unit] =
     eventService.publish(status, history)
 
-  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor =
-    eventService.subscribe(subscriber, callback.map(callbackConverter), prefixes: _*)
+  override def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber, prefixes: _*)
 
-  def get(prefix: String): Future[Option[StatusEvent]] =
+  override def subscribe(callback: StatusEvent => Unit, prefixes: String*): EventMonitor =
+    eventService.subscribe(callbackConverter(callback) _, prefixes: _*)
+
+  override def get(prefix: String): Future[Option[StatusEvent]] =
     eventService.get(prefix).mapTo[Option[StatusEvent]]
 
-  def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]] =
+  override def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]] =
     eventService.getHistory(prefix, n).mapTo[Seq[StatusEvent]]
 
-  def delete(prefix: String): Future[Unit] = eventService.delete(prefix).map(_ => ())
+  override def delete(prefix: String): Future[Unit] = eventService.delete(prefix).map(_ => ())
 }
 
 /**
  * Provides a blocking, synchronous API to the telemetry service.
- * @param ts the underlying async telemetry service to use
+ *
+ * @param ts      the underlying async telemetry service to use
  * @param timeout max amount of time to wait for a result before timing out
  * @param context environment needed for futures
  */
@@ -162,22 +179,33 @@ case class BlockingTelemetryService(ts: TelemetryService, timeout: Duration)(imp
   /**
    * Publishes the value for the status event (key is based on the event's prefix)
    *
-   * @param status the value to store
+   * @param status  the value to store
    * @param history optional number of previous values to store
    */
   def publish(status: StatusEvent, history: Int = 0): Unit =
     Await.result(ts.publish(status, history), timeout)
 
   /**
+   * Subscribes an actor to events matching the given prefixes
+   * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+   *
+   * @param subscriber an actor to receive Event messages
+   * @param prefixes   one or more prefixes of events, may include wildcard
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor =
+    ts.subscribe(subscriber, prefixes: _*)
+
+  /**
    * Subscribes an actor or callback function to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param subscriber an optional actor to receive Event messages
-   * @param callback   an optional callback which will be called with Event objects (in another thread)
-   * @param prefixes   one or more prefixes of events, may include wildcard
+   * @param callback an callback which will be called with Event objects (in another thread)
+   * @param prefixes one or more prefixes of events, may include wildcard
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(subscriber: Option[ActorRef], callback: Option[StatusEvent => Unit], prefixes: String*): EventMonitor =
-    ts.subscribe(subscriber, callback, prefixes: _*)
+  def subscribe(callback: StatusEvent => Unit, prefixes: String*): EventMonitor =
+    ts.subscribe(callback, prefixes: _*)
 
   /**
    * Gets the value for the given status event prefix
@@ -190,8 +218,9 @@ case class BlockingTelemetryService(ts: TelemetryService, timeout: Duration)(imp
 
   /**
    * Gets a list of the n most recent status event values for the given prefix
+   *
    * @param prefix the status event's prefix
-   * @param n the max number of values to get
+   * @param n      the max number of values to get
    * @return sequence of status events, ordered by most recent
    */
   def getHistory(prefix: String, n: Int): Seq[StatusEvent] =
