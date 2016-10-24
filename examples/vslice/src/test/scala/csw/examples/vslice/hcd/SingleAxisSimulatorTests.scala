@@ -250,6 +250,9 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("SingleAxisSimulatorT
     it("Should home properly") {
       val sa = defaultAxis(testActor)
 
+      sa ! GetStatistics
+      val stats2:AxisStatistics = expectMsgClass(classOf[AxisStatistics])
+
       sa ! Home
       val msgs = expectMoveMsgs()
       msgs.last.state should be(AXIS_IDLE)
@@ -382,6 +385,52 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("SingleAxisSimulatorT
       stats2.cancelCount should be(0)
 
       sa ! PoisonPill
+    }
+
+    it("should unset limit as soon as it is not in limit -- BUG found!") {
+
+      val sa = defaultAxis(testActor)
+
+      // Position starts out at 350
+      sa ! Move(0)
+      var msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(defaultAxisConfig.lowLimit)
+      msgs.last.inLowLimit should be(true)
+
+      sa.underlyingActor.current should be(defaultAxisConfig.lowLimit)
+      sa.underlyingActor.inLowLimit should be(true)
+      sa.underlyingActor.inHighLimit should be(false)
+
+      // Move just off limit
+      var newPos = defaultAxisConfig.lowUser + 20
+      sa ! Move(newPos)
+      msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(newPos)
+      msgs.last.inLowLimit should be(false)
+
+      // Get the first one that is greater than the limit to see that it is false
+      var firstOffLimit = msgs.filter(_.current >= defaultAxisConfig.lowUser).head
+      firstOffLimit.inLowLimit shouldBe false
+
+      // Now check the upper limit
+      sa ! Move(2000)
+      msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(defaultAxisConfig.highLimit)
+      msgs.last.inHighLimit should be(true)
+
+      newPos = defaultAxisConfig.highUser - 20
+      sa ! Move(newPos)
+      msgs = expectMoveMsgs(false)
+      msgs.last.state should be(AXIS_IDLE)
+      msgs.last.current should be(newPos)
+      msgs.last.inHighLimit should be(false)
+
+      // Get the first one that is greater than the limit to see that it is false
+      firstOffLimit = msgs.filter(_.current <= defaultAxisConfig.highUser).head
+      firstOffLimit.inHighLimit shouldBe false
     }
 
     it("should support a complex example") {

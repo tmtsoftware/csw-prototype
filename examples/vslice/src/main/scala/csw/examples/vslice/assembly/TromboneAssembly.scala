@@ -13,18 +13,17 @@ import csw.services.ccs.{AssemblyController2, CommandStatus2, CurrentStateReceiv
 import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{StartTheSequence, StopCurrentCommand}
 import csw.services.ccs.Validation.{Validation, ValidationList}
-import csw.services.cs.akka.ConfigServiceClient
 import csw.services.events.EventServiceSettings
-import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
+import csw.services.loc.LocationService._
 import csw.services.loc._
 import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister, HcdInfo, RegisterAndTrackServices}
 import csw.services.pkg.ContainerComponent._
 import csw.services.pkg.{Assembly, ContainerComponent, Supervisor3}
 import csw.util.config.Configurations.SetupConfigArg
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -35,10 +34,16 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   import Supervisor3._
   import TromboneStateHandler._
 
-  implicit val timeout = Timeout(10.seconds)
+  println("INFO: " + info)
+  var tromboneHCD = context.system.deadLetters
+
+  log.info("Connections: " + info.connections)
 
   // Get the assembly configuration from the config service or resource file (XXX TODO: Change to be non-blocking like the HCD version)
   val (calculationConfig, controlConfig) = getAssemblyConfigs
+  log.info("Calc: " + calculationConfig)
+  log.info("Control: " + controlConfig)
+
   implicit val ac = AssemblyContext(info, calculationConfig, controlConfig)
 
   // Initialize HCD for testing (XXX allan: change to look up with location service!)
@@ -59,35 +64,52 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
 
   // Start tracking the components we command
   log.info("Connections: " + info.connections)
-  trackConnections(info.connections)
 
-  override def allResolved(locs: Set[Location]): Unit = {
-    log.info(s"RESOLVED: $locs")
+  val trackerSubscriber = context.actorOf(TrackerSubscriberActor.props)
+  trackerSubscriber ! TrackerSubscriberActor.Subscribe
+  TrackerSubscriberActor.trackConnections(info.connections, trackerSubscriber)
 
-  }
+  //  val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
+  //  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
 
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
-
-  val tracker = context.actorOf(TestLocationService.trackerProps(Some(context.self)))
 
   // This actor handles all telemetry and system event publishing
   val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
   // This actor makes a single connection to the
-  val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
-  log.info("CurrentStateReceiver: " + currentStateReceiver)
+  //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
+  //log.info("CurrentStateReceiver: " + currentStateReceiver)
 
   // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
-  val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, Some(eventPublisher)))
+  val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), Some(eventPublisher)))
 
   // This sets up the diagnostic data publisher
-  val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
+  //val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
+
+  supervisor ! Initialized
 
   /**
    * This contains only commands that can be received during intialization
-   *
    * @return Receive is a partial function
    */
-  def initializingReceive: Receive = trackerClientReceive orElse {
+  def initializingReceive: Receive = {
+
+    case location: Location => //lookatLocations(l)
+      location match {
+        case l: ResolvedAkkaLocation =>
+          log.info(s"Got actorRef: ${l.actorRef}")
+          tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
+          supervisor ! Started
+        case h: ResolvedHttpLocation =>
+          log.info(s"HTTP Service Damn it: ${h.connection}")
+        case t: ResolvedTcpLocation =>
+          log.info(s"Service resolved: ${t.connection}")
+        case u: Unresolved =>
+          log.info(s"Unresolved: ${u.connection}")
+        case ut: UnTrackedLocation =>
+          log.info(s"UnTracked: ${ut.connection}")
+      }
+
     case Running =>
       // When Running is received, transition to running Receive
       log.info("becoming runningReceive")
@@ -97,25 +119,29 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     case x => log.error(s"Unexpected message in TromboneAssembly:initializingReceive: $x")
   }
 
-  supervisor ! Initialized
-  supervisor ! Started
-
-  val xx = locateHCD()
-
-  // Lookup the alarm service redis instance with the location service
-  private def locateHCD(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[ResolvedAkkaLocation] = {
-    import context.dispatcher
-    val connection = AkkaConnection(ComponentId("tromboneHCD", ComponentType.HCD))
-    LocationService.resolve(Set(connection)).map { locationsReady =>
-      val loc = locationsReady.locations.head.asInstanceOf[ResolvedAkkaLocation]
-      loc
+  def lookatLocations(location: Location): Unit = {
+    location match {
+      case l: ResolvedAkkaLocation =>
+        log.info(s"Got actorRef: ${l.actorRef}")
+        tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
+      case h: ResolvedHttpLocation =>
+        log.info(s"HTTP: ${h.connection}")
+      case t: ResolvedTcpLocation =>
+        log.info(s"Service resolved: ${t.connection}")
+      case u: Unresolved =>
+        log.info(s"Unresolved: ${u.connection}")
+      case ut: UnTrackedLocation =>
+        log.info(s"UnTracked: ${ut.connection}")
     }
   }
 
-  log.info("Locations: " + getLocations)
+  def locationReceive: Receive = {
+    case l: Location =>
+      lookatLocations(l)
+  }
 
   // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
-  def runningReceive: Receive = trackerClientReceive orElse stateReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
+  def runningReceive: Receive = locationReceive orElse stateReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
 
   def lifecycleReceivePF: Receive = {
     case Running =>

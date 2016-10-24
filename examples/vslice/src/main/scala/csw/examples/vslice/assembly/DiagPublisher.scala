@@ -4,6 +4,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import csw.examples.vslice.assembly.TromboneAssembly.UpdateTromboneHCD
 import csw.examples.vslice.assembly.TrombonePublisher.{AxisStateUpdate, AxisStatsUpdate}
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.services.loc.LocationService._
+import csw.services.loc.TrackerSubscriberClient
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.akka.PublisherActor
 import csw.util.config.StateVariable.CurrentState
@@ -34,7 +36,7 @@ import csw.util.config.StateVariable.CurrentState
  * @param tromboneHCDIn        actorRef of the tromboneHCD as a [[scala.Option]]
  * @param eventPublisher       actorRef of an instance of the TrombonePublisher as [[scala.Option]]
  */
-class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TimeServiceScheduler {
+class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TimeServiceScheduler with TrackerSubscriberClient {
 
   import DiagPublisher._
   import TromboneHCD._
@@ -50,7 +52,7 @@ class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorR
   val diagnosticAxisStatsPeriod = 1
 
   // Start in operations mode - 0 is initial stateMessageCounter value
-  def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCDIn)
+  def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCDIn: Option[ActorRef])
 
   /**
    * The receive method in operations state.
@@ -81,6 +83,22 @@ class DiagPublisher(currentStateReceiver: ActorRef, tromboneHCDIn: Option[ActorR
 
     case UpdateTromboneHCD(tromboneHCDUpdate) =>
       context.become(operationsReceive(currentStateReceiver, stateMessageCounter, tromboneHCDUpdate))
+
+    case location: Location =>
+      location match {
+        case l: ResolvedAkkaLocation =>
+          log.info(s"operationsReceive updated actorRef: ${l.actorRef}")
+          context.become(operationsReceive(currentStateReceive, stateMessageCounter, l.actorRef))
+        case h: ResolvedHttpLocation =>
+          log.info(s"HTTP: ${h.connection}")
+        case t: ResolvedTcpLocation =>
+          log.info(s"Service resolved: ${t.connection}")
+        case u: Unresolved =>
+          log.info(s"Unresolved: ${u.connection}")
+          context.become(operationsReceive(currentStateReceive, stateMessageCounter, None))
+        case ut: UnTrackedLocation =>
+          log.info(s"UnTracked: ${ut.connection}")
+      }
 
     case x => log.error(s"DiagPublisher:operationsReceive received an unexpected message: $x")
   }
@@ -142,7 +160,7 @@ object DiagPublisher {
 
   trait DiagPublisherMessages
 
-  final case class TimeForAxisStats(periodInSeconds: Int) extends DiagPublisherMessages
+  final case class TimeForAxisStats(periodInseconds: Int) extends DiagPublisherMessages
 
   final case object DiagnosticState extends DiagPublisherMessages
 

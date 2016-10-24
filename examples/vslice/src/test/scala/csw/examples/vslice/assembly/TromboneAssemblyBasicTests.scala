@@ -142,6 +142,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.details.status(0) shouldBe Completed
       // Wait a bit to see if there is any spurious messages
       fakeClient.expectNoMsg(250.milli)
+      logger.info("Completed: " + completeMsg)
     }
 
     it("should show a move without a datum as an error because trombone in wrong state") {

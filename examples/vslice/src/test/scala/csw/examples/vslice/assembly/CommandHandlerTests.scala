@@ -61,7 +61,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None) = {
     //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
     //thandler
-    system.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, allEventPublisher))
+    system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
   }
 
   it("should allow running datum directly to CommandHandler") {

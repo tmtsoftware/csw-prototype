@@ -71,7 +71,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None) = {
     //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
     //thandler
-    system.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, allEventPublisher))
+    system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
   }
 
   override def afterAll = TestKit.shutdownActorSystem(AlarmMonitorTests.system)
@@ -122,7 +122,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
       // Create an alarm monitor
       val am = system.actorOf(TromboneAlarmMonitor.props(fakeTromboneHCD.ref))
-      expectNoMsg(500.milli) // A delay waiting for monitor to find AlarmService with LocationService
+      expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // the fake trombone HCD sends a CurrentState event that has the low limit sent
       fakeTromboneHCD.send(am, testLowLimitEvent)

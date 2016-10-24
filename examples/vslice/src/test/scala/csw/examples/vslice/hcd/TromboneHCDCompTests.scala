@@ -35,7 +35,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     DoNotRegister, Set(AkkaType), 1.second
   )
 
-  val troboneAssemblyPrefix: String = TromboneAssembly.componentPrefix
+ // val troboneAssemblyPrefix: String = TromboneAssembly.componentPrefix
 
   def startHCD: ActorRef = {
     val testInfo = HcdInfo(

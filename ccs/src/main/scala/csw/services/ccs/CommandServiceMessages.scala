@@ -7,7 +7,7 @@ import csw.util.config.Configurations.{ControlConfigArg, SetupConfig}
  */
 object AssemblyMessages {
 
-  sealed trait CommandMessages1
+  sealed trait AssemblyMessages
 
   /**
    * Message to submit a configuration to the assembly.
@@ -18,7 +18,7 @@ object AssemblyMessages {
    *
    * @param config the configuration to execute
    */
-  final case class Submit(config: ControlConfigArg) extends CommandMessages1
+  final case class Submit(config: ControlConfigArg) extends AssemblyMessages
 
   /**
    * Message to submit a oneway config to the assembly.
@@ -28,19 +28,30 @@ object AssemblyMessages {
    *
    * @param config the configuration to execute
    */
-  case class OneWay(config: ControlConfigArg) extends CommandMessages1
+  case class OneWay(config: ControlConfigArg) extends AssemblyMessages
 }
 
 object HcdMessages {
 
-  sealed trait CommandMessages2
+  sealed trait HcdMessages
 
   /**
    * Message to submit a configuration to the HCD
    *
    * @param config describes the setup parameters to which the HCD should be configured
    */
-  final case class Submit(config: SetupConfig) extends CommandMessages2
+  final case class Submit(config: SetupConfig) extends HcdMessages
+
+  /**
+   * Message to subscribe the sender to the HCD's state.
+   * The sender will receive [[csw.util.config.StateVariable.CurrentState]] messages from the HCD whenever it's state changes.
+   */
+  final object Subscribe extends HcdMessages
+
+  /**
+   * Message to unsubscribes from the HCD's state messages.
+   */
+  final object Unsubscribe extends HcdMessages
 
 }
 

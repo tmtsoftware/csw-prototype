@@ -1,9 +1,10 @@
 package csw.examples.vslice.assembly
 
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
-import csw.services.loc.Connection
+import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.{ComponentId, ComponentType, Connection}
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister}
+import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister, RegisterAndTrackServices}
 
 /**
  * TMT Source Code: 8/12/16.
@@ -15,12 +16,12 @@ object AssemblyTestData {
   val testFocusErrors = -20.0 to 20.0 by 4.0
   val testZenithAngles = 0.0 to 60.0 by 5.0
 
-  val TestAssemblyInfo = AssemblyInfo(
-    "tromboneAssembly",
+  val hcdId = ComponentId("lgsTromboneHCD", ComponentType.HCD)
+
+  val TestAssemblyInfo = AssemblyInfo("lgsTrombone",
     "nfiraos.ncc.trombone",
     "csw.examples.vslice.assembly.TromboneAssembly",
-    DoNotRegister, Set(AkkaType), Set.empty[Connection]
-  )
+    RegisterAndTrackServices, Set(AkkaType), Set(AkkaConnection(hcdId)))
 
   val TestCalculationConfig = TromboneCalculationConfig(
     defaultInitialElevation = 95.0,
