@@ -10,20 +10,18 @@ import org.scalatest.{BeforeAndAfterAll, _}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-
 /**
-  * This test
-  */
+ * This test
+ */
 object TrackerSubscriberTests {
   LocationService.initInterface()
 
   val system = ActorSystem("TrackerSubscriberTests")
 }
 class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   override def afterAll = TestKit.shutdownActorSystem(TrackerSubscriberTests.system)
-
 
   val c1Name = "My Alarm Service"
   val c1Id = ComponentId(c1Name, ComponentType.Service)
@@ -57,15 +55,15 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
         msgs = msgs :+ event
         log.info(s"Received my location: $event")
         event match {
-          case l:ResolvedAkkaLocation =>
+          case l: ResolvedAkkaLocation =>
             log.info(s"Got actorRef: ${l.actorRef}")
-          case h:ResolvedHttpLocation =>
+          case h: ResolvedHttpLocation =>
             log.info(s"HTTP: ${h.connection}")
-          case t:ResolvedTcpLocation =>
+          case t: ResolvedTcpLocation =>
             log.info(s"TCP Location: ${t.connection}")
-          case u:Unresolved =>
+          case u: Unresolved =>
             log.info(s"Unresolved: ${u.connection}")
-          case ut:UnTrackedLocation =>
+          case ut: UnTrackedLocation =>
             log.info(s"UnTracked: ${ut.connection}")
         }
 
@@ -83,7 +81,6 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
       test.expectNoMsg(500.milli)
     }
 
-
     it("should allow subscriptions") {
       import LocationService._
 
@@ -94,11 +91,11 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
       fakeAssembly.send(ts, LocationService.TrackConnection(c1))
 
       var msg = fakeAssembly.expectMsgAnyClassOf(5.seconds, classOf[Location])
-      msg shouldBe a [Unresolved]
+      msg shouldBe a[Unresolved]
       info("Msg: " + msg)
 
       msg = fakeAssembly.expectMsgAnyClassOf(5.seconds, classOf[Location])
-      msg shouldBe a [ResolvedTcpLocation]
+      msg shouldBe a[ResolvedTcpLocation]
       info("Msg: " + msg)
       /*
             // Now track the HCD
@@ -116,11 +113,11 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
     }
 
     /**
-      * This test sets up a TrackerSubscriberActor and one Client to ensure that the client receives
-      * updates.  Only the TrackerSubscriberActor runs a tracker.
-      *
-      * Note that this test is pretty lame and assumes an "Alarm Service" and "lgsTromboneHCD" is running.
-      */
+     * This test sets up a TrackerSubscriberActor and one Client to ensure that the client receives
+     * updates.  Only the TrackerSubscriberActor runs a tracker.
+     *
+     * Note that this test is pretty lame and assumes an "Alarm Service" and "lgsTromboneHCD" is running.
+     */
     it("should allow subscriptions with trait") {
       import TestSubscriber._
       implicit val context = system.dispatcher
@@ -132,10 +129,8 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
       // Start hte TrackerSubscriber
       val ts = system.actorOf(TrackerSubscriberActor.props)
 
-
       // TrackerSubscriber tracks two connections
       fakeAssembly.send(ts, LocationService.TrackConnection(c2))
-
 
       // val readyResult = Await.ready(LocationService.registerTcpConnection(c1Id, 1000), Duration.Inf)
 
@@ -165,6 +160,5 @@ class TrackerSubscriberTests extends TestKit(TrackerSubscriberTests.system) with
     }
 
   }
-
 
 }

@@ -73,12 +73,6 @@ public interface ITelemetryService {
      */
     CompletableFuture<Unit> delete(String key);
 
-    /**
-     * Shuts the key/value store server down
-     */
-    CompletableFuture<Unit> shutdown();
-
-
     // --- static factory methods ---
 
     /**
