@@ -1,4 +1,4 @@
-package csw.examples.vsliceJava.assembly
+package csw.examples.vsliceJava.assembly;
 
 import akka.actor.*;
 import akka.event.Logging;
