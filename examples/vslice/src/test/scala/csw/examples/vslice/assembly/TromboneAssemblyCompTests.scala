@@ -1,8 +1,8 @@
 package csw.examples.vslice.assembly
 
 /**
-  * TMT Source Code: 10/10/16.
-  */
+ * TMT Source Code: 10/10/16.
+ */
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -25,17 +25,28 @@ object TromboneAssemblyCompTests {
   val system = ActorSystem("TromboneAssemblyCompTests")
 }
 class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext
   import assemblyContext._
 
-  def newTrombone(assemblyInfo: AssemblyInfo = assemblyContext.info):ActorRef = {
+  def newTrombone(assemblyInfo: AssemblyInfo = assemblyContext.info): ActorRef = {
     Supervisor3(assemblyInfo)
   }
 
-
   describe("comp tests") {
+
+    it("should just startup") {
+      val tla = newTrombone()
+      val fakeSequencer = TestProbe()
+
+      tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
+      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
+
+      fakeSequencer.expectNoMsg(12.seconds) // wait for connections
+    }
+
     it("should allow a datum") {
       val tla = newTrombone()
       val fakeSequencer = TestProbe()
@@ -44,7 +55,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
 
-      fakeSequencer.expectNoMsg(12.seconds)  // wait for connections
+      fakeSequencer.expectNoMsg(12.seconds) // wait for connections
 
       val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(datumCK))
 
@@ -68,7 +79,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
 
       tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
+      fakeSequencer.expectMsg(20.seconds, LifecycleStateChanged(LifecycleRunning))
 
       //fakeSequencer.expectNoMsg(12.seconds)  // wait for connections
 

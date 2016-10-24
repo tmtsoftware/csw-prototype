@@ -23,6 +23,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 import scala.concurrent.duration._
 
 object TromboneAssemblyBasicTests {
+  println("INITI")
   LocationService.initInterface()
 
   val system = ActorSystem("TromboneAssemblyBasicTests")
@@ -125,7 +126,8 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       //val fakeSupervisor = TestProbe()
       fakeSupervisor.expectMsg(Initialized)
-      fakeSupervisor.expectMsg(Started)
+      val xx = fakeSupervisor.expectMsg(Started)
+      logger.info("Got xx: " + xx)
       fakeSupervisor.expectNoMsg(200.milli)
       fakeSupervisor.send(tla, Running)
 

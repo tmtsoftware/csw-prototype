@@ -46,6 +46,14 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
+  // This is used for testing and insertion into components for testing
+  def eventConnection: EventService = EventService(testEventServiceSettings)
+
+  var testEventService: Option[EventService] = None
+  override def beforeAll() = {
+    testEventService = Some(eventConnection)
+  }
+
   val initialElevation = 90.0
 
   def newFollower(usingNSS: BooleanItem, tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
@@ -310,7 +318,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       // Ignoring the messages for TrombonePosition
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
 
       // Ignoring the messages for AO for the moment
       // Create the trombone publisher for publishing SystemEvents to AOESW
@@ -323,14 +331,14 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       val followActor = newFollower(nssUsage, tromboneControl, publisherActorRef, publisherActorRef)
 
       // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), Some(testEventServiceSettings)))
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), testEventService))
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
-      val tcsRtc = EventService(testEventServiceSettings)
+      val tcsRtc = testEventService // EventService(testEventServiceSettings)
 
       val testFE = 20.0
       // Publish a single focus error. This will generate a published event
-      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
+      tcsRtc.foreach(_.publish(SystemEvent(focusErrorPrefix).add(fe(testFE))))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber1 = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))
@@ -345,7 +353,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       // This should result in the length of tcsEvents being published, which is 15
       tcsEvents.foreach { f =>
         logger.info("Publish: " + f)
-        tcsRtc.publish(f)
+        tcsRtc.foreach(_.publish(f))
         // The following is not required, but is added to make the event timing more interesting
         // Varying this delay from 50 to 10 shows completion of moves and at 10 update of move positions before finishing
         Thread.sleep(500) // 500 makes it seem more interesting to watch, but is not needed for proper operation

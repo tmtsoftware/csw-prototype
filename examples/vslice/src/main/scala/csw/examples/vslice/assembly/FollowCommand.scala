@@ -3,7 +3,7 @@ package csw.examples.vslice.assembly
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.examples.vslice.assembly.FollowActor.{SetElevation, SetZenithAngle, UpdatedEventData}
 import csw.examples.vslice.assembly.TromboneAssembly.UpdateTromboneHCD
-import csw.services.events.EventServiceSettings
+import csw.services.events.{EventService, EventServiceSettings}
 import csw.util.config.Events.EventTime
 import csw.util.config.{BooleanItem, DoubleItem}
 
@@ -44,17 +44,17 @@ import csw.util.config.{BooleanItem, DoubleItem}
  * @param nssInUseIn a BooleanItem, set to true if the NFIRAOS Source Simulator is in use, set to false if not in use
  * @param tromboneHCDIn the actor reference to the trombone HCD as a [[scala.Option]]
  * @param eventPublisher the actor reference to the shared TrombonePublisher actor as a [[scala.Option]]
- * @param eventServiceSettings optional paramters for connecting to a testing event service
+ * @param eventService optional EventService for subscriptions
  *
  */
-class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings] = None) extends Actor with ActorLogging {
+class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef], eventService: Option[EventService] = None) extends Actor with ActorLogging {
   import FollowCommand._
 
   // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
   val tromboneControl = context.actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol")
   // These vals are only being created to simplify typing
   val initialFollowActor = createFollower(nssInUseIn, tromboneControl, eventPublisher, eventPublisher)
-  val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventServiceSettings)
+  val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService)
 
   def receive: Receive = followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn)
 
@@ -72,7 +72,7 @@ class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val trombo
         context.stop(followActor)
         // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
         val newFollowActor = createFollower(nssInUseUpdate, tromboneControl, eventPublisher, eventPublisher)
-        val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventServiceSettings)
+        val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventService)
         // Set a new receive method with updated actor values, prefer this over vars or globals
         context.become(followReceive(nssInUseUpdate, newFollowActor, newEventSubscriber, tromboneHCD))
       }
@@ -102,7 +102,7 @@ class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val trombo
   private def createFollower(nssInUse: BooleanItem, tromboneControl: ActorRef, eventPublisher: Option[ActorRef], telemetryPublisher: Option[ActorRef]): ActorRef =
     context.actorOf(FollowActor.props(ac, nssInUse, Some(tromboneControl), eventPublisher, eventPublisher), "follower")
 
-  private def createEventSubscriber(nssItem: BooleanItem, followActor: ActorRef, eventServiceSettings: Option[EventServiceSettings]): ActorRef = context.actorOf(TromboneEventSubscriber.props(ac, nssItem, Some(followActor), eventServiceSettings), "eventsubscriber")
+  private def createEventSubscriber(nssItem: BooleanItem, followActor: ActorRef, eventService: Option[EventService]): ActorRef = context.actorOf(TromboneEventSubscriber.props(ac, nssItem, Some(followActor), eventService), "eventsubscriber")
 
 }
 

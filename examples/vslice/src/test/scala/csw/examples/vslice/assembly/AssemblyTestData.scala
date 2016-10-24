@@ -18,10 +18,12 @@ object AssemblyTestData {
 
   val hcdId = ComponentId("lgsTromboneHCD", ComponentType.HCD)
 
-  val TestAssemblyInfo = AssemblyInfo("lgsTrombone",
+  val TestAssemblyInfo = AssemblyInfo(
+    "lgsTrombone",
     "nfiraos.ncc.trombone",
     "csw.examples.vslice.assembly.TromboneAssembly",
-    RegisterAndTrackServices, Set(AkkaType), Set(AkkaConnection(hcdId)))
+    RegisterAndTrackServices, Set(AkkaType), Set(AkkaConnection(hcdId))
+  )
 
   val TestCalculationConfig = TromboneCalculationConfig(
     defaultInitialElevation = 95.0,

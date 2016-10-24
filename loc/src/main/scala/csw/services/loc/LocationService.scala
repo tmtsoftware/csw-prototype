@@ -48,7 +48,6 @@ object LocationService {
    */
   def initInterface(): Unit = {
     if (!initialized) {
-      println("INIT")
       initialized = true
       case class Addr(index: Int, addr: InetAddress)
       def defaultAddr = Addr(0, InetAddress.getLocalHost)

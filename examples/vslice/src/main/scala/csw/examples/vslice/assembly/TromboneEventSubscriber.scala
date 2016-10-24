@@ -1,9 +1,10 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData}
 import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
-import csw.services.events.{EventServiceSettings, EventSubscriber}
+import csw.services.events.EventService
+import csw.services.loc.LocationService.{Location, ResolvedTcpLocation}
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.Events.{EventTime, SystemEvent}
 import csw.util.config._
@@ -11,7 +12,7 @@ import csw.util.config._
 /**
  * TMT Source Code: 6/20/16.
  */
-class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings]) extends EventSubscriber(eventServiceSettings) {
+class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]) extends Actor with ActorLogging {
 
   import ac._
 
@@ -28,22 +29,39 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
   // This is used to keep track since it can be updated
   var nssInUseGlobal = nssInUseIn
 
-  override def preStart(): Unit = {
+  def connectingReceive: Receive = {
+    case location: Location => location match {
+      case t: ResolvedTcpLocation =>
+        // Verify that it is the event service
+        if (t.connection == EventService.eventServiceConnection) {
+          log.info("Subscriber received connection")
+          val eventService: EventService = EventService.get(t.host, t.port)
+          log.info("Event Service at: " + eventService)
+          startupSubscriptions(eventService)
+          subscribeReceive(eventService, nssInUseIn, initialZenithAngle, initialFocusError)
+        }
+      case _ =>
+        log.info(s"EventSubscriber received location: $location")
+    }
+  }
+
+  private def startupSubscriptions(eventService: EventService): Unit = {
     // Allways subscribe to focus error
-    subscribeKeys(feConfigKey)
+    subscribeKeys(eventService, feConfigKey)
 
     log.info("nssInuse: " + nssInUseIn)
 
     // But only subscribe to ZA if nss is not in use
     if (!nssInUseIn.head) {
       // NSS not inuse so subscribe to ZA
-      subscribeKeys(zaConfigKey)
+      subscribeKeys(eventService, zaConfigKey)
     }
   }
 
-  def receive: Receive = subscribeReceive(nssInUseIn, initialZenithAngle, initialFocusError)
+  //  def receive: Receive = subscribeReceive(nssInUseIn, initialZenithAngle, initialFocusError)
+  def receive: Receive = connectingReceive
 
-  def subscribeReceive(cNssInUse: BooleanItem, cZenithAngle: DoubleItem, cFocusError: DoubleItem): Receive = {
+  def subscribeReceive(eventService: EventService, cNssInUse: BooleanItem, cZenithAngle: DoubleItem, cFocusError: DoubleItem): Receive = {
 
     case event: SystemEvent =>
       event.info.source match {
@@ -52,7 +70,7 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
           log.info(s"Received ZA: $event")
           updateFollowActor(newZenithAngle, cFocusError, event.info.time)
           // Pass the new values to the next message
-          context.become(subscribeReceive(cNssInUse, newZenithAngle, cFocusError))
+          context.become(subscribeReceive(eventService, cNssInUse, newZenithAngle, cFocusError))
 
         case `feConfigKey` =>
           // Update focusError state and then update calculator
@@ -60,7 +78,7 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
           val newFocusError = event(focusErrorKey)
           updateFollowActor(cZenithAngle, newFocusError, event.info.time)
           // Pass the new values to the next message
-          context.become(subscribeReceive(cNssInUse, cZenithAngle, newFocusError))
+          context.become(subscribeReceive(eventService, cNssInUse, cZenithAngle, newFocusError))
       }
 
     case StopFollowing =>
@@ -71,11 +89,11 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
     case UpdateNssInUse(nssInUseUpdate) =>
       if (nssInUseUpdate != cNssInUse) {
         if (nssInUseUpdate.head) {
-          unsubscribeKeys(zaConfigKey)
-          context.become(subscribeReceive(nssInUseUpdate, nssZenithAngle, cFocusError))
+          unsubscribeKeys(eventService, zaConfigKey)
+          context.become(subscribeReceive(eventService, nssInUseUpdate, nssZenithAngle, cFocusError))
         } else {
-          subscribeKeys(zaConfigKey)
-          context.become(subscribeReceive(nssInUseUpdate, cZenithAngle, cFocusError))
+          subscribeKeys(eventService, zaConfigKey)
+          context.become(subscribeReceive(eventService, nssInUseUpdate, cZenithAngle, cFocusError))
         }
         // Need to update the global for shutting down event subscriptions
         nssInUseGlobal = nssInUseUpdate
@@ -84,22 +102,24 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
     case x => log.error(s"Unexpected message received in TromboneEventSubscriber:subscribeReceive: $x")
   }
 
-  def unsubscribeKeys(configKeys: ConfigKey*): Unit = {
+  def unsubscribeKeys(eventService: EventService, configKeys: ConfigKey*): Unit = {
     log.info(s"Unsubscribing to: $configKeys")
-    unsubscribe(configKeys.map(_.prefix): _*)
+    //eventService.unsubscribe(configKeys.map(_.prefix): _*)
   }
 
-  def subscribeKeys(configKeys: ConfigKey*): Unit = {
+  def subscribeKeys(eventService: EventService, configKeys: ConfigKey*): Unit = {
     log.info(s"Subscribing to: $configKeys")
-    subscribe(configKeys.map(_.prefix): _*)
+    eventService.subscribe(Some(self), None, configKeys.map(_.prefix): _*)
   }
 
+  /*
   override def postStop(): Unit = {
     if (!nssInUseGlobal.head) {
       unsubscribeKeys(zaConfigKey)
     }
     unsubscribeKeys(feConfigKey)
   }
+  */
 
   /**
    * This function is called whenever a new event arrives. The function takes the current information consisting of
@@ -118,11 +138,11 @@ object TromboneEventSubscriber {
   /**
    * props for the TromboneEventSubscriber
    * @param followActor a FollowActor as an Option[ActorRef]
-   * @param eventServiceSettings for testing, an event Service Settings can be provided
+   * @param eventService for testing, an event Service can be provided
    * @return Props for TromboneEventSubscriber
    */
-  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, followActor: Option[ActorRef] = None, eventServiceSettings: Option[EventServiceSettings] = None) =
-    Props(classOf[TromboneEventSubscriber], assemblyContext, nssInUse, followActor, eventServiceSettings)
+  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, followActor: Option[ActorRef] = None, eventService: Option[EventService] = None) =
+    Props(classOf[TromboneEventSubscriber], assemblyContext, nssInUse, followActor, eventService)
 
   case class UpdateNssInUse(nssInUse: BooleanItem)
 }

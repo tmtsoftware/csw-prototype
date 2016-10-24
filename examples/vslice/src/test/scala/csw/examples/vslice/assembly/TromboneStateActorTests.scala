@@ -1,17 +1,16 @@
-package csw.examples.vslice
+package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
 import csw.examples.vslice.assembly.TromboneStateActor.TromboneState
-import csw.examples.vslice.assembly.{TromboneStateActor, TromboneStateClient}
 import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Inspectors, _}
 
 import scala.concurrent.duration._
 
 /**
-  * TMT Source Code: 10/22/16.
-  */
+ * TMT Source Code: 10/22/16.
+ */
 // Test subscriber actor for telemetry and system events
 object TestSubscriber {
   def props(): Props = Props(new TestSubscriber())
@@ -20,12 +19,12 @@ object TestSubscriber {
 
   case class Results(msgs: Vector[TromboneState])
 
-  def newTestSubscriber(system: ActorSystem):ActorRef = system.actorOf(props())
+  def newTestSubscriber(system: ActorSystem): ActorRef = system.actorOf(props())
 }
 
 /**
-  * Test event service client, listens for trombonestate
-  */
+ * Test event service client, listens for trombonestate
+ */
 class TestSubscriber() extends Actor with ActorLogging with TromboneStateClient {
 
   import TestSubscriber._
@@ -39,10 +38,9 @@ class TestSubscriber() extends Actor with ActorLogging with TromboneStateClient 
       msgs = msgs :+ event
       log.debug(s"Received system event: $event")
 
-    case GetResults    => sender() ! Results(msgs)
+    case GetResults => sender() ! Results(msgs)
   }
 }
-
 
 object TromboneStateActorTests {
   LocationService.initInterface()
@@ -50,9 +48,7 @@ object TromboneStateActorTests {
 }
 
 class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
-
-
+    with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
 
   import csw.examples.vslice.assembly.TromboneStateActor._
 
@@ -102,8 +98,6 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
 
   }
 
-
-
   it("it should allow publishing - check conditions") {
     import TestSubscriber._
 
@@ -143,9 +137,39 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
     tsub ! GetResults
     val result = expectMsgClass(classOf[TestSubscriber.Results])
     result.msgs.size shouldBe 4
-    result shouldEqual(Results(Vector(ts2, ts3, ts4, ts5)))
+    result shouldEqual (Results(Vector(ts2, ts3, ts4, ts5)))
     //info("Result: " + result.msgs)
   }
 
+  def setupState(ts: TromboneState) = {
+    // These times are important to allow time for test actors to get and process the state updates when running tests
+    expectNoMsg(20.milli)
+    system.eventStream.publish(ts)
+    // This is here to allow the destination to run and set its state
+    expectNoMsg(20.milli)
+  }
+
+  it("it might work with publish directly") {
+    import TestSubscriber._
+
+    val tsub = system.actorOf(TestSubscriber.props())
+
+    val ts1 = defaultTromboneState
+
+    val ts2 = TromboneState(cmdItem(cmdReady), moveDefault, sodiumLayerDefault, nssDefault)
+
+    val ts3 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumLayerDefault, nssDefault)
+
+    val ts4 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), nssDefault)
+
+    val ts5 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), nssItem(true))
+
+    setupState(ts2)
+    setupState(ts3)
+
+    tsub ! GetResults
+    val result = expectMsgClass(classOf[TestSubscriber.Results])
+    info("Result: " + result)
+  }
 
 }

@@ -1,7 +1,7 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import csw.examples.vslice.assembly.TromboneStateActor.TromboneState
+import csw.examples.vslice.assembly.TromboneStateActor._
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.CommandStatus2.{Completed, Error, NoLongerValid}
 import csw.services.ccs.HcdController
@@ -21,7 +21,7 @@ class PositionCommand(ac: AssemblyContext, sc: SetupConfig, tromboneHCD: ActorRe
   def receive: Receive = {
     case CommandStart =>
       if (cmd(startState) == cmdUninitialized || (move(startState) != moveIndexed && move(startState) != moveMoving)) {
-        sender() ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${startState.cmd}/${startState.move} does not allow motion"))
+        sender() ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${cmd(startState)}/${move(startState)} does not allow motion"))
       } else {
         val mySender = sender()
 
@@ -37,20 +37,23 @@ class PositionCommand(ac: AssemblyContext, sc: SetupConfig, tromboneHCD: ActorRe
         val stateMatcher = posMatcher(encoderPosition)
         // Position key is encoder units
         val scOut = SetupConfig(axisMoveCK).add(positionKey -> encoderPosition withUnits encoder)
-        stateActor.foreach(_ ! SetState(cmdItem(cmdBusy), moveItem(moveMoving), startState.sodiumLayer, startState.nss))
+        sendState(SetState(cmdItem(cmdBusy), moveItem(moveMoving), startState.sodiumLayer, startState.nss))
         tromboneHCD ! HcdController.Submit(scOut)
 
         executeMatch(context, stateMatcher, tromboneHCD, Some(mySender)) {
           case Completed =>
-            stateActor.foreach(_ ! SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss))
+            sendState(SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss))
           case Error(message) =>
-            log.error(s"Position command failed with message: $message")
+            log.error(s"Position command match failed with message: $message")
         }
       }
     case StopCurrentCommand =>
-      log.info("Move command -- STOP")
+      log.debug("Move command -- STOP")
       tromboneHCD ! HcdController.Submit(cancelSC)
   }
+
+  private def sendState(setState: SetState) = stateActor.foreach(_ ! setState)
+
 }
 
 object PositionCommand {

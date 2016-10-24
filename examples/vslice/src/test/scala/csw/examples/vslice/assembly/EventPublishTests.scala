@@ -20,8 +20,6 @@ object EventPublishTests {
 class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
-  override def afterAll = TestKit.shutdownActorSystem(system)
-
   implicit val execContext = system.dispatcher
 
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
@@ -31,7 +29,18 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
   import assemblyContext._
 
+  // This is used for testing and insertion into components for testing
   def eventConnection: EventService = EventService(testEventServiceSettings)
+
+  var testEventService: Option[EventService] = None
+  override def beforeAll() = {
+    testEventService = Some(eventConnection)
+  }
+
+  override def afterAll = {
+    //testEventService.foreach(_.shutdown())
+    TestKit.shutdownActorSystem(system)
+  }
 
   val initialElevation = 90.0
 
@@ -69,8 +78,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     TestActorRef(props)
   }
 
-  def newTestElPublisher(tromboneControl: Option[ActorRef]): TestActorRef[FollowActor] = {
-    val testEventServiceProps = TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings))
+  def newTestElPublisher(tromboneControl: Option[ActorRef], eventService: Option[EventService]): TestActorRef[FollowActor] = {
+    val testEventServiceProps = TrombonePublisher.props(assemblyContext, eventService)
     val publisherActorRef = system.actorOf(testEventServiceProps)
     // Enable publishing
     newFollower(tromboneControl, Some(publisherActorRef))
@@ -85,7 +94,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     it("should allow me to create actors without error") {
 
       val fakeTC = TestProbe()
-      val ap = newTestElPublisher(Some(fakeTC.ref))
+      val ap = newTestElPublisher(Some(fakeTC.ref), testEventService)
 
       // Ensure it's not sending anything out until needed
       fakeTC.expectNoMsg(100.milli)
@@ -101,7 +110,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
      */
     it("should allow publishing one event simulating event from fake TromboneEventSubscriber") {
       // Create a new publisher with no trombone position actor
-      val ap = newTestElPublisher(None)
+      val ap = newTestElPublisher(None, testEventService)
 
       val resultSubscriber = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))
 
@@ -130,7 +139,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       import AssemblyTestData._
 
       // Ignoring the messages for TrombonePosition (set to None)
-      val ap = newTestElPublisher(None)
+      val ap = newTestElPublisher(None, testEventService)
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))
@@ -171,11 +180,11 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       import AssemblyTestData._
       // Ignoring the messages for TrombonePosition
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
       // Create the calculator actor and give it the actor ref of the publisher for sending calculated events
       val followActorRef = system.actorOf(FollowActor.props(assemblyContext, setNssInUse(false), None, Some(publisherActorRef)))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), Some(testEventServiceSettings)))
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), testEventService))
 
       // This creates a local subscriber to get all aoSystemEventPrefix SystemEvents published for testing
       val resultSubscriber = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))

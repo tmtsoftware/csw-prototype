@@ -9,11 +9,12 @@ import scala.language.postfixOps
 import com.typesafe.config.{Config, ConfigFactory}
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.services.alarms.AlarmService
 import csw.services.ccs.{AssemblyController2, CommandStatus2, CurrentStateReceiver, Validation}
 import csw.services.ccs.SequentialExecution.SequentialExecutor
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{StartTheSequence, StopCurrentCommand}
 import csw.services.ccs.Validation.{Validation, ValidationList}
-import csw.services.events.EventServiceSettings
+import csw.services.events.{EventService, EventServiceSettings}
 import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService._
@@ -39,35 +40,26 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
 
   log.info("Connections: " + info.connections)
 
+  //  val calculationConfig = getCalculationConfig
+  //  log.info("Calc: " + calculationConfig)
+  //  val controlConfig = getTromboneControlConfig
+  //  log.info("Control: " + controlConfig)
+
   // Get the assembly configuration from the config service or resource file (XXX TODO: Change to be non-blocking like the HCD version)
   val (calculationConfig, controlConfig) = getAssemblyConfigs
-  log.info("Calc: " + calculationConfig)
-  log.info("Control: " + controlConfig)
-
   implicit val ac = AssemblyContext(info, calculationConfig, controlConfig)
-
-  // Initialize HCD for testing (XXX allan: change to look up with location service!)
-  def startHCD: ActorRef = {
-    val testInfo = HcdInfo(
-      TromboneHCD.componentName,
-      TromboneHCD.trombonePrefix,
-      TromboneHCD.componentClassName,
-      RegisterAndTrackServices, Set(AkkaType), 1.second
-    )
-
-    Supervisor3(testInfo)
-  }
-
-  val tromboneHCD = startHCD // XXX TODO: Look up with location service
 
   def receive = initializingReceive
 
   // Start tracking the components we command
   log.info("Connections: " + info.connections)
 
-  val trackerSubscriber = context.actorOf(TrackerSubscriberActor.props)
-  trackerSubscriber ! TrackerSubscriberActor.Subscribe
-  TrackerSubscriberActor.trackConnections(info.connections, trackerSubscriber)
+  val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
+  trackerSubscriber ! LocationSubscriberActor.Subscribe
+  LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
+  LocationSubscriberActor.trackConnection(TromboneAssembly.eventServiceConnection, trackerSubscriber)
+  //LocationSubscriberActor.trackConnection(TromboneAssembly.telemetryServiceConnection, trackerSubscriber)
+  LocationSubscriberActor.trackConnection(TromboneAssembly.alarmServiceConnection, trackerSubscriber)
 
   //  val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
   //  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
@@ -75,7 +67,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
   // This actor handles all telemetry and system event publishing
-  val eventPublisher = context.actorOf(TrombonePublisher.props(ac, Some(testEventServiceSettings)))
+  val eventPublisher = context.actorOf(TrombonePublisher.props(ac, None))
   // This actor makes a single connection to the
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //log.info("CurrentStateReceiver: " + currentStateReceiver)
@@ -191,6 +183,29 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
 
+  //  // The configuration for the calculator that provides reasonable values
+  //  def getCalculationConfig: TromboneCalculationConfig = {
+  //    val defaultInitialElevation = getConfigDouble("calculation-config.defaultInitialElevation")
+  //    val focusGainError = getConfigDouble("calculation-config.focusErrorGain")
+  //    val upperFocusLimit = getConfigDouble("calculation-config.upperFocusLimit")
+  //    val lowerFocusLimit = getConfigDouble("calculation-config.lowerFocusLimit")
+  //    val zenithFactor = getConfigDouble("calculation-config.zenithFactor")
+  //    TromboneCalculationConfig(defaultInitialElevation, focusGainError, upperFocusLimit, lowerFocusLimit, zenithFactor)
+  //  }
+  //
+  //  // The configuration for the trombone position mm to encoder
+  //  def getTromboneControlConfig: TromboneControlConfig = {
+  //    val positionScale = getConfigDouble("control-config.positionScale")
+  //    val stageZero = getConfigDouble("control-config.stageZero")
+  //    val minStageEncoder = getConfigInt("control-config.minStageEncoder")
+  //    val minEncoderLimit = getConfigInt("control-config.minEncoderLimit")
+  //    val maxEncoderLimit = getConfigInt("control-config.maxEncoderLimit")
+  //    TromboneControlConfig(positionScale, stageZero, minStageEncoder, minEncoderLimit, maxEncoderLimit)
+  //  }
+  //
+  //  def getConfigDouble(name: String): Double = context.system.settings.config.getDouble(s"csw.examples.Trombone.assembly.$name")
+  //  def getConfigInt(name: String): Int = context.system.settings.config.getInt(s"csw.examples.Trombone.assembly.$name")
+
   // Gets the assembly configurations from the config service, or a resource file, if not found and
   // returns the two parsed objects.
   private def getAssemblyConfigs: (TromboneCalculationConfig, TromboneControlConfig) = {
@@ -209,6 +224,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     //    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), 2.seconds)
 
     val config = ConfigFactory.parseResources(resource.getPath)
+    println("Config: " + config)
     (TromboneCalculationConfig(config), TromboneControlConfig(config))
   }
 }
@@ -217,17 +233,22 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
  * All assembly messages are indicated here
  */
 object TromboneAssembly {
-  // Should get this from the config file?
-  val componentPrefix = "nfiraos.ncc.trombone"
 
   def props(assemblyInfo: AssemblyInfo, supervisor: ActorRef) = Props(classOf[TromboneAssembly], assemblyInfo, supervisor)
 
   // --------- Keys/Messages used by Multiple Components
   /**
    * The message is used within the Assembly to update actors when the Trombone HCD goes up and down and up again
-   *
    * @param tromboneHCD the ActorRef of the tromboneHCD or None
    */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
+
+  /**
+   * Services needed by Trombone Assembly
+   */
+  val eventServiceConnection: Connection = TcpConnection(ComponentId(EventService.defaultName, ComponentType.Service))
+  // Kim update when telmetry service merged
+  val telemetryServiceConnection: Connection = TcpConnection(ComponentId(EventService.defaultName, ComponentType.Service))
+  val alarmServiceConnection: Connection = TcpConnection(ComponentId(AlarmService.defaultName, ComponentType.Service))
 
 }

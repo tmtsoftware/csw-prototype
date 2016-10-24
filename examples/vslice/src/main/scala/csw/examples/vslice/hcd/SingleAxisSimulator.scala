@@ -84,7 +84,7 @@ class SingleAxisSimulator(val axisConfig: AxisConfig, replyTo: Option[ActorRef])
       axisState = AXIS_MOVING
       log.debug(s"AxisHome: $axisState")
       update(replyTo, AxisStarted)
-      val props = MotionWorker.props(current, axisConfig.home, delayInMS = 2, self, diagFlag = false)
+      val props = MotionWorker.props(current, axisConfig.home, delayInMS = 100, self, diagFlag = false)
       val mw = context.actorOf(props, "homeWorker")
       context.become(homeReceive(mw))
       mw ! Start

@@ -39,6 +39,14 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
   implicit val execContext = system.dispatcher
 
+  // This is used for testing and insertion into components for testing
+  def eventConnection: EventService = EventService(testEventServiceSettings)
+
+  var testEventService: Option[EventService] = None
+  override def beforeAll() = {
+    testEventService = Some(eventConnection)
+  }
+
   val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext
@@ -56,7 +64,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
   }
 
   def newTestElPublisher(tromboneControl: Option[ActorRef]): TestActorRef[FollowActor] = {
-    val testEventServiceProps = TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings))
+    val testEventServiceProps = TrombonePublisher.props(assemblyContext, testEventService)
     val publisherActorRef = system.actorOf(testEventServiceProps)
     newFollower(tromboneControl, Some(publisherActorRef))
   }
@@ -200,7 +208,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       // Create the follow actor and give it the actor ref of the publisher for sending calculated events
       val followActor = system.actorOf(FollowActor.props(assemblyContext, nssUse, Some(fakeTromboneControl.ref), None))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), Some(testEventServiceSettings)))
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), testEventService))
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
       val tcsRtc = EventService(testEventServiceSettings)
@@ -522,7 +530,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       val followActor = newFollower(Some(tromboneControl), None)
 
       // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), Some(testEventServiceSettings)))
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), testEventService))
 
       fakeAssembly.expectNoMsg(200.milli)
 
