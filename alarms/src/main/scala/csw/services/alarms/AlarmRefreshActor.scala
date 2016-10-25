@@ -50,12 +50,12 @@ private class AlarmRefreshActor(alarmService: AlarmService, initialMap: Map[Alar
     case ChangeSeverity(m) =>
       context.become(working(map ++ m))
       for ((a, s) <- m) {
-        alarmService.setSeverity(a, s)
+        alarmService.setSeverity(a, s, refresh = false)
       }
 
     case Publish =>
       for ((a, s) <- map) {
-        alarmService.setSeverity(a, s)
+        alarmService.setSeverity(a, s, refresh = false)
       }
 
     case x => log.error(s"Received unexpected message: $x")

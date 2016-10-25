@@ -136,14 +136,14 @@ public class JAlarmServiceTests {
       Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler), false);
     Thread.sleep(shortDelayMs); // make sure actor has started
 
-    alarmService.setSeverity(key1, JSeverityLevel.Critical).get();
+    alarmService.setSeverity(key1, JSeverityLevel.Critical, false).get();
     Thread.sleep(delayMs); // wait for severity to expire
 
     // alarm is latched, so stays at critical
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Critical));
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Critical));
 
-    alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
+    alarmService.setSeverity(key1, JSeverityLevel.Warning, false).get();
     // alarm is latched, so stays at critical
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Critical));
     Thread.sleep(shortDelayMs);
@@ -151,7 +151,7 @@ public class JAlarmServiceTests {
 
     // Acknowledge the alarm, which clears it, resets it back to Okay
     alarmService.acknowledgeAndResetAlarm(key1).get();
-    alarmService.setSeverity(key1, JSeverityLevel.Okay).get();
+    alarmService.setSeverity(key1, JSeverityLevel.Okay, false).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback, so the test below passes
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay)); // alarm was cleared
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay));
@@ -162,7 +162,7 @@ public class JAlarmServiceTests {
 
     // Test alarm in shelved state
     alarmService.setShelvedState(key1, JShelvedState.Shelved).get();
-    alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
+    alarmService.setSeverity(key1, JSeverityLevel.Warning, false).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     // getSeverity should return the severity that was set ...
     assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
@@ -170,7 +170,7 @@ public class JAlarmServiceTests {
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Disconnected));
     // un-shelve the alarm and try it again
     alarmService.setShelvedState(key1, JShelvedState.Normal).get();
-    alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
+    alarmService.setSeverity(key1, JSeverityLevel.Warning, false).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
     // Since the alarm is no longer shelved, the callback should be called this time

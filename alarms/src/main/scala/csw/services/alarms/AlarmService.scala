@@ -6,8 +6,8 @@ import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
-import csw.services.loc.Connection.{HttpConnection, TcpConnection}
-import csw.services.loc.LocationService.{ResolvedHttpLocation, ResolvedTcpLocation}
+import csw.services.loc.Connection.TcpConnection
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import org.slf4j.LoggerFactory
 import redis._
 
@@ -169,9 +169,10 @@ trait AlarmService {
    *
    * @param alarmKey the key for the alarm
    * @param severity the new value of the severity
+   * @param refresh if true, keep refreshing the severity (using the AlarmRefreshActor)
    * @return a future indicating when the operation has completed
    */
-  def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit]
+  def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, refresh: Boolean = false): Future[Unit]
 
   /**
    * Gets the severity level for the given alarm
@@ -267,6 +268,9 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   import AlarmService._
   import system.dispatcher
 
+  // Actor used to keep refreshing the alarm severity
+  lazy val alarmRefreshActor = system.actorOf(AlarmRefreshActor.props(this, Map.empty[AlarmKey, SeverityLevel]))
+
   override def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]] = {
     val pattern = alarmKey.key
     redisClient.keys(pattern).flatMap { keys =>
@@ -308,12 +312,17 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
     }
   }
 
-  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit] = {
-    for {
-      alarm <- getAlarmSmall(alarmKey)
-      alarmState <- getAlarmState(alarmKey)
-      result <- setSeverity(alarmKey, alarm, alarmState, severity)
-    } yield result
+  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, refresh: Boolean): Future[Unit] = {
+    if (refresh) {
+      alarmRefreshActor ! AlarmRefreshActor.ChangeSeverity(Map(alarmKey -> severity))
+      Future.successful(())
+    } else {
+      for {
+        alarm <- getAlarmSmall(alarmKey)
+        alarmState <- getAlarmState(alarmKey)
+        result <- setSeverity(alarmKey, alarm, alarmState, severity)
+      } yield result
+    }
   }
 
   // Sets the severity of the alarm, if allowed based on the alarm state

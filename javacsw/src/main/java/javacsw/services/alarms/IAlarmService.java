@@ -53,6 +53,16 @@ public interface IAlarmService {
      *
      * @param alarmKey the key for the alarm
      * @param severity the new value of the severity
+     * @param refresh if true, keep refreshing the severity (using the AlarmRefreshActor)
+     * @return a future indicating when the operation has completed
+     */
+    CompletableFuture<Unit> setSeverity(AlarmKey alarmKey, SeverityLevel severity, boolean refresh);
+
+    /**
+     * Sets and publishes the severity level for the given alarm (severity is not refreshed)
+     *
+     * @param alarmKey the key for the alarm
+     * @param severity the new value of the severity
      * @return a future indicating when the operation has completed
      */
     CompletableFuture<Unit> setSeverity(AlarmKey alarmKey, SeverityLevel severity);

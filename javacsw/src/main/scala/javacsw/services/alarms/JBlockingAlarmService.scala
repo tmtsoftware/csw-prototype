@@ -78,6 +78,9 @@ case class JBlockingAlarmService(alarmService: AlarmService, timeout: Timeout, s
   override def getAlarmState(key: AlarmKey): AlarmState =
     Await.result(alarmService.getAlarmState(key), timeout.duration)
 
+  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, refresh: Boolean): Unit =
+    Await.result(alarmService.setSeverity(alarmKey, severity, refresh), timeout.duration)
+
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Unit =
     Await.result(alarmService.setSeverity(alarmKey, severity), timeout.duration)
 

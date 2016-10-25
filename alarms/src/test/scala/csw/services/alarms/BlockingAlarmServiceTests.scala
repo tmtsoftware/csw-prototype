@@ -60,7 +60,8 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
 
   override protected def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration)
+    Try(if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration))
+    TestKit.shutdownActorSystem(system)
   }
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {

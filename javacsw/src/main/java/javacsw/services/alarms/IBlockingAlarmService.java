@@ -52,6 +52,16 @@ public interface IBlockingAlarmService {
    *
    * @param alarmKey the key for the alarm
    * @param severity the new value of the severity
+   * @param refresh if true, keep refreshing the severity (using the AlarmRefreshActor)
+   */
+  void setSeverity(AlarmKey alarmKey, SeverityLevel severity, boolean refresh);
+
+  /**
+   * Sets and publishes the severity level for the given alarm
+   * (severity is not refreshed).
+   *
+   * @param alarmKey the key for the alarm
+   * @param severity the new value of the severity
    */
   void setSeverity(AlarmKey alarmKey, SeverityLevel severity);
 

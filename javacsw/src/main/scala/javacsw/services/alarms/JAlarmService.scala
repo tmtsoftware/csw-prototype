@@ -167,6 +167,9 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
   override def getAlarmState(key: AlarmKey): CompletableFuture[AlarmState] =
     alarmService.getAlarmState(key).toJava.toCompletableFuture
 
+  override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, refresh: Boolean): CompletableFuture[Unit] =
+    alarmService.setSeverity(alarmKey, severity, refresh).toJava.toCompletableFuture
+
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): CompletableFuture[Unit] =
     alarmService.setSeverity(alarmKey, severity).toJava.toCompletableFuture
 
