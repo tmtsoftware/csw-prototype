@@ -24,7 +24,7 @@ object TelemetryServiceAdmin {
    * @param noExit if true, do not exit the application when redis exists
    * @return a future that completes when the redis server exits
    */
-  def startTelemetryService(name: String = "Telemetry Service", noExit: Boolean = true)(implicit ec: ExecutionContext): Future[Unit] = {
+  def startTelemetryService(name: String = TelemetryService.defaultName, noExit: Boolean = true)(implicit ec: ExecutionContext): Future[Unit] = {
     val ne = if (noExit) List("--no-exit") else Nil
     val args = List("--name", name, "--command", "redis-server --port %port") ++ ne
     Future {

@@ -22,8 +22,8 @@ object AlarmServiceTests {
 }
 
 /**
-  * Test the Alarm Service API
-  */
+ * Test the Alarm Service API
+ */
 class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
   implicit val sys = AlarmServiceTests.system
 

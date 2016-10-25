@@ -51,5 +51,5 @@ case class JTelemetryService(settings: EventServiceSettings, system: ActorRefFac
    * Deletes the given status event from the store
    * @return a future indicating if/when the operation has completed
    */
-  override  def delete(prefix: String): CompletableFuture[Unit] = ts.delete(prefix).map(_ => ()).toJava.toCompletableFuture
+  override def delete(prefix: String): CompletableFuture[Unit] = ts.delete(prefix).map(_ => ()).toJava.toCompletableFuture
 }

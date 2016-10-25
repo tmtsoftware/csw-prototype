@@ -20,19 +20,20 @@ object EventService {
   val defaultName = "Event Service"
 
   /**
-   * the default EventService as a ComponentId
+   * Returns the EventService ComponentId for the given, or default name
    */
-  val eventServiceComponentId = ComponentId(defaultName, ComponentType.Service)
+  def eventServiceComponentId(name: String = defaultName): ComponentId = ComponentId(name, ComponentType.Service)
 
   /**
-   * The default Event Service as its Connection type
+   * Returns the EventService connection for the given, or default name
    */
-  val eventServiceConnection = TcpConnection(eventServiceComponentId)
+  def eventServiceConnection(name: String = defaultName): TcpConnection = TcpConnection(eventServiceComponentId(name))
 
   // Lookup the event service redis instance with the location service
   private def locateEventService(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
-    LocationService.resolve(Set(eventServiceConnection)).map { locationsReady =>
+    val connection = eventServiceConnection(name)
+    LocationService.resolve(Set(connection)).map { locationsReady =>
       val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
       RedisClient(loc.host, loc.port)
     }
@@ -204,11 +205,11 @@ private[events] object EventServiceImpl {
   }
 
   private class EventMonitorActor(
-    subscriber: Option[ActorRef],
-    callback:   Option[Event => Unit],
-    redisHost:  String, redisPort: Int,
-    currentEvents: Future[Seq[Event]],
-    prefixes:      String*
+      subscriber: Option[ActorRef],
+      callback:   Option[Event => Unit],
+      redisHost:  String, redisPort: Int,
+      currentEvents: Future[Seq[Event]],
+      prefixes:      String*
   ) extends EventSubscriber(redisHost, redisPort) {
 
     import context.dispatcher

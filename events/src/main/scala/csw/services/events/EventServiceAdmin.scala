@@ -24,7 +24,7 @@ object EventServiceAdmin {
    * @param noExit if true, do not exit the application when redis exists
    * @return a future that completes when the redis server exits
    */
-  def startEventService(name: String = "Event Service", noExit: Boolean = true)(implicit ec: ExecutionContext): Future[Unit] = {
+  def startEventService(name: String = EventService.defaultName, noExit: Boolean = true)(implicit ec: ExecutionContext): Future[Unit] = {
     val ne = if (noExit) List("--no-exit") else Nil
     val args = List("--name", name, "--command", "redis-server --port %port") ++ ne
     Future {

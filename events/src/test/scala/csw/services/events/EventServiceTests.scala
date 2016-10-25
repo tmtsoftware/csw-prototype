@@ -2,7 +2,9 @@ package csw.services.events
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.loc.LocationService
 import csw.util.config.Events.SystemEvent
 import csw.util.config._
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
@@ -11,6 +13,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object EventServiceTests {
+  LocationService.initInterface()
+  val system = ActorSystem("EventServiceTests")
 
   // Define keys for testing
   val infoValue = IntKey("infoValue")
@@ -25,15 +29,42 @@ object EventServiceTests {
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 //@DoNotDiscover
 class EventServiceTests
-    extends TestKit(ActorSystem("Test"))
+    extends TestKit(EventServiceTests.system)
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   import EventServiceTests._
+  import system.dispatcher
 
-  implicit val execContext = system.dispatcher
+  // Name of the event service Redis instance to use
+  val esName = "EventServiceTests"
 
-  val settings = EventServiceSettings(system)
-  val eventService = EventService(settings)
+  implicit val timeout = Timeout(20.seconds)
+
+  // Used to start and stop the event service Redis instance used for the test
+  var eventAdmin: EventServiceAdmin = _
+
+  // Get the event service by looking up the name with the location service.
+  var eventService: EventService = _
+
+  override protected def beforeAll(): Unit = {
+    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
+    // Start redis and register it with the location service on a random free port.
+    // The following is the equivalent of running this from the command line:
+    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
+    EventServiceAdmin.startEventService(esName)
+
+    // Get the event service by looking it up the name with the location service.
+    eventService = Await.result(EventService(esName), timeout.duration)
+
+    // This is only used to stop the Redis instance that was started for this test
+    eventAdmin = EventServiceAdmin(eventService)
+  }
+
+  override protected def afterAll(): Unit = {
+    // Shutdown Redis (Only do this in tests that also started the server)
+    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
+    system.terminate()
+  }
 
   test("Test subscribing to events via subscribe method") {
     val prefix = "tcs.test5"
@@ -50,7 +81,8 @@ class EventServiceTests
 
     Await.ready(eventService.publish(event), 2.seconds)
     val probe = TestProbe(prefix)
-    val monitor = eventService.subscribe(Some(probe.ref), Some(listener), prefix)
+    val monitor1 = eventService.subscribe(probe.ref, prefix)
+    val monitor2 = eventService.subscribe(listener _, prefix)
     try {
       Thread.sleep(500)
       // wait for actor to start
@@ -61,11 +93,8 @@ class EventServiceTests
       assert(eventReceived.isDefined)
       assert(e == eventReceived.get)
     } finally {
-      monitor.stop()
+      monitor1.stop()
+      monitor2.stop()
     }
-  }
-
-  override def afterAll(): Unit = {
-    system.terminate()
   }
 }

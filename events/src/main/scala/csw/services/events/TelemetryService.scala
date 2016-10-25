@@ -13,16 +13,25 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
 object TelemetryService {
-
   /**
-   * The default name that the Telemetry Service Redis instance is registered with (with the Location Service)
+   * The default name that the Telemetry Service is registered with
    */
   val defaultName = "Telemetry Service"
+
+  /**
+   * Returns the TelemetryService ComponentId for the given, or default name
+   */
+  def telemetryServiceComponentId(name: String = defaultName): ComponentId = ComponentId(name, ComponentType.Service)
+
+  /**
+   * Returns the TelemetryService connection for the given, or default name
+   */
+  def telemetryServiceConnection(name: String = defaultName): TcpConnection = TcpConnection(telemetryServiceComponentId(name))
 
   // Lookup the telemetry service redis instance with the location service
   private def locateTelemetryService(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
-    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
+    val connection = telemetryServiceConnection(name)
     LocationService.resolve(Set(connection)).map { locationsReady =>
       val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
       RedisClient(loc.host, loc.port)
