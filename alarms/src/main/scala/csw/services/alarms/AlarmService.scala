@@ -25,6 +25,16 @@ object AlarmService {
   val defaultName = "Alarm Service"
 
   /**
+   * Returns the AlarmService ComponentId for the given, or default name
+   */
+  def alarmServiceComponentId(name: String = defaultName): ComponentId = ComponentId(name, ComponentType.Service)
+
+  /**
+   * Returns the AlarmService connection for the given, or default name
+   */
+  def alarmServiceConnection(name: String = defaultName): TcpConnection = TcpConnection(alarmServiceComponentId(name))
+
+  /**
    * An alarm's severity should be refreshed every defaultRefreshSecs seconds
    * to make sure it does not expire and become "Disconnected" (after maxMissedRefresh missed refreshes)
    */
@@ -39,7 +49,7 @@ object AlarmService {
   // Lookup the alarm service redis instance with the location service
   private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
-    val connection = TcpConnection(ComponentId(asName, ComponentType.Service))
+    val connection = alarmServiceConnection(asName)
     LocationService.resolve(Set(connection)).map { locationsReady =>
       val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
       RedisClient(loc.host, loc.port)

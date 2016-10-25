@@ -31,6 +31,10 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
 
   implicit val timeout = Timeout(10.seconds)
 
+  // Set a low refresh rate for the test
+  val refreshSecs = 1
+  //    val refreshSecs = 5
+
   // Get the test alarm service config file (ascf)
   val url = getClass.getResource("/test-alarms.conf")
   val ascf = Paths.get(url.toURI).toFile
@@ -41,12 +45,19 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
   // Used to start and stop the alarm service Redis instance used for the test
   var alarmAdmin: AlarmServiceAdmin = _
 
+  // Get the alarm service by looking up the name with the location service.
+  var alarmService: AlarmService = _
+
   override protected def beforeAll(): Unit = {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
     AlarmServiceAdmin.startAlarmService(asName)
+    // Get the alarm service by looking up the name with the location service.
+    // (using a small value for refreshSecs for testing)
+    alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)
+    alarmAdmin = AlarmServiceAdmin(alarmService)
   }
 
   override protected def afterAll(): Unit = {
@@ -56,10 +67,6 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
 
   test("Test initializing the alarm service, then set, get, list, monitor, acknowledge alarms") {
 
-    // Set a low refresh rate for the test
-    val refreshSecs = 1
-    //    val refreshSecs = 5
-
     // Time until alarm severity expires
     val expireSecs = refreshSecs * AlarmService.maxMissedRefresh
 
@@ -68,11 +75,6 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
 
     // Time in ms to wait to see if an alarm severity expired
     val delayMs = expireSecs * 1000 * refreshSecs + shortDelayMs
-
-    // Get the alarm service by looking up the name with the location service.
-    // (using a small value for refreshSecs for testing)
-    val alarmService = Await.result(AlarmService(asName, refreshSecs = refreshSecs), timeout.duration)
-    alarmAdmin = AlarmServiceAdmin(alarmService)
 
     // initialize the list of alarms in Redis (This is only for the test and should not be done by normal clients)
     val problems = Await.result(alarmAdmin.initAlarms(ascf), timeout.duration)
