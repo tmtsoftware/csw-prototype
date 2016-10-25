@@ -25,6 +25,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 object FollowActorTests {
   LocationService.initInterface()
@@ -96,8 +97,8 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
   override protected def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
-    system.terminate()
+    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+    TestKit.shutdownActorSystem(system)
   }
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext

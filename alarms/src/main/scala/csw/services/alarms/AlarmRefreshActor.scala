@@ -42,13 +42,16 @@ private class AlarmRefreshActor(alarmService: AlarmService, initialMap: Map[Alar
   import context.dispatcher
 
   val delay = alarmService.refreshSecs.seconds
-  context.system.scheduler.schedule(delay, delay, self, Publish)
+  context.system.scheduler.schedule(Duration.Zero, delay, self, Publish)
 
   def receive: Receive = working(initialMap)
 
   def working(map: Map[AlarmKey, SeverityLevel]): Receive = {
     case ChangeSeverity(m) =>
       context.become(working(map ++ m))
+      for ((a, s) <- m) {
+        alarmService.setSeverity(a, s)
+      }
 
     case Publish =>
       for ((a, s) <- map) {

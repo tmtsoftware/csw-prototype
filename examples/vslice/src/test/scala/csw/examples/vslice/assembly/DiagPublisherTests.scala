@@ -24,6 +24,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 /**
  * Diag Pubisher Tests
@@ -114,8 +115,8 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
   override protected def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
-    system.terminate()
+    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+    TestKit.shutdownActorSystem(system)
   }
 
   implicit val execContext = system.dispatcher

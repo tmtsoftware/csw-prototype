@@ -11,6 +11,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 object EventPublishTests {
   LocationService.initInterface()
@@ -83,8 +84,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
   override protected def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
-    system.terminate()
+    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+    TestKit.shutdownActorSystem(system)
   }
 
   // Publisher behaves the same whether nss is in use or not so always nssNotInUse

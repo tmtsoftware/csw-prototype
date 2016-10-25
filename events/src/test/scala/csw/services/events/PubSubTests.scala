@@ -12,6 +12,7 @@ import csw.util.config.Events.SystemEvent
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Try
 
 class PubSubTests extends TestKit(PubSubTests.system)
     with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
@@ -46,8 +47,8 @@ class PubSubTests extends TestKit(PubSubTests.system)
 
   override protected def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
-    system.terminate()
+    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+    TestKit.shutdownActorSystem(system)
   }
 
   // Test runs for numSecs seconds, continuously publishing SystemEvent objects and

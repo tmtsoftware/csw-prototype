@@ -11,6 +11,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 object EventServiceTests {
   LocationService.initInterface()
@@ -62,8 +63,8 @@ class EventServiceTests
 
   override protected def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
-    system.terminate()
+    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+    TestKit.shutdownActorSystem(system)
   }
 
   test("Test subscribing to events via subscribe method") {
