@@ -267,22 +267,23 @@ object AsConsole extends App {
 
   private def alarmStatusCallback(cmd: String)(alarmStatus: AlarmStatus): Unit = {
     import scala.sys.process._
-    val a = alarmStatus.alarmKey
-    s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.currentSeverity.latched}".run()
+    if (cmd.nonEmpty) {
+      val a = alarmStatus.alarmKey
+      s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.currentSeverity.latched}".run()
+    }
   }
 
   private def healthStatusCallback(cmd: String)(healthStatus: HealthStatus): Unit = {
     import scala.sys.process._
-    s"$cmd ${healthStatus.health}".run()
+    if (cmd.nonEmpty) s"$cmd ${healthStatus.health}".run()
   }
 
   // Handle the --monitor* options
   private def monitor(alarmService: AlarmService, options: Options): Unit = {
     alarmService.monitorAlarms(
       AlarmKey(options.subsystem, options.component, options.name),
-      None,
-      options.monitorAlarms.map(alarmStatusCallback),
-      options.monitorHealth.map(healthStatusCallback),
+      alarmStatusCallback(options.monitorAlarms.getOrElse("")),
+      healthStatusCallback(options.monitorHealth.getOrElse("")),
       options.monitorAll
     )
   }

@@ -43,7 +43,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   import TromboneStateHandler._
   import system.dispatcher
 
-  implicit val timeout = Timeout(60.seconds)
+  implicit val timeout = Timeout(10.seconds)
 
   // Name of the alarm service Redis instance to use
   val asName = "AlarmMonitorTests"
@@ -54,17 +54,20 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   // Get the alarm service by looking up the name with the location service.
   var alarmService: AlarmService = _
 
-  override protected def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
+    logger.info("Starting alarm service")
     AlarmServiceAdmin.startAlarmService(asName)
     // Get the alarm service by looking up the name with the location service.
     // (using a small value for refreshSecs for testing)
+    logger.info("Looking up alarm service")
     alarmService = Await.result(AlarmService(asName), timeout.duration)
     alarmAdmin = AlarmServiceAdmin(alarmService)
 
+    logger.info("Initializing alarm data")
     // Initialize the available alarms from a file (location depends on how you run this test - XXX maybe should load it as a Config)
     val testAlarms1 = new File("src/test/resources/test-alarms.conf")
     val testAlarms2 = new File("examples/vslice/src/test/resources/test-alarms.conf")
@@ -72,9 +75,10 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     if (file.exists())
       Await.result(alarmAdmin.initAlarms(file), timeout.duration)
     else logger.error(s"$file does not exist")
+    logger.info("Initialized alarm service")
   }
 
-  override protected def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
     if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration)
     TestKit.shutdownActorSystem(system)
@@ -148,7 +152,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       val fakeTromboneHCD = TestProbe()
 
       // Create an alarm monitor
-      val am = system.actorOf(TromboneAlarmMonitor.props(fakeTromboneHCD.ref))
+      val am = system.actorOf(TromboneAlarmMonitor.props(fakeTromboneHCD.ref, alarmService))
       expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // the fake trombone HCD sends a CurrentState event that has the low limit sent
@@ -180,7 +184,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       val fakeTromboneHCD = TestProbe()
 
       // Create an alarm monitor
-      val am = system.actorOf(TromboneAlarmMonitor.props(fakeTromboneHCD.ref))
+      val am = system.actorOf(TromboneAlarmMonitor.props(fakeTromboneHCD.ref, alarmService))
       expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // the fake trombone HCD sends a CurrentState event that has the high limit sent
@@ -223,7 +227,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       //info("Running")
 
       // Create an alarm monitor
-      system.actorOf(TromboneAlarmMonitor.props(tromboneHCD))
+      system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService))
       expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // The command handler sends commands to the trombone HCD
@@ -277,7 +281,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       //info("Running")
 
       // Create an alarm monitor
-      system.actorOf(TromboneAlarmMonitor.props(tromboneHCD))
+      system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService))
       expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // The command handler sends commands to the trombone HCD
@@ -290,7 +294,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
       fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
 
-      expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService due to move
+      expectNoMsg(500.milli) // A bit of time for processing and update of AlarmService due to move
 
       // This is checking that the value in the alarm service has been set using admin interface
       alarmValue = Await.result(alarmService.getSeverity(highLimitAlarm), timeout.duration)

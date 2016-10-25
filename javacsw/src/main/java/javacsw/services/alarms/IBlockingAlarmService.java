@@ -124,9 +124,7 @@ public interface IBlockingAlarmService {
    *
    * @param alarmKey     an AlarmKey matching the set of alarms for a component, subsystem or all subsystems, etc. (Note
    *                     that each of the AlarmKey fields may be specified as None, which is then converted to a wildcard "*")
-   * @param subscriber   if defined, an actor that will receive a HealthStatus message whenever the health for the given key changes
-   * @param notifyAlarm  if defined, a function that will be called with an AlarmStatus object whenever the severity of an alarm changes
-   * @param notifyHealth if defined, a function that will be called with a HealthStatus object whenever the total health for key pattern changes
+   * @param subscriber   an actor that will receive a HealthStatus message whenever the health for the given key changes
    * @param notifyAll    if true, all severity changes are reported (for example, for logging), otherwise
    *                     only the relevant changes in alarms are reported, for alarms that are not shelved and not out of service,
    *                     and where the latched severity or calculated health actually changed
@@ -134,10 +132,26 @@ public interface IBlockingAlarmService {
    */
   AlarmMonitor monitorAlarms(
     AlarmKey alarmKey,
-    Optional<ActorRef> subscriber,
-    // XXX TODO: Add code to convert Java void to Scala Unit?
-    Optional<AlarmHandler> notifyAlarm,
-    Optional<HealthHandler> notifyHealth,
+    ActorRef subscriber,
+    boolean notifyAll
+  );
+
+  /**
+   * Starts monitoring the health of the system, subsystem or component
+   *
+   * @param alarmKey     an AlarmKey matching the set of alarms for a component, subsystem or all subsystems, etc. (Note
+   *                     that each of the AlarmKey fields may be specified as None, which is then converted to a wildcard "*")
+   * @param notifyAlarm  a function that will be called with an AlarmStatus object whenever the severity of an alarm changes
+   * @param notifyHealth a function that will be called with a HealthStatus object whenever the total health for key pattern changes
+   * @param notifyAll    if true, all severity changes are reported (for example, for logging), otherwise
+   *                     only the relevant changes in alarms are reported, for alarms that are not shelved and not out of service,
+   *                     and where the latched severity or calculated health actually changed
+   * @return an actorRef for the subscriber actor (kill the actor to stop monitoring)
+   */
+  AlarmMonitor monitorAlarms(
+    AlarmKey alarmKey,
+    AlarmHandler notifyAlarm,
+    HealthHandler notifyHealth,
     boolean notifyAll
   );
 

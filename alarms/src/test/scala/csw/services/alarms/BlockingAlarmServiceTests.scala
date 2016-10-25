@@ -113,7 +113,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
     val badKey = AlarmKey("XXX", "xxx", "xxx")
 
-    val alarmMonitor = bas.monitorAlarms(key1, None, Some(printAlarmStatus _), Some(printHealthStatus _))
+    val alarmMonitor = bas.monitorAlarms(key1, printAlarmStatus, printHealthStatus, notifyAll = false)
     Thread.sleep(shortDelayMs) // make sure actor has started
 
     bas.setSeverity(key1, SeverityLevel.Critical)
@@ -178,7 +178,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     alarmMonitor.stop()
     Thread.sleep(shortDelayMs)
     val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
-    val healthMonitor = bas.monitorAlarms(nfKey, None, Some(printAlarmStatus _), Some(printHealthStatus _))
+    val healthMonitor = bas.monitorAlarms(nfKey, printAlarmStatus, printHealthStatus, notifyAll = false)
     Thread.sleep(shortDelayMs) // make sure actor has started
     bas.setSeverity(key2, SeverityLevel.Okay)
     bas.setSeverity(key3, SeverityLevel.Okay)

@@ -32,24 +32,18 @@ import scala.util.{Failure, Success}
  * client, and will cause the alarms to go to disconnected, if the assembly quits.
  *
  * @param currentStateReceiver the currentStateReceiver that delivers CurrentState messages either through an HCD or a CurrentStateReceiver.
+ * @param alarmService reference to the alarm service used
  */
-class TromboneAlarmMonitor(currentStateReceiver: ActorRef) extends Actor with ActorLogging {
+class TromboneAlarmMonitor(currentStateReceiver: ActorRef, alarmService: AlarmService) extends Actor with ActorLogging {
   import TromboneAlarmMonitor._
   import context.dispatcher
 
-  implicit val timeout = Timeout(10.seconds)
+  //  implicit val timeout = Timeout(10.seconds)
 
-  AlarmService().onComplete {
-    case Success(alarmService) =>
-      log.info("Success finding alarm service")
-      // XXX allan FIXME: need to refresh alarm state!
-      // Set the alarms to okay so that the Alarm Service client will update the alarms while this actor is alive
-      sendLowLimitAlarm(alarmService, Okay)
-      sendHighLimitAlarm(alarmService, Okay)
-      context.become(monitorReceive(alarmService))
-    case Failure(ex) =>
-      log.error("TromboneAlarmMonitor failed to create the AlarmService client: $ex")
-  }
+  // Set the alarms to okay so that the Alarm Service client will update the alarms while this actor is alive
+  sendLowLimitAlarm(alarmService, Okay)
+  sendHighLimitAlarm(alarmService, Okay)
+  context.become(monitorReceive(alarmService))
 
   // Subscribe this
   currentStateReceiver ! HcdController.Subscribe
@@ -115,7 +109,7 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef) extends Actor with Ac
    * @param severity the severity that is used to set the lowLimitAlarm
    */
   def sendLowLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel) = {
-    alarmService.setSeverity(lowLimitAlarm, severity).onComplete {
+    alarmService.setSeverity(lowLimitAlarm, severity, refresh = true).onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $lowLimitAlarm to $severity: $ex")
       case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the low limit alarm")
     }
@@ -127,7 +121,7 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef) extends Actor with Ac
    * @param severity the severity that is used to set the highLimitAlarm
    */
   def sendHighLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel) = {
-    alarmService.setSeverity(highLimitAlarm, severity).onComplete {
+    alarmService.setSeverity(highLimitAlarm, severity, refresh = true).onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $highLimitAlarm to: $severity: $ex")
       case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the high limit alarm")
     }
@@ -137,7 +131,7 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef) extends Actor with Ac
 
 object TromboneAlarmMonitor {
 
-  def props(currentStateReceive: ActorRef): Props = Props(classOf[TromboneAlarmMonitor], currentStateReceive)
+  def props(currentStateReceive: ActorRef, alarmService: AlarmService): Props = Props(classOf[TromboneAlarmMonitor], currentStateReceive, alarmService)
 
   // The alarm keys for the low and high trombone encoder limits
   val highLimitAlarm = AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisHighLimitAlarm")

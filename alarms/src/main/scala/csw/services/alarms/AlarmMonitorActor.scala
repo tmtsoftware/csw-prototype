@@ -10,8 +10,8 @@ import redis.actors.RedisSubscriberActor
 import redis.api.pubsub.{Message, PMessage}
 
 import scala.util.{Failure, Success}
-import HealthMonitorActor._
-import HealthMonitorWorkorActor._
+import AlarmMonitorActor._
+import AlarmMonitorWorkorActor._
 import csw.services.alarms.AlarmService.HealthInfo
 import csw.services.alarms.AlarmState.{ActivationState, ShelvedState}
 
@@ -21,7 +21,7 @@ import scala.concurrent.Future
  * An actor that monitors selected subsystem or component health and notifies a method or
  * another actor of changes in the health status.
  */
-object HealthMonitorActor {
+object AlarmMonitorActor {
   private val keyEventPrefix = "__keyevent@0__:"
 
   /**
@@ -43,34 +43,33 @@ object HealthMonitorActor {
     notifyHealth: Option[HealthStatus => Unit] = None,
     notifyAll:    Boolean                      = false
   ): Props = {
-    Props(classOf[HealthMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber,
+    Props(classOf[AlarmMonitorActor], alarmService.asInstanceOf[AlarmServiceImpl], alarmKey, subscriber,
       notifyAlarm, notifyHealth, notifyAll)
   }
 }
 
 // Subscribes to changes in alarm severity for alarms matching the key and notifies the listeners on
 // changes in health
-private class HealthMonitorActor(
+private class AlarmMonitorActor(
   alarmService: AlarmServiceImpl,
   alarmKey:     AlarmKey,
   subscriber:   Option[ActorRef],
   notifyAlarm:  Option[AlarmStatus => Unit],
   notifyHealth: Option[HealthStatus => Unit],
   notifyAll:    Boolean
+) extends RedisSubscriberActor(
+  address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
+  channels = Seq.empty,
+  patterns = List("__key*__:*", alarmKey.severityKey),
+  authPassword = None,
+  onConnectStatus = (b: Boolean) => {}
 )
-    extends RedisSubscriberActor(
-      address = new InetSocketAddress(alarmService.redisClient.host, alarmService.redisClient.port),
-      channels = Seq.empty,
-      patterns = List("__key*__:*", alarmKey.severityKey),
-      authPassword = None,
-      onConnectStatus = (b: Boolean) => {}
-    )
     with ByteStringSerializerLowPriority {
 
   import context.dispatcher
 
   // Use a worker actor to keep track of the alarm severities and states, calculate health and notify listeners
-  var worker = context.actorOf(HealthMonitorWorkorActor.props(alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll))
+  var worker = context.actorOf(AlarmMonitorWorkorActor.props(alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll))
 
   // Initialize the complete map once at startup, and then keep it up to date by subscribing to the Redis key pattern
   initAlarmMap()
@@ -108,7 +107,7 @@ private class HealthMonitorActor(
 }
 
 // Used to create the worker actor
-private object HealthMonitorWorkorActor {
+private object AlarmMonitorWorkorActor {
 
   // Initial map with alarm data
   case class InitialMap(alarmMap: Map[AlarmKey, HealthInfo])
@@ -132,13 +131,13 @@ private object HealthMonitorWorkorActor {
     notifyHealth: Option[HealthStatus => Unit],
     notifyAll:    Boolean
   ): Props = {
-    Props(classOf[HealthMonitorWorkorActor], alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll)
+    Props(classOf[AlarmMonitorWorkorActor], alarmService, alarmKey, subscriber, notifyAlarm, notifyHealth, notifyAll)
   }
 }
 
 // Manages a map of alarm severity and state, calculates health when something changes
 // and notifies the listeners when the health value changes
-private class HealthMonitorWorkorActor(
+private class AlarmMonitorWorkorActor(
     alarmService:    AlarmServiceImpl,
     alarmKeyPattern: AlarmKey,
     subscriber:      Option[ActorRef],
