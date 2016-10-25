@@ -12,11 +12,11 @@ import scala.concurrent.duration._
 object AlarmRefreshActor {
 
   /**
-   * Actor message to change the severity level of selected alarms (only the ones contained in the map)
+   * Actor message to set the severity level of selected alarms (only the ones contained in the map)
    *
    * @param alarms a map of alarm key to the severity level that it should now have
    */
-  case class ChangeSeverity(alarms: Map[AlarmKey, SeverityLevel])
+  case class SetSeverity(alarms: Map[AlarmKey, SeverityLevel], setNow: Boolean)
 
   /**
    * Message sent by timer to tell actor to republish the alarm severities
@@ -47,10 +47,12 @@ private class AlarmRefreshActor(alarmService: AlarmService, initialMap: Map[Alar
   def receive: Receive = working(initialMap)
 
   def working(map: Map[AlarmKey, SeverityLevel]): Receive = {
-    case ChangeSeverity(m) =>
+    case SetSeverity(m, setNow) =>
       context.become(working(map ++ m))
-      for ((a, s) <- m) {
-        alarmService.setSeverity(a, s, refresh = false)
+      if (setNow) {
+        for ((a, s) <- m) {
+          alarmService.setSeverity(a, s, refresh = false)
+        }
       }
 
     case Publish =>

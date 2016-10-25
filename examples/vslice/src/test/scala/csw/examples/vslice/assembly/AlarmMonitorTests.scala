@@ -211,7 +211,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       val fakeAssembly = TestProbe()
 
       // This is checking that the value in the alarm service has been set using admin interface
-      Await.result(alarmService.setSeverity(lowLimitAlarm, Okay), timeout.duration)
+      Await.result(alarmService.setSeverity(lowLimitAlarm, Okay, refresh = true), timeout.duration)
       var alarmValue = Await.result(alarmService.getSeverity(lowLimitAlarm), timeout.duration)
       logger.info("Initial alarm value should be okay or disconnected")
       alarmValue.reported shouldBe Okay
@@ -265,7 +265,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       val fakeAssembly = TestProbe()
 
       // This is checking that the value in the alarm service has been set using admin interface
-      Await.result(alarmService.setSeverity(highLimitAlarm, Okay), timeout.duration)
+      Await.result(alarmService.setSeverity(highLimitAlarm, Okay, refresh = true), timeout.duration)
       var alarmValue = Await.result(alarmService.getSeverity(highLimitAlarm), timeout.duration)
       logger.info("Initial alarm value should be okay or disconnected")
       alarmValue.reported shouldBe Okay

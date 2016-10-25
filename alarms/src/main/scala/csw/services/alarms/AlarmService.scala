@@ -169,7 +169,7 @@ trait AlarmService {
    *
    * @param alarmKey the key for the alarm
    * @param severity the new value of the severity
-   * @param refresh if true, keep refreshing the severity (using the AlarmRefreshActor)
+   * @param refresh  if true, keep refreshing the severity (using the AlarmRefreshActor)
    * @return a future indicating when the operation has completed
    */
   def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, refresh: Boolean = false): Future[Unit]
@@ -313,16 +313,16 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   }
 
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel, refresh: Boolean): Future[Unit] = {
-    if (refresh) {
-      alarmRefreshActor ! AlarmRefreshActor.ChangeSeverity(Map(alarmKey -> severity))
-      Future.successful(())
-    } else {
-      for {
-        alarm <- getAlarmSmall(alarmKey)
-        alarmState <- getAlarmState(alarmKey)
-        result <- setSeverity(alarmKey, alarm, alarmState, severity)
-      } yield result
-    }
+    val futureResult = for {
+      alarm <- getAlarmSmall(alarmKey)
+      alarmState <- getAlarmState(alarmKey)
+      result <- setSeverity(alarmKey, alarm, alarmState, severity)
+    } yield result
+
+    if (refresh)
+      alarmRefreshActor ! AlarmRefreshActor.SetSeverity(Map(alarmKey -> severity), setNow = false)
+
+    futureResult
   }
 
   // Sets the severity of the alarm, if allowed based on the alarm state
@@ -486,6 +486,7 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, refreshSec
   // Indeterminate, it’s health is also Bad.
   private[alarms] def getHealth(alarmMap: Map[AlarmKey, HealthInfo]): Health = {
     def active(h: HealthInfo): Boolean = h.alarmState.shelvedState == ShelvedState.Normal && h.alarmState.activationState == ActivationState.Normal
+
     val severityLevels = alarmMap.values.filter(active).map(_.currentSeverity.latched).toList
 
     if (severityLevels.contains(SeverityLevel.Critical) || severityLevels.contains(SeverityLevel.Disconnected) || severityLevels.contains(SeverityLevel.Indeterminate))
