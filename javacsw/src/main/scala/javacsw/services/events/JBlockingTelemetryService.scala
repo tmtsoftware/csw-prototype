@@ -2,7 +2,7 @@ package javacsw.services.events
 
 import java.util.Optional
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRef, ActorRefFactory}
 import csw.services.events._
 import csw.util.config.Events.StatusEvent
 
@@ -26,6 +26,10 @@ case class JBlockingTelemetryService(timeout: FiniteDuration, settings: EventSer
   def publish(status: StatusEvent): Unit = ts.publish(status)
 
   def publish(status: StatusEvent, history: Int): Unit = ts.publish(status, history)
+
+  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventService.EventMonitor = ts.subscribe(subscriber, postLastEvents, prefixes: _*)
+
+  def subscribe(callback: IBlockingTelemetryService.TelemetryHandler, postLastEvents: Boolean, prefixes: String*): EventService.EventMonitor = ts.subscribe(callback.handleEvent _, postLastEvents, prefixes: _*)
 
   def get(prefix: String): Optional[StatusEvent] = ts.get(prefix).asJava
 

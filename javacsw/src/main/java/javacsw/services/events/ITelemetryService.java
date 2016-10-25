@@ -46,18 +46,20 @@ public interface ITelemetryService {
      * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
      *
      * @param subscriber an actor to receive StatusEvent messages
+     * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventService.EventMonitor subscribe(ActorRef subscriber, String... prefixes);
+    EventService.EventMonitor subscribe(ActorRef subscriber, boolean postLastEvents, String... prefixes);
 
     /**
      * Subscribes a callback function to telemetry events matching the given prefixes
      * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
      *
      * @param callback   an callback which will be called with StatusEvent objects (in another thread)
+     * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventService.EventMonitor subscribe(TelemetryHandler callback, String... prefixes);
+    EventService.EventMonitor subscribe(TelemetryHandler callback, boolean postLastEvents, String... prefixes);
 
     /**
      * Gets the value for the given status event prefix

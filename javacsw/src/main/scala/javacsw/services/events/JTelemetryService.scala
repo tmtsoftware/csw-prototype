@@ -31,11 +31,11 @@ case class JTelemetryService(settings: EventServiceSettings, system: ActorRefFac
 
   override def publish(status: StatusEvent, history: Int = 0): CompletableFuture[Unit] = ts.publish(status, history).toJava.toCompletableFuture
 
-  override def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor =
-    ts.subscribe(subscriber, prefixes: _*)
+  override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor =
+    ts.subscribe(subscriber, postLastEvents, prefixes: _*)
 
-  override def subscribe(callback: ITelemetryService.TelemetryHandler, prefixes: String*): EventMonitor =
-    ts.subscribe(callback.handleEvent _, prefixes: _*)
+  override def subscribe(callback: ITelemetryService.TelemetryHandler, postLastEvents: Boolean, prefixes: String*): EventMonitor =
+    ts.subscribe(callback.handleEvent _, postLastEvents, prefixes: _*)
 
   override def get(prefix: String): CompletableFuture[Optional[StatusEvent]] = ts.get(prefix).map(_.asJava).toJava.toCompletableFuture
 

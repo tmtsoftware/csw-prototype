@@ -108,8 +108,8 @@ class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val trombo
 
 object FollowCommand {
 
-  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisherIn: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings]) =
-    Props(classOf[FollowCommand], assemblyContext, nssInUse, tromboneHCD, eventPublisherIn, eventServiceSettings)
+  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisherIn: Option[ActorRef], eventService: Option[EventService]) =
+    Props(classOf[FollowCommand], assemblyContext, nssInUse, tromboneHCD, eventPublisherIn, eventService)
 
   trait FollowCommandMessages
 

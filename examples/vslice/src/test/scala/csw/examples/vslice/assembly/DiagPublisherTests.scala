@@ -2,18 +2,18 @@ package csw.examples.vslice.assembly
 
 import java.net.URI
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.DiagPublisher.{DiagnosticState, OperationsState}
-import csw.examples.vslice.assembly.TromboneAssembly.UpdateTromboneHCD
 import csw.examples.vslice.assembly.TrombonePublisher.{AxisStateUpdate, AxisStatsUpdate}
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD.{GetAxisStats, GetAxisUpdate}
-import csw.services.events.{EventService, EventServiceSettings, EventSubscriber}
+import csw.services.events.{EventService, EventServiceAdmin}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.{ComponentId, Connection, LocationService}
+import csw.services.loc.LocationService
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation, Unresolved}
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
@@ -22,6 +22,7 @@ import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLife
 import csw.util.config.Events.{StatusEvent, SystemEvent}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
@@ -30,73 +31,30 @@ import scala.concurrent.duration._
 object DiagPublisherTests {
   LocationService.initInterface()
   val system = ActorSystem("DiagPublisherSystem")
-}
-class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
-
-  def startHCD: ActorRef = {
-    val testInfo = HcdInfo(
-      TromboneHCD.componentName,
-      TromboneHCD.trombonePrefix,
-      TromboneHCD.componentClassName,
-      DoNotRegister, Set(AkkaType), 1.second
-    )
-
-    Supervisor3(testInfo)
-  }
-
-  // This is used for testing and insertion into components for testing
-  def eventConnection: EventService = EventService(testEventServiceSettings)
-
-  var testEventService: Option[EventService] = None
-  override def beforeAll() = {
-    testEventService = Some(eventConnection)
-  }
-
-  override def afterAll = {
-    //testEventService.foreach(_.shutdown())
-    TestKit.shutdownActorSystem(system)
-  }
-
-  implicit val execContext = system.dispatcher
-
-  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
-
-  val assemblyContext = AssemblyTestData.TestAssemblyContext
-  import assemblyContext._
-
-  // This is possible since trombone HCD has only one HCD
-  val tromboneHCDConnection: AkkaConnection = assemblyContext.info.connections.head.asInstanceOf[AkkaConnection]
-
-  def newDiagPublisher(currentStateReceiver: ActorRef, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[DiagPublisher] = {
-    val props = DiagPublisher.props(assemblyContext, currentStateReceiver, tromboneHCD, eventPublisher)
-    TestActorRef[DiagPublisher](props)
-  }
 
   // Test subscriber actor for telemetry and system events
   object TestSubscriber {
-    def props(prefix: String): Props = Props(new TestSubscriber(prefix))
+    def props(): Props = Props(classOf[TestSubscriber])
 
     case object GetSysResults
+
     case object GetStatusResults
 
     case class SysResults(msgs: Vector[SystemEvent])
+
     case class StatusResults(msgs: Vector[StatusEvent])
+
   }
 
   /**
    * Test event service client, subscribes to some event
-   * @param prefix the prefix that will be subscribed to
    */
-  class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
+  class TestSubscriber extends Actor with ActorLogging {
 
     import TestSubscriber._
 
     var sysmsgs = Vector.empty[SystemEvent]
     var statmsgs = Vector.empty[StatusEvent]
-
-    subscribe(prefix)
-    log.info(s"Test subscriber for prefix: $prefix")
 
     def receive: Receive = {
       case event: SystemEvent =>
@@ -109,6 +67,69 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       case GetSysResults    => sender() ! SysResults(sysmsgs)
       case GetStatusResults => sender() ! StatusResults(statmsgs)
     }
+  }
+
+}
+
+class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+
+  import DiagPublisherTests._
+
+  def startHCD: ActorRef = {
+    val testInfo = HcdInfo(
+      TromboneHCD.componentName,
+      TromboneHCD.trombonePrefix,
+      TromboneHCD.componentClassName,
+      DoNotRegister, Set(AkkaType), 1.second
+    )
+
+    Supervisor3(testInfo)
+  }
+
+  // Name of the event service Redis instance to use
+  val esName = "DiagPublisherTests"
+
+  implicit val timeout = Timeout(10.seconds)
+
+  // Used to start and stop the event service Redis instance used for the test
+  var eventAdmin: EventServiceAdmin = _
+
+  // Get the event service by looking up the name with the location service.
+  var eventService: EventService = _
+
+  override def beforeAll() = {
+    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
+    // Start redis and register it with the location service on a random free port.
+    // The following is the equivalent of running this from the command line:
+    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
+    EventServiceAdmin.startEventService(esName)
+
+    // Get the event service by looking it up the name with the location service.
+    eventService = Await.result(EventService(esName), timeout.duration)
+
+    // This is only used to stop the Redis instance that was started for this test
+    eventAdmin = EventServiceAdmin(eventService)
+  }
+
+  override protected def afterAll(): Unit = {
+    // Shutdown Redis (Only do this in tests that also started the server)
+    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
+    system.terminate()
+  }
+
+  implicit val execContext = system.dispatcher
+
+  val assemblyContext = AssemblyTestData.TestAssemblyContext
+
+  import assemblyContext._
+
+  // This is possible since trombone HCD has only one HCD
+  val tromboneHCDConnection: AkkaConnection = assemblyContext.info.connections.head.asInstanceOf[AkkaConnection]
+
+  def newDiagPublisher(currentStateReceiver: ActorRef, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[DiagPublisher] = {
+    val props = DiagPublisher.props(assemblyContext, currentStateReceiver, tromboneHCD, eventPublisher)
+    TestActorRef[DiagPublisher](props)
   }
 
   describe("basic diag tests") {
@@ -296,6 +317,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       // This is here to allow the destination to run and set its state
       expectNoMsg(20.milli)
     }
+
     /**
      * Test Description: Test that updating the HCD actorRef during operations works properly by
      * first setting the HCD to None and then resetting it.
@@ -348,11 +370,11 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      val resultSubscriber = TestActorRef(TestSubscriber.props(axisStateEventPrefix))
-      //expectNoMsg(50.milli)
+      val resultSubscriber = TestActorRef(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber, postLastEvents = true, axisStateEventPrefix)
 
       val tromboneHCD = startHCD
 
@@ -400,11 +422,11 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      val resultSubscriber = TestActorRef(TestSubscriber.props(axisStateEventPrefix))
-      //expectNoMsg(50.milli)
+      val resultSubscriber = TestActorRef(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber, postLastEvents = true, axisStateEventPrefix)
 
       val tromboneHCD = startHCD
 
@@ -462,12 +484,15 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      val resultSubscriber = TestActorRef(TestSubscriber.props(axisStateEventPrefix))
+      val resultSubscriber = TestActorRef(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber, postLastEvents = true, axisStateEventPrefix)
+
       // Creates a subscriber for stats events
-      val resultSubscriber2 = TestActorRef(TestSubscriber.props(axisStatsEventPrefix))
+      val resultSubscriber2 = TestActorRef(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber2, postLastEvents = true, axisStatsEventPrefix)
 
       val tromboneHCD = startHCD
 

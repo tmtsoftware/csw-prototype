@@ -1,52 +1,26 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import akka.util.Timeout
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
-import csw.services.events.{EventService, EventServiceSettings, EventSubscriber}
+import csw.services.events.{EventService, EventServiceAdmin}
 import csw.services.loc.LocationService
 import csw.util.config.Events.{EventTime, SystemEvent}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object EventPublishTests {
   LocationService.initInterface()
   val system = ActorSystem("EventPublishTests")
-}
-/**
- * TMT Source Code: 8/17/16.
- */
-class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
-
-  implicit val execContext = system.dispatcher
-
-  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
-
-  val assemblyContext = AssemblyTestData.TestAssemblyContext
-  val calculationConfig = assemblyContext.calculationConfig
-
-  import assemblyContext._
-
-  // This is used for testing and insertion into components for testing
-  def eventConnection: EventService = EventService(testEventServiceSettings)
-
-  var testEventService: Option[EventService] = None
-  override def beforeAll() = {
-    testEventService = Some(eventConnection)
-  }
-
-  override def afterAll = {
-    //testEventService.foreach(_.shutdown())
-    TestKit.shutdownActorSystem(system)
-  }
 
   val initialElevation = 90.0
 
   // Test subscriber actor for telemetry
   object TestSubscriber {
-    def props(prefix: String): Props = Props(new TestSubscriber(prefix))
+    def props(): Props = Props(new TestSubscriber())
 
     case object GetResults
 
@@ -54,14 +28,11 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
   }
 
-  class TestSubscriber(prefix: String) extends EventSubscriber(testEventServiceSettings.redisHostname, testEventServiceSettings.redisPort) {
+  class TestSubscriber extends Actor with ActorLogging {
 
     import TestSubscriber._
 
     var msgs = Vector.empty[SystemEvent]
-
-    subscribe(prefix)
-    info(s"Test subscriber for prefix: $prefix")
 
     def receive: Receive = {
       case event: SystemEvent =>
@@ -70,6 +41,50 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       case GetResults => sender() ! Results(msgs)
     }
+  }
+}
+
+/**
+ * TMT Source Code: 8/17/16.
+ */
+class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+
+  import EventPublishTests._
+  import system.dispatcher
+
+  val assemblyContext = AssemblyTestData.TestAssemblyContext
+  import assemblyContext._
+
+  // Name of the event service Redis instance to use
+  val esName = "EventPublishTests"
+
+  implicit val timeout = Timeout(10.seconds)
+
+  // Used to start and stop the event service Redis instance used for the test
+  var eventAdmin: EventServiceAdmin = _
+
+  // Get the event service by looking up the name with the location service.
+  var eventService: EventService = _
+
+  override def beforeAll() = {
+    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
+    // Start redis and register it with the location service on a random free port.
+    // The following is the equivalent of running this from the command line:
+    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
+    EventServiceAdmin.startEventService(esName)
+
+    // Get the event service by looking it up the name with the location service.
+    eventService = Await.result(EventService(esName), timeout.duration)
+
+    // This is only used to stop the Redis instance that was started for this test
+    eventAdmin = EventServiceAdmin(eventService)
+  }
+
+  override protected def afterAll(): Unit = {
+    // Shutdown Redis (Only do this in tests that also started the server)
+    if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration)
+    system.terminate()
   }
 
   // Publisher behaves the same whether nss is in use or not so always nssNotInUse
@@ -94,7 +109,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     it("should allow me to create actors without error") {
 
       val fakeTC = TestProbe()
-      val ap = newTestElPublisher(Some(fakeTC.ref), testEventService)
+      val ap = newTestElPublisher(Some(fakeTC.ref), Some(eventService))
 
       // Ensure it's not sending anything out until needed
       fakeTC.expectNoMsg(100.milli)
@@ -110,9 +125,10 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
      */
     it("should allow publishing one event simulating event from fake TromboneEventSubscriber") {
       // Create a new publisher with no trombone position actor
-      val ap = newTestElPublisher(None, testEventService)
+      val ap = newTestElPublisher(None, Some(eventService))
 
-      val resultSubscriber = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))
+      val resultSubscriber = system.actorOf(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber, postLastEvents = true, aoSystemEventPrefix)
 
       val fakeTromboneEventSubscriber = TestProbe()
 
@@ -139,10 +155,11 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       import AssemblyTestData._
 
       // Ignoring the messages for TrombonePosition (set to None)
-      val ap = newTestElPublisher(None, testEventService)
+      val ap = newTestElPublisher(None, Some(eventService))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      val resultSubscriber = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))
+      val resultSubscriber = system.actorOf(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber, postLastEvents = true, aoSystemEventPrefix)
 
       val testFE = 10.0
 
@@ -180,17 +197,18 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       import AssemblyTestData._
       // Ignoring the messages for TrombonePosition
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, testEventService))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
       // Create the calculator actor and give it the actor ref of the publisher for sending calculated events
       val followActorRef = system.actorOf(FollowActor.props(assemblyContext, setNssInUse(false), None, Some(publisherActorRef)))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), testEventService))
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), Some(eventService)))
 
       // This creates a local subscriber to get all aoSystemEventPrefix SystemEvents published for testing
-      val resultSubscriber = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))
+      val resultSubscriber = system.actorOf(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber, postLastEvents = true, aoSystemEventPrefix)
 
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-      val tcsRtc = EventService(testEventServiceSettings)
+      val tcsRtc = eventService
 
       val testFE = 10.0
       // Publish a single focus error. This will generate a published event

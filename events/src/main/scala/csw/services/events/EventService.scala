@@ -136,10 +136,11 @@ trait EventService {
    * stop the actor or change the prefixes subscribed to.
    *
    * @param subscriber an actor to receive Event messages
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
    * @param prefixes   one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor
+  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor
 
   /**
    * Subscribes a callback function to events matching the given prefixes.
@@ -151,7 +152,7 @@ trait EventService {
    * @param prefixes   one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(callback: Event => Unit, prefixes: String*): EventMonitor
+  def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor
 }
 
 private[events] object EventServiceImpl {
@@ -278,14 +279,14 @@ private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _
     Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
   }
 
-  override def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor = {
-    val currentEvents = Future.sequence(prefixes.map(get)).map(_.flatten)
+  override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
+    val currentEvents = if (postLastEvents) Future.sequence(prefixes.map(get)).map(_.flatten) else Future.successful(Nil)
     val actorRef = _system.actorOf(EventMonitorActor.props(Some(subscriber), None, redisClient.host, redisClient.port, currentEvents, prefixes: _*))
     EventMonitorImpl(actorRef)
   }
 
-  override def subscribe(callback: Event => Unit, prefixes: String*): EventMonitor = {
-    val currentEvents = Future.sequence(prefixes.map(get)).map(_.flatten)
+  override def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
+    val currentEvents = if (postLastEvents) Future.sequence(prefixes.map(get)).map(_.flatten) else Future.successful(Nil)
     val actorRef = _system.actorOf(EventMonitorActor.props(None, Some(callback), redisClient.host, redisClient.port, currentEvents, prefixes: _*))
     EventMonitorImpl(actorRef)
   }

@@ -33,8 +33,6 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //currentStateReceiver ! AddPublisher(tromboneHCD)
 
-  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
-
   // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
   val tromboneStateActor = context.actorOf(TromboneStateActor.props())
 
@@ -87,8 +85,8 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
             // At this point, parameters have been checked so direct access is okay
             val nssItem = sc(ac.nssInUseKey)
 
-            // The event publisher may be passed in
-            val props = FollowCommand.props(ac, nssItem, Some(tromboneHCD), allEventPublisher, Some(testEventServiceSettings))
+            // The event publisher may be passed in (XXX FIXME? pass in eventService)
+            val props = FollowCommand.props(ac, nssItem, Some(tromboneHCD), allEventPublisher, eventService = None)
             // Follow command runs the trombone when following
             val followCommandActor = context.actorOf(props)
             context.become(followReceive(followCommandActor))

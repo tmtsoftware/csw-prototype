@@ -105,20 +105,22 @@ trait TelemetryService {
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
    * @param subscriber an actor to receive Event messages
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
    * @param prefixes   one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor
+  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor
 
   /**
    * Subscribes a callback function to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
    * @param callback an callback which will be called with Event objects (in another thread)
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
    * @param prefixes one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(callback: StatusEvent => Unit, prefixes: String*): EventMonitor
+  def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor
 
   /**
    * Gets the value for the given status event prefix
@@ -161,11 +163,11 @@ case class TelemetryServiceImpl(redisClient: RedisClient)(implicit _system: Acto
   override def publish(status: StatusEvent, history: Int = 0): Future[Unit] =
     eventService.publish(status, history)
 
-  override def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor =
-    eventService.subscribe(subscriber, prefixes: _*)
+  override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor =
+    eventService.subscribe(subscriber, postLastEvents = true, prefixes: _*)
 
-  override def subscribe(callback: StatusEvent => Unit, prefixes: String*): EventMonitor =
-    eventService.subscribe(callbackConverter(callback) _, prefixes: _*)
+  override def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor =
+    eventService.subscribe(callbackConverter(callback) _, postLastEvents = true, prefixes: _*)
 
   override def get(prefix: String): Future[Option[StatusEvent]] =
     eventService.get(prefix).mapTo[Option[StatusEvent]]
@@ -199,22 +201,24 @@ case class BlockingTelemetryService(ts: TelemetryService, timeout: Duration)(imp
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
    * @param subscriber an actor to receive Event messages
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
    * @param prefixes   one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(subscriber: ActorRef, prefixes: String*): EventMonitor =
-    ts.subscribe(subscriber, prefixes: _*)
+  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor =
+    ts.subscribe(subscriber, postLastEvents, prefixes: _*)
 
   /**
    * Subscribes an actor or callback function to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
    * @param callback an callback which will be called with Event objects (in another thread)
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
    * @param prefixes one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(callback: StatusEvent => Unit, prefixes: String*): EventMonitor =
-    ts.subscribe(callback, prefixes: _*)
+  def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor =
+    ts.subscribe(callback, postLastEvents, prefixes: _*)
 
   /**
    * Gets the value for the given status event prefix

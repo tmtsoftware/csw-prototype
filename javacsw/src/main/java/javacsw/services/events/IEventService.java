@@ -56,16 +56,18 @@ public interface IEventService {
      * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
      *
      * @param subscriber an actor to receive Event messages
+     * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventMonitor subscribe(ActorRef subscriber, String... prefixes);
+    EventMonitor subscribe(ActorRef subscriber, boolean postLastEvents, String... prefixes);
 
     /**
      * Subscribes a callback function to events matching the given prefixes
      * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
      *
      * @param callback   an callback which will be called with Event objects (in another thread)
+     * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventMonitor subscribe(EventHandler callback, String... prefixes);
+    EventMonitor subscribe(EventHandler callback, boolean postLastEvents, String... prefixes);
 }

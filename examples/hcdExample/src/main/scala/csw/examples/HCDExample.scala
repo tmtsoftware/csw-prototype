@@ -59,7 +59,7 @@ object HCDExample {
 
     // Create a subscriber to positions (just for test)
     val subscriberActor = context.actorOf(Props(classOf[EventPosSubscriber]))
-    eventService.subscribe(subscriberActor, prefix)
+    eventService.subscribe(subscriberActor, postLastEvents = true, prefix)
 
     var timer = setTimer(1000)
 

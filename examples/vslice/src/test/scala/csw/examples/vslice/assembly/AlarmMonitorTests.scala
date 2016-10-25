@@ -1,5 +1,7 @@
 package csw.examples.vslice.assembly
 
+import java.io.File
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
@@ -7,7 +9,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.alarms.AlarmModel.SeverityLevel.{Okay, Warning}
-import csw.services.alarms.AlarmService
+import csw.services.alarms.{AlarmService, AlarmServiceAdmin}
 import csw.services.ccs.CommandStatus2.CommandStatus2
 import csw.services.ccs.SequentialExecution.SequentialExecutor.ExecuteOne
 import csw.services.loc.ConnectionType.AkkaType
@@ -31,8 +33,6 @@ object AlarmMonitorTests {
   val system = ActorSystem("AlarmMonitorTests")
 }
 
-// XXX TODO FIXME: Start alarm service and init with test-alarms.conf before tests!
-
 /**
  * AlarmMonitorTests
  */
@@ -41,8 +41,44 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   import TromboneAlarmMonitor._
   import TromboneStateHandler._
+  import system.dispatcher
 
   implicit val timeout = Timeout(60.seconds)
+
+  // Name of the alarm service Redis instance to use
+  val asName = "AlarmMonitorTests"
+
+  // Used to start and stop the alarm service Redis instance used for the test
+  var alarmAdmin: AlarmServiceAdmin = _
+
+  // Get the alarm service by looking up the name with the location service.
+  var alarmService: AlarmService = _
+
+  override protected def beforeAll(): Unit = {
+    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
+    // Start redis and register it with the location service on a random free port.
+    // The following is the equivalent of running this from the command line:
+    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
+    AlarmServiceAdmin.startAlarmService(asName)
+    // Get the alarm service by looking up the name with the location service.
+    // (using a small value for refreshSecs for testing)
+    alarmService = Await.result(AlarmService(asName), timeout.duration)
+    alarmAdmin = AlarmServiceAdmin(alarmService)
+
+    // Initialize the available alarms from
+    val testAlarms1 = new File("src/test/resources/test-alarms.conf")
+    val testAlarms2 = new File("examples/vslice/src/test/resources/test-alarms.conf")
+    val file = if (testAlarms1.exists()) testAlarms1 else testAlarms2
+    if (file.exists())
+      Await.result(alarmAdmin.initAlarms(file), timeout.duration)
+    else logger.error(s"$file does not exist")
+  }
+
+  override protected def afterAll(): Unit = {
+    // Shutdown Redis (Only do this in tests that also started the server)
+    if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration)
+    TestKit.shutdownActorSystem(system)
+  }
 
   val ac = AssemblyTestData.TestAssemblyContext
 
@@ -74,8 +110,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
   }
 
-  override def afterAll = TestKit.shutdownActorSystem(AlarmMonitorTests.system)
-
   // Test Low Limit
   val testLowLimitEvent = CurrentState(TromboneHCD.axisStateCK).madd(
     positionKey -> 0 withUnits encoder,
@@ -104,10 +138,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   )
 
   describe("Basic alarm monitor tests with test alarm service running") {
-    // Note that the Alarm Service redis instance must be started with TrackLocation under this name
-    // tracklocation --name "Alarm Service" --command "redis-server --protected-mode no --port %port" --port 7777
-    val asName = "Alarm Service"
-
     /**
      * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
      * This causes the monitor to send the warning severity to the Alarm Service
@@ -115,9 +145,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
      * the monitor actually did set the alarm severity.
      */
     it("monitor should set a low alarm when receiving simulated encoder low limit") {
-
-      val alarmService = Await.result(AlarmService(asName), timeout.duration)
-
       val fakeTromboneHCD = TestProbe()
 
       // Create an alarm monitor
@@ -150,9 +177,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
      * the monitor actually did set the alarm severity.
      */
     it("monitor should set a low alarm when receiving simulated encoder high limit") {
-
-      val alarmService = Await.result(AlarmService(asName), timeout.duration)
-
       val fakeTromboneHCD = TestProbe()
 
       // Create an alarm monitor
@@ -183,8 +207,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
      */
     it("monitor should set a low alarm when receiving real encoder low limit using real HCD to generate data") {
-      val alarmService = Await.result(AlarmService(asName), timeout.duration)
-
       val tromboneHCD = startHCD
       val fakeAssembly = TestProbe()
 
@@ -239,8 +261,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
      */
     it("monitor should set a high alarm when receiving real encoder high limit using real HCD to generate data") {
-      val alarmService = Await.result(AlarmService(asName), timeout.duration)
-
       val tromboneHCD = startHCD
       val fakeAssembly = TestProbe()
 

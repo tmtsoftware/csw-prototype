@@ -1,7 +1,9 @@
 package javacsw.services.events;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
+import csw.services.events.EventService;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.Events.StatusEvent;
 import scala.concurrent.duration.FiniteDuration;
@@ -29,6 +31,34 @@ public interface IBlockingTelemetryService {
      * @param history optional number of previous values to store
      */
     void publish(StatusEvent status, int history);
+
+    /**
+     * API to handle a telemetry event (StatusEvent) from the telemetry service
+     */
+    interface TelemetryHandler {
+        void handleEvent(StatusEvent event);
+    }
+
+    /**
+     * Subscribes an actor to telemetry events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param subscriber an actor to receive StatusEvent messages
+     * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
+     * @param prefixes   one or more prefixes of events, may include wildcard
+     */
+    EventService.EventMonitor subscribe(ActorRef subscriber, boolean postLastEvents, String... prefixes);
+
+    /**
+     * Subscribes a callback function to telemetry events matching the given prefixes
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param callback   an callback which will be called with StatusEvent objects (in another thread)
+     * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
+     * @param prefixes   one or more prefixes of events, may include wildcard
+     */
+    EventService.EventMonitor subscribe(TelemetryHandler callback, boolean postLastEvents, String... prefixes);
+
 
     /**
      * Gets the value for the given status event prefix

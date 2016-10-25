@@ -11,46 +11,48 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 10/22/16.
  */
-// Test subscriber actor for telemetry and system events
-object TestSubscriber {
-  def props(): Props = Props(new TestSubscriber())
-
-  case object GetResults
-
-  case class Results(msgs: Vector[TromboneState])
-
-  def newTestSubscriber(system: ActorSystem): ActorRef = system.actorOf(props())
-}
-
-/**
- * Test event service client, listens for trombonestate
- */
-class TestSubscriber() extends Actor with ActorLogging with TromboneStateClient {
-
-  import TestSubscriber._
-
-  var msgs = Vector.empty[TromboneState]
-
-  log.info(s"Test subscriber for TromboneState")
-
-  def receive: Receive = {
-    case event: TromboneState =>
-      msgs = msgs :+ event
-      log.debug(s"Received system event: $event")
-
-    case GetResults => sender() ! Results(msgs)
-  }
-}
 
 object TromboneStateActorTests {
   LocationService.initInterface()
   val system = ActorSystem("TromboneStateActorTests")
+
+  // Test subscriber actor for telemetry and system events
+  object TestSubscriber {
+    def props(): Props = Props(new TestSubscriber())
+
+    case object GetResults
+
+    case class Results(msgs: Vector[TromboneState])
+
+    def newTestSubscriber(system: ActorSystem): ActorRef = system.actorOf(props())
+  }
+
+  /**
+   * Test event service client, listens for trombonestate
+   */
+  class TestSubscriber() extends Actor with ActorLogging with TromboneStateClient {
+
+    import TestSubscriber._
+
+    var msgs = Vector.empty[TromboneState]
+
+    log.info(s"Test subscriber for TromboneState")
+
+    def receive: Receive = {
+      case event: TromboneState =>
+        msgs = msgs :+ event
+        log.debug(s"Received system event: $event")
+
+      case GetResults => sender() ! Results(msgs)
+    }
+  }
 }
 
 class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
 
-  import csw.examples.vslice.assembly.TromboneStateActor._
+  import TromboneStateActorTests._
+  import TromboneStateActor._
 
   describe("Testing state item") {
 
@@ -137,7 +139,7 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
     tsub ! GetResults
     val result = expectMsgClass(classOf[TestSubscriber.Results])
     result.msgs.size shouldBe 4
-    result shouldEqual (Results(Vector(ts2, ts3, ts4, ts5)))
+    result shouldEqual Results(Vector(ts2, ts3, ts4, ts5))
     //info("Result: " + result.msgs)
   }
 

@@ -81,8 +81,8 @@ class EventServiceTests
 
     Await.ready(eventService.publish(event), 2.seconds)
     val probe = TestProbe(prefix)
-    val monitor1 = eventService.subscribe(probe.ref, prefix)
-    val monitor2 = eventService.subscribe(listener _, prefix)
+    val monitor1 = eventService.subscribe(probe.ref, postLastEvents = true, prefix)
+    val monitor2 = eventService.subscribe(listener _, postLastEvents = true, prefix)
     try {
       Thread.sleep(500)
       // wait for actor to start

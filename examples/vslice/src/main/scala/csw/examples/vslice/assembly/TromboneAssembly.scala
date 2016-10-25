@@ -64,8 +64,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   //  val c1 = TcpConnection(ComponentId("Alarm Service", ComponentType.Service))
   //  TrackerSubscriberActor.trackConnection(c1, trackerSubscriber)
 
-  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
-
   // This actor handles all telemetry and system event publishing
   val eventPublisher = context.actorOf(TrombonePublisher.props(ac, None))
   // This actor makes a single connection to the

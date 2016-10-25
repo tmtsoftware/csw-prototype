@@ -16,7 +16,7 @@ import EventServiceImpl._
  * Adds the ability to an actor to subscribe to events from the event service.
  * The subscribed actor will receive messages of type Event for the given event prefixes.
  */
-abstract class EventSubscriber(redisHost: String, redisPort: Int) extends Actor with ActorLogging {
+private[events] abstract class EventSubscriber(redisHost: String, redisPort: Int) extends Actor with ActorLogging {
 
   private lazy val redis = context.actorOf(SubscribeActor.props(self, redisHost, redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))

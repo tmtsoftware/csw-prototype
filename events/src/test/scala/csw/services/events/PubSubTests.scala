@@ -56,7 +56,7 @@ class PubSubTests extends TestKit(PubSubTests.system)
     // number of seconds to run
     val numSecs = 10
     val subscriber = system.actorOf(TestSubscriber.props())
-    eventService.subscribe(subscriber, "tcs.mobie.red.dat.*")
+    eventService.subscribe(subscriber, postLastEvents = true, "tcs.mobie.red.dat.*")
     val publisher = system.actorOf(TestPublisher.props(eventService, self, numSecs))
 
     within(numSecs + 2 seconds) {

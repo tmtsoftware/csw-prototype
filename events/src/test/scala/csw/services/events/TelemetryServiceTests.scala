@@ -204,8 +204,8 @@ class TelemetryServiceTests
       eventReceived = Some(ev)
       logger.info(s"Listener received event: $ev")
     }
-    val monitor1 = ts.subscribe(self, prefix)
-    val monitor2 = ts.subscribe(listener _, prefix)
+    val monitor1 = ts.subscribe(self, true, prefix)
+    val monitor2 = ts.subscribe(listener _, true, prefix)
     try {
       Thread.sleep(500) // wait for actor to start
       Await.ready(ts.publish(event), 5.seconds)
@@ -238,7 +238,7 @@ class TelemetryServiceTests
 
     // See below for actor class
     val mySubscriber = system.actorOf(MySubscriber.props(prefix1, prefix2))
-    ts.subscribe(mySubscriber, prefix1, prefix2)
+    ts.subscribe(mySubscriber, true, prefix1, prefix2)
 
     // This is just to make sure the actor has time to subscribe before we proceed
     Thread.sleep(1000)

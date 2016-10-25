@@ -58,7 +58,7 @@ public class JEventServiceTests {
       .add(jset(infoValue, 5))
       .add(jset(infoStr, "info 5"));
     eventService.publish(event).get();
-    EventMonitor monitor = eventService.subscribe(Optional.empty(), Optional.of(eventHandler), prefix);
+    EventMonitor monitor = eventService.subscribe(eventHandler, false, prefix);
     Thread.sleep(500); // wait for actor to start
     try {
       assertTrue(eventReceived.isPresent());

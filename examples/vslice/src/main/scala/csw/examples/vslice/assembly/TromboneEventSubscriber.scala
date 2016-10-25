@@ -33,7 +33,9 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
     case location: Location => location match {
       case t: ResolvedTcpLocation =>
         // Verify that it is the event service
-        if (t.connection == EventService.eventServiceConnection) {
+        // XXX Note: The call below assumes the default name for the event service!
+        // It might be better to pass in the name actually used when starting the event service.
+        if (t.connection == EventService.eventServiceConnection()) {
           log.info("Subscriber received connection")
           val eventService: EventService = EventService.get(t.host, t.port)
           log.info("Event Service at: " + eventService)
@@ -109,7 +111,7 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
 
   def subscribeKeys(eventService: EventService, configKeys: ConfigKey*): Unit = {
     log.info(s"Subscribing to: $configKeys")
-    eventService.subscribe(self, configKeys.map(_.prefix): _*)
+    eventService.subscribe(self, postLastEvents = true, configKeys.map(_.prefix): _*)
   }
 
   /*
