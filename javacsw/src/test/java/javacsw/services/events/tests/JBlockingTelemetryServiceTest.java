@@ -9,14 +9,14 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
-import csw.services.events.EventServiceSettings;
-import csw.services.events.JAbstractSubscriber;
+import akka.util.Timeout;
+import csw.services.loc.LocationService;
 import csw.util.config.DoubleKey;
 import csw.util.config.Events.*;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.IBlockingTelemetryService;
-import javacsw.services.events.IEventService;
+import javacsw.services.events.ITelemetryServiceAdmin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,24 +34,33 @@ import static junit.framework.TestCase.assertTrue;
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class JBlockingTelemetryServiceTest {
 
+  // Amount of time to wait for Redis server to answer
+  private static Timeout timeout = new Timeout(FiniteDuration.create(15, TimeUnit.SECONDS));
+  private static ActorSystem system;
+
   // Keys used in test
   private static final IntKey infoValue = new IntKey("infoValue");
   private static final StringKey infoStr = new StringKey("infoStr");
   private static final DoubleKey exposureTime = new DoubleKey("exposureTime");
-
-  // Amount of time to wait for Redis server to answer
-  private static FiniteDuration timeout = Duration.create(5, "seconds");
-
-  private static ActorSystem system;
 
   // The target for this test
   private static IBlockingTelemetryService bts;
 
   @BeforeClass
   public static void setup() {
+    LocationService.initInterface();
     system = ActorSystem.create();
-    EventServiceSettings settings = IEventService.getEventServiceSettings(system);
-    bts = IBlockingTelemetryService.getTelemetryService(timeout, settings, system);
+
+    String tsName = "Telemetry Service Test";
+
+    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
+    // Start redis on a random port and register it with the location service.
+    // The following is the equivalent of running this from the command line:
+    //   tracklocation --name "Telemetry Service Test" --command "redis-server --port %port" --no-exit
+    ITelemetryServiceAdmin.startTelemetryService(tsName, true, system.dispatcher());
+
+    // Get the telemetry service by looking up the name with the location service
+    bts = IBlockingTelemetryService.getTelemetryService(tsName, system, timeout);
   }
 
   @AfterClass

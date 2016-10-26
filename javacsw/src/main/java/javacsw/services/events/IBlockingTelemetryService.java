@@ -2,11 +2,9 @@ package javacsw.services.events;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
-import akka.actor.ActorSystem;
+import akka.util.Timeout;
 import csw.services.events.EventService;
-import csw.services.events.EventServiceSettings;
 import csw.util.config.Events.StatusEvent;
-import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,30 +80,32 @@ public interface IBlockingTelemetryService {
     void delete(String key);
 
 
-    // --- factory methods ---
+    // --- Static factory methods ---
 
     /**
-     * @param system the actor system used to access the akka config file containing the kvs settings
-     * @return an object containing the kvs settings
+     * Looks up the Redis instance for the Telemetry Service with the Location Service
+     * and then returns an TelemetryService instance using it.
+     * <p>
+     * Note: Applications using the Location Service should call LocationService.initialize() once before
+     * accessing any Akka or Location Service methods.
+     *
+     * @param name    name used to register the Redis instance with the Location Service (default: "Telemetry Service")
+     * @param sys     required Akka environment
+     * @param timeout amount of time to wait looking up name with the location service before giving up with an error
+     * @return a future ITelemetryService instance
      */
-    static EventServiceSettings getKvsSettings(ActorSystem system) {
-        return EventServiceSettings.getEventServiceSettings(system);
+    static IBlockingTelemetryService getTelemetryService(String name, ActorRefFactory sys, Timeout timeout) {
+        return JBlockingTelemetryService.lookup(name, sys, timeout);
     }
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new TelemetryService
+     * Returns an ITelemetryService instance using the Redis instance at the given host and port
+     *
+     * @param host the Redis host name or IP address
+     * @param port the Redis port
+     * @return a new ITelemetryService instance
      */
-    static IBlockingTelemetryService getTelemetryService(FiniteDuration timeout, EventServiceSettings settings, ActorRefFactory system) {
-        return new JBlockingTelemetryService(timeout, settings, system);
-    }
-
-    /**
-     * @param system   Akka env required by RedisClient
-     * @return a new TelemetryService
-     */
-    static IBlockingTelemetryService getTelemetryService(FiniteDuration timeout, ActorSystem system) {
-        return new JBlockingTelemetryService(timeout, getKvsSettings(system), system);
+    static IBlockingTelemetryService getTelemetryService(String host, int port, ActorRefFactory sys, Timeout timeout) {
+        return new JBlockingTelemetryService(host, port, sys, timeout);
     }
 }

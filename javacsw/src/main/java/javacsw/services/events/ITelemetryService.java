@@ -2,9 +2,8 @@ package javacsw.services.events;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
-import akka.actor.ActorSystem;
+import akka.util.Timeout;
 import csw.services.events.EventService;
-import csw.services.events.EventServiceSettings;
 import csw.util.config.Events.StatusEvent;
 import scala.Unit;
 
@@ -83,30 +82,49 @@ public interface ITelemetryService {
      */
     CompletableFuture<Unit> delete(String key);
 
-    // --- static factory methods ---
+    // --- Static factory methods ---
 
     /**
-     * @param system the actor system used to access the akka config file containing the kvs settings
-     * @return an object containing the kvs settings
+     * Looks up the Redis instance for the Telemetry Service with the Location Service
+     * and then returns an TelemetryService instance using it.
+     * <p>
+     * Note: Applications using the Location Service should call LocationService.initialize() once before
+     * accessing any Akka or Location Service methods.
+     *
+     * @param name    name used to register the Redis instance with the Location Service (default: "Telemetry Service")
+     * @param sys     required Akka environment
+     * @param timeout amount of time to wait looking up name with the location service before giving up with an error
+     * @return a future ITelemetryService instance
      */
-    static EventServiceSettings getKvsSettings(ActorSystem system) {
-        return EventServiceSettings.getEventServiceSettings(system);
+    static CompletableFuture<ITelemetryService> getTelemetryService(String name, ActorRefFactory sys, Timeout timeout) {
+        return JTelemetryService.lookup(name, sys, timeout);
     }
 
     /**
-     * @param settings Redis server settings
-     * @param system   Akka env required by RedisClient
-     * @return a new TelemetryService
+     * Returns an ITelemetryService instance using the Redis instance at the given host and port
+     *
+     * @param host the Redis host name or IP address
+     * @param port the Redis port
+     * @return a new ITelemetryService instance
      */
-    static ITelemetryService getTelemetryService(EventServiceSettings settings, ActorRefFactory system) {
-        return new JTelemetryService(settings, system);
+    static ITelemetryService getTelemetryService(String host, int port, ActorRefFactory sys) {
+        return new JTelemetryService(host, port, sys);
     }
 
-    /**
-     * @param system   Akka env required by RedisClient
-     * @return a new TelemetryService
-     */
-    static ITelemetryService getTelemetryService(ActorSystem system) {
-        return new JTelemetryService(getKvsSettings(system), system);
-    }
+//    /**
+//     * @param system the actor system used to access the akka config file containing the kvs settings
+//     * @return an object containing the kvs settings
+//     */
+//    static TelemetryServiceSettings getTelemetryServiceSettings(ActorSystem system) {
+//        return TelemetryServiceSettings.getTelemetryServiceSettings(system);
+//    }
+//
+//    /**
+//     * @param settings Redis server settings
+//     * @param system   Akka env required by RedisClient
+//     * @return a new ITelemetryService
+//     */
+//    static ITelemetryService getTelemetryService(TelemetryServiceSettings settings, ActorRefFactory system) {
+//        return new JTelemetryService(settings, system);
+//    }
 }

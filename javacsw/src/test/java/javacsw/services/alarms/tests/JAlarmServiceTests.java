@@ -53,9 +53,6 @@ public class JAlarmServiceTests {
   // Time in ms to wait to see if an alarm severity expired
   private static int delayMs = expireSecs * 1000 + shortDelayMs;
 
-  public JAlarmServiceTests() throws URISyntaxException {
-  }
-
   @BeforeClass
   public static void setup() throws ExecutionException, InterruptedException {
     LocationService.initInterface();
@@ -67,7 +64,7 @@ public class JAlarmServiceTests {
     // Start redis on a random port and register it with the location service.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port" --no-exit
-    IAlarmServiceAdmin.startAlarmService("Alarm Service Test", true, system.dispatcher());
+    IAlarmServiceAdmin.startAlarmService(asName, true, system.dispatcher());
 
     // Later, in another JVM...,
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)

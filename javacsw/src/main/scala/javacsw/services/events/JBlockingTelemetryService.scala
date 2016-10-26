@@ -3,25 +3,56 @@ package javacsw.services.events
 import java.util.Optional
 
 import akka.actor.{ActorRef, ActorRefFactory}
+import akka.util.Timeout
 import csw.services.events._
 import csw.util.config.Events.StatusEvent
 
 import scala.concurrent.duration.FiniteDuration
 import scala.compat.java8.OptionConverters._
 import collection.JavaConverters._
+import scala.concurrent.Await
+
+case object JBlockingTelemetryService {
+  /**
+   * Looks up the Redis instance for the Telemetry Service with the Location Service
+   * and then returns a Java friendly JBlockingTelemetryService instance using it.
+   *
+   * Note: Applications using the Location Service should call LocationService.initialize() once before
+   * accessing any Akka or Location Service methods.
+   *
+   * @param name name used to register the Redis instance with the Location Service (default: "Telemetry Service")
+   * @param sys required Akka environment
+   * @param timeout amount of time to wait looking up name with the location service before giving up with an error
+   */
+  def lookup(name: String, sys: ActorRefFactory, timeout: Timeout): IBlockingTelemetryService = {
+    import sys.dispatcher
+    val ts = Await.result(TelemetryService(name)(sys, timeout).map(BlockingTelemetryService(_, timeout.duration)(sys)), timeout.duration)
+    JBlockingTelemetryService(ts, sys, timeout.duration)
+  }
+}
 
 /**
- * A wrapper API for a KVS that waits for operations to complete before returing.
+ * A Java wrapper API for the telemetry service (blocking version)
  *
- * @param timeout the max amount of time to wait for an operation to complete
- * @param settings Redis server settings
- * @param system Akka env required by RedisClient
+ * @param ts the underlying Scala BlockingTelemetryService implementation
+ * @param system Akka env required for using actors, futures
+ * @param timeout amount of time to wait for operations to complete before giving up with an error
  */
-case class JBlockingTelemetryService(timeout: FiniteDuration, settings: EventServiceSettings, system: ActorRefFactory)
+case class JBlockingTelemetryService(ts: BlockingTelemetryService, system: ActorRefFactory, timeout: FiniteDuration)
     extends IBlockingTelemetryService {
 
   private implicit val _system: ActorRefFactory = system
-  private val ts = BlockingTelemetryService(TelemetryService(settings), timeout)(system)
+
+  /**
+   * Returns a JTelemetryService instance using the Redis instance at the given host and port
+   *
+   * @param host the Redis host name or IP address
+   * @param port the Redis port
+   * @return a new JTelemetryService instance
+   */
+  def this(host: String, port: Int, sys: ActorRefFactory, timeout: Timeout) {
+    this(BlockingTelemetryService(TelemetryService.get(host, port)(sys), timeout.duration)(sys), sys, timeout.duration)
+  }
 
   def publish(status: StatusEvent): Unit = ts.publish(status)
 
