@@ -7,7 +7,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import csw.services.ccs.HcdController
-import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ComponentType
 import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.Supervisor3._
@@ -22,8 +21,8 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 /**
- * Example main class for the Trombone HCD
- */
+  * Example main class for the Trombone HCD
+  */
 class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController {
 
   import context.dispatcher
@@ -35,50 +34,31 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   // Note: The following could be passed as parameters to context.become(), but are declared as
   // vars here so that they can be examined by test cases
 
-  var axisConfig: AxisConfig = _
-
-  // Create an axis for simulating trombone motion
-  var tromboneAxis: ActorRef = _
-
   // Initialize values -- This causes an update to the listener
   // The current axis position from the hardware axis, initialize to default value
   var current: AxisUpdate = _
   var stats: AxisStatistics = _
 
-  // Keep track of the last SetupConfig to be received from external
-  private var lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix)
-
   // Get the axis config file from the config service, then use it to start the tromboneAxis actor
   // and get the current values. Once that is done, we can tell the supervisor actor that we are ready
   // and then wait for the Running message from the supervisor before going to the running state.
-  for {
-    // Initialize axis from ConfigService
-    axisConfig <- getAxisConfig
+  // Initialize axis from ConfigService
+  val axisConfig = Await.result(getAxisConfig, timeout.duration)
 
-    // Create an axis for simulating trombone motion
-    tromboneAxis <- Future.successful(setupAxis(axisConfig))
+  // Create an axis for simulating trombone motion
+  val tromboneAxis = setupAxis(axisConfig)
 
-    // Initialize values -- This causes an update to the listener
-    // The current axis position from the hardware axis, initialize to default value
-    current <- (tromboneAxis ? InitialState).mapTo[AxisUpdate]
-    stats <- (tromboneAxis ? GetStatistics).mapTo[AxisStatistics]
+  // Initialize values -- This causes an update to the listener
+  // The current axis position from the hardware axis, initialize to default value
+  current = Await.result((tromboneAxis ? InitialState).mapTo[AxisUpdate], timeout.duration)
+  stats = Await.result((tromboneAxis ? GetStatistics).mapTo[AxisStatistics], timeout.duration)
 
-  } yield {
-    this.tromboneAxis = tromboneAxis
-    this.axisConfig = axisConfig
-    this.current = current
-    this.stats = stats
-    context.become(initializingReceive)
-
-    // Required setup for Lifecycle in order to get messages
-    supervisor ! Initialized
-    supervisor ! Started
-  }
+  // Required setup for Lifecycle in order to get messages
+  supervisor ! Initialized
+  supervisor ! Started
 
   // Receive actor methods
-  override def receive: Receive = publisherReceive orElse {
-    case x => log.error(s"Unexpected message in TromboneHCD (Not initialized yet): $x")
-  }
+  override def receive: Receive = initializingReceive
 
   // State where we are waiting for the Running message from the supervisor
   private def initializingReceive: Receive = publisherReceive orElse {
@@ -133,7 +113,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
       )
       notifySubscribers(axisConfigState)
 
-    case au @ AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
+    case au@AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
       // Update actor state
       this.current = au
       //      context.become(runningReceive)
@@ -169,9 +149,6 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     import TromboneHCD._
     log.debug(s"Trombone process received sc: $sc")
 
-    // Store the last received for diags
-    lastReceivedSC = sc
-
     sc.configKey match {
       case `axisMoveCK` =>
         tromboneAxis ! Move(sc(positionKey).head, diagFlag = true)
@@ -193,7 +170,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     implicit val system = context.system
 
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
-    val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
+//    val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
     val resource = new File("tromboneHCD.conf")
 
     // XXX FIXME: the time it takes to determine that the config service is not running breaks the assembly tests!
@@ -298,13 +275,13 @@ object TromboneHCD {
   case object GetAxisStats extends TromboneEngineering
 
   /**
-   * Returns an AxisUpdate through subscribers
-   */
+    * Returns an AxisUpdate through subscribers
+    */
   case object GetAxisUpdate extends TromboneEngineering
 
   /**
-   * Directly returns an AxisUpdate to sender
-   */
+    * Directly returns an AxisUpdate to sender
+    */
   case object GetAxisUpdateNow extends TromboneEngineering
 
   case object GetAxisConfig extends TromboneEngineering
