@@ -21,8 +21,8 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 /**
-  * Example main class for the Trombone HCD
-  */
+ * Example main class for the Trombone HCD
+ */
 class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController {
 
   import context.dispatcher
@@ -113,7 +113,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
       )
       notifySubscribers(axisConfigState)
 
-    case au@AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
+    case au @ AxisUpdate(_, axisState, currentPosition, inLowLimit, inHighLimit, inHomed) =>
       // Update actor state
       this.current = au
       //      context.become(runningReceive)
@@ -170,7 +170,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     implicit val system = context.system
 
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
-//    val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
+    //    val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
     val resource = new File("tromboneHCD.conf")
 
     // XXX FIXME: the time it takes to determine that the config service is not running breaks the assembly tests!
@@ -275,13 +275,13 @@ object TromboneHCD {
   case object GetAxisStats extends TromboneEngineering
 
   /**
-    * Returns an AxisUpdate through subscribers
-    */
+   * Returns an AxisUpdate through subscribers
+   */
   case object GetAxisUpdate extends TromboneEngineering
 
   /**
-    * Directly returns an AxisUpdate to sender
-    */
+   * Directly returns an AxisUpdate to sender
+   */
   case object GetAxisUpdateNow extends TromboneEngineering
 
   case object GetAxisConfig extends TromboneEngineering
