@@ -26,7 +26,8 @@ object EventServiceAdmin {
    */
   def startEventService(name: String = EventService.defaultName, noExit: Boolean = true)(implicit ec: ExecutionContext): Future[Unit] = {
     val ne = if (noExit) List("--no-exit") else Nil
-    val args = List("--name", name, "--command", "redis-server --port %port") ++ ne
+    // Note: The --protected-mode no option is required in newer versions of Redis (the way we use it), but not available in older versions
+    val args = List("--name", name, "--command", "redis-server --protected-mode no --port %port") ++ ne
     Future {
       TrackLocation.main(args.toArray)
     }
@@ -41,8 +42,8 @@ object EventServiceAdmin {
  */
 trait EventServiceAdmin {
   /**
-    * For use in testing: Deletes all keys in all databases in the Redis instance
-    */
+   * For use in testing: Deletes all keys in all databases in the Redis instance
+   */
   def reset(): Future[Unit]
 
   /**
@@ -66,7 +67,6 @@ private[events] case class EventServiceAdminImpl(eventService: EventService)(imp
   override def reset(): Future[Unit] = {
     redisClient.flushall().map(_ => ())
   }
-
 
   override def shutdown(): Future[Unit] = {
     val f = redisClient.shutdown()

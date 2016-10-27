@@ -122,7 +122,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
   before {
     // Reset the Redis database before each test to make sure the state is clean
     // (This deletes everything in the Redis database: Only do this in a test with its own private Redis instance!)
-    Await.ready(eventAdmin.reset(), timeout.duration)
+    //    Await.ready(eventAdmin.reset(), timeout.duration)
   }
 
   implicit val execContext = system.dispatcher
@@ -381,7 +381,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber, postLastEvents = true, axisStateEventPrefix)
+      eventService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
 
       val tromboneHCD = startHCD
 
@@ -432,8 +432,8 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      val resultSubscriber = system.actorOf(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber, postLastEvents = true, axisStateEventPrefix)
+      val resultSubscriber = TestActorRef(TestSubscriber.props())
+      eventService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
 
       val tromboneHCD = startHCD
 
@@ -495,11 +495,11 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber, postLastEvents = true, axisStateEventPrefix)
+      eventService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
 
       // Creates a subscriber for stats events
       val resultSubscriber2 = TestActorRef(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber2, postLastEvents = true, axisStatsEventPrefix)
+      eventService.subscribe(resultSubscriber2, postLastEvents = false, axisStatsEventPrefix)
 
       val tromboneHCD = startHCD
 

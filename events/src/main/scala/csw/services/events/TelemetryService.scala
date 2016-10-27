@@ -164,7 +164,7 @@ case class TelemetryServiceImpl(redisClient: RedisClient)(implicit _system: Acto
     eventService.publish(status, history)
 
   override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor =
-    eventService.subscribe(subscriber, postLastEvents = true, prefixes: _*)
+    eventService.subscribe(subscriber, postLastEvents, prefixes: _*)
 
   override def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor =
     eventService.subscribe(callbackConverter(callback) _, postLastEvents = true, prefixes: _*)

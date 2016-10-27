@@ -26,7 +26,7 @@ object TelemetryServiceAdmin {
    */
   def startTelemetryService(name: String = TelemetryService.defaultName, noExit: Boolean = true)(implicit ec: ExecutionContext): Future[Unit] = {
     val ne = if (noExit) List("--no-exit") else Nil
-    val args = List("--name", name, "--command", "redis-server --port %port") ++ ne
+    val args = List("--name", name, "--command", "redis-server --protected-mode no --port %port") ++ ne
     Future {
       TrackLocation.main(args.toArray)
     }

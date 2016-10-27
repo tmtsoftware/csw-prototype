@@ -129,7 +129,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       val ap = newTestElPublisher(None, Some(eventService))
 
       val resultSubscriber = system.actorOf(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber, postLastEvents = true, aoSystemEventPrefix)
+      eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
 
       val fakeTromboneEventSubscriber = TestProbe()
 
@@ -160,7 +160,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = system.actorOf(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber, postLastEvents = true, aoSystemEventPrefix)
+      eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
 
       val testFE = 10.0
 
@@ -206,7 +206,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       // This creates a local subscriber to get all aoSystemEventPrefix SystemEvents published for testing
       val resultSubscriber = system.actorOf(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber, postLastEvents = true, aoSystemEventPrefix)
+      eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
 
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
       val tcsRtc = eventService

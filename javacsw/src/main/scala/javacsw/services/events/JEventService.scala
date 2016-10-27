@@ -67,7 +67,7 @@ case class JEventService(eventService: EventService, system: ActorRefFactory)
     eventService.publish(event).toJava.toCompletableFuture
 
   override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor =
-    eventService.subscribe(subscriber, postLastEvents = true, prefixes: _*)
+    eventService.subscribe(subscriber, postLastEvents, prefixes: _*)
 
   override def subscribe(callback: EventHandler, postLastEvents: Boolean, prefixes: String*): EventMonitor =
     eventService.subscribe(callback.handleEvent _, postLastEvents = true, prefixes: _*)

@@ -213,10 +213,10 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber1 = system.actorOf(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber1, postLastEvents = true, aoSystemEventPrefix)
+      eventService.subscribe(resultSubscriber1, postLastEvents = false, aoSystemEventPrefix)
 
       val resultSubscriber2 = system.actorOf(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber2, postLastEvents = true, engStatusEventPrefix)
+      eventService.subscribe(resultSubscriber2, postLastEvents = false, engStatusEventPrefix)
 
       // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
@@ -328,10 +328,10 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber1 = TestActorRef(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber1, postLastEvents = true, aoSystemEventPrefix)
+      eventService.subscribe(resultSubscriber1, postLastEvents = false, aoSystemEventPrefix)
 
       val resultSubscriber2 = TestActorRef(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber2, postLastEvents = true, engStatusEventPrefix)
+      eventService.subscribe(resultSubscriber2, postLastEvents = false, engStatusEventPrefix)
 
       // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
