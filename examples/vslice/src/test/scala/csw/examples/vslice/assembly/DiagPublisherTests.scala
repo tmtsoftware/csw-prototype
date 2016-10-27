@@ -73,7 +73,7 @@ object DiagPublisherTests {
 }
 
 class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfter with LazyLogging {
 
   import DiagPublisherTests._
 
@@ -117,6 +117,12 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     // Shutdown Redis (Only do this in tests that also started the server)
     Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
     TestKit.shutdownActorSystem(system)
+  }
+
+  before {
+    // Reset the Redis database before each test to make sure the state is clean
+    // (This deletes everything in the Redis database: Only do this in a test with its own private Redis instance!)
+    Await.ready(eventAdmin.reset(), timeout.duration)
   }
 
   implicit val execContext = system.dispatcher
@@ -426,7 +432,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      val resultSubscriber = TestActorRef(TestSubscriber.props())
+      val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = true, axisStateEventPrefix)
 
       val tromboneHCD = startHCD

@@ -41,6 +41,11 @@ object EventServiceAdmin {
  */
 trait EventServiceAdmin {
   /**
+    * For use in testing: Deletes all keys in all databases in the Redis instance
+    */
+  def reset(): Future[Unit]
+
+  /**
    * Shuts down the the database server (For use in test cases that started the database themselves)
    */
   def shutdown(): Future[Unit]
@@ -57,6 +62,11 @@ private[events] case class EventServiceAdminImpl(eventService: EventService)(imp
   import system.dispatcher
 
   val redisClient = eventService.asInstanceOf[EventServiceImpl].redisClient
+
+  override def reset(): Future[Unit] = {
+    redisClient.flushall().map(_ => ())
+  }
+
 
   override def shutdown(): Future[Unit] = {
     val f = redisClient.shutdown()
