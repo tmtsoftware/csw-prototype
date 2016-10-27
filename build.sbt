@@ -29,7 +29,7 @@ val csw = (project in file("."))
       "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
       "DOCROOT" -> "latest/api/index.html"
     )
-  ).aggregate(util, support, log, events, event_old, alarms, loc, ccs, cs, pkg, ts,
+  ).aggregate(util, support, log, loc, events, event_old, alarms, ccs, cs, pkg, ts,
   containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample,
   trackLocation, asConsole, sysControl, javacsw, vslice //, vsliceJava
 )
