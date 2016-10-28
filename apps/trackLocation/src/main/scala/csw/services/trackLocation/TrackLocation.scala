@@ -9,7 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
 import csw.services.cs.akka.BlockingConfigServiceClient
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 /**
@@ -33,6 +33,7 @@ object TrackLocation extends App {
     command:       Option[String] = None,
     port:          Option[Int]    = None,
     appConfigFile: Option[File]   = None,
+    delay:         Option[Int]    = None,
     noExit:        Boolean        = false
   )
 
@@ -55,6 +56,10 @@ object TrackLocation extends App {
     arg[File]("<app-config>") optional () maxOccurs 1 action { (x, c) =>
       c.copy(appConfigFile = Some(x))
     } text "optional config file in HOCON format (Options specified as: $name.command, $name.port, etc. Fetched from config service if path does not exist)"
+
+    opt[Int]("delay") action { (x, c) =>
+      c.copy(delay = Some(x))
+    } text "number of milliseconds to wait for the app to start before registering it with the location service (default: 1000)"
 
     opt[Unit]("no-exit") action { (_, c) =>
       c.copy(noExit = true)
@@ -144,14 +149,21 @@ object TrackLocation extends App {
     // Replace %port in the command
     val command = getStringOpt("command", options.command).get.replace("%port", port.toString)
 
-    startApp(name, command, port, options.noExit)
+    startApp(name, command, port, options.delay.getOrElse(1000), options.noExit)
   }
 
   // Starts the command and registers it with the given name on the given port
-  private def startApp(name: String, command: String, port: Int, noExit: Boolean): Unit = {
+  private def startApp(name: String, command: String, port: Int, delay: Int, noExit: Boolean): Unit = {
     import scala.sys.process._
+    import system.dispatcher
+
     val componentId = ComponentId(name, ComponentType.Service)
-    val f = LocationService.registerTcpConnection(componentId, port)
+
+    // Insert a delay before registering with the location service to give the app a chance to start
+    val f = for {
+      _ <- Future { Thread.sleep(delay) }
+      reg <- LocationService.registerTcpConnection(componentId, port)
+    } yield reg
 
     // Run the command and wait for it to exit
     val exitCode = command.!
