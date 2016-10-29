@@ -20,6 +20,15 @@
 REDIS_SERVER=/usr/local/bin/redis-server
 REDIS_CLIENT=/usr/local/bin/redis-cli
 
+if test ! -x $REDIS_SERVER ; then
+    echo "$REDIS_SERVER not found"
+    exit 1
+fi
+if test ! -x $REDIS_CLIENT ; then
+    echo "$REDIS_CLIENT not found"
+    exit 1
+fi
+
 # Set to yes to start the config service
 START_CONFIG_SERVICE=no
 
@@ -52,11 +61,11 @@ case "$1" in
             echo "Please set CSW_INSTALL to the root directory where the csw software is installed"
             exit 1
         elif [ "$START_CONFIG_SERVICE" == "yes" ] ; then
-            $CSW_INSTALL/bin/cs --init > $CS_LOG_FILE 2>&1 &
+            $CSW_INSTALL/bin/cs --init --nohttp --noannex > $CS_LOG_FILE 2>&1 &
             echo $! > $CS_PID_FILE
         fi
 
-	    # Start Redis and register Redis based services
+	# Start Redis and register Redis based services
         if [ -f $REDIS1_PID_FILE ] ; then
             echo "Redis $REDIS1_PID_FILE exists, process is already running or crashed"
         else
@@ -109,14 +118,15 @@ case "$1" in
             rm -f $REG_PID_FILE $REG_LOG_FILE $REDIS1_LOG_FILE $REDIS1_PID_FILE
         fi
         # Stop Config Service
-        if [ ! -f $CS_PID_FILE ]
-        then
-            echo "Config Service $CS_PID_FILE does not exist, process is not running"
-        else
-            PID=$(cat $CS_PID_FILE)
-            echo "Stopping Config Service..."
-            kill $PID
-            rm -f $CS_PID_FILE $CS_LOG_FILE
+        if [ "$START_CONFIG_SERVICE" == "yes" ] ; then
+            if [ ! -f $CS_PID_FILE ]; then
+		        echo "Config Service $CS_PID_FILE does not exist, process is not running"
+            else
+		        PID=$(cat $CS_PID_FILE)
+		        echo "Stopping Config Service..."
+		        kill $PID
+		        rm -f $CS_PID_FILE $CS_LOG_FILE
+            fi
         fi
         ;;
     *)
