@@ -45,27 +45,24 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   implicit val timeout = Timeout(10.seconds)
 
-  // Name of the alarm service Redis instance to use
-  val asName = "AlarmMonitorTests"
+  // Get the alarm service by looking up the name with the location service.
+  val alarmService = Await.result(AlarmService(), timeout.duration)
 
   // Used to start and stop the alarm service Redis instance used for the test
-  var alarmAdmin: AlarmServiceAdmin = _
-
-  // Get the alarm service by looking up the name with the location service.
-  var alarmService: AlarmService = _
+  val alarmAdmin = AlarmServiceAdmin(alarmService)
 
   override def beforeAll(): Unit = {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
-    logger.info("Starting alarm service")
-    AlarmServiceAdmin.startAlarmService(asName)
+    //    logger.info("Starting alarm service")
+    //    AlarmServiceAdmin.startAlarmService(asName)
     // Get the alarm service by looking up the name with the location service.
     // (using a small value for refreshSecs for testing)
-    logger.info("Looking up alarm service")
-    alarmService = Await.result(AlarmService(asName), timeout.duration)
-    alarmAdmin = AlarmServiceAdmin(alarmService)
+    //    logger.info("Looking up alarm service")
+    //    alarmService = Await.result(AlarmService(asName), timeout.duration)
+    //    alarmAdmin = AlarmServiceAdmin(alarmService)
 
     logger.info("Initializing alarm data")
     // Initialize the available alarms from a file (location depends on how you run this test - XXX maybe should load it as a Config)
@@ -80,7 +77,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   override def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration)
+    //    if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration)
     TestKit.shutdownActorSystem(system)
   }
 

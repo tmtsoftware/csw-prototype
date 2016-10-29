@@ -20,6 +20,9 @@
 REDIS_SERVER=/usr/local/bin/redis-server
 REDIS_CLIENT=/usr/local/bin/redis-cli
 
+# Set to yes to start the config service
+START_CONFIG_SERVICE=no
+
 REDIS1_PORT=7777
 #REDIS2_PORT=...
 
@@ -48,12 +51,12 @@ case "$1" in
         if [ ! -d "$CSW_INSTALL" ] ; then
             echo "Please set CSW_INSTALL to the root directory where the csw software is installed"
             exit 1
-        else
+        elif [ "$START_CONFIG_SERVICE" == "yes" ] ; then
             $CSW_INSTALL/bin/cs --init > $CS_LOG_FILE 2>&1 &
             echo $! > $CS_PID_FILE
         fi
 
-	# Start Redis and register Redis based services
+	    # Start Redis and register Redis based services
         if [ -f $REDIS1_PID_FILE ] ; then
             echo "Redis $REDIS1_PID_FILE exists, process is already running or crashed"
         else

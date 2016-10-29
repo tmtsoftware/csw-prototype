@@ -11,7 +11,7 @@
     <logger name="com.prosysopc.ua" level="INFO"/>
     <logger name="com.romix.akka.serialization.kryo" level="WARN"/>
     <logger name="com.typesafe" level="INFO"/>
-    <logger name="csw" level="INFO"/>
+    <logger name="csw" level="DEBUG"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="javax.jmdns" level="ERROR"/>
     <logger name="org.hornetq" level="ERROR"/>

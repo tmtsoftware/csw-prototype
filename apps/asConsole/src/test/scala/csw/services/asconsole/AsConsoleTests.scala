@@ -34,10 +34,10 @@ class AsConsoleTests extends TestKit(AsConsoleTests.system) with FunSuiteLike wi
     // Start redis and register it with the location service on a random port.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
-    val asName = "Alarm Service Test"
-    Future {
-      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --protected-mode no --port %port", "--no-exit"))
-    }
+//    val asName = "Alarm Service Test"
+//    Future {
+//      TrackLocation.main(Array("--name", asName, "--command", s"redis-server --protected-mode no --port %port", "--no-exit"))
+//    }
 
     // Later, in another JVM, run the asconsole command to initialize the Redis database from the alarm service config file.
     AsConsole.main(Array("--as-name", asName, "--init", ascf.getAbsolutePath, "--list", "--no-exit", "--shutdown"))

@@ -36,34 +36,31 @@ class EventServiceTests
   import EventServiceTests._
   import system.dispatcher
 
-  // Name of the event service Redis instance to use
-  val esName = "EventServiceTests"
-
   implicit val timeout = Timeout(20.seconds)
 
   // Used to start and stop the event service Redis instance used for the test
-  var eventAdmin: EventServiceAdmin = _
+  //  var eventAdmin: EventServiceAdmin = _
 
   // Get the event service by looking up the name with the location service.
-  var eventService: EventService = _
+  val eventService = Await.result(EventService(), timeout.duration)
 
   override protected def beforeAll(): Unit = {
     // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
-    EventServiceAdmin.startEventService(esName)
+    //   tracklocation --name "Event Service" --command "redis-server --port %port"
+    //    EventServiceAdmin.startEventService()
 
     // Get the event service by looking it up the name with the location service.
-    eventService = Await.result(EventService(esName), timeout.duration)
+    //    eventService = Await.result(EventService(), timeout.duration)
 
     // This is only used to stop the Redis instance that was started for this test
-    eventAdmin = EventServiceAdmin(eventService)
+    //    eventAdmin = EventServiceAdmin(eventService)
   }
 
   override protected def afterAll(): Unit = {
     // Shutdown Redis (Only do this in tests that also started the server)
-    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
     TestKit.shutdownActorSystem(system)
   }
 

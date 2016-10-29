@@ -240,45 +240,6 @@ class TromboneCommandHandler extends TromboneStateHandler {
     commandOriginator.ifPresent(actorRef -> actorRef.tell(Cancelled, self()));
   }
 
-  // XXX allan FIXME: Using a nonstatic inner actor class here. Is that OK? (sharing state with outer actor class)
-  private class DatumCommandActor extends AbstractActor {
-
-    private final SetupConfig sc;
-    private final ActorRef tromboneHCD;
-    private final TromboneState ts;
-
-    private DatumCommandActor(SetupConfig sc, ActorRef tromboneHCD, TromboneState ts) {
-      this.sc = sc;
-      this.tromboneHCD = tromboneHCD;
-      this.ts = ts;
-
-      // Not using stateReceive since no state updates are needed here only writes
-      receive(ReceiveBuilder.
-        matchEquals(JSequentialExecution.CommandStart()), t -> {
-          if (cmd().equals(cmdUninitialized)) {
-            sender().tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of "
-              + cmd() + "/" + move() + " does not allow datum"));
-          } else {
-            log.info("In Start: " + tromboneState);
-            ActorRef mySender = sender();
-            state(cmdBusy, moveIndexing, sodiumLayer(), nss());
-            tromboneHCD.tell(new HcdController.Submit(new SetupConfig(axisDatumCK.prefix())), self());
-            executeMatch(context(), idleMatcher, tromboneHCD, Optional.of(mySender)) {
-              case Completed =>
-                state(cmdReady, moveIndexed, false, false);
-              case Error(message) =>
-                log.error("Error: " + message);
-            }
-          }
-        }).
-        matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
-          log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>  DATUM STOP STOP");
-          tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
-        }).
-        matchAny(t -> log.warning("Unknown message received: " + t)).
-        build();
-    }
-  }
 
   // XXX use a props() method?
   ActorRef DatumCommand(SetupConfig sc, ActorRef tromboneHCD) {

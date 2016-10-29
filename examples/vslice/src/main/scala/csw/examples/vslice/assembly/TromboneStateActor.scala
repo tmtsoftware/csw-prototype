@@ -56,7 +56,7 @@ trait TromboneStateClient {
    * The currentState as a TromonbeState is returned.
    * @return TromboneState current state
    */
-  def currentState: TromboneState = internalState.copy()
+  def currentState: TromboneState = internalState
 }
 
 object TromboneStateActor {
