@@ -53,7 +53,7 @@ case "$1" in
             echo $! > $CS_PID_FILE
         fi
 
-        # Start Redis and register Redis based services
+	# Start Redis and register Redis based services
         if [ -f $REDIS1_PID_FILE ] ; then
             echo "Redis $REDIS1_PID_FILE exists, process is already running or crashed"
         else
@@ -79,6 +79,9 @@ case "$1" in
                 dns-sd -R "Telemetry Service-Service-tcp" _csw._tcp local. $REDIS1_PORT >> $REG_LOG_FILE 2>&1 &
                 echo $! >> $REG_PID_FILE
             fi
+
+            # Load the default alarms in to the Alarm Service Redis instance
+            $CSW_INSTALL/bin/asconsole --init $CSW_INSTALL/conf/alarms.conf
         fi
         ;;
     stop)
