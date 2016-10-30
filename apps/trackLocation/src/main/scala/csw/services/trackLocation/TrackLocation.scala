@@ -29,7 +29,7 @@ object TrackLocation extends App {
    * See val parser below for descriptions of the options.
    */
   private case class Options(
-    name:          Option[String] = None,
+    names:         List[String]   = Nil,
     command:       Option[String] = None,
     port:          Option[Int]    = None,
     appConfigFile: Option[File]   = None,
@@ -41,9 +41,9 @@ object TrackLocation extends App {
   private val parser = new scopt.OptionParser[Options]("trackLocation") {
     head("trackLocation", System.getProperty("CSW_VERSION"))
 
-    opt[String]("name") valueName "<name>" action { (x, c) =>
-      c.copy(name = Some(x))
-    } text "Required: The name used to register the application (also root name in config file)"
+    opt[String]("name") valueName "<name1>[,<name2>,...]" action { (x, c) =>
+      c.copy(names = x.split(',').toList)
+    } text "Required: The name (or names, separated by comma) used to register the application (also root name in config file)"
 
     opt[String]('c', "command") valueName "<name>" action { (x, c) =>
       c.copy(command = Some(x))
@@ -108,9 +108,7 @@ object TrackLocation extends App {
 
   // Run the application
   private def run(options: Options): Unit = {
-    if (options.name.isEmpty) error("Please specify an application name")
-    val name = options.name.get
-
+    if (options.names.isEmpty) error("Please specify one or more application names, separated by commas")
     //. Get the app config file, if given
     val appConfig = options.appConfigFile.map(getAppConfig)
 
@@ -119,7 +117,8 @@ object TrackLocation extends App {
       val value = if (arg.isDefined) arg
       else {
         appConfig.flatMap { c =>
-          val path = s"$name.$opt"
+          // XXX: Using only first name here
+          val path = s"${options.names.head}.$opt"
           if (c.hasPath(path)) Some(c.getString(path)) else None
         }
       }
@@ -149,20 +148,21 @@ object TrackLocation extends App {
     // Replace %port in the command
     val command = getStringOpt("command", options.command).get.replace("%port", port.toString)
 
-    startApp(name, command, port, options.delay.getOrElse(1000), options.noExit)
+    startApp(options.names, command, port, options.delay.getOrElse(1000), options.noExit)
   }
 
   // Starts the command and registers it with the given name on the given port
-  private def startApp(name: String, command: String, port: Int, delay: Int, noExit: Boolean): Unit = {
+  private def startApp(names: List[String], command: String, port: Int, delay: Int, noExit: Boolean): Unit = {
     import scala.sys.process._
     import system.dispatcher
 
-    val componentId = ComponentId(name, ComponentType.Service)
+    // Register all the names given for the application with the location service
+    def registerNames = Future.sequence(names.map(name => LocationService.registerTcpConnection(ComponentId(name, ComponentType.Service), port)))
 
     // Insert a delay before registering with the location service to give the app a chance to start
     val f = for {
       _ <- Future { Thread.sleep(delay) }
-      reg <- LocationService.registerTcpConnection(componentId, port)
+      reg <- registerNames
     } yield reg
 
     // Run the command and wait for it to exit
@@ -172,7 +172,7 @@ object TrackLocation extends App {
 
     // Unregister from the location service and exit
     val registration = Await.result(f, timeout.duration)
-    registration.unregister()
+    registration.foreach(_.unregister())
 
     if (!noExit) System.exit(exitCode)
   }
