@@ -49,6 +49,7 @@ object AlarmService {
   // Lookup the alarm service redis instance with the location service
   private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
+    logger.debug(s"Looking up '$asName' with the Location Service (timeout: ${timeout.duration})")
     val connection = alarmServiceConnection(asName)
     LocationService.resolve(Set(connection)).map { locationsReady =>
       val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]

@@ -1,6 +1,8 @@
 #!/bin/bash
 #
 # Starts serviced required by CSW and registers them with the location service.
+# This script uses the csw trackLocation app to start Redis and register it with the
+# Location Service under different names (see below).
 #
 # Usage is:
 #
@@ -73,10 +75,10 @@ case "$1" in
             if [ -f $REDIS_PID_FILE ] ; then
                 echo "Redis pid file $REDIS_PID_FILE exists, process is already running or crashed?"
             else
-                $CSW_INSTALL/bin/tracklocation --name "$REDIS_SERVICES" --command "$REDIS_SERVER --protected-mode no --port $REDIS_PORT" > $REDIS_LOG_FILE 2>&1 &
+                $CSW_INSTALL/bin/tracklocation --name "$REDIS_SERVICES" --port $REDIS_PORT --command "$REDIS_SERVER --protected-mode no --port $REDIS_PORT" > $REDIS_LOG_FILE 2>&1 &
                 echo $! > $REDIS_PID_FILE
 				# Load the default alarms in to the Alarm Service Redis instance
-				$CSW_INSTALL/bin/asconsole --init $CSW_INSTALL/conf/alarms.conf
+				$CSW_INSTALL/bin/asconsole --init $CSW_INSTALL/conf/alarms.conf >> $REDIS_LOG_FILE 2>&1 &
 			fi
         fi
         ;;
