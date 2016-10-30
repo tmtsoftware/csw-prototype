@@ -58,7 +58,7 @@ public class TromboneStateActor extends AbstractActor {
       context().system().eventStream().subscribe(self(), TromboneState.class);
     }
 
-    private PartialFunction<Object, BoxedUnit> stateReceive(TromboneState currentState) {
+    protected PartialFunction<Object, BoxedUnit> stateReceive(TromboneState currentState) {
       return ReceiveBuilder.
         match(TromboneState.class, ts -> {
           if (ts != currentState) {

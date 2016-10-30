@@ -11,6 +11,7 @@ import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch;
 import csw.services.ccs.StateMatchers.*;
 import csw.services.ccs.Validation.*;
 import csw.services.events.EventServiceSettings;
+import csw.services.loc.LocationService;
 import csw.util.config.BooleanItem;
 import csw.util.config.Configurations;
 import csw.util.config.Configurations.*;
@@ -26,8 +27,11 @@ import akka.util.Timeout;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.alarms.*;
 import csw.util.config.JavaHelpers;
+import javacsw.services.pkg.ILocationSubscriberClient;
 import javacsw.util.config.JConfigDSL;
 import csw.util.config.StateVariable.CurrentState;
+import csw.examples.vsliceJava.assembly.TromboneStateActor.TromboneStateClient;
+import csw.services.loc.LocationService.*;
 
 import javacsw.services.alarms.IAlarmService;
 import javacsw.services.alarms.JAlarmService;
@@ -38,6 +42,8 @@ import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 import java.util.concurrent.TimeUnit;
 import scala.concurrent.duration.*;
+
+import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JConfigDSL.*;
 
@@ -59,27 +65,27 @@ import static scala.compat.java8.OptionConverters.toJava;
  * TMT Source Code: 9/21/16.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-class TromboneCommandHandler extends TromboneStateHandler {
+class TromboneCommandHandler extends TromboneStateClient implements ILocationSubscriberClient {
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext ac;
-  private final ActorRef tromboneHCDIn;
   private final Optional<ActorRef> allEventPublisher;
 
   private int moveCnt;
   // Diags
   private final ActorRef tromboneHCD;
 
-  private final EventServiceSettings testEventServiceSettings;
+  // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
+  private final ActorRef tromboneStateActor;
 
-  public TromboneCommandHandler(AssemblyContext ac, ActorRef tromboneHCDIn, Optional<ActorRef> allEventPublisher) {
+
+  public TromboneCommandHandler(AssemblyContext ac, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> allEventPublisher) {
     this.ac = ac;
-    this.tromboneHCDIn = tromboneHCDIn;
+    this.tromboneHCD = tromboneHCDIn.orElse(context().system().deadLetters());
+    tromboneStateActor = context().actorOf(TromboneStateActor.props());
     this.allEventPublisher = allEventPublisher;
-
     moveCnt = 0;
-    tromboneHCD= tromboneHCDIn;
-    testEventServiceSettings = new EventServiceSettings("localhost", 7777);
+    subscribeToLocationUpdates();
 
 //    receive(ReceiveBuilder.
 //      matchAny(t -> log.warning("Unknown message received: " + t)).
@@ -98,14 +104,17 @@ class TromboneCommandHandler extends TromboneStateHandler {
         if (configKey.equals(ac.initCK)) {
           log.info("Init not yet implemented");
         } else if (configKey.equals(ac.datumCK)) {
-          ActorRef datumActorRef = DatumCommand(sc, tromboneHCD);
+          ActorRef datumActorRef = context().actorOf(DatumCommand.props(sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
           context().become(actorExecutingReceive(datumActorRef, commandOriginator));
           self().tell(JSequentialExecution.CommandStart(), self());
         } else if (configKey.equals(ac.moveCK)) {
-          ActorRef moveActorRef = MoveCommand(sc, tromboneHCD);
+          ActorRef moveActorRef = context().actorOf(MoveCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
           context().become(actorExecutingReceive(moveActorRef, commandOriginator));
           self().tell(JSequentialExecution.CommandStart(), self());
         } else if (configKey.equals(ac.positionCK)) {
+//          val positionActorRef = context.actorOf(PositionCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
+//          context.become(actorExecutingReceive(positionActorRef, commandOriginator))
+//          self ! CommandStart
           ActorRef positionActorRef = PositionCommand(sc, tromboneHCD);
           context().become(actorExecutingReceive(positionActorRef, commandOriginator));
           self().tell(JSequentialExecution.CommandStart(), self());
@@ -116,10 +125,32 @@ class TromboneCommandHandler extends TromboneStateHandler {
           commandOriginator.ifPresent(actorRef ->
             actorRef.tell(new Invalid(new WrongInternalStateIssue("Trombone assembly must be following for setAngle")), self()));
         } else if (configKey.equals(ac.setElevationCK)) {
+//          // Note that units have already been verified here
+//          val setElevationActorRef = context.actorOf(SetElevationCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
+//          context.become(actorExecutingReceive(setElevationActorRef, commandOriginator))
+//          self ! CommandStart
           commandOriginator.ifPresent(actorRef ->
             actorRef.tell(new Invalid(new WrongInternalStateIssue("Trombone assembly must be following for setElevation")), self()));
         } else if (configKey.equals(ac.followCK)) {
-          if (cmd().equals(cmdUninitialized) || (!move().equals(moveIndexed) && !move().equals(moveMoving)) || !sodiumLayer()) {
+//          if (cmd(currentState) == cmdUninitialized || (move(currentState) != moveIndexed && move(currentState) != moveMoving) || !sodiumLayer(currentState)) {
+//            commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${cmd(currentState)}/${move(currentState)} does not allow follow")))
+//          } else {
+//            // No state set during follow
+//            // At this point, parameters have been checked so direct access is okay
+//            val nssItem = sc(ac.nssInUseKey)
+//
+//            // The event publisher may be passed in (XXX FIXME? pass in eventService)
+//            val props = FollowCommand.props(ac, nssItem, Some(tromboneHCD), allEventPublisher, eventService = None)
+//            // Follow command runs the trombone when following
+//            val followCommandActor = context.actorOf(props)
+//            context.become(followReceive(followCommandActor))
+//            // Note that this is where sodiumLayer is set allowing other commands that require this state
+//            tromboneStateActor ! SetState(cmdContinuous, moveMoving, sodiumLayer(currentState), nssItem.head)
+//            commandOriginator.foreach(_ ! Completed)
+//          }
+          if (cmd(currentState()).equals(cmdUninitialized)
+            || (!move(currentState()).equals(moveIndexed) && !move(currentState()).equals(moveMoving))
+            || !sodiumLayer(currentState())) {
             commandOriginator.ifPresent(actorRef ->
               actorRef.tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of $cmd/$move does not allow follow")), self()));
           } else {
@@ -128,12 +159,13 @@ class TromboneCommandHandler extends TromboneStateHandler {
             BooleanItem nssItem = jitem(sc, ac.nssInUseKey);
 
               // The event publisher may be passed in
-            Props props = FollowCommand.props(ac, nssItem, Optional.of(tromboneHCD), allEventPublisher, Optional.of(testEventServiceSettings));
+            Props props = FollowCommand.props(ac, nssItem, Optional.of(tromboneHCD), allEventPublisher, Optional.empty());
             // Follow command runs the trombone when following
             ActorRef followCommandActor = context().actorOf(props);
             context().become(followReceive(followCommandActor));
             // Note that this is where sodiumLayer is set allowing other commands that require this state
-            state(cmdContinuous, moveMoving, sodiumLayer(), jvalue(nssItem));
+//            state(cmdContinuous, moveMoving, sodiumLayer(), jvalue(nssItem));
+            tromboneStateActor.tell(new SetState(cmdContinuous, moveMoving, sodiumLayer(currentState()), nssItem.head()), self());
             commandOriginator.ifPresent(actorRef -> actorRef.tell(Completed, self()));
           }
         } else {
@@ -143,9 +175,27 @@ class TromboneCommandHandler extends TromboneStateHandler {
             configKey.prefix() + " in the current state.")), self()));
         }
       }).
+      match(TromboneStateActor.TromboneState.class, this::stateReceive).
       matchAny(t -> log.warning("TromboneCommandHandler2:noFollowReceive received an unknown message: " + t)).
       build();
   }
+
+  private void lookatLocations(Location location) {
+    if (location instanceof LocationService.ResolvedAkkaLocation) {
+      log.info("Got actorRef: " + l.actorRef);
+      tromboneHCD = l.actorRef.getOrElse(context().system().deadLetters());
+    }
+      case h: ResolvedHttpLocation =>
+        log.info(s"HTTP: ${h.connection}")
+      case t: ResolvedTcpLocation =>
+        log.info(s"Received TCP Location: ${t.connection}")
+      case u: Unresolved =>
+        log.info(s"Unresolved: ${u.connection}")
+      case ut: UnTrackedLocation =>
+        log.info(s"UnTracked: ${ut.connection}")
+    }
+  }
+
 
   private PartialFunction<Object, BoxedUnit> followReceive(ActorRef followActor) {
     return ReceiveBuilder.
