@@ -89,7 +89,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
     // Test internal function
     val map1 = Await.result(alarmService.asInstanceOf[AlarmServiceImpl].getHealthInfoMap(AlarmKey()), timeout.duration)
     println(s"Total map: $map1")
-//    assert(map1.size == 3)
+    //    assert(map1.size == 3)
 
     val map2 = Await.result(alarmService.asInstanceOf[AlarmServiceImpl].getHealthInfoMap(AlarmKey(Some("NFIRAOS"))), timeout.duration)
     println(s"NFIRAOS map: $map2")
