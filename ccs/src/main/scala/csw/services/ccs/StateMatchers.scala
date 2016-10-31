@@ -5,6 +5,7 @@ import akka.util.Timeout
 import csw.util.akka.PublisherActor.{Subscribe, Unsubscribe}
 import csw.util.config.StateVariable.{CurrentState, DemandState}
 
+import scala.annotation.varargs
 import scala.concurrent.duration._
 
 object StateMatchers {
@@ -265,6 +266,10 @@ object StateMatchers {
 
     object StartMatch {
       def apply(matchers: StateMatcher*): StartMatch = StartMatch(matchers.toList)
+
+      // Java API
+      @varargs
+      def create(matchers: StateMatcher*): StartMatch = StartMatch(matchers.toList)
     }
 
   }

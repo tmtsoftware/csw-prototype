@@ -33,7 +33,7 @@ import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class MoveCommand extends AbstractActor {
+public class PositionCommand extends AbstractActor {
 
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
   private final AssemblyContext ac;
@@ -42,7 +42,7 @@ public class MoveCommand extends AbstractActor {
   private final TromboneState startState;
   private final Optional<ActorRef> stateActor;
 
-  private MoveCommand(AssemblyContext ac, SetupConfig sc, ActorRef tromboneHCD, TromboneState startState, Optional<ActorRef> stateActor) {
+  private PositionCommand(AssemblyContext ac, SetupConfig sc, ActorRef tromboneHCD, TromboneState startState, Optional<ActorRef> stateActor) {
     this.ac = ac;
     this.sc = sc;
     this.tromboneHCD = tromboneHCD;
@@ -54,32 +54,35 @@ public class MoveCommand extends AbstractActor {
       matchEquals(JSequentialExecution.CommandStart(), t -> {
         if (cmd(startState) == cmdUninitialized || (move(startState) != moveIndexed && move(startState) != moveMoving)) {
           sender().tell(new NoLongerValid(new WrongInternalStateIssue(
-            "Assembly state of " + cmd(startState) + "/" + move(startState) + " does not allow move")), self());
+            "Assembly state of " + cmd(startState) + "/" + move(startState) + " does not allow motion")), self());
         } else {
           ActorRef mySender = sender();
-          DoubleItem stagePosition = JavaHelpers.jvalue(sc, ac.stagePositionKey);
 
-          // Convert to encoder units from mm
-          int encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, jvalue(stagePosition));
+          // Note that units have already been verified here
+          DoubleItem rangeDistance = JavaHelpers.jvalue(sc, ac.naRangeDistanceKey);
 
-          log.info("Setting trombone axis to: " + encoderPosition);
+          // Convert range distance to encoder units from mm
+          double stagePosition = Algorithms.rangeDistanceToStagePosition(jvalue(rangeDistance));
+          int encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, stagePosition);
+
+          log.info("Using rangeDistance: " + jvalue(rangeDistance) + " to get stagePosition: " + stagePosition + " to encoder: " + encoderPosition);
 
           DemandMatcher stateMatcher = TromboneCommandHandler.posMatcher(encoderPosition);
           // Position key is encoder units
           SetupConfig scOut = jadd(sc(axisMoveCK.prefix(), jset(positionKey, encoderPosition).withUnits(encoder)));
-
           sendState(new SetState(cmdItem(cmdBusy), moveItem(moveMoving), startState.sodiumLayer, startState.nss));
           tromboneHCD.tell(new HcdController.Submit(scOut), self());
+
           executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender)) {
             case Completed =>
               sendState(SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss));
             case Error(message) =>
-              log.error("Move command match failed with message: " + message);
+              log.error("Position command match failed with message: " + message);
           }
         }
       }).
       matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
-        log.info("Move command -- STOP");
+        log.info("Position command -- STOP");
         tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
       }).
       matchAny(t -> log.warning("Unknown message received: " + t)).
@@ -91,12 +94,12 @@ public class MoveCommand extends AbstractActor {
   }
 
   public static Props props(AssemblyContext ac, SetupConfig sc, ActorRef tromboneHCD, TromboneState startState, Optional<ActorRef> stateActor) {
-    return Props.create(new Creator<MoveCommand>() {
+    return Props.create(new Creator<PositionCommand>() {
       private static final long serialVersionUID = 1L;
 
       @Override
-      public MoveCommand create() throws Exception {
-        return new MoveCommand(ac, sc, tromboneHCD, startState, stateActor);
+      public PositionCommand create() throws Exception {
+        return new PositionCommand(ac, sc, tromboneHCD, startState, stateActor);
       }
     });
   }

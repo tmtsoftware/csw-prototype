@@ -1,6 +1,7 @@
 package csw.services.loc
 
 import java.net.{Inet6Address, InetAddress, NetworkInterface, URI}
+import java.util.Optional
 import javax.jmdns._
 
 import akka.actor._
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 import collection.JavaConverters._
+import scala.compat.java8.OptionConverters._
 
 /**
  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
@@ -158,6 +160,12 @@ object LocationService {
 
   final case class ResolvedAkkaLocation(connection: AkkaConnection, uri: URI, prefix: String = "", actorRef: Option[ActorRef] = None) extends Location {
     override val isResolved = true
+
+    /**
+      * Java API to get actorRef
+      * @return
+      */
+    def getActorRef: Optional[ActorRef] = actorRef.asJava
   }
 
   final case class ResolvedHttpLocation(connection: HttpConnection, uri: URI, path: String) extends Location {
