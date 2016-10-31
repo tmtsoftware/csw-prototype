@@ -162,9 +162,9 @@ object LocationService {
     override val isResolved = true
 
     /**
-      * Java API to get actorRef
-      * @return
-      */
+     * Java API to get actorRef
+     * @return
+     */
     def getActorRef: Optional[ActorRef] = actorRef.asJava
   }
 
