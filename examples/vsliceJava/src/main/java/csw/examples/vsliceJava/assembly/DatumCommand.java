@@ -7,6 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
+import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.HcdController;
 import csw.services.ccs.Validation;
@@ -18,6 +19,7 @@ import csw.examples.vsliceJava.assembly.TromboneStateActor.SetState;
 import csw.services.ccs.CommandStatus2.NoLongerValid;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.axisDatumCK;
@@ -51,12 +53,13 @@ public class DatumCommand extends AbstractActor {
           ActorRef mySender = sender();
           sendState(new SetState(cmdItem(cmdBusy), moveItem(moveIndexing), startState.sodiumLayer, startState.nss));
           tromboneHCD.tell(new HcdController.Submit(new SetupConfig(axisDatumCK.prefix())), self());
-          executeMatch(context(), idleMatcher, tromboneHCD, Optional.of(mySender)) {
-            case Completed =>
-              sendState(SetState(cmdReady, moveIndexed, false, false));
-            case Error(message) =>
-              log.error("Data command match failed with error: " + message);
-          }
+          Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
+          TromboneCommandHandler.executeMatch(context(), TromboneCommandHandler.idleMatcher(), tromboneHCD,  Optional.of(mySender), timeout, status -> {
+            if (status == Completed)
+              sendState(new SetState(cmdReady, moveIndexed, false, false));
+            else if (status instanceof CommandStatus2.Error)
+              log.error("Data command match failed with error: " + ((CommandStatus2.Error)status).message());
+          });
         }
       }).
       matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
@@ -64,7 +67,7 @@ public class DatumCommand extends AbstractActor {
         tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
       }).
       matchAny(t -> log.warning("Unknown message received: " + t)).
-      build();
+      build());
   }
 
   private void sendState(SetState setState) {

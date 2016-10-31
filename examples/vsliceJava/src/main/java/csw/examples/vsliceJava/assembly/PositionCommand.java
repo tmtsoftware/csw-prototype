@@ -7,6 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
+import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.HcdController;
 import csw.services.ccs.StateMatchers;
@@ -24,6 +25,7 @@ import csw.services.ccs.StateMatchers.DemandMatcher;
 import javacsw.util.config.JUnitsOfMeasure;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
@@ -73,12 +75,14 @@ public class PositionCommand extends AbstractActor {
           sendState(new SetState(cmdItem(cmdBusy), moveItem(moveMoving), startState.sodiumLayer, startState.nss));
           tromboneHCD.tell(new HcdController.Submit(scOut), self());
 
-          executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender)) {
-            case Completed =>
-              sendState(SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss));
-            case Error(message) =>
-              log.error("Position command match failed with message: " + message);
-          }
+          Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
+          TromboneCommandHandler.executeMatch(context(), stateMatcher, tromboneHCD,  Optional.of(mySender), timeout, status -> {
+            if (status == Completed)
+              sendState(new SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss));
+            else if (status instanceof CommandStatus2.Error)
+              log.error("Position command match failed with message: " + ((CommandStatus2.Error)status).message());
+          });
+
         }
       }).
       matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {

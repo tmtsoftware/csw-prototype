@@ -130,10 +130,9 @@ class FollowCommand extends AbstractActor {
         log.info("Got angle: " + t.zenithAngle);
         followActor.tell(t, sender());
 
-      }).
-      // Note that this is an option so it can be None
-        match(UpdateTromboneHCD.class, t -> {
-        // Set a new receive method with updated actor values and new HCD, prefer this over vars or globals
+      }).match(UpdateTromboneHCD.class, t -> {
+          // Note that this is an option so it can be None
+          // Set a new receive method with updated actor values and new HCD, prefer this over vars or globals
         context().become(followReceive(nssInUse, followActor, eventSubscriber, upd.tromboneHCD));
         // Also update the trombone control with the new HCD reference
         tromboneControl.tell(new UpdateTromboneHCD(upd.tromboneHCD), self());

@@ -26,6 +26,7 @@ import csw.services.loc.LocationService.*;
 
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
+
 import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
@@ -42,20 +43,18 @@ import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
 import static javacsw.services.ccs.JCommandStatus2.Cancelled;
 import static javacsw.services.ccs.JCommandStatus2.Completed;
 import static javacsw.util.config.JItems.jset;
-import static javacsw.util.config.JItems.jvalue;
 import static scala.compat.java8.OptionConverters.toJava;
 
 /**
  * TMT Source Code: 9/21/16.
  */
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 class TromboneCommandHandler extends TromboneStateClient implements ILocationSubscriberClient {
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext ac;
   private final Optional<ActorRef> allEventPublisher;
 
-  private int moveCnt;
   // Diags
   private ActorRef tromboneHCD;
 
@@ -68,7 +67,7 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
     this.tromboneHCD = tromboneHCDIn.orElse(context().system().deadLetters());
     tromboneStateActor = context().actorOf(TromboneStateActor.props());
     this.allEventPublisher = allEventPublisher;
-    moveCnt = 0;
+    int moveCnt = 0;
     subscribeToLocationUpdates();
 
 //    receive(ReceiveBuilder.
@@ -120,7 +119,7 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
             // At this point, parameters have been checked so direct access is okay
             BooleanItem nssItem = jitem(sc, ac.nssInUseKey);
 
-              // The event publisher may be passed in
+            // The event publisher may be passed in
             Props props = FollowCommand.props(ac, nssItem, Optional.of(tromboneHCD), allEventPublisher, Optional.empty());
             // Follow command runs the trombone when following
             ActorRef followCommandActor = context().actorOf(props);
@@ -133,8 +132,8 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
         } else {
           log.error("TromboneCommandHandler2:noFollowReceive received an unknown command: " + t);
           commandOriginator.ifPresent(actorRef ->
-            actorRef.tell(new Invalid(new UnsupportedCommandInStateIssue("Trombone assembly does not support the command "+
-            configKey.prefix() + " in the current state.")), self()));
+            actorRef.tell(new Invalid(new UnsupportedCommandInStateIssue("Trombone assembly does not support the command " +
+              configKey.prefix() + " in the current state.")), self()));
         }
       }).
       match(TromboneStateActor.TromboneState.class, this::stateReceive).
@@ -144,20 +143,20 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
 
   private void lookatLocations(Location location) {
     if (location instanceof ResolvedAkkaLocation) {
-      ResolvedAkkaLocation l = (ResolvedAkkaLocation)location;
+      ResolvedAkkaLocation l = (ResolvedAkkaLocation) location;
       log.info("Got actorRef: " + l.actorRef());
       tromboneHCD = l.getActorRef().orElse(context().system().deadLetters());
     } else if (location instanceof ResolvedHttpLocation) {
-      ResolvedHttpLocation h = (ResolvedHttpLocation)location;
+      ResolvedHttpLocation h = (ResolvedHttpLocation) location;
       log.info("Received HTTP Location: " + h.connection());
     } else if (location instanceof ResolvedTcpLocation) {
-      ResolvedTcpLocation t = (ResolvedTcpLocation)location;
+      ResolvedTcpLocation t = (ResolvedTcpLocation) location;
       log.info("Received TCP Location: " + t.connection());
     } else if (location instanceof Unresolved) {
-      Unresolved u = (Unresolved)location;
+      Unresolved u = (Unresolved) location;
       log.info("Unresolved: " + u.connection());
     } else if (location instanceof UnTrackedLocation) {
-      UnTrackedLocation ut = (UnTrackedLocation)location;
+      UnTrackedLocation ut = (UnTrackedLocation) location;
       log.info("Untracked: " + ut.connection());
     }
   }
@@ -165,37 +164,37 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
   private PartialFunction<Object, BoxedUnit> followReceive(ActorRef followActor) {
     return ReceiveBuilder.
       match(ExecuteOne.class, t -> {
-          SetupConfig sc = t.sc();
-          Optional<ActorRef> commandOriginator = toJava(t.commandOriginator());
-          ConfigKey configKey = sc.configKey();
-          if (configKey.equals(ac.datumCK) || configKey.equals(ac.moveCK) || configKey.equals(ac.positionCK) || configKey.equals(ac.followCK) || configKey.equals(ac.setElevationCK)) {
-            commandOriginator.ifPresent(actorRef ->
-              actorRef.tell(new Invalid(new WrongInternalStateIssue("Trombone assembly cannot be following for datum, move, position, setElevation, and follow")), self()));
-          } else if (configKey.equals(ac.setAngleCK)) {
-            // Unclear what to really do with state here
-            // Everything else is the same
-            tromboneStateActor.tell(new SetState(cmdBusy, move(currentState()), sodiumLayer(currentState()), nss(currentState())), self());
+        SetupConfig sc = t.sc();
+        Optional<ActorRef> commandOriginator = toJava(t.commandOriginator());
+        ConfigKey configKey = sc.configKey();
+        if (configKey.equals(ac.datumCK) || configKey.equals(ac.moveCK) || configKey.equals(ac.positionCK) || configKey.equals(ac.followCK) || configKey.equals(ac.setElevationCK)) {
+          commandOriginator.ifPresent(actorRef ->
+            actorRef.tell(new Invalid(new WrongInternalStateIssue("Trombone assembly cannot be following for datum, move, position, setElevation, and follow")), self()));
+        } else if (configKey.equals(ac.setAngleCK)) {
+          // Unclear what to really do with state here
+          // Everything else is the same
+          tromboneStateActor.tell(new SetState(cmdBusy, move(currentState()), sodiumLayer(currentState()), nss(currentState())), self());
 
-            // At this point, parameters have been checked so direct access is okay
-            // Send the SetElevation to the follow actor
-            DoubleItem zenithAngleItem = jitem(sc, ac.zenithAngleKey);
-            followActor.tell(new FollowActor.SetZenithAngle(zenithAngleItem), self());
-            Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
-            executeMatch(context(), idleMatcher(), tromboneHCD, commandOriginator, timeout, status -> {
-              if (status == Completed)
-                tromboneStateActor.tell(new SetState(cmdContinuous, move(currentState()), sodiumLayer(currentState()), nss(currentState())), self());
-              else if (status instanceof Error)
-                log.error("setElevation command failed with message: " + ((Error)status).message());
-            });
-          } else if (configKey.equals(ac.stopCK)) {
-            // Stop the follower
-            log.info("Just received the stop");
-            followActor.tell(new FollowCommand.StopFollowing(), self());
-            tromboneStateActor.tell(new SetState(cmdReady, moveIndexed, sodiumLayer(currentState()), nss(currentState())), self());
+          // At this point, parameters have been checked so direct access is okay
+          // Send the SetElevation to the follow actor
+          DoubleItem zenithAngleItem = jitem(sc, ac.zenithAngleKey);
+          followActor.tell(new FollowActor.SetZenithAngle(zenithAngleItem), self());
+          Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
+          executeMatch(context(), idleMatcher(), tromboneHCD, commandOriginator, timeout, status -> {
+            if (status == Completed)
+              tromboneStateActor.tell(new SetState(cmdContinuous, move(currentState()), sodiumLayer(currentState()), nss(currentState())), self());
+            else if (status instanceof Error)
+              log.error("setElevation command failed with message: " + ((Error) status).message());
+          });
+        } else if (configKey.equals(ac.stopCK)) {
+          // Stop the follower
+          log.info("Just received the stop");
+          followActor.tell(new FollowCommand.StopFollowing(), self());
+          tromboneStateActor.tell(new SetState(cmdReady, moveIndexed, sodiumLayer(currentState()), nss(currentState())), self());
 
-            // Go back to no follow state
-            context().become(noFollowReceive());
-            commandOriginator.ifPresent(actorRef -> actorRef.tell(Completed, self()));
+          // Go back to no follow state
+          context().become(noFollowReceive());
+          commandOriginator.ifPresent(actorRef -> actorRef.tell(Completed, self()));
         }
       }).
       build();
@@ -238,136 +237,6 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
     commandOriginator.ifPresent(actorRef -> actorRef.tell(Cancelled, self()));
   }
 
-
-//  // XXX use a props() method?
-//  ActorRef DatumCommand(SetupConfig sc, ActorRef tromboneHCD) {
-//    // XXX FIXME allan: This will fail since it is an inner class!
-//    return context().actorOf(Props.create(DatumCommandActor.class, sc, tromboneHCD, tromboneState));
-//  }
-
-  // XXX TODO FIXME nonstatic static inner class actor
-//  class MoveCommandActor extends AbstractActor {
-//    private final AssemblyContext.TromboneControlConfig controlConfig;
-//    private final SetupConfig sc;
-//    private final ActorRef tromboneHCD;
-//
-//    private MoveCommandActor(AssemblyContext.TromboneControlConfig controlConfig, SetupConfig sc, ActorRef tromboneHCD) {
-//      this.controlConfig = controlConfig;
-//      this.sc = sc;
-//      this.tromboneHCD = tromboneHCD;
-//
-//      receive(ReceiveBuilder.
-//        matchEquals(JSequentialExecution.CommandStart(), t -> {
-//          // Move moves the trombone state in mm but not encoder units
-//          if (cmd().equals(cmdUninitialized) || (!move().equals(moveIndexed) && !move().equals(moveMoving))) {
-//            sender().tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of $cmd/$move does not allow move")), self());
-//          } else {
-//            ActorRef mySender = sender();
-//            DoubleItem stagePosition = jitem(sc, ac.stagePositionKey);
-//
-//            // Convert to encoder units from mm
-//            int encoderPosition = Algorithms.stagePositionToEncoder(controlConfig, jvalue(stagePosition));
-//
-//            log.info("Setting trombone axis to: " + encoderPosition);
-//
-//            DemandMatcher stateMatcher = posMatcher(encoderPosition);
-//            // Position key is encoder units
-//            SetupConfig scOut =  jadd(sc(axisMoveCK.prefix()),
-//              jset(positionKey, encoderPosition).withUnits(JUnitsOfMeasure.encoder));
-//
-//            state(cmdBusy, moveMoving, sodiumLayer(), nss());
-//            tromboneHCD.tell(new HcdController.Submit(scOut), self());
-//            executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender)) {
-//              case Completed =>
-//                state(cmdReady, moveIndexed, sodiumLayer(), nss());
-//                moveCnt += 1;
-//                log.info("Done with move at: " + moveCnt);
-//              case Error(message) =>
-//                log.error("Move command failed with message: " + message);
-//            }
-//          }
-//        }).
-//        matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
-//          log.info("Move command -- STOP");
-//          tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
-//        }).
-//        matchAny(t -> log.warning("Unknown message received: " + t)).
-//        build());
-//    }
-//  }
-
-//  ActorRef MoveCommand(SetupConfig sc, ActorRef tromboneHCD) {
-//    // XXX FIXME allan: This will fail since it is an inner class!
-//    return context().actorOf(Props.create(MoveCommandActor.class, ac.controlConfig, sc, tromboneHCD));
-//  }
-
-//  private class PositionCommandActor extends AbstractActor {
-//
-//    private final AssemblyContext.TromboneControlConfig controlConfig;
-//    private final SetupConfig sc;
-//    private final ActorRef tromboneHCD;
-//
-//    private PositionCommandActor(AssemblyContext.TromboneControlConfig controlConfig, SetupConfig sc, ActorRef tromboneHCD) {
-//      this.controlConfig = controlConfig;
-//      this.sc = sc;
-//      this.tromboneHCD = tromboneHCD;
-//
-//      receive(ReceiveBuilder.
-//        matchEquals(JSequentialExecution.CommandStart(), t -> {
-//          if (cmd().equals(cmdUninitialized) || (!move().equals(moveIndexed) && !move().equals(moveMoving))) {
-//            sender().tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of "
-//              + cmd() + "/" + move() + " does not allow motion"));
-//          } else {
-//            ActorRef mySender = sender();
-//
-//            // Note that units have already been verified here
-//            DoubleItem rangeDistance = jitem(sc, ac.naRangeDistanceKey);
-//
-//            // Convert elevation to
-//            // Convert to encoder units from mm
-//            double stagePosition = Algorithms.rangeDistanceToStagePosition(jvalue(rangeDistance));
-//            int encoderPosition = Algorithms.stagePositionToEncoder(controlConfig, stagePosition);
-//
-//            log.info("Using rangeDistance: " + jvalue(rangeDistance) + " to get stagePosition: "
-//              + stagePosition + " to encoder: " + encoderPosition);
-//
-//            DemandMatcher stateMatcher = posMatcher(encoderPosition);
-//            // Position key is encoder units
-//            SetupConfig scOut = jadd(sc(axisMoveCK.prefix()), jset(positionKey, encoderPosition).withUnits(JUnitsOfMeasure.encoder));
-//            state(cmdBusy, moveMoving, sodiumLayer(), nss());
-//            tromboneHCD.tell(new HcdController.Submit(scOut), self());
-//
-//            executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender)) {
-//              case Completed =>
-//                state(cmdReady, moveIndexed, sodiumLayer(), nss());
-//                moveCnt += 1;
-//                log.info("Done with position at: " + moveCnt);
-//              case Error(message) =>
-//                log.error("Position command failed with message: " + message);
-//            }
-//          }
-//        }).
-//        matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
-//          log.info("Move command -- STOP");
-//          tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
-//        }).
-//        matchAny(t -> log.warning("Unknown message received: " + t)).
-//        build());
-//    }
-//
-//    @Override
-//    public void postStop() {
-//      unsubscribeState();
-//    }
-//  }
-
-//  private ActorRef PositionCommand(SetupConfig sc, ActorRef tromboneHCD) {
-//    // XXX FIXME: Won't work in non-static class
-//    return context().actorOf(Props.create(PositionCommandActor.class, ac.controlConfig, sc, tromboneHCD));
-//  }
-
-
-
   // --- static defs ---
 
   public static Props props(AssemblyContext ac, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> allEventPublisher) {
@@ -381,26 +250,26 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
     });
   }
 
-  private static void executeMatch(ActorContext context, StateMatcher stateMatcher, ActorRef currentStateSource, Optional<ActorRef> replyTo,
-                            Timeout timeout, Consumer<CommandStatus2> codeBlock) {
+  static void executeMatch(ActorContext context, StateMatcher stateMatcher, ActorRef currentStateSource, Optional<ActorRef> replyTo,
+                           Timeout timeout, Consumer<CommandStatus2> codeBlock) {
 
     ActorRef matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout));
 
     ask(matcher, StartMatch.create(stateMatcher), timeout).
       thenApply(reply -> {
-        CommandStatus2 cmdStatus = (CommandStatus2)reply;
+        CommandStatus2 cmdStatus = (CommandStatus2) reply;
         codeBlock.accept(cmdStatus);
         replyTo.ifPresent(actorRef -> actorRef.tell(cmdStatus, context.self()));
         return null;
       });
   }
 
-  private DemandMatcher idleMatcher() {
+  static DemandMatcher idleMatcher() {
     DemandState ds = jadd(new DemandState(axisStateCK.prefix()), jset(stateKey, TromboneHCD.AXIS_IDLE));
     return new DemandMatcher(ds, false);
   }
 
-  private DemandMatcher posMatcher(int position) {
+  static DemandMatcher posMatcher(int position) {
     DemandState ds = jadd(new DemandState(axisStateCK.prefix()),
       jset(stateKey, TromboneHCD.AXIS_IDLE),
       jset(positionKey, position));
