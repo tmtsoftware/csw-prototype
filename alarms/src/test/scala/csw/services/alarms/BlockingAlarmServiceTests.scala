@@ -31,19 +31,19 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
 
   implicit val timeout = Timeout(15.seconds)
 
-  // Set a low refresh rate for the test
+  // Set a low refresh rate for the test (should not be used in non-test code)
   val refreshSecs = 1
-  //    val refreshSecs = 5
+  System.setProperty("csw.services.alarms.refreshSecs", refreshSecs.toString)
 
   // Get the test alarm service config file (ascf)
   val url = getClass.getResource("/test-alarms.conf")
   val ascf = Paths.get(url.toURI).toFile
 
   // Get the alarm service by looking up the name with the location service.
-  val alarmService = Await.result(AlarmService(refreshSecs = refreshSecs), timeout.duration)
+  val alarmService = Await.result(AlarmService(), timeout.duration)
 
   // Used to start and stop the alarm service Redis instance used for the test
-  val alarmAdmin = AlarmServiceAdmin(alarmService)
+  //  val alarmAdmin = AlarmServiceAdmin(alarmService)
 
   override protected def beforeAll(): Unit = {
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
@@ -74,15 +74,16 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     // Time in ms to wait to see if an alarm severity expired
     val delayMs = expireSecs * 1000 * refreshSecs + shortDelayMs
 
-    val bas = BlockingAlarmService(refreshSecs = refreshSecs)
+    val bas = BlockingAlarmService()
+    val basAdmin = BlockingAlarmServiceAdmin(BlockingAlarmService())
 
     // initialize the list of alarms in Redis (This is only for the test and should not be done by normal clients)
-    val problems = Await.result(alarmAdmin.initAlarms(ascf), timeout.duration)
+    val problems = basAdmin.initAlarms(ascf)
     Problem.printProblems(problems)
     assert(Problem.errorCount(problems) == 0)
 
     // List all the alarms that were written to Redis
-    val alarms = bas.getAlarms(AlarmKey())
+    val alarms = basAdmin.getAlarms(AlarmKey())
     alarms.foreach { alarm =>
       // XXX TODO: compare results
       logger.debug(s"List Alarm: $alarm")
@@ -112,106 +113,106 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
     val badKey = AlarmKey("XXX", "xxx", "xxx")
 
-    val alarmMonitor = bas.monitorAlarms(key1, printAlarmStatus, printHealthStatus, notifyAll = false)
+    val alarmMonitor = basAdmin.monitorAlarms(key1, printAlarmStatus, printHealthStatus, notifyAll = false)
     Thread.sleep(shortDelayMs) // make sure actor has started
 
     bas.setSeverity(key1, SeverityLevel.Critical)
     Thread.sleep(delayMs) // wait for severity to expire
 
     // alarm is latched, so stays at critical
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Critical))
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Critical))
     assert(callbackSev == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Critical))
 
     bas.setSeverity(key1, SeverityLevel.Warning)
     // alarm is latched, so stays at critical
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
     Thread.sleep(shortDelayMs)
     assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Critical))
 
     // Acknowledge the alarm, which clears it, resets it back to Okay
-    bas.acknowledgeAndResetAlarm(key1)
+    basAdmin.acknowledgeAndResetAlarm(key1)
     bas.setSeverity(key1, SeverityLevel.Okay)
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback, so the test below passes
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay)) // alarm was cleared
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay)) // alarm was cleared
     assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
 
     Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected)) // alarm severity key expired
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected)) // alarm severity key expired
     assert(callbackSev == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected))
 
     // Test alarm in shelved state
-    bas.setShelvedState(key1, ShelvedState.Shelved)
+    basAdmin.setShelvedState(key1, ShelvedState.Shelved)
     bas.setSeverity(key1, SeverityLevel.Warning)
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback
     // getSeverity should return the severity that was set ...
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
     // but the callback should not have been called, since alarm is shelved (callbackSev should have previous value)
     assert(callbackSev == CurrentSeverity(SeverityLevel.Disconnected, SeverityLevel.Disconnected))
     // un-shelve the alarm and try it again
-    bas.setShelvedState(key1, ShelvedState.Normal)
+    basAdmin.setShelvedState(key1, ShelvedState.Normal)
     bas.setSeverity(key1, SeverityLevel.Warning)
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback
     assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
     // Since the alarm is no longer shelved, the callback should be called this time
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
 
     // Test alarm in deactivated state
-    bas.acknowledgeAndResetAlarm(key1)
+    basAdmin.acknowledgeAndResetAlarm(key1)
     bas.setSeverity(key1, SeverityLevel.Okay)
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback
-    bas.setActivationState(key1, ActivationState.OutOfService)
+    basAdmin.setActivationState(key1, ActivationState.OutOfService)
     bas.setSeverity(key1, SeverityLevel.Warning)
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
     // callback should not have been called, callbackSev should have previous value
     assert(callbackSev == CurrentSeverity(SeverityLevel.Okay, SeverityLevel.Okay))
     // reactivate the alarm
-    bas.setActivationState(key1, ActivationState.Normal)
+    basAdmin.setActivationState(key1, ActivationState.Normal)
     bas.setSeverity(key1, SeverityLevel.Warning)
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback
     assert(callbackSev == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
     // This time the callback should have been called
-    assert(bas.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
+    assert(basAdmin.getSeverity(key1) == CurrentSeverity(SeverityLevel.Warning, SeverityLevel.Warning))
 
     // Test health monitor
     alarmMonitor.stop()
     Thread.sleep(shortDelayMs)
     val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
-    val healthMonitor = bas.monitorAlarms(nfKey, printAlarmStatus, printHealthStatus, notifyAll = false)
+    val healthMonitor = basAdmin.monitorAlarms(nfKey, printAlarmStatus, printHealthStatus, notifyAll = false)
     Thread.sleep(shortDelayMs) // make sure actor has started
     bas.setSeverity(key2, SeverityLevel.Okay)
     bas.setSeverity(key3, SeverityLevel.Okay)
     Thread.sleep(shortDelayMs)
-    assert(bas.getHealth(nfKey) == Health.Good)
+    assert(basAdmin.getHealth(nfKey) == Health.Good)
     assert(callbackHealth.contains(Health.Good))
 
     Thread.sleep(delayMs) // wait for severity to expire and become "Disconnected"
     assert(callbackHealth.contains(Health.Bad))
-    assert(bas.getHealth(nfKey) == Health.Bad)
-    assert(bas.getHealth(AlarmKey()) == Health.Bad)
+    assert(basAdmin.getHealth(nfKey) == Health.Bad)
+    assert(basAdmin.getHealth(AlarmKey()) == Health.Bad)
 
     bas.setSeverity(key2, SeverityLevel.Major)
     bas.setSeverity(key3, SeverityLevel.Okay)
 
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback
     assert(callbackHealth.contains(Health.Ill))
-    assert(bas.getHealth(nfKey) == Health.Ill)
-    bas.acknowledgeAndResetAlarm(key2)
+    assert(basAdmin.getHealth(nfKey) == Health.Ill)
+    basAdmin.acknowledgeAndResetAlarm(key2)
 
     bas.setSeverity(key2, SeverityLevel.Okay)
     bas.setSeverity(key3, SeverityLevel.Critical)
     Thread.sleep(shortDelayMs) // Give redis time to notify the callback
     assert(callbackHealth.contains(Health.Bad))
-    assert(bas.getHealth(nfKey) == Health.Bad)
+    assert(basAdmin.getHealth(nfKey) == Health.Bad)
 
     // Test error conditions: Try to set an alarm that does not exist
-    assert(Try(bas.getAlarm(badKey)).isFailure)
+    assert(Try(basAdmin.getAlarm(badKey)).isFailure)
     assert(Try(bas.setSeverity(badKey, SeverityLevel.Critical)).isFailure)
-    assert(Try(bas.getSeverity(badKey)).isFailure)
-    assert(Try(bas.acknowledgeAndResetAlarm(badKey)).isFailure)
-    assert(Try(bas.getHealth(badKey)).isFailure)
-    assert(Try(bas.setShelvedState(badKey, ShelvedState.Normal)).isFailure)
-    assert(Try(bas.setActivationState(badKey, ActivationState.Normal)).isFailure)
+    assert(Try(basAdmin.getSeverity(badKey)).isFailure)
+    assert(Try(basAdmin.acknowledgeAndResetAlarm(badKey)).isFailure)
+    assert(Try(basAdmin.getHealth(badKey)).isFailure)
+    assert(Try(basAdmin.setShelvedState(badKey, ShelvedState.Normal)).isFailure)
+    assert(Try(basAdmin.setActivationState(badKey, ActivationState.Normal)).isFailure)
 
     // Stop the actors monitoring the alarm and health
     healthMonitor.stop()

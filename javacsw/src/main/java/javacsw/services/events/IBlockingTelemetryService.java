@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.util.Timeout;
 import csw.services.events.EventService;
+import csw.services.events.TelemetryService$;
 import csw.util.config.Events.StatusEvent;
 
 import java.util.List;
@@ -14,6 +15,11 @@ import java.util.Optional;
  */
 @SuppressWarnings("unused")
 public interface IBlockingTelemetryService {
+
+    /**
+     * The default name that the Telemetry Service is registered with
+     */
+    String defaultName = TelemetryService$.MODULE$.defaultName();
 
     /**
      * Publishes the status event (key is based on the event's prefix)

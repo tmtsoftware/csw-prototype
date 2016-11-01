@@ -41,7 +41,7 @@ private class AlarmRefreshActor(alarmService: AlarmService, initialMap: Map[Alar
   import AlarmRefreshActor._
   import context.dispatcher
 
-  val delay = alarmService.refreshSecs.seconds
+  val delay = alarmService.asInstanceOf[AlarmServiceImpl].refreshSecs.seconds
   context.system.scheduler.schedule(Duration.Zero, delay, self, Publish)
 
   def receive: Receive = working(initialMap)
@@ -51,13 +51,13 @@ private class AlarmRefreshActor(alarmService: AlarmService, initialMap: Map[Alar
       context.become(working(map ++ m))
       if (setNow) {
         for ((a, s) <- m) {
-          alarmService.setSeverity(a, s, refresh = false)
+          alarmService.setSeverity(a, s)
         }
       }
 
     case Publish =>
       for ((a, s) <- map) {
-        alarmService.setSeverity(a, s, refresh = false)
+        alarmService.setSeverity(a, s)
       }
 
     case x => log.error(s"Received unexpected message: $x")

@@ -46,7 +46,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   implicit val timeout = Timeout(10.seconds)
 
   // Get the alarm service by looking up the name with the location service.
-  val alarmService = Await.result(AlarmService(), timeout.duration)
+  val alarmService = Await.result(AlarmService(autoRefresh = true), timeout.duration)
 
   // Used to start and stop the alarm service Redis instance used for the test
   val alarmAdmin = AlarmServiceAdmin(alarmService)
@@ -158,7 +158,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
 
       // This is checking that the value in the alarm service has been set using admin interface
-      var alarmValue = Await.result(alarmService.getSeverity(lowLimitAlarm), timeout.duration)
+      var alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
       alarmValue.reported shouldBe Warning
 
       // This simulates that the alarm has been cleared
@@ -167,7 +167,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(50.milli) // A bit of time
 
       // use the alarm service admin to see that it is cleared,
-      alarmValue = Await.result(alarmService.getSeverity(lowLimitAlarm), timeout.duration)
+      alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
       alarmValue.reported shouldBe Okay
     }
 
@@ -190,7 +190,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
 
       // This is checking that the value in the alarm service has been set using admin interface
-      var alarmValue = Await.result(alarmService.getSeverity(highLimitAlarm), timeout.duration)
+      var alarmValue = Await.result(alarmAdmin.getSeverity(highLimitAlarm), timeout.duration)
       alarmValue.reported shouldBe Warning
 
       // This simulates that the alarm has been cleared
@@ -199,7 +199,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(50.milli) // A bit of time
 
       // use the alarm service admin to see that it is cleared,
-      alarmValue = Await.result(alarmService.getSeverity(highLimitAlarm), timeout.duration)
+      alarmValue = Await.result(alarmAdmin.getSeverity(highLimitAlarm), timeout.duration)
       alarmValue.reported shouldBe Okay
     }
 
@@ -212,8 +212,8 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       val fakeAssembly = TestProbe()
 
       // This is checking that the value in the alarm service has been set using admin interface
-      Await.result(alarmService.setSeverity(lowLimitAlarm, Okay, refresh = true), timeout.duration)
-      var alarmValue = Await.result(alarmService.getSeverity(lowLimitAlarm), timeout.duration)
+      Await.result(alarmService.setSeverity(lowLimitAlarm, Okay), timeout.duration)
+      var alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
       logger.info("Initial alarm value should be okay or disconnected")
       alarmValue.reported shouldBe Okay
 
@@ -241,7 +241,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
 
       // This is checking that the value in the alarm service has been set using admin interface
-      alarmValue = Await.result(alarmService.getSeverity(lowLimitAlarm), timeout.duration)
+      alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
       // use the alarm service admin to see that it is cleared,
       alarmValue.reported shouldBe Warning
 
@@ -253,7 +253,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
 
       // This is checking that the value in the alarm service has been set using admin interface
-      alarmValue = Await.result(alarmService.getSeverity(lowLimitAlarm), timeout.duration)
+      alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
       alarmValue.reported shouldBe Okay
     }
 
@@ -266,8 +266,8 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       val fakeAssembly = TestProbe()
 
       // This is checking that the value in the alarm service has been set using admin interface
-      Await.result(alarmService.setSeverity(highLimitAlarm, Okay, refresh = true), timeout.duration)
-      var alarmValue = Await.result(alarmService.getSeverity(highLimitAlarm), timeout.duration)
+      Await.result(alarmService.setSeverity(highLimitAlarm, Okay), timeout.duration)
+      var alarmValue = Await.result(alarmAdmin.getSeverity(highLimitAlarm), timeout.duration)
       logger.info("Initial alarm value should be okay or disconnected")
       alarmValue.reported shouldBe Okay
 
@@ -294,7 +294,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(500.milli) // A bit of time for processing and update of AlarmService due to move
 
       // This is checking that the value in the alarm service has been set using admin interface
-      alarmValue = Await.result(alarmService.getSeverity(highLimitAlarm), timeout.duration)
+      alarmValue = Await.result(alarmAdmin.getSeverity(highLimitAlarm), timeout.duration)
       // use the alarm service admin to see that it is cleared,
       alarmValue.reported shouldBe Warning
 
@@ -306,7 +306,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
 
       // This is checking that the value in the alarm service has been set using admin interface
-      alarmValue = Await.result(alarmService.getSeverity(highLimitAlarm), timeout.duration)
+      alarmValue = Await.result(alarmAdmin.getSeverity(highLimitAlarm), timeout.duration)
       alarmValue.reported shouldBe Okay
     }
   }

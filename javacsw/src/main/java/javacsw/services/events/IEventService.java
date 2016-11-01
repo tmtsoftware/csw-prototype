@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
 import akka.util.Timeout;
+import csw.services.events.EventService$;
 import csw.services.events.EventService.*;
 import csw.services.events.EventServiceSettings;
 import csw.util.config.Events.EventServiceEvent;
@@ -18,6 +19,10 @@ import java.util.concurrent.CompletableFuture;
 @SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
 public interface IEventService {
 
+  /**
+   * The default name that the Event Service is registered with
+   */
+  String defaultName = EventService$.MODULE$.defaultName();
 
   /**
    * Publishes the value for the given key

@@ -109,7 +109,7 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef, alarmService: AlarmSe
    * @param severity the severity that is used to set the lowLimitAlarm
    */
   def sendLowLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel) = {
-    alarmService.setSeverity(lowLimitAlarm, severity, refresh = true).onComplete {
+    alarmService.setSeverity(lowLimitAlarm, severity).onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $lowLimitAlarm to $severity: $ex")
       case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the low limit alarm")
     }
@@ -121,7 +121,7 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef, alarmService: AlarmSe
    * @param severity the severity that is used to set the highLimitAlarm
    */
   def sendHighLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel) = {
-    alarmService.setSeverity(highLimitAlarm, severity, refresh = true).onComplete {
+    alarmService.setSeverity(highLimitAlarm, severity).onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $highLimitAlarm to: $severity: $ex")
       case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the high limit alarm")
     }

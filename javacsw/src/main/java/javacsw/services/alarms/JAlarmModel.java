@@ -10,6 +10,7 @@ public class JAlarmModel {
     /**
      * Java access to SeverityLevel values
      */
+    @SuppressWarnings("unused")
     public static class JSeverityLevel {
         public static final SeverityLevel Disconnected = JAlarmService.JSeverityLevelSup$.MODULE$.Disconnected();
         public static final SeverityLevel Indeterminate = JAlarmService.JSeverityLevelSup$.MODULE$.Indeterminate();

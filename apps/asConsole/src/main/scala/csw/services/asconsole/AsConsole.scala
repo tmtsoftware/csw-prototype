@@ -42,7 +42,6 @@ object AsConsole extends App {
     component:        Option[String]  = None,
     name:             Option[String]  = None, // Alarm name (with wildcards)
     severity:         Option[String]  = None,
-    refreshSecs:      Option[Int]     = Some(5),
     refreshSeverity:  Boolean         = false,
     monitorAlarms:    Option[String]  = None,
     monitorHealth:    Option[String]  = None,
@@ -71,7 +70,7 @@ object AsConsole extends App {
       c.copy(asConfig = Some(x))
     } text "Initialize the set of available alarms from the given Alarm Service Config File (ASCF)"
 
-    opt[Unit]("delete") action { (x, c) =>
+    opt[Unit]("delete") action { (_, c) =>
       c.copy(delete = true)
     } text "When used with --init, deletes the existing alarm data before importing"
 
@@ -105,15 +104,15 @@ object AsConsole extends App {
       c.copy(monitorHealth = Some(x))
     } text "Starts monitoring the health of the subsystems or components given by (--subsystem, --component, --name) and calls the shell command with one arg: Good, Ill or Bad"
 
-    opt[Unit]("monitor-all") action { (x, c) =>
+    opt[Unit]("monitor-all") action { (_, c) =>
       c.copy(monitorAll = true)
     } text "With this option all severity changes are reported, even if shelved or out of service"
 
-    opt[Unit]("acknowledge") action { (x, c) =>
+    opt[Unit]("acknowledge") action { (_, c) =>
       c.copy(acknowledgeAlarm = true)
     } text "Acknowledge the alarm given by (--subsystem, --component, --name) (Alarm must be unique)"
 
-    opt[Unit]("reset") action { (x, c) =>
+    opt[Unit]("reset") action { (_, c) =>
       c.copy(resetAlarm = true)
     } text "Reset the latched state of the alarm given by (--subsystem, --component, --name) (Alarm must be unique)"
 
@@ -125,15 +124,11 @@ object AsConsole extends App {
       c.copy(activated = Some(x))
     } text "Set the activated state of the alarm to true (activated), or false (normal)"
 
-    opt[Unit]("refresh") action { (x, c) =>
+    opt[Unit]("refresh") action { (_, c) =>
       c.copy(refreshSeverity = true)
     } text "Continually refresh the given alarm's severity before it expires (use together with --subsystem, --component, --name, --severity)"
 
-    opt[Int]("refresh-secs") action { (x, c) =>
-      c.copy(refreshSecs = Some(x))
-    } text "When --refresh was specified, the number of seconds between refreshes of the alarm's severity"
-
-    opt[Unit]("no-exit") action { (x, c) =>
+    opt[Unit]("no-exit") action { (_, c) =>
       c.copy(noExit = true)
     } text "For testing: prevents application from exiting the JVM"
 
@@ -169,8 +164,7 @@ object AsConsole extends App {
     options.logLevel.foreach(setLogLevel)
 
     val alarmServiceName = options.asName.getOrElse(AlarmService.defaultName)
-    val refreshSecs = options.refreshSecs.getOrElse(AlarmService.defaultRefreshSecs)
-    val alarmService = Await.result(AlarmService(alarmServiceName, refreshSecs), timeout.duration)
+    val alarmService = Await.result(AlarmService(alarmServiceName), timeout.duration)
 
     options.asConfig.foreach(init(alarmService, _, options))
     options.severity.foreach(setSeverity(alarmService, _, options))
@@ -229,7 +223,7 @@ object AsConsole extends App {
     if (options.component.isEmpty) error("Missing required --component option")
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
-    Await.ready(alarmService.setShelvedState(key, shelvedState), timeout.duration)
+    Await.ready(AlarmServiceAdmin(alarmService).setShelvedState(key, shelvedState), timeout.duration)
   }
 
   // Handle --activated option (set selected alarm's activated state)
@@ -239,7 +233,7 @@ object AsConsole extends App {
     if (options.component.isEmpty) error("Missing required --component option")
     if (options.name.isEmpty) error("Missing required --name option (alarm name)")
     val key = AlarmKey(options.subsystem.get, options.component.get, options.name.get)
-    Await.ready(alarmService.setActivationState(key, activatedState), timeout.duration)
+    Await.ready(AlarmServiceAdmin(alarmService).setActivationState(key, activatedState), timeout.duration)
   }
 
   // Handle --refresh option (start an actor to continually refresh the selected alarm severity)
@@ -258,7 +252,7 @@ object AsConsole extends App {
 
   // Handle the --list option
   private def list(alarmService: AlarmService, options: Options): Unit = {
-    val alarms = Await.result(alarmService.getAlarms(AlarmKey(options.subsystem, options.component, options.name)), timeout.duration)
+    val alarms = Await.result(AlarmServiceAdmin(alarmService).getAlarms(AlarmKey(options.subsystem, options.component, options.name)), timeout.duration)
     alarms.foreach { alarm =>
       // XXX TODO: add format options?
       println(AlarmJson.toJson(alarm).prettyPrint)
@@ -280,7 +274,7 @@ object AsConsole extends App {
 
   // Handle the --monitor* options
   private def monitor(alarmService: AlarmService, options: Options): Unit = {
-    alarmService.monitorAlarms(
+    AlarmServiceAdmin(alarmService).monitorAlarms(
       AlarmKey(options.subsystem, options.component, options.name),
       alarmStatusCallback(options.monitorAlarms.getOrElse("")),
       healthStatusCallback(options.monitorHealth.getOrElse("")),
@@ -291,7 +285,7 @@ object AsConsole extends App {
   // Handle the --acknowledge option
   private def acknowledgeAlarm(alarmService: AlarmService, options: Options): Unit = {
     Await.ready(
-      alarmService.acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name)),
+      AlarmServiceAdmin(alarmService).acknowledgeAlarm(AlarmKey(options.subsystem, options.component, options.name)),
       timeout.duration
     )
   }
@@ -299,7 +293,7 @@ object AsConsole extends App {
   // Handle the --reset option
   private def resetAlarm(alarmService: AlarmService, options: Options): Unit = {
     Await.ready(
-      alarmService.resetAlarm(AlarmKey(options.subsystem, options.component, options.name)),
+      AlarmServiceAdmin(alarmService).resetAlarm(AlarmKey(options.subsystem, options.component, options.name)),
       timeout.duration
     )
   }

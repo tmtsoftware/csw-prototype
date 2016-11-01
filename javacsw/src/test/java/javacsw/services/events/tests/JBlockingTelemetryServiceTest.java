@@ -16,7 +16,6 @@ import csw.util.config.Events.*;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.IBlockingTelemetryService;
-import javacsw.services.events.ITelemetryServiceAdmin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,16 +50,16 @@ public class JBlockingTelemetryServiceTest {
     LocationService.initInterface();
     system = ActorSystem.create();
 
-    String tsName = "Telemetry Service Test";
+//    String tsName = "Telemetry Service Test";
 
     // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis on a random port and register it with the location service.
     // The following is the equivalent of running this from the command line:
     //   tracklocation --name "Telemetry Service Test" --command "redis-server --port %port" --no-exit
-    ITelemetryServiceAdmin.startTelemetryService(tsName, true, system.dispatcher());
+//    ITelemetryServiceAdmin.startTelemetryService(tsName, true, system.dispatcher());
 
     // Get the telemetry service by looking up the name with the location service
-    bts = IBlockingTelemetryService.getTelemetryService(tsName, system, timeout);
+    bts = IBlockingTelemetryService.getTelemetryService(IBlockingTelemetryService.defaultName, system, timeout);
   }
 
   @AfterClass
