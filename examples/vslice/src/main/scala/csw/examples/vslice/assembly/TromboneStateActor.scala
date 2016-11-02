@@ -26,6 +26,7 @@ class TromboneStateActor extends Actor with ActorLogging {
 
     case SetState(ts) =>
       if (ts != currentState) {
+        log.info("System: " + context.system)
         context.system.eventStream.publish(ts)
         context.become(stateReceive(ts))
       }
@@ -44,12 +45,15 @@ trait TromboneStateClient {
   import TromboneStateActor._
 
   // This actor subscribes to TromboneState using the EventBus
+  println(s"Subsribed to eventbus: $self")
   context.system.eventStream.subscribe(self, classOf[TromboneState])
 
   private var internalState = defaultTromboneState
 
   def stateReceive: Receive = {
-    case ts: TromboneState => internalState = ts
+    case ts: TromboneState =>
+      println("Got state: " + ts)
+      internalState = ts
   }
 
   /**

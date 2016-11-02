@@ -1,7 +1,5 @@
 package csw.examples.vslice.assembly
 
-import java.io.File
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
@@ -14,7 +12,7 @@ import csw.services.ccs.CommandStatus2.CommandStatus2
 import csw.services.ccs.SequentialExecution.SequentialExecutor.ExecuteOne
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
-import csw.services.pkg.Component.{HcdInfo, RegisterAndTrackServices}
+import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor3
 import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
@@ -26,27 +24,26 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * These tests are for the Trombone AlarmMonitor.
- */
+  * These tests are for the Trombone AlarmMonitor.
+  */
 object AlarmMonitorTests {
   LocationService.initInterface()
   val system = ActorSystem("AlarmMonitorTests")
 }
 
 /**
- * AlarmMonitorTests
- */
+  * AlarmMonitorTests
+  */
 class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneAlarmMonitor._
   import TromboneStateHandler._
-  import system.dispatcher
 
   implicit val timeout = Timeout(10.seconds)
 
   // Get the alarm service by looking up the name with the location service.
-  val alarmService = Await.result(AlarmService(autoRefresh = true), timeout.duration)
+  val alarmService = Await.result(AlarmService(autoRefresh = false), timeout.duration)
 
   // Used to start and stop the alarm service Redis instance used for the test
   val alarmAdmin = AlarmServiceAdmin(alarmService)
@@ -63,8 +60,10 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     //    logger.info("Looking up alarm service")
     //    alarmService = Await.result(AlarmService(asName), timeout.duration)
     //    alarmAdmin = AlarmServiceAdmin(alarmService)
-
+    Await.result(alarmAdmin.acknowledgeAndResetAlarm(TromboneAlarmMonitor.lowLimitAlarm), timeout.duration)
+    Await.result(alarmAdmin.acknowledgeAndResetAlarm(TromboneAlarmMonitor.highLimitAlarm), timeout.duration)
     logger.info("Initializing alarm data")
+    /*
     // Initialize the available alarms from a file (location depends on how you run this test - XXX maybe should load it as a Config)
     val testAlarms1 = new File("src/test/resources/test-alarms.conf")
     val testAlarms2 = new File("examples/vslice/src/test/resources/test-alarms.conf")
@@ -73,6 +72,13 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       Await.result(alarmAdmin.initAlarms(file), timeout.duration)
     else logger.error(s"$file does not exist")
     logger.info("Initialized alarm service")
+    */
+  }
+
+  def setupAlarms(): Unit = {
+    Await.result(alarmAdmin.acknowledgeAndResetAlarm(TromboneAlarmMonitor.lowLimitAlarm), timeout.duration)
+    Await.result(alarmAdmin.acknowledgeAndResetAlarm(TromboneAlarmMonitor.highLimitAlarm), timeout.duration)
+    logger.info("Initializing alarm data")
   }
 
   override def afterAll(): Unit = {
@@ -99,7 +105,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       TromboneHCD.componentName,
       TromboneHCD.trombonePrefix,
       TromboneHCD.componentClassName,
-      RegisterAndTrackServices, Set(AkkaType), 1.second
+      DoNotRegister, Set(AkkaType), 1.second
     )
 
     Supervisor3(testInfo)
@@ -140,11 +146,11 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   describe("Basic alarm monitor tests with test alarm service running") {
     /**
-     * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
-     * This causes the monitor to send the warning severity to the Alarm Service
-     * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
-     * the monitor actually did set the alarm severity.
-     */
+      * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
+      * This causes the monitor to send the warning severity to the Alarm Service
+      * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
+      * the monitor actually did set the alarm severity.
+      */
     it("monitor should set a low alarm when receiving simulated encoder low limit") {
       val fakeTromboneHCD = TestProbe()
 
@@ -172,12 +178,12 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     }
 
     /**
-     * Test Description: this uses a fake trombone HCD to send  a CurrentState with high limit set.
-     * This causes the monitor to send the warning severity to the Alarm Service
-     * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
-     * the monitor actually did set the alarm severity.
-     */
-    it("monitor should set a low alarm when receiving simulated encoder high limit") {
+      * Test Description: this uses a fake trombone HCD to send  a CurrentState with high limit set.
+      * This causes the monitor to send the warning severity to the Alarm Service
+      * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
+      * the monitor actually did set the alarm severity.
+      */
+    it("monitor should set a high alarm when receiving simulated encoder high limit") {
       val fakeTromboneHCD = TestProbe()
 
       // Create an alarm monitor
@@ -204,68 +210,17 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     }
 
     /**
-     * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
-     * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
-     */
-    it("monitor should set a low alarm when receiving real encoder low limit using real HCD to generate data") {
-      val tromboneHCD = startHCD
-      val fakeAssembly = TestProbe()
-
-      // This is checking that the value in the alarm service has been set using admin interface
-      Await.result(alarmService.setSeverity(lowLimitAlarm, Okay), timeout.duration)
-      var alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
-      logger.info("Initial alarm value should be okay or disconnected")
-      alarmValue.reported shouldBe Okay
-
-      // This is boiler plate for setting up an HCD for testing
-      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-      //info("Running")
-
-      // Create an alarm monitor
-      system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService))
-      expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
-
-      // The command handler sends commands to the trombone HCD
-      val ch = newCommandHandler(tromboneHCD)
-
-      setupState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false)))
-
-      // Move to the 0 position
-      val limitPosition = 0.0
-      ch ! ExecuteOne(moveSC(limitPosition), Some(fakeAssembly.ref))
-      // Watch for command completion
-      fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
-
-      expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
-
-      // This is checking that the value in the alarm service has been set using admin interface
-      alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
-      // use the alarm service admin to see that it is cleared,
-      alarmValue.reported shouldBe Warning
-
-      // Now move it out of the limit and see that the alarm is cleared
-      val clearPosition = 100.0
-      ch ! ExecuteOne(moveSC(clearPosition), Some(fakeAssembly.ref))
-      fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
-
-      expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
-
-      // This is checking that the value in the alarm service has been set using admin interface
-      alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
-      alarmValue.reported shouldBe Okay
-    }
-
-    /**
-     * Test Description: This test uses the actual HCD to drive the axis to the high limit and verify that the high
-     * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
-     */
+      * Test Description: This test uses the actual HCD to drive the axis to the high limit and verify that the high
+      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
+      */
     it("monitor should set a high alarm when receiving real encoder high limit using real HCD to generate data") {
+      import TromboneStateActor._
+
       val tromboneHCD = startHCD
       val fakeAssembly = TestProbe()
 
       // This is checking that the value in the alarm service has been set using admin interface
+      setupAlarms()
       Await.result(alarmService.setSeverity(highLimitAlarm, Okay), timeout.duration)
       var alarmValue = Await.result(alarmAdmin.getSeverity(highLimitAlarm), timeout.duration)
       logger.info("Initial alarm value should be okay or disconnected")
@@ -278,18 +233,21 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       //info("Running")
 
       // Create an alarm monitor
-      system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService))
+      val am = system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService))
       expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
 
       // The command handler sends commands to the trombone HCD
       val ch = newCommandHandler(tromboneHCD)
 
-      setupState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false)))
+      val needToSetStateForMoveCommand = system.actorOf(TromboneStateActor.props())
+      needToSetStateForMoveCommand ! SetState(cmdReady, moveIndexed, false, false)
+      expectNoMsg(900.milli)
 
       val limitPosition = 2000.0
       ch ! ExecuteOne(moveSC(limitPosition), Some(fakeAssembly.ref))
-
-      fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
+      // Watch for command completion
+      val result = fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
+      logger.info("Result: " + result)
 
       expectNoMsg(500.milli) // A bit of time for processing and update of AlarmService due to move
 
@@ -308,7 +266,79 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       // This is checking that the value in the alarm service has been set using admin interface
       alarmValue = Await.result(alarmAdmin.getSeverity(highLimitAlarm), timeout.duration)
       alarmValue.reported shouldBe Okay
+
+      expectNoMsg(3.seconds)
+      system.stop(ch)
+      system.stop(needToSetStateForMoveCommand)
+      system.stop(am)
+      system.stop(tromboneHCD)
     }
+
+    /**
+      * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
+      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
+      */
+    it("monitor should set a low alarm when receiving real encoder low limit using real HCD to generate data") {
+      import TromboneStateActor._
+      // For setting state
+      val tromboneHCD = startHCD
+      val fakeAssembly = TestProbe()
+
+      // This is checking that the value in the alarm service has been set using admin interface
+      setupAlarms()
+      Await.result(alarmService.setSeverity(lowLimitAlarm, Okay), timeout.duration)
+      var alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
+      logger.info("Initial alarm value should be okay or disconnected")
+      alarmValue.reported shouldBe Okay
+
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
+      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
+      //info("Running")
+
+      // Create an alarm monitor
+      val am = system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService))
+      expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
+
+      // The command handler sends commands to the trombone HCD
+      val ch = newCommandHandler(tromboneHCD)
+
+      val needToSetStateForMoveCommand = system.actorOf(TromboneStateActor.props())
+      needToSetStateForMoveCommand ! SetState(cmdReady, moveIndexed, false, false)
+      expectNoMsg(900.milli)
+
+      // Move to the 0 position
+      val limitPosition = 0.0
+      ch ! ExecuteOne(moveSC(limitPosition), Some(fakeAssembly.ref))
+      // Watch for command completion
+      val result = fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
+      logger.info("Result: " + result)
+
+      expectNoMsg(500.milli) // A bit of time for processing and update of AlarmService
+
+      // This is checking that the value in the alarm service has been set using admin interface
+      alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
+      // use the alarm service admin to see that it is cleared,
+      alarmValue.reported shouldBe Warning
+
+      // Now move it out of the limit and see that the alarm is cleared
+      val clearPosition = 100.0
+      ch ! ExecuteOne(moveSC(clearPosition), Some(fakeAssembly.ref))
+      fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
+
+      expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
+
+      // This is checking that the value in the alarm service has been set using admin interface
+      alarmValue = Await.result(alarmAdmin.getSeverity(lowLimitAlarm), timeout.duration)
+      alarmValue.reported shouldBe Okay
+
+      system.stop(ch)
+      system.stop(needToSetStateForMoveCommand)
+      system.stop(am)
+    }
+
+
   }
 
 }
