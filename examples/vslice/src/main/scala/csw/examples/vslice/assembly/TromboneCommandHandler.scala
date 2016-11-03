@@ -15,6 +15,7 @@ import csw.services.ccs.Validation.{UnsupportedCommandInStateIssue, WrongInterna
 import csw.services.events.EventServiceSettings
 import csw.services.loc.LocationService._
 import csw.services.loc.LocationSubscriberClient
+import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.DemandState
 
@@ -27,11 +28,17 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
 
   import TromboneStateActor._
   import TromboneCommandHandler._
+  import ac._
+
+  //override val prefix = ac.info.prefix
 
   var tromboneHCD: ActorRef = tromboneHCDIn.getOrElse(context.system.deadLetters)
+  // Set the default evaluation for use with the follow command
+  var setElevationItem = naElevation(calculationConfig.defaultInitialElevation)
 
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //currentStateReceiver ! AddPublisher(tromboneHCD)
+  log.info("System  is: " + context.system)
 
   // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
   val tromboneStateActor = context.actorOf(TromboneStateActor.props())
@@ -56,6 +63,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
           self ! CommandStart
 
         case ac.moveCK =>
+          log.info("Current state: " + currentState)
           val moveActorRef = context.actorOf(MoveCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
           context.become(actorExecutingReceive(moveActorRef, commandOriginator))
           self ! CommandStart
@@ -72,6 +80,9 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
           commandOriginator.foreach(_ ! Invalid(WrongInternalStateIssue("Trombone assembly must be following for setAngle")))
 
         case ac.setElevationCK =>
+          // Setting the elevation state here for a future follow command
+          setElevationItem = sc(ac.naElevationKey)
+          log.info("Setting elevation to: " + setElevationItem)
           // Note that units have already been verified here
           val setElevationActorRef = context.actorOf(SetElevationCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
           context.become(actorExecutingReceive(setElevationActorRef, commandOriginator))
@@ -79,14 +90,16 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
 
         case ac.followCK =>
           if (cmd(currentState) == cmdUninitialized || (move(currentState) != moveIndexed && move(currentState) != moveMoving) || !sodiumLayer(currentState)) {
-            commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${cmd(currentState)}/${move(currentState)} does not allow follow")))
+            commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${cmd(currentState)}/${move(currentState)}/${sodiumLayer(currentState)} does not allow follow")))
           } else {
             // No state set during follow
             // At this point, parameters have been checked so direct access is okay
             val nssItem = sc(ac.nssInUseKey)
 
+            log.info("Set elevation is: " + setElevationItem)
+
             // The event publisher may be passed in (XXX FIXME? pass in eventService)
-            val props = FollowCommand.props(ac, nssItem, Some(tromboneHCD), allEventPublisher, eventService = None)
+            val props = FollowCommand.props(ac, setElevationItem, nssItem, Some(tromboneHCD), allEventPublisher, eventService = None)
             // Follow command runs the trombone when following
             val followCommandActor = context.actorOf(props)
             context.become(followReceive(followCommandActor))

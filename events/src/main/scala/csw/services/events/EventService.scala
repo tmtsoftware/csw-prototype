@@ -300,4 +300,3 @@ private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _
   // deletes the saved value for the given prefix
   def delete(prefix: String*): Future[Long] = redisClient.del(prefix: _*)
 }
-

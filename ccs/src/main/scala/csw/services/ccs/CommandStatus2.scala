@@ -55,7 +55,7 @@ object CommandStatus2 {
   def validationsToCommandResult(runId: RunId, configs: Seq[SequenceConfig], validations: List[Validation]): CommandResult = {
     val commandResultPairs = validationsToCommandResultPairs(configs, validations)
     val overall = validationsToOverallCommandStatus(validations)
-    // Currently returning all configs for accepted, but could return empty
+    // Currently returning all configs for accepted, but could return empty as in the next line
     //CommandResult(runId, overall, if (overall == Accepted) CommandResults(List.empty[CommandResultPair]) else CommandResults(commandResultPairs))
     CommandResult(runId, overall, CommandResults(commandResultPairs))
   }

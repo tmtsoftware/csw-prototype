@@ -1,12 +1,15 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.util.Timeout
 import csw.examples.vslice.assembly.TrombonePublisher.{AOESWUpdate, AxisStateUpdate, AxisStatsUpdate, EngrUpdate}
 import csw.services.events.{EventService, EventServiceSettings}
 import csw.services.loc.LocationService.Location
 import csw.services.loc.LocationSubscriberClient
 import csw.util.config._
 import csw.util.config.Events.{StatusEvent, SystemEvent}
+
+import scala.concurrent.{Await, Future}
 
 /**
  * An actor that provides the publishing interface to the TMT Event Service and Telemetry Service.
@@ -28,6 +31,7 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
   import assemblyContext._
   import TromboneStateActor._
 
+  log.info("Event Service in: " + eventServiceIn)
   def receive: Receive = publishingEnabled(eventServiceIn)
 
   def publishingEnabled(eventService: Option[EventService]): Receive = stateReceive orElse {
@@ -41,6 +45,7 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
       publishState(eventService, ts)
 
     case AxisStateUpdate(axisName, position, state, inLowLimit, inHighLimit, inHome) =>
+      log.info("Got Axis State Update!")
       publishAxisState(eventService, axisName, position, state, inLowLimit, inHighLimit, inHome)
 
     case AxisStatsUpdate(axisName, datumCount, moveCount, homeCount, limitCount, successCount, failureCount, cancelCount) =>
@@ -69,11 +74,24 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
     log.debug(s"Status state publish of $tromboneStateStatusEventPrefix: $ste")
     eventService.foreach(_.publish(ste))
   }
-
+  import scala.concurrent.duration._
   def publishAxisState(eventService: Option[EventService], axisName: StringItem, position: IntItem, state: ChoiceItem, inLowLimit: BooleanItem, inHighLimit: BooleanItem, inHome: BooleanItem) = {
+    import context.dispatcher
     val ste = StatusEvent(axisStateEventPrefix).madd(axisName, position, state, inLowLimit, inHighLimit, inHome)
-    log.debug(s"Axis state publish of $axisStateEventPrefix: $ste")
-    eventService.foreach(_.publish(ste))
+    log.info(s"Axis state publish of $axisStateEventPrefix: $ste")
+    //Await.ready(eventService.foreach(_.publish(ste)), 2.seconds)
+    Await.ready(eventService.get.publish(ste), 4.seconds)
+    //implicit val timeout = Timeout(3.seconds)
+    /*
+    val f:Future[Unit] = eventService.get.publish(ste)
+    f.onFailure {
+      case t => log.info(s"Failed to publish: $t")
+    }
+    f.onSuccess {
+      case t => log.info(s"Succcess publish: $t")
+    }
+    */
+
   }
 
   def publishAxisStats(eventService: Option[EventService], axisName: StringItem, datumCount: IntItem, moveCount: IntItem, homeCount: IntItem, limitCount: IntItem, successCount: IntItem, failureCount: IntItem, cancelCount: IntItem) = {

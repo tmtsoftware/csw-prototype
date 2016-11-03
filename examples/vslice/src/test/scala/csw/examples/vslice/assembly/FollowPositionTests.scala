@@ -104,8 +104,11 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
   def pos(position: Double): DoubleItem = stagePositionKey -> position withUnits stagePositionUnits
 
+
+  // Used for creating followers
+  val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
   def newFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
-    val props = FollowActor.props(assemblyContext, setNssInUse(false), tromboneControl, publisher)
+    val props = FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), tromboneControl, publisher)
     TestActorRef(props)
   }
 
@@ -224,7 +227,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
       val nssUse = setNssInUse(false)
       // Create the follow actor and give it the actor ref of the publisher for sending calculated events
-      val followActor = system.actorOf(FollowActor.props(assemblyContext, nssUse, Some(fakeTromboneControl.ref), None))
+      val followActor = system.actorOf(FollowActor.props(assemblyContext, initialElevation, nssUse, Some(fakeTromboneControl.ref), None))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
       system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), Some(eventService)))
 

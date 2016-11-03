@@ -33,11 +33,12 @@ import csw.util.config.Events.EventTime
  * @param engPublisher an actorRef as [[scala.Option]] of the actor that publishes the eng telemetry event
  */
 class FollowActor(
-    ac:                  AssemblyContext,
-    val inNSSMode:       BooleanItem,
-    val tromboneControl: Option[ActorRef],
-    val aoPublisher:     Option[ActorRef],
-    val engPublisher:    Option[ActorRef]
+    ac:                   AssemblyContext,
+    val initialElevation: DoubleItem,
+    val inNSSMode:        BooleanItem,
+    val tromboneControl:  Option[ActorRef],
+    val aoPublisher:      Option[ActorRef],
+    val engPublisher:     Option[ActorRef]
 ) extends Actor with ActorLogging {
 
   import FollowActor._
@@ -48,7 +49,7 @@ class FollowActor(
   val controlConfig = ac.controlConfig
 
   // In this implementation, these vars are needed to support the setElevation and setAngle commands which require an update
-  val initialElevation: DoubleItem = initialElevationKey -> calculationConfig.defaultInitialElevation withUnits initialElevationUnits
+  //val initialElevation: DoubleItem = initialElevationIn
   val initialFocusError: DoubleItem = focusErrorKey -> 0.0 withUnits focusErrorUnits
   val initialZenithAngle: DoubleItem = zenithAngleKey -> 0.0 withUnits zenithAngleUnits
 
@@ -62,7 +63,7 @@ class FollowActor(
     case StopFollowing =>
 
     case UpdatedEventData(zenithAngleIn, focusErrorIn, time) =>
-
+      log.info(s"Got an Update Event: $UpdatedEventData")
       // Not really using the time here
       // Units checks - should not happen, so if so, flag an error and skip calculation
       if (zenithAngleIn.units != zenithAngleUnits || focusErrorIn.units != focusErrorUnits) {
@@ -139,12 +140,13 @@ class FollowActor(
 object FollowActor {
   // Props for creating the follow actor
   def props(
-    assemblyContext: AssemblyContext,
-    inNSSModeIn:     BooleanItem,
-    tromboneControl: Option[ActorRef],
-    aoPublisher:     Option[ActorRef] = None,
-    engPublisher:    Option[ActorRef] = None
-  ) = Props(classOf[FollowActor], assemblyContext, inNSSModeIn, tromboneControl, aoPublisher, engPublisher)
+    assemblyContext:  AssemblyContext,
+    initialElevation: DoubleItem,
+    inNSSModeIn:      BooleanItem,
+    tromboneControl:  Option[ActorRef],
+    aoPublisher:      Option[ActorRef] = None,
+    engPublisher:     Option[ActorRef] = None
+  ) = Props(classOf[FollowActor], assemblyContext, initialElevation, inNSSModeIn, tromboneControl, aoPublisher, engPublisher)
 
   /**
    * Messages received by csw.examples.vslice.FollowActor

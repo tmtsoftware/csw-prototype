@@ -47,8 +47,7 @@ case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalcul
   // setElevation submit command
   val setElevationPrefix = s"$componentPrefix.setElevation"
   val setElevationCK: ConfigKey = setElevationPrefix
-
-  def setElevationSC(elevation: Double): SetupConfig = SetupConfig(setElevationCK).add(naElevationKey -> elevation withUnits naElevationUnits)
+  def setElevationSC(elevation: Double): SetupConfig = SetupConfig(setElevationCK).add(naElevation(elevation))
 
   // setAngle submit command
   val setAnglePrefx = s"$componentPrefix.setAngle"
@@ -90,13 +89,11 @@ case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalcul
 
   val naElevationKey = DoubleKey("elevation")
   val naElevationUnits = kilometers
-
-  def el(elevation: Double): DoubleItem = naElevationKey -> elevation withUnits naElevationUnits
+  def naElevation(elevation: Double): DoubleItem = naElevationKey -> elevation withUnits naElevationUnits
 
   val initialElevationKey = DoubleKey("initialElevation")
   val initialElevationUnits = kilometers
-
-  def iel(elevation: Double): DoubleItem = initialElevationKey -> elevation withUnits initialElevationUnits
+  def iElevation(elevation: Double): DoubleItem = initialElevationKey -> elevation withUnits initialElevationUnits
 
   val stagePositionKey = DoubleKey("stagePosition")
   val stagePositionUnits = millimeters

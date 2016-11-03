@@ -175,7 +175,8 @@ class DiagPublisher(assemblyContext: AssemblyContext, currentStateReceiver: Acto
   }
 
   private def publishStateUpdate(cs: CurrentState): Unit = {
-    log.info("publish state")
+    log.info(s"publish state: $cs")
+    log.info("Eventpublisher: " + eventPublisher)
     eventPublisher.foreach(_ ! AxisStateUpdate(cs(axisNameKey), cs(positionKey), cs(stateKey), cs(inLowLimitKey), cs(inHighLimitKey), cs(inHomeKey)))
   }
 

@@ -47,13 +47,13 @@ import csw.util.config.{BooleanItem, DoubleItem}
  * @param eventService optional EventService for subscriptions
  *
  */
-class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef], eventService: Option[EventService] = None) extends Actor with ActorLogging {
+class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssInUseIn: BooleanItem, val tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef], eventService: Option[EventService] = None) extends Actor with ActorLogging {
   import FollowCommand._
 
   // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
   val tromboneControl = context.actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol")
   // These vals are only being created to simplify typing
-  val initialFollowActor = createFollower(nssInUseIn, tromboneControl, eventPublisher, eventPublisher)
+  val initialFollowActor = createFollower(initialElevation, nssInUseIn, tromboneControl, eventPublisher, eventPublisher)
   val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService)
 
   def receive: Receive = followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn)
@@ -71,16 +71,11 @@ class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val trombo
         context.stop(eventSubscriber)
         context.stop(followActor)
         // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
-        val newFollowActor = createFollower(nssInUseUpdate, tromboneControl, eventPublisher, eventPublisher)
+        val newFollowActor = createFollower(initialElevation, nssInUseUpdate, tromboneControl, eventPublisher, eventPublisher)
         val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventService)
         // Set a new receive method with updated actor values, prefer this over vars or globals
         context.become(followReceive(nssInUseUpdate, newFollowActor, newEventSubscriber, tromboneHCD))
       }
-
-    case m @ SetElevation(elevation) =>
-      // This updates the current elevation and then causes an internal update to move things
-      log.info(s"Received setElevation, setting to: $elevation")
-      followActor.forward(m)
 
     case m @ SetZenithAngle(zenithAngle) =>
       log.info(s"Got angle: $zenithAngle")
@@ -99,8 +94,8 @@ class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val trombo
     case x => log.error(s"Unexpected message received in TromboneAssembly:FollowCommand: $x")
   }
 
-  private def createFollower(nssInUse: BooleanItem, tromboneControl: ActorRef, eventPublisher: Option[ActorRef], telemetryPublisher: Option[ActorRef]): ActorRef =
-    context.actorOf(FollowActor.props(ac, nssInUse, Some(tromboneControl), eventPublisher, eventPublisher), "follower")
+  private def createFollower(initialElevation: DoubleItem, nssInUse: BooleanItem, tromboneControl: ActorRef, eventPublisher: Option[ActorRef], telemetryPublisher: Option[ActorRef]): ActorRef =
+    context.actorOf(FollowActor.props(ac, initialElevation, nssInUse, Some(tromboneControl), eventPublisher, eventPublisher), "follower")
 
   private def createEventSubscriber(nssItem: BooleanItem, followActor: ActorRef, eventService: Option[EventService]): ActorRef = context.actorOf(TromboneEventSubscriber.props(ac, nssItem, Some(followActor), eventService), "eventsubscriber")
 
@@ -108,8 +103,8 @@ class FollowCommand(ac: AssemblyContext, val nssInUseIn: BooleanItem, val trombo
 
 object FollowCommand {
 
-  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisherIn: Option[ActorRef], eventService: Option[EventService]) =
-    Props(classOf[FollowCommand], assemblyContext, nssInUse, tromboneHCD, eventPublisherIn, eventService)
+  def props(assemblyContext: AssemblyContext, initialElevation: DoubleItem, nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisherIn: Option[ActorRef], eventService: Option[EventService]) =
+    Props(classOf[FollowCommand], assemblyContext, initialElevation, nssInUse, tromboneHCD, eventPublisherIn, eventService)
 
   trait FollowCommandMessages
 
