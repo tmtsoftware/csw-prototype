@@ -3,17 +3,18 @@ package csw.examples.vslice.assembly
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData}
 import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
-import csw.services.events.{EventService, EventServiceAdmin}
+import csw.services.events.EventService
 import csw.services.loc.LocationService
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.util.config.BooleanItem
 import csw.util.config.Events.SystemEvent
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
 
 object EventSubscriberTests {
   LocationService.initInterface()
@@ -24,9 +25,7 @@ object EventSubscriberTests {
  * TMT Source Code: 9/17/16.
  */
 class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
-
-  import system.dispatcher
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   implicit val timeout = Timeout(10.seconds)
 
@@ -93,6 +92,9 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), Some(eventService))
+      // This injects the event service location
+      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+      es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -101,7 +103,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
       // Default ZA is 0.0
       val testFE = 10.0
       // Publish a single focus error. This will generate a published event
-      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
+      Await.ready(tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE))), 2.seconds)
 
       val msg = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
 
@@ -113,13 +115,14 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
 
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
-
     }
 
     it("should make several events for an fe list publish with nssInUse but no ZA") {
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), Some(eventService))
+      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+      es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -152,6 +155,8 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
+      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+      es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -205,6 +210,8 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
 
       // Create with nssNotInuse so we get za events
       val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
+      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+      es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error

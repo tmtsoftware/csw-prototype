@@ -4,7 +4,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData}
 import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
 import csw.services.events.EventService
+import csw.services.events.EventService.EventMonitor
 import csw.services.loc.LocationService.{Location, ResolvedTcpLocation}
+import csw.services.loc.LocationSubscriberClient
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.Events.{EventTime, SystemEvent}
 import csw.util.config._
@@ -12,7 +14,7 @@ import csw.util.config._
 /**
  * TMT Source Code: 6/20/16.
  */
-class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]) extends Actor with ActorLogging {
+class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventServiceIn: Option[EventService]) extends Actor with ActorLogging with LocationSubscriberClient {
 
   import ac._
 
@@ -29,6 +31,9 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
   // This is used to keep track since it can be updated
   var nssInUseGlobal = nssInUseIn
 
+  // This var is needed to capture the Monitor used for subscriptions
+  var subscribeMonitor: EventMonitor = _
+
   def connectingReceive: Receive = {
     case location: Location => location match {
       case t: ResolvedTcpLocation =>
@@ -36,27 +41,28 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
         // XXX Note: The call below assumes the default name for the event service!
         // It might be better to pass in the name actually used when starting the event service.
         if (t.connection == EventService.eventServiceConnection()) {
-          log.info("Subscriber received connection")
+          log.debug(s"Event subscriber received connection: $t")
           val eventService: EventService = EventService.get(t.host, t.port)
-          log.info("Event Service at: " + eventService)
           startupSubscriptions(eventService)
-          subscribeReceive(eventService, nssInUseIn, initialZenithAngle, initialFocusError)
+          context.become(subscribeReceive(eventService, nssInUseIn, initialZenithAngle, initialFocusError))
         }
       case _ =>
-        log.info(s"EventSubscriber received location: $location")
+        log.debug(s"EventSubscriber received location: $location")
     }
   }
 
   private def startupSubscriptions(eventService: EventService): Unit = {
-    // Allways subscribe to focus error
-    subscribeKeys(eventService, feConfigKey)
+    // Always subscribe to focus error
+    // Create the subscribeMonitor here
+    subscribeMonitor = subscribeKeys(eventService, feConfigKey)
+    log.info(s"FeMonitor actor: ${subscribeMonitor.actorRef}")
 
     log.info("nssInuse: " + nssInUseIn)
 
     // But only subscribe to ZA if nss is not in use
     if (!nssInUseIn.head) {
       // NSS not inuse so subscribe to ZA
-      subscribeKeys(eventService, zaConfigKey)
+      subscribeKeys(subscribeMonitor, zaConfigKey)
     }
   }
 
@@ -81,6 +87,7 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
           updateFollowActor(cZenithAngle, newFocusError, event.info.time)
           // Pass the new values to the next message
           context.become(subscribeReceive(eventService, cNssInUse, cZenithAngle, newFocusError))
+        case x => log.info(s"Got some other event: $x")
       }
 
     case StopFollowing =>
@@ -91,10 +98,10 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
     case UpdateNssInUse(nssInUseUpdate) =>
       if (nssInUseUpdate != cNssInUse) {
         if (nssInUseUpdate.head) {
-          unsubscribeKeys(eventService, zaConfigKey)
+          unsubscribeKeys(subscribeMonitor, zaConfigKey)
           context.become(subscribeReceive(eventService, nssInUseUpdate, nssZenithAngle, cFocusError))
         } else {
-          subscribeKeys(eventService, zaConfigKey)
+          subscribeKeys(subscribeMonitor, zaConfigKey)
           context.become(subscribeReceive(eventService, nssInUseUpdate, cZenithAngle, cFocusError))
         }
         // Need to update the global for shutting down event subscriptions
@@ -104,24 +111,20 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
     case x => log.error(s"Unexpected message received in TromboneEventSubscriber:subscribeReceive: $x")
   }
 
-  def unsubscribeKeys(eventService: EventService, configKeys: ConfigKey*): Unit = {
-    log.info(s"Unsubscribing to: $configKeys")
-    //eventService.unsubscribe(configKeys.map(_.prefix): _*)
+  def unsubscribeKeys(monitor: EventMonitor, configKeys: ConfigKey*): Unit = {
+    log.debug(s"Unsubscribing to: $configKeys")
+    monitor.unsubscribe(configKeys.map(_.prefix): _*)
   }
 
-  def subscribeKeys(eventService: EventService, configKeys: ConfigKey*): Unit = {
-    log.info(s"Subscribing to: $configKeys")
-    eventService.subscribe(self, postLastEvents = true, configKeys.map(_.prefix): _*)
+  def subscribeKeys(eventService: EventService, configKeys: ConfigKey*): EventMonitor = {
+    log.debug(s"Subscribing to: $configKeys as $self")
+    eventService.subscribe(self, postLastEvents = false, configKeys.map(_.prefix): _*)
   }
 
-  /*
-  override def postStop(): Unit = {
-    if (!nssInUseGlobal.head) {
-      unsubscribeKeys(zaConfigKey)
-    }
-    unsubscribeKeys(feConfigKey)
+  def subscribeKeys(monitor: EventMonitor, configKeys: ConfigKey*): Unit = {
+    log.debug(s"Subscribing to: $configKeys as $self")
+    monitor.subscribe(configKeys.map(_.prefix): _*)
   }
-  */
 
   /**
    * This function is called whenever a new event arrives. The function takes the current information consisting of

@@ -98,13 +98,16 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
   val controlConfig = assemblyContext.controlConfig
   import assemblyContext._
 
+  // Used for creating followers
+  val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
+
   def newTestFollowCommand(nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[FollowCommand] = {
-    val props = FollowCommand.props(assemblyContext, nssInUse, tromboneHCD, eventPublisher, Some(eventService))
+    val props = FollowCommand.props(assemblyContext, initialElevation, nssInUse, tromboneHCD, eventPublisher, Some(eventService))
     TestActorRef(props)
   }
 
   def newFollowCommand(isNssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): ActorRef = {
-    val props = FollowCommand.props(assemblyContext, isNssInUse, tromboneHCD, eventPublisher, Some(eventService))
+    val props = FollowCommand.props(assemblyContext, initialElevation, isNssInUse, tromboneHCD, eventPublisher, Some(eventService))
     system.actorOf(props, "newfollow")
   }
 

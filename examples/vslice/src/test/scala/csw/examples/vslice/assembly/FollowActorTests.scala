@@ -104,7 +104,9 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   import assemblyContext._
 
   def newFollower(usingNSS: BooleanItem, tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
-    val props = FollowActor.props(assemblyContext, usingNSS, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
+    // Used for creating followers
+    val initialElevation = iElevation(assemblyContext.calculationConfig.defaultInitialElevation)
+    val props = FollowActor.props(assemblyContext, initialElevation, usingNSS, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
     TestActorRef(props)
   }
 
@@ -116,7 +118,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     it("should allow creation with defaults") {
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
-      cal.underlyingActor.initialElevation should be(iel(calculationConfig.defaultInitialElevation))
+      cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
 
       fakeTC.expectNoMsg(1.seconds)
     }
@@ -130,7 +132,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     it("should be default before") {
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
-      cal.underlyingActor.initialElevation should be(iel(calculationConfig.defaultInitialElevation))
+      cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
     }
 
     /*

@@ -3,9 +3,11 @@ package csw.examples.vslice.assembly
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
+import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
 import csw.services.events.{EventService, EventServiceAdmin}
 import csw.services.loc.LocationService
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.util.config.Events.{EventTime, SystemEvent}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
@@ -49,7 +51,7 @@ object EventPublishTests {
  * TMT Source Code: 8/17/16.
  */
 class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import EventPublishTests._
   import system.dispatcher
@@ -85,9 +87,12 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     TestKit.shutdownActorSystem(system)
   }
 
+  // Used for creating followers
+  val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
+
   // Publisher behaves the same whether nss is in use or not so always nssNotInUse
-  def newFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
-    val props = FollowActor.props(assemblyContext, setNssInUse(false), tromboneControl, publisher)
+  def newTestFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
+    val props = FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), tromboneControl, publisher)
     TestActorRef(props)
   }
 
@@ -95,7 +100,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     val testEventServiceProps = TrombonePublisher.props(assemblyContext, eventService)
     val publisherActorRef = system.actorOf(testEventServiceProps)
     // Enable publishing
-    newFollower(tromboneControl, Some(publisherActorRef))
+    newTestFollower(tromboneControl, Some(publisherActorRef))
   }
 
   describe("Create follow actor with publisher and subscriber") {
@@ -127,6 +132,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
+      expectNoMsg(1.second)  // Wait for the connection
 
       val fakeTromboneEventSubscriber = TestProbe()
 
@@ -141,7 +147,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       val result = expectMsgClass(classOf[Results])
       result.msgs.size should be(1)
-      result.msgs should equal(Vector(SystemEvent(aoSystemEventPrefix).madd(el(calculationConfig.defaultInitialElevation), rd(calculationConfig.defaultInitialElevation))))
+      result.msgs should equal(Vector(SystemEvent(aoSystemEventPrefix).madd(naElevation(calculationConfig.defaultInitialElevation), rd(calculationConfig.defaultInitialElevation))))
     }
 
     /**
@@ -158,6 +164,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
+      expectNoMsg(1.second)  // Wait for the connection
 
       val testFE = 10.0
 
@@ -187,7 +194,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     /**
      * Test Description: This takes it one step further and replaced the fakeTromboneSubscriber with the actual TromboneEventSubscriber
      * and uses the event service to publish events. The focus error of 10 is published then the set of data varying the zenith angle.
-     * The TromboneEventSubscriber receives the events forwards them to the follow actor which then receives the events in the resultSubscriber.
+     * The TromboneEventSubscriber receives the events forwards them to the follow actor which then sends out updates.
      * Note that the EventSubscriber and FollowActor are separate so that the FollowActor can be tested as a standalone actor without the
      * event service as is done in this and the previous tests.
      */
@@ -197,13 +204,17 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       // Create the trombone publisher for publishing SystemEvents to AOESW
       val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
       // Create the calculator actor and give it the actor ref of the publisher for sending calculated events
-      val followActorRef = system.actorOf(FollowActor.props(assemblyContext, setNssInUse(false), None, Some(publisherActorRef)))
+      val followActorRef = system.actorOf(FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), None, Some(publisherActorRef)))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), Some(eventService)))
+      val es = system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), Some(eventService)))
+      // This injects the event service location
+      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+      es ! evLocation
 
       // This creates a local subscriber to get all aoSystemEventPrefix SystemEvents published for testing
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
+      expectNoMsg(1.second)  // Wait for the connection
 
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
       val tcsRtc = eventService
@@ -216,10 +227,13 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
       // This should result in the length of tcsEvents being published
-      tcsEvents.map(f => tcsRtc.publish(f))
+      tcsEvents.map{f =>
+        logger.info(s"Publish: $f")
+        tcsRtc.publish(f)
+      }
 
       // This is to give actors time to run and subscriptions to register
-      expectNoMsg(250.milli)
+      expectNoMsg(500.milli)
 
       // Ask the local subscriber for all the ao events published for testing
       resultSubscriber ! GetResults
@@ -241,7 +255,6 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       // Here is the test for equality - total 16 messages
       aoeswExpected should equal(result.msgs)
-
     }
   }
 

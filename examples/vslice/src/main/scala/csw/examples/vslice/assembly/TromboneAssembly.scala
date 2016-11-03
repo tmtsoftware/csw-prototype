@@ -19,9 +19,10 @@ import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnectio
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService._
 import csw.services.loc._
+import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister, HcdInfo, RegisterAndTrackServices}
 import csw.services.pkg.ContainerComponent._
-import csw.services.pkg.{Assembly, ContainerComponent, Supervisor3}
+import csw.services.pkg.{Assembly, Supervisor3}
 import csw.util.config.Configurations.SetupConfigArg
 
 import scala.concurrent.Future
@@ -30,10 +31,11 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 6/10/16.
  */
-class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with TromboneStateHandler with AssemblyController2 {
+class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with TromboneStateClient with AssemblyController2 {
 
   import Supervisor3._
-  import TromboneStateHandler._
+
+  //override val prefix = "Bouncing"
 
   println("INFO: " + info)
   var tromboneHCD = context.system.deadLetters
@@ -104,7 +106,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
       // When Running is received, transition to running Receive
       log.info("becoming runningReceive")
       // Set the operational cmd state to "ready" according to spec-this is propagated to other actors
-      state(cmd = cmdReady)
+      //state(cmd = cmdReady)
       context.become(runningReceive)
     case x => log.error(s"Unexpected message in TromboneAssembly:initializingReceive: $x")
   }
