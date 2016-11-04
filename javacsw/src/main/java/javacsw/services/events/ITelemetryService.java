@@ -3,8 +3,7 @@ package javacsw.services.events;
 import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.util.Timeout;
-import csw.services.events.EventService;
-import csw.services.events.EventService$;
+import csw.services.events.EventService.EventMonitor;
 import csw.services.events.TelemetryService$;
 import csw.util.config.Events.StatusEvent;
 import scala.Unit;
@@ -55,7 +54,7 @@ public interface ITelemetryService {
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
    * @param prefixes       one or more prefixes of events, may include wildcard
    */
-  EventService.EventMonitor subscribe(ActorRef subscriber, boolean postLastEvents, String... prefixes);
+  EventMonitor subscribe(ActorRef subscriber, boolean postLastEvents, String... prefixes);
 
   /**
    * Subscribes a callback function to telemetry events matching the given prefixes
@@ -65,7 +64,31 @@ public interface ITelemetryService {
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
    * @param prefixes       one or more prefixes of events, may include wildcard
    */
-  EventService.EventMonitor subscribe(TelemetryHandler callback, boolean postLastEvents, String... prefixes);
+  EventMonitor subscribe(TelemetryHandler callback, boolean postLastEvents, String... prefixes);
+
+  /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param subscriber an actor to receive Event messages
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  default EventMonitor createEventMonitor(ActorRef subscriber, boolean postLastEvents) {
+    return subscribe(subscriber, postLastEvents);
+  }
+
+  /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param callback   an callback which will be called with Event objects (in another thread)
+   * @param postLastEvents if true, the callback receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  default EventMonitor createEventMonitor(TelemetryHandler callback, boolean postLastEvents) {
+    return subscribe(callback, postLastEvents);
+  }
 
   /**
    * Gets the value for the given status event prefix

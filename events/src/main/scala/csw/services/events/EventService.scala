@@ -10,7 +10,8 @@ import csw.services.events.EventService.EventMonitor
 import csw.util.config.ConfigSerializer._
 import redis.{ByteStringFormatter, RedisClient}
 
-import scala.concurrent.Future
+import scala.annotation.varargs
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object EventService {
 
@@ -95,6 +96,7 @@ object EventService {
      *
      * @param prefixes one or more prefixes of events, may include wildcard
      */
+    @varargs
     def subscribe(prefixes: String*): Unit
 
     /**
@@ -102,6 +104,7 @@ object EventService {
      *
      * @param prefixes one or more prefixes of events, may include wildcard
      */
+    @varargs
     def unsubscribe(prefixes: String*): Unit
 
     /**
@@ -136,10 +139,11 @@ trait EventService {
    * stop the actor or change the prefixes subscribed to.
    *
    * @param subscriber an actor to receive Event messages
-   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events first
    * @param prefixes   one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
+  @varargs
   def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor
 
   /**
@@ -149,10 +153,32 @@ trait EventService {
    * stop the actor or change the prefixes subscribed to.
    *
    * @param callback   an callback which will be called with Event objects (in another thread)
+   * @param postLastEvents if true, the callback receives the last known values of any subscribed events first
    * @param prefixes   one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
+  @varargs
   def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor
+
+  /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param subscriber an actor to receive Event messages
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  def createEventMonitor(subscriber: ActorRef, postLastEvents: Boolean): EventMonitor = subscribe(subscriber, postLastEvents)
+
+  /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param callback   an callback which will be called with Event objects (in another thread)
+   * @param postLastEvents if true, the callback receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  def createEventMonitor(callback: Event => Unit, postLastEvents: Boolean): EventMonitor = subscribe(callback, postLastEvents)
 }
 
 private[events] object EventServiceImpl {
@@ -189,13 +215,12 @@ private[events] object EventServiceImpl {
   // Actor used to subscribe to events for given prefixes and then notify the actor or call the function
   private object EventMonitorActor {
     def props(
-      subscriber: Option[ActorRef],
-      callback:   Option[Event => Unit],
-      redisHost:  String, redisPort: Int,
-      currentEvents: Future[Seq[Event]],
-      prefixes:      String*
+      subscriber:     Option[ActorRef],
+      callback:       Option[Event => Unit],
+      eventService:   EventServiceImpl,
+      postLastEvents: Boolean
     ): Props =
-      Props(classOf[EventMonitorActor], subscriber, callback, redisHost, redisPort, currentEvents: Future[Seq[Event]], prefixes)
+      Props(classOf[EventMonitorActor], subscriber, callback, eventService, postLastEvents)
 
     // Message sent to subscribe to more prefixes
     case class Subscribe(prefixes: String*)
@@ -206,31 +231,35 @@ private[events] object EventServiceImpl {
   }
 
   private class EventMonitorActor(
-      subscriber: Option[ActorRef],
-      callback:   Option[Event => Unit],
-      redisHost:  String, redisPort: Int,
-      currentEvents: Future[Seq[Event]],
-      prefixes:      String*
-  ) extends EventSubscriber(redisHost, redisPort) {
+      subscriber:     Option[ActorRef],
+      callback:       Option[Event => Unit],
+      eventService:   EventServiceImpl,
+      postLastEvents: Boolean
+  ) extends EventSubscriber(eventService.redisClient.host, eventService.redisClient.port) {
 
     import context.dispatcher
     import EventMonitorActor._
 
-    // First send the subscribers the current values for the events
-    currentEvents.onSuccess {
-      case events => events.foreach(notifySubscribers)
-    }
-    // Then subscribe to future events
-    currentEvents.onComplete(_ => subscribe(prefixes: _*))
-
-    override def postStop(): Unit = {
-      unsubscribe(prefixes: _*)
-    }
-
     def receive: Receive = {
-      case event: Event   => notifySubscribers(event)
-      case s: Subscribe   => subscribe(s.prefixes: _*)
-      case u: Unsubscribe => unsubscribe(u.prefixes: _*)
+      case event: Event =>
+        notifySubscribers(event)
+
+      case s: Subscribe =>
+        if (postLastEvents) {
+          // Notify the subscriber of the current event values
+          for {
+            currentEvents <- Future.sequence(s.prefixes.map(eventService.get)).map(_.flatten)
+          } {
+            currentEvents.foreach(notifySubscribers)
+            subscribe(s.prefixes: _*)
+          }
+        } else {
+          // Just subscribe to future values
+          subscribe(s.prefixes: _*)
+        }
+
+      case u: Unsubscribe =>
+        unsubscribe(u.prefixes: _*)
     }
 
     private def notifySubscribers(event: Event): Unit = {
@@ -256,8 +285,7 @@ private[events] object EventServiceImpl {
 private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _system: ActorRefFactory) extends EventService {
 
   import EventServiceImpl._
-
-  implicit val execContext = _system.dispatcher
+  import _system.dispatcher
 
   override def publish(event: Event): Future[Unit] = publish(event, 0)
 
@@ -280,15 +308,17 @@ private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _
   }
 
   override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
-    val currentEvents = if (postLastEvents) Future.sequence(prefixes.map(get)).map(_.flatten) else Future.successful(Nil)
-    val actorRef = _system.actorOf(EventMonitorActor.props(Some(subscriber), None, redisClient.host, redisClient.port, currentEvents, prefixes: _*))
-    EventMonitorImpl(actorRef)
+    val actorRef = _system.actorOf(EventMonitorActor.props(Some(subscriber), None, this, postLastEvents))
+    val monitor = EventMonitorImpl(actorRef)
+    monitor.subscribe(prefixes: _*)
+    monitor
   }
 
   override def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
-    val currentEvents = if (postLastEvents) Future.sequence(prefixes.map(get)).map(_.flatten) else Future.successful(Nil)
-    val actorRef = _system.actorOf(EventMonitorActor.props(None, Some(callback), redisClient.host, redisClient.port, currentEvents, prefixes: _*))
-    EventMonitorImpl(actorRef)
+    val actorRef = _system.actorOf(EventMonitorActor.props(None, Some(callback), this, postLastEvents))
+    val monitor = EventMonitorImpl(actorRef)
+    monitor.subscribe(prefixes: _*)
+    monitor
   }
 
   // gets the current value for the given prefix

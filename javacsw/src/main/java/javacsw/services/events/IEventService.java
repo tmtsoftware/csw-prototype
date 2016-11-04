@@ -58,6 +58,31 @@ public interface IEventService {
    */
   EventMonitor subscribe(EventHandler callback, boolean postLastEvents, String... prefixes);
 
+  /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param subscriber an actor to receive Event messages
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  default EventMonitor createEventMonitor(ActorRef subscriber, boolean postLastEvents) {
+    return subscribe(subscriber, postLastEvents);
+  }
+
+  /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param callback   an callback which will be called with Event objects (in another thread)
+   * @param postLastEvents if true, the callback receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  default EventMonitor createEventMonitor(IEventService.EventHandler callback, boolean postLastEvents) {
+    return subscribe(callback, postLastEvents);
+  }
+
+
   // --- Static factory methods ---
 
   /**

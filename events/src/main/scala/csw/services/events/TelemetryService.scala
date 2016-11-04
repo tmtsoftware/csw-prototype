@@ -123,6 +123,26 @@ trait TelemetryService {
   def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor
 
   /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param subscriber an actor to receive Event messages
+   * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  def createEventMonitor(subscriber: ActorRef, postLastEvents: Boolean): EventMonitor = subscribe(subscriber, postLastEvents)
+
+  /**
+   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * The return value can be used to stop the actor or subscribe and unsubscribe to events.
+   *
+   * @param callback   an callback which will be called with Event objects (in another thread)
+   * @param postLastEvents if true, the callback receives the last known values of any subscribed events first
+   * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
+   */
+  def createEventMonitor(callback: Event => Unit, postLastEvents: Boolean): EventMonitor = subscribe(callback, postLastEvents)
+
+  /**
    * Gets the value for the given status event prefix
    *
    * @param prefix the prefix (key) for the event to get
@@ -167,7 +187,7 @@ case class TelemetryServiceImpl(redisClient: RedisClient)(implicit _system: Acto
     eventService.subscribe(subscriber, postLastEvents, prefixes: _*)
 
   override def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor =
-    eventService.subscribe(callbackConverter(callback) _, postLastEvents = true, prefixes: _*)
+    eventService.subscribe(callbackConverter(callback) _, postLastEvents, prefixes: _*)
 
   override def get(prefix: String): Future[Option[StatusEvent]] =
     eventService.get(prefix).mapTo[Option[StatusEvent]]
