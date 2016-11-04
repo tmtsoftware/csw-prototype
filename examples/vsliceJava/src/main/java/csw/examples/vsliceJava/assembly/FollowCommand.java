@@ -61,6 +61,7 @@ class FollowCommand extends AbstractActor {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext ac;
+  private final DoubleItem initialElevation;
   private final  BooleanItem nssInUseIn;
   private final Optional<ActorRef> tromboneHCDIn;
   private final Optional<ActorRef> eventPublisher;
@@ -81,16 +82,17 @@ class FollowCommand extends AbstractActor {
    * @param eventPublisher the actor reference to the shared TrombonePublisher actor as a [[scala.Option]]
    * @param eventServiceSettings optional paramters for connecting to a testing event service
    */
-  private FollowCommand(AssemblyContext ac, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
+  private FollowCommand(AssemblyContext ac, DoubleItem initialElevation, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
                         Optional<ActorRef> eventPublisher, Optional<EventServiceSettings> eventServiceSettings) {
     this.ac = ac;
+    this.initialElevation = initialElevation;
     this.nssInUseIn = nssInUseIn;
     this.tromboneHCDIn = tromboneHCDIn;
     this.eventPublisher = eventPublisher;
     this.eventServiceSettings = eventServiceSettings;
 
     tromboneControl = context().actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol");
-    initialFollowActor = createFollower(nssInUseIn, tromboneControl, eventPublisher, eventPublisher);
+    initialFollowActor = createFollower(initialElevation, nssInUseIn, tromboneControl, eventPublisher, eventPublisher);
     initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventServiceSettings);
 
     getContext().become(followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn));
@@ -115,17 +117,17 @@ class FollowCommand extends AbstractActor {
           context().stop(eventSubscriber);
           context().stop(followActor);
           // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
-          ActorRef newFollowActor = createFollower(t.nssInUse, tromboneControl, eventPublisher, eventPublisher);
+          ActorRef newFollowActor = createFollower(initialElevation, t.nssInUse, tromboneControl, eventPublisher, eventPublisher);
           ActorRef newEventSubscriber = createEventSubscriber(t.nssInUse, newFollowActor, eventServiceSettings);
           // Set a new receive method with updated actor values, prefer this over vars or globals
           context().become(followReceive(t.nssInUse, newFollowActor, newEventSubscriber, tromboneHCD));
         }
       }).
-      match(SetElevation.class, t -> {
-        // This updates the current elevation and then causes an internal update to move things
-        log.info("Received setElevation, setting to: " + t.elevation);
-        followActor.tell(t, sender());
-      }).
+//      match(SetElevation.class, t -> {
+//        // This updates the current elevation and then causes an internal update to move things
+//        log.info("Received setElevation, setting to: " + t.elevation);
+//        followActor.tell(t, sender());
+//      }).
       match(SetZenithAngle.class, t -> {
         log.info("Got angle: " + t.zenithAngle);
         followActor.tell(t, sender());
@@ -145,8 +147,8 @@ class FollowCommand extends AbstractActor {
   }
 
 
-  private ActorRef createFollower(BooleanItem nssInUse, ActorRef tromboneControl, Optional<ActorRef> eventPublisher, Optional<ActorRef> telemetryPublisher) {
-    return context().actorOf(FollowActor.props(ac, nssInUse, Optional.of(tromboneControl), eventPublisher, eventPublisher), "follower");
+  private ActorRef createFollower(DoubleItem initialElevation, BooleanItem nssInUse, ActorRef tromboneControl, Optional<ActorRef> eventPublisher, Optional<ActorRef> telemetryPublisher) {
+    return context().actorOf(FollowActor.props(ac, initialElevation, nssInUse, Optional.of(tromboneControl), eventPublisher, eventPublisher), "follower");
   }
 
   private ActorRef createEventSubscriber(BooleanItem nssItem, ActorRef followActor, Optional<EventServiceSettings> eventServiceSettings) {
@@ -155,14 +157,14 @@ class FollowCommand extends AbstractActor {
 
   // --- static defs ---
 
-  public static Props props(AssemblyContext ac, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
+  public static Props props(AssemblyContext ac, DoubleItem initialElevation, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
                             Optional<ActorRef> eventPublisher, Optional<EventServiceSettings> eventServiceSettings) {
     return Props.create(new Creator<FollowCommand>() {
       private static final long serialVersionUID = 1L;
 
       @Override
       public FollowCommand create() throws Exception {
-        return new FollowCommand(ac, nssInUseIn, tromboneHCDIn, eventPublisher, eventServiceSettings);
+        return new FollowCommand(ac, initialElevation, nssInUseIn, tromboneHCDIn, eventPublisher, eventServiceSettings);
       }
     });
   }

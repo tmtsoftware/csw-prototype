@@ -64,7 +64,7 @@ public class AssemblyContext {
   public final ConfigKey setElevationCK;
 
   public SetupConfig setElevationSC(double elevation) {
-    return sc(setElevationCK.prefix(), jset(naElevationKey, elevation).withUnits(naElevationUnits));
+    return sc(setElevationCK.prefix(), naElevation(elevation));
   }
 
   // setAngle submit command
@@ -119,15 +119,13 @@ public class AssemblyContext {
 
   public final DoubleKey naElevationKey;
   public final UnitsOfMeasure.Units naElevationUnits;
-
-  public final DoubleItem el(double elevation) {
+  public final DoubleItem naElevation(Double elevation) {
     return jset(naElevationKey, elevation).withUnits(naElevationUnits);
   }
 
   public final DoubleKey initialElevationKey;
   public final UnitsOfMeasure.Units initialElevationUnits;
-
-  public DoubleItem iel(double elevation) {
+  public DoubleItem iElevation(double elevation) {
     return jset(initialElevationKey, elevation).withUnits(initialElevationUnits);
   }
 

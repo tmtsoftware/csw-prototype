@@ -19,6 +19,7 @@ import java.util.Optional;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
 import static javacsw.services.ts.JTimeService.localTimeNow;
+import static javacsw.util.config.JItems.jitem;
 
 /**
  * DiagPublisher provides diagnostic telemetry in the form of two events. DiagPublisher operaties in the 'OperationsState' or 'DiagnosticState'.
@@ -155,6 +156,8 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
 
 
   private void publishStateUpdate(CurrentState cs) {
+    log.info("publish state: " + cs);
+    log.info("Eventpublisher: " + eventPublisher);
     eventPublisher.ifPresent(actorRef ->
       actorRef.tell(new AxisStateUpdate(
           jitem(cs, axisNameKey),

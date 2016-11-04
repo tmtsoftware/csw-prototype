@@ -1,20 +1,41 @@
-//package csw.examples.vsliceJava.assembly;
+//package csw.examples.vslice.assembly
 //
+//import java.io.File
 //
-//import akka.actor.ActorRef;
-//import csw.services.ccs.AssemblyController2;
-//import csw.services.pkg.Assembly;
-//import csw.services.pkg.Component;
-//import csw.services.pkg.Component.AssemblyInfo;
+//import akka.actor.{ActorRef, ActorRefFactory, Props}
+//import akka.util.Timeout
 //
+//import scala.language.postfixOps
+//import com.typesafe.config.{Config, ConfigFactory}
+//import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
+//import csw.examples.vslice.hcd.TromboneHCD
+//import csw.services.alarms.AlarmService
+//import csw.services.ccs.{AssemblyController2, CommandStatus2, CurrentStateReceiver, Validation}
+//import csw.services.ccs.SequentialExecution.SequentialExecutor
+//import csw.services.ccs.SequentialExecution.SequentialExecutor.{StartTheSequence, StopCurrentCommand}
+//import csw.services.ccs.Validation.{Validation, ValidationList}
+//import csw.services.events.{EventService, EventServiceSettings}
+//import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
+//import csw.services.loc.ConnectionType.AkkaType
+//import csw.services.loc.LocationService._
+//import csw.services.loc._
+//import csw.services.log.PrefixedActorLogging
+//import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister, HcdInfo, RegisterAndTrackServices}
+//import csw.services.pkg.ContainerComponent._
+//import csw.services.pkg.{Assembly, Supervisor3}
+//import csw.util.config.Configurations.SetupConfigArg
+//
+//import scala.concurrent.Future
+//import scala.concurrent.duration._
 //
 ///**
 // * TMT Source Code: 6/10/16.
 // */
-//public class TromboneAssembly extends TromboneStateActor implements Assembly, AssemblyController2 {
+//class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with TromboneStateClient with AssemblyController2 {
 //
-//  private final AssemblyInfo info;
-//  private final ActorRef supervisor;
+//  import Supervisor3._
+//
+//  //override val prefix = "Bouncing"
 //
 //  println("INFO: " + info)
 //  var tromboneHCD = context.system.deadLetters
@@ -85,7 +106,7 @@
 //      // When Running is received, transition to running Receive
 //      log.info("becoming runningReceive")
 //      // Set the operational cmd state to "ready" according to spec-this is propagated to other actors
-//      state(cmd = cmdReady)
+//      //state(cmd = cmdReady)
 //      context.become(runningReceive)
 //    case x => log.error(s"Unexpected message in TromboneAssembly:initializingReceive: $x")
 //  }

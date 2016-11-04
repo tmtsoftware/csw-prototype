@@ -57,6 +57,8 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
 
   // Diags
   private ActorRef tromboneHCD;
+  // Set the default evaluation for use with the follow command
+  private DoubleItem setElevationItem;
 
   // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
   private final ActorRef tromboneStateActor;
@@ -67,8 +69,10 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
     this.tromboneHCD = tromboneHCDIn.orElse(context().system().deadLetters());
     tromboneStateActor = context().actorOf(TromboneStateActor.props());
     this.allEventPublisher = allEventPublisher;
+    setElevationItem = ac.naElevation(ac.calculationConfig.defaultInitialElevation);
     int moveCnt = 0;
     subscribeToLocationUpdates();
+    log.info("System  is: " + context().system());
 
 //    receive(ReceiveBuilder.
 //      matchAny(t -> log.warning("Unknown message received: " + t)).
@@ -90,6 +94,7 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
           context().become(actorExecutingReceive(datumActorRef, commandOriginator));
           self().tell(JSequentialExecution.CommandStart(), self());
         } else if (configKey.equals(ac.moveCK)) {
+          log.info("Current state: " + currentState());
           ActorRef moveActorRef = context().actorOf(MoveCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
           context().become(actorExecutingReceive(moveActorRef, commandOriginator));
           self().tell(JSequentialExecution.CommandStart(), self());
@@ -104,6 +109,9 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
           commandOriginator.ifPresent(actorRef ->
             actorRef.tell(new Invalid(new WrongInternalStateIssue("Trombone assembly must be following for setAngle")), self()));
         } else if (configKey.equals(ac.setElevationCK)) {
+          // Setting the elevation state here for a future follow command
+          setElevationItem = jitem(sc, ac.naElevationKey);
+          log.info("Setting elevation to: " + setElevationItem);
           // Note that units have already been verified here
           ActorRef setElevationActorRef = context().actorOf(SetElevationCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
           context().become(actorExecutingReceive(setElevationActorRef, commandOriginator));
@@ -112,15 +120,19 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
           if (cmd(currentState()).equals(cmdUninitialized)
             || (!move(currentState()).equals(moveIndexed) && !move(currentState()).equals(moveMoving))
             || !sodiumLayer(currentState())) {
+//            commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${cmd(currentState)}/${move(currentState)}/${sodiumLayer(currentState)} does not allow follow")))
             commandOriginator.ifPresent(actorRef ->
-              actorRef.tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of $cmd/$move does not allow follow")), self()));
+              actorRef.tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of "
+                + cmd(currentState()) + "/" + move(currentState()) + "/" + sodiumLayer(currentState()) + " does not allow follow")), self()));
           } else {
             // No state set during follow
             // At this point, parameters have been checked so direct access is okay
             BooleanItem nssItem = jitem(sc, ac.nssInUseKey);
 
+            log.info("Set elevation is: " + setElevationItem);
+
             // The event publisher may be passed in
-            Props props = FollowCommand.props(ac, nssItem, Optional.of(tromboneHCD), allEventPublisher, Optional.empty());
+            Props props = FollowCommand.props(ac, setElevationItem, nssItem, Optional.of(tromboneHCD), allEventPublisher, Optional.empty());
             // Follow command runs the trombone when following
             ActorRef followCommandActor = context().actorOf(props);
             context().become(followReceive(followCommandActor));

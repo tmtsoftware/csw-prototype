@@ -6,6 +6,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import csw.services.events.EventServiceSettings;
+import csw.services.loc.LocationService;
 import csw.util.config.*;
 import javacsw.services.events.IEventService;
 import scala.PartialFunction;
@@ -34,85 +35,97 @@ import static javacsw.util.config.JItems.jadd;
 public class TrombonePublisher extends TromboneStateHandler {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
-  private final AssemblyContext ac;
-  private final IEventService eventService;
+  private final AssemblyContext assemblyContext;
 
   /**
-   * Constructor
+   * An actor that provides the publishing interface to the TMT Event Service and Telemetry Service.
    *
-   * @param ac the trombone AssemblyContext contains important shared values and useful functions
-   * @param settings optional paramters for connecting to a testing event service
+   * The TrombonePublisher receives messages from other actors that need to publish an event of some kind. The messages are
+   * repackaged as SystemEvents or StatusEvents as needed.
+   *
+   * Currently, this actor publishes the sodiumLayer System Event for RTC, and the engr StatusEvent
+   * and the state StatusEvent. The sodiumLayer event is triggered by the arrival of an AOESWUpdate message. The engr
+   * StatusEvent is triggered by the arrival of an EngrUpdate message, and the state StatusEvent is triggered by the
+   * TromboneState message.
+   *
+   * Values in messages are assumed to be correct and ready for publishing.
+   *
+   * @param assemblyContext the trombone AssemblyContext contains important shared values and useful functions
+   * @param eventServiceIn optional EventService for testing event service
    */
-  public TrombonePublisher(AssemblyContext ac, Optional<EventServiceSettings> settings) {
-    this.ac = ac;
+  public TrombonePublisher(AssemblyContext assemblyContext, Optional<IEventService> eventServiceIn) {
+    this.assemblyContext = assemblyContext;
 
-    eventService = IEventService.getEventService(
-      settings.orElse(IEventService.getEventServiceSettings(context().system())),
-      context().system());
+    log.info("Event Service in: " + eventServiceIn);
 
 //    receive(ReceiveBuilder.
 //      matchAny(t -> log.warning("Unknown message received: " + t)).
 //      build());
 
-    getContext().become(publishingEnabled());
+    getContext().become(publishingEnabled(eventServiceIn));
 
   }
 
-  PartialFunction<Object, BoxedUnit> publishingEnabled() {
+  private PartialFunction<Object, BoxedUnit> publishingEnabled(Optional<IEventService> eventService) {
     return ReceiveBuilder.
-      match(AOESWUpdate.class, t -> publishAOESW(t.naElevation, t.naRange)).
-      match(EngrUpdate.class, t -> publishEngr(t.focusError, t.stagePosition, t.zenithAngle)).
-      match(TromboneState.class, this::publishState).
-      match(AxisStateUpdate.class, t -> publishAxisState(t.axisName, t.position, t.state, t.inLowLimit, t.inHighLimit, t.inHome)).
-      match(AxisStatsUpdate.class, t -> publishAxisStats(t.axisName, t.initCount, t.moveCount, t.homeCount, t.limitCount,
-        t.successCount, t.failCount, t.cancelCount)).
+      match(AOESWUpdate.class, t ->
+          publishAOESW(eventService, t.naElevation, t.naRange)).
+      match(EngrUpdate.class, t ->
+          publishEngr(eventService, t.focusError, t.stagePosition, t.zenithAngle)).
+      match(TromboneState.class, t ->
+          publishState(eventService, t)).
+      match(AxisStateUpdate.class, t ->
+        publishAxisState(eventService, t.axisName, t.position, t.state, t.inLowLimit, t.inHighLimit, t.inHome)).
+      match(AxisStatsUpdate.class, t ->
+        publishAxisStats(eventService, t.axisName, t.initCount, t.moveCount, t.homeCount, t.limitCount, t.successCount, t.failCount, t.cancelCount)).
+      match(LocationService.Location.class, t -> log.debug("Ignoring location: " + t)).
       matchAny(t -> log.warning("Unexpected message in TrombonePublisher:publishingEnabled: " + t)).
       build();
   }
 
-  private void publishAOESW(DoubleItem elevationItem, DoubleItem rangeItem) {
-    SystemEvent se = jadd(new SystemEvent(ac.aoSystemEventPrefix), elevationItem, rangeItem);
-    log.info("System publish of " + ac.aoSystemEventPrefix + ": " + se);
-    eventService.publish(se);
+  private void publishAOESW(Optional<IEventService> eventService, DoubleItem elevationItem, DoubleItem rangeItem) {
+    SystemEvent se = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix), elevationItem, rangeItem);
+    log.info("System publish of " + assemblyContext.aoSystemEventPrefix + ": " + se);
+    eventService.ifPresent(e -> e.publish(se));
   }
 
-  private void publishEngr(DoubleItem rtcFocusError, DoubleItem stagePosition, DoubleItem zenithAngle) {
-    StatusEvent ste = jadd(new StatusEvent(ac.engStatusEventPrefix), rtcFocusError, stagePosition, zenithAngle);
-    log.info("Status publish of " + ac.engStatusEventPrefix + ": " + ste);
-    eventService.publish(ste);
+  private void publishEngr(Optional<IEventService> eventService, DoubleItem rtcFocusError, DoubleItem stagePosition, DoubleItem zenithAngle) {
+    StatusEvent ste = jadd(new StatusEvent(assemblyContext.engStatusEventPrefix), rtcFocusError, stagePosition, zenithAngle);
+    log.info("Status publish of " + assemblyContext.engStatusEventPrefix + ": " + ste);
+    eventService.ifPresent(e -> e.publish(ste));
   }
 
-  private void publishState(TromboneState ts) {
+  private void publishState(Optional<IEventService> eventService, TromboneState ts) {
     // We can do this for convenience rather than using TromboneStateHandler's stateReceive
-    StatusEvent ste = jadd(new StatusEvent(ac.tromboneStateStatusEventPrefix), ts.cmd, ts.move, ts.sodiumLayer, ts.nss);
-    log.debug("Status state publish of " + ac.tromboneStateStatusEventPrefix + ": " + ste);
-    eventService.publish(ste);
+    StatusEvent ste = jadd(new StatusEvent(assemblyContext.tromboneStateStatusEventPrefix), ts.cmd, ts.move, ts.sodiumLayer, ts.nss);
+    log.debug("Status state publish of " + assemblyContext.tromboneStateStatusEventPrefix + ": " + ste);
+    eventService.ifPresent(e -> e.publish(ste));
   }
 
-  private void publishAxisState(StringItem axisName, IntItem position, ChoiceItem state, BooleanItem inLowLimit,
+  private void publishAxisState(Optional<IEventService> eventService, StringItem axisName, IntItem position, ChoiceItem state, BooleanItem inLowLimit,
                                 BooleanItem inHighLimit, BooleanItem inHome) {
-    StatusEvent ste = jadd(new StatusEvent(ac.axisStateEventPrefix), axisName, position, state, inLowLimit, inHighLimit, inHome);
-    log.debug("Axis state publish of " + ac.axisStateEventPrefix + ": " + ste);
-    eventService.publish(ste);
+    StatusEvent ste = jadd(new StatusEvent(assemblyContext.axisStateEventPrefix), axisName, position, state, inLowLimit, inHighLimit, inHome);
+    log.debug("Axis state publish of " + assemblyContext.axisStateEventPrefix + ": " + ste);
+    eventService.ifPresent(e -> e.publish(ste));
   }
 
-  void publishAxisStats(StringItem axisName, IntItem datumCount, IntItem moveCount, IntItem homeCount, IntItem limitCount,
+  void publishAxisStats(Optional<IEventService> eventService, StringItem axisName, IntItem datumCount, IntItem moveCount, IntItem homeCount, IntItem limitCount,
                         IntItem successCount, IntItem failureCount, IntItem cancelCount) {
-    StatusEvent ste = jadd(new StatusEvent(ac.axisStatsEventPrefix), axisName, datumCount, moveCount, homeCount, limitCount,
+    StatusEvent ste = jadd(new StatusEvent(assemblyContext.axisStatsEventPrefix), axisName, datumCount, moveCount, homeCount, limitCount,
         successCount, failureCount, cancelCount);
-    log.debug("Axis stats publish of " + ac.axisStatsEventPrefix + ": " + ste);
-    eventService.publish(ste);
+    log.debug("Axis stats publish of " + assemblyContext.axisStatsEventPrefix + ": " + ste);
+    eventService.ifPresent(e -> e.publish(ste));
   }
 
   // --- static defs ---
 
-  public static Props props(AssemblyContext ac, Optional<EventServiceSettings> settings) {
+  public static Props props(AssemblyContext assemblyContext, Optional<IEventService> eventServiceIn) {
     return Props.create(new Creator<TrombonePublisher>() {
       private static final long serialVersionUID = 1L;
 
       @Override
       public TrombonePublisher create() throws Exception {
-        return new TrombonePublisher(ac, settings);
+        return new TrombonePublisher(assemblyContext, eventServiceIn);
       }
     });
   }

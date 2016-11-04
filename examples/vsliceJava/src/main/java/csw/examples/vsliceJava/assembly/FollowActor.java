@@ -49,6 +49,7 @@ class FollowActor extends AbstractActor {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext ac;
+  private final DoubleItem initialElevation;
   private final BooleanItem inNSSMode;
   private final Optional<ActorRef> tromboneControl;
   private final Optional<ActorRef> aoPublisher;
@@ -58,7 +59,6 @@ class FollowActor extends AbstractActor {
   private final TromboneControlConfig controlConfig;
 
   // In this implementation, these vars are needed to support the setElevation and setAngle commands which require an update
-  private final DoubleItem initialElevation;
   private final DoubleItem initialFocusError;
   private final DoubleItem initialZenithAngle;
 
@@ -73,9 +73,10 @@ class FollowActor extends AbstractActor {
    * @param aoPublisher an actorRef as [[scala.Option]] of the actor that publishes the sodiumLayer event
    * @param engPublisher an actorRef as [[scala.Option]] of the actor that publishes the eng telemetry event
    */
-  private FollowActor(AssemblyContext ac, BooleanItem inNSSMode, Optional<ActorRef> tromboneControl,
+  private FollowActor(AssemblyContext ac, DoubleItem initialElevation, BooleanItem inNSSMode, Optional<ActorRef> tromboneControl,
                      Optional<ActorRef> aoPublisher, Optional<ActorRef> engPublisher) {
     this.ac = ac;
+    this.initialElevation = initialElevation;
     this.inNSSMode = inNSSMode;
     this.tromboneControl = tromboneControl;
     this.aoPublisher = aoPublisher;
@@ -84,7 +85,7 @@ class FollowActor extends AbstractActor {
     calculationConfig = ac.calculationConfig;
     controlConfig = ac.controlConfig;
 
-    initialElevation = jset(ac.initialElevationKey, calculationConfig.defaultInitialElevation).withUnits(ac.initialElevationUnits);
+//    initialElevation = jset(ac.initialElevationKey, calculationConfig.defaultInitialElevation).withUnits(ac.initialElevationUnits);
     initialFocusError = jset(ac.focusErrorKey).withUnits(ac.focusErrorUnits);
     initialZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);
 
@@ -105,6 +106,7 @@ class FollowActor extends AbstractActor {
         // do nothing
       }).
       match(UpdatedEventData.class, t -> {
+        log.info("Got an Update Event: " + t);
         // Not really using the time here
         // Units checks - should not happen, so if so, flag an error and skip calculation
         if (t.zenithAngle.units() != ac.zenithAngleUnits || t.focusError.units() != ac.focusErrorUnits) {
@@ -186,6 +188,7 @@ class FollowActor extends AbstractActor {
   // Props for creating the follow actor
   public static Props props(
     AssemblyContext assemblyContext,
+    DoubleItem initialElevation,
     BooleanItem inNSSModeIn,
     Optional<ActorRef> tromboneControl,
     Optional<ActorRef> aoPublisher,
@@ -195,7 +198,7 @@ class FollowActor extends AbstractActor {
 
       @Override
       public FollowActor create() throws Exception {
-        return new FollowActor(assemblyContext, inNSSModeIn, tromboneControl, aoPublisher, engPublisher);
+        return new FollowActor(assemblyContext, initialElevation, inNSSModeIn, tromboneControl, aoPublisher, engPublisher);
       }
     });
   }

@@ -38,8 +38,6 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
     case location: Location => location match {
       case t: ResolvedTcpLocation =>
         // Verify that it is the event service
-        // XXX Note: The call below assumes the default name for the event service!
-        // It might be better to pass in the name actually used when starting the event service.
         if (t.connection == EventService.eventServiceConnection()) {
           log.debug(s"Event subscriber received connection: $t")
           val eventService: EventService = EventService.get(t.host, t.port)
