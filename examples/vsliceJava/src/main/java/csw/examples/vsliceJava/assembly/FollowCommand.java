@@ -3,24 +3,18 @@ package csw.examples.vsliceJava.assembly;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import csw.services.events.EventServiceSettings;
 import csw.util.config.BooleanItem;
 import csw.util.config.DoubleItem;
 import csw.util.config.Events.*;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
-import javacsw.services.ts.JTimeService;
+import javacsw.services.events.IEventService;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
-import csw.examples.vsliceJava.assembly.AssemblyContext.*;
 import csw.examples.vsliceJava.assembly.FollowActor.*;
 
 import java.time.Instant;
 import java.util.Optional;
-
-import static csw.examples.vsliceJava.assembly.Algorithms.*;
-import static javacsw.util.config.JItems.jset;
-import static javacsw.util.config.JItems.jvalue;
 
 /**
  * FollowCommand encapsulates the actors that collaborate to implement the Follow command.
@@ -62,38 +56,31 @@ class FollowCommand extends AbstractActor {
 
   private final AssemblyContext ac;
   private final DoubleItem initialElevation;
-  private final  BooleanItem nssInUseIn;
-  private final Optional<ActorRef> tromboneHCDIn;
   private final Optional<ActorRef> eventPublisher;
-  private final Optional<EventServiceSettings> eventServiceSettings;
+  private final Optional<IEventService> eventService;
 
   // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
   private final ActorRef tromboneControl;
-  // These vals are only being created to simplify typing
-  private final ActorRef initialFollowActor;
-  private final ActorRef initialEventSubscriber;
 
   /**
    * Constructor
    *
    * @param ac the trombone Assembly context contains shared values and functions
    * @param nssInUseIn a BooleanItem, set to true if the NFIRAOS Source Simulator is in use, set to false if not in use
-   * @param tromboneHCDIn the actor reference to the trombone HCD as a [[scala.Option]]
-   * @param eventPublisher the actor reference to the shared TrombonePublisher actor as a [[scala.Option]]
-   * @param eventServiceSettings optional paramters for connecting to a testing event service
+   * @param tromboneHCDIn the actor reference to the trombone HCD as an optional value
+   * @param eventPublisher the actor reference to the shared TrombonePublisher actor as an optional value
+   * @param eventService optional EventService for subscriptions
    */
   private FollowCommand(AssemblyContext ac, DoubleItem initialElevation, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
-                        Optional<ActorRef> eventPublisher, Optional<EventServiceSettings> eventServiceSettings) {
+                        Optional<ActorRef> eventPublisher, Optional<IEventService> eventService) {
     this.ac = ac;
     this.initialElevation = initialElevation;
-    this.nssInUseIn = nssInUseIn;
-    this.tromboneHCDIn = tromboneHCDIn;
     this.eventPublisher = eventPublisher;
-    this.eventServiceSettings = eventServiceSettings;
+    this.eventService = eventService;
 
     tromboneControl = context().actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol");
-    initialFollowActor = createFollower(initialElevation, nssInUseIn, tromboneControl, eventPublisher, eventPublisher);
-    initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventServiceSettings);
+    ActorRef initialFollowActor = createFollower(initialElevation, nssInUseIn, tromboneControl, eventPublisher, eventPublisher);
+    ActorRef initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService);
 
     getContext().become(followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn));
 
@@ -102,8 +89,9 @@ class FollowCommand extends AbstractActor {
 //      build());
   }
 
-  PartialFunction<Object, BoxedUnit> followReceive(BooleanItem nssInUse, ActorRef followActor,
-                                                   ActorRef eventSubscriber, Optional<ActorRef> tromboneHCD) {
+  private PartialFunction<Object, BoxedUnit> followReceive(BooleanItem nssInUse, ActorRef followActor,
+                                                           ActorRef eventSubscriber, Optional<ActorRef> tromboneHCD) {
+    //noinspection CodeBlock2Expr
     return ReceiveBuilder.
       match(StopFollowing.class, t -> {
         log.info("Receive stop following in Follow Command");
@@ -118,7 +106,7 @@ class FollowCommand extends AbstractActor {
           context().stop(followActor);
           // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
           ActorRef newFollowActor = createFollower(initialElevation, t.nssInUse, tromboneControl, eventPublisher, eventPublisher);
-          ActorRef newEventSubscriber = createEventSubscriber(t.nssInUse, newFollowActor, eventServiceSettings);
+          ActorRef newEventSubscriber = createEventSubscriber(t.nssInUse, newFollowActor, eventService);
           // Set a new receive method with updated actor values, prefer this over vars or globals
           context().become(followReceive(t.nssInUse, newFollowActor, newEventSubscriber, tromboneHCD));
         }
@@ -132,12 +120,12 @@ class FollowCommand extends AbstractActor {
         log.info("Got angle: " + t.zenithAngle);
         followActor.tell(t, sender());
 
-      }).match(UpdateTromboneHCD.class, t -> {
+      }).match(TromboneAssembly.UpdateTromboneHCD.class, upd -> {
           // Note that this is an option so it can be None
           // Set a new receive method with updated actor values and new HCD, prefer this over vars or globals
         context().become(followReceive(nssInUse, followActor, eventSubscriber, upd.tromboneHCD));
         // Also update the trombone control with the new HCD reference
-        tromboneControl.tell(new UpdateTromboneHCD(upd.tromboneHCD), self());
+        tromboneControl.tell(new TromboneAssembly.UpdateTromboneHCD(upd.tromboneHCD), self());
       }).
       match(UpdateZAandFE.class, t -> {
         followActor.tell(new UpdatedEventData(t.zenithAngle, t.focusError, new EventTime(Instant.now())), self());
@@ -151,20 +139,20 @@ class FollowCommand extends AbstractActor {
     return context().actorOf(FollowActor.props(ac, initialElevation, nssInUse, Optional.of(tromboneControl), eventPublisher, eventPublisher), "follower");
   }
 
-  private ActorRef createEventSubscriber(BooleanItem nssItem, ActorRef followActor, Optional<EventServiceSettings> eventServiceSettings) {
-    return context().actorOf(TromboneEventSubscriber.props(ac, nssItem, Optional.of(followActor), eventServiceSettings), "eventsubscriber");
+  private ActorRef createEventSubscriber(BooleanItem nssItem, ActorRef followActor, Optional<IEventService> eventService) {
+    return context().actorOf(TromboneEventSubscriber.props(ac, nssItem, Optional.of(followActor), eventService), "eventsubscriber");
   }
 
   // --- static defs ---
 
   public static Props props(AssemblyContext ac, DoubleItem initialElevation, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
-                            Optional<ActorRef> eventPublisher, Optional<EventServiceSettings> eventServiceSettings) {
+                            Optional<ActorRef> eventPublisher, Optional<IEventService> eventService) {
     return Props.create(new Creator<FollowCommand>() {
       private static final long serialVersionUID = 1L;
 
       @Override
       public FollowCommand create() throws Exception {
-        return new FollowCommand(ac, initialElevation, nssInUseIn, tromboneHCDIn, eventPublisher, eventServiceSettings);
+        return new FollowCommand(ac, initialElevation, nssInUseIn, tromboneHCDIn, eventPublisher, eventService);
       }
     });
   }
@@ -174,6 +162,7 @@ class FollowCommand extends AbstractActor {
 
   public static class StopFollowing implements FollowCommandMessages {}
 
+  @SuppressWarnings("WeakerAccess")
   public static class UpdateNssInUse implements FollowCommandMessages {
     public final BooleanItem nssInUse;
 
@@ -186,6 +175,7 @@ class FollowCommand extends AbstractActor {
    * This is an engineering and test method that is used to trigger the same kind of update as a zenith angle and focus error
    * events from external to the Assembly
    */
+  @SuppressWarnings("WeakerAccess")
   public static class UpdateZAandFE {
     public final DoubleItem zenithAngle;
     public final DoubleItem focusError;

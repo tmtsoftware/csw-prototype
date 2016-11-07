@@ -15,7 +15,7 @@ import csw.services.pkg.Component.AssemblyInfo;
 /**
  * TMT Source Code: 10/4/16.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess", "SameParameterValue"})
 public class AssemblyContext {
 
   public final AssemblyInfo info;

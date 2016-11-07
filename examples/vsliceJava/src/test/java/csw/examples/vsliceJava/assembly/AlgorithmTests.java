@@ -1,10 +1,15 @@
 //package csw.examples.vsliceJava.assembly
 //
+//import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
+//
 ///**
 // * These are tests of the calculations in the Calculation Actor
 // */
 //class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
+//  import Algorithms._
 //  import AssemblyTestData._
+//
+//  import AssemblyTestData.TestAssemblyContext._
 //
 //  def ~=(x: Double, y: Double, precision: Double) = {
 //    if ((x - y).abs < precision) true else false

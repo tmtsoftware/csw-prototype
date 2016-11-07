@@ -3,10 +3,25 @@
 //import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 //import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 //import csw.services.loc.LocationService
+//import org.scalatest.{BeforeAndAfterAll, Inspectors, _}
 //
 //object OtherTests {
 //  LocationService.initInterface()
 //  val system = ActorSystem("OtherTests")
+//
+//  class TestSubscriber(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
+//
+//    def receive: Receive = stateReceive orElse {
+//      case x => println(s"Got a bad message: $x")
+//    }
+//  }
+//
+//  class TestPublisher(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
+//
+//    def receive: Receive = stateReceive orElse {
+//      case x => println(s"Got a bad message: $x")
+//    }
+//  }
 //}
 //
 ///**
@@ -14,6 +29,9 @@
 // */
 //class OtherTests extends TestKit(OtherTests.system) with ImplicitSender
 //    with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
+//
+//  import OtherTests._
+//  import TromboneStateHandler._
 //
 //  describe("Testing state item") {
 //    it("should allow creation") {
@@ -35,20 +53,6 @@
 //      ts.nss.head should equal(false)
 //    }
 //
-//  }
-//
-//  class TestSubscriber(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
-//
-//    def receive: Receive = stateReceive orElse {
-//      case x => println(s"Got a bad message: $x")
-//    }
-//  }
-//
-//  class TestPublisher(input: Int) extends Actor with ActorLogging with TromboneStateHandler {
-//
-//    def receive: Receive = stateReceive orElse {
-//      case x => println(s"Got a bad message: $x")
-//    }
 //  }
 //
 //  /**

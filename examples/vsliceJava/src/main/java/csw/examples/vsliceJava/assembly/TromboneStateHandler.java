@@ -12,7 +12,7 @@ import java.util.Optional;
 import static javacsw.util.config.JItems.jset;
 import static javacsw.util.config.JItems.jvalue;
 
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
 public abstract class TromboneStateHandler extends AbstractActor {
 
   protected final ChoiceItem cmdDefault = jset(cmdKey, cmdUninitialized);

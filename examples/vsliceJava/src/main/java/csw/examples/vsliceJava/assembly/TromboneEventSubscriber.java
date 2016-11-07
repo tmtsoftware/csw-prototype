@@ -6,14 +6,13 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import csw.services.events.*;
+import csw.services.loc.Connection;
 import csw.services.loc.LocationService;
 import csw.services.loc.LocationService.Location;
-import csw.services.loc.LocationSubscriberClient;
 import csw.services.loc.LocationService.ResolvedTcpLocation;
 import csw.util.config.Configurations.ConfigKey;
 import csw.util.config.Events.*;
 import csw.util.config.*;
-import javacsw.services.event_old.JEventService;
 import javacsw.services.events.IEventService;
 import javacsw.services.pkg.ILocationSubscriberClient;
 import scala.PartialFunction;
@@ -22,7 +21,6 @@ import csw.services.events.EventService.EventMonitor;
 
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static javacsw.util.config.JItems.jitem;
 import static javacsw.util.config.JItems.jvalue;
@@ -38,7 +36,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
   private final AssemblyContext ac;
   private final BooleanItem nssInUseIn;
   private final Optional<ActorRef> followActor;
-  private final Optional<IEventService> eventServiceIn;
+
   // If state of NSS is false, then subscriber provides 0 for zenith distance with updates to subscribers
 
   // This value is used when NSS is in Use
@@ -61,7 +59,6 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
     this.ac = ac;
     this.nssInUseIn = nssInUseIn;
     this.followActor = followActor;
-    this.eventServiceIn = eventServiceIn;
 
     nssZenithAngle = ac.za(0.0);
     initialZenithAngle = jvalue(nssInUseIn) ? nssZenithAngle : ac.za(0.0);
@@ -83,11 +80,12 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
         if (location instanceof LocationService.ResolvedTcpLocation) {
           ResolvedTcpLocation t = (ResolvedTcpLocation) location;
           // Verify that it is the event service
-          if (t.connection().equals(IEventService.eventServiceConnection())) {
+          Connection.TcpConnection conn = IEventService.eventServiceConnection(IEventService.defaultName);
+          if (location.connection().equals(conn)) {
             log.debug("Event subscriber received connection: " + t);
             IEventService eventService = IEventService.getEventService(t.host(), t.port(), context().system());
             startupSubscriptions(eventService);
-            context().become(subscribeReceive(eventService, nssInUseIn, initialZenithAngle, initialFocusError))
+            context().become(subscribeReceive(eventService, nssInUseIn, initialZenithAngle, initialFocusError));
           }
         } else log.debug("EventSubscriber received location: " + location);
       }).
@@ -109,7 +107,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
     }
   }
 
-  PartialFunction<Object, BoxedUnit> subscribeReceive(IEventService eventService, BooleanItem cNssInUse, DoubleItem cZenithAngle, DoubleItem cFocusError) {
+  private PartialFunction<Object, BoxedUnit> subscribeReceive(IEventService eventService, BooleanItem cNssInUse, DoubleItem cZenithAngle, DoubleItem cFocusError) {
     return ReceiveBuilder.
       match(SystemEvent.class, event -> {
         if (event.info().source().equals(ac.zaConfigKey)) {
@@ -206,7 +204,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
   }
 
   public static class UpdateNssInUse {
-    public final BooleanItem nssInUse;
+    final BooleanItem nssInUse;
 
     public UpdateNssInUse(BooleanItem nssInUse) {
       this.nssInUse = nssInUse;

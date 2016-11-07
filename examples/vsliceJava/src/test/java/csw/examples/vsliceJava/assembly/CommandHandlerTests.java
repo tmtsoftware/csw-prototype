@@ -3,6 +3,10 @@
 //import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 //import akka.testkit.{TestKit, TestProbe}
 //import com.typesafe.scalalogging.slf4j.LazyLogging
+//import csw.examples.vslice.assembly.TromboneStateActor.SetState
+//import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
+//import csw.examples.vslice.hcd.TromboneHCD
+//import csw.examples.vslice.hcd.TromboneHCD.GetAxisUpdateNow
 //import csw.services.ccs.CommandStatus2._
 //import csw.services.ccs.SequentialExecution.SequentialExecutor
 //import csw.services.ccs.SequentialExecution.SequentialExecutor.{ExecuteOne, StartTheSequence}
@@ -14,6 +18,7 @@
 //import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 //import csw.util.config.Configurations
 //import csw.util.config.Configurations.SetupConfig
+//import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 //
 //import scala.concurrent.duration._
 //
@@ -27,6 +32,8 @@
 // */
 //class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 //    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+//
+//  import TromboneStateActor._
 //
 //  override def afterAll = TestKit.shutdownActorSystem(system)
 //
@@ -54,7 +61,7 @@
 //  def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None) = {
 //    //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
 //    //thandler
-//    system.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, allEventPublisher))
+//    system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
 //  }
 //
 //  it("should allow running datum directly to CommandHandler") {
@@ -68,22 +75,27 @@
 //    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
 //    //info("Running")
 //
+//    val tsa = system.actorOf(TromboneStateActor.props)
+//
 //    val ch = newCommandHandler(tromboneHCD)
 //
-//    ch ! TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
+//    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false)))
 //
 //    val sc = SetupConfig(ac.datumCK)
 //
 //    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 //
-//    val msg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
-//    println("Final: " + msg)
+//    val msg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    msg shouldBe Completed
+//    //info("Final: " + msg)
 //
 //    // Demonstrate error
 //    ch ! TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
 //    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 //
 //    val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    errMsg shouldBe a[NoLongerValid]
+//
 //    val monitor = TestProbe()
 //    monitor.watch(ch)
 //    ch ! PoisonPill
@@ -112,7 +124,9 @@
 //    se ! StartTheSequence(ch)
 //
 //    val msg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
-//    println("Final: " + msg)
+//    //info("Final: " + msg)
+//    msg.overall shouldBe AllCompleted
+//    msg.details.results.size shouldBe 1
 //
 //    // Demonstrate error
 //    ch ! TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
@@ -123,7 +137,7 @@
 //    val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
 //    errMsg.overall should equal(Incomplete)
 //    errMsg.details.results.head._1 shouldBe a[NoLongerValid]
-//    println("Final: " + errMsg)
+//    //info("Final: " + errMsg)
 //
 //    val monitor = TestProbe()
 //    monitor.watch(ch)
@@ -218,6 +232,7 @@
 //    val pos2 = 150.1
 //
 //    val sca = Configurations.createSetupConfigArg("testobsId", ac.moveSC(pos1), ac.moveSC(pos2))
+//    println("SCA: " + sca)
 //
 //    val se2 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
 //    se2 ! StartTheSequence(ch)
@@ -291,7 +306,7 @@
 //
 //    val testRangeDistance = 94.0
 //    val positionConfig = ac.positionSC(testRangeDistance)
-//    info("Position: " + positionConfig)
+//    logger.info("Position: " + positionConfig)
 //    val sca = Configurations.createSetupConfigArg("testobsId", positionConfig)
 //
 //    val se2 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
@@ -332,7 +347,8 @@
 //    val se2 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
 //    se2 ! StartTheSequence(ch)
 //
-//    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandResult])
+//    val msg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
+//    //info("Final: " + msg)
 //
 //    // Test
 //    val finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testRangeDistance.last)
@@ -344,7 +360,38 @@
 //    system.stop(tromboneHCD)
 //  }
 //
-//  it("should get error for setAngle and setElevation when not following") {
+//  it("should allow running a setElevation without sequence") {
+//    val tromboneHCD = startHCD
+//    val fakeAssembly = TestProbe()
+//
+//    // The following is to synchronize the test with the HCD entering Running state
+//    // This is boiler plate for setting up an HCD for testing
+//    tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
+//    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+//    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
+//    //info("Running")
+//
+//    val ch = newCommandHandler(tromboneHCD)
+//
+//    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false)))
+//
+//    val testEl = 150.0
+//    ch ! ExecuteOne(ac.setElevationSC(testEl), Some(fakeAssembly.ref))
+//
+//    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus2])
+//    val finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testEl)
+//
+//    // Use the engineering GetAxisUpdate to get the current encoder for checking
+//    fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
+//    val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
+//    upd.current should equal(finalPos)
+//    info("Upd: " + upd)
+//
+//    ch ! PoisonPill
+//    system.stop(tromboneHCD)
+//  }
+//
+//  it("should get error for setAngle when not following") {
 //    val tromboneHCD = startHCD
 //    val fakeAssembly = TestProbe()
 //
@@ -370,14 +417,6 @@
 //    errMsg.overall should equal(Incomplete)
 //    errMsg.details.results.head._1 shouldBe a[Invalid]
 //
-//    val sca2 = Configurations.createSetupConfigArg("testobsId", ac.setElevationSC(96.0))
-//    se2 = system.actorOf(SequentialExecutor.props(sca2, Some(fakeAssembly.ref)))
-//
-//    se2 ! StartTheSequence(ch)
-//
-//    val errMsg2 = fakeAssembly.expectMsgClass(35.seconds, classOf[CommandResult])
-//    errMsg2.overall should equal(Incomplete)
-//    errMsg2.details.results.head._1 shouldBe a[Invalid]
 //    system.stop(ch)
 //    system.stop(tromboneHCD)
 //  }
@@ -410,7 +449,7 @@
 //    system.stop(tromboneHCD)
 //  }
 //
-//  it("should allow follow, with setElevation, SetAngle and stop") {
+//  it("should allow follow, with two SetAngles and stop") {
 //    val tromboneHCD = startHCD
 //    val fakeAssembly = TestProbe()
 //
@@ -429,66 +468,70 @@
 //    val testElevation = 100.0
 //    val initialZenithAngle = 0.0
 //
-//    // set the state so the command succeeds
-//    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), nssItem(false)))
+//    // set the state so the command succeeds - NOTE: Setting sodiumItem true here
+//    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false)))
 //
 //    //fakeAssembly.expectNoMsg(30.milli)
-//    var sca = Configurations.createSetupConfigArg("testobsId", ac.followSC(false))
-//    val se = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
-//    se ! StartTheSequence(ch)
-//
 //    var totalRangeDistance = Algorithms.focusZenithAngleToRangeDistance(ac.calculationConfig, testElevation, testFocusError, initialZenithAngle)
 //    var stagePosition = Algorithms.rangeDistanceToStagePosition(totalRangeDistance)
 //    var expectedEncoderValue = Algorithms.stagePositionToEncoder(ac.controlConfig, stagePosition)
 //    logger.info(s"Expected for setElevation: $expectedEncoderValue")
 //
-//    val msg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
-//    logger.info(">>>>>>>Msg: " + msg)
-//
-//    sca = Configurations.createSetupConfigArg("testobsId", ac.setElevationSC(testElevation))
+//    var sca = Configurations.createSetupConfigArg("testobsId", ac.setElevationSC(testElevation))
 //    val se2 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
 //    se2 ! StartTheSequence(ch)
 //
-//    val msg2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
-//    logger.info("Msg3: " + msg2)
+//    val msg1 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
+//    logger.info("Msg: " + msg1)
 //
 //    // Use the engineering GetAxisUpdate to get the current encoder for checking
 //    fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
 //    var upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
 //    upd.current should equal(expectedEncoderValue)
 //
-//    fakeAssembly.expectNoMsg(2.seconds)
+////    fakeAssembly.expectNoMsg(2.seconds)
+//
+//    // This sets up the follow command to put assembly into follow mode
+//    sca = Configurations.createSetupConfigArg("testobsId", ac.followSC(nssInUse = false))
+//    val se = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
+//    se ! StartTheSequence(ch)
+//    val msg2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
+//    logger.info("Msg2: " + msg2)
+//
 //    val testZenithAngle = 30.0
 //    sca = Configurations.createSetupConfigArg("testobsId", ac.setAngleSC(testZenithAngle))
 //    val se3 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
 //    se3 ! StartTheSequence(ch)
+//
+//    val msg3 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
+//    logger.info("Msg3: " + msg3)
 //
 //    totalRangeDistance = Algorithms.focusZenithAngleToRangeDistance(ac.calculationConfig, testElevation, testFocusError, testZenithAngle)
 //    stagePosition = Algorithms.rangeDistanceToStagePosition(totalRangeDistance)
 //    expectedEncoderValue = Algorithms.stagePositionToEncoder(ac.controlConfig, stagePosition)
 //    logger.info(s"Expected for setAngle: $expectedEncoderValue")
 //
-//    val msg3 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
-//    logger.info("Msg3: " + msg3)
+//   // val msg4 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
+//    //logger.info("Msg4: " + msg4)
 //
 //    // Use the engineering GetAxisUpdate to get the current encoder for checking
 //    fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
 //    upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
-//    //logger.info(s"Upd2: $upd")
+//    logger.info(s"Upd2: $upd")
 //    upd.current should equal(expectedEncoderValue)
 //
 //    sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(ac.stopCK))
 //    val se4 = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
 //    se4 ! StartTheSequence(ch)
 //
-//    val msg4 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
-//    logger.info("Msg: " + msg4)
+//    val msg5 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
+//    logger.info("Msg: " + msg5)
 //    fakeAssembly.expectNoMsg(1.seconds)
 //    system.stop(ch)
 //    system.stop(tromboneHCD)
 //  }
 //
-//  it("should allow follow, with setElevation, SetAngle and stop as a single sequence") {
+//  it("should allow one Arg with setElevation, follow, SetAngle and stop as a single sequence") {
 //    val tromboneHCD = startHCD
 //    val fakeAssembly = TestProbe()
 //
@@ -512,7 +555,7 @@
 //    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), nssItem(false)))
 //
 //    //fakeAssembly.expectNoMsg(30.milli)
-//    val sca = Configurations.createSetupConfigArg("testobsId", ac.followSC(false), ac.setElevationSC(testElevation), ac.setAngleSC(testZenithAngle), SetupConfig(ac.stopCK))
+//    val sca = Configurations.createSetupConfigArg("testobsId", ac.setElevationSC(testElevation), ac.followSC(false), ac.setAngleSC(testZenithAngle), SetupConfig(ac.stopCK))
 //    val se = system.actorOf(SequentialExecutor.props(sca, Some(fakeAssembly.ref)))
 //    se ! StartTheSequence(ch)
 //

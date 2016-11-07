@@ -7,7 +7,6 @@ import csw.services.ccs.CommandStatus2.Invalid;
 import csw.services.ccs.CommandStatus2.NoLongerValid;
 import csw.services.ccs.CommandStatus2.Error;
 import csw.services.ccs.SequentialExecution.SequentialExecutor.*;
-import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch;
 import csw.services.ccs.StateMatchers.*;
 import csw.services.ccs.Validation.*;
 import csw.util.config.BooleanItem;
@@ -48,8 +47,8 @@ import static scala.compat.java8.OptionConverters.toJava;
 /**
  * TMT Source Code: 9/21/16.
  */
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
-class TromboneCommandHandler extends TromboneStateClient implements ILocationSubscriberClient {
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
+class TromboneCommandHandler extends AbstractActor implements TromboneStateClient, ILocationSubscriberClient {
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext ac;
@@ -63,6 +62,17 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
   // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
   private final ActorRef tromboneStateActor;
 
+  @SuppressWarnings("FieldCanBeLocal")
+  private TromboneStateActor.TromboneState internalState = TromboneStateActor.defaultTromboneState;
+
+  @Override
+  public void setCurrentState(TromboneStateActor.TromboneState ts) {
+    internalState = ts;
+  }
+
+  private TromboneStateActor.TromboneState currentState() {
+    return internalState;
+  }
 
   public TromboneCommandHandler(AssemblyContext ac, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> allEventPublisher) {
     this.ac = ac;
@@ -82,7 +92,7 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
   }
 
   private PartialFunction<Object, BoxedUnit> noFollowReceive() {
-    return ReceiveBuilder.
+    return stateReceive().orElse(ReceiveBuilder.
       match(ExecuteOne.class, t -> {
         SetupConfig sc = t.sc();
         Optional<ActorRef> commandOriginator = toJava(t.commandOriginator());
@@ -148,9 +158,8 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
               configKey.prefix() + " in the current state.")), self()));
         }
       }).
-      match(TromboneStateActor.TromboneState.class, this::stateReceive).
       matchAny(t -> log.warning("TromboneCommandHandler2:noFollowReceive received an unknown message: " + t)).
-      build();
+      build());
   }
 
   private void lookatLocations(Location location) {
@@ -174,7 +183,7 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
   }
 
   private PartialFunction<Object, BoxedUnit> followReceive(ActorRef followActor) {
-    return ReceiveBuilder.
+    return stateReceive().orElse(ReceiveBuilder.
       match(ExecuteOne.class, t -> {
         SetupConfig sc = t.sc();
         Optional<ActorRef> commandOriginator = toJava(t.commandOriginator());
@@ -209,13 +218,13 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
           commandOriginator.ifPresent(actorRef -> actorRef.tell(Completed, self()));
         }
       }).
-      build();
+      build());
   }
 
   private PartialFunction<Object, BoxedUnit> actorExecutingReceive(ActorRef currentCommand, Optional<ActorRef> commandOriginator) {
     Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
 
-    return ReceiveBuilder.
+    return stateReceive().orElse(ReceiveBuilder.
       matchEquals(JSequentialExecution.CommandStart(), t -> {
 
         // Execute the command actor asynchronously, pass the command status back, kill the actor and go back to waiting
@@ -239,7 +248,7 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
         closeDownMotionCommand(currentCommand, commandOriginator);
       }).
       matchAny(t -> log.warning("TromboneCommandHandler2:actorExecutingReceive received an unknown message: " + t)).
-      build();
+      build());
   }
 
   private void closeDownMotionCommand(ActorRef currentCommand, Optional<ActorRef> commandOriginator) {
@@ -267,7 +276,7 @@ class TromboneCommandHandler extends TromboneStateClient implements ILocationSub
 
     ActorRef matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout));
 
-    ask(matcher, StartMatch.create(stateMatcher), timeout).
+    ask(matcher, MultiStateMatcherActor.StartMatch.create(stateMatcher), timeout).
       thenApply(reply -> {
         CommandStatus2 cmdStatus = (CommandStatus2) reply;
         codeBlock.accept(cmdStatus);

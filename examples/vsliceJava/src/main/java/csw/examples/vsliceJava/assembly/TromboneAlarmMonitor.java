@@ -141,7 +141,7 @@ public class TromboneAlarmMonitor extends AbstractActor {
    * @param severity the severity that is used to set the lowLimitAlarm
    */
   private void sendLowLimitAlarm(IAlarmService alarmService, AlarmModel.SeverityLevel severity) {
-    alarmService.setSeverity(lowLimitAlarm, severity, false).exceptionally(ex -> {
+    alarmService.setSeverity(lowLimitAlarm, severity).exceptionally(ex -> {
       log.error("TromboneAlarmMonitor failed to set " + lowLimitAlarm + " to " + severity + ": " + ex);
       return null;
     }).thenAccept(t -> log.info("TromboneAlarmMonitor successfully posted: $severity to the low limit alarm"));
@@ -153,7 +153,7 @@ public class TromboneAlarmMonitor extends AbstractActor {
    * @param severity the severity that is used to set the highLimitAlarm
    */
   private void sendHighLimitAlarm(IAlarmService alarmService, AlarmModel.SeverityLevel severity) {
-    alarmService.setSeverity(highLimitAlarm, severity, false).exceptionally(ex -> {
+    alarmService.setSeverity(highLimitAlarm, severity).exceptionally(ex -> {
       log.error("TromboneAlarmMonitor failed to set " + highLimitAlarm + " to " + severity + ": " + ex);
       return null;
     }).thenAccept(t -> log.info("TromboneAlarmMonitor successfully posted: $severity to the low limit alarm"));

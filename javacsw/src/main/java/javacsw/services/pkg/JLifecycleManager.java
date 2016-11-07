@@ -18,7 +18,6 @@ public class JLifecycleManager {
     public static LifecycleCommand LifecycleFailure(LifecycleState state, String reason) {
         return LifecycleFailure$.MODULE$.apply(state, reason);
     }
-
 }
 
 //

@@ -148,6 +148,13 @@ object Component {
     context.actorOf(props, s"${cinfo.componentName}-${cinfo.componentType}")
   }
 
+  /**
+   * Creates a component from the given componentInfo
+   * @param context the actor context
+   * @param componentInfo describes the component
+   * @param supervisorIn optional supervisor actor to use instead of the default
+   * @return the component's supervisor
+   */
   def create(context: ActorContext, componentInfo: ComponentInfo, supervisorIn: Option[ActorRef] = None): ActorRef = componentInfo match {
     case hcd: HcdInfo =>
       createHCD(context, hcd, supervisorIn)
@@ -160,6 +167,13 @@ object Component {
   // This is for JComponent create
   import scala.compat.java8.OptionConverters._
 
+  /**
+   * Java API to create a component from the given componentInfo
+   * @param context the actor context
+   * @param componentInfo describes the component
+   * @param supervisorIn optional supervisor actor to use instead of the default
+   * @return the component's supervisor
+   */
   def create(context: ActorContext, componentInfo: ComponentInfo, supervisorIn: Optional[ActorRef]): ActorRef = create(context, componentInfo, supervisorIn.asScala)
 }
 

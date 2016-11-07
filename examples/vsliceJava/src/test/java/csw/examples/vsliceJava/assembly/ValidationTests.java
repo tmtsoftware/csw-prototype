@@ -6,13 +6,16 @@
 //import csw.util.config.Configurations.SetupConfig
 //import csw.util.config.UnitsOfMeasure.kilometers
 //import csw.util.config.{Configurations, DoubleKey}
+//import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
 //
 ///**
 // * TMT Source Code: 8/25/16.
 // */
 //class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
+//  import ConfigValidation._
 //
 //  implicit val ac = AssemblyTestData.TestAssemblyContext
+//  import ac._
 //
 //  def checkInvalid(result: Validation): Invalid = {
 //    result shouldBe a[Invalid]

@@ -5,7 +5,6 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.ts.AbstractTimeServiceScheduler;
-import csw.util.config.JavaHelpers;
 import csw.util.config.StateVariable.CurrentState;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
@@ -42,20 +41,18 @@ import static javacsw.util.config.JItems.jitem;
  * This shows how to use the TimeService to send periodic messages and how to periodically call another actor and process its
  * response.
  */
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 public class DiagPublisher extends AbstractTimeServiceScheduler {
 
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final ActorRef currentStateReceiver;
-  private final Optional<ActorRef> tromboneHCDIn;
   private final Optional<ActorRef> eventPublisher;
 
   private DiagPublisher(ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
 //      getContext().setReceiveTimeout(timeout);
 
     this.currentStateReceiver = currentStateReceiver;
-    this.tromboneHCDIn = tromboneHCDIn;
     this.eventPublisher = eventPublisher;
 
     currentStateReceiver.tell(JPublisherActor.Subscribe, self());
@@ -80,7 +77,8 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
    * @param tromboneHCD         the trombone HCD ActorRef as an Option
    * @return Receive partial function
    */
-  PartialFunction<Object, BoxedUnit> operationsReceive(ActorRef currentStateReceive, int stateMessageCounter, Optional<ActorRef> tromboneHCD) {
+  private PartialFunction<Object, BoxedUnit> operationsReceive(ActorRef currentStateReceive, int stateMessageCounter, Optional<ActorRef> tromboneHCD) {
+    //noinspection CodeBlock2Expr
     return ReceiveBuilder.
       match(CurrentState.class, cs -> {
         if (cs.configKey().equals(TromboneHCD.axisStateCK)) {
@@ -102,8 +100,8 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
         Cancellable cancelToken = scheduleOnce(localTimeNow().plusSeconds(diagnosticAxisStatsPeriod), self(), new TimeForAxisStats(diagnosticAxisStatsPeriod));
         context().become(diagnosticReceive(currentStateReceive, stateMessageCounter, tromboneHCD, cancelToken));
       }).
-      match(UpdateTromboneHCD.class, t -> {
-        context().become(operationsReceive(currentStateReceiver, stateMessageCounter, t.tromboneHCDUpdate));
+      match(TromboneAssembly.UpdateTromboneHCD.class, t -> {
+        context().become(operationsReceive(currentStateReceiver, stateMessageCounter, t.tromboneHCD));
       }).
       matchAny(t -> log.warning("DiagPublisher:operationsReceive received an unexpected message: " + t)).
       build();
@@ -118,8 +116,8 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
    * @param cancelToken         a token that allows the current timer to be cancelled
    * @return Receive partial function
    */
-  PartialFunction<Object, BoxedUnit> diagnosticReceive(ActorRef currentStateReceive, int stateMessageCounter,
-                                                       Optional<ActorRef> tromboneHCD, Cancellable cancelToken) {
+  private PartialFunction<Object, BoxedUnit> diagnosticReceive(ActorRef currentStateReceive, int stateMessageCounter,
+                                                               Optional<ActorRef> tromboneHCD, Cancellable cancelToken) {
     return ReceiveBuilder.
       match(CurrentState.class, cs -> {
         if (cs.configKey().equals(TromboneHCD.axisStateCK)) {
@@ -146,9 +144,9 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
         cancelToken.cancel();
         context().become(operationsReceive(currentStateReceive, stateMessageCounter, tromboneHCD));
       }).
-      match(UpdateTromboneHCD.class, t -> {
+      match(TromboneAssembly.UpdateTromboneHCD.class, t -> {
         // The actor ref of the trombone HCD has changed
-        context().become(diagnosticReceive(currentStateReceiver, stateMessageCounter, t.tromboneHCDUpdate, cancelToken));
+        context().become(diagnosticReceive(currentStateReceiver, stateMessageCounter, t.tromboneHCD, cancelToken));
       }).
       matchAny(t -> log.warning("DiagPublisher:diagnosticReceive received an unexpected message: " + t)).
       build();
@@ -195,9 +193,11 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
   /**
    * Base class for actor messages received
    */
+  @SuppressWarnings("WeakerAccess")
   public interface DiagPublisherMessages {
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static class TimeForAxisStats implements DiagPublisherMessages {
     public final int periodInSeconds;
 
@@ -206,9 +206,11 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
     }
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static class DiagnosticState implements DiagPublisherMessages {
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static class OperationsState implements DiagPublisherMessages {
   }
 

@@ -1,8 +1,12 @@
 package csw.services.ccs
 
+import java.util.Optional
+
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.ccs.CommandStatus2._
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
+
+import scala.compat.java8.OptionConverters._
 
 /**
  * TMT Source Code: 9/6/16.
@@ -92,6 +96,9 @@ object SequentialExecution {
   object SequentialExecutor {
 
     def props(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): Props = Props(classOf[SequentialExecutor], sca, commandOriginator)
+
+    // Java API
+    def props(sca: SetupConfigArg, commandOriginator: Optional[ActorRef]): Props = Props(classOf[SequentialExecutor], sca, commandOriginator.asScala)
 
     sealed trait SequenceExecutorMessages
     case class StartTheSequence(commandProcessor: ActorRef) extends SequenceExecutorMessages

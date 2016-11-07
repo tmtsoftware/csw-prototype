@@ -1,10 +1,16 @@
 //package csw.examples.vsliceJava.assembly
 //
-//import akka.actor.{ActorRef, ActorSystem, Props}
+//import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 //import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+//import akka.util.Timeout
 //import com.typesafe.scalalogging.slf4j.LazyLogging
+//import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
+//import csw.examples.vslice.assembly.TromboneControl.GoToStagePosition
+//import csw.examples.vslice.assembly.TrombonePublisher.{AOESWUpdate, EngrUpdate}
+//import csw.examples.vslice.hcd.TromboneHCD
+//import csw.examples.vslice.hcd.TromboneHCD._
 //import csw.services.ccs.HcdController._
-//import csw.services.events.{Event, EventService, EventServiceSettings, EventSubscriber}
+//import csw.services.events._
 //import csw.services.loc.ConnectionType.AkkaType
 //import csw.services.loc.LocationService
 //import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
@@ -15,40 +21,21 @@
 //import csw.util.config.Events.{EventTime, StatusEvent, SystemEvent}
 //import csw.util.config.StateVariable.CurrentState
 //import csw.util.config.UnitsOfMeasure.{degrees, kilometers, micrometers, millimeters}
+//import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 //
+//import scala.concurrent.Await
 //import scala.concurrent.duration._
+//import scala.util.Try
 //
 //object FollowActorTests {
 //  LocationService.initInterface()
 //  val system = ActorSystem("FollowActorTests")
-//}
-//
-///**
-// * TMT Source Code: 8/12/16.
-// */
-//class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
-//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
-//
-//  //import TromboneAssembly._
-//
-//  override def afterAll(): Unit = { TestKit.shutdownActorSystem(system) }
-//
-//  val assemblyContext = AssemblyTestData.TestAssemblyContext
-//  val calculationConfig = assemblyContext.calculationConfig
-//  val controlConfig = assemblyContext.controlConfig
-//
-//  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
 //
 //  val initialElevation = 90.0
 //
-//  def newFollower(usingNSS: BooleanItem, tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
-//    val props = FollowActor.props(assemblyContext, usingNSS, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
-//    TestActorRef(props)
-//  }
-//
 //  // Test subscriber actor for telemetry
 //  object TestSubscriber {
-//    def props(prefix: String): Props = Props(new TestSubscriber(prefix))
+//    def props(): Props = Props(new TestSubscriber())
 //
 //    case object GetResults
 //
@@ -56,13 +43,10 @@
 //
 //  }
 //
-//  class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
+//  class TestSubscriber extends Actor with ActorLogging {
 //    import TestSubscriber._
 //
 //    var msgs = Vector.empty[Event]
-//
-//    subscribe(prefix)
-//    log.info(s"Test subscriber for prefix: $prefix")
 //
 //    def receive: Receive = {
 //      case event: SystemEvent =>
@@ -75,6 +59,56 @@
 //      case GetResults => sender() ! Results(msgs)
 //    }
 //  }
+//}
+//
+///**
+// * TMT Source Code: 8/12/16.
+// */
+//class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
+//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+//
+//  import FollowActorTests._
+//  import system.dispatcher
+//
+//  implicit val timeout = Timeout(10.seconds)
+//
+//  // Used to start and stop the event service Redis instance used for the test
+//  //  var eventAdmin: EventServiceAdmin = _
+//
+//  // Get the event service by looking up the name with the location service.
+//  var eventService = Await.result(EventService(), timeout.duration)
+//
+//  override def beforeAll() = {
+//    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
+//    // Start redis and register it with the location service on a random free port.
+//    // The following is the equivalent of running this from the command line:
+//    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
+//    //    EventServiceAdmin.startEventService()
+//
+//    // Get the event service by looking it up the name with the location service.
+//    //    eventService = Await.result(EventService(), timeout.duration)
+//
+//    // This is only used to stop the Redis instance that was started for this test
+//    //    eventAdmin = EventServiceAdmin(eventService)
+//  }
+//
+//  override protected def afterAll(): Unit = {
+//    // Shutdown Redis (Only do this in tests that also started the server)
+//    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+//    TestKit.shutdownActorSystem(system)
+//  }
+//
+//  val assemblyContext = AssemblyTestData.TestAssemblyContext
+//  val calculationConfig = assemblyContext.calculationConfig
+//  val controlConfig = assemblyContext.controlConfig
+//  import assemblyContext._
+//
+//  def newFollower(usingNSS: BooleanItem, tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
+//    // Used for creating followers
+//    val initialElevation = iElevation(assemblyContext.calculationConfig.defaultInitialElevation)
+//    val props = FollowActor.props(assemblyContext, initialElevation, usingNSS, Some(tromboneControl), Some(aoPublisher), Some(engPublisher))
+//    TestActorRef(props)
+//  }
 //
 //  describe("Basic tests for connectivity") {
 //    val fakeTC = TestProbe()
@@ -84,7 +118,7 @@
 //    it("should allow creation with defaults") {
 //      val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 //
-//      cal.underlyingActor.initialElevation should be(iel(calculationConfig.defaultInitialElevation))
+//      cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
 //
 //      fakeTC.expectNoMsg(1.seconds)
 //    }
@@ -98,7 +132,7 @@
 //    it("should be default before") {
 //      val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 //
-//      cal.underlyingActor.initialElevation should be(iel(calculationConfig.defaultInitialElevation))
+//      cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
 //    }
 //
 //    /*
@@ -175,6 +209,7 @@
 //   */
 //  describe("Test for reasonable results when setNssInUse(false)") {
 //    import AssemblyTestData._
+//    import Algorithms._
 //
 //    val fakeTC = TestProbe()
 //    val fakePub = TestProbe()
@@ -266,9 +301,9 @@
 //     */
 //    def expectMoveMsgsWithDest(tp: TestProbe, dest: Int): Seq[CurrentState] = {
 //      val msgs = tp.receiveWhile(5.seconds) {
-//        case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
+//        case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
 //        // This is present to pick up the first status message
-//        case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+//        case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
 //      }
 //      val fmsg1 = tp.expectMsgClass(classOf[CurrentState]) // last one with current == target
 //      val fmsg2 = tp.expectMsgClass(classOf[CurrentState]) // the the end event with IDLE
@@ -302,7 +337,7 @@
 //
 //      // Ignoring the messages for TrombonePosition
 //      // Create the trombone publisher for publishing SystemEvents to AOESW
-//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings)))
+//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
 //
 //      // Ignoring the messages for AO for the moment
 //      // Create the trombone publisher for publishing SystemEvents to AOESW
@@ -315,19 +350,21 @@
 //      val followActor = newFollower(nssUsage, tromboneControl, publisherActorRef, publisherActorRef)
 //
 //      // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), Some(testEventServiceSettings)))
+//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), Some(eventService)))
 //
 //      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
-//      val tcsRtc = EventService(testEventServiceSettings)
+//      val tcsRtc = Some(eventService)
 //
 //      val testFE = 20.0
 //      // Publish a single focus error. This will generate a published event
-//      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
+//      tcsRtc.foreach(_.publish(SystemEvent(focusErrorPrefix).add(fe(testFE))))
 //
 //      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-//      val resultSubscriber1 = TestActorRef(TestSubscriber.props(aoSystemEventPrefix))
+//      val resultSubscriber1 = system.actorOf(TestSubscriber.props())
+//      eventService.subscribe(resultSubscriber1, postLastEvents = false, aoSystemEventPrefix)
 //
-//      val resultSubscriber2 = TestActorRef(TestSubscriber.props(engStatusEventPrefix))
+//      val resultSubscriber2 = system.actorOf(TestSubscriber.props())
+//      eventService.subscribe(resultSubscriber2, postLastEvents = false, engStatusEventPrefix)
 //
 //      // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
 //      val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
@@ -337,7 +374,7 @@
 //      // This should result in the length of tcsEvents being published, which is 15
 //      tcsEvents.foreach { f =>
 //        logger.info("Publish: " + f)
-//        tcsRtc.publish(f)
+//        tcsRtc.foreach(_.publish(f))
 //        // The following is not required, but is added to make the event timing more interesting
 //        // Varying this delay from 50 to 10 shows completion of moves and at 10 update of move positions before finishing
 //        Thread.sleep(500) // 500 makes it seem more interesting to watch, but is not needed for proper operation
