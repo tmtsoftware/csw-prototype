@@ -109,9 +109,10 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
           implicit val timeout = Timeout(10.seconds)
           log.info(s"Assembly received AS connection: $t")
           // Setting var here!
-          alarmService = Some(Await.result(AlarmService.get(t.host, t.port), timeout.duration))
-          log.info(s"Event Service at: $alarmService")
+          alarmService = Some(AlarmService.get(t.host, t.port))
+          log.info(s"Alarm Service at: $alarmService")
         }
+
       case u: Unresolved =>
         log.info(s"Unresolved: ${u.connection}")
         //if (u.connection == EventService.eventServiceConnection()) eventService = badEventService
