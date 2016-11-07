@@ -11,7 +11,7 @@ import csw.services.loc.LocationService.ResolvedTcpLocation
 import org.slf4j.LoggerFactory
 import redis._
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 
 /**
  * Static definitions for the Alarm Service
@@ -88,15 +88,15 @@ object AlarmService {
    * @param autoRefresh  if true, keep refreshing the severity of alarms after setSeverity is called (using the AlarmRefreshActor)
    * @return a new AlarmService instance
    */
-  def get(host: String = "127.0.0.1", port: Int = 6379, autoRefresh: Boolean = false)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
-    import system.dispatcher
+  def get(host: String = "127.0.0.1", port: Int = 6379, autoRefresh: Boolean = false)(implicit system: ActorRefFactory, timeout: Timeout): AlarmService = {
     val redisClient = RedisClient(host, port)
-    for {
-      ok <- redisClient.configSet("notify-keyspace-events", "KEA")
-    } yield {
+    try {
+      val ok = Await.result(redisClient.configSet("notify-keyspace-events", "KEA"), timeout.duration)
       if (!ok) logger.error("redis configSet notify-keyspace-events failed")
-      AlarmServiceImpl(redisClient, autoRefresh)
+    } catch {
+      case ex: Exception => logger.error("redis configSet notify-keyspace-events failed", ex)
     }
+    AlarmServiceImpl(redisClient, autoRefresh)
   }
 
   /**
@@ -156,10 +156,10 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, autoRefres
 
   // Alarm severity should be reset every refreshSecs seconds to avoid being expired (after three missed refreshes).
   // (Allow override with system property for testing)
-  val refreshSecs = Option(System.getProperty("csw.services.alarms.refreshSecs")).getOrElse(s"$defaultRefreshSecs").toInt
+  val refreshSecs: Int = Option(System.getProperty("csw.services.alarms.refreshSecs")).getOrElse(s"$defaultRefreshSecs").toInt
 
   // Actor used to keep refreshing the alarm severity
-  lazy val alarmRefreshActor = system.actorOf(AlarmRefreshActor.props(this, Map.empty[AlarmKey, SeverityLevel]))
+  lazy val alarmRefreshActor: ActorRef = system.actorOf(AlarmRefreshActor.props(this, Map.empty[AlarmKey, SeverityLevel]))
 
   def getAlarms(alarmKey: AlarmKey): Future[Seq[AlarmModel]] = {
     val pattern = alarmKey.key
