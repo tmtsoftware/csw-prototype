@@ -7,6 +7,8 @@ import akka.util.Timeout;
 import csw.services.events.EventService$;
 import csw.services.events.EventService.*;
 import csw.services.events.EventServiceSettings;
+import csw.services.loc.ComponentId;
+import csw.services.loc.Connection;
 import csw.util.config.Events.EventServiceEvent;
 import scala.Unit;
 
@@ -23,6 +25,21 @@ public interface IEventService {
    * The default name that the Event Service is registered with
    */
   String defaultName = EventService$.MODULE$.defaultName();
+
+  /**
+   * Returns the EventService ComponentId for the given, or default name
+   */
+  static ComponentId eventServiceComponentId(String name) {
+    return EventService$.MODULE$.eventServiceComponentId(name);
+  }
+
+  /**
+   * Returns the EventService connection for the given, or default name
+   */
+  static Connection.TcpConnection eventServiceConnection(String name) {
+    return EventService$.MODULE$.eventServiceConnection(name);
+  }
+
 
   /**
    * Publishes the value for the given key

@@ -12,7 +12,6 @@ import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 import csw.examples.vsliceJava.assembly.AssemblyContext.*;
 import csw.examples.vsliceJava.assembly.TrombonePublisher.*;
-import csw.examples.vsliceJava.assembly.TromboneControl.*;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -49,20 +48,12 @@ class FollowActor extends AbstractActor {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext ac;
-  private final DoubleItem initialElevation;
   private final BooleanItem inNSSMode;
   private final Optional<ActorRef> tromboneControl;
   private final Optional<ActorRef> aoPublisher;
   private final Optional<ActorRef> engPublisher;
 
   private final TromboneCalculationConfig calculationConfig;
-  private final TromboneControlConfig controlConfig;
-
-  // In this implementation, these vars are needed to support the setElevation and setAngle commands which require an update
-  private final DoubleItem initialFocusError;
-  private final DoubleItem initialZenithAngle;
-
-  private final DoubleItem nSSModeZenithAngle;
 
   /**
    * Constructor
@@ -76,20 +67,18 @@ class FollowActor extends AbstractActor {
   private FollowActor(AssemblyContext ac, DoubleItem initialElevation, BooleanItem inNSSMode, Optional<ActorRef> tromboneControl,
                      Optional<ActorRef> aoPublisher, Optional<ActorRef> engPublisher) {
     this.ac = ac;
-    this.initialElevation = initialElevation;
     this.inNSSMode = inNSSMode;
     this.tromboneControl = tromboneControl;
     this.aoPublisher = aoPublisher;
     this.engPublisher = engPublisher;
 
     calculationConfig = ac.calculationConfig;
-    controlConfig = ac.controlConfig;
 
-//    initialElevation = jset(ac.initialElevationKey, calculationConfig.defaultInitialElevation).withUnits(ac.initialElevationUnits);
-    initialFocusError = jset(ac.focusErrorKey).withUnits(ac.focusErrorUnits);
-    initialZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);
+    // In this implementation, these vars are needed to support the setElevation and setAngle commands which require an update
+    DoubleItem initialFocusError = jset(ac.focusErrorKey).withUnits(ac.focusErrorUnits);
+    DoubleItem initialZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);
 
-    nSSModeZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);
+//    DoubleItem nSSModeZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);
 
     // Initial receive - start with initial values
     getContext().become(followingReceive(initialElevation, initialFocusError, initialZenithAngle));
@@ -100,7 +89,7 @@ class FollowActor extends AbstractActor {
 
   }
 
-  PartialFunction<Object, BoxedUnit> followingReceive(DoubleItem cElevation, DoubleItem cFocusError, DoubleItem cZenithAngle) {
+  private PartialFunction<Object, BoxedUnit> followingReceive(DoubleItem cElevation, DoubleItem cFocusError, DoubleItem cZenithAngle) {
     return ReceiveBuilder.
       match(StopFollowing.class, t -> {
         // do nothing
@@ -209,6 +198,7 @@ class FollowActor extends AbstractActor {
    */
   interface FollowActorMessages {}
 
+  @SuppressWarnings("WeakerAccess")
   public static class UpdatedEventData implements FollowActorMessages {
     public final DoubleItem zenithAngle;
     public final DoubleItem focusError;
@@ -230,6 +220,7 @@ class FollowActor extends AbstractActor {
     }
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static class SetZenithAngle implements FollowActorMessages {
     public final DoubleItem zenithAngle;
 

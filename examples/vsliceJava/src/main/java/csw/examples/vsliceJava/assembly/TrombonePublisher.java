@@ -5,7 +5,6 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
-import csw.services.events.EventServiceSettings;
 import csw.services.loc.LocationService;
 import csw.util.config.*;
 import javacsw.services.events.IEventService;
@@ -106,11 +105,17 @@ public class TrombonePublisher extends TromboneStateHandler {
                                 BooleanItem inHighLimit, BooleanItem inHome) {
     StatusEvent ste = jadd(new StatusEvent(assemblyContext.axisStateEventPrefix), axisName, position, state, inLowLimit, inHighLimit, inHome);
     log.debug("Axis state publish of " + assemblyContext.axisStateEventPrefix + ": " + ste);
-    eventService.ifPresent(e -> e.publish(ste));
+    eventService.ifPresent(e -> {
+      try {
+        e.publish(ste).get(); // XXX Why wait here? (was in Scala version)
+      } catch (Exception e1) {
+        e1.printStackTrace();
+      }
+    });
   }
 
-  void publishAxisStats(Optional<IEventService> eventService, StringItem axisName, IntItem datumCount, IntItem moveCount, IntItem homeCount, IntItem limitCount,
-                        IntItem successCount, IntItem failureCount, IntItem cancelCount) {
+  private void publishAxisStats(Optional<IEventService> eventService, StringItem axisName, IntItem datumCount, IntItem moveCount, IntItem homeCount, IntItem limitCount,
+                                IntItem successCount, IntItem failureCount, IntItem cancelCount) {
     StatusEvent ste = jadd(new StatusEvent(assemblyContext.axisStatsEventPrefix), axisName, datumCount, moveCount, homeCount, limitCount,
         successCount, failureCount, cancelCount);
     log.debug("Axis stats publish of " + assemblyContext.axisStatsEventPrefix + ": " + ste);
@@ -133,6 +138,7 @@ public class TrombonePublisher extends TromboneStateHandler {
   /**
    * Used by actors wishing to cause an event for AO ESW
    */
+  @SuppressWarnings("WeakerAccess")
   public static class AOESWUpdate {
     public final DoubleItem naElevation;
     public final DoubleItem naRange;
@@ -151,6 +157,7 @@ public class TrombonePublisher extends TromboneStateHandler {
   /**
    * Used by actors wishing to cause an engineering event update
    */
+  @SuppressWarnings("WeakerAccess")
   public static class EngrUpdate {
     public final DoubleItem focusError;
     public final DoubleItem stagePosition;
@@ -169,6 +176,7 @@ public class TrombonePublisher extends TromboneStateHandler {
     }
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static class AxisStateUpdate {
     public final StringItem axisName;
     public final IntItem position;
@@ -188,6 +196,7 @@ public class TrombonePublisher extends TromboneStateHandler {
     }
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static class AxisStatsUpdate {
     public final StringItem axisName;
     public final IntItem initCount;

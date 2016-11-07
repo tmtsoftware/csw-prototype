@@ -18,7 +18,7 @@ import java.util.Set;
 /**
  * TMT Source Code: 8/24/16.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class ConfigValidation {
 
   /**

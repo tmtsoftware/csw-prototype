@@ -6,6 +6,7 @@
 //import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 //import com.typesafe.config.ConfigFactory
 //import com.typesafe.scalalogging.slf4j.LazyLogging
+//import csw.examples.vslice.hcd.TromboneHCD
 //import csw.services.ccs.AssemblyController2.Submit
 //import csw.services.ccs.CommandStatus2._
 //import csw.services.ccs.Validation.WrongInternalStateIssue
@@ -14,12 +15,15 @@
 //import csw.services.pkg.Component.{AssemblyInfo, HcdInfo, RegisterAndTrackServices}
 //import csw.services.pkg.Supervisor3
 //import csw.services.pkg.Supervisor3._
+//import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 //import csw.util.config.Configurations
 //import csw.util.config.Configurations.SetupConfig
+//import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 //
 //import scala.concurrent.duration._
 //
 //object TromboneAssemblyBasicTests {
+//  println("INITI")
 //  LocationService.initInterface()
 //
 //  val system = ActorSystem("TromboneAssemblyBasicTests")
@@ -48,6 +52,7 @@
 //  }
 //
 //  val assemblyContext = AssemblyTestData.TestAssemblyContext
+//  import assemblyContext._
 //
 //  def getTromboneProps(assemblyInfo: AssemblyInfo, supervisorIn: Option[ActorRef]): Props = {
 //    supervisorIn match {
@@ -121,7 +126,8 @@
 //
 //      //val fakeSupervisor = TestProbe()
 //      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
+//      val xx = fakeSupervisor.expectMsg(Started)
+//      logger.info("Got xx: " + xx)
 //      fakeSupervisor.expectNoMsg(200.milli)
 //      fakeSupervisor.send(tla, Running)
 //
@@ -138,6 +144,7 @@
 //      completeMsg.details.status(0) shouldBe Completed
 //      // Wait a bit to see if there is any spurious messages
 //      fakeClient.expectNoMsg(250.milli)
+//      logger.info("Completed: " + completeMsg)
 //    }
 //
 //    it("should show a move without a datum as an error because trombone in wrong state") {

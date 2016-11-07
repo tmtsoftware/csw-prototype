@@ -412,6 +412,7 @@ object Configurations {
    * @param info    contains the obsId, runId
    * @param configs one or more SetupConfigs
    */
+  @varargs
   final case class SetupConfigArg(info: ConfigInfo, configs: SetupConfig*) extends SequenceConfigArg with ControlConfigArg {
     /**
      * Java API: Returns the list of configs

@@ -10,9 +10,6 @@ import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.HcdController;
-import csw.services.ccs.StateMatchers;
-import csw.services.ccs.Validation;
-import csw.util.config.Configurations;
 import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.DoubleItem;
 import csw.util.config.JavaHelpers;
@@ -22,7 +19,6 @@ import csw.examples.vsliceJava.assembly.TromboneStateActor.SetState;
 import csw.services.ccs.CommandStatus2.NoLongerValid;
 import csw.services.ccs.Validation.WrongInternalStateIssue;
 import csw.services.ccs.StateMatchers.DemandMatcher;
-import javacsw.util.config.JUnitsOfMeasure;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -48,17 +44,9 @@ import static javacsw.util.config.JUnitsOfMeasure.encoder;
 public class SetElevationCommand extends AbstractActor {
 
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-  private final AssemblyContext ac;
-  private final SetupConfig sc;
-  private final ActorRef tromboneHCD;
-  private final TromboneState startState;
   private final Optional<ActorRef> stateActor;
 
   private SetElevationCommand(AssemblyContext ac, SetupConfig sc, ActorRef tromboneHCD, TromboneState startState, Optional<ActorRef> stateActor) {
-    this.ac = ac;
-    this.sc = sc;
-    this.tromboneHCD = tromboneHCD;
-    this.startState = startState;
     this.stateActor = stateActor;
 
     // Not using stateReceive since no state updates are needed here only writes
@@ -77,7 +65,7 @@ public class SetElevationCommand extends AbstractActor {
           double stagePosition = Algorithms.rangeDistanceToStagePosition(jvalue(elevationItem));
           int encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, stagePosition);
 
-          log.info("Using elevation as rangeDistance: " + jvalue(elevationItem) + " to get stagePosition: " + stagePosition " + to encoder: " + encoderPosition);
+          log.info("Using elevation as rangeDistance: " + jvalue(elevationItem) + " to get stagePosition: " + stagePosition + " to encoder: " + encoderPosition);
 
           DemandMatcher stateMatcher = TromboneCommandHandler.posMatcher(encoderPosition);
           // Position key is encoder units

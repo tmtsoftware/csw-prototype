@@ -2,6 +2,7 @@ package csw.examples.vsliceJava.assembly;
 
 
 import akka.actor.AbstractActor;
+import akka.actor.Actor;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -17,7 +18,7 @@ import static javacsw.util.config.JItems.jvalue;
 /**
  * Note that this state actor is not a listener for events. Only the client listens.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class TromboneStateActor extends AbstractActor {
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
@@ -48,33 +49,38 @@ public class TromboneStateActor extends AbstractActor {
 
   // --- static data ---
 
-  @SuppressWarnings("unused")
-  public static abstract class TromboneStateClient extends AbstractActor {
+  @SuppressWarnings({"unused", "WeakerAccess"})
+  public interface TromboneStateClient extends Actor {
 
-    private TromboneState internalState = defaultTromboneState;
+//    private TromboneState internalState = defaultTromboneState;
 
-    public TromboneStateClient() {
-      // This actor subscribes to TromboneState using the EventBus
-      context().system().eventStream().subscribe(self(), TromboneState.class);
-    }
-
-    protected PartialFunction<Object, BoxedUnit> stateReceive(TromboneState currentState) {
-      return ReceiveBuilder.
-        match(TromboneState.class, ts -> {
-          if (ts != currentState) {
-            internalState = ts;
-          }
-        }).
-        build();
-    }
+//    public TromboneStateClient() {
+//      // This actor subscribes to TromboneState using the EventBus
+//      context().system().eventStream().subscribe(self(), TromboneState.class);
+//    }
 
     /**
-     * The currentState as a TromonbeState is returned.
-     *
-     * @return TromboneState current state
+     * Sets the current trombone state.
+     * (Note: Since Java interfaces can't have non-static local variables, this needs to be defined in the implementing class.)
      */
-    public TromboneState currentState() {
-      return internalState;
+    void setCurrentState(TromboneState ts);
+
+//    /**
+//     * The currentState as a TromonbeState is returned.
+//     *
+//     * @return TromboneState current state
+//     */
+//    public TromboneState currentState() {
+//      return internalState;
+//    }
+
+    default PartialFunction<Object, BoxedUnit> stateReceive() {
+      return ReceiveBuilder.
+        match(TromboneState.class, ts -> {
+          System.out.println("Got state: " + ts);
+          setCurrentState(ts);
+        }).
+        build();
     }
   }
 

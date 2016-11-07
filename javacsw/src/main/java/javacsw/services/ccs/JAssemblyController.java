@@ -16,21 +16,6 @@ import scala.runtime.BoxedUnit;
 @SuppressWarnings("unused")
 abstract public class JAssemblyController extends AbstractAssemblyController {
 
-//    /**
-//     * Indicates a valid config (Invalid is a class that takes a reason argument)
-//     */
-//    public static final Validation Valid = Valid$.MODULE$;
-//
-//    /**
-//     * Indicates an invalid config
-//     *
-//     * @param reason a description of why the config is invalid
-//     * @return the Invalid object
-//     */
-//    public static Validation Invalid(String reason) {
-//        return new Invalid(reason);
-//    }
-
     /**
      * A request to the implementing actor to publish the current state value
      * by calling notifySubscribers().

@@ -33,7 +33,6 @@ class TromboneControl extends AbstractActor {
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext ac;
-  private final Optional<ActorRef> tromboneHCDIn;
 
   /**
    * Constructor
@@ -43,7 +42,6 @@ class TromboneControl extends AbstractActor {
    */
   private TromboneControl(AssemblyContext ac, Optional<ActorRef> tromboneHCDIn) {
     this.ac = ac;
-    this.tromboneHCDIn = tromboneHCDIn;
 
 //    receive(ReceiveBuilder.
 //      matchAny(t -> log.warning("Unknown message received: " + t)).
@@ -51,11 +49,9 @@ class TromboneControl extends AbstractActor {
 
     // Initial receive - start with initial values
     getContext().become(controlReceive(tromboneHCDIn));
-
-
   }
 
-  PartialFunction<Object, BoxedUnit> controlReceive(Optional<ActorRef> tromboneHCD) {
+  private PartialFunction<Object, BoxedUnit> controlReceive(Optional<ActorRef> tromboneHCD) {
     return ReceiveBuilder.
       match(GoToStagePosition.class, t -> {
         DoubleItem newPosition = t.stagePosition;
@@ -73,9 +69,7 @@ class TromboneControl extends AbstractActor {
         // Send command to HCD here
         tromboneHCD.ifPresent(actorRef -> actorRef.tell(new Submit(TromboneHCD.positionSC(encoderPosition)), self()));
       }).
-      match(UpdateTromboneHCD.class, t -> {
-        context().become(controlReceive(t.tromboneHCD));
-      }).
+      match(TromboneAssembly.UpdateTromboneHCD.class, t -> context().become(controlReceive(t.tromboneHCD))).
       matchAny(t -> log.warning("Unexpected message received in TromboneControl:controlReceive: " + t)).
       build();
   }
@@ -95,10 +89,10 @@ class TromboneControl extends AbstractActor {
   }
 
   // Used to send a position that requries transformaton from
-  public static class GoToStagePosition {
-    public final DoubleItem stagePosition;
+  static class GoToStagePosition {
+    final DoubleItem stagePosition;
 
-    public GoToStagePosition(DoubleItem stagePosition) {
+    GoToStagePosition(DoubleItem stagePosition) {
       this.stagePosition = stagePosition;
     }
   }

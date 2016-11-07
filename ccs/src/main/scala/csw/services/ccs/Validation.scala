@@ -1,4 +1,5 @@
 package csw.services.ccs
+import scala.collection.JavaConverters._
 
 /**
  * TMT Source Code: 8/25/16.
@@ -56,7 +57,14 @@ object Validation {
    * @param validations a ValidationList from validation of a list of configurations
    * @return True if all validations are Valid, else false
    */
-  def isAllValid(validations: ValidationList): Boolean = validations.filter(_ != Validation.Valid).isEmpty
+  def isAllValid(validations: ValidationList): Boolean = !validations.exists(_ != Validation.Valid)
+
+  /**
+   * Test that all validations in a list of Validation are Valid
+   * @param validations a ValidationList from validation of a list of configurations
+   * @return True if all validations are Valid, else false
+   */
+  def isAllValid(validations: java.util.List[Validation]): Boolean = !validations.asScala.exists(_ != Validation.Valid)
 
   /**
    * Base trait for the results of validating incoming configs

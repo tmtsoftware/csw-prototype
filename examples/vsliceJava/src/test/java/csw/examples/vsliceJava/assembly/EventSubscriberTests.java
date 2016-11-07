@@ -2,11 +2,18 @@
 //
 //import akka.actor.{ActorRef, ActorSystem}
 //import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-//import csw.services.events.{EventService, EventServiceSettings}
+//import akka.util.Timeout
+//import com.typesafe.scalalogging.slf4j.LazyLogging
+//import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData}
+//import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
+//import csw.services.events.EventService
 //import csw.services.loc.LocationService
+//import csw.services.loc.LocationService.ResolvedTcpLocation
 //import csw.util.config.BooleanItem
 //import csw.util.config.Events.SystemEvent
+//import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 //
+//import scala.concurrent.Await
 //import scala.concurrent.duration._
 //
 //object EventSubscriberTests {
@@ -18,23 +25,46 @@
 // * TMT Source Code: 9/17/16.
 // */
 //class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with ImplicitSender
-//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 //
-//  override def afterAll = {
+//  implicit val timeout = Timeout(10.seconds)
+//
+//  // Used to start and stop the event service Redis instance used for the test
+//  //  var eventAdmin: EventServiceAdmin = _
+//
+//  // Get the event service by looking up the name with the location service.
+//  val eventService = Await.result(EventService(), timeout.duration)
+//
+//  override def beforeAll() = {
+//    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
+//    // Start redis and register it with the location service on a random free port.
+//    // The following is the equivalent of running this from the command line:
+//    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
+//    //    EventServiceAdmin.startEventService()
+//
+//    // Get the event service by looking it up the name with the location service.
+//    //    eventService = Await.result(EventService(), timeout.duration)
+//
+//    // This is only used to stop the Redis instance that was started for this test
+//    //    eventAdmin = EventServiceAdmin(eventService)
+//  }
+//
+//  override protected def afterAll(): Unit = {
+//    // Shutdown Redis (Only do this in tests that also started the server)
+//    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
 //    TestKit.shutdownActorSystem(system)
 //  }
 //
 //  val assemblyContext = AssemblyTestData.TestAssemblyContext
+//  import assemblyContext._
 //
-//  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
-//
-//  def newTestEventSubscriber(nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings] = Some(testEventServiceSettings)): TestActorRef[TromboneEventSubscriber] = {
-//    val props = TromboneEventSubscriber.props(assemblyContext, nssInUseIn, followActor, eventServiceSettings)
+//  def newTestEventSubscriber(nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]): TestActorRef[TromboneEventSubscriber] = {
+//    val props = TromboneEventSubscriber.props(assemblyContext, nssInUseIn, followActor, eventService)
 //    TestActorRef(props)
 //  }
 //
-//  def newEventSubscriber(nssInUse: BooleanItem, followActor: Option[ActorRef], eventServiceSettings: Option[EventServiceSettings] = Some(testEventServiceSettings)): ActorRef = {
-//    val props = TromboneEventSubscriber.props(assemblyContext, nssInUse, followActor, eventServiceSettings)
+//  def newEventSubscriber(nssInUse: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]): ActorRef = {
+//    val props = TromboneEventSubscriber.props(assemblyContext, nssInUse, followActor, eventService)
 //    system.actorOf(props)
 //  }
 //
@@ -43,7 +73,7 @@
 //    it("should be created with no issues") {
 //      val fakeFollowActor = TestProbe()
 //
-//      val es = newTestEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref))
+//      val es = newTestEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
 //
 //      es.underlyingActor.nssZenithAngle should equal(za(0.0))
 //      es.underlyingActor.initialFocusError should equal(fe(0.0))
@@ -61,16 +91,19 @@
 //    it("should make one event for an fe publish nssInUse") {
 //      val fakeFollowActor = TestProbe()
 //
-//      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref))
+//      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), Some(eventService))
+//      // This injects the event service location
+//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+//      es ! evLocation
 //
 //      // first test that events are created for published focus error events
 //      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = EventService(testEventServiceSettings)
+//      val tcsRtc = eventService
 //
 //      // Default ZA is 0.0
 //      val testFE = 10.0
 //      // Publish a single focus error. This will generate a published event
-//      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
+//      Await.ready(tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE))), 2.seconds)
 //
 //      val msg = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
 //
@@ -82,17 +115,18 @@
 //
 //      // No more messages please
 //      fakeFollowActor.expectNoMsg(100.milli)
-//
 //    }
 //
 //    it("should make several events for an fe list publish with nssInUse but no ZA") {
 //      val fakeFollowActor = TestProbe()
 //
-//      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref))
+//      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), Some(eventService))
+//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+//      es ! evLocation
 //
 //      // first test that events are created for published focus error events
 //      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = EventService(testEventServiceSettings)
+//      val tcsRtc = eventService
 //
 //      // Publish a single focus error. This will generate a published event
 //      val feEvents = testFocusErrors.map(f => SystemEvent(focusErrorPrefix).add(fe(f)))
@@ -120,11 +154,13 @@
 //    it("now enable follow should make several events for za and fe list publish nssNotInUse") {
 //      val fakeFollowActor = TestProbe()
 //
-//      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref))
+//      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
+//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+//      es ! evLocation
 //
 //      // first test that events are created for published focus error events
 //      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = EventService(testEventServiceSettings)
+//      val tcsRtc = eventService
 //
 //      // Publish a single focus error. This will generate a published event
 //      val feEvents = testFocusErrors.map(f => SystemEvent(focusErrorPrefix).add(fe(f)))
@@ -173,11 +209,13 @@
 //      val fakeFollowActor = TestProbe()
 //
 //      // Create with nssNotInuse so we get za events
-//      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref))
+//      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
+//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+//      es ! evLocation
 //
 //      // first test that events are created for published focus error events
 //      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = EventService(testEventServiceSettings)
+//      val tcsRtc = eventService
 //
 //      // Publish a single focus error. This will generate a published event
 //      val feEvents = testFocusErrors.map(f => SystemEvent(focusErrorPrefix).add(fe(f)))

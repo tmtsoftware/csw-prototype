@@ -11,7 +11,6 @@ import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.HcdController;
 import csw.services.ccs.Validation;
-import csw.util.config.Configurations;
 import csw.util.config.Configurations.SetupConfig;
 import javacsw.services.ccs.JSequentialExecution;
 import csw.examples.vsliceJava.assembly.TromboneStateActor.TromboneState;
@@ -29,18 +28,12 @@ import static javacsw.services.ccs.JCommandStatus2.Completed;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class DatumCommand extends AbstractActor {
 
-  private static final String prefix = "NFIRAOS.cc.lgsTrombone";
+//  private static final String prefix = "NFIRAOS.cc.lgsTrombone";
 
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-  private final SetupConfig sc;
-  private final ActorRef tromboneHCD;
-  private final TromboneState startState;
   private final Optional<ActorRef> stateActor;
 
   private DatumCommand(SetupConfig sc, ActorRef tromboneHCD, TromboneState startState, Optional<ActorRef> stateActor) {
-    this.sc = sc;
-    this.tromboneHCD = tromboneHCD;
-    this.startState = startState;
     this.stateActor = stateActor;
 
     // Not using stateReceive since no state updates are needed here only writes

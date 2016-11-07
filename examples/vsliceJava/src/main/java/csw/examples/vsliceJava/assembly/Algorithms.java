@@ -18,7 +18,7 @@ import static javacsw.util.config.JItems.jvalue;
  * a good strategy.  Then they are called from the FollowActor and other places. The method names are
  * representative of their function: rangeDistanceToElevation for instance.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class Algorithms {
 
   /**

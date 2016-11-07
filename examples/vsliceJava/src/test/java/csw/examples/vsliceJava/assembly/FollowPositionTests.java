@@ -1,10 +1,15 @@
 //package csw.examples.vsliceJava.assembly
 //
-//import akka.actor.{ActorRef, ActorSystem, Props}
+//import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 //import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+//import akka.util.Timeout
 //import com.typesafe.scalalogging.slf4j.LazyLogging
+//import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
+//import csw.examples.vslice.assembly.TromboneControl.GoToStagePosition
+//import csw.examples.vslice.hcd.TromboneHCD
+//import csw.examples.vslice.hcd.TromboneHCD._
 //import csw.services.ccs.HcdController._
-//import csw.services.events.{EventService, EventServiceSettings, EventSubscriber}
+//import csw.services.events.{EventService, EventServiceAdmin}
 //import csw.services.loc.ConnectionType.AkkaType
 //import csw.services.loc.LocationService
 //import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
@@ -16,12 +21,42 @@
 //import csw.util.config.Events.{EventTime, SystemEvent}
 //import csw.util.config.StateVariable.CurrentState
 //import csw.util.config.UnitsOfMeasure._
+//import org.scalatest.{FunSpecLike, _}
 //
+//import scala.concurrent.Await
 //import scala.concurrent.duration._
+//import scala.util.Try
 //
 //object FollowPositionTests {
 //  LocationService.initInterface()
 //  val system = ActorSystem("FollowPositionTests")
+//
+//  val initialElevation = 90.0
+//
+//  // Test subscriber actor for telemetry
+//  object TestSubscriber {
+//    def props(): Props = Props(new TestSubscriber())
+//
+//    case object GetResults
+//
+//    case class Results(msgs: Vector[SystemEvent])
+//
+//  }
+//
+//  class TestSubscriber() extends Actor with ActorLogging {
+//
+//    import TestSubscriber._
+//
+//    var msgs = Vector.empty[SystemEvent]
+//
+//    def receive: Receive = {
+//      case event: SystemEvent =>
+//        msgs = msgs :+ event
+//        log.info(s"Received event: $event")
+//
+//      case GetResults => sender() ! Results(msgs)
+//    }
+//  }
 //}
 //
 ///**
@@ -29,26 +64,56 @@
 // */
 //class FollowPositionTests extends TestKit(FollowPositionTests.system) with ImplicitSender
 //    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+//  import Algorithms._
+//  import TromboneAssembly._
 //
-//  implicit val execContext = system.dispatcher
+//  import system.dispatcher
 //
-//  val testEventServiceSettings = EventServiceSettings("localhost", 7777)
+//  implicit val timeout = Timeout(10.seconds)
+//
+//  // Used to start and stop the event service Redis instance used for the test
+//  //  var eventAdmin: EventServiceAdmin = _
+//
+//  // Get the event service by looking up the name with the location service.
+//  val eventService = Await.result(EventService(), timeout.duration)
+//
+//  override def beforeAll() = {
+//    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
+//    // Start redis and register it with the location service on a random free port.
+//    // The following is the equivalent of running this from the command line:
+//    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
+//    //    EventServiceAdmin.startEventService()
+//
+//    // Get the event service by looking it up the name with the location service.
+//    //    eventService = Await.result(EventService(), timeout.duration)
+//
+//    // This is only used to stop the Redis instance that was started for this test
+//    //    eventAdmin = EventServiceAdmin(eventService)
+//  }
+//
+//  override protected def afterAll(): Unit = {
+//    // Shutdown Redis (Only do this in tests that also started the server)
+//    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
+//    TestKit.shutdownActorSystem(system)
+//  }
 //
 //  val assemblyContext = AssemblyTestData.TestAssemblyContext
 //  val controlConfig = assemblyContext.controlConfig
 //  val calculationConfig = assemblyContext.calculationConfig
-//
-//  val initialElevation = 90.0
+//  import assemblyContext._
 //
 //  def pos(position: Double): DoubleItem = stagePositionKey -> position withUnits stagePositionUnits
 //
+//
+//  // Used for creating followers
+//  val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
 //  def newFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
-//    val props = FollowActor.props(assemblyContext, setNssInUse(false), tromboneControl, publisher)
+//    val props = FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), tromboneControl, publisher)
 //    TestActorRef(props)
 //  }
 //
 //  def newTestElPublisher(tromboneControl: Option[ActorRef]): TestActorRef[FollowActor] = {
-//    val testEventServiceProps = TrombonePublisher.props(assemblyContext, Some(testEventServiceSettings))
+//    val testEventServiceProps = TrombonePublisher.props(assemblyContext, Some(eventService))
 //    val publisherActorRef = system.actorOf(testEventServiceProps)
 //    newFollower(tromboneControl, Some(publisherActorRef))
 //  }
@@ -67,34 +132,6 @@
 //   */
 //  def fe(error: Double): DoubleItem = focusErrorKey -> error withUnits micrometers
 //
-//  // Test subscriber actor for telemetry
-//  object TestSubscriber {
-//    def props(prefix: String): Props = Props(new TestSubscriber(prefix))
-//
-//    case object GetResults
-//
-//    case class Results(msgs: Vector[SystemEvent])
-//
-//  }
-//
-//  class TestSubscriber(prefix: String) extends EventSubscriber(Some(testEventServiceSettings)) {
-//
-//    import TestSubscriber._
-//
-//    var msgs = Vector.empty[SystemEvent]
-//
-//    subscribe(prefix)
-//    info(s"Test subscriber for prefix: $prefix")
-//
-//    def receive: Receive = {
-//      case event: SystemEvent =>
-//        msgs = msgs :+ event
-//        log.info(s"Received event: $event")
-//
-//      case GetResults => sender() ! Results(msgs)
-//    }
-//  }
-//
 //  /**
 //   * Test Description: This test tests the CalculatorActor to a fake TromboneHCD to inspect the messages
 //   * provided by the CalculatorActor.  fakeTromboneEventSubscriber sends an UpdatedEventData event to
@@ -103,6 +140,7 @@
 //   */
 //  describe("connect output of calculator actor to the trombone publisher") {
 //    import AssemblyTestData._
+//    import Algorithms._
 //
 //    it("tests total RD to encoder is within values") {
 //      val maxEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(maxTotalRD))
@@ -189,12 +227,12 @@
 //
 //      val nssUse = setNssInUse(false)
 //      // Create the follow actor and give it the actor ref of the publisher for sending calculated events
-//      val followActor = system.actorOf(FollowActor.props(assemblyContext, nssUse, Some(fakeTromboneControl.ref), None))
+//      val followActor = system.actorOf(FollowActor.props(assemblyContext, initialElevation, nssUse, Some(fakeTromboneControl.ref), None))
 //      // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), Some(testEventServiceSettings)))
+//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), Some(eventService)))
 //
 //      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
-//      val tcsRtc = EventService(testEventServiceSettings)
+//      val tcsRtc = eventService
 //
 //      val testFE = 10.0
 //      // Publish a single focus error. This will generate a published event
@@ -235,6 +273,7 @@
 //    import AssemblyTestData._
 //
 //    it("should allow one update") {
+//      import TromboneHCD._
 //
 //      val fakeTromboneHCD = TestProbe()
 //
@@ -267,6 +306,7 @@
 //     * a "fake" HCD and tested
 //     */
 //    it("should create a proper set of Submit messages for the fakeTromboneHCD") {
+//      import TromboneHCD._
 //
 //      val fakeTromboneHCD = TestProbe()
 //
@@ -324,9 +364,9 @@
 //     */
 //    def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
 //      val msgs = tp.receiveWhile(5.seconds) {
-//        case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
+//        case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
 //        // This is present to pick up the first status message
-//        case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+//        case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
 //      }
 //      val fmsg = tp.expectMsgClass(classOf[CurrentState]) // last one -- with AXIS_IDLE
 //      val allmsgs = msgs :+ fmsg
@@ -342,9 +382,9 @@
 //     */
 //    def expectMoveMsgsWithDest(tp: TestProbe, dest: Int): Seq[CurrentState] = {
 //      val msgs = tp.receiveWhile(5.seconds) {
-//        case m @ CurrentState(ck, items) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
+//        case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
 //        // This is present to pick up the first status message
-//        case st @ CurrentState(ck, items) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+//        case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
 //      }
 //      val fmsg1 = tp.expectMsgClass(classOf[CurrentState]) // last one with current == target
 //      val fmsg2 = tp.expectMsgClass(classOf[CurrentState]) // the the end event with IDLE
@@ -511,12 +551,12 @@
 //      val followActor = newFollower(Some(tromboneControl), None)
 //
 //      // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), Some(testEventServiceSettings)))
+//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), Some(eventService)))
 //
 //      fakeAssembly.expectNoMsg(200.milli)
 //
 //      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
-//      val tcsRtc = EventService(testEventServiceSettings)
+//      val tcsRtc = eventService
 //
 //      val testFE = 10.0
 //      // Publish a single focus error. This will generate a published event
