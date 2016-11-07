@@ -202,7 +202,7 @@ class JSONTests extends FunSpec {
       val e1out = ConfigJSON.writeEvent(e1)
       val e1in = ConfigJSON.readEvent[StatusEvent](e1out)
       assert(e1in(k3).head == 1234L)
-      assert(e1in.info.time == e1.info.time)
+      assert(e1in.info.eventTime == e1.info.eventTime)
       assert(e1in == e1)
     }
 

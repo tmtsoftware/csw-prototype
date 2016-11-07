@@ -73,6 +73,9 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
   // Get the event service by looking up the name with the location service.
   val eventService = Await.result(EventService(), timeout.duration)
 
+  // Get the telemetry service by looking up the name with the location service.
+  val telemetryService = Await.result(TelemetryService(), timeout.duration)
+
   override def beforeAll() = {
     // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
@@ -108,7 +111,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
   def newFollowCommand(isNssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): ActorRef = {
     val props = FollowCommand.props(assemblyContext, initialElevation, isNssInUse, tromboneHCD, eventPublisher, Some(eventService))
-    system.actorOf(props, "newfollow")
+    system.actorOf(props)
   }
 
   // The following are used to start a tromboneHCD for testing purposes
@@ -201,7 +204,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       // This has HCD sending updates back to this Assembly
       fakeAssembly.send(tromboneHCD, Subscribe)
 
-      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)), "eventpublisher1")
+      val eventPublisher = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService), Some(telemetryService)))
       val fc = newFollowCommand(setNssInUse(false), Some(tromboneHCD), Some(eventPublisher))
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
@@ -217,6 +220,8 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
       val resultSubscriber2 = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber2, postLastEvents = false, engStatusEventPrefix)
+
+      expectNoMsg(1.second)  // Wait for subscriptions to happen
 
       // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))

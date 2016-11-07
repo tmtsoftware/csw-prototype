@@ -400,15 +400,12 @@ object LocationService {
 
     override def serviceAdded(event: ServiceEvent): Unit = {
       Connection(event.getName).map { connection =>
-        log.info("serviceAdded connection: " + connection)
         if (!connections.contains(connection)) {
           val unc = UnTrackedLocation(connection)
           connections += connection -> unc
           // Should we send an update here?
-          log.info(s"Adding untracked for: $connection")
         }
       }
-
     }
 
     override def serviceRemoved(event: ServiceEvent): Unit = {
@@ -434,11 +431,9 @@ object LocationService {
 
     // Check to see if a connection is already resolved, and if so, resolve the service
     private def tryToResolve(connection: Connection): Unit = {
-      log.info("Connections: " + connections)
       connections.get(connection) match {
         case Some(Unresolved(_)) =>
           val s = Option(registry.getServiceInfo(dnsType, connection.toString))
-          log.info(s"Try to resolve connection: $connection: Result: $s")
           s.foreach(resolveService(connection, _))
         case x =>
           log.warning(s"Attempt to track and already tracked connection: $x")
@@ -484,7 +479,6 @@ object LocationService {
                 // A TCP-based connection is ended here
                 val rtc = ResolvedTcpLocation(tcp, uri.getHost, uri.getPort)
                 connections += (connection -> rtc)
-                log.info(s"Resolved TCP: ${connections.values.toList}")
                 sendLocationUpdate(rtc)
             }
         }
@@ -506,7 +500,7 @@ object LocationService {
     // Sends an Identify message to the URI for the actor, which should result in an
     // ActorIdentity reply containing the actorRef.
     private def identify(rs: ResolvedAkkaLocation): Unit = {
-      log.info(s"Attempting to identify actor ${rs.uri.toString}")
+      log.debug(s"Attempting to identify actor ${rs.uri.toString}")
       val actorPath = ActorPath.fromString(rs.uri.toString)
       context.actorSelection(actorPath) ! Identify(rs)
     }
@@ -515,14 +509,13 @@ object LocationService {
     // Update the resolved map and check if we have everything that was requested.
     private def actorIdentified(actorRefOpt: Option[ActorRef], rs: ResolvedAkkaLocation): Unit = {
       if (actorRefOpt.isDefined) {
-        log.info(s"Resolved: Identified actor $actorRefOpt")
+        log.debug(s"Resolved: Identified actor $actorRefOpt")
         // Update the table
         val newrc = rs.copy(actorRef = actorRefOpt)
         connections += (rs.connection -> newrc)
         // Watch the actor for death
         context.watch(actorRefOpt.get)
         // Here is where the resolved message is sent for an Akka Connection
-        log.info("Resolved: " + connections.values.toList)
         sendLocationUpdate(newrc)
       } else {
         log.warning(s"Could not identify actor for ${rs.connection} ${rs.uri}")
@@ -553,7 +546,7 @@ object LocationService {
 
       case TrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, add it
-        println("----------------Received track connection: " + connection)
+        log.debug("----------------Received track connection: " + connection)
         if (!connections.contains(connection)) {
           waitToTrack(connection)
         } else {

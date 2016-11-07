@@ -24,6 +24,7 @@ import csw.util.config.DoubleItem
  */
 class TromboneControl(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef]) extends Actor with ActorLogging {
 
+  log.info(s"TromboneIn: ========> $tromboneHCDIn")
   def receive = controlReceive(tromboneHCDIn)
 
   def controlReceive(tromboneHCD: Option[ActorRef]): Receive = {
@@ -36,6 +37,7 @@ class TromboneControl(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef]) exte
       val encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, newPosition.head)
 
       // Final check before sending off to hardware
+      log.info(s"epos: $encoderPosition, minLimit: ${ac.controlConfig.minEncoderLimit}, maxEnc: ${ac.controlConfig.maxEncoderLimit}")
       assert(encoderPosition > ac.controlConfig.minEncoderLimit && encoderPosition < ac.controlConfig.maxEncoderLimit)
 
       log.debug(s"Setting trombone axis to stage position: ${newPosition.head} and encoder: $encoderPosition")

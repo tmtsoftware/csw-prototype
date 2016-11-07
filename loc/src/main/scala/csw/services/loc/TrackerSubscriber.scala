@@ -102,7 +102,7 @@ class LocationSubscriberActor() extends Actor with ActorLogging {
 
     // Called when tracker sees a change in a location
     case location: Location =>
-      log.debug("TrackerSubscriber got aa location: " + location)
+      log.info(s"Publishing: $location")
       context.system.eventStream.publish(location)
 
     // Called to indicate need to track a specific connection

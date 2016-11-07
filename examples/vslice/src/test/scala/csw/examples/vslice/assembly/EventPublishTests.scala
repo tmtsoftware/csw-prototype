@@ -5,15 +5,15 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
-import csw.services.events.{EventService, EventServiceAdmin}
+import csw.examples.vslice.assembly.TromboneStateActor.TromboneState
+import csw.services.events.{Event, EventService, TelemetryService}
 import csw.services.loc.LocationService
 import csw.services.loc.LocationService.ResolvedTcpLocation
-import csw.util.config.Events.{EventTime, SystemEvent}
+import csw.util.config.Events.{EventTime, StatusEvent, SystemEvent}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
 
 object EventPublishTests {
   LocationService.initInterface()
@@ -27,20 +27,21 @@ object EventPublishTests {
 
     case object GetResults
 
-    case class Results(msgs: Vector[SystemEvent])
-
+    case class Results(msgs: Vector[Event])
   }
 
   class TestSubscriber extends Actor with ActorLogging {
-
     import TestSubscriber._
 
-    var msgs = Vector.empty[SystemEvent]
+    var msgs = Vector.empty[Event]
 
     def receive: Receive = {
       case event: SystemEvent =>
         msgs = msgs :+ event
-        log.info(s"Received event: $event")
+        log.info(s"-------->RECEIVED System ${event.info.source} event: $event")
+      case event: StatusEvent =>
+        msgs = msgs :+ event
+        log.info(s"-------->RECEIVED Status ${event.info.source} event: $event")
 
       case GetResults => sender() ! Results(msgs)
     }
@@ -54,7 +55,6 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import EventPublishTests._
-  import system.dispatcher
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext
   import assemblyContext._
@@ -64,8 +64,10 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
   // Used to start and stop the event service Redis instance used for the test
   //  var eventAdmin: EventServiceAdmin = _
 
-  // Get the event service by looking up the name with the location service.
+  // Get the event and telemetry service by looking up the name with the location service.
   val eventService = Await.result(EventService(), timeout.duration)
+
+  val telemetryService = Await.result(TelemetryService(), timeout.duration)
 
   override def beforeAll() = {
     // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
@@ -91,33 +93,18 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
   val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
 
   // Publisher behaves the same whether nss is in use or not so always nssNotInUse
-  def newTestFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
+  def newTestFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): ActorRef = {
     val props = FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), tromboneControl, publisher)
-    TestActorRef(props)
+    system.actorOf(props)
   }
 
-  def newTestElPublisher(tromboneControl: Option[ActorRef], eventService: Option[EventService]): TestActorRef[FollowActor] = {
-    val testEventServiceProps = TrombonePublisher.props(assemblyContext, eventService)
-    val publisherActorRef = system.actorOf(testEventServiceProps)
-    // Enable publishing
-    newTestFollower(tromboneControl, Some(publisherActorRef))
+  def newTestPublisher(eventService: Option[EventService], telemetryService: Option[TelemetryService]): ActorRef = {
+    val testEventPublisherProps = TrombonePublisher.props(assemblyContext, eventService, telemetryService)
+    system.actorOf(testEventPublisherProps)
   }
 
   describe("Create follow actor with publisher and subscriber") {
     import TestSubscriber._
-
-    /**
-     * Test Description: This test just creates a publisher and checks initialization
-     */
-    it("should allow me to create actors without error") {
-
-      val fakeTC = TestProbe()
-      val ap = newTestElPublisher(Some(fakeTC.ref), Some(eventService))
-
-      // Ensure it's not sending anything out until needed
-      fakeTC.expectNoMsg(100.milli)
-      ap.underlyingActor.tromboneControl should be(Some(fakeTC.ref))
-    }
 
     /**
      * Test Description: This test uses a "fakeSubscriber" which is simulating the subscription to TCS and RTC
@@ -128,7 +115,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
      */
     it("should allow publishing one event simulating event from fake TromboneEventSubscriber") {
       // Create a new publisher with no trombone position actor
-      val ap = newTestElPublisher(None, Some(eventService))
+      val pub = newTestPublisher(Some(eventService), None)
+      val fol = newTestFollower(None, Some(pub))
 
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
@@ -137,7 +125,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       val fakeTromboneEventSubscriber = TestProbe()
 
       // This should result in two messages being sent, one to each actor in the given order
-      fakeTromboneEventSubscriber.send(ap, UpdatedEventData(za(0), fe(0), EventTime()))
+      fakeTromboneEventSubscriber.send(fol, UpdatedEventData(za(0), fe(0), EventTime()))
 
       // This is to give actors time to run
       expectNoMsg(100.milli)
@@ -159,7 +147,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       import AssemblyTestData._
 
       // Ignoring the messages for TrombonePosition (set to None)
-      val ap = newTestElPublisher(None, Some(eventService))
+      val pub = newTestPublisher(Some(eventService), None)
+      val fol = newTestFollower(None, Some(pub))
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = system.actorOf(TestSubscriber.props())
@@ -173,7 +162,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       // This should result in two messages being sent, one to each actor in the given order
       val fakeTromboneSubscriber = TestProbe()
-      events.foreach(ev => fakeTromboneSubscriber.send(ap, ev))
+      events.foreach(ev => fakeTromboneSubscriber.send(fol, ev))
 
       // This is to give actors time to run
       expectNoMsg(100.milli)
@@ -202,11 +191,11 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       import AssemblyTestData._
       // Ignoring the messages for TrombonePosition
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService), Some(telemetryService)))
       // Create the calculator actor and give it the actor ref of the publisher for sending calculated events
       val followActorRef = system.actorOf(FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), None, Some(publisherActorRef)))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      val es = system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), Some(eventService)))
+      val es = system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), eventService))
       // This injects the event service location
       val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
       es ! evLocation
@@ -255,6 +244,45 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       // Here is the test for equality - total 16 messages
       aoeswExpected should equal(result.msgs)
+    }
+
+    /**
+      * Test Description: This test simulates some status data for the publisher.
+      */
+    it("should allow publishing TromboneState to publisher") {
+      import TromboneStateActor._
+
+      val s1 = TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
+      val s2 = TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
+      val s3 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexing), sodiumItem(false), nssItem(false))
+      val s4 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false))
+
+      // Create a new publisher with no trombone position actor
+      val tp = newTestPublisher(None, Some(telemetryService))
+
+      val resultSubscriber = system.actorOf(TestSubscriber.props())
+      telemetryService.subscribe(resultSubscriber, postLastEvents = false, tromboneStateStatusEventPrefix)
+      expectNoMsg(1.second)  // Wait for the connection
+
+      val fakeStateProducer = TestProbe()
+
+      def makeStatusEvent(ts:TromboneState):StatusEvent = StatusEvent(tromboneStateStatusEventPrefix).madd(ts.cmd, ts.move, ts.sodiumLayer, ts.nss)
+
+      // This should result in two messages being sent, one to each actor in the given order
+      fakeStateProducer.send(tp, s1)
+      fakeStateProducer.send(tp, s2)
+      fakeStateProducer.send(tp, s3)
+      fakeStateProducer.send(tp, s4)
+
+      // This is to give actors time to run
+      expectNoMsg(1.seconds)
+
+      // Ask our test subscriber for the published events
+      resultSubscriber ! GetResults
+
+      val result = expectMsgClass(classOf[Results])
+      result.msgs.size should be(4)
+      result.msgs should equal(Seq(s1, s2, s3, s4).map(makeStatusEvent(_)))
     }
   }
 

@@ -2,6 +2,7 @@ package csw.examples.vslice.assembly
 
 import com.typesafe.config.Config
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
+import csw.services.loc.ComponentId
 import csw.services.pkg.Component.AssemblyInfo
 import csw.util.config.Configurations.{ConfigKey, SetupConfig}
 import csw.util.config.UnitsOfMeasure.{degrees, kilometers, micrometers, millimeters}
@@ -18,6 +19,9 @@ case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalcul
   val componentPrefix: String = info.prefix
   val componentType = info.componentType
   val fullName = s"$componentPrefix.$componentName"
+
+  val assemblyComponentId = ComponentId(componentName, componentType)
+  val hcdComponentId = info.connections.head.componentId // There is only one
 
   // Public command configurations
   // Init submit command
@@ -52,7 +56,6 @@ case class AssemblyContext(info: AssemblyInfo, calculationConfig: TromboneCalcul
   // setAngle submit command
   val setAnglePrefx = s"$componentPrefix.setAngle"
   val setAngleCK: ConfigKey = setAnglePrefx
-
   def setAngleSC(zenithAngle: Double): SetupConfig = SetupConfig(setAngleCK).add(za(zenithAngle))
 
   // Follow submit command

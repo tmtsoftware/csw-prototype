@@ -43,6 +43,17 @@ object Validation {
   // A command is unsupported by component
   final case class UnsupportedCommandIssue(reason: String) extends ValidationIssue
 
+  // A required service is not available
+  final case class RequiredServiceUnavailableIssue(reason: String) extends ValidationIssue
+
+  // A required HCD is not available
+  final case class RequiredHCDUnavailableIssue(reason: String) extends ValidationIssue
+
+  // A required Assembly is not available
+  final case class RequiredAssemblyUnavailableIssue(reason: String) extends ValidationIssue
+
+  final case class RequiredSequencerUnavailableIssue(reason: String) extends ValidationIssue
+
   // Some other issue!
   final case class OtherIssue(reason: String) extends ValidationIssue
 

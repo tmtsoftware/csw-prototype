@@ -73,7 +73,6 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   private def runningReceive: Receive = controllerReceive orElse {
     case Running =>
       log.info("Received running")
-    //      context.become(runningReceive)
 
     case RunningOffline =>
       log.info("Received running offline")
@@ -188,7 +187,7 @@ object TromboneHCD {
   def props(hcdInfo: HcdInfo, supervisor: ActorRef) = Props(classOf[TromboneHCD], hcdInfo, supervisor)
 
   // HCD Info
-  val componentName = "tromboneHCD"
+  val componentName = "lgsTromboneHCD"
   val componentType = ComponentType.HCD
   val componentClassName = "csw.examples.vslice.hcd.TromboneHCD"
   val trombonePrefix = "nfiraos.ncc.tromboneHCD"

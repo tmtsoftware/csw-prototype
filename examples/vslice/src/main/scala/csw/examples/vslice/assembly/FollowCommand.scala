@@ -1,9 +1,9 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import csw.examples.vslice.assembly.FollowActor.{SetElevation, SetZenithAngle, UpdatedEventData}
+import csw.examples.vslice.assembly.FollowActor.{SetZenithAngle, UpdatedEventData}
 import csw.examples.vslice.assembly.TromboneAssembly.UpdateTromboneHCD
-import csw.services.events.{EventService, EventServiceSettings}
+import csw.services.events.EventService
 import csw.util.config.Events.EventTime
 import csw.util.config.{BooleanItem, DoubleItem}
 
@@ -54,7 +54,7 @@ class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssIn
   val tromboneControl = context.actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol")
   // These vals are only being created to simplify typing
   val initialFollowActor = createFollower(initialElevation, nssInUseIn, tromboneControl, eventPublisher, eventPublisher)
-  val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService)
+  val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService.get)
 
   def receive: Receive = followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn)
 
@@ -72,7 +72,7 @@ class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssIn
         context.stop(followActor)
         // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
         val newFollowActor = createFollower(initialElevation, nssInUseUpdate, tromboneControl, eventPublisher, eventPublisher)
-        val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventService)
+        val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventService.get)
         // Set a new receive method with updated actor values, prefer this over vars or globals
         context.become(followReceive(nssInUseUpdate, newFollowActor, newEventSubscriber, tromboneHCD))
       }
@@ -97,7 +97,8 @@ class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssIn
   private def createFollower(initialElevation: DoubleItem, nssInUse: BooleanItem, tromboneControl: ActorRef, eventPublisher: Option[ActorRef], telemetryPublisher: Option[ActorRef]): ActorRef =
     context.actorOf(FollowActor.props(ac, initialElevation, nssInUse, Some(tromboneControl), eventPublisher, eventPublisher), "follower")
 
-  private def createEventSubscriber(nssItem: BooleanItem, followActor: ActorRef, eventService: Option[EventService]): ActorRef = context.actorOf(TromboneEventSubscriber.props(ac, nssItem, Some(followActor), eventService), "eventsubscriber")
+  private def createEventSubscriber(nssItem: BooleanItem, followActor: ActorRef, eventService: EventService): ActorRef =
+    context.actorOf(TromboneEventSubscriber.props(ac, nssItem, Some(followActor), eventService), "eventsubscriber")
 
 }
 

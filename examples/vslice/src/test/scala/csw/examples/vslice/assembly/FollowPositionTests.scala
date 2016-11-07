@@ -9,7 +9,7 @@ import csw.examples.vslice.assembly.TromboneControl.GoToStagePosition
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.HcdController._
-import csw.services.events.{EventService, EventServiceAdmin}
+import csw.services.events.EventService
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
@@ -25,7 +25,6 @@ import org.scalatest.{FunSpecLike, _}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
 
 object FollowPositionTests {
   LocationService.initInterface()
@@ -66,8 +65,6 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
   import Algorithms._
   import TromboneAssembly._
-
-  import system.dispatcher
 
   implicit val timeout = Timeout(10.seconds)
 
@@ -229,7 +226,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       // Create the follow actor and give it the actor ref of the publisher for sending calculated events
       val followActor = system.actorOf(FollowActor.props(assemblyContext, initialElevation, nssUse, Some(fakeTromboneControl.ref), None))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), Some(eventService)))
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), eventService))
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
       val tcsRtc = eventService
@@ -551,7 +548,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       val followActor = newFollower(Some(tromboneControl), None)
 
       // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), Some(eventService)))
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), eventService))
 
       fakeAssembly.expectNoMsg(200.milli)
 

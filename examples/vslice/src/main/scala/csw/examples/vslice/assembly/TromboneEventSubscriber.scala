@@ -5,7 +5,6 @@ import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData
 import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
 import csw.services.events.EventService
 import csw.services.events.EventService.EventMonitor
-import csw.services.loc.LocationService.{Location, ResolvedTcpLocation}
 import csw.services.loc.LocationSubscriberClient
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.Events.{EventTime, SystemEvent}
@@ -14,7 +13,7 @@ import csw.util.config._
 /**
  * TMT Source Code: 6/20/16.
  */
-class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventServiceIn: Option[EventService]) extends Actor with ActorLogging with LocationSubscriberClient {
+class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventService: EventService) extends Actor with ActorLogging with LocationSubscriberClient {
 
   import ac._
 
@@ -32,27 +31,12 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
   var nssInUseGlobal = nssInUseIn
 
   // This var is needed to capture the Monitor used for subscriptions
-  var subscribeMonitor: EventMonitor = _
+  val subscribeMonitor: EventMonitor = startupSubscriptions(eventService)
 
-  def connectingReceive: Receive = {
-    case location: Location => location match {
-      case t: ResolvedTcpLocation =>
-        // Verify that it is the event service
-        if (t.connection == EventService.eventServiceConnection()) {
-          log.debug(s"Event subscriber received connection: $t")
-          val eventService: EventService = EventService.get(t.host, t.port)
-          startupSubscriptions(eventService)
-          context.become(subscribeReceive(eventService, nssInUseIn, initialZenithAngle, initialFocusError))
-        }
-      case _ =>
-        log.debug(s"EventSubscriber received location: $location")
-    }
-  }
-
-  private def startupSubscriptions(eventService: EventService): Unit = {
+  private def startupSubscriptions(eventService: EventService): EventMonitor = {
     // Always subscribe to focus error
     // Create the subscribeMonitor here
-    subscribeMonitor = subscribeKeys(eventService, feConfigKey)
+    val subscribeMonitor = subscribeKeys(eventService, feConfigKey)
     log.info(s"FeMonitor actor: ${subscribeMonitor.actorRef}")
 
     log.info("nssInuse: " + nssInUseIn)
@@ -62,30 +46,31 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
       // NSS not inuse so subscribe to ZA
       subscribeKeys(subscribeMonitor, zaConfigKey)
     }
+    subscribeMonitor
   }
 
-  //  def receive: Receive = subscribeReceive(nssInUseIn, initialZenithAngle, initialFocusError)
-  def receive: Receive = connectingReceive
+  def receive: Receive = subscribeReceive(nssInUseIn, initialZenithAngle, initialFocusError)
 
-  def subscribeReceive(eventService: EventService, cNssInUse: BooleanItem, cZenithAngle: DoubleItem, cFocusError: DoubleItem): Receive = {
+  def subscribeReceive(cNssInUse: BooleanItem, cZenithAngle: DoubleItem, cFocusError: DoubleItem): Receive = {
 
     case event: SystemEvent =>
       event.info.source match {
         case `zaConfigKey` =>
           val newZenithAngle = event(zenithAngleKey)
-          log.info(s"Received ZA: $event")
-          updateFollowActor(newZenithAngle, cFocusError, event.info.time)
+          log.debug(s"Received ZA: $event")
+          updateFollowActor(newZenithAngle, cFocusError, event.info.eventTime)
           // Pass the new values to the next message
-          context.become(subscribeReceive(eventService, cNssInUse, newZenithAngle, cFocusError))
+          context.become(subscribeReceive(cNssInUse, newZenithAngle, cFocusError))
 
         case `feConfigKey` =>
           // Update focusError state and then update calculator
-          log.info(s"Received FE: $event")
+          log.debug(s"Received FE: $event")
           val newFocusError = event(focusErrorKey)
-          updateFollowActor(cZenithAngle, newFocusError, event.info.time)
+          updateFollowActor(cZenithAngle, newFocusError, event.info.eventTime)
           // Pass the new values to the next message
-          context.become(subscribeReceive(eventService, cNssInUse, cZenithAngle, newFocusError))
-        case x => log.info(s"Got some other event: $x")
+          context.become(subscribeReceive(cNssInUse, cZenithAngle, newFocusError))
+
+        case x => log.error(s"subscribeReceive in TromboneEventSubscriber received an unknown SystemEvent: $x")
       }
 
     case StopFollowing =>
@@ -97,10 +82,10 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
       if (nssInUseUpdate != cNssInUse) {
         if (nssInUseUpdate.head) {
           unsubscribeKeys(subscribeMonitor, zaConfigKey)
-          context.become(subscribeReceive(eventService, nssInUseUpdate, nssZenithAngle, cFocusError))
+          context.become(subscribeReceive(nssInUseUpdate, nssZenithAngle, cFocusError))
         } else {
           subscribeKeys(subscribeMonitor, zaConfigKey)
-          context.become(subscribeReceive(eventService, nssInUseUpdate, cZenithAngle, cFocusError))
+          context.become(subscribeReceive(nssInUseUpdate, cZenithAngle, cFocusError))
         }
         // Need to update the global for shutting down event subscriptions
         nssInUseGlobal = nssInUseUpdate
@@ -144,7 +129,7 @@ object TromboneEventSubscriber {
    * @param eventService for testing, an event Service can be provided
    * @return Props for TromboneEventSubscriber
    */
-  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, followActor: Option[ActorRef] = None, eventService: Option[EventService] = None) =
+  def props(assemblyContext: AssemblyContext, nssInUse: BooleanItem, followActor: Option[ActorRef] = None, eventService: EventService) =
     Props(classOf[TromboneEventSubscriber], assemblyContext, nssInUse, followActor, eventService)
 
   case class UpdateNssInUse(nssInUse: BooleanItem)

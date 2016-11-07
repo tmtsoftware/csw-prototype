@@ -3,19 +3,19 @@ package csw.examples.vslice.assembly
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, PoisonPill, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import csw.examples.vslice.assembly.FollowActor.{SetElevation, SetZenithAngle}
+import csw.examples.vslice.assembly.FollowActor.SetZenithAngle
 import csw.examples.vslice.assembly.FollowCommand.StopFollowing
+import csw.examples.vslice.hcd
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.CommandStatus2._
 import csw.services.ccs.SequentialExecution.SequentialExecutor.{CommandStart, ExecuteOne, StopCurrentCommand}
 import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
 import csw.services.ccs.StateMatchers.{DemandMatcher, MultiStateMatcherActor, StateMatcher}
-import csw.services.ccs.Validation.{UnsupportedCommandInStateIssue, WrongInternalStateIssue}
-import csw.services.events.EventServiceSettings
+import csw.services.ccs.Validation.{RequiredHCDUnavailableIssue, UnsupportedCommandInStateIssue, WrongInternalStateIssue}
+import csw.services.events.EventService
 import csw.services.loc.LocationService._
 import csw.services.loc.LocationSubscriberClient
-import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.DemandState
 
@@ -31,53 +31,99 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
   import ac._
 
   //override val prefix = ac.info.prefix
+  private val badHCDReference = context.system.deadLetters
 
-  var tromboneHCD: ActorRef = tromboneHCDIn.getOrElse(context.system.deadLetters)
+  private var tromboneHCD: ActorRef = tromboneHCDIn.getOrElse(badHCDReference)
+  private def isHCDAvailable: Boolean = tromboneHCD != badHCDReference
+
+  private val badEventService = None
+  var eventService: Option[EventService] = badEventService
+  //var eventService:EventService = _
+  private def isEventServiceAvailable: Boolean = eventService.isDefined
+
   // Set the default evaluation for use with the follow command
   var setElevationItem = naElevation(calculationConfig.defaultInitialElevation)
 
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //currentStateReceiver ! AddPublisher(tromboneHCD)
-  log.info("System  is: " + context.system)
 
   // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
   val tromboneStateActor = context.actorOf(TromboneStateActor.props())
 
-  def receive = noFollowReceive()
+  def receive: Receive = noFollowReceive()
+
+  def handleLocations(location: Location): Unit = {
+    location match {
+      case l: ResolvedAkkaLocation =>
+        log.debug(s"CommandHandler receive an actorRef: ${l.actorRef}")
+        tromboneHCD = l.actorRef.getOrElse(badHCDReference)
+      case t: ResolvedTcpLocation =>
+        log.info(s"Received TCP Location: ${t.connection}")
+        // Verify that it is the event service
+        if (t.connection == EventService.eventServiceConnection()) {
+          log.info(s"Subscriber received connection: $t")
+          //val eventService: EventService = EventService.get(t.host, t.port)
+          // Setting var here!
+          eventService = Some(EventService.get(t.host, t.port))
+          log.info(s"Event Service at: $eventService")
+        }
+      case u: Unresolved =>
+        log.info(s"Unresolved: ${u.connection}")
+        if (u.connection == EventService.eventServiceConnection()) eventService = badEventService
+        if (u.connection.componentId == ac.hcdComponentId) tromboneHCD = badHCDReference
+      case default =>
+        log.info(s"EventSubscriber received some other location: $default")
+    }
+  }
+
+  def waitingReceive(): Receive = {
+    case l: Location =>
+      log.info("CommandHandler: " + l)
+      handleLocations(l)
+    case x => log.info(s"Waiting receive received: $x")
+  }
 
   def noFollowReceive(): Receive = stateReceive orElse {
 
     case l: Location =>
       log.info("CommandHandler: " + l)
-      lookatLocations(l)
+      handleLocations(l)
 
     case ExecuteOne(sc, commandOriginator) =>
 
       sc.configKey match {
         case ac.initCK =>
-          log.info("Init not yet implemented")
+          log.info("Init not fully implemented -- only sets state ready!")
+          tromboneStateActor ! SetState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
+          commandOriginator.foreach(_ ! Completed)
 
         case ac.datumCK =>
-          val datumActorRef = context.actorOf(DatumCommand.props(sc, tromboneHCD, currentState, Some(tromboneStateActor)))
-          context.become(actorExecutingReceive(datumActorRef, commandOriginator))
-          self ! CommandStart
+          if (isHCDAvailable) {
+            log.info(s"Datums State: $currentState")
+            val datumActorRef = context.actorOf(DatumCommand.props(sc, tromboneHCD, currentState, Some(tromboneStateActor)))
+            context.become(actorExecutingReceive(datumActorRef, commandOriginator))
+            self ! CommandStart
+          } else hcdNotAvailableResponse(commandOriginator)
 
         case ac.moveCK =>
-          log.info("Current state: " + currentState)
-          val moveActorRef = context.actorOf(MoveCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
-          context.become(actorExecutingReceive(moveActorRef, commandOriginator))
-          self ! CommandStart
+          if (isHCDAvailable) {
+            val moveActorRef = context.actorOf(MoveCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
+            context.become(actorExecutingReceive(moveActorRef, commandOriginator))
+            self ! CommandStart
+          } else hcdNotAvailableResponse(commandOriginator)
 
         case ac.positionCK =>
-          val positionActorRef = context.actorOf(PositionCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
-          context.become(actorExecutingReceive(positionActorRef, commandOriginator))
-          self ! CommandStart
+          if (isHCDAvailable) {
+            val positionActorRef = context.actorOf(PositionCommand.props(ac, sc, tromboneHCD, currentState, Some(tromboneStateActor)))
+            context.become(actorExecutingReceive(positionActorRef, commandOriginator))
+            self ! CommandStart
+          } else hcdNotAvailableResponse(commandOriginator)
 
         case ac.stopCK =>
-          commandOriginator.foreach(_ ! Invalid(WrongInternalStateIssue("Trombone assembly must be executing a command to use stop")))
+          commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue("Trombone assembly must be executing a command to use stop")))
 
         case ac.setAngleCK =>
-          commandOriginator.foreach(_ ! Invalid(WrongInternalStateIssue("Trombone assembly must be following for setAngle")))
+          commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue("Trombone assembly must be following for setAngle")))
 
         case ac.setElevationCK =>
           // Setting the elevation state here for a future follow command
@@ -99,10 +145,10 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
             log.info("Set elevation is: " + setElevationItem)
 
             // The event publisher may be passed in (XXX FIXME? pass in eventService)
-            val props = FollowCommand.props(ac, setElevationItem, nssItem, Some(tromboneHCD), allEventPublisher, eventService = None)
+            val props = FollowCommand.props(ac, setElevationItem, nssItem, Some(tromboneHCD), allEventPublisher, eventService)
             // Follow command runs the trombone when following
             val followCommandActor = context.actorOf(props)
-            context.become(followReceive(followCommandActor))
+            context.become(followReceive(eventService.get, followCommandActor))
             // Note that this is where sodiumLayer is set allowing other commands that require this state
             tromboneStateActor ! SetState(cmdContinuous, moveMoving, sodiumLayer(currentState), nssItem.head)
             commandOriginator.foreach(_ ! Completed)
@@ -116,23 +162,11 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
     case x => log.error(s"TromboneCommandHandler:noFollowReceive received an unknown message: $x")
   }
 
-  def lookatLocations(location: Location): Unit = {
-    location match {
-      case l: ResolvedAkkaLocation =>
-        log.info(s"Got actorRef: ${l.actorRef}")
-        tromboneHCD = l.actorRef.getOrElse(context.system.deadLetters)
-      case h: ResolvedHttpLocation =>
-        log.info(s"HTTP: ${h.connection}")
-      case t: ResolvedTcpLocation =>
-        log.info(s"Received TCP Location: ${t.connection}")
-      case u: Unresolved =>
-        log.info(s"Unresolved: ${u.connection}")
-      case ut: UnTrackedLocation =>
-        log.info(s"UnTracked: ${ut.connection}")
-    }
+  def hcdNotAvailableResponse(commandOriginator: Option[ActorRef]): Unit = {
+    commandOriginator.foreach(_ ! NoLongerValid(RequiredHCDUnavailableIssue(s"${ac.hcdComponentId} is not available")))
   }
 
-  def followReceive(followActor: ActorRef): Receive = stateReceive orElse {
+  def followReceive(eventService: EventService, followActor: ActorRef): Receive = stateReceive orElse {
     case ExecuteOne(sc, commandOriginator) =>
       sc.configKey match {
         case ac.datumCK | ac.moveCK | ac.positionCK | ac.followCK | ac.setElevationCK =>

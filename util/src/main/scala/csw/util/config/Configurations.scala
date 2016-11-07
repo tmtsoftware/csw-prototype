@@ -71,7 +71,6 @@ object Configurations {
     final def prefix: String = configKey.prefix
 
     override def toString = s"$typeName[$subsystem, $prefix]$dataToString"
-
   }
 
   /**
@@ -494,6 +493,6 @@ object Configurations {
   /**
    * Contains a list of configs that can be sent to a sequencer
    */
-  final case class ConfigArgList(configs: Seq[SequenceConfig])
+  final case class ConfigArgList(configs: Seq[SequenceConfigArg])
 
 }

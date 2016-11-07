@@ -38,7 +38,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneAlarmMonitor._
-  import TromboneStateHandler._
+  import TromboneStateActor._
 
   implicit val timeout = Timeout(10.seconds)
 

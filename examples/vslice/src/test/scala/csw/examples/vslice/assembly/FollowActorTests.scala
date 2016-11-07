@@ -25,7 +25,6 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
 
 object FollowActorTests {
   LocationService.initInterface()
@@ -44,6 +43,7 @@ object FollowActorTests {
   }
 
   class TestSubscriber extends Actor with ActorLogging {
+
     import TestSubscriber._
 
     var msgs = Vector.empty[Event]
@@ -59,16 +59,16 @@ object FollowActorTests {
       case GetResults => sender() ! Results(msgs)
     }
   }
+
 }
 
 /**
- * TMT Source Code: 8/12/16.
- */
+  * TMT Source Code: 8/12/16.
+  */
 class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import FollowActorTests._
-  import system.dispatcher
 
   implicit val timeout = Timeout(10.seconds)
 
@@ -76,7 +76,11 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   //  var eventAdmin: EventServiceAdmin = _
 
   // Get the event service by looking up the name with the location service.
-  var eventService = Await.result(EventService(), timeout.duration)
+  val eventService = Await.result(EventService(), timeout.duration)
+
+  // Get the telemetry service by looking up the name with the location service. -- Used in the last test
+  val telemetryService = Await.result(TelemetryService(), timeout.duration)
+
 
   override def beforeAll() = {
     // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
@@ -101,6 +105,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   val assemblyContext = AssemblyTestData.TestAssemblyContext
   val calculationConfig = assemblyContext.calculationConfig
   val controlConfig = assemblyContext.controlConfig
+
   import assemblyContext._
 
   def newFollower(usingNSS: BooleanItem, tromboneControl: ActorRef, aoPublisher: ActorRef, engPublisher: ActorRef): TestActorRef[FollowActor] = {
@@ -200,16 +205,16 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   }
 
   /**
-   * Test Description: This test provides simulated UpdatedEventData events to the FollowActor and then tests that the
-   * FollowActor sends the expected messages out including:
-   * Events for AOESW
-   * Positions for Trombone Stage
-   * Engineering Status event
-   * The events are received by "fake" actors played by TestProbes
-   */
+    * Test Description: This test provides simulated UpdatedEventData events to the FollowActor and then tests that the
+    * FollowActor sends the expected messages out including:
+    * Events for AOESW
+    * Positions for Trombone Stage
+    * Engineering Status event
+    * The events are received by "fake" actors played by TestProbes
+    */
   describe("Test for reasonable results when setNssInUse(false)") {
-    import AssemblyTestData._
     import Algorithms._
+    import AssemblyTestData._
 
     val fakeTC = TestProbe()
     val fakePub = TestProbe()
@@ -293,17 +298,19 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     }
 
     /**
-     * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
-     * Then it collects the one where it is the destination and the end message
-     * @param tp TestProbe that is receiving the CurrentState messages
-     * @param dest a TestProbe acting as the assembly
-     * @return A sequence of CurrentState messages
-     */
+      * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
+      * Then it collects the one where it is the destination and the end message
+      *
+      * @param tp   TestProbe that is receiving the CurrentState messages
+      * @param dest a TestProbe acting as the assembly
+      *
+      * @return A sequence of CurrentState messages
+      */
     def expectMoveMsgsWithDest(tp: TestProbe, dest: Int): Seq[CurrentState] = {
       val msgs = tp.receiveWhile(5.seconds) {
-        case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
+        case m@CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
         // This is present to pick up the first status message
-        case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+        case st@CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
       }
       val fmsg1 = tp.expectMsgClass(classOf[CurrentState]) // last one with current == target
       val fmsg2 = tp.expectMsgClass(classOf[CurrentState]) // the the end event with IDLE
@@ -312,14 +319,14 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     }
 
     /**
-     * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
-     * This tests the entire path with fake TCS sending events through Event Service, which are received by
-     * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
-     * which sends them to the TromboneHCD, which replies with StateUpdates.
-     * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
-     * and subscribed to by test clients, that collect their events for checking at the end
-     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-     */
+      * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
+      * This tests the entire path with fake TCS sending events through Event Service, which are received by
+      * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
+      * which sends them to the TromboneHCD, which replies with StateUpdates.
+      * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
+      * and subscribed to by test clients, that collect their events for checking at the end
+      * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+      */
     it("creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance") {
       import TestSubscriber._
 
@@ -337,7 +344,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       // Ignoring the messages for TrombonePosition
       // Create the trombone publisher for publishing SystemEvents to AOESW
-      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
+      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService), Some(telemetryService)))
 
       // Ignoring the messages for AO for the moment
       // Create the trombone publisher for publishing SystemEvents to AOESW
@@ -350,7 +357,9 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       val followActor = newFollower(nssUsage, tromboneControl, publisherActorRef, publisherActorRef)
 
       // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), Some(eventService)))
+      val es = system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), eventService))
+      //val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
+      //es ! evLocation
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
       val tcsRtc = Some(eventService)
@@ -413,7 +422,8 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       val firstOne = SystemEvent(aoSystemEventPrefix).madd(naElevationKey -> testResult.head._2 withUnits naElevationUnits, naRangeDistanceKey -> testResult.head._1 withUnits naRangeDistanceUnits)
       val zaExpected = testResult.map(f => SystemEvent(aoSystemEventPrefix).madd(naElevationKey -> f._2 withUnits naElevationUnits, naRangeDistanceKey -> f._1 withUnits naRangeDistanceUnits))
       val aoeswExpected = firstOne +: zaExpected
-      //info("aowes: " + aoeswExpected)
+      //logger.info("aowes: " + aoeswExpected)
+      //logger.info("size: " + aoeswExpected.size)
       result1.msgs should equal(aoeswExpected)
 
       resultSubscriber2 ! GetResults

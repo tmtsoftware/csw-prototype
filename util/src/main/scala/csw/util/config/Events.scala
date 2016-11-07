@@ -26,12 +26,12 @@ object Events {
    * This will grow and develop.
    *
    * @param source the source subsystem and prefix for the component
-   * @param time time of the event
+   * @param eventTime time of the event
    * @param obsId optional observation id
    * @param eventId automatically generated unique event id
    */
-  case class EventInfo(source: ConfigKey, time: EventTime, obsId: Option[ObsId], eventId: String = UUID.randomUUID().toString) {
-    override def toString = s"$source: eId: $eventId, time: $time, obsId: $obsId"
+  case class EventInfo(source: ConfigKey, eventTime: EventTime, obsId: Option[ObsId], eventId: String = UUID.randomUUID().toString) {
+    override def toString = s"$source: eId: $eventId, time: $eventTime, obsId: $obsId"
 
     override def equals(that: Any): Boolean = {
       that match {
@@ -86,7 +86,7 @@ object Events {
     /**
      * The time the event was created
      */
-    def rawTime: EventTime = info.time
+    def eventTime: EventTime = info.eventTime
 
     /**
      * The event id

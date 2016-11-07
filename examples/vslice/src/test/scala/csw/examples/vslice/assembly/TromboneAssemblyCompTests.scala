@@ -44,7 +44,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
 
-      fakeSequencer.expectNoMsg(12.seconds) // wait for connections
+      fakeSequencer.expectNoMsg(3.seconds) // wait for connections
     }
 
     it("should allow a datum") {
@@ -55,9 +55,9 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
 
-      fakeSequencer.expectNoMsg(12.seconds) // wait for connections
+      fakeSequencer.expectNoMsg(3.seconds) // wait for connections
 
-      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(datumCK))
+      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
 
       fakeSequencer.send(tla, Submit(sca))
 
@@ -83,7 +83,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
 
       //fakeSequencer.expectNoMsg(12.seconds)  // wait for connections
 
-      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(datumCK))
+      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
       fakeSequencer.send(tla, Submit(datum))
 
       // This first one is the accept/verification
