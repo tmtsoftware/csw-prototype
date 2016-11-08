@@ -19,7 +19,7 @@ import java.util.Set;
  * Each component has its own ActorSystem, LifecycleManager and name.
  */
 @SuppressWarnings({"unused", "SameParameterValue", "OptionalUsedAsFieldOrParameterType"})
-interface JComponent extends Actor {
+public interface JComponent extends Actor {
 
   // -- LocationServiceUsage: Describes how a component uses the location service --
   LocationServiceUsage DoNotRegister = Component.DoNotRegister$.MODULE$;
