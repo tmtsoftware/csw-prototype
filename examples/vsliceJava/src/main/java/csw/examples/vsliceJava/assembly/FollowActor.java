@@ -10,8 +10,6 @@ import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
-import csw.examples.vsliceJava.assembly.AssemblyContext.*;
-import csw.examples.vsliceJava.assembly.TrombonePublisher.*;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -19,6 +17,10 @@ import java.util.Optional;
 import static csw.examples.vsliceJava.assembly.Algorithms.*;
 import static javacsw.util.config.JItems.jset;
 import static javacsw.util.config.JItems.jvalue;
+import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneCalculationConfig;
+import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneControlConfig;
+import static csw.examples.vsliceJava.assembly.TrombonePublisher.AOESWUpdate;
+import static csw.examples.vsliceJava.assembly.TrombonePublisher.EngrUpdate;
 
 /**
  * FollowActor uses events from TCS and RTC to calculate the position of the trombone assembly when in follow mode, which is set
@@ -41,7 +43,7 @@ import static javacsw.util.config.JItems.jvalue;
  *
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-class FollowActor extends AbstractActor {
+public class FollowActor extends AbstractActor {
 
   // --- non static defs ---
 

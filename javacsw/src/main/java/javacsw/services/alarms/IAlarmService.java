@@ -4,6 +4,8 @@ import akka.actor.ActorRefFactory;
 import akka.util.Timeout;
 import csw.services.alarms.*;
 import csw.services.alarms.AlarmModel.*;
+import csw.services.loc.ComponentId;
+import csw.services.loc.Connection;
 import scala.Unit;
 
 import java.util.concurrent.CompletableFuture;
@@ -42,6 +44,18 @@ public interface IAlarmService {
   }
 
   /**
+   * Returns an IAlarmService instance using the Redis instance at the given host and port
+   *
+   * @param host the Redis host name or IP address
+   * @param port the Redis port
+   * @return a new IAlarmService instance
+   */
+  static IAlarmService getAlarmService(String host, int port, ActorRefFactory sys) {
+    return new JAlarmService(host, port, sys);
+  }
+
+
+  /**
    * Looks up the Redis instance for the Alarm Service with the Location Service
    * and then returns an IAlarmService instance using it.
    * <p>
@@ -60,6 +74,20 @@ public interface IAlarmService {
    * The default name that the Alarm Service is registered with
    */
   String defaultName = AlarmService$.MODULE$.defaultName();
+
+  /**
+   * Returns the AlarmService ComponentId for the given, or default name
+   */
+  static ComponentId alarmServiceComponentId(String name) {
+    return AlarmService$.MODULE$.alarmServiceComponentId(name);
+  }
+
+  /**
+   * Returns the AlarmService connection for the given, or default name
+   */
+  static Connection.TcpConnection alarmServiceConnection(String name) {
+    return AlarmService$.MODULE$.alarmServiceConnection(name);
+  }
 
   /**
    * An alarm's severity should be refreshed every defaultRefreshSecs seconds

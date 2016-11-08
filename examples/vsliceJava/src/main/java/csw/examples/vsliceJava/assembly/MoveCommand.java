@@ -9,22 +9,20 @@ import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
+import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
-import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.DoubleItem;
 import csw.util.config.JavaHelpers;
 import javacsw.services.ccs.JSequentialExecution;
-import csw.examples.vsliceJava.assembly.TromboneStateActor.TromboneState;
-import csw.examples.vsliceJava.assembly.TromboneStateActor.SetState;
-import csw.services.ccs.CommandStatus2.NoLongerValid;
-import csw.services.ccs.Validation.WrongInternalStateIssue;
-import csw.services.ccs.StateMatchers.DemandMatcher;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
+import static csw.services.ccs.CommandStatus2.NoLongerValid;
+import static csw.services.ccs.Validation.WrongInternalStateIssue;
+import static csw.util.config.Configurations.SetupConfig;
 import static javacsw.services.ccs.JCommandStatus2.Completed;
 import static javacsw.util.config.JConfigDSL.sc;
 import static javacsw.util.config.JItems.*;
@@ -61,11 +59,11 @@ public class MoveCommand extends AbstractActor {
           sendState(new SetState(cmdItem(cmdBusy), moveItem(moveMoving), startState.sodiumLayer, startState.nss));
           tromboneHCD.tell(new HcdController.Submit(scOut), self());
           Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
-          TromboneCommandHandler.executeMatch(context(), stateMatcher, tromboneHCD,  Optional.of(mySender), timeout, status -> {
+          TromboneCommandHandler.executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender), timeout, status -> {
             if (status == Completed)
               sendState(new SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss));
             else if (status instanceof CommandStatus2.Error)
-              log.error("Move command match failed with message: " + ((CommandStatus2.Error)status).message());
+              log.error("Move command match failed with message: " + ((CommandStatus2.Error) status).message());
           });
         }
       }).

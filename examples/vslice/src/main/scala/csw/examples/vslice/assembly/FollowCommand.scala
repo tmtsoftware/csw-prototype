@@ -44,17 +44,17 @@ import csw.util.config.{BooleanItem, DoubleItem}
  * @param nssInUseIn a BooleanItem, set to true if the NFIRAOS Source Simulator is in use, set to false if not in use
  * @param tromboneHCDIn the actor reference to the trombone HCD as a [[scala.Option]]
  * @param eventPublisher the actor reference to the shared TrombonePublisher actor as a [[scala.Option]]
- * @param eventService optional EventService for subscriptions
+ * @param eventService EventService for subscriptions
  *
  */
-class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssInUseIn: BooleanItem, val tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef], eventService: Option[EventService] = None) extends Actor with ActorLogging {
+class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssInUseIn: BooleanItem, val tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef], eventService: EventService) extends Actor with ActorLogging {
   import FollowCommand._
 
   // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
   val tromboneControl = context.actorOf(TromboneControl.props(ac, tromboneHCDIn), "trombonecontrol")
   // These vals are only being created to simplify typing
   val initialFollowActor = createFollower(initialElevation, nssInUseIn, tromboneControl, eventPublisher, eventPublisher)
-  val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService.get)
+  val initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService)
 
   def receive: Receive = followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn)
 
@@ -72,7 +72,7 @@ class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssIn
         context.stop(followActor)
         // Note that follower has the option of a different publisher for events and telemetry, but this is primarily useful for testing
         val newFollowActor = createFollower(initialElevation, nssInUseUpdate, tromboneControl, eventPublisher, eventPublisher)
-        val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventService.get)
+        val newEventSubscriber = createEventSubscriber(nssInUseUpdate, newFollowActor, eventService)
         // Set a new receive method with updated actor values, prefer this over vars or globals
         context.become(followReceive(nssInUseUpdate, newFollowActor, newEventSubscriber, tromboneHCD))
       }
@@ -104,7 +104,7 @@ class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssIn
 
 object FollowCommand {
 
-  def props(assemblyContext: AssemblyContext, initialElevation: DoubleItem, nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisherIn: Option[ActorRef], eventService: Option[EventService]) =
+  def props(assemblyContext: AssemblyContext, initialElevation: DoubleItem, nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisherIn: Option[ActorRef], eventService: EventService) =
     Props(classOf[FollowCommand], assemblyContext, initialElevation, nssInUse, tromboneHCD, eventPublisherIn, eventService)
 
   trait FollowCommandMessages

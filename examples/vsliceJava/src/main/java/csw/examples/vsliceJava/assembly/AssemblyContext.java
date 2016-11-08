@@ -1,16 +1,19 @@
 package csw.examples.vsliceJava.assembly;
 
 import com.typesafe.config.Config;
+import csw.services.loc.ComponentId;
 import csw.services.loc.ComponentType;
 import csw.util.config.*;
-import csw.util.config.Configurations.SetupConfig;
-import csw.util.config.Configurations.ConfigKey;
+import csw.util.config.BooleanKey;
+import csw.util.config.DoubleKey;
+import csw.util.config.StringKey;
 
+import static csw.services.pkg.Component.AssemblyInfo;
+import static csw.util.config.Configurations.ConfigKey;
+import static csw.util.config.Configurations.SetupConfig;
+import static javacsw.util.config.JConfigDSL.sc;
 import static javacsw.util.config.JItems.*;
-import static javacsw.util.config.JConfigDSL.*;
 import static javacsw.util.config.JUnitsOfMeasure.*;
-
-import csw.services.pkg.Component.AssemblyInfo;
 
 /**
  * TMT Source Code: 10/4/16.
@@ -29,6 +32,9 @@ public class AssemblyContext {
   public final String componentPrefix;
   public final ComponentType componentType;
   public final String fullName;
+
+  public final ComponentId assemblyComponentId ;
+  public final ComponentId hcdComponentId; // There is only one
 
   // Public command configurations
   // Init submit command
@@ -164,6 +170,9 @@ public class AssemblyContext {
     componentPrefix = info.prefix();
     componentType = info.componentType();
     fullName = componentPrefix + "." + componentName;
+
+    assemblyComponentId = new ComponentId(componentName, componentType);
+    hcdComponentId = info.connections().head().componentId(); // There is only one
 
     // Public command configurations
     // Init submit command

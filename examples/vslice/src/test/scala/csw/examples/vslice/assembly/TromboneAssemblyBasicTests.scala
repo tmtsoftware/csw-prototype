@@ -26,11 +26,11 @@ object TromboneAssemblyBasicTests {
 }
 
 /**
-  * This test assumes an HCD is running.
-  * It creates an Assembly for direct interaction, not using the Supervisor
-  */
+ * This test assumes an HCD is running.
+ * It creates an Assembly for direct interaction, not using the Supervisor
+ */
 class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   override def afterAll = {
     TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
@@ -46,7 +46,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
   def getTromboneProps(assemblyInfo: AssemblyInfo, supervisorIn: Option[ActorRef]): Props = {
     supervisorIn match {
-      case None => TromboneAssembly.props(assemblyInfo, TestProbe().ref)
+      case None           => TromboneAssembly.props(assemblyInfo, TestProbe().ref)
       case Some(actorRef) => TromboneAssembly.props(assemblyInfo, actorRef)
     }
   }
@@ -599,7 +599,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
     // This should result in the length of tcsEvents being published
-    tcsEvents.map{f =>
+    tcsEvents.map { f =>
       logger.info(s"Publish: $f")
       tcsRtc.publish(f)
     }

@@ -1,18 +1,20 @@
 package csw.examples.vsliceJava.assembly;
 
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
-import csw.services.ccs.HcdController.Submit;
 import csw.util.config.DoubleItem;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 
 import java.util.Optional;
 
+import static csw.services.ccs.HcdController.Submit;
 import static javacsw.util.config.JItems.jvalue;
 
 /**
@@ -42,6 +44,7 @@ class TromboneControl extends AbstractActor {
    */
   private TromboneControl(AssemblyContext ac, Optional<ActorRef> tromboneHCDIn) {
     this.ac = ac;
+    log.info("TromboneIn: ========> " + tromboneHCDIn);
 
 //    receive(ReceiveBuilder.
 //      matchAny(t -> log.warning("Unknown message received: " + t)).
@@ -62,6 +65,7 @@ class TromboneControl extends AbstractActor {
         int encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, jvalue(newPosition));
 
         // Final check before sending off to hardware
+        log.info("epos: $encoderPosition, minLimit: " + ac.controlConfig.minEncoderLimit + ", maxEnc: " + ac.controlConfig.maxEncoderLimit);
         assert (encoderPosition > ac.controlConfig.minEncoderLimit && encoderPosition < ac.controlConfig.maxEncoderLimit);
 
         log.debug("Setting trombone axis to stage position: " + jvalue(newPosition) + " and encoder: " + encoderPosition);

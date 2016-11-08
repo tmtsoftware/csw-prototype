@@ -101,7 +101,6 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
   def pos(position: Double): DoubleItem = stagePositionKey -> position withUnits stagePositionUnits
 
-
   // Used for creating followers
   val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
   def newFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
@@ -511,7 +510,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
       // This collects the messages from the calculator setup above - it is difficult to predict what messages will arrive from the HCD because it depends on timing of inputs
       val msgs = expectMoveMsgsWithDest(fakeAssembly, encExpected)
-      msgs.last(positionKey).head should equal(encExpected)
+      msgs.last(positionKey).head should equal(encExpected) // XXX TODO FIXME: test gets: 208 did not equal 343
       msgs.last(stateKey).head should equal(AXIS_IDLE)
       msgs.last(inLowLimitKey).head should equal(false)
       msgs.last(inHighLimitKey).head should equal(false)

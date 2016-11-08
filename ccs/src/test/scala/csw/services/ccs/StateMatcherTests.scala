@@ -12,7 +12,6 @@ import csw.util.config.UnitsOfMeasure.encoder
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 import csw.util.config.StateVariable.{CurrentState, DemandState}
 import akka.pattern.{ask, pipe}
-import csw.services.ccs.StateMatchers.{DemandMatcher, MultiStateMatcherActor, PresenceMatcher, SingleStateMatcherActor}
 import csw.util.akka.PublisherActor.Subscribe
 
 import scala.language.reflectiveCalls
@@ -23,17 +22,17 @@ import scala.concurrent.duration._
  */
 class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests")) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
-  override def afterAll = TestKit.shutdownActorSystem(system)
+  override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
   // Needed for futures
   import system.dispatcher
 
-  def stateReceiver = system.actorOf(CurrentStateReceiver.props)
+  def stateReceiver: ActorRef = system.actorOf(CurrentStateReceiver.props)
 
   val movePrefix = s"WFOS.filter.move"
   val moveCK: ConfigKey = movePrefix
   val posKey = IntKey("position")
-  def moveCS(pos: Int) = CurrentState(moveCK).add(posKey -> pos withUnits encoder)
+  def moveCS(pos: Int): CurrentState = CurrentState(moveCK).add(posKey -> pos withUnits encoder)
 
   val datumPrefix = s"WFOS.filter.datum"
   val datumCK: ConfigKey = datumPrefix
@@ -104,7 +103,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
      * fake CurrentStates and tests that it returns a Completed when it matches
      */
     it("single item match works") {
-      import csw.services.ccs.StateMatchers.SingleStateMatcherActor.StartMatch
+      import csw.services.ccs.SingleStateMatcherActor.StartMatch
 
       val sr = stateReceiver
 
@@ -132,7 +131,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
      * This is the only way that a matcher looking at current state can fail at this point
      */
     it("single item times out with a failure when pos not found") {
-      import csw.services.ccs.StateMatchers.SingleStateMatcherActor.StartMatch
+      import csw.services.ccs.SingleStateMatcherActor.StartMatch
       val sr = stateReceiver
 
       val fakeSender = TestProbe()
@@ -158,7 +157,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
      * fake CurrentStates and tests that it returns a Completed when it matches a single current state
      */
     it("single item match works with multi matcher") {
-      import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
+      import csw.services.ccs.MultiStateMatcherActor.StartMatch
 
       val sr = stateReceiver
 
@@ -186,7 +185,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
      * in the same stream. This is looking for two matches with the same prefix!
      */
     it("multi item match works with multi matcher") {
-      import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
+      import csw.services.ccs.MultiStateMatcherActor.StartMatch
 
       val sr = stateReceiver
 
@@ -218,7 +217,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
      * with different prefixes
      */
     it("multi item match works with multi matcher diffrent prefixes") {
-      import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
+      import csw.services.ccs.MultiStateMatcherActor.StartMatch
 
       val sr = stateReceiver
 
@@ -247,7 +246,7 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
      * units enabled is used
      */
     it("multi item match works with multi matcher with units") {
-      import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
+      import csw.services.ccs.MultiStateMatcherActor.StartMatch
 
       val sr = stateReceiver
 

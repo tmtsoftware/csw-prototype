@@ -3,8 +3,11 @@ package javacsw.services.events;
 import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
 import akka.util.Timeout;
+import csw.services.events.EventService$;
 import csw.services.events.EventService.EventMonitor;
 import csw.services.events.TelemetryService$;
+import csw.services.loc.ComponentId;
+import csw.services.loc.Connection;
 import csw.util.config.Events.StatusEvent;
 import scala.Unit;
 
@@ -21,6 +24,20 @@ public interface ITelemetryService {
    * The default name that the Telemetry Service is registered with
    */
   String defaultName = TelemetryService$.MODULE$.defaultName();
+
+  /**
+   * Returns the EventService ComponentId for the given, or default name
+   */
+  static ComponentId telemetryServiceComponentId(String name) {
+    return TelemetryService$.MODULE$.telemetryServiceComponentId(name);
+  }
+
+  /**
+   * Returns the TelemetryService connection for the given, or default name
+   */
+  static Connection.TcpConnection telemetryServiceConnection(String name) {
+    return TelemetryService$.MODULE$.telemetryServiceConnection(name);
+  }
 
   /**
    * Publishes the value for the status event (key is based on the event's prefix)
@@ -143,20 +160,4 @@ public interface ITelemetryService {
     return new JTelemetryService(host, port, sys);
   }
 
-//    /**
-//     * @param system the actor system used to access the akka config file containing the kvs settings
-//     * @return an object containing the kvs settings
-//     */
-//    static TelemetryServiceSettings getTelemetryServiceSettings(ActorSystem system) {
-//        return TelemetryServiceSettings.getTelemetryServiceSettings(system);
-//    }
-//
-//    /**
-//     * @param settings Redis server settings
-//     * @param system   Akka env required by RedisClient
-//     * @return a new ITelemetryService
-//     */
-//    static ITelemetryService getTelemetryService(TelemetryServiceSettings settings, ActorRefFactory system) {
-//        return new JTelemetryService(settings, system);
-//    }
 }

@@ -348,7 +348,6 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       // Create the trombone publisher for publishing SystemEvents to AOESW
       val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, None, Some(telemetryService)))
 
-
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props())
       telemetryService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
@@ -463,7 +462,6 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
       val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, None, Some(telemetryService)))
-
 
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = TestActorRef(TestSubscriber.props())

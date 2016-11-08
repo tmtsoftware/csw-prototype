@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.ConnectionType._
 import csw.services.loc._
 import csw.services.loc.ComponentType._
+import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager._
 import csw.services.pkg.Supervisor.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
@@ -107,7 +108,7 @@ object ContainerComponent {
   class Terminator(ref: ActorRef) extends Actor with ActorLogging {
     context watch ref
 
-    def receive = {
+    def receive: Receive = {
       case Terminated(_) =>
         log.debug("{} has terminated, shutting down system", ref.path)
         context.system.terminate()
@@ -265,7 +266,7 @@ object ContainerComponent {
   /**
    * A function that can be used to parse a container config from a string.  Primarily useful for testing.
    */
-  def parseStringConfig(s: String) = {
+  def parseStringConfig(s: String): Config = {
     val options = ConfigParseOptions.defaults().
       setOriginDescription("string container config").
       setSyntax(ConfigSyntax.CONF)
@@ -333,6 +334,8 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
   private var registrationOpt: Option[LocationService.RegistrationResult] = None
 
   registerWithLocationService()
+
+  override def prefix: String = info.prefix
 
   def receive = Actor.emptyBehavior
   context.become(runningReceive(Nil))

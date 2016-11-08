@@ -59,6 +59,7 @@ object FollowCommandTests {
 /**
  * TMT Source Code: 9/21/16.
  */
+//noinspection TypeAnnotation
 class FollowCommandTests extends TestKit(FollowCommandTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
@@ -105,12 +106,12 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
   val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
 
   def newTestFollowCommand(nssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[FollowCommand] = {
-    val props = FollowCommand.props(assemblyContext, initialElevation, nssInUse, tromboneHCD, eventPublisher, Some(eventService))
+    val props = FollowCommand.props(assemblyContext, initialElevation, nssInUse, tromboneHCD, eventPublisher, eventService)
     TestActorRef(props)
   }
 
   def newFollowCommand(isNssInUse: BooleanItem, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): ActorRef = {
-    val props = FollowCommand.props(assemblyContext, initialElevation, isNssInUse, tromboneHCD, eventPublisher, Some(eventService))
+    val props = FollowCommand.props(assemblyContext, initialElevation, isNssInUse, tromboneHCD, eventPublisher, eventService)
     system.actorOf(props)
   }
 
@@ -221,7 +222,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       val resultSubscriber2 = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber2, postLastEvents = false, engStatusEventPrefix)
 
-      expectNoMsg(1.second)  // Wait for subscriptions to happen
+      expectNoMsg(1.second) // Wait for subscriptions to happen
 
       // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))

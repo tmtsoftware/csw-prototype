@@ -1,22 +1,25 @@
 package csw.examples.vsliceJava.assembly;
 
-import akka.actor.*;
+import akka.actor.ActorRef;
+import akka.actor.Cancellable;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.japi.Creator;
+import akka.japi.pf.ReceiveBuilder;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.ts.AbstractTimeServiceScheduler;
 import csw.util.config.StateVariable.CurrentState;
-import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
 import javacsw.util.config.JPublisherActor;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
-import csw.examples.vsliceJava.assembly.TrombonePublisher.*;
 
 import java.util.Optional;
 
-import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
+import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStateUpdate;
+import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStatsUpdate;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
 import static javacsw.services.ts.JTimeService.localTimeNow;
 import static javacsw.util.config.JItems.jitem;
 
@@ -155,7 +158,6 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
 
   private void publishStateUpdate(CurrentState cs) {
     log.info("publish state: " + cs);
-    log.info("Eventpublisher: " + eventPublisher);
     eventPublisher.ifPresent(actorRef ->
       actorRef.tell(new AxisStateUpdate(
           jitem(cs, axisNameKey),

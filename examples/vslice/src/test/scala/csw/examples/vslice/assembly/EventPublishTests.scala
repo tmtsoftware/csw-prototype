@@ -120,7 +120,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
-      expectNoMsg(1.second)  // Wait for the connection
+      expectNoMsg(1.second) // Wait for the connection
 
       val fakeTromboneEventSubscriber = TestProbe()
 
@@ -153,7 +153,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
-      expectNoMsg(1.second)  // Wait for the connection
+      expectNoMsg(1.second) // Wait for the connection
 
       val testFE = 10.0
 
@@ -203,7 +203,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       // This creates a local subscriber to get all aoSystemEventPrefix SystemEvents published for testing
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
-      expectNoMsg(1.second)  // Wait for the connection
+      expectNoMsg(1.second) // Wait for the connection
 
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
       val tcsRtc = eventService
@@ -216,7 +216,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
       // This should result in the length of tcsEvents being published
-      tcsEvents.map{f =>
+      tcsEvents.map { f =>
         logger.info(s"Publish: $f")
         tcsRtc.publish(f)
       }
@@ -247,8 +247,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
     }
 
     /**
-      * Test Description: This test simulates some status data for the publisher.
-      */
+     * Test Description: This test simulates some status data for the publisher.
+     */
     it("should allow publishing TromboneState to publisher") {
       import TromboneStateActor._
 
@@ -262,11 +262,11 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       val resultSubscriber = system.actorOf(TestSubscriber.props())
       telemetryService.subscribe(resultSubscriber, postLastEvents = false, tromboneStateStatusEventPrefix)
-      expectNoMsg(1.second)  // Wait for the connection
+      expectNoMsg(1.second) // Wait for the connection
 
       val fakeStateProducer = TestProbe()
 
-      def makeStatusEvent(ts:TromboneState):StatusEvent = StatusEvent(tromboneStateStatusEventPrefix).madd(ts.cmd, ts.move, ts.sodiumLayer, ts.nss)
+      def makeStatusEvent(ts: TromboneState): StatusEvent = StatusEvent(tromboneStateStatusEventPrefix).madd(ts.cmd, ts.move, ts.sodiumLayer, ts.nss)
 
       // This should result in two messages being sent, one to each actor in the given order
       fakeStateProducer.send(tp, s1)

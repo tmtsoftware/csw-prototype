@@ -1,16 +1,17 @@
 package csw.examples.vsliceJava.assembly;
 
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
-import csw.services.alarms.*;
+import csw.services.alarms.AlarmKey;
+import csw.services.alarms.AlarmModel;
 import csw.util.config.JavaHelpers;
-import csw.util.config.StateVariable.CurrentState;
-
 import javacsw.services.alarms.IAlarmService;
 import javacsw.services.alarms.JAlarmService;
 import javacsw.services.ccs.JHcdController;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.hcd.TromboneHCD.inHighLimitKey;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.inLowLimitKey;
+import static csw.util.config.StateVariable.CurrentState;
 import static javacsw.services.alarms.JAlarmModel.JSeverityLevel.Okay;
 import static javacsw.services.alarms.JAlarmModel.JSeverityLevel.Warning;
 

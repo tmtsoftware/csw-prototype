@@ -2,10 +2,7 @@ package csw.services.ccs
 
 import akka.actor.{Actor, ActorRef}
 import csw.services.ccs.Validation.Validation
-import csw.services.log.PrefixedActorLogging
-import csw.util.akka.PublisherActor
 import csw.util.config.Configurations.{ControlConfigArg, ObserveConfigArg, SetupConfigArg}
-import csw.util.config.StateVariable._
 
 object AssemblyController2 {
 
@@ -40,8 +37,8 @@ object AssemblyController2 {
 /**
  * Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.
  */
-trait AssemblyController2 extends PublisherActor[CurrentStates] {
-  this: Actor with PrefixedActorLogging =>
+trait AssemblyController2 {
+  this: Actor =>
 
   import CommandStatus2._
   import AssemblyController2._
@@ -53,7 +50,7 @@ trait AssemblyController2 extends PublisherActor[CurrentStates] {
   /**
    * Receive actor messages
    */
-  protected def controllerReceive: Receive = publisherReceive orElse {
+  protected def controllerReceive: Receive = {
     case Submit(configArg) =>
       configArg match {
         case sca: SetupConfigArg   => setupSubmit(sca, oneway = false, sender())

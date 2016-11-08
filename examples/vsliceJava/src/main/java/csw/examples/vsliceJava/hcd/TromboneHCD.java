@@ -8,13 +8,9 @@ import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-import com.typesafe.config.Config;
 import csw.services.loc.ComponentType;
 import csw.services.pkg.Supervisor3;
 import csw.util.config.*;
-import csw.util.config.Configurations.SetupConfig;
-import csw.util.config.Configurations.ConfigKey;
-import csw.util.config.StateVariable.CurrentState;
 import javacsw.services.cs.akka.JConfigServiceClient;
 import javacsw.services.loc.JComponentType;
 import javacsw.services.pkg.*;
@@ -28,12 +24,16 @@ import static javacsw.util.config.JConfigDSL.*;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
 import static javacsw.services.pkg.JSupervisor3.*;
 
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState;
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStarted;
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStatistics;
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisUpdate;
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.InitialState;
-import csw.examples.vsliceJava.hcd.SingleAxisSimulator.GetStatistics;
+import static csw.util.config.Configurations.SetupConfig;
+import static csw.util.config.Configurations.ConfigKey;
+import static csw.util.config.StateVariable.CurrentState;
+
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStarted;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStatistics;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisUpdate;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.InitialState;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.GetStatistics;
 
 import java.io.File;
 import java.util.Optional;

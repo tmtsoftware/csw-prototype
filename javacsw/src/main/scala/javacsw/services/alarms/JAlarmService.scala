@@ -10,6 +10,7 @@ import csw.services.alarms.AlarmModel.{AlarmType, Health, SeverityLevel}
 import csw.services.alarms._
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
+import scala.concurrent.duration._
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
@@ -155,6 +156,18 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
 
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): CompletableFuture[Unit] =
     alarmService.setSeverity(alarmKey, severity).toJava.toCompletableFuture
+
+  /**
+   * Alternate constructor to use the Redis instance at the given host and port
+   *
+   * @param host the Redis host name or IP address
+   * @param port the Redis port
+   * @return a new JAlarmService instance
+   */
+  def this(host: String, port: Int, sys: ActorRefFactory) {
+    this(AlarmService.get(host, port)(sys, Timeout(5.seconds)), sys)
+  }
+
 }
 
 /**

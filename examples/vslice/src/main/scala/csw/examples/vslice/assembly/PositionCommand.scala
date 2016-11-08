@@ -5,7 +5,7 @@ import csw.examples.vslice.assembly.TromboneStateActor._
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.CommandStatus2.{Completed, Error, NoLongerValid}
 import csw.services.ccs.HcdController
-import csw.services.ccs.SequentialExecution.SequentialExecutor.{CommandStart, StopCurrentCommand}
+import csw.services.ccs.SequentialExecutor.{CommandStart, StopCurrentCommand}
 import csw.services.ccs.Validation.WrongInternalStateIssue
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.UnitsOfMeasure.encoder

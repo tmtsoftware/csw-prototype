@@ -11,11 +11,7 @@ import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.HcdController;
 import csw.services.ccs.Validation;
-import csw.util.config.Configurations.SetupConfig;
 import javacsw.services.ccs.JSequentialExecution;
-import csw.examples.vsliceJava.assembly.TromboneStateActor.TromboneState;
-import csw.examples.vsliceJava.assembly.TromboneStateActor.SetState;
-import csw.services.ccs.CommandStatus2.NoLongerValid;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +19,8 @@ import java.util.concurrent.TimeUnit;
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.axisDatumCK;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.cancelSC;
+import static csw.services.ccs.CommandStatus2.NoLongerValid;
+import static csw.util.config.Configurations.SetupConfig;
 import static javacsw.services.ccs.JCommandStatus2.Completed;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

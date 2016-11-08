@@ -1,19 +1,20 @@
 package csw.examples.vsliceJava.assembly;
 
-import csw.services.ccs.Validation.Invalid;
-import csw.services.ccs.Validation.Validation;
-import csw.util.config.*;
-import csw.util.config.Configurations.*;
-
-import static javacsw.services.ccs.JValidation.*;
-import static javacsw.util.config.JItems.jitem;
-import static javacsw.util.config.JItems.jvalue;
-
+import csw.util.config.Configurations.ConfigKey;
+import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.SetupConfigArg;
+import csw.util.config.DoubleItem;
 import javacsw.services.ccs.JValidation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import static csw.services.ccs.Validation.Invalid;
+import static csw.services.ccs.Validation.Validation;
+import static javacsw.services.ccs.JValidation.*;
+import static javacsw.util.config.JItems.jitem;
+import static javacsw.util.config.JItems.jvalue;
 
 /**
  * TMT Source Code: 8/24/16.

@@ -1,20 +1,24 @@
 package csw.examples.vsliceJava.assembly;
 
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import csw.util.config.BooleanItem;
-import csw.util.config.DoubleItem;
-import csw.util.config.Events.*;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
+import csw.util.config.BooleanItem;
+import csw.util.config.DoubleItem;
+import csw.util.config.Events.EventTime;
 import javacsw.services.events.IEventService;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
-import csw.examples.vsliceJava.assembly.FollowActor.*;
 
 import java.time.Instant;
 import java.util.Optional;
+
+import static csw.examples.vsliceJava.assembly.FollowActor.SetZenithAngle;
+import static csw.examples.vsliceJava.assembly.FollowActor.UpdatedEventData;
 
 /**
  * FollowCommand encapsulates the actors that collaborate to implement the Follow command.
@@ -57,7 +61,7 @@ class FollowCommand extends AbstractActor {
   private final AssemblyContext ac;
   private final DoubleItem initialElevation;
   private final Optional<ActorRef> eventPublisher;
-  private final Optional<IEventService> eventService;
+  private final IEventService eventService; // XXX FIXME: remove Optional!
 
   // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
   private final ActorRef tromboneControl;
@@ -69,10 +73,10 @@ class FollowCommand extends AbstractActor {
    * @param nssInUseIn a BooleanItem, set to true if the NFIRAOS Source Simulator is in use, set to false if not in use
    * @param tromboneHCDIn the actor reference to the trombone HCD as an optional value
    * @param eventPublisher the actor reference to the shared TrombonePublisher actor as an optional value
-   * @param eventService optional EventService for subscriptions
+   * @param eventService  EventService for subscriptions
    */
   private FollowCommand(AssemblyContext ac, DoubleItem initialElevation, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
-                        Optional<ActorRef> eventPublisher, Optional<IEventService> eventService) {
+                        Optional<ActorRef> eventPublisher, IEventService eventService) {
     this.ac = ac;
     this.initialElevation = initialElevation;
     this.eventPublisher = eventPublisher;
@@ -139,14 +143,14 @@ class FollowCommand extends AbstractActor {
     return context().actorOf(FollowActor.props(ac, initialElevation, nssInUse, Optional.of(tromboneControl), eventPublisher, eventPublisher), "follower");
   }
 
-  private ActorRef createEventSubscriber(BooleanItem nssItem, ActorRef followActor, Optional<IEventService> eventService) {
+  private ActorRef createEventSubscriber(BooleanItem nssItem, ActorRef followActor, IEventService eventService) {
     return context().actorOf(TromboneEventSubscriber.props(ac, nssItem, Optional.of(followActor), eventService), "eventsubscriber");
   }
 
   // --- static defs ---
 
   public static Props props(AssemblyContext ac, DoubleItem initialElevation, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
-                            Optional<ActorRef> eventPublisher, Optional<IEventService> eventService) {
+                            Optional<ActorRef> eventPublisher, IEventService eventService) {
     return Props.create(new Creator<FollowCommand>() {
       private static final long serialVersionUID = 1L;
 

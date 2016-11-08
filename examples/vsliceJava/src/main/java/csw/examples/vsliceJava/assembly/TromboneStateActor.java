@@ -2,7 +2,6 @@ package csw.examples.vsliceJava.assembly;
 
 
 import akka.actor.AbstractActor;
-import akka.actor.Actor;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
@@ -48,41 +47,6 @@ public class TromboneStateActor extends AbstractActor {
   }
 
   // --- static data ---
-
-  @SuppressWarnings({"unused", "WeakerAccess"})
-  public interface TromboneStateClient extends Actor {
-
-//    private TromboneState internalState = defaultTromboneState;
-
-//    public TromboneStateClient() {
-//      // This actor subscribes to TromboneState using the EventBus
-//      context().system().eventStream().subscribe(self(), TromboneState.class);
-//    }
-
-    /**
-     * Sets the current trombone state.
-     * (Note: Since Java interfaces can't have non-static local variables, this needs to be defined in the implementing class.)
-     */
-    void setCurrentState(TromboneState ts);
-
-//    /**
-//     * The currentState as a TromonbeState is returned.
-//     *
-//     * @return TromboneState current state
-//     */
-//    public TromboneState currentState() {
-//      return internalState;
-//    }
-
-    default PartialFunction<Object, BoxedUnit> stateReceive() {
-      return ReceiveBuilder.
-        match(TromboneState.class, ts -> {
-          System.out.println("Got state: " + ts);
-          setCurrentState(ts);
-        }).
-        build();
-    }
-  }
 
   public static Props props() {
     return Props.create(new Creator<TromboneStateActor>() {

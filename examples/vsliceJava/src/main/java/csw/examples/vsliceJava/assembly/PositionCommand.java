@@ -9,22 +9,20 @@ import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
+import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
-import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.DoubleItem;
 import csw.util.config.JavaHelpers;
 import javacsw.services.ccs.JSequentialExecution;
-import csw.examples.vsliceJava.assembly.TromboneStateActor.TromboneState;
-import csw.examples.vsliceJava.assembly.TromboneStateActor.SetState;
-import csw.services.ccs.CommandStatus2.NoLongerValid;
-import csw.services.ccs.Validation.WrongInternalStateIssue;
-import csw.services.ccs.StateMatchers.DemandMatcher;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
+import static csw.services.ccs.CommandStatus2.NoLongerValid;
+import static csw.services.ccs.Validation.WrongInternalStateIssue;
+import static csw.util.config.Configurations.SetupConfig;
 import static javacsw.services.ccs.JCommandStatus2.Completed;
 import static javacsw.util.config.JConfigDSL.sc;
 import static javacsw.util.config.JItems.*;

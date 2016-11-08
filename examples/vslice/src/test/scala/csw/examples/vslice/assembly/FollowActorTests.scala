@@ -63,10 +63,10 @@ object FollowActorTests {
 }
 
 /**
-  * TMT Source Code: 8/12/16.
-  */
+ * TMT Source Code: 8/12/16.
+ */
 class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import FollowActorTests._
 
@@ -80,7 +80,6 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
   // Get the telemetry service by looking up the name with the location service. -- Used in the last test
   val telemetryService = Await.result(TelemetryService(), timeout.duration)
-
 
   override def beforeAll() = {
     // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
@@ -205,13 +204,13 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   }
 
   /**
-    * Test Description: This test provides simulated UpdatedEventData events to the FollowActor and then tests that the
-    * FollowActor sends the expected messages out including:
-    * Events for AOESW
-    * Positions for Trombone Stage
-    * Engineering Status event
-    * The events are received by "fake" actors played by TestProbes
-    */
+   * Test Description: This test provides simulated UpdatedEventData events to the FollowActor and then tests that the
+   * FollowActor sends the expected messages out including:
+   * Events for AOESW
+   * Positions for Trombone Stage
+   * Engineering Status event
+   * The events are received by "fake" actors played by TestProbes
+   */
   describe("Test for reasonable results when setNssInUse(false)") {
     import Algorithms._
     import AssemblyTestData._
@@ -298,19 +297,19 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     }
 
     /**
-      * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
-      * Then it collects the one where it is the destination and the end message
-      *
-      * @param tp   TestProbe that is receiving the CurrentState messages
-      * @param dest a TestProbe acting as the assembly
-      *
-      * @return A sequence of CurrentState messages
-      */
+     * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
+     * Then it collects the one where it is the destination and the end message
+     *
+     * @param tp   TestProbe that is receiving the CurrentState messages
+     * @param dest a TestProbe acting as the assembly
+     *
+     * @return A sequence of CurrentState messages
+     */
     def expectMoveMsgsWithDest(tp: TestProbe, dest: Int): Seq[CurrentState] = {
       val msgs = tp.receiveWhile(5.seconds) {
-        case m@CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
+        case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
         // This is present to pick up the first status message
-        case st@CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
+        case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
       }
       val fmsg1 = tp.expectMsgClass(classOf[CurrentState]) // last one with current == target
       val fmsg2 = tp.expectMsgClass(classOf[CurrentState]) // the the end event with IDLE
@@ -319,14 +318,14 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     }
 
     /**
-      * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
-      * This tests the entire path with fake TCS sending events through Event Service, which are received by
-      * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
-      * which sends them to the TromboneHCD, which replies with StateUpdates.
-      * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
-      * and subscribed to by test clients, that collect their events for checking at the end
-      * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-      */
+     * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
+     * This tests the entire path with fake TCS sending events through Event Service, which are received by
+     * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
+     * which sends them to the TromboneHCD, which replies with StateUpdates.
+     * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
+     * and subscribed to by test clients, that collect their events for checking at the end
+     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+     */
     it("creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance") {
       import TestSubscriber._
 

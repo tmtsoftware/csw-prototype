@@ -12,7 +12,7 @@ import java.util.Optional;
  * Supports Java subclasses of AssemblyController and LifecycleHandler
  */
 @SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
-public abstract class JAssemblyControllerWithLifecycleHandler extends AbstractAssemblyControllerWithLifecycleHandler {
+public abstract class JAssemblyController2 extends AbstractAssemblyController2 {
   @Override
   public List<Validation.Validation> setup(Configurations.SetupConfigArg configArg, Optional<ActorRef> replyTo) {
     return Collections.emptyList();
@@ -23,7 +23,7 @@ public abstract class JAssemblyControllerWithLifecycleHandler extends AbstractAs
     return Collections.emptyList();
   }
 
-  public JAssemblyControllerWithLifecycleHandler(AssemblyInfo info) {
+  public JAssemblyController2(AssemblyInfo info) {
     super(info);
   }
 }

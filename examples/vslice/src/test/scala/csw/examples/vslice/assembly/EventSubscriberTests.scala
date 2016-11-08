@@ -33,7 +33,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
   //  var eventAdmin: EventServiceAdmin = _
 
   // Get the event service by looking up the name with the location service.
-  val eventService:EventService = Await.result(EventService(), timeout.duration)
+  val eventService: EventService = Await.result(EventService(), timeout.duration)
   logger.info("Got Event Service!")
 
   override def beforeAll() = {

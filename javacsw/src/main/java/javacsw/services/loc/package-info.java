@@ -43,7 +43,7 @@
  * In Java, the easiest way to use the location service in an actor to keep track of connections to other applications
  * is to inherit from a class that inherits the Scala {@link csw.services.loc.LocationTrackerClientActor}
  * trait (such as {@link javacsw.services.loc.AbstractLocationTrackerClientActor}
- * or {@link javacsw.services.pkg.JAssemblyControllerWithLifecycleHandler}).
+ * or {@link javacsw.services.pkg.JAssemblyController2}).
  * Then you can override the `allResolved` method to be notified with connection details once (and whenever)
  * all connections have been resolved.
  * <p>

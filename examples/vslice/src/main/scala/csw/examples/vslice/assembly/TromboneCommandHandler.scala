@@ -5,13 +5,12 @@ import akka.pattern.ask
 import akka.util.Timeout
 import csw.examples.vslice.assembly.FollowActor.SetZenithAngle
 import csw.examples.vslice.assembly.FollowCommand.StopFollowing
-import csw.examples.vslice.hcd
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.ccs.CommandStatus2._
-import csw.services.ccs.SequentialExecution.SequentialExecutor.{CommandStart, ExecuteOne, StopCurrentCommand}
-import csw.services.ccs.StateMatchers.MultiStateMatcherActor.StartMatch
-import csw.services.ccs.StateMatchers.{DemandMatcher, MultiStateMatcherActor, StateMatcher}
+import csw.services.ccs.SequentialExecutor.{CommandStart, ExecuteOne, StopCurrentCommand}
+import csw.services.ccs.MultiStateMatcherActor.StartMatch
+import csw.services.ccs.{DemandMatcher, MultiStateMatcherActor, StateMatcher}
 import csw.services.ccs.Validation.{RequiredHCDUnavailableIssue, UnsupportedCommandInStateIssue, WrongInternalStateIssue}
 import csw.services.events.EventService
 import csw.services.loc.LocationService._
@@ -39,16 +38,16 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
   private val badEventService = None
   var eventService: Option[EventService] = badEventService
   //var eventService:EventService = _
-  private def isEventServiceAvailable: Boolean = eventService.isDefined
+  //  private def isEventServiceAvailable: Boolean = eventService.isDefined
 
   // Set the default evaluation for use with the follow command
-  var setElevationItem = naElevation(calculationConfig.defaultInitialElevation)
+  private var setElevationItem = naElevation(calculationConfig.defaultInitialElevation)
 
   //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
   //currentStateReceiver ! AddPublisher(tromboneHCD)
 
   // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
-  val tromboneStateActor = context.actorOf(TromboneStateActor.props())
+  private val tromboneStateActor = context.actorOf(TromboneStateActor.props())
 
   def receive: Receive = noFollowReceive()
 
@@ -74,13 +73,6 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
       case default =>
         log.info(s"EventSubscriber received some other location: $default")
     }
-  }
-
-  def waitingReceive(): Receive = {
-    case l: Location =>
-      log.info("CommandHandler: " + l)
-      handleLocations(l)
-    case x => log.info(s"Waiting receive received: $x")
   }
 
   def noFollowReceive(): Receive = stateReceive orElse {
@@ -145,7 +137,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
             log.info("Set elevation is: " + setElevationItem)
 
             // The event publisher may be passed in (XXX FIXME? pass in eventService)
-            val props = FollowCommand.props(ac, setElevationItem, nssItem, Some(tromboneHCD), allEventPublisher, eventService)
+            val props = FollowCommand.props(ac, setElevationItem, nssItem, Some(tromboneHCD), allEventPublisher, eventService.get)
             // Follow command runs the trombone when following
             val followCommandActor = context.actorOf(props)
             context.become(followReceive(eventService.get, followCommandActor))
@@ -199,7 +191,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
           commandOriginator.foreach(_ ! Completed)
       }
 
-    case commandStop =>
+    //    case commandStop =>
 
   }
 

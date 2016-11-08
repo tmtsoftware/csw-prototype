@@ -9,8 +9,8 @@ import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD.GetAxisUpdateNow
 import csw.services.ccs.CommandStatus2._
-import csw.services.ccs.SequentialExecution.SequentialExecutor
-import csw.services.ccs.SequentialExecution.SequentialExecutor.{ExecuteOne, StartTheSequence}
+import csw.services.ccs.SequentialExecutor
+import csw.services.ccs.SequentialExecutor.{ExecuteOne, StartTheSequence}
 import csw.services.ccs.Validation.{RequiredHCDUnavailableIssue, WrongInternalStateIssue}
 import csw.services.events.EventService
 import csw.services.loc.Connection.AkkaConnection
@@ -138,7 +138,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 
-    val errMsg:CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    val errMsg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
     errMsg shouldBe a[NoLongerValid]
     errMsg.asInstanceOf[NoLongerValid].issue shouldBe a[RequiredHCDUnavailableIssue]
 
@@ -546,7 +546,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     var upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(expectedEncoderValue)
 
-//    fakeAssembly.expectNoMsg(2.seconds)
+    //    fakeAssembly.expectNoMsg(2.seconds)
 
     // This sets up the follow command to put assembly into follow mode
     sca = Configurations.createSetupConfigArg("testobsId", ac.followSC(nssInUse = false))

@@ -1,6 +1,7 @@
 package javacsw.services.ccs;
 
 import csw.util.config.StateVariable;
+import javacsw.services.pkg.JAssemblyController2;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 
@@ -10,7 +11,7 @@ import scala.runtime.BoxedUnit;
  * Note: The non-static methods here are only defined as public due to interoperability issues between Scala and Java
  * and should normally be protected (Actors only react to messages).
  *
- * Note: You probably want to use this class instead: {@link javacsw.services.pkg.JAssemblyControllerWithLifecycleHandler}
+ * Note: You probably want to use this class instead: {@link JAssemblyController2}
  *
  */
 @SuppressWarnings("unused")
