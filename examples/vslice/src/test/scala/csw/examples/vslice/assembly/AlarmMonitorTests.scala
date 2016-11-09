@@ -60,19 +60,9 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     //    logger.info("Looking up alarm service")
     //    alarmService = Await.result(AlarmService(asName), timeout.duration)
     //    alarmAdmin = AlarmServiceAdmin(alarmService)
-    Await.result(alarmAdmin.acknowledgeAndResetAlarm(TromboneAlarmMonitor.lowLimitAlarm), timeout.duration)
-    Await.result(alarmAdmin.acknowledgeAndResetAlarm(TromboneAlarmMonitor.highLimitAlarm), timeout.duration)
-    logger.info("Initializing alarm data")
-    /*
-    // Initialize the available alarms from a file (location depends on how you run this test - XXX maybe should load it as a Config)
-    val testAlarms1 = new File("src/test/resources/test-alarms.conf")
-    val testAlarms2 = new File("examples/vslice/src/test/resources/test-alarms.conf")
-    val file = if (testAlarms1.exists()) testAlarms1 else testAlarms2
-    if (file.exists())
-      Await.result(alarmAdmin.initAlarms(file), timeout.duration)
-    else logger.error(s"$file does not exist")
-    logger.info("Initialized alarm service")
-    */
+
+    setupAlarms()
+
   }
 
   def setupAlarms(): Unit = {

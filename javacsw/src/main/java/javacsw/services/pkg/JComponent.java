@@ -1,6 +1,5 @@
 package javacsw.services.pkg;
 
-import akka.actor.Actor;
 import akka.actor.ActorContext;
 import akka.actor.ActorRef;
 import csw.services.loc.Connection;
@@ -19,7 +18,7 @@ import java.util.Set;
  * Each component has its own ActorSystem, LifecycleManager and name.
  */
 @SuppressWarnings({"unused", "SameParameterValue", "OptionalUsedAsFieldOrParameterType"})
-public interface JComponent extends Actor {
+public interface JComponent {
 
   // -- LocationServiceUsage: Describes how a component uses the location service --
   LocationServiceUsage DoNotRegister = Component.DoNotRegister$.MODULE$;

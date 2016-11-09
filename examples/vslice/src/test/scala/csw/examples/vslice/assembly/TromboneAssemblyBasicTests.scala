@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.apps.containerCmd.ContainerCmd
 import csw.services.ccs.AssemblyController2.Submit
 import csw.services.ccs.CommandStatus2._
 import csw.services.ccs.Validation.WrongInternalStateIssue
@@ -32,7 +33,17 @@ object TromboneAssemblyBasicTests {
 class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
-  override def afterAll = {
+  // List of top level actors that were created for the HCD (for clean up)
+  var hcdActors: List[ActorRef] = Nil
+
+  override def beforeAll: Unit = {
+    // Starts the HCD used in the test
+    val cmd = ContainerCmd("vslice", Array("--standalone"), Map("" -> "tromboneHCD.conf"))
+    hcdActors = cmd.actors
+  }
+
+  override def afterAll: Unit = {
+    hcdActors.foreach(_ ! PoisonPill)
     TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
   }
 

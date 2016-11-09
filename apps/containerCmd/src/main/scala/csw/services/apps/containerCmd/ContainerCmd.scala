@@ -2,6 +2,7 @@ package csw.services.apps.containerCmd
 
 import java.io.File
 
+import akka.actor.ActorRef
 import com.typesafe.config.{ConfigFactory, ConfigResolveOptions}
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.LocationService
@@ -34,8 +35,11 @@ object ContainerCmd {
  * @param resources optional map of name to config file (under src/main/resources, "" maps to the default resource)
  */
 case class ContainerCmd(name: String, args: Array[String], resources: Map[String, String] = Map.empty) {
-  val logger = Logger(LoggerFactory.getLogger(ContainerCmd.getClass))
-  val choices = resources.keys.toList.filter(_.nonEmpty).mkString(", ")
+  val logger: Logger = Logger(LoggerFactory.getLogger(ContainerCmd.getClass))
+  val choices: String = resources.keys.toList.filter(_.nonEmpty).mkString(", ")
+
+  // For use in tests that need to kill the created actors: The list of actors created.
+  var actors: List[ActorRef] = Nil
 
   /**
    * Command line options: file
@@ -83,10 +87,12 @@ case class ContainerCmd(name: String, args: Array[String], resources: Map[String
         }
         logger.debug(s" Using file: $file in $mode")
         val config = ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem())
-        if (options.standalone)
-          ContainerComponent.createStandalone(config)
-        else
-          ContainerComponent.create(config)
+        actors = if (options.standalone) {
+          ContainerComponent.createStandalone(config).getOrElse(Nil)
+        } else {
+          val t = ContainerComponent.create(config)
+          if (t.isFailure) Nil else List(t.get)
+        }
 
       case None =>
         if (resources.isEmpty) {
