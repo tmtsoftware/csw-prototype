@@ -67,12 +67,7 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
     log.info("Event Service in: " + eventServiceIn);
     log.info("Telemetry Service in: " + telemetryServiceIn);
 
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
-
-    getContext().become(publishingEnabled(eventServiceIn, telemetryServiceIn));
-
+    receive(publishingEnabled(eventServiceIn, telemetryServiceIn));
   }
 
   private PartialFunction<Object, BoxedUnit> publishingEnabled(Optional<IEventService> eventService, Optional<ITelemetryService> telemetryService) {

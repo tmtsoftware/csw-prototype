@@ -28,29 +28,29 @@ import static javacsw.util.JUtils.*;
 public class AssemblyTestData {
 
   static List<Double> testFocusErrors = Arrays.asList(ArrayUtils.toObject(
-    new double[] {-20.0, -16.0, -12.0, -8.0, -4.0, 0.0, 4.0, 8.0, 12.0, 16.0, 20.0}));
+    new double[]{-20.0, -16.0, -12.0, -8.0, -4.0, 0.0, 4.0, 8.0, 12.0, 16.0, 20.0}));
   static List<Double> testZenithAngles = Arrays.asList(ArrayUtils.toObject(
-    new double[] {0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0}));
+    new double[]{0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0}));
 
   static ComponentId hcdId = new ComponentId("lgsTromboneHCD", JComponentType.HCD);
 
   static AssemblyInfo TestAssemblyInfo = JComponent.assemblyInfo(
     "lgsTrombone",
     "nfiraos.ncc.trombone",
-    "csw.examples.vslice.assembly.TromboneAssembly",
+    "csw.examples.vsliceJava.assembly.TromboneAssembly",
     RegisterAndTrackServices, Collections.singleton(AkkaType), Collections.singleton(new Connection.AkkaConnection(hcdId)));
 
   static TromboneCalculationConfig TestCalculationConfig = new TromboneCalculationConfig(
     95.0, .75, 20.0, -20.0, 4);
 
   static TromboneControlConfig TestControlConfig = new TromboneControlConfig(
-    8.0, 90,225.0,200,  1200);
+    8.0, 225, 90.0, 200, 1200);
 
   static AssemblyContext TestAssemblyContext = new AssemblyContext(TestAssemblyInfo, TestCalculationConfig, TestControlConfig);
 
   static double maxRDError = focusErrorToRangeError(TestCalculationConfig, TestCalculationConfig.upperFocusLimit);
-  static double maxRD = zenithAngleToRangeDistance(TestCalculationConfig.defaultInitialElevation, testZenithAngles.get(testZenithAngles.size()-1));
-  static double maxTotalRD = maxRDError + zenithAngleToRangeDistance(TestCalculationConfig.defaultInitialElevation, testZenithAngles.get(testZenithAngles.size()-1));
+  static double maxRD = zenithAngleToRangeDistance(TestCalculationConfig.defaultInitialElevation, testZenithAngles.get(testZenithAngles.size() - 1));
+  static double maxTotalRD = maxRDError + zenithAngleToRangeDistance(TestCalculationConfig.defaultInitialElevation, testZenithAngles.get(testZenithAngles.size() - 1));
 
   static double minRDError = focusErrorToRangeError(TestCalculationConfig, TestCalculationConfig.lowerFocusLimit);
   static double minRD = zenithAngleToRangeDistance(TestCalculationConfig.defaultInitialElevation, testZenithAngles.get(0));
@@ -66,24 +66,24 @@ public class AssemblyTestData {
   static double minReasonableRangeError = -5.0;
 
   // These are values for testing the range error based on focus error (fe, fe distance error)
-  List<Pair<Double, Double>> feRangeErrorTestValues = testFocusErrors.stream().map(f ->
+  static List<Pair<Double, Double>> feRangeErrorTestValues = testFocusErrors.stream().map(f ->
     new Pair<>(f, focusErrorToRangeError(TestCalculationConfig, f)))
-      .collect(Collectors.toList());
+    .collect(Collectors.toList());
 
   // This provides "base" range distance based on za only (za, rd)
-  List<Pair<Double, Double>> zaRangeDistance = testZenithAngles.stream().map(f ->
+  static List<Pair<Double, Double>> zaRangeDistance = testZenithAngles.stream().map(f ->
     new Pair<>(f, zenithAngleToRangeDistance(TestCalculationConfig.defaultInitialElevation, f)))
     .collect(Collectors.toList());
 
   // This produces an Vector of data of form (newRangeDistance, newElevation), (newRangeDistance, newElevation),...) as a function of za at a given focus error
-  List<Pair<Double, Double>> newRangeAndElData(Double fe) {
+  static List<Pair<Double, Double>> newRangeAndElData(Double fe) {
     return testZenithAngles.stream().map(f ->
       focusZenithAngleToElevationAndRangeDistance(TestCalculationConfig, TestCalculationConfig.defaultInitialElevation, fe, f))
       .collect(Collectors.toList());
   }
 
   // This produces an Vector of data of form (newRangeDistance, newElevation), (newRangeDistance, newElevation),...) as a function of za at a given focus error
-  List<Pair<Double, Double>> newZARangeAndElData(Double za) {
+  static List<Pair<Double, Double>> newZARangeAndElData(Double za) {
     return testFocusErrors.stream().map(f ->
       focusZenithAngleToElevationAndRangeDistance(TestCalculationConfig, TestCalculationConfig.defaultInitialElevation, f, za))
       .collect(Collectors.toList());
@@ -97,15 +97,15 @@ public class AssemblyTestData {
     }
   }
 
-  double getza(TestValue t) {
+  static double getza(TestValue t) {
     return t.v.first().first();
   }
 
-  double gettrd(TestValue t) {
+  static double gettrd(TestValue t) {
     return t.v.first().second();
   }
 
-  int getenc(TestValue t) {
+  static int getenc(TestValue t) {
     return t.v.second();
   }
 
@@ -115,10 +115,10 @@ public class AssemblyTestData {
    * for the range of zenith angle 0 to 60 in steps of 5 degrees
    *
    * @param calculationConfig the assembly calculation config provides algorithm parameters
-   * @param controlConfig the control config provides values for mapping stage positions into encoder values
+   * @param controlConfig     the control config provides values for mapping stage positions into encoder values
    * @return a Vector of the form (((za, totalRD), enc), ((za, totalRD), enc), ...)
    */
-  List<TestValue> calculatedTestData(TromboneCalculationConfig calculationConfig, TromboneControlConfig controlConfig, double fe) {
+  static List<TestValue> calculatedTestData(TromboneCalculationConfig calculationConfig, TromboneControlConfig controlConfig, double fe) {
 
     double rde = focusErrorToRangeError(calculationConfig, fe);
 
@@ -137,10 +137,10 @@ public class AssemblyTestData {
    * for the range of focus error -20 to 20 in steps of 2 um
    *
    * @param calculationConfig the assembly calculation config provides algorithm parameters
-   * @param controlConfig the control config provides values for mapping stage positions into encoder values
+   * @param controlConfig     the control config provides values for mapping stage positions into encoder values
    * @return a Vector of the form (((fe, totalRD), enc), ((fe, totalRD), enc), ...)
    */
-  List<TestValue> calculatedFETestData(TromboneCalculationConfig calculationConfig, TromboneControlConfig controlConfig, Double elevation, Double za) {
+  static List<TestValue> calculatedFETestData(TromboneCalculationConfig calculationConfig, TromboneControlConfig controlConfig, Double elevation, Double za) {
 
     double rangeDistance1 = zenithAngleToRangeDistance(elevation, za);
     List<Double> rangeError = testFocusErrors.stream().map(f -> focusErrorToRangeError(calculationConfig, f)).collect(Collectors.toList());
@@ -157,6 +157,7 @@ public class AssemblyTestData {
 
   // These values take a total el + range to encoder value
   static final List<Pair<Double, Integer>> encoderTestValues = new ArrayList<>();
+
   static {
     encoderTestValues.add(new Pair<>(80.0, 200));
     encoderTestValues.add(new Pair<>(90.0, 225));

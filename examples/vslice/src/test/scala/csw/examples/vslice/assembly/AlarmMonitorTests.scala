@@ -24,18 +24,18 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * These tests are for the Trombone AlarmMonitor.
-  */
+ * These tests are for the Trombone AlarmMonitor.
+ */
 object AlarmMonitorTests {
   LocationService.initInterface()
   val system = ActorSystem("AlarmMonitorTests")
 }
 
 /**
-  * AlarmMonitorTests
-  */
+ * AlarmMonitorTests
+ */
 class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneAlarmMonitor._
   import TromboneStateActor._
@@ -136,38 +136,37 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   describe("Basic alarm monitor tests with test alarm service running") {
     /**
-      * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
-      * This causes the monitor to send the warning severity to the Alarm Service
-      * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
-      * the monitor actually did set the alarm severity.
-      */
+     * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
+     * This causes the monitor to send the warning severity to the Alarm Service
+     * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
+     * the monitor actually did set the alarm severity.
+     */
     it("monitor should set a low alarm when receiving simulated encoder low limit") {
       testLimitEvent(testLowLimitEvent, lowLimitAlarm)
     }
 
     /**
-      * Test Description: this uses a fake trombone HCD to send  a CurrentState with high limit set.
-      * This causes the monitor to send the warning severity to the Alarm Service
-      * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
-      * the monitor actually did set the alarm severity.
-      */
+     * Test Description: this uses a fake trombone HCD to send  a CurrentState with high limit set.
+     * This causes the monitor to send the warning severity to the Alarm Service
+     * Then the alarm is cleared. In both cases, the admin interface of the Alarm Service is used to check that
+     * the monitor actually did set the alarm severity.
+     */
     it("monitor should set a high alarm when receiving simulated encoder high limit") {
       testLimitEvent(testHighLimitEvent, highLimitAlarm)
     }
 
     /**
-      * Test Description: This test uses the actual HCD to drive the axis to the high limit and verify that the high
-      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
-      */
+     * Test Description: This test uses the actual HCD to drive the axis to the high limit and verify that the high
+     * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
+     */
     it("monitor should set a high alarm when receiving real encoder high limit using real HCD to generate data") {
       testLimitAlarm(highLimitAlarm, 2000.0, AssemblyTestData.maxReasonableStage)
     }
 
-    // XXX Commenting out for now, since test fails only when run together with above test
     /**
-      * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
-      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
-      */
+     * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
+     * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
+     */
     it("monitor should set a low alarm when receiving real encoder low limit using real HCD to generate data") {
       testLimitAlarm(lowLimitAlarm, 0.0, 100.0)
     }
@@ -197,6 +196,8 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     // use the alarm service admin to see that it is cleared,
     val alarmValue2 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     alarmValue2.reported shouldBe Okay
+
+    system.stop(am)
   }
 
   def testLimitAlarm(alarmKey: AlarmKey, limitPosition: Double, clearPosition: Double) {
@@ -252,7 +253,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     val alarmValue3 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     alarmValue3.reported shouldBe Okay
 
-    expectNoMsg(3.seconds)
+    //    expectNoMsg(3.seconds)
     system.stop(ch)
     system.stop(needToSetStateForMoveCommand)
     system.stop(am)

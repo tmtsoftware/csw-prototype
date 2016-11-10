@@ -34,7 +34,7 @@ public class MoveCommand extends AbstractActor {
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
   private final Optional<ActorRef> stateActor;
 
-  private MoveCommand(AssemblyContext ac, SetupConfig sc, ActorRef tromboneHCD, TromboneState startState, Optional<ActorRef> stateActor) {
+  public MoveCommand(AssemblyContext ac, SetupConfig sc, ActorRef tromboneHCD, TromboneState startState, Optional<ActorRef> stateActor) {
     this.stateActor = stateActor;
 
     // Not using stateReceive since no state updates are needed here only writes

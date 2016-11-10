@@ -112,9 +112,9 @@ class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with Be
       val minEncoder = stagePositionToEncoder(controlConfig, minStage)
       val maxEncoder = stagePositionToEncoder(controlConfig, maxStage)
 
-      //info(s"minStage/maxStage: $minStage/$maxStage")
-      //info(s"minEnc/maxEnc: $minEncoder/$maxEncoder")
-      //info(s"zero: ${stagePositionToEncoder(controlConfig, 0.0)}")
+      info(s"minStage/maxStage: $minStage/$maxStage")
+      info(s"minEnc/maxEnc: $minEncoder/$maxEncoder")
+      info(s"zero: ${stagePositionToEncoder(controlConfig, 0.0)}")
 
       minEncoder shouldBe >(controlConfig.minEncoderLimit)
       maxEncoder shouldBe <(controlConfig.maxEncoderLimit)

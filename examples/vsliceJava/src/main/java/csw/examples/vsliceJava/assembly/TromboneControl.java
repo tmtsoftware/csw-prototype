@@ -46,12 +46,8 @@ class TromboneControl extends AbstractActor {
     this.ac = ac;
     log.info("TromboneIn: ========> " + tromboneHCDIn);
 
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
-
     // Initial receive - start with initial values
-    getContext().become(controlReceive(tromboneHCDIn));
+    receive(controlReceive(tromboneHCDIn));
   }
 
   private PartialFunction<Object, BoxedUnit> controlReceive(Optional<ActorRef> tromboneHCD) {
