@@ -28,7 +28,7 @@ public class AxisConfig {
 
   public AxisConfig(Config config) {
     // Main prefix for keys used below
-    String prefix = "csw.examples.Trombone.hcd";
+    String prefix = "csw.examples.trombone.hcd";
     axisName = config.getString(prefix + ".axis-config.axisName");
     lowLimit = config.getInt(prefix + ".axis-config.lowLimit");
     lowUser = config.getInt(prefix + ".axis-config.lowUser");

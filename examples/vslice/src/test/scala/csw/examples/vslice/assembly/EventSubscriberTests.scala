@@ -18,13 +18,13 @@ import scala.concurrent.duration._
 
 object EventSubscriberTests {
   LocationService.initInterface()
-  val system = ActorSystem("EventSubscriberTests")
+  val sys = ActorSystem("EventSubscriberTests")
 }
 
 /**
  * TMT Source Code: 9/17/16.
  */
-class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with ImplicitSender
+class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   implicit val timeout = Timeout(10.seconds)
@@ -137,7 +137,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
 
       feEvents.map(f => tcsRtc.publish(f))
 
-      val msgs2 = fakeFollowActor.receiveN(feEvents.size)
+      val msgs2 = fakeFollowActor.receiveN(feEvents.size, timeout.duration)
       msgs2.size shouldBe feEvents.size
 
       // No more messages please
@@ -229,7 +229,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with Imp
 
       val testZA = 45.0
       tcsRtc.publish(SystemEvent(zenithAnglePrefix).add(za(testZA)))
-      val one: UpdatedEventData = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
+      val one = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
       one.zenithAngle.head shouldBe testZA
 
       // Now follow with nssInUse and send feEvents, should have 0.0 as ZA

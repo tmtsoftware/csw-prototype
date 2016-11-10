@@ -36,7 +36,7 @@ public class TromboneStateActor extends AbstractActor {
     return ReceiveBuilder.
       match(SetState.class, t -> {
         TromboneState ts = t.tromboneState;
-        if (ts != currentState) {
+        if (!ts.equals(currentState)) {
           context().system().eventStream().publish(ts);
           context().become(stateReceive(ts));
         }

@@ -23,18 +23,18 @@ import static org.junit.Assert.*;
 import static csw.examples.vsliceJava.hcd.MotionWorker.*;
 
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SameParameterValue", "WeakerAccess"})
 public class SingleAxisSimulatorTests extends JavaTestKit {
   private static ActorSystem system;
   Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));
 
   // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
-  ActorRef self() {
+  private ActorRef self() {
     return getTestActor();
   }
 
   // For compatibility with Scala tests
-  void it(String s) {
+  private void it(String s) {
     System.out.println(s);
   }
 
@@ -54,8 +54,8 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
     system = null;
   }
 
-  Vector<MotionWorkerMsgs> expectLLMoveMsgs(final int start, final int destinationIn, final int delayInMS,
-                                            final boolean diagFlag) {
+  private Vector<MotionWorkerMsgs> expectLLMoveMsgs(final int start, final int destinationIn, final int delayInMS,
+                                                    final boolean diagFlag) {
     Vector<MotionWorkerMsgs> allMsgs = new Vector<>();
     // Get AxisStarted
     allMsgs.add(expectMsgEquals(Start.instance));
@@ -105,7 +105,7 @@ public class SingleAxisSimulatorTests extends JavaTestKit {
   }
 
 
-  Vector<AxisResponse> expectMoveMsgsWithDest(int target, boolean diagFlag) {
+  private Vector<AxisResponse> expectMoveMsgsWithDest(int target, boolean diagFlag) {
     Vector<AxisResponse> allMsgs = new Vector<>();
     // Receive updates until axis idle then get the last one
     final AxisResponse[] msgs =

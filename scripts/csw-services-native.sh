@@ -1,4 +1,5 @@
 #!/bin/bash
+# XXX NOTE: This script is not currently used (see csw-services.sh instead)
 #
 # Starts serviced required by CSW and registers them with the location service
 # using the native OS dns-sd/avahi tools.

@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import static javacsw.services.pkg.JSupervisor3.*;
 import static org.junit.Assert.*;
 
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
 public class TromboneHCDCompTests extends JavaTestKit {
   private static LoggingAdapter log;
   private static ActorSystem system;

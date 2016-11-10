@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import static javacsw.services.pkg.JSupervisor3.*;
 import static org.junit.Assert.*;
 
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
 public class TromboneHCDBasicTests extends JavaTestKit {
   private static ActorSystem system;
   Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));

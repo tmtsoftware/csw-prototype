@@ -13,7 +13,7 @@ import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
 import csw.util.config.DoubleItem;
 import csw.util.config.JavaHelpers;
-import javacsw.services.ccs.JSequentialExecution;
+import javacsw.services.ccs.JSequentialExecutor;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -39,8 +39,8 @@ public class PositionCommand extends AbstractActor {
 
     // Not using stateReceive since no state updates are needed here only writes
     receive(ReceiveBuilder.
-      matchEquals(JSequentialExecution.CommandStart(), t -> {
-        if (cmd(startState) == cmdUninitialized || (move(startState) != moveIndexed && move(startState) != moveMoving)) {
+      matchEquals(JSequentialExecutor.CommandStart(), t -> {
+        if (cmd(startState).equals(cmdUninitialized) || (!move(startState).equals(moveIndexed) && !move(startState).equals(moveMoving))) {
           sender().tell(new NoLongerValid(new WrongInternalStateIssue(
             "Assembly state of " + cmd(startState) + "/" + move(startState) + " does not allow motion")), self());
         } else {
@@ -71,7 +71,7 @@ public class PositionCommand extends AbstractActor {
 
         }
       }).
-      matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
+      matchEquals(JSequentialExecutor.StopCurrentCommand(), t -> {
         log.info("Position command -- STOP");
         tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
       }).

@@ -54,32 +54,20 @@ public class TromboneAlarmMonitor extends AbstractActor {
    *
    * @param currentStateReceiver the currentStateReceiver that delivers CurrentState messages either through an HCD or a CurrentStateReceiver.
    */
-  private TromboneAlarmMonitor(ActorRef currentStateReceiver) {
+  private TromboneAlarmMonitor(ActorRef currentStateReceiver, IAlarmService alarmService) {
+
+    // Set the alarms to okay so that the Alarm Service client will update the alarms while this actor is alive
+    sendLowLimitAlarm(alarmService, Okay);
+    sendHighLimitAlarm(alarmService, Okay);
+    context().become(monitorReceive(alarmService));
+
+    // Subscribe this
+    currentStateReceiver.tell(JHcdController.Subscribe, self());
 
     receive(ReceiveBuilder.
       matchAny(t -> log.warning("AlarmMonitor uninitialized receive received an unexpected message: " + t)).
       build());
-
-    JAlarmService.lookup(JAlarmService.defaultName, context().system(), timeout)
-      .exceptionally(ex -> {
-        log.error("TromboneAlarmMonitor failed to create the AlarmService client: " + ex);
-        return null;
-      })
-      .thenAccept(alarmService -> {
-        log.info("Success finding alarm service");
-        // Set the alarms to okay so that the Alarm Service client will update the alarms while this actor is alive
-        // XXX allan FIXME: need to refresh alarm state!
-        sendLowLimitAlarm(alarmService, Okay);
-        sendHighLimitAlarm(alarmService, Okay);
-        context().become(monitorReceive(alarmService));
-//        return alarmService;
-      });
-
-    // Subscribe this
-    currentStateReceiver.tell(JHcdController.Subscribe, self());
   }
-
-
 
   /**
    * monitorReceive watches the CurrentState events for in low limit or in high limit set and sets
@@ -122,6 +110,7 @@ public class TromboneAlarmMonitor extends AbstractActor {
               // Go back to monitor State once the alarm has been cleared
               context().become(monitorReceive(alarmService));
             }
+
           } else if (alarmKey.equals(highLimitAlarm)) {
             boolean inHighLimit = JavaHelpers.jvalue(cs, inHighLimitKey);
             if (!inHighLimit) {
@@ -131,6 +120,7 @@ public class TromboneAlarmMonitor extends AbstractActor {
               context().become(monitorReceive(alarmService));
             }
           }
+
         } else log.warning("TromboneAlarmMonitor:inAlarmStateReceive received an unexpected message: " + cs);
       }).
       matchAny(t -> log.warning("TromboneAlarmMonitor:inAlarmStateReceive received an unexpected message: " + t)).
@@ -163,20 +153,20 @@ public class TromboneAlarmMonitor extends AbstractActor {
 
   // --- static defs ---
 
-  public static Props props(ActorRef currentStateReceiver) {
+  public static Props props(ActorRef currentStateReceiver, IAlarmService alarmService) {
     return Props.create(new Creator<TromboneAlarmMonitor>() {
       private static final long serialVersionUID = 1L;
 
       @Override
       public TromboneAlarmMonitor create() throws Exception {
-        return new TromboneAlarmMonitor(currentStateReceiver);
+        return new TromboneAlarmMonitor(currentStateReceiver, alarmService);
       }
     });
   }
 
   // The alarm keys for the low and high trombone encoder limits
-  private static final AlarmKey highLimitAlarm = new AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisHighLimitAlarm");
-  private static final AlarmKey lowLimitAlarm = new AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisLowLimitAlarm");
+   static final AlarmKey highLimitAlarm = new AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisHighLimitAlarm");
+   static final AlarmKey lowLimitAlarm = new AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisLowLimitAlarm");
 
   private static final Timeout timeout = new Timeout(10, TimeUnit.SECONDS);
 }

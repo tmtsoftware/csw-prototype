@@ -11,7 +11,7 @@ import akka.util.Timeout;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.HcdController;
 import csw.services.ccs.Validation;
-import javacsw.services.ccs.JSequentialExecution;
+import javacsw.services.ccs.JSequentialExecutor;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +36,7 @@ public class DatumCommand extends AbstractActor {
 
     // Not using stateReceive since no state updates are needed here only writes
     receive(ReceiveBuilder.
-      matchEquals(JSequentialExecution.CommandStart(), t -> {
+      matchEquals(JSequentialExecutor.CommandStart(), t -> {
         if (startState.cmd.head().equals(cmdUninitialized)) {
           sender().tell(new NoLongerValid(new Validation.WrongInternalStateIssue("Assembly state of "
             + startState.cmd + "/" + startState.move + " does not allow datum")), self());
@@ -53,7 +53,7 @@ public class DatumCommand extends AbstractActor {
           });
         }
       }).
-      matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
+      matchEquals(JSequentialExecutor.StopCurrentCommand(), t -> {
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>  DATUM STOP STOP");
         tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
       }).

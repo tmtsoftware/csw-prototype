@@ -121,7 +121,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
       // This is an engineering command to allow checking subscriber
        match(UpdateNssInUse.class, t -> {
         BooleanItem nssInUseUpdate = t.nssInUse;
-        if (nssInUseUpdate != cNssInUse) {
+        if (!nssInUseUpdate.equals(cNssInUse)) {
           if (jvalue(nssInUseUpdate)) {
             unsubscribeKeys(subscribeMonitor, ac.zaConfigKey);
             context().become(subscribeReceive(nssInUseUpdate, nssZenithAngle, cFocusError));

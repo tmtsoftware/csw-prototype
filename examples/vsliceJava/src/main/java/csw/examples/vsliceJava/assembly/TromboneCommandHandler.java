@@ -13,7 +13,7 @@ import csw.services.ccs.SequentialExecutor.ExecuteOne;
 import csw.services.ccs.StateMatcher;
 import csw.util.config.BooleanItem;
 import csw.util.config.DoubleItem;
-import javacsw.services.ccs.JSequentialExecution;
+import javacsw.services.ccs.JSequentialExecutor;
 import javacsw.services.events.IEventService;
 import javacsw.services.pkg.ILocationSubscriberClient;
 import scala.PartialFunction;
@@ -149,21 +149,21 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
             log.info("Datums State: " + currentState());
             ActorRef datumActorRef = context().actorOf(DatumCommand.props(sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
             context().become(actorExecutingReceive(datumActorRef, commandOriginator));
-            self().tell(JSequentialExecution.CommandStart(), self());
+            self().tell(JSequentialExecutor.CommandStart(), self());
           } else hcdNotAvailableResponse(commandOriginator);
 
         } else if (configKey.equals(ac.moveCK)) {
           if (isHCDAvailable) {
             ActorRef moveActorRef = context().actorOf(MoveCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
             context().become(actorExecutingReceive(moveActorRef, commandOriginator));
-            self().tell(JSequentialExecution.CommandStart(), self());
+            self().tell(JSequentialExecutor.CommandStart(), self());
           } else hcdNotAvailableResponse(commandOriginator);
 
         } else if (configKey.equals(ac.positionCK)) {
           if (isHCDAvailable) {
             ActorRef positionActorRef = context().actorOf(PositionCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
             context().become(actorExecutingReceive(positionActorRef, commandOriginator));
-            self().tell(JSequentialExecution.CommandStart(), self());
+            self().tell(JSequentialExecutor.CommandStart(), self());
           } else hcdNotAvailableResponse(commandOriginator);
 
         } else if (configKey.equals(ac.stopCK)) {
@@ -181,7 +181,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           // Note that units have already been verified here
           ActorRef setElevationActorRef = context().actorOf(SetElevationCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
           context().become(actorExecutingReceive(setElevationActorRef, commandOriginator));
-          self().tell(JSequentialExecution.CommandStart(), self());
+          self().tell(JSequentialExecutor.CommandStart(), self());
 
         } else if (configKey.equals(ac.followCK)) {
           if (cmd(currentState()).equals(cmdUninitialized)
@@ -270,10 +270,10 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
     Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
 
     return stateReceive().orElse(ReceiveBuilder.
-      matchEquals(JSequentialExecution.CommandStart(), t -> {
+      matchEquals(JSequentialExecutor.CommandStart(), t -> {
 
         // Execute the command actor asynchronously, pass the command status back, kill the actor and go back to waiting
-        ask(currentCommand, JSequentialExecution.CommandStart(), timeout.duration().toMillis()).
+        ask(currentCommand, JSequentialExecutor.CommandStart(), timeout.duration().toMillis()).
           thenApply(reply -> {
             CommandStatus2 cs = (CommandStatus2) reply;
             commandOriginator.ifPresent(actorRef -> actorRef.tell(cs, self()));
@@ -282,7 +282,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
             return null;
           });
       }).
-      matchEquals(JSequentialExecution.StopCurrentCommand(), t -> {
+      matchEquals(JSequentialExecutor.StopCurrentCommand(), t -> {
         // This sends the Stop sc to the HCD
         log.debug("actorExecutingReceive STOP STOP");
         closeDownMotionCommand(currentCommand, commandOriginator);
@@ -297,7 +297,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
   }
 
   private void closeDownMotionCommand(ActorRef currentCommand, Optional<ActorRef> commandOriginator) {
-    currentCommand.tell(JSequentialExecution.StopCurrentCommand(), self());
+    currentCommand.tell(JSequentialExecutor.StopCurrentCommand(), self());
     currentCommand.tell(PoisonPill.getInstance(), self());
     context().become(noFollowReceive());
     commandOriginator.ifPresent(actorRef -> actorRef.tell(Cancelled, self()));
