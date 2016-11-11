@@ -19,7 +19,9 @@ import csw.util.config.Events.{StatusEvent, SystemEvent}
  * StatusEvent is triggered by the arrival of an EngrUpdate message, and the state StatusEvent is triggered by the
  * TromboneState message.
  *
- * Values in messages are assumed to be correct and ready for publishing.
+ * The pubisher also publishes diagnostic data from the DiagPublisher as an axis state and statistics StatusEvent.
+ *
+ * Values in received messages are assumed to be correct and ready for publishing.
  *
  * @param assemblyContext the trombone AssemblyContext contains important shared values and useful functions
  * @param eventServiceIn optional EventService for testing event service
@@ -29,6 +31,7 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
   import assemblyContext._
   import TromboneStateActor._
 
+  // Needed for future onFailure
   import context.dispatcher
 
   log.info("Event Service in: " + eventServiceIn)
@@ -62,22 +65,20 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
   def handleLocations(location: Location, currentEventService: Option[EventService], currentTelemetryService: Option[TelemetryService]): Unit = {
     location match {
       case t: ResolvedTcpLocation =>
-        log.info(s"Received TCP Location: ${t.connection}")
+        log.debug(s"Received TCP Location: ${t.connection}")
         // Verify that it is the event service
         if (t.connection == EventService.eventServiceConnection()) {
-          log.info(s"TrombonePublisher received connection: $t")
           val newEventService = Some(EventService.get(t.host, t.port))
-          log.info(s"Event Service at: $newEventService")
+          log.debug(s"Event Service at: $newEventService")
           context.become(publishingEnabled(newEventService, currentTelemetryService))
         }
         if (t.connection == TelemetryService.telemetryServiceConnection()) {
-          log.info(s"TrombonePublisher received connection: $t")
           val newTelemetryService = Some(TelemetryService.get(t.host, t.port))
-          log.info(s"Telemetry Service at: $newTelemetryService")
+          log.debug(s"Telemetry Service at: $newTelemetryService")
           context.become(publishingEnabled(currentEventService, newTelemetryService))
         }
       case u: Unresolved =>
-        log.info(s"Unresolved: ${u.connection}")
+        log.debug(s"Unresolved: ${u.connection}")
         if (u.connection == EventService.eventServiceConnection()) context.become(publishingEnabled(None, currentTelemetryService))
         else if (u.connection == TelemetryService.telemetryServiceConnection()) context.become(publishingEnabled(currentEventService, None))
       case default =>
@@ -87,16 +88,17 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
 
   private def publishAOESW(eventService: Option[EventService], elevationItem: DoubleItem, rangeItem: DoubleItem) = {
     val se = SystemEvent(aoSystemEventPrefix).madd(elevationItem, rangeItem)
-    log.info(s"System publish of $aoSystemEventPrefix: $se")
-    eventService.foreach(_.publish(se))
+    log.debug(s"System publish of $aoSystemEventPrefix: $se")
+    eventService.foreach(_.publish(se).onFailure {
+      case ex => log.error("TrombonePublisher failed to publish AO system event: $se", ex)
+    })
   }
 
   private def publishEngr(telemetryService: Option[TelemetryService], rtcFocusError: DoubleItem, stagePosition: DoubleItem, zenithAngle: DoubleItem) = {
     val ste = StatusEvent(engStatusEventPrefix).madd(rtcFocusError, stagePosition, zenithAngle)
     log.info(s"Status publish of $engStatusEventPrefix: $ste")
-
     telemetryService.foreach(_.publish(ste).onFailure {
-      case ex => log.error(s"TrombonePublisher failed to publish engr: $ste", ex)
+      case ex => log.error(s"TrombonePublisher failed to publish engr event: $ste", ex)
     })
   }
 
@@ -105,23 +107,24 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
     val ste = StatusEvent(tromboneStateStatusEventPrefix).madd(ts.cmd, ts.move, ts.sodiumLayer, ts.nss)
     log.debug(s"Status state publish of $tromboneStateStatusEventPrefix: $ste")
     telemetryService.foreach(_.publish(ste).onFailure {
-      case ex => log.error(s"TrombonePublisher failed to publish engr: $ste", ex)
+      case ex => log.error(s"TrombonePublisher failed to publish trombone state: $ste", ex)
     })
   }
 
   private def publishAxisState(telemetryService: Option[TelemetryService], axisName: StringItem, position: IntItem, state: ChoiceItem, inLowLimit: BooleanItem, inHighLimit: BooleanItem, inHome: BooleanItem) = {
-    import context.dispatcher
     val ste = StatusEvent(axisStateEventPrefix).madd(axisName, position, state, inLowLimit, inHighLimit, inHome)
-    log.info(s"Axis state publish of $axisStateEventPrefix: $ste")
+    log.debug(s"Axis state publish of $axisStateEventPrefix: $ste")
     telemetryService.foreach(_.publish(ste).onFailure {
-      case ex => log.error(s"TrombonePublisher failed to publish engr: $ste", ex)
+      case ex => log.error(s"TrombonePublisher failed to publish trombone axis state: $ste", ex)
     })
   }
 
   def publishAxisStats(telemetryService: Option[TelemetryService], axisName: StringItem, datumCount: IntItem, moveCount: IntItem, homeCount: IntItem, limitCount: IntItem, successCount: IntItem, failureCount: IntItem, cancelCount: IntItem): Unit = {
     val ste = StatusEvent(axisStatsEventPrefix).madd(axisName, datumCount, moveCount, homeCount, limitCount, successCount, failureCount, cancelCount)
     log.debug(s"Axis stats publish of $axisStatsEventPrefix: $ste")
-    telemetryService.foreach(_.publish(ste))
+    telemetryService.foreach(_.publish(ste).onFailure {
+      case ex => log.error(s"TrombonePublisher failed to publish trombone axis stats: $ste", ex)
+    })
   }
 
 }
