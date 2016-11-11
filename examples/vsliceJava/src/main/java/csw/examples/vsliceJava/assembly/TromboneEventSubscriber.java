@@ -68,11 +68,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
     // This var is needed to capture the Monitor used for subscriptions
     subscribeMonitor = startupSubscriptions(eventService);
 
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
-
-    context().become(subscribeReceive(nssInUseIn, initialZenithAngle, initialFocusError));
+    receive(subscribeReceive(nssInUseIn, initialZenithAngle, initialFocusError));
   }
 
   private EventMonitor startupSubscriptions(IEventService eventService) {

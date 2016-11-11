@@ -85,10 +85,12 @@ public class Algorithms {
    * @param stagePosition is the value of the stage position in millimeters (currently the total NA elevation)
    * @return DoubleItem with key naTrombonePosition and units of enc
    */
+  @SuppressWarnings("UnnecessaryLocalVariable")
   public static int stagePositionToEncoder(TromboneControlConfig controlConfig, double stagePosition) {
     // Scale value to be between 200 and 1000 encoder
     int encoderValue = (int) (controlConfig.positionScale * (stagePosition - controlConfig.stageZero) + controlConfig.minStageEncoder);
-    return Math.max(controlConfig.minEncoderLimit, Math.min(controlConfig.maxEncoderLimit, encoderValue));
+    int pinnedEncValue = Math.max(controlConfig.minEncoderLimit, Math.min(controlConfig.maxEncoderLimit, encoderValue));
+    return pinnedEncValue;
   }
 
 }

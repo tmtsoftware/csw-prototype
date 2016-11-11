@@ -84,7 +84,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
     this.ac = ac;
     badHCDReference = context().system().deadLetters();
     this.tromboneHCD = tromboneHCDIn.orElse(badHCDReference);
-    isHCDAvailable = tromboneHCD != badHCDReference;
+    isHCDAvailable = !tromboneHCD.equals(badHCDReference);
     tromboneStateActor = context().actorOf(TromboneStateActor.props());
     this.allEventPublisher = allEventPublisher;
     setElevationItem = ac.naElevation(ac.calculationConfig.defaultInitialElevation);
@@ -92,11 +92,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
     subscribeToLocationUpdates();
     log.info("System  is: " + context().system());
 
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
-
-    context().become(noFollowReceive());
+    receive(noFollowReceive());
   }
 
   private void handleLocations(Location location) {
@@ -118,7 +114,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
       log.info("Unresolved: " + location.connection());
       if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName)))
         eventService = badEventService;
-      if (location.connection().componentId() == ac.hcdComponentId)
+      if (location.connection().componentId().equals(ac.hcdComponentId))
         tromboneHCD = badHCDReference;
     } else {
       log.info("EventSubscriber received some other location: " + location);

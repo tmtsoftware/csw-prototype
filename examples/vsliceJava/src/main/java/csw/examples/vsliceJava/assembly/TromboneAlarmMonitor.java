@@ -59,14 +59,11 @@ public class TromboneAlarmMonitor extends AbstractActor {
     // Set the alarms to okay so that the Alarm Service client will update the alarms while this actor is alive
     sendLowLimitAlarm(alarmService, Okay);
     sendHighLimitAlarm(alarmService, Okay);
-    context().become(monitorReceive(alarmService));
 
     // Subscribe this
     currentStateReceiver.tell(JHcdController.Subscribe, self());
 
-    receive(ReceiveBuilder.
-      matchAny(t -> log.warning("AlarmMonitor uninitialized receive received an unexpected message: " + t)).
-      build());
+    receive(monitorReceive(alarmService));
   }
 
   /**

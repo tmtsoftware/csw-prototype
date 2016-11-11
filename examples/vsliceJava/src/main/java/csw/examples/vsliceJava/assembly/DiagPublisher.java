@@ -62,11 +62,7 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
     // It would be nice if this message was in a more general location than HcdController or
 
     // Start in operations mode - 0 is initial stateMessageCounter value
-    getContext().become(operationsReceive(currentStateReceiver, 0, tromboneHCDIn));
-
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
+    receive(operationsReceive(currentStateReceiver, 0, tromboneHCDIn));
   }
 
   /**

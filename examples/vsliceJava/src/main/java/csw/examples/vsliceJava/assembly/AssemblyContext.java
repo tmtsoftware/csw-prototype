@@ -99,44 +99,45 @@ public class AssemblyContext {
 
   // Shared key values --
   // Used by setElevation, setAngle
-  public final StringKey configurationNameKey;
-  public final StringKey configurationVersionKey;
+  public static final StringKey configurationNameKey = StringKey("initConfigurationName");
+  public static final StringKey configurationVersionKey = StringKey("initConfigurationVersion");
 
-  public final DoubleKey focusErrorKey;
-  public final UnitsOfMeasure.Units focusErrorUnits;
 
-  public DoubleItem fe(double error) {
+  public static final DoubleKey focusErrorKey = DoubleKey("focus");
+  public static final UnitsOfMeasure.Units focusErrorUnits = micrometers;
+
+  public static DoubleItem fe(double error) {
     return jset(focusErrorKey, error).withUnits(focusErrorUnits);
   }
 
-  public final DoubleKey zenithAngleKey;
-  public final UnitsOfMeasure.Units zenithAngleUnits;
+  public static final DoubleKey zenithAngleKey = DoubleKey("zenithAngle");
+  public static final UnitsOfMeasure.Units zenithAngleUnits = degrees;
 
-  public final DoubleItem za(double angle) {
+  public static final DoubleItem za(double angle) {
     return jset(zenithAngleKey, angle).withUnits(zenithAngleUnits);
   }
 
-  public final DoubleKey naRangeDistanceKey;
-  public final UnitsOfMeasure.Units naRangeDistanceUnits;
+  public static final DoubleKey naRangeDistanceKey = DoubleKey("rangeDistance");
+  public static final UnitsOfMeasure.Units naRangeDistanceUnits = kilometers;
 
   public DoubleItem rd(double rangedistance) {
     return jset(naRangeDistanceKey, rangedistance).withUnits(naRangeDistanceUnits);
   }
 
-  public final DoubleKey naElevationKey;
-  public final UnitsOfMeasure.Units naElevationUnits;
+  public final DoubleKey naElevationKey = DoubleKey("elevation");
+  public final UnitsOfMeasure.Units naElevationUnits = kilometers;
   public final DoubleItem naElevation(Double elevation) {
     return jset(naElevationKey, elevation).withUnits(naElevationUnits);
   }
 
-  public final DoubleKey initialElevationKey;
-  public final UnitsOfMeasure.Units initialElevationUnits;
+  public final DoubleKey initialElevationKey = DoubleKey("initialElevation");
+  public final UnitsOfMeasure.Units initialElevationUnits = kilometers;
   public DoubleItem iElevation(double elevation) {
     return jset(initialElevationKey, elevation).withUnits(initialElevationUnits);
   }
 
-  public final DoubleKey stagePositionKey;
-  public final UnitsOfMeasure.Units stagePositionUnits;
+  public final DoubleKey stagePositionKey = DoubleKey("stagePosition");
+  public final UnitsOfMeasure.Units stagePositionUnits = millimeters;
 
   public DoubleItem spos(double pos) {
     return jset(stagePositionKey, pos).withUnits(stagePositionUnits);
@@ -144,12 +145,12 @@ public class AssemblyContext {
 
   // ---------- Keys used by TromboneEventSubscriber and Others
   // This is the zenith angle from TCS
-  public final String zenithAnglePrefix;
-  public final ConfigKey zaConfigKey;
+  public final String zenithAnglePrefix = "TCS.tcsPk.zenithAngle";
+  public final ConfigKey zaConfigKey = new ConfigKey(zenithAnglePrefix);
 
   // This is the focus error from RTC
-  public final String focusErrorPrefix;
-  public final ConfigKey feConfigKey;
+  public final String focusErrorPrefix = "RTC.focusError";
+  public final ConfigKey feConfigKey = new ConfigKey(focusErrorPrefix);
 
   // ----------- Keys, etc. used by trombonePublisher, calculator, comamnds
   public final String aoSystemEventPrefix;
@@ -210,38 +211,6 @@ public class AssemblyContext {
 
     // A list of all commands
     allCommandKeys = new ConfigKey[]{initCK, datumCK, stopCK, moveCK, positionCK, setElevationCK, setAngleCK, followCK};
-
-    // Shared key values --
-    // Used by setElevation, setAngle
-    configurationNameKey = StringKey("initConfigurationName");
-    configurationVersionKey = StringKey("initConfigurationVersion");
-
-    focusErrorKey = DoubleKey("focus");
-    focusErrorUnits = micrometers;
-
-    zenithAngleKey = DoubleKey("zenithAngle");
-    zenithAngleUnits = degrees;
-
-    naRangeDistanceKey = DoubleKey("rangeDistance");
-    naRangeDistanceUnits = kilometers;
-
-    naElevationKey = DoubleKey("elevation");
-    naElevationUnits = kilometers;
-
-    initialElevationKey = DoubleKey("initialElevation");
-    initialElevationUnits = kilometers;
-
-    stagePositionKey = DoubleKey("stagePosition");
-    stagePositionUnits = millimeters;
-
-    // ---------- Keys used by TromboneEventSubscriber and Others
-    // This is the zenith angle from TCS
-    zenithAnglePrefix = "TCS.tcsPk.zenithAngle";
-    zaConfigKey = new ConfigKey(zenithAnglePrefix);
-
-    // This is the focus error from RTC
-    focusErrorPrefix = "RTC.focusError";
-    feConfigKey = new ConfigKey(focusErrorPrefix);
 
     // ----------- Keys, etc. used by trombonePublisher, calculator, comamnds
     aoSystemEventPrefix = componentPrefix + ".sodiumLayer";

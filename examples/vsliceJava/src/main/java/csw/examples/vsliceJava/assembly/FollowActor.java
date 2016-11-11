@@ -83,12 +83,7 @@ public class FollowActor extends AbstractActor {
 //    DoubleItem nSSModeZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);
 
     // Initial receive - start with initial values
-    getContext().become(followingReceive(initialElevation, initialFocusError, initialZenithAngle));
-
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
-
+    receive(followingReceive(initialElevation, initialFocusError, initialZenithAngle));
   }
 
   private PartialFunction<Object, BoxedUnit> followingReceive(DoubleItem cElevation, DoubleItem cFocusError, DoubleItem cZenithAngle) {
@@ -195,7 +190,7 @@ public class FollowActor extends AbstractActor {
   }
 
   /**
-   * Messages received by csw.examples.vslice.FollowActor
+   * Messages received by csw.examples.vsliceJava.FollowActor
    * Update from subscribers
    */
   interface FollowActorMessages {}

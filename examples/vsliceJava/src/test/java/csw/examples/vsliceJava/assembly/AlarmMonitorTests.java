@@ -220,6 +220,8 @@ public class AlarmMonitorTests extends JavaTestKit {
     // use the alarm service admin to see that it is cleared,
     CurrentSeverity alarmValue2 = alarmAdmin.getSeverity(alarmKey).get(10, TimeUnit.SECONDS);
     assertEquals(alarmValue2.reported(), Okay);
+
+    system.stop(am);
   }
 
   void testLimitAlarm(AlarmKey alarmKey, double limitPosition, double clearPosition) throws Exception {
@@ -274,7 +276,7 @@ public class AlarmMonitorTests extends JavaTestKit {
     CurrentSeverity alarmValue3 = alarmAdmin.getSeverity(alarmKey).get(10, TimeUnit.SECONDS);
     assertEquals(alarmValue3.reported(), Okay);
 
-    expectNoMsg(FiniteDuration.create(3, TimeUnit.SECONDS));
+//    expectNoMsg(FiniteDuration.create(3, TimeUnit.SECONDS));
     system.stop(ch);
     system.stop(needToSetStateForMoveCommand);
     system.stop(am);

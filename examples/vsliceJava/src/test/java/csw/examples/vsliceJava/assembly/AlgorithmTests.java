@@ -1,135 +1,168 @@
-//package csw.examples.vsliceJava.assembly
-//
-//import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
-//
-///**
-// * These are tests of the calculations in the Calculation Actor
-// */
-//class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
-//  import Algorithms._
-//  import AssemblyTestData._
-//
-//  import AssemblyTestData.TestAssemblyContext._
-//
-//  def ~=(x: Double, y: Double, precision: Double) = {
-//    if ((x - y).abs < precision) true else false
-//  }
-//
-//  val testFocusError = -20 to 20 by 4
-//
-//  val calculationConfig = TestCalculationConfig
-//  val controlConfig = TestControlConfig
-//
-//  val initialElevation = calculationConfig.defaultInitialElevation
-//
-//  describe("Testing the algorithms for correctness without actor") {
-//
-//    it("should produce good range distance error - good") {
-//
-//      val rde = testFocusError.map(focusErrorToRangeError(calculationConfig, _))
-//      // Verify reasonableness
-//      // range distances should be the same at 0 za
-//      rde.head shouldBe >(minReasonableRangeError)
-//      rde.last shouldBe <(maxReasonableRangeError)
-//    }
-//
-//    def round(din: Double): Double = Math.rint(din * 100) / 100
-//
-//    it("should have good zenith angle to range distance - good") {
-//
-//      val testElevation = calculationConfig.defaultInitialElevation
-//
-//      val rds = testZenithAngles.map(zenithAngleToRangeDistance(testElevation, _))
-//
-//      // Verify reasonableness
-//      // range distances should be the same at 0 za
-//      rds.head shouldBe >(minTotalRD)
-//      rds.last shouldBe <(maxTotalRD)
-//    }
-//
-//    // This is the approach used to find the new elevation after adding the range error
-//    it("should work with elevation too") {
-//      val testElevation = calculationConfig.defaultInitialElevation
-//
-//      val rds = testZenithAngles.map(zenithAngleToRangeDistance(testElevation, _))
-//
-//      val in = testZenithAngles.zip(rds)
-//
-//      val els = in.map(f => rangeDistanceToElevation(f._2, f._1)).map(round)
-//
-//      els.forall(_.equals(testElevation)) shouldBe true
-//
-//    }
-//
-//    it("should work with the next values generation") {
-//      // First change the zenith angle with a fixed fe so range distance = elevation
-//      val fe1 = 0.0
-//      val p1 = testZenithAngles.map(focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe1, _))
-//      //info("P1: " + p1)
-//      p1.head._1 should equal(p1.head._2)
-//      p1.head._1 should equal(calculationConfig.defaultInitialElevation)
-//      p1.last._1 should equal(maxRD)
-//      p1.last._2 should equal(calculationConfig.defaultInitialElevation)
-//
-//      val fe2 = calculationConfig.lowerFocusLimit
-//      val p2 = testZenithAngles.map(focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe2, _))
-//      //info("P2: " + p2)
-//      p2.head._1 should equal(p2.head._2)
-//      p2.head._1 should equal(calculationConfig.defaultInitialElevation + minRDError)
-//
-//      val fe3 = calculationConfig.upperFocusLimit
-//      val p3 = testZenithAngles.map(focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe3, _))
-//      //info("P3: " + p3)
-//      p3.head._1 should equal(p3.head._2)
-//      p3.head._1 should equal(calculationConfig.defaultInitialElevation + maxRDError)
-//    }
-//
-//    it("should verify focuserror values") {
-//      verifyFocusError(TestCalculationConfig, focusErrorKey -> 0.0) should be(true)
-//      verifyFocusError(TestCalculationConfig, focusErrorKey -> 15.0) should be(true)
-//      verifyFocusError(TestCalculationConfig, focusErrorKey -> -21.0) should be(false)
-//      verifyFocusError(TestCalculationConfig, focusErrorKey -> 41.0) should be(false)
-//    }
-//
-//    it("should verify zenith angle values") {
-//      verifyZenithAngle(zenithAngleKey -> 0.0) should be(true)
-//      verifyZenithAngle(zenithAngleKey -> -1.0) should be(false)
-//      verifyZenithAngle(zenithAngleKey -> 92.0) should be(false)
-//    }
-//
-//    it("should take a range distance and provide a reasonable stage position") {
-//      val minStage = rangeDistanceToStagePosition(minRD)
-//      val maxStage = rangeDistanceToStagePosition(maxRD)
-//
-//      minStage shouldBe >(minReasonableStage)
-//      maxStage shouldBe <(maxReasonableStage)
-//    }
-//
-//    it("should provide a reasonable encoder value") {
-//      val minStage = rangeDistanceToStagePosition(minRD)
-//      val maxStage = rangeDistanceToStagePosition(maxRD)
-//
-//      val minEncoder = stagePositionToEncoder(controlConfig, minStage)
-//      val maxEncoder = stagePositionToEncoder(controlConfig, maxStage)
-//
-//      //info(s"minStage/maxStage: $minStage/$maxStage")
-//      //info(s"minEnc/maxEnc: $minEncoder/$maxEncoder")
-//      //info(s"zero: ${stagePositionToEncoder(controlConfig, 0.0)}")
-//
-//      minEncoder shouldBe >(controlConfig.minEncoderLimit)
-//      maxEncoder shouldBe <(controlConfig.maxEncoderLimit)
-//    }
-//
-//    it("should give good data") {
-//
-//      println("test1: " + feRangeErrorTestValues)
-//      println("test2: " + zaRangeDistance)
-//
-//      println("tst3: " + newRangeAndElData(-20.0))
-//
-//      println("Test4: " + calculatedTestData(calculationConfig, controlConfig, -20.0))
-//    }
-//
-//  }
-//
-//}
+package csw.examples.vsliceJava.assembly;
+
+import akka.japi.Pair;
+import net.logstash.logback.encoder.org.apache.commons.lang.ArrayUtils;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static csw.examples.vsliceJava.assembly.Algorithms.*;
+import static csw.examples.vsliceJava.assembly.AssemblyContext.focusErrorKey;
+import static csw.examples.vsliceJava.assembly.AssemblyContext.zenithAngleKey;
+import static csw.examples.vsliceJava.assembly.AssemblyTestData.*;
+import static javacsw.util.JUtils.zip;
+import static javacsw.util.config.JItems.jset;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+
+
+/**
+ * These are tests of the calculations in the Calculation Actor
+ */
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class AlgorithmTests {
+
+  static final List<Double> testFocusError = Arrays.asList(ArrayUtils.toObject(
+    new double[]{-20.0, -16.0, -12.0, -8.0, -4.0, 0.0, 4.0, 8.0, 12.0, 16.0, 20.0}));
+
+  static final AssemblyContext.TromboneCalculationConfig calculationConfig = TestCalculationConfig;
+  static final AssemblyContext.TromboneControlConfig controlConfig = TestControlConfig;
+
+  static final double initialElevation = calculationConfig.defaultInitialElevation;
+
+  // default margin of error
+  static final double delta = 0.0001;
+
+  // --- Testing the algorithms for correctness without actor ---
+
+  @Test
+  public void shouldProduceGoodRangeDistanceError() {
+    List<Double> rde = testFocusError.stream().map(f -> focusErrorToRangeError(calculationConfig, f))
+      .collect(Collectors.toList());
+    // Verify reasonableness
+    // range distances should be the same at 0 za
+    assertTrue(rde.get(0) > minReasonableRangeError);
+    assertTrue(rde.get(rde.size() - 1) < maxReasonableRangeError);
+  }
+
+  double round(double din) {
+    return Math.rint(din * 100) / 100;
+  }
+
+  @Test
+  public void shouldHaveGoodZenithAngleToRangeDistance() {
+    double testElevation = calculationConfig.defaultInitialElevation;
+
+    List<Double> rds = testZenithAngles.stream().map(f -> zenithAngleToRangeDistance(testElevation, f))
+      .collect(Collectors.toList());
+
+    // Verify reasonableness
+    // range distances should be the same at 0 za
+    assertTrue(rds.get(0) > minTotalRD);
+    assertTrue(rds.get(rds.size() - 1) < maxTotalRD);
+  }
+
+  // This is the approach used to find the new elevation after adding the range error
+  @Test
+  public void shouldWorkWithElevationToo() {
+    double testElevation = calculationConfig.defaultInitialElevation;
+
+    List<Double> rds = testZenithAngles.stream().map(f -> zenithAngleToRangeDistance(testElevation, f))
+      .collect(Collectors.toList());
+
+    List<Pair<Double, Double>> in = zip(testZenithAngles, rds);
+
+    List<Double> els = in.stream().map(f -> rangeDistanceToElevation(f.second(), f.first())).map(this::round)
+      .collect(Collectors.toList());
+
+    els.forEach(f -> assertEquals(f, testElevation, delta));
+  }
+
+  @Test
+  public void shouldWorkWithTheNextValuesGeneration() {
+    // First change the zenith angle with a fixed fe so range distance = elevation
+    double fe1 = 0.0;
+    List<Pair<Double, Double>> p1 = testZenithAngles.stream().map(f ->
+      focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe1, f))
+      .collect(Collectors.toList());
+
+    //info("P1: " + p1)
+    assertEquals(p1.get(0).first(), p1.get(0).second());
+    assertEquals(p1.get(0).first(), calculationConfig.defaultInitialElevation, delta);
+    assertEquals(p1.get(p1.size() - 1).first(), maxRD, delta);
+    assertEquals(p1.get(p1.size() - 1).second(), calculationConfig.defaultInitialElevation, delta);
+
+    double fe2 = calculationConfig.lowerFocusLimit;
+    List<Pair<Double, Double>> p2 = testZenithAngles.stream().map(f ->
+      focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe2, f))
+      .collect(Collectors.toList());
+
+    //info("P2: " + p2)
+    assertEquals(p2.get(0).first(), p2.get(0).second(), delta);
+    assertEquals(p2.get(0).first(), calculationConfig.defaultInitialElevation + minRDError, delta);
+
+    double fe3 = calculationConfig.upperFocusLimit;
+    List<Pair<Double, Double>> p3 = testZenithAngles.stream().map(f ->
+      focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, fe3, f))
+      .collect(Collectors.toList());
+
+    //info("P3: " + p3)
+    assertEquals(p3.get(0).first(), p3.get(0).second(), delta);
+    assertEquals(p3.get(0).first(), calculationConfig.defaultInitialElevation + maxRDError, delta);
+  }
+
+  @Test
+  public void shouldVerifyFocusErrorValues() {
+    assertTrue(verifyFocusError(TestCalculationConfig, jset(focusErrorKey, 0.0)));
+    assertTrue(verifyFocusError(TestCalculationConfig, jset(focusErrorKey, 15.0)));
+    assertFalse(verifyFocusError(TestCalculationConfig, jset(focusErrorKey, -21.0)));
+    assertFalse(verifyFocusError(TestCalculationConfig, jset(focusErrorKey, 41.0)));
+  }
+
+  @Test
+  public void shouldVerifyZenithAngleValues() {
+    assertTrue(verifyZenithAngle(jset(zenithAngleKey, 0.0)));
+    assertFalse(verifyZenithAngle(jset(zenithAngleKey, -1.0)));
+    assertFalse(verifyZenithAngle(jset(zenithAngleKey, 92.0)));
+  }
+
+  @Test
+  public void shouldTakeARangeDistanceAndProvideAReasonableStagePosition() {
+    double minStage = rangeDistanceToStagePosition(minRD);
+    double maxStage = rangeDistanceToStagePosition(maxRD);
+
+    assertTrue(minStage > minReasonableStage);
+    assertTrue(maxStage < maxReasonableStage);
+  }
+
+  @Test
+  public void shouldProvideAReasonableEncoderValue() {
+    double minStage = rangeDistanceToStagePosition(minRD);
+    double maxStage = rangeDistanceToStagePosition(maxRD);
+
+    int minEncoder = stagePositionToEncoder(controlConfig, minStage);
+    int maxEncoder = stagePositionToEncoder(controlConfig, maxStage);
+
+    System.out.println("minStage/maxStage: " + minStage + "/" + maxStage);
+    System.out.println("minEnc/maxEnc: " + minEncoder + "/" + maxEncoder);
+    System.out.println("zero: " + stagePositionToEncoder(controlConfig, 0.0));
+
+    assertTrue(minEncoder > controlConfig.minEncoderLimit);
+    assertTrue(maxEncoder < controlConfig.maxEncoderLimit);
+  }
+
+  @Test
+  public void shouldGiveGoodData() {
+    System.out.println("test1: " + feRangeErrorTestValues);
+    System.out.println("test2: " + zaRangeDistance);
+
+    System.out.println("tst3: " + newRangeAndElData(-20.0));
+
+    System.out.println("Test4: " + calculatedTestData(calculationConfig, controlConfig, -20.0));
+  }
+
+}
+

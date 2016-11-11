@@ -86,11 +86,7 @@ class FollowCommand extends AbstractActor {
     ActorRef initialFollowActor = createFollower(initialElevation, nssInUseIn, tromboneControl, eventPublisher, eventPublisher);
     ActorRef initialEventSubscriber = createEventSubscriber(nssInUseIn, initialFollowActor, eventService);
 
-    getContext().become(followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn));
-
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
+    receive(followReceive(nssInUseIn, initialFollowActor, initialEventSubscriber, tromboneHCDIn));
   }
 
   private PartialFunction<Object, BoxedUnit> followReceive(BooleanItem nssInUse, ActorRef followActor,

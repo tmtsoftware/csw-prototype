@@ -31,7 +31,6 @@ import java.util.Optional;
 
 import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneCalculationConfig;
 import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneControlConfig;
-import static csw.examples.vsliceJava.assembly.TromboneStateActor.TromboneState;
 import static csw.services.loc.Connection.TcpConnection;
 import static csw.util.config.Configurations.SetupConfigArg;
 import static javacsw.services.pkg.JSupervisor3.*;
@@ -40,7 +39,7 @@ import static javacsw.services.pkg.JSupervisor3.*;
  * TMT Source Code: 6/10/16.
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
-public class TromboneAssembly extends JAssemblyController2 implements TromboneStateClient {
+public class TromboneAssembly extends JAssemblyController2 {
 
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
@@ -76,13 +75,6 @@ public class TromboneAssembly extends JAssemblyController2 implements TromboneSt
     return alarmService.isPresent();
   }
 
-  private TromboneStateActor.TromboneState internalState = TromboneStateActor.defaultTromboneState;
-
-  @Override
-  public void setCurrentState(TromboneState ts) {
-    internalState = ts;
-  }
-
   public TromboneAssembly(Component.AssemblyInfo info, ActorRef supervisor) {
     super(info);
     this.supervisor = supervisor;
@@ -95,13 +87,8 @@ public class TromboneAssembly extends JAssemblyController2 implements TromboneSt
     TromboneConfigs configs = getAssemblyConfigs();
     ac = new AssemblyContext(info, configs.calculationConfig, configs.controlConfig);
 
-//    receive(ReceiveBuilder.
-//      matchAny(t -> log.warning("Unknown message received: " + t)).
-//      build());
-
     // Initial receive - start with initial values
-    getContext().become(initializingReceive());
-
+    receive(initializingReceive());
 
     ActorRef trackerSubscriber = context().actorOf(LocationSubscriberActor.props());
     trackerSubscriber.tell(JLocationSubscriberActor.Subscribe, self());
@@ -189,7 +176,7 @@ public class TromboneAssembly extends JAssemblyController2 implements TromboneSt
   }
 
   private PartialFunction<Object, BoxedUnit> runningReceive() {
-    return locationReceive().orElse(stateReceive()).orElse(controllerReceive()).orElse(lifecycleReceivePF()).orElse(unhandledPF());
+    return locationReceive().orElse(controllerReceive()).orElse(lifecycleReceivePF()).orElse(unhandledPF());
   }
 
   private PartialFunction<Object, BoxedUnit> lifecycleReceivePF() {
