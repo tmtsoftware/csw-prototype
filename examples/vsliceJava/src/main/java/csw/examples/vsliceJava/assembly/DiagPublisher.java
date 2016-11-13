@@ -10,6 +10,7 @@ import akka.japi.pf.ReceiveBuilder;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.ts.AbstractTimeServiceScheduler;
 import csw.util.config.StateVariable.CurrentState;
+import javacsw.services.pkg.ILocationSubscriberClient;
 import javacsw.util.config.JPublisherActor;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
@@ -45,7 +46,7 @@ import static javacsw.util.config.JItems.jitem;
  * response.
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
-public class DiagPublisher extends AbstractTimeServiceScheduler {
+public class DiagPublisher extends AbstractTimeServiceScheduler implements ILocationSubscriberClient {
 
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
@@ -53,7 +54,7 @@ public class DiagPublisher extends AbstractTimeServiceScheduler {
   private final Optional<ActorRef> eventPublisher;
 
   private DiagPublisher(ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
-//      getContext().setReceiveTimeout(timeout);
+    subscribeToLocationUpdates();
 
     this.currentStateReceiver = currentStateReceiver;
     this.eventPublisher = eventPublisher;

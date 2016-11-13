@@ -33,7 +33,9 @@ import static javacsw.util.config.JItems.jadd;
  * StatusEvent is triggered by the arrival of an EngrUpdate message, and the state StatusEvent is triggered by the
  * TromboneState message.
  *
- * Values in messages are assumed to be correct and ready for publishing.
+ * The pubisher also publishes diagnostic data from the DiagPublisher as an axis state and statistics StatusEvent.
+ *
+ * Values in received messages are assumed to be correct and ready for publishing.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class TrombonePublisher extends AbstractActor implements ILocationSubscriberClient {
@@ -59,6 +61,7 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
    * @param telemetryServiceIn optional Telemetryservice for testing with telemetry service
    */
   public TrombonePublisher(AssemblyContext assemblyContext, Optional<IEventService> eventServiceIn, Optional<ITelemetryService> telemetryServiceIn) {
+    subscribeToLocationUpdates();
     this.assemblyContext = assemblyContext;
 
       // This actor subscribes to TromboneState using the EventBus
@@ -97,24 +100,24 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
   private void handleLocations(LocationService.Location location, Optional<IEventService> currentEventService, Optional<ITelemetryService> currentTelemetryService) {
     if (location instanceof ResolvedTcpLocation) {
       ResolvedTcpLocation t = (ResolvedTcpLocation)location;
-      log.info("Received TCP Location: " + t.connection());
+      log.debug("Received TCP Location: " + t.connection());
       // Verify that it is the event service
       if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName))) {
-        log.info("TrombonePublisher received connection: " + t);
+        log.debug("TrombonePublisher received connection: " + t);
         Optional<IEventService> newEventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
-        log.info("Event Service at: " + newEventService);
+        log.debug("Event Service at: " + newEventService);
         context().become(publishingEnabled(newEventService, currentTelemetryService));
       }
 
       if (location.connection().equals(ITelemetryService.telemetryServiceConnection(ITelemetryService.defaultName))) {
-        log.info("TrombonePublisher received connection: " + t);
+        log.debug("TrombonePublisher received connection: " + t);
         Optional<ITelemetryService> newTelemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context()));
-        log.info("Telemetry Service at: " + newTelemetryService);
+        log.debug("Telemetry Service at: " + newTelemetryService);
         context().become(publishingEnabled(currentEventService, newTelemetryService));
       }
 
     } else if (location instanceof LocationService.Unresolved) {
-      log.info("Unresolved: " + location.connection());
+      log.debug("Unresolved: " + location.connection());
       if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName)))
         context().become(publishingEnabled(Optional.empty(), currentTelemetryService));
       else if (location.connection().equals(ITelemetryService.telemetryServiceConnection(ITelemetryService.defaultName)))
@@ -129,7 +132,10 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
   private void publishAOESW(Optional<IEventService> eventService, DoubleItem elevationItem, DoubleItem rangeItem) {
     SystemEvent se = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix), elevationItem, rangeItem);
     log.info("System publish of " + assemblyContext.aoSystemEventPrefix + ": " + se);
-    eventService.ifPresent(e -> e.publish(se));
+    eventService.ifPresent(e -> e.publish(se).handle((x, ex) -> {
+      log.error("TrombonePublisher failed to publish AO system event: " + se, ex);
+      return null;
+    }));
   }
 
   private void publishEngr(Optional<ITelemetryService> telemetryService, DoubleItem rtcFocusError, DoubleItem stagePosition, DoubleItem zenithAngle) {
@@ -137,7 +143,7 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
     log.info("Status publish of " + assemblyContext.engStatusEventPrefix + ": " + ste);
 
     telemetryService.ifPresent(e -> e.publish(ste).handle((x, ex) -> {
-      log.error("TrombonePublisher failed to publish engr: $ste", ex);
+      log.error("TrombonePublisher failed to publish engr: " + ste, ex);
       return null;
     }));
   }
@@ -147,7 +153,7 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
     StatusEvent ste = jadd(new StatusEvent(assemblyContext.tromboneStateStatusEventPrefix), ts.cmd, ts.move, ts.sodiumLayer, ts.nss);
     log.debug("Status state publish of " + assemblyContext.tromboneStateStatusEventPrefix + ": " + ste);
     telemetryService.ifPresent(e -> e.publish(ste).handle((x, ex) -> {
-      log.error("TrombonePublisher failed to publish state: $ste", ex);
+      log.error("TrombonePublisher failed to publish state: " + ste, ex);
       return null;
     }));
   }
@@ -157,7 +163,7 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
     StatusEvent ste = jadd(new StatusEvent(assemblyContext.axisStateEventPrefix), axisName, position, state, inLowLimit, inHighLimit, inHome);
     log.debug("Axis state publish of " + assemblyContext.axisStateEventPrefix + ": " + ste);
     telemetryService.ifPresent(e -> e.publish(ste).handle((x, ex) -> {
-      log.error("TrombonePublisher failed to publish axis state: $ste", ex);
+      log.error("TrombonePublisher failed to publish axis state: " + ste, ex);
       return null;
     }));
   }
@@ -167,7 +173,10 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
     StatusEvent ste = jadd(new StatusEvent(assemblyContext.axisStatsEventPrefix), axisName, datumCount, moveCount, homeCount, limitCount,
         successCount, failureCount, cancelCount);
     log.debug("Axis stats publish of " + assemblyContext.axisStatsEventPrefix + ": " + ste);
-    telemetryService.ifPresent(e -> e.publish(ste));
+    telemetryService.ifPresent(e -> e.publish(ste).handle((x, ex) -> {
+      log.error("TrombonePublisher failed to publish trombone axis stats: " + ste, ex);
+      return null;
+    }));
   }
 
   // --- static defs ---

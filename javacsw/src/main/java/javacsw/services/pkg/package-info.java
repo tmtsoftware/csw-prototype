@@ -22,7 +22,7 @@
  * <p>
  * Java based components should extend an abstract actor based class that includes that trait, such as
  * {@link javacsw.services.pkg.JAssemblyController2} for assemblies or
- * {@link javacsw.services.pkg.JHcdControllerWithLifecycleHandler} for HCDs and then override
+ * {@link javacsw.services.pkg.JHcdController} for HCDs and then override
  * the lifecycle methods, such as startup(), initialize(), shutdown().
  * <p>
  * <strong>Container Config Files</strong>

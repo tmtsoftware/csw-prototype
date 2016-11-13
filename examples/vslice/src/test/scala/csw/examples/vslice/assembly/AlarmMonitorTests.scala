@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -81,13 +81,13 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   import ac._
 
-  def setupState(ts: TromboneState) = {
-    // These times are important to allow time for test actors to get and process the state updates when running tests
-    expectNoMsg(20.milli)
-    system.eventStream.publish(ts)
-    // This is here to allow the destination to run and set its state
-    expectNoMsg(20.milli)
-  }
+//  def setupState(ts: TromboneState) = {
+//    // These times are important to allow time for test actors to get and process the state updates when running tests
+//    expectNoMsg(20.milli)
+//    system.eventStream.publish(ts)
+//    // This is here to allow the destination to run and set its state
+//    expectNoMsg(20.milli)
+//  }
 
   // Initialize HCD for testing
   def startHCD: ActorRef = {
@@ -257,6 +257,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     system.stop(ch)
     system.stop(needToSetStateForMoveCommand)
     system.stop(am)
-    system.stop(tromboneHCD)
+    tromboneHCD ! PoisonPill
   }
 }

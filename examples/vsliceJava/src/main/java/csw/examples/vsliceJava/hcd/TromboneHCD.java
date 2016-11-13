@@ -34,6 +34,7 @@ import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisStatistics;
 import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisUpdate;
 import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.InitialState;
 import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.GetStatistics;
+import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.PublishAxisUpdate;
 
 import java.io.File;
 import java.util.Optional;
@@ -42,9 +43,9 @@ import java.util.concurrent.CompletableFuture;
 /**
  * TMT Source Code: 6/20/16.
  */
-@SuppressWarnings({"unused", "CodeBlock2Expr", "OptionalUsedAsFieldOrParameterType"})
-public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
-  LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+@SuppressWarnings({"unused", "CodeBlock2Expr", "OptionalUsedAsFieldOrParameterType", "WeakerAccess"})
+public class TromboneHCD extends JHcdController {
+  private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   // Initialize axis from ConfigService
   AxisConfig axisConfig;
@@ -53,7 +54,7 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   ActorRef tromboneAxis;
 
   // Initialize values -- This causes an update to the listener
-  Timeout timeout = new Timeout(Duration.create(2, "seconds"));
+  private final Timeout timeout = new Timeout(Duration.create(2, "seconds"));
 
 
   // The current axis position from the hardware axis, initialize to default value
@@ -61,9 +62,9 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
   AxisStatistics stats;
 
   // Keep track of the last SetupConfig to be received from external
-  SetupConfig lastReceivedSC;
+  private SetupConfig lastReceivedSC;
 
-  final ActorRef supervisor;
+  private final ActorRef supervisor;
 
 
   // Actor constructor: use the props() method to create the actor.
@@ -98,21 +99,44 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
     supervisor.tell(Started, self());
   }
 
-  PartialFunction<Object, BoxedUnit> initializingReceive() {
-    return ReceiveBuilder
+  private PartialFunction<Object, BoxedUnit> initializingReceive() {
+    return publisherReceive().orElse(ReceiveBuilder
       .matchEquals(Running, e -> {
         // When Running is received, transition to running Receive
-        context().become(runningReceive);
+        context().become(runningReceive());
       })
-      .matchAny(x -> log.warning("Unexpected message in TromboneHCD:initializingReceive: " + x))
-      .build();
+      .matchAny(x -> log.warning("Unexpected message in TromboneHCD (Not running yet): " + x))
+      .build());
   }
 
 
-  PartialFunction<Object, BoxedUnit> runningReceive1() {
-    return ReceiveBuilder
+  private PartialFunction<Object, BoxedUnit> runningReceive() {
+    return controllerReceive().orElse(ReceiveBuilder
+      .matchEquals(Running, e -> {
+        log.info("Received Running");
+      })
+      .matchEquals(RunningOffline, e -> {
+        log.info("Received RunningOffline");
+      })
+      .matchEquals(DoRestart, e -> {
+        log.info("Received DoRestart");
+      })
+      .matchEquals(DoShutdown, e -> {
+        log.info("Received DoShutdown");
+        // Just say complete for now
+        supervisor.tell(ShutdownComplete, self());
+      })
+      .match(Supervisor3.LifecycleFailureInfo.class, e -> {
+        log.info("Received failed state: " + e.state() + " for reason: " + e.reason());
+      })
       .matchEquals(TromboneEngineering.GetAxisStats, e -> {
         tromboneAxis.tell(GetStatistics.instance, self());
+      })
+      .matchEquals(TromboneEngineering.GetAxisUpdate, e -> {
+        tromboneAxis.tell(PublishAxisUpdate.instance, self());
+      })
+      .matchEquals(TromboneEngineering.GetAxisUpdateNow, e -> {
+        sender().tell(current, self());
       })
       .match(AxisStarted.class, e -> {
         // println("Axis Started")
@@ -157,29 +181,9 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
         );
         notifySubscribers(tromboneStats);
       })
-      .matchEquals(Running, e -> {
-        log.info("Received Running");
-        context().become(runningReceive);
-      })
-      .matchEquals(RunningOffline, e -> {
-        log.info("Received RunningOffline");
-      })
-      .matchEquals(DoRestart, e -> {
-        log.info("Received DoRestart");
-      })
-      .matchEquals(DoShutdown, e -> {
-        log.info("Received DoShutdown");
-        // Just say complete for now
-        supervisor.tell(ShutdownComplete, self());
-      })
-      .match(Supervisor3.LifecycleFailureInfo.class, e -> {
-        log.info("Received failed state: " + e.state() + " for reason: " + e.reason());
-      })
       .matchAny(x -> log.warning("Unexpected message in TromboneHCD:unhandledPF: " + x))
-      .build();
+      .build());
   }
-
-  PartialFunction<Object, BoxedUnit> runningReceive = defaultReceive().orElse(runningReceive1());
 
   /**
    * @param sc the config received
@@ -206,7 +210,7 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
     }
   }
 
-  ActorRef setupAxis(AxisConfig ac) {
+  private ActorRef setupAxis(AxisConfig ac) {
     return context().actorOf(SingleAxisSimulator.props(ac, Optional.of(self())), "Test1");
   }
 
@@ -326,7 +330,21 @@ public class TromboneHCD extends JHcdControllerWithLifecycleHandler {
 
   // Testing messages for TromboneHCD
   public enum TromboneEngineering {
+    /**
+     * Returns an AxisUpdate through subscribers
+     */
     GetAxisStats,
+
+    /**
+     * Directly returns an AxisUpdate to sender
+     */
+    GetAxisUpdate,
+
+    /**
+     * Directly returns an AxisUpdate to sender
+     */
+    GetAxisUpdateNow,
+
     GetAxisConfig
   }
 }

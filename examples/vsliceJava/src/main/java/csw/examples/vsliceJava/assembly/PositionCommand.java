@@ -12,7 +12,6 @@ import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
 import csw.util.config.DoubleItem;
-import csw.util.config.JavaHelpers;
 import javacsw.services.ccs.JSequentialExecutor;
 
 import java.util.Optional;
@@ -47,7 +46,7 @@ public class PositionCommand extends AbstractActor {
           ActorRef mySender = sender();
 
           // Note that units have already been verified here
-          DoubleItem rangeDistance = JavaHelpers.jvalue(sc, ac.naRangeDistanceKey);
+          DoubleItem rangeDistance = jitem(sc, AssemblyContext.naRangeDistanceKey);
 
           // Convert range distance to encoder units from mm
           double stagePosition = Algorithms.rangeDistanceToStagePosition(jvalue(rangeDistance));

@@ -2,6 +2,7 @@ package csw.examples.vsliceJava.assembly;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
@@ -103,13 +104,13 @@ public class AlarmMonitorTests extends JavaTestKit {
     logger.info("Initializing alarm data");
   }
 
-  void setupState(TromboneStateActor.TromboneState ts) {
-    // These times are important to allow time for test actors to get and process the state updates when running tests
-    expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
-    system.eventStream().publish(ts);
-    // This is here to allow the destination to run and set its state
-    expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
-  }
+//  void setupState(TromboneStateActor.TromboneState ts) {
+//    // These times are important to allow time for test actors to get and process the state updates when running tests
+//    expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+//    system.eventStream().publish(ts);
+//    // This is here to allow the destination to run and set its state
+//    expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+//  }
 
   // Initialize HCD for testing
   ActorRef startHCD() {
@@ -280,7 +281,7 @@ public class AlarmMonitorTests extends JavaTestKit {
     system.stop(ch);
     system.stop(needToSetStateForMoveCommand);
     system.stop(am);
-    system.stop(tromboneHCD);
+    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
   }
 }
 

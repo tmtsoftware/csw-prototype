@@ -2,7 +2,7 @@ package csw.examples.vslice.assembly
 
 import java.net.URI
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -140,7 +140,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
 
       system.stop(dp)
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
     }
 
     /**
@@ -178,7 +178,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
 
       system.stop(dp)
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
     }
 
     /**
@@ -218,7 +218,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       fakePublisher.expectNoMsg(20.milli)
 
       system.stop(dp)
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
     }
 
     /**
@@ -283,7 +283,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       fakeEventPublisher.expectNoMsg(1200.milli)
 
       system.stop(dp)
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
     }
 
     def setLocation(loc: Location) = {
@@ -329,7 +329,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
 
       system.stop(dp)
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
     }
   }
 
@@ -385,7 +385,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       result.msgs.size shouldBe 2
       //info("result: " + result)
 
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
     }
 
     /**
@@ -448,7 +448,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       //result.msgs.size shouldBe 4
       info("result: " + result)
 
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
       expectNoMsg(5.seconds)
     }
 
@@ -517,7 +517,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       result2.msgs.size should be >= 2
       //info("result: " + result2)
 
-      system.stop(tromboneHCD)
+      tromboneHCD ! PoisonPill
     }
 
   }

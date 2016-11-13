@@ -18,10 +18,9 @@ import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.*;
 /**
  * This class provides a simulator of a single axis device for the purpose of testing TMT HCDs and Assemblies.
  */
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "CodeBlock2Expr"})
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "CodeBlock2Expr", "WeakerAccess"})
 public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-
 
   final AxisConfig axisConfig;
   private final Optional<ActorRef> replyTo;
@@ -68,21 +67,20 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     if (axisConfig.home >= axisConfig.highUser)
       throw new AssertionError("home position must be less than highUser value: " + axisConfig.highUser);
 
-    getContext().become(idleReceive());
-
+    receive(idleReceive());
   }
 
   // Short-cut to forward a messaage to the optional replyTo actor
   void update(Optional<ActorRef> replyTo, Object msg) {
-    if (replyTo.isPresent()) {
-      replyTo.get().tell(msg, self());
-    }
+    replyTo.ifPresent(actorRef -> actorRef.tell(msg, self()));
   }
 
   // Actor state while working (after receiving the initial PublisherInfo message)
   PartialFunction<Object, BoxedUnit> idleReceive() {
     return ReceiveBuilder
+
       .matchEquals(InitialState.instance, e -> sender().tell(getState(), self()))
+
       .matchEquals(Datum.instance, e -> {
         axisState = AXIS_MOVING;
         update(replyTo, AxisStarted.instance);
@@ -92,27 +90,34 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
         initCount++;
         moveCount++;
       })
+
       .matchEquals(DatumComplete.instance, e -> {
         // Set limits
         axisState = AXIS_IDLE;
         // Power on causes motion of one unit!
         current++;
-        calcLimitsAndStats();
+        checkLimits();
         // Stats
         successCount++;
         // Send Update
         update(replyTo, getState());
       })
+
       .match(GetStatistics.class, e -> {
         sender().tell(
           new AxisStatistics(axisConfig.axisName, initCount, moveCount, homeCount, limitCount, successCount, failureCount, cancelCount),
           self());
       })
+
+      .matchEquals(PublishAxisUpdate.instance, e -> {
+        update(replyTo, getState());
+      })
+
       .matchEquals(Home.instance, e -> {
         axisState = AXIS_MOVING;
         log.debug("AxisHome: " + axisState);
         update(replyTo, AxisStarted.instance);
-        Props props = MotionWorker.props(current, axisConfig.home, 2, self(), false);
+        Props props = MotionWorker.props(current, axisConfig.home, 100, self(), false);
         ActorRef mw = context().actorOf(props, "homeWorker");
         context().become(homeReceive(mw));
         mw.tell(MotionWorker.Start.instance, self());
@@ -123,7 +128,8 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
         axisState = AXIS_IDLE;
         current = e.position;
         // Set limits
-        calcLimitsAndStats();
+        checkLimits();
+        if (inHome) homeCount += 1;
         // Stats
         successCount++;
         // Send Update
@@ -147,11 +153,18 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
         axisState = AXIS_IDLE;
         current = e.position;
         // Set limits
-        calcLimitsAndStats();
+        checkLimits();
+        // Do the count of limits
+        if (inHighLimit || inLowLimit) limitCount += 1;
         // Stats
         successCount++;
         // Send Update
         update(replyTo, getState());
+      })
+      .match(CancelMove.class, e -> {
+        log.debug("Received Cancel Move while idle :-(");
+        // Stats
+        cancelCount += 1;
       })
       .matchAny(x -> log.warning("Unexpected message in idleReceive: " + x))
       .build();
@@ -191,6 +204,8 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
       .match(MotionWorker.Tick.class, e -> {
         current = e.current;
         log.debug("Move Update");
+        // Set limits - this was a bug - need to do this after every step
+        checkLimits();
         // Send Update to caller
         update(replyTo, getState());
       })
@@ -204,12 +219,10 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
 
-  void calcLimitsAndStats() {
+  void checkLimits() {
     inHighLimit = isHighLimit(axisConfig, current);
     inLowLimit = isLowLimit(axisConfig, current);
-    if (inHighLimit || inLowLimit) limitCount += 1;
     inHome = isHomed(axisConfig, current);
-    if (inHome) homeCount += 1;
   }
 
   AxisUpdate getState() {
@@ -290,6 +303,12 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     }
   }
 
+  public static class PublishAxisUpdate implements AxisRequest {
+    public static final PublishAxisUpdate instance = new PublishAxisUpdate();
+
+    private PublishAxisUpdate() {
+    }
+  }
 
   public interface AxisResponse {
   }
@@ -309,13 +328,14 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
     }
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static class AxisUpdate implements AxisResponse {
-    String axisName;
-    AxisState state;
-    int current;
-    boolean inLowLimit;
-    boolean inHighLimit;
-    boolean inHomed;
+    public final String axisName;
+    public final AxisState state;
+    public final int current;
+    public final boolean inLowLimit;
+    public final boolean inHighLimit;
+    public final boolean inHomed;
 
     public AxisUpdate(String axisName, AxisState state, int current, boolean inLowLimit, boolean inHighLimit, boolean inHomed) {
       this.axisName = axisName;
@@ -329,7 +349,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
 
   @SuppressWarnings("unused")
   public static class AxisFailure implements AxisResponse {
-    String reason;
+    public final String reason;
 
     public AxisFailure(String reason) {
       this.reason = reason;
@@ -337,14 +357,14 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   public static class AxisStatistics implements AxisResponse {
-    String axisName;
-    int initCount;
-    int moveCount;
-    int homeCount;
-    int limitCount;
-    int successCount;
-    int failureCount;
-    int cancelCount;
+    public final String axisName;
+    public final int initCount;
+    public final int moveCount;
+    public final int homeCount;
+    public final int limitCount;
+    public final int successCount;
+    public final int failureCount;
+    public final int cancelCount;
 
     public AxisStatistics(String axisName, int initCount, int moveCount, int homeCount, int limitCount,
                           int successCount, int failureCount, int cancelCount) {
@@ -376,14 +396,14 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   public static class DatumComplete implements InternalMessages {
-    static final DatumComplete instance = new DatumComplete();
+    public static final DatumComplete instance = new DatumComplete();
 
     private DatumComplete() {
     }
   }
 
   public static class HomeComplete implements InternalMessages {
-    int position;
+    public final int position;
 
     public HomeComplete(int position) {
       this.position = position;
@@ -391,7 +411,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   public static class MoveComplete implements InternalMessages {
-    int position;
+    public final int position;
 
     public MoveComplete(int position) {
       this.position = position;
@@ -399,7 +419,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
   }
 
   public static class InitialState implements InternalMessages {
-    static final InitialState instance = new InitialState();
+    public static final InitialState instance = new InitialState();
 
     private InitialState() {
     }
@@ -407,7 +427,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
 
   @SuppressWarnings("unused")
   public static class InitialStatistics implements InternalMessages {
-    static final InitialStatistics instance = new InitialStatistics();
+    public static final InitialStatistics instance = new InitialStatistics();
 
     private InitialStatistics() {
     }
@@ -435,6 +455,7 @@ public class SingleAxisSimulator extends AbstractTimeServiceScheduler {
 
 // --- MotionWorker actor ---
 
+@SuppressWarnings("WeakerAccess")
 class MotionWorker extends AbstractTimeServiceScheduler {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 

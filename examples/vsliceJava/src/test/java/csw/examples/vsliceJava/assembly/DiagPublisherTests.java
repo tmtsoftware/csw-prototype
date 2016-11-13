@@ -160,7 +160,7 @@
 //      fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
 //
 //      system.stop(dp)
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //    }
 //
 //    /**
@@ -198,7 +198,7 @@
 //      msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
 //
 //      system.stop(dp)
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //    }
 //
 //    /**
@@ -238,7 +238,7 @@
 //      fakePublisher.expectNoMsg(20.milli)
 //
 //      system.stop(dp)
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //    }
 //
 //    /**
@@ -303,7 +303,7 @@
 //      fakeEventPublisher.expectNoMsg(1200.milli)
 //
 //      system.stop(dp)
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //    }
 //
 //    def setLocation(loc: Location) = {
@@ -349,7 +349,7 @@
 //      fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
 //
 //      system.stop(dp)
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //    }
 //  }
 //
@@ -406,7 +406,7 @@
 //      result.msgs.size shouldBe 2
 //      //info("result: " + result)
 //
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //    }
 //
 //    /**
@@ -471,7 +471,7 @@
 //      //result.msgs.size shouldBe 4
 //      info("result: " + result)
 //
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //      expectNoMsg(5.seconds)
 //    }
 //
@@ -541,7 +541,7 @@
 //      result2.msgs.size should be >= 2
 //      //info("result: " + result2)
 //
-//      system.stop(tromboneHCD)
+//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
 //    }
 //
 //  }

@@ -4,6 +4,9 @@ import csw.services.ccs.Validation.{Validation, ValidationIssue}
 import csw.util.config.Configurations.{SequenceConfig, SetupConfig}
 import csw.util.config.RunId
 
+import scala.compat.java8.OptionConverters._
+import scala.collection.JavaConverters._
+
 object CommandStatus2 {
 
   /**
@@ -50,7 +53,7 @@ object CommandStatus2 {
     validations.map(f => validationAsCommandStatus(f)).zip(configs)
 
   def validationsToOverallCommandStatus(validations: List[Validation]): OverallCommandStatus =
-    if (validations.filter(_ != Validation.Valid).isEmpty) Accepted else NotAccepted
+    if (!validations.exists(_ != Validation.Valid)) Accepted else NotAccepted
 
   def validationsToCommandResult(runId: RunId, configs: Seq[SequenceConfig], validations: List[Validation]): CommandResult = {
     val commandResultPairs = validationsToCommandResultPairs(configs, validations)
@@ -63,7 +66,7 @@ object CommandStatus2 {
   /**
    * The configuration or set of configurations was valid and started
    */
-  final case object Valid extends CommandStatus2
+  case object Valid extends CommandStatus2
 
   /**
    * The command was valid when received, but is no longer valid because of itervening activities
@@ -73,7 +76,7 @@ object CommandStatus2 {
   /**
    * The command has completed successfully
    */
-  final case object Completed extends CommandStatus2
+  case object Completed extends CommandStatus2
 
   /**
    * Command Completed with a result
@@ -112,29 +115,36 @@ object CommandStatus2 {
   /**
    * A multi-config arg has been accepted for all parts
    */
-  final case object Accepted extends OverallCommandStatus
+  case object Accepted extends OverallCommandStatus
 
   /**
    * A multi-config arg has failed validiation for one or more reasons
    */
-  final case object NotAccepted extends OverallCommandStatus
+  case object NotAccepted extends OverallCommandStatus
 
   /**
    * If a multi-config arg has not completed all parts, overall is set to Incomplete
    */
-  final case object Incomplete extends OverallCommandStatus
+  case object Incomplete extends OverallCommandStatus
 
   /**
    * All parts of a multi-config arg have completed successfully
    */
-  final case object AllCompleted extends OverallCommandStatus
+  case object AllCompleted extends OverallCommandStatus
 
   type CommandResultPair = (CommandStatus2, SequenceConfig)
 
   final case class CommandResults(results: List[CommandResultPair] = List.empty[CommandResultPair]) {
     def :+(pair: CommandResultPair) = CommandResults(results = results :+ pair)
-    def status(index: Int) = results(index)._1
-    def config(index: Int) = results(index)._2
+    def status(index: Int): CommandStatus2 = results(index)._1
+    def config(index: Int): SequenceConfig = results(index)._2
+
+    /**
+      * Java API to access results
+      */
+    def getResults: java.util.List[akka.japi.Pair[CommandStatus2, SequenceConfig]] = {
+      results.map(p => new akka.japi.Pair(p._1, p._2)).asJava
+    }
   }
 
   /**

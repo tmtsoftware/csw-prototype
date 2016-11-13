@@ -56,6 +56,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
 
   private TromboneEventSubscriber(AssemblyContext ac, BooleanItem nssInUseIn, Optional<ActorRef> followActor,
                                   IEventService eventService) {
+    subscribeToLocationUpdates();
     this.ac = ac;
     this.nssInUseIn = nssInUseIn;
     this.followActor = followActor;

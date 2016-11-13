@@ -127,7 +127,7 @@ public class TromboneHCDBasicTests extends JavaTestKit {
       new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
         protected CurrentState match(Object in) {
           if (in instanceof CurrentState) {
-            CurrentState cs = (CurrentState)in;
+            CurrentState cs = (CurrentState) in;
             if (cs.prefix().contains(TromboneHCD.axisStatePrefix) && jvalue(jitem(cs, stateKey)).name().equals(AXIS_MOVING.name())) {
               return cs;
             }
@@ -152,7 +152,7 @@ public class TromboneHCDBasicTests extends JavaTestKit {
       new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
         protected CurrentState match(Object in) {
           if (in instanceof CurrentState) {
-            CurrentState cs = (CurrentState)in;
+            CurrentState cs = (CurrentState) in;
             if (cs.prefix().contains(TromboneHCD.axisStatePrefix)) {
               return cs;
             }
@@ -382,176 +382,176 @@ public class TromboneHCDBasicTests extends JavaTestKit {
   @Test
   public void placeIntoTheLowLimit() throws Exception {
 
-      it("should show entering a low limit");
-      {
-        TestProbeTestActorRefPair t = newTestTrombone();
-        TestProbe supervisor = t.testProbe;
-        TestActorRef<TromboneHCD> tla = t.testActorRef;
+    it("should show entering a low limit");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
 
-        lifecycleStart(supervisor, tla);
+      lifecycleStart(supervisor, tla);
 
-        int testPos = 0;
-        int testActual = tla.underlyingActor().axisConfig.lowLimit;
+      int testPos = 0;
+      int testActual = tla.underlyingActor().axisConfig.lowLimit;
 
-        tla.tell(JHcdController.Subscribe, self());
-        tla.tell(new Submit(positionSC(testPos)), self());
+      tla.tell(JHcdController.Subscribe, self());
+      tla.tell(new Submit(positionSC(testPos)), self());
 
-        Vector<CurrentState> msgs = waitForMoveMsgs();
-        // Check the last message
-        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
-        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), true);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      // Check the last message
+      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), true);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
 
-        //info("Msgs: " + msgs)
-        tla.tell(JHcdController.Unsubscribe, self());
-        system.stop(tla);
-      }
+      //info("Msgs: " + msgs)
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
     }
+  }
 
   @Test
   public void placeIntoTheHighLimit() throws Exception {
-      it("should show entering a high limit");
-      {
-        TestProbeTestActorRefPair t = newTestTrombone();
-        TestProbe supervisor = t.testProbe;
-        TestActorRef<TromboneHCD> tla = t.testActorRef;
+    it("should show entering a high limit");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
 
-        lifecycleStart(supervisor, tla);
+      lifecycleStart(supervisor, tla);
 
-        int testPos = 3000;
-        int testActual = tla.underlyingActor().axisConfig.highLimit;
+      int testPos = 3000;
+      int testActual = tla.underlyingActor().axisConfig.highLimit;
 
-        tla.tell(JHcdController.Subscribe, self());
-        tla.tell(new Submit(positionSC(testPos)), self());
+      tla.tell(JHcdController.Subscribe, self());
+      tla.tell(new Submit(positionSC(testPos)), self());
 
-        Vector<CurrentState> msgs = waitForMoveMsgs();
-        // Check the last message
-        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
-        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), true);
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      // Check the last message
+      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), true);
 
-        //info("Msgs: " + msgs)
-        tla.tell(JHcdController.Unsubscribe, self());
-        system.stop(tla);
-      }
+      //info("Msgs: " + msgs)
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
     }
+  }
 
   @Test
   public void ShouldSupportAMoreComplexSeriesOfMoves() throws Exception {
-      it("should allow complex series of moves");
-      {
-        // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
+    it("should allow complex series of moves");
+    {
+      // Starts at 350, init (351), go home, go to 423, 800, 560, highlmit at 1240, then home
 
-        TestProbeTestActorRefPair t = newTestTrombone();
-        TestProbe supervisor = t.testProbe;
-        TestActorRef<TromboneHCD> tla = t.testActorRef;
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
 
-        lifecycleStart(supervisor, tla);
+      lifecycleStart(supervisor, tla);
 
-        // Get state events
-        tla.tell(JHcdController.Subscribe, self());
+      // Get state events
+      tla.tell(JHcdController.Subscribe, self());
 
-        // Move 1
-        tla.tell(new Submit(SetupConfig(axisDatumPrefix)), self()); // Could use ones in TromboneHCD
-        Vector<CurrentState> msgs = waitForMoveMsgs();
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), false);
+      // Move 1
+      tla.tell(new Submit(SetupConfig(axisDatumPrefix)), self()); // Could use ones in TromboneHCD
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), false);
 
-        // Move 2
-        tla.tell(new Submit(homeSC), self());
-        msgs = waitForMoveMsgs();
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+      // Move 2
+      tla.tell(new Submit(homeSC), self());
+      msgs = waitForMoveMsgs();
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
 
-        // Move 3
-        int testPos = 423;
-        tla.tell(new Submit(positionSC(testPos)), self());
-        msgs = waitForMoveMsgs();
-        // Check the last message
-        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
-        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), false);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+      // Move 3
+      int testPos = 423;
+      tla.tell(new Submit(positionSC(testPos)), self());
+      msgs = waitForMoveMsgs();
+      // Check the last message
+      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), false);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
 
-        // Move 4
-        testPos = 800;
-        tla.tell(new Submit(positionSC(testPos)), self());
-        msgs = waitForMoveMsgs();
-        // Check the last message
-        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
-        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+      // Move 4
+      testPos = 800;
+      tla.tell(new Submit(positionSC(testPos)), self());
+      msgs = waitForMoveMsgs();
+      // Check the last message
+      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
 
-        // Move 5
-        testPos = 1240;
-        tla.tell(new Submit(positionSC(testPos)), self());
-        msgs = waitForMoveMsgs();
-        // Check the last message
-        assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
-        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), true);
+      // Move 5
+      testPos = 1240;
+      tla.tell(new Submit(positionSC(testPos)), self());
+      msgs = waitForMoveMsgs();
+      // Check the last message
+      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), true);
 
-        // Move 6
-        tla.tell(new Submit(homeSC), self());
-        msgs = waitForMoveMsgs();
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
-        assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+      // Move 6
+      tla.tell(new Submit(homeSC), self());
+      msgs = waitForMoveMsgs();
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
 
-        // Get summary stats
-        tla.tell(GetAxisStats, self());
-        CurrentState stats = expectMsgClass(CurrentState.class);
-        //println("Stats: " + stats)
-        assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
-        assertEquals(stats.item(datumCountKey).head(), 1);
-        assertEquals(stats.item(moveCountKey).head(), 6);
-        assertEquals(stats.item(homeCountKey).head(), 2);
-        assertEquals(stats.item(limitCountKey).head(), 1);
-        assertEquals(stats.item(successCountKey).head(), 6);
-        assertEquals(stats.item(failureCountKey).head(), 0);
-        assertEquals(stats.item(cancelCountKey).head(), 0);
+      // Get summary stats
+      tla.tell(GetAxisStats, self());
+      CurrentState stats = expectMsgClass(CurrentState.class);
+      //println("Stats: " + stats)
+      assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+      assertEquals(stats.item(datumCountKey).head(), 1);
+      assertEquals(stats.item(moveCountKey).head(), 6);
+      assertEquals(stats.item(homeCountKey).head(), 2);
+      assertEquals(stats.item(limitCountKey).head(), 1);
+      assertEquals(stats.item(successCountKey).head(), 6);
+      assertEquals(stats.item(failureCountKey).head(), 0);
+      assertEquals(stats.item(cancelCountKey).head(), 0);
 
-        tla.tell(JHcdController.Unsubscribe, self());
-        system.stop(tla);
-      }
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
     }
+  }
 
 
   @Test
   public void ShouldHandleACancelOfAMotion() throws Exception {
-      it("start up a move and cancel it");
-      {
-        TestProbeTestActorRefPair t = newTestTrombone();
-        TestProbe supervisor = t.testProbe;
-        TestActorRef<TromboneHCD> tla = t.testActorRef;
+    it("start up a move and cancel it");
+    {
+      TestProbeTestActorRefPair t = newTestTrombone();
+      TestProbe supervisor = t.testProbe;
+      TestActorRef<TromboneHCD> tla = t.testActorRef;
 
-        lifecycleStart(supervisor, tla);
+      lifecycleStart(supervisor, tla);
 
-        int testPos = 1000;
+      int testPos = 1000;
 
-        tla.tell(JHcdController.Subscribe, self());
-        tla.tell(new Submit(positionSC(testPos)), self());
+      tla.tell(JHcdController.Subscribe, self());
+      tla.tell(new Submit(positionSC(testPos)), self());
 
-        // wait for 2 updates
-        receiveN(2);
-        tla.tell(new Submit(cancelSC), self());
-        Vector<CurrentState> msgs = waitForMoveMsgs();
-        // Check the last message
-        assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
-        // info("Msgs: " + msgs)
+      // wait for 2 updates
+      receiveN(2);
+      tla.tell(new Submit(cancelSC), self());
+      Vector<CurrentState> msgs = waitForMoveMsgs();
+      // Check the last message
+      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+      // info("Msgs: " + msgs)
 
-        // Get summary stats
-        tla.tell(GetAxisStats, self());
-        CurrentState stats = expectMsgClass(CurrentState.class);
-        //println("Stats: " + stats)
-        assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
-        assertEquals(stats.item(moveCountKey).head(), 1);
-        assertEquals(stats.item(successCountKey).head(), 1);
-        assertEquals(stats.item(cancelCountKey).head(), 1);
+      // Get summary stats
+      tla.tell(GetAxisStats, self());
+      CurrentState stats = expectMsgClass(CurrentState.class);
+      //println("Stats: " + stats)
+      assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+      assertEquals(stats.item(moveCountKey).head(), 1);
+      assertEquals(stats.item(successCountKey).head(), 1);
+      assertEquals(stats.item(cancelCountKey).head(), 1);
 
-        tla.tell(JHcdController.Unsubscribe, self());
-        system.stop(tla);
-      }
+      tla.tell(JHcdController.Unsubscribe, self());
+      system.stop(tla);
     }
+  }
 }

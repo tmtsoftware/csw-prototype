@@ -23,7 +23,8 @@ import scala.concurrent.duration._
 /**
  * TMT Source Code: 9/21/16.
  */
-class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef], allEventPublisher: Option[ActorRef]) extends Actor with ActorLogging with LocationSubscriberClient with TromboneStateClient {
+class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef], allEventPublisher: Option[ActorRef])
+    extends Actor with ActorLogging with LocationSubscriberClient with TromboneStateClient {
 
   import TromboneStateActor._
   import TromboneCommandHandler._

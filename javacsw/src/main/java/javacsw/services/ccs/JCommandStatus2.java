@@ -1,6 +1,7 @@
 package javacsw.services.ccs;
 
 import csw.services.ccs.CommandStatus2;
+import csw.services.ccs.Validation;
 
 /**
  * Java access to Scala CommandStatus2 constant objects
@@ -16,7 +17,9 @@ public class JCommandStatus2 {
 //  /**
 //   * The command was valid when received, but is no longer valid because of itervening activities
 //   */
-//  final case class NoLongerValid(issue: ValidationIssue) extends CommandStatus2
+//  public static CommandStatus2.CommandStatus2 NoLongerValid(Validation.ValidationIssue issue) {
+//      return new CommandStatus2.NoLongerValid(issue);
+//  }
 
   /**
    * The command has completed successfully

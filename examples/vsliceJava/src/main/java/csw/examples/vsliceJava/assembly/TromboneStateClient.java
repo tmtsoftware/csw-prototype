@@ -10,7 +10,10 @@ public interface TromboneStateClient extends Actor {
 
   /**
    * Sets the current trombone state.
-   * (Note: Since Java interfaces can't have non-static local variables, this needs to be defined in the implementing class.)
+   * Note: Since Java interfaces can't have non-static local variables, this needs to be defined in the implementing class.
+   *
+   * Note: Implementing Java based actor classes must subscribe to TromboneState using the EventBus:
+   *  context().system().eventStream().subscribe(self(), TromboneState.class);
    */
   void setCurrentState(TromboneStateActor.TromboneState ts);
 

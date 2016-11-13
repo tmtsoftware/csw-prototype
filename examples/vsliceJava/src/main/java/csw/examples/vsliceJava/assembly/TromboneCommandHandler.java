@@ -57,10 +57,9 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
 
   private Optional<IEventService> badEventService = Optional.empty();
   private Optional<IEventService> eventService = badEventService;
-
-  private boolean isEventServiceAvailable() {
-    return eventService.isPresent();
-  }
+//  private boolean isEventServiceAvailable() {
+//    return eventService.isPresent();
+//  }
 
   // Set the default evaluation for use with the follow command
   private DoubleItem setElevationItem;
@@ -81,6 +80,9 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
   }
 
   public TromboneCommandHandler(AssemblyContext ac, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> allEventPublisher) {
+    subscribeToLocationUpdates();
+    context().system().eventStream().subscribe(self(), TromboneState.class);
+
     this.ac = ac;
     badHCDReference = context().system().deadLetters();
     this.tromboneHCD = tromboneHCDIn.orElse(badHCDReference);
@@ -89,7 +91,6 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
     this.allEventPublisher = allEventPublisher;
     setElevationItem = ac.naElevation(ac.calculationConfig.defaultInitialElevation);
     int moveCnt = 0;
-    subscribeToLocationUpdates();
     log.info("System  is: " + context().system());
 
     receive(noFollowReceive());
@@ -288,7 +289,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
         log.debug("actorExecutingReceive: Stop CK");
         closeDownMotionCommand(currentCommand, commandOriginator);
       }).
-      matchAny(t -> log.warning("TromboneCommandHandler2:actorExecutingReceive received an unknown message: " + t)).
+      matchAny(t -> log.warning("TromboneCommandHandler2:actorExecutingReceive received an unknown message: " + t + " from " + sender())).
       build());
   }
 
