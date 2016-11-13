@@ -16,17 +16,21 @@ trait LocationSubscriberClient extends ActorLogging {
   /**
    * An Akka receive partial function that can be used rather than receiving the Location message in your
    * own code.
+   *
    * @return Receive partial function
    */
   def locationSubscriberReceive: Receive = {
 
-    case location: Location => locationUpdate(location)
+    case location: Location =>
+      log.debug(s"Received location $location from ${sender()}")
+      locationUpdate(location)
 
-    case x                  => log.error(s"TrackerSubscriberClient received an unknown message: $x")
+    case x => log.error(s"TrackerSubscriberClient received an unknown message: $x")
   }
 
   /**
    * Start receiving location updates.  It is necessary to call this in the client when you are ready to receive updates.
+   *
    * @return Unit
    */
   def subscribeToLocationUpdates(): Unit = {
@@ -35,6 +39,7 @@ trait LocationSubscriberClient extends ActorLogging {
 
   /**
    * The given actor stops listening to Location updates.
+   *
    * @return Unit
    */
   def unsubscribeLocationUpdates(): Unit = {
@@ -43,6 +48,7 @@ trait LocationSubscriberClient extends ActorLogging {
 
   /**
    * If calling the TrackerSubscriberClient recieve, then override this method to handle Location events.
+   *
    * @param location a resolved Location; either HTTP or Akka
    */
   def locationUpdate(location: Location): Unit = {}
@@ -67,23 +73,24 @@ trait LocationSubscriberClient extends ActorLogging {
  *
  * Example:
  * <pre>
- *   import TrackerSubscriber._
+ * import TrackerSubscriber._
  *
- *   val trackerSubscriber = system.actorOf(TrackerSubscriber.props)
+ * val trackerSubscriber = system.actorOf(TrackerSubscriber.props)
  *
- *   val c1 = HttpConnection("lgsTromboneHCD", ComponentType.HCD)
+ * val c1 = HttpConnection("lgsTromboneHCD", ComponentType.HCD)
  *
- *   trackerSubscriber ! LocationService.Subscribe
+ * trackerSubscriber ! LocationService.Subscribe
  *
- *   // An actor wishing to receive Location messages
- *   trackerSubscriber ! TrackConnecton(c1)
+ * // An actor wishing to receive Location messages
+ * trackerSubscriber ! TrackConnecton(c1)
  *
- *   // Later, it can stop receiving Location messages using
- *   trackerSubscriber ! UntrackConnection(c1)
+ * // Later, it can stop receiving Location messages using
+ * trackerSubscriber ! UntrackConnection(c1)
  * </pre>
  *
  */
 class LocationSubscriberActor() extends Actor with ActorLogging {
+
   import LocationSubscriberActor._
 
   // Start a LocationTracker to listen for our connections
@@ -91,6 +98,7 @@ class LocationSubscriberActor() extends Actor with ActorLogging {
 
   /**
    * The TrackerSubscriberActor's Receive function listens for messages.
+   *
    * @return Receive partion function
    */
   def receive: Receive = {

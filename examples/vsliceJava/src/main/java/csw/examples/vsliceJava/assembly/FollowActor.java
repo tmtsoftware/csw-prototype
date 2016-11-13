@@ -77,7 +77,7 @@ public class FollowActor extends AbstractActor {
     calculationConfig = ac.calculationConfig;
 
     // In this implementation, these vars are needed to support the setElevation and setAngle commands which require an update
-    DoubleItem initialFocusError = jset(ac.focusErrorKey).withUnits(ac.focusErrorUnits);
+    DoubleItem initialFocusError = jset(ac.focusErrorKey, 0.0).withUnits(ac.focusErrorUnits);
     DoubleItem initialZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);
 
 //    DoubleItem nSSModeZenithAngle = jset(ac.zenithAngleKey, 0.0).withUnits(ac.zenithAngleUnits);

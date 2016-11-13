@@ -22,10 +22,9 @@ public interface ILocationSubscriberClient extends Actor {
    * own code.
    * @return Receive partial function
    */
-  default PartialFunction<Object, BoxedUnit> locationSubscriberReceive() {
+  default PartialFunction<Object, BoxedUnit> locationSubscriberReceive() { // XXX not used
     return ReceiveBuilder.
       match(Location.class, this::locationUpdate).
-//      matchAny(t -> log.warning("TromboneCommandHandler2:noFollowReceive received an unknown message: " + t)).
       build();
   }
 
@@ -33,12 +32,12 @@ public interface ILocationSubscriberClient extends Actor {
    * Start receiving location updates.  It is necessary to call this in the client when you are ready to receive updates.
    */
   default void subscribeToLocationUpdates() {
-//    context().system().eventStream().subscribe(self(), Location.class);
-    context().system().eventStream().subscribe(self(), LocationService.UnTrackedLocation.class);
-    context().system().eventStream().subscribe(self(), LocationService.Unresolved.class);
-    context().system().eventStream().subscribe(self(), LocationService.ResolvedAkkaLocation.class);
-    context().system().eventStream().subscribe(self(), LocationService.ResolvedHttpLocation.class);
-    context().system().eventStream().subscribe(self(), LocationService.ResolvedTcpLocation.class);
+    context().system().eventStream().subscribe(self(), Location.class);
+//    context().system().eventStream().subscribe(self(), LocationService.UnTrackedLocation.class);
+//    context().system().eventStream().subscribe(self(), LocationService.Unresolved.class);
+//    context().system().eventStream().subscribe(self(), LocationService.ResolvedAkkaLocation.class);
+//    context().system().eventStream().subscribe(self(), LocationService.ResolvedHttpLocation.class);
+//    context().system().eventStream().subscribe(self(), LocationService.ResolvedTcpLocation.class);
   }
 
   /**

@@ -56,7 +56,7 @@ public class SetElevationCommand extends AbstractActor {
         } else {
           ActorRef mySender = sender();
           // Note that units have already been verified here
-          DoubleItem elevationItem = JavaHelpers.jvalue(sc, ac.naElevationKey);
+          DoubleItem elevationItem = jitem(sc, ac.naElevationKey);
 
           // Let the elevation be the range distance
           // Convert range distance to encoder units from mm

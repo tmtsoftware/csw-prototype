@@ -14,7 +14,6 @@ import csw.util.config.StateVariable.CurrentState
 abstract class AbstractHcdController(override val info: HcdInfo) extends AbstractActor
     with Hcd with HcdController with PublisherActor[CurrentState] {
 
-
   // -- These methods use Java types (Set, List, Optional, BiFunction) rather than the Scala counterparts --
 
   // -- Called from parent --

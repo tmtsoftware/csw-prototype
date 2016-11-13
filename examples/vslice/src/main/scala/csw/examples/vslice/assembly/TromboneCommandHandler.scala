@@ -58,10 +58,10 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
         log.debug(s"CommandHandler receive an actorRef: ${l.actorRef}")
         tromboneHCD = l.actorRef.getOrElse(badHCDReference)
       case t: ResolvedTcpLocation =>
-        log.info(s"Received TCP Location: ${t.connection}")
+        log.info(s"Received TCP Location: ${t.connection} from ${sender()}")
         // Verify that it is the event service
         if (t.connection == EventService.eventServiceConnection()) {
-          log.info(s"Subscriber received connection: $t")
+          log.info(s"Subscriber received connection: $t from ${sender()}")
           //val eventService: EventService = EventService.get(t.host, t.port)
           // Setting var here!
           eventService = Some(EventService.get(t.host, t.port))

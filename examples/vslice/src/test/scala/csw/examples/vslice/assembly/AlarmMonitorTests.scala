@@ -81,13 +81,13 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
   import ac._
 
-//  def setupState(ts: TromboneState) = {
-//    // These times are important to allow time for test actors to get and process the state updates when running tests
-//    expectNoMsg(20.milli)
-//    system.eventStream.publish(ts)
-//    // This is here to allow the destination to run and set its state
-//    expectNoMsg(20.milli)
-//  }
+  //  def setupState(ts: TromboneState) = {
+  //    // These times are important to allow time for test actors to get and process the state updates when running tests
+  //    expectNoMsg(20.milli)
+  //    system.eventStream.publish(ts)
+  //    // This is here to allow the destination to run and set its state
+  //    expectNoMsg(20.milli)
+  //  }
 
   // Initialize HCD for testing
   def startHCD: ActorRef = {

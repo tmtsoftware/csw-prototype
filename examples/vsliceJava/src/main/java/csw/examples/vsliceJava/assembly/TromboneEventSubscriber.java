@@ -156,7 +156,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
   private void subscribeKeys(EventMonitor monitor, ConfigKey... configKeys) {
     log.debug("Subscribing to: " + Arrays.toString(configKeys));
     for(ConfigKey configKey : configKeys) {
-      monitor.subscribe(configKey.prefix());
+      monitor.subscribeTo(configKey.prefix());
     }
   }
 

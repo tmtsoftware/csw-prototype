@@ -11,6 +11,7 @@ import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.MultiStateMatcherActor;
 import csw.services.ccs.SequentialExecutor.ExecuteOne;
 import csw.services.ccs.StateMatcher;
+import csw.services.loc.LocationService;
 import csw.util.config.BooleanItem;
 import csw.util.config.DoubleItem;
 import javacsw.services.ccs.JSequentialExecutor;
@@ -97,6 +98,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
   }
 
   private void handleLocations(Location location) {
+    log.info("CommandHandler: " + location);
     if (location instanceof ResolvedAkkaLocation) {
       ResolvedAkkaLocation l = (ResolvedAkkaLocation) location;
       log.info("Got actorRef: " + l.getActorRef());
@@ -125,10 +127,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
   private PartialFunction<Object, BoxedUnit> noFollowReceive() {
     return stateReceive().orElse(ReceiveBuilder.
 
-      match(Location.class, l -> {
-        log.info("CommandHandler: " + l);
-        handleLocations(l);
-      }).
+      match(Location.class, this::handleLocations).
 
       match(ExecuteOne.class, t -> {
 
@@ -184,7 +183,6 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           if (cmd(currentState()).equals(cmdUninitialized)
             || (!move(currentState()).equals(moveIndexed) && !move(currentState()).equals(moveMoving))
             || !sodiumLayer(currentState())) {
-//            commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${cmd(currentState)}/${move(currentState)}/${sodiumLayer(currentState)} does not allow follow")))
             commandOriginator.ifPresent(actorRef ->
               actorRef.tell(new NoLongerValid(new WrongInternalStateIssue("Assembly state of "
                 + cmd(currentState()) + "/" + move(currentState()) + "/" + sodiumLayer(currentState()) + " does not allow follow")), self()));
@@ -207,13 +205,14 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           }
 
         } else {
-          log.error("TromboneCommandHandler2:noFollowReceive received an unknown command: " + t);
+          log.error("TromboneCommandHandler2:noFollowReceive received an unknown command: " + t + " from " + sender());
           commandOriginator.ifPresent(actorRef ->
             actorRef.tell(new Invalid(new UnsupportedCommandInStateIssue("Trombone assembly does not support the command " +
               configKey.prefix() + " in the current state.")), self()));
         }
       }).
-      matchAny(t -> log.warning("TromboneCommandHandler2:noFollowReceive received an unknown message: " + t)).
+      matchAny(t ->
+        log.warning("TromboneCommandHandler2:noFollowReceive received an unknown message: " + t + " from " + sender())).
       build());
   }
 
@@ -284,7 +283,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
         log.debug("actorExecutingReceive STOP STOP");
         closeDownMotionCommand(currentCommand, commandOriginator);
       }).
-      match(SetupConfig.class, t -> {
+      match(SetupConfig.class, t -> t.configKey().equals(ac.stopCK), t -> {
         // This sends the Stop sc to the HCD
         log.debug("actorExecutingReceive: Stop CK");
         closeDownMotionCommand(currentCommand, commandOriginator);

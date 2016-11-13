@@ -140,8 +140,8 @@ object CommandStatus2 {
     def config(index: Int): SequenceConfig = results(index)._2
 
     /**
-      * Java API to access results
-      */
+     * Java API to access results
+     */
     def getResults: java.util.List[akka.japi.Pair[CommandStatus2, SequenceConfig]] = {
       results.map(p => new akka.japi.Pair(p._1, p._2)).asJava
     }

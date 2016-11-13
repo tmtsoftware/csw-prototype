@@ -10,10 +10,12 @@ import akka.testkit.TestProbe;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.ccs.CommandStatus2;
 import csw.services.ccs.SequentialExecutor;
+import csw.services.ccs.Validation;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component;
 import csw.services.pkg.Supervisor3;
 import csw.util.config.Configurations;
+import javacsw.services.events.IEventService;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -24,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisUpdate;
@@ -58,8 +62,13 @@ public class CommandHandlerTests extends JavaTestKit {
     super(system);
   }
 
+
+  // XXX Note sure if this is needed to prevent concurrent running of test cases in JUnit...
+  private static Lock sequential = new ReentrantLock();
+
   @BeforeClass
   public static void setup() throws Exception {
+    sequential.lock();
     LocationService.initInterface();
     system = ActorSystem.create("TromboneAssemblyCommandHandlerTests");
     logger = Logging.getLogger(system, system);
@@ -69,6 +78,7 @@ public class CommandHandlerTests extends JavaTestKit {
   public static void teardown() {
     JavaTestKit.shutdownActorSystem(system);
     system = null;
+    sequential.unlock();
   }
 
   static final AssemblyContext ac = AssemblyTestData.TestAssemblyContext;
@@ -107,7 +117,7 @@ public class CommandHandlerTests extends JavaTestKit {
     fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
     fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
 
-    ActorRef tsa = system.actorOf(TromboneStateActor.props());
+//    ActorRef tsa = system.actorOf(TromboneStateActor.props());
 
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
 
@@ -134,9 +144,61 @@ public class CommandHandlerTests extends JavaTestKit {
     TestProbe monitor = new TestProbe(system);
     monitor.watch(ch);
     system.stop(ch);
-    system.stop(tsa);
+//    system.stop(tsa);
     monitor.expectTerminated(ch, FiniteDuration.create(1, TimeUnit.SECONDS));
   }
+
+// XXX TODO: Was added after Java port
+//  it("datum should handle change in HCD") {
+//    val tromboneHCD = startHCD
+//    val fakeAssembly = TestProbe()
+//
+//    // The following is to synchronize the test with the HCD entering Running state
+//    // This is boiler plate for setting up an HCD for testing
+//    tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
+//    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+//    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
+//    //info("Running")
+//
+//    //val tsa = system.actorOf(TromboneStateActor.props)
+//
+//    // Start with good HCD
+//    val ch = newCommandHandler(tromboneHCD)
+//
+//    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false)))
+//
+//    val sc = SetupConfig(ac.datumCK)
+//
+//    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
+//
+//    val msg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    msg shouldBe Completed
+//    //info("Final: " + msg
+//
+//    val unresolvedHCD = Unresolved(AkkaConnection(ac.hcdComponentId))
+//    ch ! unresolvedHCD
+//
+//    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
+//
+//    val errMsg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    errMsg shouldBe a[NoLongerValid]
+//    errMsg.asInstanceOf[NoLongerValid].issue shouldBe a[RequiredHCDUnavailableIssue]
+//
+//    val resolvedHCD = ResolvedAkkaLocation(AkkaConnection(ac.hcdComponentId), new URI("http://help"), "", Some(tromboneHCD))
+//    ch ! resolvedHCD
+//
+//    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
+//    val msg2: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    msg2 shouldBe Completed
+//
+//    val monitor = TestProbe()
+//    monitor.watch(ch)
+//    ch ! PoisonPill
+//    monitor.expectTerminated(ch)
+//  }
+
+
+
 
   @Test
   public void shouldAllowRunningDatumThroughSequentialExecutor() {
@@ -171,9 +233,13 @@ public class CommandHandlerTests extends JavaTestKit {
     ActorRef se2 = system.actorOf(SequentialExecutor.props(sca, Optional.of(fakeAssembly.ref())));
     se2.tell(new StartTheSequence(ch), self());
 
+
     CommandResult errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS), CommandResult.class);
     assertEquals(errMsg.overall(), Incomplete);
-    assertTrue(errMsg.details().getResults().get(0).first() instanceof NoLongerValid);
+    CommandStatus2.CommandStatus2 e1 = errMsg.details().getResults().get(0).first();
+    assertTrue(e1 instanceof NoLongerValid);
+    assertTrue(((NoLongerValid)e1).issue() instanceof Validation.WrongInternalStateIssue);
+
     //info("Final: " + errMsg)
 
     TestProbe monitor = new TestProbe(system);
@@ -243,7 +309,7 @@ public class CommandHandlerTests extends JavaTestKit {
     double testPosition = 90.0;
     ch.tell(ExecuteOne(ac.moveSC(testPosition), Optional.of(fakeAssembly.ref())), self());
 
-    fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandStatus2.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandStatus2.CommandStatus2.class);
     int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testPosition);
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking
@@ -314,9 +380,12 @@ public class CommandHandlerTests extends JavaTestKit {
     ActorRef se = system.actorOf(SequentialExecutor.props(sca, Optional.of(fakeAssembly.ref())));
     se.tell(new StartTheSequence(ch), self());
 
-    Configurations.createSetupConfigArg("testobsId", new SetupConfig(ac.stopCK.prefix()));
-//    Thread.sleep(20); // This is an arbitrary time to get things going before sending stop
-    expectNoMsg(FiniteDuration.apply(20, TimeUnit.SECONDS));
+//    Configurations.createSetupConfigArg("testobsId", new SetupConfig(ac.stopCK.prefix()));
+    try {
+      Thread.sleep(20); // This is an arbitrary time to get things going before sending stop
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 
     // This won't work
     //val se2 = system.actorOf(SequentialExecutor.props(sca2, Optional.of(fakeAssembly.ref)))
@@ -428,7 +497,7 @@ public class CommandHandlerTests extends JavaTestKit {
     double testEl = 150.0;
     ch.tell(ExecuteOne(ac.setElevationSC(testEl), Optional.of(fakeAssembly.ref())), self());
 
-    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus2.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus2.CommandStatus2.class);
     int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testEl);
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking
@@ -465,7 +534,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     CommandResult errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandResult.class);
     assertEquals(errMsg.overall(), Incomplete);
-    assertTrue(errMsg.details().getResults().get(0).first() instanceof CommandStatus2.NoLongerValid);
+    assertTrue(errMsg.details().getResults().get(0).first() instanceof NoLongerValid);
 
     system.stop(ch);
     tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
@@ -485,6 +554,9 @@ public class CommandHandlerTests extends JavaTestKit {
     //info("Running")
 
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
+    LocationService.ResolvedTcpLocation evLocation = new LocationService.ResolvedTcpLocation(
+      IEventService.eventServiceConnection(IEventService.defaultName), "localhost", 7777);
+    ch.tell(evLocation, self());
 
     // set the state so the command succeeds
     setupState(new TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), nssItem(false)));
@@ -513,6 +585,9 @@ public class CommandHandlerTests extends JavaTestKit {
     //info("Running")
 
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
+    LocationService.ResolvedTcpLocation evLocation = new LocationService.ResolvedTcpLocation(
+      IEventService.eventServiceConnection(IEventService.defaultName), "localhost", 7777);
+    ch.tell(evLocation, self());
 
     // I'm sending this event to the follower so I know its state so I can check the final result
     // to see that it moves the stage to the right place when sending a new elevation
@@ -593,6 +668,9 @@ public class CommandHandlerTests extends JavaTestKit {
     //info("Running")
 
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
+    LocationService.ResolvedTcpLocation evLocation = new LocationService.ResolvedTcpLocation(
+      IEventService.eventServiceConnection(IEventService.defaultName), "localhost", 7777);
+    ch.tell(evLocation, self());
 
     // I'm sending this event to the follower so I know its state so I can check the final result
     // to see that it moves the stage to the right place when sending a new elevation
@@ -625,8 +703,11 @@ public class CommandHandlerTests extends JavaTestKit {
     logger.info("Upd2: " + upd);
 
     // Cleanup
-    system.stop(ch);
     tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(ch);
+    system.stop(ch);
+    monitor.expectTerminated(ch, FiniteDuration.apply(1, TimeUnit.SECONDS));
   }
 
 }

@@ -96,8 +96,15 @@ object EventService {
      *
      * @param prefixes one or more prefixes of events, may include wildcard
      */
-    @varargs
     def subscribe(prefixes: String*): Unit
+
+    /**
+     * Adds events matching the given prefix to the current subscription.
+     * The prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param prefix one or more prefixes of events, may include wildcard
+     */
+    def subscribeTo(prefix: String): Unit = subscribe(prefix)
 
     /**
      * Ubsubscribes from events matching the given prefixes.

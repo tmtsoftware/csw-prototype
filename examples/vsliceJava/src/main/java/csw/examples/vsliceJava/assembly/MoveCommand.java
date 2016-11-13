@@ -45,7 +45,7 @@ public class MoveCommand extends AbstractActor {
             "Assembly state of " + cmd(startState) + "/" + move(startState) + " does not allow move")), self());
         } else {
           ActorRef mySender = sender();
-          DoubleItem stagePosition = JavaHelpers.jvalue(sc, ac.stagePositionKey);
+          DoubleItem stagePosition = jitem(sc, ac.stagePositionKey);
 
           // Convert to encoder units from mm
           int encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, jvalue(stagePosition));
