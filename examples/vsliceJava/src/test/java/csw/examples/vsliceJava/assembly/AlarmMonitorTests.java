@@ -89,7 +89,6 @@ public class AlarmMonitorTests extends JavaTestKit {
     alarmService = IAlarmService.getAlarmService(IAlarmService.defaultName, system, timeout).get();
     alarmAdmin = new JAlarmServiceAdmin(alarmService, system);
     setupAlarms();
-
   }
 
   @AfterClass

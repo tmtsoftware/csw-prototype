@@ -62,13 +62,8 @@ public class CommandHandlerTests extends JavaTestKit {
     super(system);
   }
 
-
-  // XXX Note sure if this is needed to prevent concurrent running of test cases in JUnit...
-  private static Lock sequential = new ReentrantLock();
-
   @BeforeClass
   public static void setup() throws Exception {
-    sequential.lock();
     LocationService.initInterface();
     system = ActorSystem.create("TromboneAssemblyCommandHandlerTests");
     logger = Logging.getLogger(system, system);
@@ -78,7 +73,6 @@ public class CommandHandlerTests extends JavaTestKit {
   public static void teardown() {
     JavaTestKit.shutdownActorSystem(system);
     system = null;
-    sequential.unlock();
   }
 
   static final AssemblyContext ac = AssemblyTestData.TestAssemblyContext;
