@@ -203,9 +203,11 @@ private[alarms] case class AlarmServiceImpl(redisClient: RedisClient, autoRefres
   }
 
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): Future[Unit] = {
+    val f1 = getAlarmSmall(alarmKey)
+    val f2 = getAlarmState(alarmKey)
     val futureResult = for {
-      alarm <- getAlarmSmall(alarmKey)
-      alarmState <- getAlarmState(alarmKey)
+      alarm <- f1
+      alarmState <- f2
       result <- setSeverity(alarmKey, alarm, alarmState, severity)
     } yield result
 

@@ -99,10 +99,12 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
 
   private void handleLocations(Location location) {
     log.info("CommandHandler: " + location);
+
     if (location instanceof ResolvedAkkaLocation) {
       ResolvedAkkaLocation l = (ResolvedAkkaLocation) location;
       log.info("Got actorRef: " + l.getActorRef());
       tromboneHCD = l.getActorRef().orElse(badHCDReference);
+
     } else if (location instanceof ResolvedTcpLocation) {
       ResolvedTcpLocation t = (ResolvedTcpLocation) location;
       log.info("Received TCP Location: " + t.connection());
@@ -113,12 +115,14 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
         eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
         log.info("Event Service at: " + eventService);
       }
+
     } else if (location instanceof Unresolved) {
       log.info("Unresolved: " + location.connection());
       if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName)))
         eventService = badEventService;
       if (location.connection().componentId().equals(ac.hcdComponentId))
         tromboneHCD = badHCDReference;
+
     } else {
       log.info("EventSubscriber received some other location: " + location);
     }

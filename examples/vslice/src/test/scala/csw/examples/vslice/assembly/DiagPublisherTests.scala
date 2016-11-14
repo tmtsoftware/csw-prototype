@@ -245,6 +245,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
       // Because timeout is 3 seconds, we get the one stats event after 1 second
       fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
+
+      system.stop(dp)
+      tromboneHCD ! PoisonPill
     }
 
     /**
@@ -267,15 +270,12 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       // Use HCD as currentStateReceiver
       val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(fakeEventPublisher.ref))
       dp ! DiagnosticState
-      var msgs = Seq[AxisStatsUpdate]()
 
       // Wait for a bit over 3 seconds
-      fakeEventPublisher.receiveWhile(3200.milli) {
-        case asu: AxisStatsUpdate =>
-          msgs = asu +: msgs
+      val msgs = fakeEventPublisher.receiveWhile(3200.milli) {
+        case asu: AxisStatsUpdate => asu
       }
       msgs.size shouldBe 3
-      msgs.head shouldBe a[AxisStatsUpdate]
 
       // Now turn them off
       dp ! OperationsState

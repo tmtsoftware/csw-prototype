@@ -100,6 +100,7 @@ public class AlarmMonitorTests extends JavaTestKit {
   static void setupAlarms() throws Exception {
     alarmAdmin.acknowledgeAndResetAlarm(lowLimitAlarm).get(10, TimeUnit.SECONDS);
     alarmAdmin.acknowledgeAndResetAlarm(highLimitAlarm).get(10, TimeUnit.SECONDS);
+
     logger.info("Initializing alarm data");
   }
 
@@ -185,7 +186,6 @@ public class AlarmMonitorTests extends JavaTestKit {
     testLimitAlarm(highLimitAlarm, 2000.0, AssemblyTestData.maxReasonableStage);
   }
 
-  // XXX Commenting out for now, since test fails only when run together with above test
     /*
      * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
      * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
@@ -244,14 +244,14 @@ public class AlarmMonitorTests extends JavaTestKit {
 
     // Create an alarm monitor
     ActorRef am = system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService));
-    expectNoMsg(FiniteDuration.create(100, TimeUnit.MILLISECONDS)); // A delay waiting for monitor to find AlarmService with LocationService
+    expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS)); // A delay waiting for alarms to be set?
 
     // The command handler sends commands to the trombone HCD
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
 
     ActorRef needToSetStateForMoveCommand = system.actorOf(TromboneStateActor.props());
     needToSetStateForMoveCommand.tell(new SetState(cmdReady, moveIndexed, false, false), self());
-    expectNoMsg(FiniteDuration.create(900, TimeUnit.MILLISECONDS));
+    expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS));
 
     ch.tell(JSequentialExecutor.ExecuteOne(ac.moveSC(limitPosition), Optional.of(fakeAssembly.ref())), self());
     // Watch for command completion
@@ -259,7 +259,7 @@ public class AlarmMonitorTests extends JavaTestKit {
       CommandStatus2.CommandStatus2.class);
     logger.info("Result: " + result);
 
-    expectNoMsg(FiniteDuration.create(500, TimeUnit.MILLISECONDS)); // A bit of time for processing and update of AlarmService due to move
+    expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS)); // A bit of time for processing and update of AlarmService due to move
 
     // This is checking that the value in the alarm service has been set using admin interface
     CurrentSeverity alarmValue2 = alarmAdmin.getSeverity(alarmKey).get(10, TimeUnit.SECONDS);
@@ -268,15 +268,14 @@ public class AlarmMonitorTests extends JavaTestKit {
 
     // Now move it out of the limit and see that the alarm is cleared
     ch.tell(JSequentialExecutor.ExecuteOne(ac.moveSC(clearPosition), Optional.of(fakeAssembly.ref())), self());
-    fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandStatus2.CommandStatus2.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus2.CommandStatus2.class);
 
-    expectNoMsg(FiniteDuration.create(50, TimeUnit.MILLISECONDS)); // A bit of time for processing and update of AlarmService
+    expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS)); // A bit of time for processing and update of AlarmService
 
     // This is checking that the value in the alarm service has been set using admin interface
     CurrentSeverity alarmValue3 = alarmAdmin.getSeverity(alarmKey).get(10, TimeUnit.SECONDS);
     assertEquals(alarmValue3.reported(), Okay);
 
-//    expectNoMsg(FiniteDuration.create(3, TimeUnit.SECONDS));
     system.stop(ch);
     system.stop(needToSetStateForMoveCommand);
     system.stop(am);

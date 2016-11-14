@@ -102,8 +102,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   }
 
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None): ActorRef = {
-    //val thandler = TestActorRef(TromboneCommandHandler.props(configs, tromboneHCD, allEventPublisher), "X")
-    //thandler
     system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
   }
 
@@ -221,22 +219,22 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
     // Create an alarm monitor
     val am = system.actorOf(TromboneAlarmMonitor.props(tromboneHCD, alarmService))
-    expectNoMsg(100.milli) // A delay waiting for monitor to find AlarmService with LocationService
+    expectNoMsg(1.second) // A delay waiting for alarms to be set?
 
     // The command handler sends commands to the trombone HCD
     val ch = newCommandHandler(tromboneHCD)
 
     val needToSetStateForMoveCommand = system.actorOf(TromboneStateActor.props())
     needToSetStateForMoveCommand ! SetState(cmdReady, moveIndexed, sodiumLayer = false, nss = false)
-    expectNoMsg(900.milli)
+    expectNoMsg(1.second)
 
     // Move to the 0 position
     ch ! ExecuteOne(moveSC(limitPosition), Some(fakeAssembly.ref))
     // Watch for command completion
-    val result = fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
+    val result = fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus2])
     logger.info("Result: " + result)
 
-    expectNoMsg(500.milli) // A bit of time for processing and update of AlarmService
+    expectNoMsg(1.second) // A bit of time for processing and update of AlarmService
 
     // This is checking that the value in the alarm service has been set using admin interface
     val alarmValue2 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
@@ -245,15 +243,14 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
     // Now move it out of the limit and see that the alarm is cleared
     ch ! ExecuteOne(moveSC(clearPosition), Some(fakeAssembly.ref))
-    fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
+    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus2])
 
-    expectNoMsg(50.milli) // A bit of time for processing and update of AlarmService
+    expectNoMsg(1.second) // A bit of time for processing and update of AlarmService
 
     // This is checking that the value in the alarm service has been set using admin interface
     val alarmValue3 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     alarmValue3.reported shouldBe Okay
 
-    //    expectNoMsg(3.seconds)
     system.stop(ch)
     system.stop(needToSetStateForMoveCommand)
     system.stop(am)

@@ -8,6 +8,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
+import csw.services.loc.LocationService;
 import csw.services.ts.AbstractTimeServiceScheduler;
 import csw.util.config.StateVariable.CurrentState;
 import javacsw.services.pkg.ILocationSubscriberClient;
@@ -15,6 +16,7 @@ import javacsw.util.config.JPublisherActor;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStateUpdate;
@@ -23,25 +25,26 @@ import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxi
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
 import static javacsw.services.ts.JTimeService.localTimeNow;
 import static javacsw.util.config.JItems.jitem;
+import static csw.services.loc.LocationService.Location;
 
 /**
  * DiagPublisher provides diagnostic telemetry in the form of two events. DiagPublisher operaties in the 'OperationsState' or 'DiagnosticState'.
- * <p>
+ *
  * DiagPublisher listens in on axis state updates from the HCD and publishes them as a StatusEvent through the assembly's event publisher.
  * In OperationsState, it publishes every 5'th axis state update (set with val operationsSkipCount.
  * In DiagnosticState, it publishes every other axis update (more frequent in diagnostic state).
- * <p>
+ *
  * context.become is used to implement a state machine with two states operationsReceive and diagnosticReceive
- * <p>
+ *
  * In DiagnosticState, it also publishes an axis statistics event every second. Every one second (diagnosticAxisStatsPeriod), it
  * sends the GetAxisStats message to the HCD. When the data arrives, it is sent to the event publisher.
- * <p>
+ *
  * This actor demonstrates a few techniques. First, it has no variables. Each state in the actor is represented by its own
  * receive method. Each method has parameters that can be called from within the function with updated values eliminating the need
  * for variables.
- * <p>
+ *
  * This shows how to filter events from the CurrentState stream from the HCD.
- * <p>
+ *
  * This shows how to use the TimeService to send periodic messages and how to periodically call another actor and process its
  * response.
  */
@@ -52,12 +55,25 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
 
   private final ActorRef currentStateReceiver;
   private final Optional<ActorRef> eventPublisher;
+  private final String hcdName;
 
-  private DiagPublisher(ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
+  /**
+   * Constructor
+   *
+   * @param assemblyContext      the assembly context provides overall assembly information and convenience functions
+   * @param currentStateReceiver a source for CurrentState messages. This can be the actorRef of the HCD itself, or the actorRef of
+   *                             a CurrentStateReceiver
+   * @param tromboneHCDIn        initial actorRef of the tromboneHCD as a [[scala.Option]]
+   * @param eventPublisher     initial actorRef of an instance of the TrombonePublisher as [[scala.Option]]
+   */
+  private DiagPublisher(AssemblyContext assemblyContext, ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
     subscribeToLocationUpdates();
 
     this.currentStateReceiver = currentStateReceiver;
     this.eventPublisher = eventPublisher;
+
+    // This works because we only have one HCD
+    this.hcdName = assemblyContext.info.getConnections().get(0).name();
 
     currentStateReceiver.tell(JPublisherActor.Subscribe, self());
     // It would be nice if this message was in a more general location than HcdController or
@@ -84,8 +100,6 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
         if (cs.configKey().equals(TromboneHCD.axisStateCK)) {
           if (stateMessageCounter % operationsSkipCount == 0) publishStateUpdate(cs);
           context().become(operationsReceive(currentStateReceive, stateMessageCounter + 1, tromboneHCD));
-        } else if (!cs.configKey().equals(TromboneHCD.axisStatsCK)) {
-          log.warning("Unknown message received: " + cs);
         }
       }).
       match(TimeForAxisStats.class, t -> {
@@ -102,6 +116,27 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
       }).
       match(TromboneAssembly.UpdateTromboneHCD.class, t -> {
         context().become(operationsReceive(currentStateReceiver, stateMessageCounter, t.tromboneHCD));
+      }).
+      match(Location.class, location -> {
+
+        if (location instanceof LocationService.ResolvedAkkaLocation) {
+          if (Objects.equals(location.connection().name(), hcdName)) {
+            LocationService.ResolvedAkkaLocation rloc = (LocationService.ResolvedAkkaLocation) location;
+            log.info("operationsReceive updated actorRef: " + rloc.getActorRef());
+            context().become(operationsReceive(currentStateReceive, stateMessageCounter, rloc.getActorRef()));
+          }
+
+        } else if (location instanceof LocationService.Unresolved) {
+          if (Objects.equals(location.connection().name(), hcdName)) {
+            log.info("operationsReceive got unresolve for trombone HCD");
+            context().become(operationsReceive(currentStateReceive, stateMessageCounter, Optional.empty()));
+          }
+        } else if (location instanceof LocationService.UnTrackedLocation) {
+          if (Objects.equals(location.connection().name(), hcdName)) {
+            log.info("operationsReceive got untrack for trombone HCD");
+            context().become(operationsReceive(currentStateReceive, stateMessageCounter, Optional.empty()));
+          }
+        }
       }).
       matchAny(t -> log.warning("DiagPublisher:operationsReceive received an unexpected message: " + t)).
       build();
@@ -148,6 +183,28 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
         // The actor ref of the trombone HCD has changed
         context().become(diagnosticReceive(currentStateReceiver, stateMessageCounter, t.tromboneHCD, cancelToken));
       }).
+      match(Location.class, location -> {
+
+        if (location instanceof LocationService.ResolvedAkkaLocation) {
+          if (Objects.equals(location.connection().name(), hcdName)) {
+            LocationService.ResolvedAkkaLocation rloc = (LocationService.ResolvedAkkaLocation) location;
+            log.info("diagnosticReceive got unresolve for trombone HCD");
+            context().become(diagnosticReceive(currentStateReceive, stateMessageCounter, Optional.empty(), cancelToken));
+          }
+
+        } else if (location instanceof LocationService.Unresolved) {
+          if (Objects.equals(location.connection().name(), hcdName)) {
+            log.info("diagnosticReceive got unresolve for trombone HCD");
+            context().become(diagnosticReceive(currentStateReceive, stateMessageCounter, Optional.empty(), cancelToken));
+          }
+
+        } else if (location instanceof LocationService.UnTrackedLocation) {
+          if (Objects.equals(location.connection().name(), hcdName)) {
+            log.info("diagnosticReceive got untrack for trombone HCD");
+            context().become(diagnosticReceive(currentStateReceive, stateMessageCounter, Optional.empty(), cancelToken));
+          }
+        }
+      }).
       matchAny(t -> log.warning("DiagPublisher:diagnosticReceive received an unexpected message: " + t)).
       build();
   }
@@ -167,6 +224,7 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
   }
 
   private void publishStatsUpdate(CurrentState cs) {
+    log.info("publish stats");
     eventPublisher.ifPresent(actorRef ->
       actorRef.tell(new AxisStatsUpdate(
           jitem(cs, axisNameKey),
@@ -214,20 +272,21 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
   }
 
   /**
-   * Returns the props to use to create the actor.
+   * Used to create the actor.
    *
+   * @param assemblyContext      the assembly context provides overall assembly information and convenience functions
    * @param currentStateReceiver a source for CurrentState messages. This can be the actorRef of the HCD itself, or the actorRef of
    *                             a CurrentStateReceiver
-   * @param tromboneHCDIn        actorRef of the tromboneHCD as a [[scala.Option]]
-   * @param eventPublisher       actorRef of an instance of the TrombonePublisher as [[scala.Option]]
+   * @param tromboneHCDIn        initial actorRef of the tromboneHCD as a [[scala.Option]]
+   * @param eventPublisher     initial actorRef of an instance of the TrombonePublisher as [[scala.Option]]
    */
-  public static Props props(ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
+  public static Props props(AssemblyContext assemblyContext, ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
     return Props.create(new Creator<DiagPublisher>() {
       private static final long serialVersionUID = 1L;
 
       @Override
       public DiagPublisher create() throws Exception {
-        return new DiagPublisher(currentStateReceiver, tromboneHCDIn, eventPublisher);
+        return new DiagPublisher(assemblyContext, currentStateReceiver, tromboneHCDIn, eventPublisher);
       }
     });
   }

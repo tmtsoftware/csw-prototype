@@ -1,362 +1,422 @@
-//package csw.examples.vsliceJava.assembly
-//
-//import java.net.URI
-//
-//import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-//import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-//import akka.util.Timeout
-//import com.typesafe.scalalogging.slf4j.LazyLogging
-//import csw.examples.vslice.assembly.DiagPublisher.{DiagnosticState, OperationsState}
-//import csw.examples.vslice.assembly.TrombonePublisher.{AxisStateUpdate, AxisStatsUpdate}
-//import csw.examples.vslice.hcd.TromboneHCD
-//import csw.examples.vslice.hcd.TromboneHCD.{GetAxisStats, GetAxisUpdate}
-//import csw.services.events.{EventService, EventServiceAdmin}
-//import csw.services.loc.Connection.AkkaConnection
-//import csw.services.loc.ConnectionType.AkkaType
-//import csw.services.loc.LocationService
-//import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation, Unresolved}
-//import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-//import csw.services.pkg.Supervisor3
-//import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
-//import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
-//import csw.util.config.Events.{StatusEvent, SystemEvent}
-//import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
-//
-//import scala.concurrent.Await
-//import scala.concurrent.duration._
-//
-///**
-// * Diag Pubisher Tests
-// */
-//object DiagPublisherTests {
-//  LocationService.initInterface()
-//  val system = ActorSystem("DiagPublisherSystem")
-//
-//  // Test subscriber actor for telemetry and system events
-//  object TestSubscriber {
-//    def props(): Props = Props(classOf[TestSubscriber])
-//
-//    case object GetSysResults
-//
-//    case object GetStatusResults
-//
-//    case class SysResults(msgs: Vector[SystemEvent])
-//
-//    case class StatusResults(msgs: Vector[StatusEvent])
-//
-//  }
+package csw.examples.vsliceJava.assembly;
+
+import akka.actor.*;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.japi.Creator;
+import akka.japi.pf.ReceiveBuilder;
+import akka.testkit.JavaTestKit;
+import akka.testkit.TestActorRef;
+import akka.testkit.TestProbe;
+import akka.util.Timeout;
+import csw.examples.vsliceJava.hcd.TromboneHCD;
+import csw.services.loc.Connection;
+import csw.services.loc.LocationService;
+import csw.services.pkg.Component;
+import csw.services.pkg.Supervisor3;
+import csw.util.config.Events;
+import javacsw.services.events.ITelemetryService;
+import javacsw.services.pkg.JComponent;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
+import static csw.util.config.Events.SystemEvent;
+import static csw.util.config.Events.StatusEvent;
+import static javacsw.services.loc.JConnectionType.AkkaType;
+import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static csw.services.loc.Connection.AkkaConnection;
+import static javacsw.services.pkg.JSupervisor3.LifecycleInitialized;
+import static javacsw.services.pkg.JSupervisor3.LifecycleRunning;
+import static csw.services.pkg.SupervisorExternal.LifecycleStateChanged;
+import static csw.services.pkg.SupervisorExternal.SubscribeLifecycleCallback;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.*;
+import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStateUpdate;
+import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStatsUpdate;
+import static csw.examples.vsliceJava.assembly.DiagPublisher.DiagnosticState;
+import static junit.framework.TestCase.assertEquals;
+import static csw.examples.vsliceJava.assembly.DiagPublisher.OperationsState;
+import static csw.services.loc.LocationService.Location;
+import static csw.services.loc.LocationService.Unresolved;
+import static csw.services.loc.LocationService.ResolvedAkkaLocation;
+
+@SuppressWarnings("WeakerAccess")
+/**
+ * Test event service client, subscribes to some event
+ */
+class TestSubscriber extends AbstractActor {
+  private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+  public static Props props() {
+    return Props.create(new Creator<TestSubscriber>() {
+      private static final long serialVersionUID = 1L;
+
+      @Override
+      public TestSubscriber create() throws Exception {
+        return new TestSubscriber();
+      }
+    });
+  }
+
+  // --- Actor message classes ---
+  static class GetSysResults {
+  }
+
+  static class GetStatusResults {
+  }
+
+  static class SysResults {
+    public final Vector<SystemEvent> msgs;
+
+    public SysResults(Vector<SystemEvent> msgs) {
+      this.msgs = msgs;
+    }
+  }
+
+  static class StatusResults {
+    public final Vector<StatusEvent> msgs;
+
+    public StatusResults(Vector<StatusEvent> msgs) {
+      this.msgs = msgs;
+    }
+  }
+
+  Vector<SystemEvent> sysmsgs = new Vector<>();
+  Vector<StatusEvent> statmsgs = new Vector<>();
+
+  public TestSubscriber() {
+    receive(ReceiveBuilder.
+      match(SystemEvent.class, event -> {
+        sysmsgs.add(event);
+        log.debug("Received system event: " + event);
+      }).
+      match(Events.StatusEvent.class, event -> {
+        statmsgs.add(event);
+        log.debug("Received status event: " + event);
+      }).
+      match(GetSysResults.class, t -> sender().tell(new SysResults(sysmsgs), self())).
+      match(GetStatusResults.class, t -> sender().tell(new StatusResults(statmsgs), self())).
+      matchAny(t -> log.warning("Unknown message received: " + t)).
+      build());
+  }
+}
+
+/**
+ * Diag Pubisher Tests
+ */
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
+public class DiagPublisherTests extends JavaTestKit {
+
+  private static ActorSystem system;
+  private static LoggingAdapter logger;
+
+  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(10, TimeUnit.SECONDS));
+
+  private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
+
+  private static ITelemetryService telemtryService;
+
+  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
+  ActorRef self() {
+    return getTestActor();
+  }
+
+  public DiagPublisherTests() {
+    super(system);
+  }
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    LocationService.initInterface();
+    system = ActorSystem.create();
+    logger = Logging.getLogger(system, system);
+    telemtryService = ITelemetryService.getTelemetryService(ITelemetryService.defaultName, system, timeout)
+      .get(5, TimeUnit.SECONDS);
+  }
+
+  @AfterClass
+  public static void teardown() {
+    JavaTestKit.shutdownActorSystem(system);
+    system = null;
+  }
+
+  ActorRef startHCD() {
+    Component.HcdInfo testInfo = JComponent.hcdInfo(
+      TromboneHCD.componentName,
+      TromboneHCD.trombonePrefix,
+      TromboneHCD.componentClassName,
+      DoNotRegister, Collections.singleton(AkkaType), FiniteDuration.apply(1, TimeUnit.SECONDS)
+    );
+
+    return Supervisor3.apply(testInfo);
+  }
+
+  // This is possible since trombone HCD has only one HCD
+  Connection.AkkaConnection tromboneHCDConnection = (AkkaConnection)assemblyContext.info.getConnections().get(0);
+
+  TestActorRef<DiagPublisher> newDiagPublisher(ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCD, Optional<ActorRef> eventPublisher) {
+    Props props = DiagPublisher.props(assemblyContext, currentStateReceiver, tromboneHCD, eventPublisher);
+    return TestActorRef.create(system, props);
+  }
+
+  // --- basic diag tests ---
+
+    /**
+     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations state.
+     */
+    @Test
+    public void test1() {
+      // should see one type of messages sent to publisher in operations mode
+      ActorRef tromboneHCD = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+      TestProbe fakePublisher = new TestProbe(system);
+
+      // Use HCD as currentStateReceiver
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakePublisher.ref()));
+
+      // Sending GetAxisStats and GetAxisUpdate to tromboneHCD simulates generation of messages during motion -- at least for AxisUpdate
+      // Operations mode ignores AxisStats messages
+      tromboneHCD.tell(GetAxisStats, self());
+      // Check that nothing is happening here
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+
+      // Skip count is 5 so should get one message right away and then none for 4 more - just check for one
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectMsgClass(AxisStateUpdate.class);
+
+      system.stop(dp);
+      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    /**
+     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations mode.
+     * This test shows that in operations state the skip count is 5
+     */
+    @Test
+    public void test2() {
+      // should see one state message sent to publisher in operations mode for every skipCount messages
+      ActorRef tromboneHCD = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+      TestProbe fakePublisher = new TestProbe(system);
+
+      // Use HCD as currentStateReceiver
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakePublisher.ref()));
+
+      // Skip count is 5 so should get one message right away and then none for 4 more
+      tromboneHCD.tell(GetAxisUpdate, self());
+      AxisStateUpdate msg = fakePublisher.expectMsgClass(AxisStateUpdate.class);
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectMsgClass(AxisStateUpdate.class);
+
+      system.stop(dp);
+      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    /**
+     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in diagnostic mode.
+     * This test shows that in diagnostic state the skip count is 2
+     */
+    @Test
+    public void test3() {
+      // should see one state message sent to publisher in operations mode for every skipCount messages
+      ActorRef tromboneHCD = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+      TestProbe fakePublisher = new TestProbe(system);
+
+      // Use HCD as currentStateReceiver
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakePublisher.ref()));
+
+      dp.tell(new DiagnosticState(), self());
+
+      // Skip count is 2 so should get a message for every other event
+      tromboneHCD.tell(GetAxisUpdate, self());
+      AxisStateUpdate msg = fakePublisher.expectMsgClass(AxisStateUpdate.class);
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectMsgClass(AxisStateUpdate.class);
+      tromboneHCD.tell(GetAxisUpdate, self());
+      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+
+      system.stop(dp);
+      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    /**
+     * Test Description: This test shows that in diagnostic state there is also a stats event once/second.
+     * This test waits for one message demonstrating that stats events are published
+     */
+    @Test
+    public void test4() {
+      // should see one stats message sent to publisher in diagnostics mode every second (current spec)
+      ActorRef tromboneHCD = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+      TestProbe fakePublisher = new TestProbe(system);
+
+      // Use HCD as currentStateReceiver
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakePublisher.ref()));
+
+      dp.tell(new DiagnosticState(), self());
+
+      // Because timeout is 3 seconds, we get the one stats event after 1 second
+      fakePublisher.expectMsgClass(AxisStatsUpdate.class);
+
+      system.stop(dp);
+      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    /**
+     * Test Description: Demonstrate that stats events are published once/second by waiting for 3 seconds
+     * The end of the test demonstrates that the stats events are turned off properl in operations state
+     */
+    @Test
+    public void test5() {
+      // should generate several timed events in diagnostic mode
+      ActorRef tromboneHCD = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+      TestProbe fakeEventPublisher = new TestProbe(system);
+
+      // Use HCD as currentStateReceiver
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakeEventPublisher.ref()));
+
+      dp.tell(new DiagnosticState(), self());
+
+      final AxisStatsUpdate[] msgs =
+        new ReceiveWhile<AxisStatsUpdate>(AxisStatsUpdate.class, duration("3200 milliseconds")) {
+          protected AxisStatsUpdate match(Object in) {
+            if (in instanceof AxisStatsUpdate) {
+              return (AxisStatsUpdate) in;
+            } else {
+              throw noMatch();
+            }
+          }
+        }.get(); // this extracts the received messages
+
+
+      assertEquals(msgs.length, 3);
+
+      // Now turn them off
+      dp.tell(new OperationsState(), self());
+      // A delay to see that no messages arrive after one second to ensure timer is off
+      fakeEventPublisher.expectNoMsg(duration("1200 milliseconds"));
+
+      system.stop(dp);
+      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
+    void setLocation(Location loc) {
+      // These times are important to allow time for test actors to get and process the state updates when running tests
+      expectNoMsg(FiniteDuration.apply(10, TimeUnit.MILLISECONDS));
+      system.eventStream().publish(loc);
+      // This is here to allow the destination to run and set its state
+      expectNoMsg(FiniteDuration.apply(10, TimeUnit.MILLISECONDS));
+    }
+
+    /**
+     * Test Description: Test that updating the HCD actorRef during operations works properly by
+     * first setting the HCD to None and then resetting it.
+     */
+    @Test
+    public void test6() throws URISyntaxException {
+      // "tromboneHCD update should work properly impacting timed events which contact the HCD"
+      ActorRef tromboneHCD = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+      TestProbe fakePublisher = new TestProbe(system);
+
+      // Use HCD as currentStateReceiver
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakePublisher.ref()));
+
+      dp.tell(new DiagnosticState(), self());
+
+      // Wait for one update message
+      fakePublisher.expectMsgClass(AxisStatsUpdate.class);
+
+      // Setting HCD to None should turn off stats updates
+      setLocation(new Unresolved(tromboneHCDConnection));
+      expectNoMsg(FiniteDuration.apply(200, TimeUnit.MILLISECONDS)); // This is to let event bus and other actor work on slow machines
+      fakePublisher.expectNoMsg(FiniteDuration.apply(1500, TimeUnit.MILLISECONDS));
+
+      // Turn back on and wait for next event
+      URI uri = new URI("http://test"); // Some fake URI for AkkaLocation
+      setLocation(new ResolvedAkkaLocation(tromboneHCDConnection, uri, "", Optional.of(tromboneHCD)));
+      // Wait for one update message
+      fakePublisher.expectMsgClass(AxisStatsUpdate.class);
+
+      system.stop(dp);
+      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
 //
 //  /**
-//   * Test event service client, subscribes to some event
+//   * These tests tie the Telemetry Service to the DiagPublisher and verify that real events are published as needed
 //   */
-//  class TestSubscriber extends Actor with ActorLogging {
-//
-//    import TestSubscriber._
-//
-//    var sysmsgs = Vector.empty[SystemEvent]
-//    var statmsgs = Vector.empty[StatusEvent]
-//
-//    def receive: Receive = {
-//      case event: SystemEvent =>
-//        sysmsgs = sysmsgs :+ event
-//        log.debug(s"Received system event: $event")
-//      case event: StatusEvent =>
-//        statmsgs = statmsgs :+ event
-//        log.debug(s"Received status event: $event")
-//
-//      case GetSysResults    => sender() ! SysResults(sysmsgs)
-//      case GetStatusResults => sender() ! StatusResults(statmsgs)
-//    }
-//  }
-//}
-//
-//class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
-//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfter with LazyLogging {
-//
-//  import DiagPublisherTests._
-//
-//  def startHCD: ActorRef = {
-//    val testInfo = HcdInfo(
-//      TromboneHCD.componentName,
-//      TromboneHCD.trombonePrefix,
-//      TromboneHCD.componentClassName,
-//      DoNotRegister, Set(AkkaType), 1.second
-//    )
-//
-//    Supervisor3(testInfo)
-//  }
-//
-//  implicit val timeout = Timeout(10.seconds)
-//
-//  // Used to start and stop the event service Redis instance used for the test
-//  var eventAdmin: EventServiceAdmin = _
-//
-//  // Get the event service by looking up the name with the location service.
-//  val eventService = Await.result(EventService(), timeout.duration)
-//
-//  override def beforeAll() = {
-//    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
-//    // Start redis and register it with the location service on a random free port.
-//    // The following is the equivalent of running this from the command line:
-//    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
-//    //    EventServiceAdmin.startEventService()
-//
-//    // Get the event service by looking it up the name with the location service.
-//    //    eventService = Await.result(EventService(), timeout.duration)
-//
-//    // This is only used to stop the Redis instance that was started for this test
-//    //    eventAdmin = EventServiceAdmin(eventService)
-//  }
-//
-//  override protected def afterAll(): Unit = {
-//    // Shutdown Redis (Only do this in tests that also started the server)
-//    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
-//    TestKit.shutdownActorSystem(system)
-//  }
-//
-//  implicit val execContext = system.dispatcher
-//
-//  val assemblyContext = AssemblyTestData.TestAssemblyContext
-//
-//  import assemblyContext._
-//
-//  // This is possible since trombone HCD has only one HCD
-//  val tromboneHCDConnection: AkkaConnection = assemblyContext.info.connections.head.asInstanceOf[AkkaConnection]
-//
-//  def newDiagPublisher(currentStateReceiver: ActorRef, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[DiagPublisher] = {
-//    val props = DiagPublisher.props(assemblyContext, currentStateReceiver, tromboneHCD, eventPublisher)
-//    TestActorRef[DiagPublisher](props)
-//  }
-//
-//  describe("basic diag tests") {
-//
-//    /**
-//     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations state.
-//     */
-//    it("should see one type of messages sent to publisher in operations mode") {
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      val fakePublisher = TestProbe()
-//
-//      // Use HCD as currentStateReceiver
-//      val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(fakePublisher.ref))
-//
-//      // Sending GetAxisStats and GetAxisUpdate to tromboneHCD simulates generation of messages during motion -- at least for AxisUpdate
-//      // Operations mode ignores AxisStats messages
-//      tromboneHCD ! GetAxisStats
-//      // Check that nothing is happening here
-//      fakePublisher.expectNoMsg(20.milli)
-//
-//      // Skip count is 5 so should get one message right away and then none for 4 more - just check for one
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
-//
-//      system.stop(dp)
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
-//    }
-//
-//    /**
-//     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations mode.
-//     * This test shows that in operations state the skip count is 5
-//     */
-//    it("should see one state message sent to publisher in operations mode for every skipCount messages") {
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      val fakePublisher = TestProbe()
-//
-//      // Use HCD as currentStateReceiver
-//      val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(fakePublisher.ref))
-//
-//      // Skip count is 5 so should get one message right away and then none for 4 more
-//      tromboneHCD ! GetAxisUpdate
-//      var msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectNoMsg(20.milli)
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectNoMsg(20.milli)
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectNoMsg(20.milli)
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectNoMsg(20.milli)
-//      tromboneHCD ! GetAxisUpdate
-//      msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
-//
-//      system.stop(dp)
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
-//    }
-//
-//    /**
-//     * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in diagnostic mode.
-//     * This test shows that in diagnostic state the skip count is 2
-//     */
-//    it("should see one state message sent to publisher in diagnostics mode for every update message") {
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      val fakePublisher = TestProbe()
-//
-//      // Use HCD as currentStateReceiver
-//      val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(fakePublisher.ref))
-//
-//      dp ! DiagnosticState
-//
-//      // Skip count is 2 so should get a message for every other event
-//      tromboneHCD ! GetAxisUpdate
-//      var msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectNoMsg(20.milli)
-//      tromboneHCD ! GetAxisUpdate
-//      msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectNoMsg(20.milli)
-//      tromboneHCD ! GetAxisUpdate
-//      msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
-//      tromboneHCD ! GetAxisUpdate
-//      fakePublisher.expectNoMsg(20.milli)
-//
-//      system.stop(dp)
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
-//    }
-//
-//    /**
-//     * Test Description: This test shows that in diagnostic state there is also a stats event once/second.
-//     * This test waits for one message demonstrating that stats events are published
-//     */
-//    it("should see one stats message sent to publisher in diagnostics mode every second (current spec)") {
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      val fakePublisher = TestProbe()
-//
-//      // Use HCD as currentStateReceiver
-//      val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(fakePublisher.ref))
-//
-//      dp ! DiagnosticState
-//
-//      // Because timeout is 3 seconds, we get the one stats event after 1 second
-//      fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
-//    }
-//
-//    /**
-//     * Test Description: Demonstrate that stats events are published once/second by waiting for 3 seconds
-//     * The end of the test demonstrates that the stats events are turned off properl in operations state
-//     */
-//    it("should generate several timed events in diagnostic mode") {
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      val fakeEventPublisher = TestProbe()
-//
-//      // Use HCD as currentStateReceiver
-//      val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(fakeEventPublisher.ref))
-//      dp ! DiagnosticState
-//      var msgs = Seq[AxisStatsUpdate]()
-//
-//      // Wait for a bit over 3 seconds
-//      fakeEventPublisher.receiveWhile(3200.milli) {
-//        case asu: AxisStatsUpdate =>
-//          msgs = asu +: msgs
-//      }
-//      msgs.size shouldBe 3
-//      msgs.head shouldBe a[AxisStatsUpdate]
-//
-//      // Now turn them off
-//      dp ! OperationsState
-//      // A delay to see that no messages arrive after one second to ensure timer is off
-//      fakeEventPublisher.expectNoMsg(1200.milli)
-//
-//      system.stop(dp)
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
-//    }
-//
-//    def setLocation(loc: Location) = {
-//      // These times are important to allow time for test actors to get and process the state updates when running tests
-//      expectNoMsg(20.milli)
-//      system.eventStream.publish(loc)
-//      // This is here to allow the destination to run and set its state
-//      expectNoMsg(20.milli)
-//    }
-//
-//    /**
-//     * Test Description: Test that updating the HCD actorRef during operations works properly by
-//     * first setting the HCD to None and then resetting it.
-//     */
-//    it("tromboneHCD update should work properly impacting timed events which contact the HCD") {
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      val fakePublisher = TestProbe()
-//
-//      // Use HCD as currentStateReceiver
-//      val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(fakePublisher.ref))
-//      dp ! DiagnosticState
-//      // Wait for one update message
-//      fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
-//
-//      // Setting HCD to None should turn off stats updates
-//      setLocation(Unresolved(tromboneHCDConnection))
-//      expectNoMsg(200.milli) // This is to let event bus and other actor work on slow machines
-//      fakePublisher.expectNoMsg(1.5.seconds)
-//
-//      // Turn back on and wait for next event
-//      val uri = new URI("http://test") // Some fake URI for AkkaLocation
-//      setLocation(ResolvedAkkaLocation(tromboneHCDConnection, uri, "", Some(tromboneHCD)))
-//      // Wait for one update message
-//      fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
-//
-//      system.stop(dp)
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
-//    }
-//  }
-//
-//  /**
-//   * These tests tie the Event Service to the DiagPublisher and verify that real events are published as needed
-//   */
-//  describe("functionality tests using Event Service") {
+//  describe("functionality tests using Telemetry Service") {
 //
 //    /**
 //     * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
@@ -366,12 +426,11 @@
 //      import TestSubscriber._
 //
 //      // Create the trombone publisher for publishing SystemEvents to AOESW
-//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
-//
+//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, None, Some(telemetryService)))
 //
 //      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
 //      val resultSubscriber = TestActorRef(TestSubscriber.props())
-//      eventService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
+//      telemetryService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
 //
 //      val tromboneHCD = startHCD
 //
@@ -406,7 +465,7 @@
 //      result.msgs.size shouldBe 2
 //      //info("result: " + result)
 //
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
+//      tromboneHCD ! PoisonPill
 //    }
 //
 //    /**
@@ -417,14 +476,12 @@
 //      import TestSubscriber._
 //
 //      // Create the trombone publisher for publishing SystemEvents to AOESW
-//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
-////      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, None))
-//
+//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, None, Some(telemetryService)))
 //
 //      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
 //      val resultSubscriber = TestActorRef(TestSubscriber.props())
 //      logger.info("Before subscribe")
-//      eventService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
+//      telemetryService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
 //      logger.info("After subscribe")
 //      logger.info("After wait")
 //
@@ -471,7 +528,7 @@
 //      //result.msgs.size shouldBe 4
 //      info("result: " + result)
 //
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
+//      tromboneHCD ! PoisonPill
 //      expectNoMsg(5.seconds)
 //    }
 //
@@ -484,16 +541,15 @@
 //      import TestSubscriber._
 //
 //      // Create the trombone publisher for publishing SystemEvents to AOESW
-//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService)))
-//
+//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, None, Some(telemetryService)))
 //
 //      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
 //      val resultSubscriber = TestActorRef(TestSubscriber.props())
-//      eventService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
+//      telemetryService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
 //
 //      // Creates a subscriber for stats events
 //      val resultSubscriber2 = TestActorRef(TestSubscriber.props())
-//      eventService.subscribe(resultSubscriber2, postLastEvents = false, axisStatsEventPrefix)
+//      telemetryService.subscribe(resultSubscriber2, postLastEvents = false, axisStatsEventPrefix)
 //
 //      val tromboneHCD = startHCD
 //
@@ -541,9 +597,7 @@
 //      result2.msgs.size should be >= 2
 //      //info("result: " + result2)
 //
-//      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender())
+//      tromboneHCD ! PoisonPill
 //    }
 //
-//  }
-//
-//}
+}

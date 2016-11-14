@@ -46,15 +46,9 @@ class DiagPublisher(assemblyContext: AssemblyContext, currentStateReceiver: Acto
   currentStateReceiver ! PublisherActor.Subscribe
   // It would be nice if this message was in a more general location than HcdController or
 
-  val diagnosticSkipCount = 2
-  val operationsSkipCount = 5
-
-  // Following are in units of seconds - could be in a configuration file
-  val diagnosticAxisStatsPeriod = 1
-
   // This works because we only have one HCD
-  val hcdName = assemblyContext.info.connections.head.name
-  var tromboneHCD: Option[ActorRef] = tromboneHCDIn
+  val hcdName: String = assemblyContext.info.connections.head.name
+  val tromboneHCD: Option[ActorRef] = tromboneHCDIn
 
   // Start in operations mode - 0 is initial stateMessageCounter value
   def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCD)
@@ -98,12 +92,12 @@ class DiagPublisher(assemblyContext: AssemblyContext, currentStateReceiver: Acto
           }
         case Unresolved(connection) =>
           if (connection.name == hcdName) {
-            log.info(s"operationsReceive got unresolve for trombone HCD")
+            log.info("operationsReceive got unresolve for trombone HCD")
             context.become(operationsReceive(currentStateReceive, stateMessageCounter, None))
           }
         case UnTrackedLocation(connection) =>
           if (connection.name == hcdName) {
-            log.info(s"operationsReceive got untrack for trombone HCD")
+            log.info("operationsReceive got untrack for trombone HCD")
             context.become(operationsReceive(currentStateReceive, stateMessageCounter, None))
           }
         case h: ResolvedHttpLocation => // Do Nothing
@@ -159,12 +153,12 @@ class DiagPublisher(assemblyContext: AssemblyContext, currentStateReceiver: Acto
           }
         case Unresolved(connection) =>
           if (connection.name == hcdName) {
-            log.info(s"diagnosticReceive got unresolve for trombone HCD")
+            log.info("diagnosticReceive got unresolve for trombone HCD")
             context.become(diagnosticReceive(currentStateReceive, stateMessageCounter, None, cancelToken))
           }
         case UnTrackedLocation(connection) =>
           if (connection.name == hcdName) {
-            log.info(s"diagnosticReceive got untrack for trombone HCD")
+            log.info("diagnosticReceive got untrack for trombone HCD")
             context.become(diagnosticReceive(currentStateReceive, stateMessageCounter, None, cancelToken))
           }
         case h: ResolvedHttpLocation => // Do Nothing
@@ -199,4 +193,9 @@ object DiagPublisher {
 
   final case object OperationsState extends DiagPublisherMessages
 
+  val diagnosticSkipCount = 2
+  val operationsSkipCount = 5
+
+  // Following are in units of seconds - could be in a configuration file
+  val diagnosticAxisStatsPeriod = 1
 }

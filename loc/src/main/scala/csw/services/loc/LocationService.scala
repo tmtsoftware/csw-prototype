@@ -162,6 +162,11 @@ object LocationService {
     override val isResolved = true
 
     /**
+     * Java constructor
+     */
+    def this(connection: AkkaConnection, uri: URI, prefix: String, actorRef: Optional[ActorRef]) = this(connection, uri, prefix, actorRef.asScala)
+
+    /**
      * Java API to get actorRef
      * @return
      */

@@ -7,6 +7,7 @@ import csw.services.loc.{ComponentType, Connection, ConnectionType}
 import csw.services.loc.ComponentType._
 import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.ComponentInfo
+import scala.collection.JavaConverters._
 
 import scala.concurrent.duration.{FiniteDuration, _}
 
@@ -96,6 +97,11 @@ object Component {
       connections:          Set[Connection]
   ) extends ComponentInfo {
     val componentType = Assembly
+
+    /**
+     * Java API to get the list of connections for the assembly
+     */
+    def getConnections: java.util.List[Connection] = connections.toList.asJava
   }
 
   /**
