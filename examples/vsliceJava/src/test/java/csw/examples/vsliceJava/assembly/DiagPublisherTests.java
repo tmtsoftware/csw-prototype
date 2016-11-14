@@ -273,7 +273,7 @@ public class DiagPublisherTests extends JavaTestKit {
       tromboneHCD.tell(GetAxisUpdate, self());
       fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
       tromboneHCD.tell(GetAxisUpdate, self());
-      fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
+      fakePublisher.expectMsgClass(AxisStateUpdate.class);
       tromboneHCD.tell(GetAxisUpdate, self());
       fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
       tromboneHCD.tell(GetAxisUpdate, self());
