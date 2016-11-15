@@ -38,5 +38,7 @@ abstract class AbstractHcdController(override val info: HcdInfo) extends Abstrac
   /**
    * Notifies all subscribers with the given value
    */
-  override protected def notifySubscribers(a: CurrentState): Unit = super.notifySubscribers(a)
+  override protected def notifySubscribers(a: CurrentState): Unit = {
+    super.notifySubscribers(a)
+  }
 }

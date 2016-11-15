@@ -48,10 +48,9 @@ class DiagPublisher(assemblyContext: AssemblyContext, currentStateReceiver: Acto
 
   // This works because we only have one HCD
   val hcdName: String = assemblyContext.info.connections.head.name
-  val tromboneHCD: Option[ActorRef] = tromboneHCDIn
 
   // Start in operations mode - 0 is initial stateMessageCounter value
-  def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCD)
+  def receive: Receive = operationsReceive(currentStateReceiver, 0, tromboneHCDIn)
 
   /**
    * The receive method in operations state.

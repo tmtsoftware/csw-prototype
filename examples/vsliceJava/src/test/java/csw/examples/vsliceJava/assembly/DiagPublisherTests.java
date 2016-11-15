@@ -249,7 +249,7 @@ public class DiagPublisherTests extends JavaTestKit {
      */
     @Test
     public void test3() {
-      // should see one state message sent to publisher in operations mode for every skipCount messages
+      // should see one state message sent to publisher in diagnostics mode for every update message
       ActorRef tromboneHCD = startHCD();
 
       TestProbe fakeAssembly = new TestProbe(system);
@@ -269,7 +269,7 @@ public class DiagPublisherTests extends JavaTestKit {
 
       // Skip count is 2 so should get a message for every other event
       tromboneHCD.tell(GetAxisUpdate, self());
-      AxisStateUpdate msg = fakePublisher.expectMsgClass(AxisStateUpdate.class);
+      fakePublisher.expectMsgClass(AxisStateUpdate.class);
       tromboneHCD.tell(GetAxisUpdate, self());
       fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
       tromboneHCD.tell(GetAxisUpdate, self());
@@ -333,15 +333,17 @@ public class DiagPublisherTests extends JavaTestKit {
       fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
       fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
 
-      TestProbe fakeEventPublisher = new TestProbe(system);
+      // XXX Using self instead of TestProbe in the Java version of this test, since I don't know how to
+      // call receiveWhile on a TestProbe using the Java Akka API
+      ActorRef fakeEventPublisher = self();
 
       // Use HCD as currentStateReceiver
-      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakeEventPublisher.ref()));
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakeEventPublisher));
 
       dp.tell(new DiagnosticState(), self());
 
       final AxisStatsUpdate[] msgs =
-        new ReceiveWhile<AxisStatsUpdate>(AxisStatsUpdate.class, duration("3200 milliseconds")) {
+        new ReceiveWhile<AxisStatsUpdate>(AxisStatsUpdate.class, FiniteDuration.apply(3200, TimeUnit.MILLISECONDS)) {
           protected AxisStatsUpdate match(Object in) {
             if (in instanceof AxisStatsUpdate) {
               return (AxisStatsUpdate) in;
@@ -352,12 +354,12 @@ public class DiagPublisherTests extends JavaTestKit {
         }.get(); // this extracts the received messages
 
 
-      assertEquals(msgs.length, 3);
+      assertEquals(3, msgs.length);
 
       // Now turn them off
       dp.tell(new OperationsState(), self());
       // A delay to see that no messages arrive after one second to ensure timer is off
-      fakeEventPublisher.expectNoMsg(duration("1200 milliseconds"));
+      expectNoMsg(duration("1200 milliseconds"));
 
       system.stop(dp);
       tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
@@ -365,10 +367,10 @@ public class DiagPublisherTests extends JavaTestKit {
 
     void setLocation(Location loc) {
       // These times are important to allow time for test actors to get and process the state updates when running tests
-      expectNoMsg(FiniteDuration.apply(10, TimeUnit.MILLISECONDS));
+      expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
       system.eventStream().publish(loc);
       // This is here to allow the destination to run and set its state
-      expectNoMsg(FiniteDuration.apply(10, TimeUnit.MILLISECONDS));
+      expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -392,9 +394,7 @@ public class DiagPublisherTests extends JavaTestKit {
 
       // Use HCD as currentStateReceiver
       ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(fakePublisher.ref()));
-
       dp.tell(new DiagnosticState(), self());
-
       // Wait for one update message
       fakePublisher.expectMsgClass(AxisStatsUpdate.class);
 

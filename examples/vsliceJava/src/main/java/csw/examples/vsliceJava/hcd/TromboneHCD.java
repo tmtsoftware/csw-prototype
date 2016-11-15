@@ -61,9 +61,6 @@ public class TromboneHCD extends JHcdController {
   AxisUpdate current;
   AxisStatistics stats;
 
-  // Keep track of the last SetupConfig to be received from external
-  private SetupConfig lastReceivedSC;
-
   private final ActorRef supervisor;
 
 
@@ -85,9 +82,6 @@ public class TromboneHCD extends JHcdController {
     // The current axis position from the hardware axis, initialize to default value
     current = (AxisUpdate) Await.result(Patterns.ask(tromboneAxis, InitialState.instance, timeout), timeout.duration());
     stats = (AxisStatistics) Await.result(Patterns.ask(tromboneAxis, GetStatistics.instance, timeout), timeout.duration());
-
-    // Keep track of the last SetupConfig to be received from external
-    lastReceivedSC = SetupConfig(TromboneHCD.trombonePrefix);
 
     // --
 
@@ -194,9 +188,6 @@ public class TromboneHCD extends JHcdController {
 
     log.debug("Trombone process received sc: " + sc);
 
-    // Store the last received for diags
-    lastReceivedSC = sc;
-
     ConfigKey configKey = sc.configKey();
     if (configKey.equals(axisMoveCK)) {
       tromboneAxis.tell(new SingleAxisSimulator.Move(jvalue(jitem(sc, positionKey)), true), self());
@@ -284,7 +275,7 @@ public class TromboneHCD extends JHcdController {
   public static final IntKey successCountKey = IntKey("successCount");
   public static final IntKey failureCountKey = IntKey("failureCount");
   public static final IntKey cancelCountKey = IntKey("cancelCount");
-  public static final CurrentState defaultStatsState = cs(axisStatsPrefix,
+  public static final CurrentState defaultStatsState = cs(axisStatsCK.prefix(),
     jset(axisNameKey, tromboneAxisName),
     jset(datumCountKey, 0),
     jset(moveCountKey, 0),

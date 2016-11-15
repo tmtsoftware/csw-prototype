@@ -23,7 +23,7 @@ import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStateUpdate
 import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStatsUpdate;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
-import static javacsw.services.ts.JTimeService.localTimeNow;
+import static csw.services.ts.TimeService.localTimeNow;
 import static javacsw.util.config.JItems.jitem;
 import static csw.services.loc.LocationService.Location;
 
@@ -67,16 +67,16 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
    * @param eventPublisher     initial actorRef of an instance of the TrombonePublisher as [[scala.Option]]
    */
   private DiagPublisher(AssemblyContext assemblyContext, ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
-    subscribeToLocationUpdates();
-
     this.currentStateReceiver = currentStateReceiver;
     this.eventPublisher = eventPublisher;
 
-    // This works because we only have one HCD
-    this.hcdName = assemblyContext.info.getConnections().get(0).name();
+    subscribeToLocationUpdates();
 
     currentStateReceiver.tell(JPublisherActor.Subscribe, self());
     // It would be nice if this message was in a more general location than HcdController or
+
+    // This works because we only have one HCD
+    this.hcdName = assemblyContext.info.getConnections().get(0).name();
 
     // Start in operations mode - 0 is initial stateMessageCounter value
     receive(operationsReceive(currentStateReceiver, 0, tromboneHCDIn));
@@ -156,9 +156,9 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
     return ReceiveBuilder.
       match(CurrentState.class, cs -> {
         if (cs.configKey().equals(TromboneHCD.axisStateCK)) {
-          if (stateMessageCounter % operationsSkipCount == 0) publishStateUpdate(cs);
+          if (stateMessageCounter % diagnosticSkipCount == 0) publishStateUpdate(cs);
           context().become(diagnosticReceive(currentStateReceive, stateMessageCounter + 1, tromboneHCD, cancelToken));
-        } else if (!cs.configKey().equals(TromboneHCD.axisStatsCK)) {
+        } else if (cs.configKey().equals(TromboneHCD.axisStatsCK)) {
           // Here when a CurrentState is received with the axisStats configKey, the axis statistics are published as an event
           publishStatsUpdate(cs);
         }
@@ -188,8 +188,8 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
         if (location instanceof LocationService.ResolvedAkkaLocation) {
           if (Objects.equals(location.connection().name(), hcdName)) {
             LocationService.ResolvedAkkaLocation rloc = (LocationService.ResolvedAkkaLocation) location;
-            log.info("diagnosticReceive got unresolve for trombone HCD");
-            context().become(diagnosticReceive(currentStateReceive, stateMessageCounter, Optional.empty(), cancelToken));
+            log.info("diagnosticReceive updated actorRef: " + rloc.getActorRef());
+            context().become(diagnosticReceive(currentStateReceive, stateMessageCounter, rloc.getActorRef(), cancelToken));
           }
 
         } else if (location instanceof LocationService.Unresolved) {

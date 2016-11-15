@@ -114,6 +114,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * Test Description: Stimulate DiagPublisher with CurrentState events to demonstrate diag publishing in operations state.
      */
     it("should see one type of messages sent to publisher in operations mode") {
+      // test1
       val tromboneHCD = startHCD
 
       val fakeAssembly = TestProbe()
@@ -148,6 +149,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * This test shows that in operations state the skip count is 5
      */
     it("should see one state message sent to publisher in operations mode for every skipCount messages") {
+      // test2
       val tromboneHCD = startHCD
 
       val fakeAssembly = TestProbe()
@@ -186,6 +188,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * This test shows that in diagnostic state the skip count is 2
      */
     it("should see one state message sent to publisher in diagnostics mode for every update message") {
+      // test3
       val tromboneHCD = startHCD
 
       val fakeAssembly = TestProbe()
@@ -205,15 +208,15 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
       // Skip count is 2 so should get a message for every other event
       tromboneHCD ! GetAxisUpdate
-      var msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
+      fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
       tromboneHCD ! GetAxisUpdate
       fakePublisher.expectNoMsg(20.milli)
       tromboneHCD ! GetAxisUpdate
-      msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
+      fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
       tromboneHCD ! GetAxisUpdate
       fakePublisher.expectNoMsg(20.milli)
       tromboneHCD ! GetAxisUpdate
-      msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
+      fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
       tromboneHCD ! GetAxisUpdate
       fakePublisher.expectNoMsg(20.milli)
 
@@ -226,6 +229,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * This test waits for one message demonstrating that stats events are published
      */
     it("should see one stats message sent to publisher in diagnostics mode every second (current spec)") {
+      // test4
       val tromboneHCD = startHCD
 
       val fakeAssembly = TestProbe()
@@ -255,6 +259,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * The end of the test demonstrates that the stats events are turned off properl in operations state
      */
     it("should generate several timed events in diagnostic mode") {
+      // test5
       val tromboneHCD = startHCD
 
       val fakeAssembly = TestProbe()
@@ -299,6 +304,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * first setting the HCD to None and then resetting it.
      */
     it("tromboneHCD update should work properly impacting timed events which contact the HCD") {
+      // test6
       val tromboneHCD = startHCD
 
       val fakeAssembly = TestProbe()
