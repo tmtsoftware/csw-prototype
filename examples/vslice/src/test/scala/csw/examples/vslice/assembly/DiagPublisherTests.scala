@@ -401,6 +401,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * The diag publisher is in diagnostic state so it publishes an event every 2 updates
      */
     it("should receive status events in diagnostic mode") {
+      // test8
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
@@ -456,8 +457,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       //result.msgs.size shouldBe 4
       info("result: " + result)
 
+      system.stop(dp)
       tromboneHCD ! PoisonPill
-      expectNoMsg(5.seconds)
+//      expectNoMsg(5.seconds)
     }
 
     /**
@@ -525,9 +527,9 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       result2.msgs.size should be >= 2
       //info("result: " + result2)
 
+      system.stop(dp)
       tromboneHCD ! PoisonPill
     }
-
   }
 
 }
