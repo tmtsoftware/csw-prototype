@@ -113,44 +113,44 @@ public class AssemblyContext {
   public static final DoubleKey zenithAngleKey = DoubleKey("zenithAngle");
   public static final UnitsOfMeasure.Units zenithAngleUnits = degrees;
 
-  public static final DoubleItem za(double angle) {
+  public static DoubleItem za(double angle) {
     return jset(zenithAngleKey, angle).withUnits(zenithAngleUnits);
   }
 
   public static final DoubleKey naRangeDistanceKey = DoubleKey("rangeDistance");
   public static final UnitsOfMeasure.Units naRangeDistanceUnits = kilometers;
 
-  public DoubleItem rd(double rangedistance) {
+  public static DoubleItem rd(double rangedistance) {
     return jset(naRangeDistanceKey, rangedistance).withUnits(naRangeDistanceUnits);
   }
 
-  public final DoubleKey naElevationKey = DoubleKey("elevation");
-  public final UnitsOfMeasure.Units naElevationUnits = kilometers;
-  public final DoubleItem naElevation(Double elevation) {
+  public static final DoubleKey naElevationKey = DoubleKey("elevation");
+  public static final UnitsOfMeasure.Units naElevationUnits = kilometers;
+  public static DoubleItem naElevation(Double elevation) {
     return jset(naElevationKey, elevation).withUnits(naElevationUnits);
   }
 
-  public final DoubleKey initialElevationKey = DoubleKey("initialElevation");
-  public final UnitsOfMeasure.Units initialElevationUnits = kilometers;
-  public DoubleItem iElevation(double elevation) {
+  public static final DoubleKey initialElevationKey = DoubleKey("initialElevation");
+  public static final UnitsOfMeasure.Units initialElevationUnits = kilometers;
+  public static DoubleItem iElevation(double elevation) {
     return jset(initialElevationKey, elevation).withUnits(initialElevationUnits);
   }
 
-  public final DoubleKey stagePositionKey = DoubleKey("stagePosition");
-  public final UnitsOfMeasure.Units stagePositionUnits = millimeters;
+  public static final DoubleKey stagePositionKey = DoubleKey("stagePosition");
+  public static final UnitsOfMeasure.Units stagePositionUnits = millimeters;
 
-  public DoubleItem spos(double pos) {
+  public static DoubleItem spos(double pos) {
     return jset(stagePositionKey, pos).withUnits(stagePositionUnits);
   }
 
   // ---------- Keys used by TromboneEventSubscriber and Others
   // This is the zenith angle from TCS
-  public final String zenithAnglePrefix = "TCS.tcsPk.zenithAngle";
-  public final ConfigKey zaConfigKey = new ConfigKey(zenithAnglePrefix);
+  public static final String zenithAnglePrefix = "TCS.tcsPk.zenithAngle";
+  public static final ConfigKey zaConfigKey = new ConfigKey(zenithAnglePrefix);
 
   // This is the focus error from RTC
-  public final String focusErrorPrefix = "RTC.focusError";
-  public final ConfigKey feConfigKey = new ConfigKey(focusErrorPrefix);
+  public static final String focusErrorPrefix = "RTC.focusError";
+  public static final ConfigKey feConfigKey = new ConfigKey(focusErrorPrefix);
 
   // ----------- Keys, etc. used by trombonePublisher, calculator, comamnds
   public final String aoSystemEventPrefix;

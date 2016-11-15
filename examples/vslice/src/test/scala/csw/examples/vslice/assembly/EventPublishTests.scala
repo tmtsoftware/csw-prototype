@@ -104,7 +104,6 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
   }
 
   describe("Create follow actor with publisher and subscriber") {
-    // test1
     import TestSubscriber._
 
     /**
@@ -115,6 +114,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
      * In this case range distance and elevation are the same, which is initial elevation in this case.
      */
     it("should allow publishing one event simulating event from fake TromboneEventSubscriber") {
+      // test1
       // Create a new publisher with no trombone position actor
       val pub = newTestPublisher(Some(eventService), None)
       val fol = newTestFollower(None, Some(pub))
@@ -145,6 +145,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
      * AlgorithmData. If you change the algorithm you need to update the test helpers.
      */
     it("should allow publishing several events with fake tromboneEventSubscriber") {
+      // test2
       import AssemblyTestData._
 
       // Ignoring the messages for TrombonePosition (set to None)

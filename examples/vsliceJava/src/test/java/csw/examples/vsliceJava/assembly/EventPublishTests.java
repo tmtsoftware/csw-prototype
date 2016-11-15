@@ -1,56 +1,42 @@
 package csw.examples.vsliceJava.assembly;
 
-import akka.actor.*;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
+import akka.japi.Pair;
 import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
-import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
-import csw.examples.vsliceJava.hcd.TromboneHCD;
-import csw.services.loc.Connection;
 import csw.services.loc.LocationService;
-import csw.services.pkg.Component;
-import csw.services.pkg.Supervisor3;
 import csw.util.config.DoubleItem;
 import csw.util.config.Events;
 import javacsw.services.events.IEventService;
 import javacsw.services.events.ITelemetryService;
-import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import static csw.examples.vsliceJava.assembly.DiagPublisher.DiagnosticState;
-import static csw.examples.vsliceJava.assembly.DiagPublisher.OperationsState;
-import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStateUpdate;
-import static csw.examples.vsliceJava.assembly.TrombonePublisher.AxisStatsUpdate;
-import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisStats;
-import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisUpdate;
-import static csw.services.loc.Connection.AkkaConnection;
-import static csw.services.loc.LocationService.*;
-import static csw.services.pkg.SupervisorExternal.LifecycleStateChanged;
-import static csw.services.pkg.SupervisorExternal.SubscribeLifecycleCallback;
-import static csw.util.config.Events.StatusEvent;
-import static csw.util.config.Events.SystemEvent;
-import static javacsw.services.loc.JConnectionType.AkkaType;
-import static javacsw.services.pkg.JComponent.DoNotRegister;
-import static javacsw.services.pkg.JSupervisor3.LifecycleInitialized;
-import static javacsw.services.pkg.JSupervisor3.LifecycleRunning;
-import static javacsw.util.config.JItems.jadd;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
+import static csw.examples.vsliceJava.assembly.AssemblyContext.*;
+import static csw.examples.vsliceJava.assembly.AssemblyTestData.newRangeAndElData;
+import static csw.examples.vsliceJava.assembly.AssemblyTestData.testZenithAngles;
+import static csw.examples.vsliceJava.assembly.FollowActor.UpdatedEventData;
 import static csw.util.config.Events.EventServiceEvent;
+import static csw.util.config.Events.SystemEvent;
+import static javacsw.util.config.JItems.jadd;
+import static javacsw.util.config.JItems.jset;
+import static junit.framework.TestCase.assertEquals;
 
 /**
  * Diag Pubisher Tests
@@ -147,7 +133,7 @@ public class EventPublishTests extends JavaTestKit {
     system = null;
   }
 
-  DoubleItem initialElevation = assemblyContext.naElevation(assemblyContext.calculationConfig.defaultInitialElevation);
+  DoubleItem initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation);
 
   // Publisher behaves the same whether nss is in use or not so always nssNotInUse
   ActorRef newTestFollower(Optional<ActorRef> tromboneControl, Optional<ActorRef> publisher) {
@@ -186,7 +172,7 @@ public class EventPublishTests extends JavaTestKit {
 
       // This should result in two messages being sent, one to each actor in the given order
       fakeTromboneEventSubscriber.send(fol, new FollowActor.UpdatedEventData(
-        AssemblyContext.za(0), AssemblyContext.fe(0),
+        za(0), fe(0),
         Events.getEventTime()));
 
       // This is to give actors time to run
@@ -198,55 +184,62 @@ public class EventPublishTests extends JavaTestKit {
       TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
       assertEquals(result.msgs.size(), 1);
       SystemEvent se = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
-        assemblyContext.naElevation(assemblyContext.calculationConfig.defaultInitialElevation),
-        assemblyContext.rd(assemblyContext.calculationConfig.defaultInitialElevation));
+        naElevation(assemblyContext.calculationConfig.defaultInitialElevation),
+        rd(assemblyContext.calculationConfig.defaultInitialElevation));
       Vector<SystemEvent> v = new Vector<>();
       v.add(se);
       assertEquals(result.msgs, v);
     }
 
-//    /**
-//     * Test Description: This test is similar to the last but a set of events are used that vary the zenith angle while holding
-//     * the focus error constant to see that multiple events are generated. The computed, expected values are computed with
-//     * AlgorithmData. If you change the algorithm you need to update the test helpers.
-//     */
-//    it("should allow publishing several events with fake tromboneEventSubscriber") {
-//      import AssemblyTestData._
-//
-//      // Ignoring the messages for TrombonePosition (set to None)
-//      val pub = newTestPublisher(Some(eventService), None)
-//      val fol = newTestFollower(None, Some(pub))
-//
-//      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-//      val resultSubscriber = system.actorOf(TestSubscriber.props())
-//      eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
-//      expectNoMsg(1.second) // Wait for the connection
-//
-//      val testFE = 10.0
-//
-//      // These are fake messages for the CalculationActor from the EventSubscriber
-//      val events = testZenithAngles.map(td => UpdatedEventData(za(td), fe(testFE), EventTime()))
-//
-//      // This should result in two messages being sent, one to each actor in the given order
-//      val fakeTromboneSubscriber = TestProbe()
-//      events.foreach(ev => fakeTromboneSubscriber.send(fol, ev))
-//
-//      // This is to give actors time to run
-//      expectNoMsg(100.milli)
-//
-//      resultSubscriber ! GetResults
-//      // Check the events received through the Event Service
-//      val result = expectMsgClass(classOf[Results])
-//
-//      // Calculate expected events
-//      val testResult = newRangeAndElData(testFE)
-//
-//      val aoeswExpected = testResult.map(f => SystemEvent(aoSystemEventPrefix).madd(naElevationKey -> f._2 withUnits naElevationUnits, naRangeDistanceKey -> f._1 withUnits naRangeDistanceUnits))
-//      //info("aowes: " + aoeswExpected)
-//
-//      aoeswExpected should equal(result.msgs)
-//    }
-//
+    /**
+     * Test Description: This test is similar to the last but a set of events are used that vary the zenith angle while holding
+     * the focus error constant to see that multiple events are generated. The computed, expected values are computed with
+     * AlgorithmData. If you change the algorithm you need to update the test helpers.
+     */
+    @Test
+    public void test2() {
+      // should allow publishing several events with fake tromboneEventSubscriber
+
+      // Ignoring the messages for TrombonePosition (set to None)
+      ActorRef pub = newTestPublisher(Optional.of(eventService), Optional.empty());
+      ActorRef fol = newTestFollower(Optional.empty(), Optional.of(pub));
+
+      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
+      ActorRef resultSubscriber = system.actorOf(TestSubscriber.props());
+      eventService.subscribe(resultSubscriber, false, assemblyContext.aoSystemEventPrefix);
+      expectNoMsg(duration("1 second")); // Wait for the connection
+
+      double testFE = 10.0;
+
+      // These are fake messages for the CalculationActor from the EventSubscriber
+      List<UpdatedEventData> events = testZenithAngles.stream().map(td ->
+        new UpdatedEventData(za(td), fe(testFE), Events.getEventTime())).collect(Collectors.toList());
+
+      // This should result in two messages being sent, one to each actor in the given order
+      TestProbe fakeTromboneSubscriber = new TestProbe(system);
+      events.forEach(ev -> fakeTromboneSubscriber.send(fol, ev));
+
+      // This is to give actors time to run
+      expectNoMsg(duration("100 milli"));
+
+      resultSubscriber.tell(new TestSubscriber.GetResults(), self());
+      // Check the events received through the Event Service
+      TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
+
+      // Calculate expected events
+      List<Pair<Double, Double>> testResult = newRangeAndElData(testFE);
+
+      List<SystemEvent> aoeswExpected = testResult.stream().map(f ->
+        jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
+          jset(naElevationKey, f.second()).withUnits(naElevationUnits),
+          jset(naRangeDistanceKey, f.first()).withUnits(naRangeDistanceUnits)))
+        .collect(Collectors.toList());
+
+      //info("aowes: " + aoeswExpected)
+
+      assertEquals(aoeswExpected, result.msgs);
+    }
+
 //    /**
 //     * Test Description: This takes it one step further and replaced the fakeTromboneSubscriber with the actual TromboneEventSubscriber
 //     * and uses the event service to publish events. The focus error of 10 is published then the set of data varying the zenith angle.
