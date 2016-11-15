@@ -349,6 +349,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
      * The diag publisher is in operations state so it requires 6 updates to produce one event
      */
     it("should receive status events in operations mode") {
+      // test7
       import TestSubscriber._
 
       // Create the trombone publisher for publishing SystemEvents to AOESW
@@ -369,7 +370,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
 
       // Use HCD as currentStateReceiver
-      newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(publisherActorRef))
+      val dp = newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(publisherActorRef))
 
       // This should cause an event to be generated and received
       // This should cause two published events since skip count is 5
@@ -391,6 +392,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       result.msgs.size shouldBe 2
       //info("result: " + result)
 
+      system.stop(dp)
       tromboneHCD ! PoisonPill
     }
 

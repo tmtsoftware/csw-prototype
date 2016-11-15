@@ -48,7 +48,7 @@ import static csw.services.loc.LocationService.Unresolved;
 import static csw.services.loc.LocationService.ResolvedAkkaLocation;
 
 @SuppressWarnings("WeakerAccess")
-/**
+/*
  * Test event service client, subscribes to some event
  */
 class TestSubscriber extends AbstractActor {
@@ -121,7 +121,7 @@ public class DiagPublisherTests extends JavaTestKit {
 
   private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
 
-  private static ITelemetryService telemtryService;
+  private static ITelemetryService telemetryService;
 
   // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
   ActorRef self() {
@@ -137,7 +137,7 @@ public class DiagPublisherTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
-    telemtryService = ITelemetryService.getTelemetryService(ITelemetryService.defaultName, system, timeout)
+    telemetryService = ITelemetryService.getTelemetryService(ITelemetryService.defaultName, system, timeout)
       .get(5, TimeUnit.SECONDS);
   }
 
@@ -412,62 +412,65 @@ public class DiagPublisherTests extends JavaTestKit {
       system.stop(dp);
       tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
     }
-//
-//  /**
-//   * These tests tie the Telemetry Service to the DiagPublisher and verify that real events are published as needed
-//   */
-//  describe("functionality tests using Telemetry Service") {
-//
-//    /**
-//     * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
-//     * The diag publisher is in operations state so it requires 6 updates to produce one event
-//     */
-//    it("should receive status events in operations mode") {
-//      import TestSubscriber._
-//
-//      // Create the trombone publisher for publishing SystemEvents to AOESW
-//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, None, Some(telemetryService)))
-//
-//      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-//      val resultSubscriber = TestActorRef(TestSubscriber.props())
-//      telemetryService.subscribe(resultSubscriber, postLastEvents = false, axisStateEventPrefix)
-//
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = TestProbe()
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      // Use HCD as currentStateReceiver
-//      newDiagPublisher(tromboneHCD, Some(tromboneHCD), Some(publisherActorRef))
-//
-//      // This should cause an event to be generated and received
-//      // This should cause two published events since skip count is 5
-//      tromboneHCD ! GetAxisUpdate
-//      tromboneHCD ! GetAxisUpdate
-//      tromboneHCD ! GetAxisUpdate
-//      tromboneHCD ! GetAxisUpdate
-//      tromboneHCD ! GetAxisUpdate
-//      tromboneHCD ! GetAxisUpdate
-//
-//      // Need to give a little time for messages to flow about and back to the subscriber
-//      // On my machine in this testing envrironment this needs to be at least 1000 ms
-//      expectNoMsg(1.second)
-//
-//      // Ask the local subscriber for all the ao events published for testing
-//      resultSubscriber ! GetStatusResults
-//      // Check the events received through the Event Service
-//      val result = expectMsgClass(classOf[StatusResults])
-//      result.msgs.size shouldBe 2
-//      //info("result: " + result)
-//
-//      tromboneHCD ! PoisonPill
-//    }
-//
+
+  /*
+   * These tests tie the Telemetry Service to the DiagPublisher and verify that real events are published as needed
+   */
+
+  // --- functionality tests using Telemetry Service ---
+
+    /**
+     * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
+     * The diag publisher is in operations state so it requires 6 updates to produce one event
+     */
+    @Test
+    public void test7() {
+      // should receive status events in operations mode
+
+      // Create the trombone publisher for publishing SystemEvents to AOESW
+      ActorRef publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Optional.empty(), Optional.of(telemetryService)));
+
+      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
+      TestActorRef resultSubscriber = TestActorRef.create(system, TestSubscriber.props());
+      telemetryService.subscribe(resultSubscriber, false, assemblyContext.axisStateEventPrefix);
+
+      ActorRef tromboneHCD = startHCD();
+
+      TestProbe fakeAssembly = new TestProbe(system);
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+      // Use HCD as currentStateReceiver
+      ActorRef dp = newDiagPublisher(tromboneHCD, Optional.of(tromboneHCD), Optional.of(publisherActorRef));
+
+      // This should cause an event to be generated and received
+      // This should cause two published events since skip count is 5
+      tromboneHCD.tell(GetAxisUpdate, self());
+      tromboneHCD.tell(GetAxisUpdate, self());
+      tromboneHCD.tell(GetAxisUpdate, self());
+      tromboneHCD.tell(GetAxisUpdate, self());
+      tromboneHCD.tell(GetAxisUpdate, self());
+      tromboneHCD.tell(GetAxisUpdate, self());
+
+      // Need to give a little time for messages to flow about and back to the subscriber
+      // On my machine in this testing envrironment this needs to be at least 1000 ms
+      expectNoMsg(duration("1 second"));
+
+      // Ask the local subscriber for all the ao events published for testing
+      resultSubscriber.tell(new TestSubscriber.GetStatusResults(), self());
+      // Check the events received through the Event Service
+      TestSubscriber.StatusResults result = expectMsgClass(TestSubscriber.StatusResults.class);
+      assertEquals(result.msgs.size(), 2);
+      //info("result: " + result)
+
+      system.stop(dp);
+      tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    }
+
 //    /**
 //     * Test Description: This test creates an HCD and uses TestSubscribers to listen for diag publisher events.
 //     * The diag publisher is in diagnostic state so it publishes an event every 2 updates

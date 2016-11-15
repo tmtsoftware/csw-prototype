@@ -32,7 +32,7 @@ if test ! -x $REDIS_CLIENT ; then
 fi
 
 # Set to yes to start the config service
-START_CONFIG_SERVICE=no
+START_CONFIG_SERVICE=yes
 
 REDIS_PORT=7777
 REDIS_SERVICES="Event Service,Alarm Service,Telemetry Service"

@@ -11,6 +11,7 @@ import csw.services.ccs.SequentialExecutor
 import csw.services.ccs.SequentialExecutor.StartTheSequence
 import csw.services.ccs.Validation.ValidationList
 import csw.services.ccs.{AssemblyController2, Validation}
+import csw.services.cs.akka.ConfigServiceClient
 import csw.services.events.{EventService, TelemetryService}
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService._
@@ -19,6 +20,7 @@ import csw.services.pkg.Component.AssemblyInfo
 import csw.services.pkg.{Assembly, Supervisor3}
 import csw.util.config.Configurations.SetupConfigArg
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -225,8 +227,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
     val tromboneConfigFile = new File("trombone/tromboneAssembly.conf")
     val resource = new File("tromboneAssembly.conf")
 
-    // XXX TODO: Use config service (deal with timeout issues, if not running: Note: tests wait for 3 seconds...)
-    //    implicit val timeout = Timeout(1.seconds)
+    //    implicit val timeout = Timeout(3.seconds)
     //    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
     //    // parse the future (optional) config (XXX waiting for the result for now, need to wait longer than the timeout: FIXME)
     //    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), 2.seconds)
