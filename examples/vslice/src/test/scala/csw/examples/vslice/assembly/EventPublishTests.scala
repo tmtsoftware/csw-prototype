@@ -19,7 +19,7 @@ object EventPublishTests {
   LocationService.initInterface()
   val system = ActorSystem("EventPublishTests")
 
-  val initialElevation = 90.0
+//  val initialElevation = 90.0
 
   // Test subscriber actor for telemetry
   object TestSubscriber {
@@ -104,6 +104,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
   }
 
   describe("Create follow actor with publisher and subscriber") {
+    // test1
     import TestSubscriber._
 
     /**

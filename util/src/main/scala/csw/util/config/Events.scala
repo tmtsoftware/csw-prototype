@@ -18,8 +18,14 @@ object Events {
   object EventTime {
     implicit def toEventTime(time: Instant): EventTime = EventTime(time)
 
-    implicit def toCurrent = EventTime(Instant.now(Clock.systemUTC))
+    implicit def toCurrent = EventTime()
   }
+
+
+  /**
+    * Java API to get current time as EventTime
+    */
+  def getEventTime: EventTime = EventTime()
 
   /**
    * This will include information related to the observation that is related to a configuration.
