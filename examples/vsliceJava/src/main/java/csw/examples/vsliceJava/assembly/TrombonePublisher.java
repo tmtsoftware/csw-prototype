@@ -102,14 +102,14 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
       ResolvedTcpLocation t = (ResolvedTcpLocation)location;
       log.debug("Received TCP Location: " + t.connection());
       // Verify that it is the event service
-      if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName))) {
+      if (location.connection().equals(IEventService.eventServiceConnection())) {
         log.debug("TrombonePublisher received connection: " + t);
         Optional<IEventService> newEventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
         log.debug("Event Service at: " + newEventService);
         context().become(publishingEnabled(newEventService, currentTelemetryService));
       }
 
-      if (location.connection().equals(ITelemetryService.telemetryServiceConnection(ITelemetryService.defaultName))) {
+      if (location.connection().equals(ITelemetryService.telemetryServiceConnection())) {
         log.debug("TrombonePublisher received connection: " + t);
         Optional<ITelemetryService> newTelemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context()));
         log.debug("Telemetry Service at: " + newTelemetryService);
@@ -118,9 +118,9 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
 
     } else if (location instanceof LocationService.Unresolved) {
       log.debug("Unresolved: " + location.connection());
-      if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName)))
+      if (location.connection().equals(IEventService.eventServiceConnection()))
         context().become(publishingEnabled(Optional.empty(), currentTelemetryService));
-      else if (location.connection().equals(ITelemetryService.telemetryServiceConnection(ITelemetryService.defaultName)))
+      else if (location.connection().equals(ITelemetryService.telemetryServiceConnection()))
         context().become(publishingEnabled(currentEventService, Optional.empty()));
 
     } else  {

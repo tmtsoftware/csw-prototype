@@ -21,10 +21,9 @@ object Events {
     implicit def toCurrent = EventTime()
   }
 
-
   /**
-    * Java API to get current time as EventTime
-    */
+   * Java API to get current time as EventTime
+   */
   def getEventTime: EventTime = EventTime()
 
   /**

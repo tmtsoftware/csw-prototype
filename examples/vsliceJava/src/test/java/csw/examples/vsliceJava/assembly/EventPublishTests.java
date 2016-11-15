@@ -22,9 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -32,8 +30,9 @@ import static csw.examples.vsliceJava.assembly.AssemblyContext.*;
 import static csw.examples.vsliceJava.assembly.AssemblyTestData.newRangeAndElData;
 import static csw.examples.vsliceJava.assembly.AssemblyTestData.testZenithAngles;
 import static csw.examples.vsliceJava.assembly.FollowActor.UpdatedEventData;
-import static csw.util.config.Events.EventServiceEvent;
-import static csw.util.config.Events.SystemEvent;
+import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
+import static csw.services.loc.LocationService.ResolvedTcpLocation;
+import static csw.util.config.Events.*;
 import static javacsw.util.config.JItems.jadd;
 import static javacsw.util.config.JItems.jset;
 import static junit.framework.TestCase.assertEquals;
@@ -150,200 +149,216 @@ public class EventPublishTests extends JavaTestKit {
   // --- Create follow actor with publisher and subscriber ---
 
 
-    /**
-     * Test Description: This test uses a "fakeSubscriber" which is simulating the subscription to TCS and RTC
-     * events and ships UpdatedEventData messages to the FollowActor which calculates trombone positions and
-     * other things and publishes events. This one checks for the events for AOESW in the form of
-     * the System event for AOESW. One event for zenith angle 0 and focus error 0 is used for testing.
-     * In this case range distance and elevation are the same, which is initial elevation in this case.
-     */
-    @Test
-    public void test1() {
-      // should allow publishing one event simulating event from fake TromboneEventSubscriber
-      // Create a new publisher with no trombone position actor
-      ActorRef pub = newTestPublisher(Optional.of(eventService), Optional.empty());
-      ActorRef fol = newTestFollower(Optional.empty(), Optional.of(pub));
+  /**
+   * Test Description: This test uses a "fakeSubscriber" which is simulating the subscription to TCS and RTC
+   * events and ships UpdatedEventData messages to the FollowActor which calculates trombone positions and
+   * other things and publishes events. This one checks for the events for AOESW in the form of
+   * the System event for AOESW. One event for zenith angle 0 and focus error 0 is used for testing.
+   * In this case range distance and elevation are the same, which is initial elevation in this case.
+   */
+  @Test
+  public void test1() {
+    // should allow publishing one event simulating event from fake TromboneEventSubscriber
+    // Create a new publisher with no trombone position actor
+    ActorRef pub = newTestPublisher(Optional.of(eventService), Optional.empty());
+    ActorRef fol = newTestFollower(Optional.empty(), Optional.of(pub));
 
-      ActorRef resultSubscriber = system.actorOf(TestSubscriber.props());
-      eventService.subscribe(resultSubscriber, false, assemblyContext.aoSystemEventPrefix);
-      expectNoMsg(duration("1 second")); // Wait for the connection
+    ActorRef resultSubscriber = system.actorOf(TestSubscriber.props());
+    eventService.subscribe(resultSubscriber, false, assemblyContext.aoSystemEventPrefix);
+    expectNoMsg(duration("1 second")); // Wait for the connection
 
-      TestProbe fakeTromboneEventSubscriber = new TestProbe(system);
+    TestProbe fakeTromboneEventSubscriber = new TestProbe(system);
 
-      // This should result in two messages being sent, one to each actor in the given order
-      fakeTromboneEventSubscriber.send(fol, new FollowActor.UpdatedEventData(
-        za(0), fe(0),
-        Events.getEventTime()));
+    // This should result in two messages being sent, one to each actor in the given order
+    fakeTromboneEventSubscriber.send(fol, new FollowActor.UpdatedEventData(
+      za(0), fe(0),
+      Events.getEventTime()));
 
-      // This is to give actors time to run
-      expectNoMsg(duration("100 milli"));
+    // This is to give actors time to run
+    expectNoMsg(duration("100 milli"));
 
-      // Ask our test subscriber for the published events
-      resultSubscriber.tell(new TestSubscriber.GetResults(), self());
+    // Ask our test subscriber for the published events
+    resultSubscriber.tell(new TestSubscriber.GetResults(), self());
 
-      TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
-      assertEquals(result.msgs.size(), 1);
-      SystemEvent se = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
-        naElevation(assemblyContext.calculationConfig.defaultInitialElevation),
-        rd(assemblyContext.calculationConfig.defaultInitialElevation));
-      Vector<SystemEvent> v = new Vector<>();
-      v.add(se);
-      assertEquals(result.msgs, v);
-    }
+    TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
+    assertEquals(result.msgs.size(), 1);
+    SystemEvent se = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
+      naElevation(assemblyContext.calculationConfig.defaultInitialElevation),
+      rd(assemblyContext.calculationConfig.defaultInitialElevation));
+    Vector<SystemEvent> v = new Vector<>();
+    v.add(se);
+    assertEquals(result.msgs, v);
+  }
 
-    /**
-     * Test Description: This test is similar to the last but a set of events are used that vary the zenith angle while holding
-     * the focus error constant to see that multiple events are generated. The computed, expected values are computed with
-     * AlgorithmData. If you change the algorithm you need to update the test helpers.
-     */
-    @Test
-    public void test2() {
-      // should allow publishing several events with fake tromboneEventSubscriber
+  /**
+   * Test Description: This test is similar to the last but a set of events are used that vary the zenith angle while holding
+   * the focus error constant to see that multiple events are generated. The computed, expected values are computed with
+   * AlgorithmData. If you change the algorithm you need to update the test helpers.
+   */
+  @Test
+  public void test2() {
+    // should allow publishing several events with fake tromboneEventSubscriber
 
-      // Ignoring the messages for TrombonePosition (set to None)
-      ActorRef pub = newTestPublisher(Optional.of(eventService), Optional.empty());
-      ActorRef fol = newTestFollower(Optional.empty(), Optional.of(pub));
+    // Ignoring the messages for TrombonePosition (set to None)
+    ActorRef pub = newTestPublisher(Optional.of(eventService), Optional.empty());
+    ActorRef fol = newTestFollower(Optional.empty(), Optional.of(pub));
 
-      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      ActorRef resultSubscriber = system.actorOf(TestSubscriber.props());
-      eventService.subscribe(resultSubscriber, false, assemblyContext.aoSystemEventPrefix);
-      expectNoMsg(duration("1 second")); // Wait for the connection
+    // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
+    ActorRef resultSubscriber = system.actorOf(TestSubscriber.props());
+    eventService.subscribe(resultSubscriber, false, assemblyContext.aoSystemEventPrefix);
+    expectNoMsg(duration("1 second")); // Wait for the connection
 
-      double testFE = 10.0;
+    double testFE = 10.0;
 
-      // These are fake messages for the CalculationActor from the EventSubscriber
-      List<UpdatedEventData> events = testZenithAngles.stream().map(td ->
-        new UpdatedEventData(za(td), fe(testFE), Events.getEventTime())).collect(Collectors.toList());
+    // These are fake messages for the CalculationActor from the EventSubscriber
+    List<UpdatedEventData> events = testZenithAngles.stream().map(td ->
+      new UpdatedEventData(za(td), fe(testFE), Events.getEventTime())).collect(Collectors.toList());
 
-      // This should result in two messages being sent, one to each actor in the given order
-      TestProbe fakeTromboneSubscriber = new TestProbe(system);
-      events.forEach(ev -> fakeTromboneSubscriber.send(fol, ev));
+    // This should result in two messages being sent, one to each actor in the given order
+    TestProbe fakeTromboneSubscriber = new TestProbe(system);
+    events.forEach(ev -> fakeTromboneSubscriber.send(fol, ev));
 
-      // This is to give actors time to run
-      expectNoMsg(duration("100 milli"));
+    // This is to give actors time to run
+    expectNoMsg(duration("100 milli"));
 
-      resultSubscriber.tell(new TestSubscriber.GetResults(), self());
-      // Check the events received through the Event Service
-      TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
+    resultSubscriber.tell(new TestSubscriber.GetResults(), self());
+    // Check the events received through the Event Service
+    TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
 
-      // Calculate expected events
-      List<Pair<Double, Double>> testResult = newRangeAndElData(testFE);
+    // Calculate expected events
+    List<Pair<Double, Double>> testResult = newRangeAndElData(testFE);
 
-      List<SystemEvent> aoeswExpected = testResult.stream().map(f ->
-        jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
-          jset(naElevationKey, f.second()).withUnits(naElevationUnits),
-          jset(naRangeDistanceKey, f.first()).withUnits(naRangeDistanceUnits)))
-        .collect(Collectors.toList());
+    List<SystemEvent> aoeswExpected = testResult.stream().map(f ->
+      jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
+        jset(naElevationKey, f.second()).withUnits(naElevationUnits),
+        jset(naRangeDistanceKey, f.first()).withUnits(naRangeDistanceUnits)))
+      .collect(Collectors.toList());
 
-      //info("aowes: " + aoeswExpected)
+    //info("aowes: " + aoeswExpected)
 
-      assertEquals(aoeswExpected, result.msgs);
-    }
+    assertEquals(aoeswExpected, result.msgs);
+  }
 
-//    /**
-//     * Test Description: This takes it one step further and replaced the fakeTromboneSubscriber with the actual TromboneEventSubscriber
-//     * and uses the event service to publish events. The focus error of 10 is published then the set of data varying the zenith angle.
-//     * The TromboneEventSubscriber receives the events forwards them to the follow actor which then sends out updates.
-//     * Note that the EventSubscriber and FollowActor are separate so that the FollowActor can be tested as a standalone actor without the
-//     * event service as is done in this and the previous tests.
-//     */
-//    it("should allow publishing several events through the event service") {
-//      import AssemblyTestData._
-//      // Ignoring the messages for TrombonePosition
-//      // Create the trombone publisher for publishing SystemEvents to AOESW
-//      val publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Some(eventService), Some(telemetryService)))
-//      // Create the calculator actor and give it the actor ref of the publisher for sending calculated events
-//      val followActorRef = system.actorOf(FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), None, Some(publisherActorRef)))
-//      // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-//      val es = system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActorRef), eventService))
-//      // This injects the event service location
-//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-//      es ! evLocation
-//
-//      // This creates a local subscriber to get all aoSystemEventPrefix SystemEvents published for testing
-//      val resultSubscriber = system.actorOf(TestSubscriber.props())
-//      eventService.subscribe(resultSubscriber, postLastEvents = false, aoSystemEventPrefix)
-//      expectNoMsg(1.second) // Wait for the connection
-//
-//      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = eventService
-//
-//      val testFE = 10.0
-//      // Publish a single focus error. This will generate a published event
-//      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
-//
-//      // These are fake messages for the FollowActor that will be sent to simulate the TCS
-//      val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-//
-//      // This should result in the length of tcsEvents being published
-//      tcsEvents.map { f =>
-//        logger.info(s"Publish: $f")
-//        tcsRtc.publish(f)
-//      }
-//
-//      // This is to give actors time to run and subscriptions to register
-//      expectNoMsg(500.milli)
-//
-//      // Ask the local subscriber for all the ao events published for testing
-//      resultSubscriber ! GetResults
-//      // Check the events received through the Event Service
-//      val result = expectMsgClass(classOf[Results])
-//      info("result: " + result)
-//      info("resultsize: " + result.msgs.size)
-//
-//      // Calculate expected events
-//      val testResult = newRangeAndElData(testFE)
-//
-//      val firstOne = SystemEvent(aoSystemEventPrefix).madd(naElevationKey -> testResult.head._2 withUnits naElevationUnits, naRangeDistanceKey -> testResult.head._1 withUnits naRangeDistanceUnits)
-//      info("First: " + firstOne)
-//
-//      val zaExpected = testResult.map(f => SystemEvent(aoSystemEventPrefix).madd(naElevationKey -> f._2 withUnits naElevationUnits, naRangeDistanceKey -> f._1 withUnits naRangeDistanceUnits))
-//      val aoeswExpected = firstOne +: zaExpected
-//      info("aowes: " + aoeswExpected)
-//      info("aoesw size: " + aoeswExpected.size)
-//
-//      // Here is the test for equality - total 16 messages
-//      aoeswExpected should equal(result.msgs)
-//    }
-//
-//    /**
-//     * Test Description: This test simulates some status data for the publisher.
-//     */
-//    it("should allow publishing TromboneState to publisher") {
-//      import TromboneStateActor._
-//
-//      val s1 = TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
-//      val s2 = TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
-//      val s3 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexing), sodiumItem(false), nssItem(false))
-//      val s4 = TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false))
-//
-//      // Create a new publisher with no trombone position actor
-//      val tp = newTestPublisher(None, Some(telemetryService))
-//
-//      val resultSubscriber = system.actorOf(TestSubscriber.props())
-//      telemetryService.subscribe(resultSubscriber, postLastEvents = false, tromboneStateStatusEventPrefix)
-//      expectNoMsg(1.second) // Wait for the connection
-//
-//      val fakeStateProducer = TestProbe()
-//
-//      def makeStatusEvent(ts: TromboneState): StatusEvent = StatusEvent(tromboneStateStatusEventPrefix).madd(ts.cmd, ts.move, ts.sodiumLayer, ts.nss)
-//
-//      // This should result in two messages being sent, one to each actor in the given order
-//      fakeStateProducer.send(tp, s1)
-//      fakeStateProducer.send(tp, s2)
-//      fakeStateProducer.send(tp, s3)
-//      fakeStateProducer.send(tp, s4)
-//
-//      // This is to give actors time to run
-//      expectNoMsg(1.seconds)
-//
-//      // Ask our test subscriber for the published events
-//      resultSubscriber ! GetResults
-//
-//      val result = expectMsgClass(classOf[Results])
-//      result.msgs.size should be(4)
-//      result.msgs should equal(Seq(s1, s2, s3, s4).map(makeStatusEvent(_)))
-//    }
-//  }
-//
+  /**
+   * Test Description: This takes it one step further and replaced the fakeTromboneSubscriber with the actual TromboneEventSubscriber
+   * and uses the event service to publish events. The focus error of 10 is published then the set of data varying the zenith angle.
+   * The TromboneEventSubscriber receives the events forwards them to the follow actor which then sends out updates.
+   * Note that the EventSubscriber and FollowActor are separate so that the FollowActor can be tested as a standalone actor without the
+   * event service as is done in this and the previous tests.
+   */
+  @Test
+  public void test3() {
+    // should allow publishing several events through the event service
+    // Ignoring the messages for TrombonePosition
+    // Create the trombone publisher for publishing SystemEvents to AOESW
+    ActorRef publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Optional.of(eventService), Optional.of(telemetryService)));
+    // Create the calculator actor and give it the actor ref of the publisher for sending calculated events
+    ActorRef followActorRef = system.actorOf(FollowActor.props(assemblyContext, initialElevation, assemblyContext.setNssInUse(false),
+      Optional.empty(), Optional.of(publisherActorRef), Optional.empty()));
+    // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
+    ActorRef es = system.actorOf(TromboneEventSubscriber.props(assemblyContext, assemblyContext.setNssInUse(false),
+      Optional.of(followActorRef), eventService));
+    // This injects the event service location
+    ResolvedTcpLocation evLocation = new ResolvedTcpLocation(IEventService.eventServiceConnection(), "localhost", 7777);
+    es.tell(evLocation, self());
+
+    // This creates a local subscriber to get all aoSystemEventPrefix SystemEvents published for testing
+    ActorRef resultSubscriber = system.actorOf(TestSubscriber.props());
+    eventService.subscribe(resultSubscriber, false, assemblyContext.aoSystemEventPrefix);
+    expectNoMsg(duration("1 second")); // Wait for the connection
+
+    // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
+    IEventService tcsRtc = eventService;
+
+    double testFE = 10.0;
+    // Publish a single focus error. This will generate a published event
+    tcsRtc.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE)));
+
+    // These are fake messages for the FollowActor that will be sent to simulate the TCS
+    List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
+      .collect(Collectors.toList());
+
+    // This should result in the length of tcsEvents being published
+    tcsEvents.forEach(f -> {
+      logger.info("Publish: " + f);
+      tcsRtc.publish(f);
+    });
+
+    // This is to give actors time to run and subscriptions to register
+    expectNoMsg(duration("500 milli"));
+
+    // Ask the local subscriber for all the ao events published for testing
+    resultSubscriber.tell(new TestSubscriber.GetResults(), self());
+    // Check the events received through the Event Service
+    TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
+    logger.info("result: " + result);
+    logger.info("resultsize: " + result.msgs.size());
+
+    // Calculate expected events
+    List<Pair<Double, Double>> testResult = newRangeAndElData(testFE);
+
+    SystemEvent firstOne = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
+      jset(naElevationKey, testResult.get(0).second()).withUnits(naElevationUnits),
+      jset(naRangeDistanceKey, testResult.get(0).first()).withUnits(naRangeDistanceUnits));
+    logger.info("First: " + firstOne);
+
+    List<SystemEvent> zaExpected = testResult.stream().map(f ->
+      jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
+        jset(naElevationKey, f.second()).withUnits(naElevationUnits),
+        jset(naRangeDistanceKey, f.first()).withUnits(naRangeDistanceUnits)))
+      .collect(Collectors.toList());
+
+    List<SystemEvent> aoeswExpected = new ArrayList<>(1 + zaExpected.size());
+    aoeswExpected.add(firstOne);
+    aoeswExpected.addAll(zaExpected);
+    logger.info("aowes: " + aoeswExpected);
+    logger.info("aoesw size: " + aoeswExpected.size());
+
+    // Here is the test for equality - total 16 messages
+    assertEquals(aoeswExpected, result.msgs);
+  }
+
+  static StatusEvent makeStatusEvent(TromboneState ts) {
+    return jadd(new StatusEvent(assemblyContext.tromboneStateStatusEventPrefix),
+      ts.cmd, ts.move, ts.sodiumLayer, ts.nss);
+  }
+
+  /**
+   * Test Description: This test simulates some status data for the publisher.
+   */
+  @Test
+  public void test4() {
+    // should allow publishing TromboneState to publisher
+
+    TromboneState s1 = new TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false));
+    TromboneState s2 = new TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false));
+    TromboneState s3 = new TromboneState(cmdItem(cmdReady), moveItem(moveIndexing), sodiumItem(false), nssItem(false));
+    TromboneState s4 = new TromboneState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), nssItem(false));
+
+    // Create a new publisher with no trombone position actor
+    ActorRef tp = newTestPublisher(Optional.empty(), Optional.of(telemetryService));
+
+    ActorRef resultSubscriber = system.actorOf(TestSubscriber.props());
+    telemetryService.subscribe(resultSubscriber, false, assemblyContext.tromboneStateStatusEventPrefix);
+    expectNoMsg(duration("1 second")); // Wait for the connection
+
+    TestProbe fakeStateProducer = new TestProbe(system);
+
+    // This should result in two messages being sent, one to each actor in the given order
+    fakeStateProducer.send(tp, s1);
+    fakeStateProducer.send(tp, s2);
+    fakeStateProducer.send(tp, s3);
+    fakeStateProducer.send(tp, s4);
+
+    // This is to give actors time to run
+    expectNoMsg(duration("1 second"));
+
+    // Ask our test subscriber for the published events
+    resultSubscriber.tell(new TestSubscriber.GetResults(), self());
+
+    TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
+    assertEquals(result.msgs.size(), 4);
+    assertEquals(result.msgs, Arrays.stream(new TromboneState[]{s1, s2, s3, s4}).map(EventPublishTests::makeStatusEvent).collect(Collectors.toList()));
+  }
 }
+

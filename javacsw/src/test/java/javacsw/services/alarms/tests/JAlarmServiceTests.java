@@ -67,7 +67,7 @@ public class JAlarmServiceTests {
 //    IAlarmServiceAdmin.startAlarmService(asName, true, system.dispatcher());
 //
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)
-    alarmService = IAlarmService.getAlarmService(IAlarmService.defaultName, system, timeout).get();
+    alarmService = IAlarmService.getAlarmService(system, timeout).get();
   }
 
   @AfterClass

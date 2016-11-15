@@ -34,10 +34,17 @@ public interface IEventService {
   }
 
   /**
-   * Returns the EventService connection for the given, or default name
+   * Returns the EventService connection for the given
    */
   static Connection.TcpConnection eventServiceConnection(String name) {
     return EventService$.MODULE$.eventServiceConnection(name);
+  }
+
+  /**
+   * Returns the EventService connection for the default name
+   */
+  static Connection.TcpConnection eventServiceConnection() {
+    return EventService$.MODULE$.eventServiceConnection(defaultName);
   }
 
 

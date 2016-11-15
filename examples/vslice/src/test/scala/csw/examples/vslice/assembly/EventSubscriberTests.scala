@@ -72,6 +72,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
   describe("basic event subscriber tests") {
 
     it("should be created with no issues") {
+      // test1
       val fakeFollowActor = TestProbe()
 
       val es = newTestEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), eventService)
@@ -90,6 +91,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
     import AssemblyTestData._
 
     it("should make one event for an fe publish nssInUse") {
+      // test2
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), eventService)
@@ -119,6 +121,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
     }
 
     it("should make several events for an fe list publish with nssInUse but no ZA") {
+      // test3
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), eventService)
@@ -135,7 +138,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // These are fake messages for the FollowActor that will be sent to simulate the TCS
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
-      feEvents.map(f => tcsRtc.publish(f))
+      feEvents.foreach(f => tcsRtc.publish(f))
 
       val msgs2 = fakeFollowActor.receiveN(feEvents.size, timeout.duration)
       msgs2.size shouldBe feEvents.size
@@ -144,7 +147,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       fakeFollowActor.expectNoMsg(100.milli)
 
       // Should get no tcsEvents because not following
-      tcsEvents.map(f => tcsRtc.publish(f))
+      tcsEvents.foreach(f => tcsRtc.publish(f))
 
       system.stop(es)
 
@@ -169,7 +172,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // These are fake messages for the FollowActor that will be sent to simulate the TCS
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
-      feEvents.map(f => tcsRtc.publish(f))
+      feEvents.foreach(f => tcsRtc.publish(f))
 
       val feEventMsgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
       feEventMsgs.size should equal(feEvents.size)
@@ -181,7 +184,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       fakeFollowActor.expectNoMsg(100.milli)
 
       // Should get no tcsEvents because not following
-      tcsEvents.map(f => tcsRtc.publish(f))
+      tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // Should get several and the zenith angles should match since nssInUse was false
       val msgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(tcsEvents.size).asInstanceOf[Vector[UpdatedEventData]]
@@ -198,7 +201,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       fakeFollowActor.expectNoMsg(20.milli)
 
       // Should get no tcsEvents because not following
-      tcsEvents.map(f => tcsRtc.publish(f))
+      tcsEvents.foreach(f => tcsRtc.publish(f))
 
       system.stop(es)
 
@@ -207,6 +210,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
     }
 
     it("alter nssInUse to see switch to nssZenithAngles") {
+      // test5
       val fakeFollowActor = TestProbe()
 
       // Create with nssNotInuse so we get za events
@@ -236,8 +240,10 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       es ! UpdateNssInUse(setNssInUse(true))
 
       // Now send the events
-      feEvents.map(f => tcsRtc.publish(f))
+      feEvents.foreach(tcsRtc.publish)
+
       val msgs2: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
+
       // Each zenith angle with the message should be 0.0 now, not 45.0
       val zavals = msgs2.map(f => f.zenithAngle.head)
       zavals.filter(_ != 0.0) shouldBe empty
@@ -246,7 +252,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       fakeFollowActor.expectNoMsg(100.milli)
 
       // Should get no tcsEvents because nssInUse = true
-      tcsEvents.map(f => tcsRtc.publish(f))
+      tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
@@ -258,7 +264,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       fakeFollowActor.expectNoMsg(20.milli)
 
       // Should get no tcsEvents because not following
-      tcsEvents.map(f => tcsRtc.publish(f))
+      tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)

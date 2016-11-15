@@ -109,7 +109,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
       ResolvedTcpLocation t = (ResolvedTcpLocation) location;
       log.info("Received TCP Location: " + t.connection());
       // Verify that it is the event service
-      if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName))) {
+      if (location.connection().equals(IEventService.eventServiceConnection())) {
         log.info("Assembly received ES connection: " + t);
         // Setting var here!
         eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
@@ -118,7 +118,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
 
     } else if (location instanceof Unresolved) {
       log.info("Unresolved: " + location.connection());
-      if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName)))
+      if (location.connection().equals(IEventService.eventServiceConnection()))
         eventService = badEventService;
       if (location.connection().componentId().equals(ac.hcdComponentId))
         tromboneHCD = badHCDReference;

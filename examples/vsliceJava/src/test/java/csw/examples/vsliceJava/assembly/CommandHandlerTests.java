@@ -549,7 +549,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
     LocationService.ResolvedTcpLocation evLocation = new LocationService.ResolvedTcpLocation(
-      IEventService.eventServiceConnection(IEventService.defaultName), "localhost", 7777);
+      IEventService.eventServiceConnection(), "localhost", 7777);
     ch.tell(evLocation, self());
 
     // set the state so the command succeeds
@@ -580,7 +580,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
     LocationService.ResolvedTcpLocation evLocation = new LocationService.ResolvedTcpLocation(
-      IEventService.eventServiceConnection(IEventService.defaultName), "localhost", 7777);
+      IEventService.eventServiceConnection(), "localhost", 7777);
     ch.tell(evLocation, self());
 
     // I'm sending this event to the follower so I know its state so I can check the final result
@@ -663,7 +663,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
     LocationService.ResolvedTcpLocation evLocation = new LocationService.ResolvedTcpLocation(
-      IEventService.eventServiceConnection(IEventService.defaultName), "localhost", 7777);
+      IEventService.eventServiceConnection(), "localhost", 7777);
     ch.tell(evLocation, self());
 
     // I'm sending this event to the follower so I know its state so I can check the final result

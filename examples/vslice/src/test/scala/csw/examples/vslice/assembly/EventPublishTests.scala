@@ -19,7 +19,7 @@ object EventPublishTests {
   LocationService.initInterface()
   val system = ActorSystem("EventPublishTests")
 
-//  val initialElevation = 90.0
+  //  val initialElevation = 90.0
 
   // Test subscriber actor for telemetry
   object TestSubscriber {
@@ -190,6 +190,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
      * event service as is done in this and the previous tests.
      */
     it("should allow publishing several events through the event service") {
+      // test3
       import AssemblyTestData._
       // Ignoring the messages for TrombonePosition
       // Create the trombone publisher for publishing SystemEvents to AOESW
@@ -218,7 +219,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
       // This should result in the length of tcsEvents being published
-      tcsEvents.map { f =>
+      tcsEvents.foreach { f =>
         logger.info(s"Publish: $f")
         tcsRtc.publish(f)
       }
@@ -236,10 +237,16 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       // Calculate expected events
       val testResult = newRangeAndElData(testFE)
 
-      val firstOne = SystemEvent(aoSystemEventPrefix).madd(naElevationKey -> testResult.head._2 withUnits naElevationUnits, naRangeDistanceKey -> testResult.head._1 withUnits naRangeDistanceUnits)
+      val firstOne = SystemEvent(aoSystemEventPrefix).madd(
+        naElevationKey -> testResult.head._2 withUnits naElevationUnits,
+        naRangeDistanceKey -> testResult.head._1 withUnits naRangeDistanceUnits
+      )
       info("First: " + firstOne)
 
-      val zaExpected = testResult.map(f => SystemEvent(aoSystemEventPrefix).madd(naElevationKey -> f._2 withUnits naElevationUnits, naRangeDistanceKey -> f._1 withUnits naRangeDistanceUnits))
+      val zaExpected = testResult.map(f => SystemEvent(aoSystemEventPrefix).madd(
+        naElevationKey -> f._2 withUnits naElevationUnits,
+        naRangeDistanceKey -> f._1 withUnits naRangeDistanceUnits
+      ))
       val aoeswExpected = firstOne +: zaExpected
       info("aowes: " + aoeswExpected)
       info("aoesw size: " + aoeswExpected.size)
@@ -252,6 +259,7 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
      * Test Description: This test simulates some status data for the publisher.
      */
     it("should allow publishing TromboneState to publisher") {
+      // test4
       import TromboneStateActor._
 
       val s1 = TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))

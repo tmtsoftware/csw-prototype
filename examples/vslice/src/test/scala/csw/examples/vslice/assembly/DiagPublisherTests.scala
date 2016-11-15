@@ -459,7 +459,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
       system.stop(dp)
       tromboneHCD ! PoisonPill
-//      expectNoMsg(5.seconds)
+      //      expectNoMsg(5.seconds)
     }
 
     /**

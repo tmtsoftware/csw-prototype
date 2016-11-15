@@ -123,14 +123,14 @@ public class TromboneAssembly extends JAssemblyController2 {
       log.info("Received TCP Location: " + t.connection());
 
       // Verify that it is the event service
-      if (location.connection().equals(IEventService.eventServiceConnection(IEventService.defaultName))) {
+      if (location.connection().equals(IEventService.eventServiceConnection())) {
         log.info("Assembly received ES connection: " + t);
         // Setting var here!
         eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
         log.info("Event Service at: " + eventService);
       }
 
-      if (location.connection().equals(ITelemetryService.telemetryServiceConnection(ITelemetryService.defaultName))) {
+      if (location.connection().equals(ITelemetryService.telemetryServiceConnection())) {
         log.info("Assembly received TS connection: " + t);
         // Setting var here!
         telemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context()));

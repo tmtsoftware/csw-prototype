@@ -1,267 +1,306 @@
-//package csw.examples.vsliceJava.assembly
-//
-//import akka.actor.{ActorRef, ActorSystem}
-//import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-//import akka.util.Timeout
-//import com.typesafe.scalalogging.slf4j.LazyLogging
-//import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData}
-//import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
-//import csw.services.events.EventService
-//import csw.services.loc.LocationService
-//import csw.services.loc.LocationService.ResolvedTcpLocation
-//import csw.util.config.BooleanItem
-//import csw.util.config.Events.SystemEvent
-//import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
-//
-//import scala.concurrent.Await
-//import scala.concurrent.duration._
-//
-//object EventSubscriberTests {
-//  LocationService.initInterface()
-//  val system = ActorSystem("EventSubscriberTests")
-//}
-//
-///**
-// * TMT Source Code: 9/17/16.
-// */
-//class EventSubscriberTests extends TestKit(EventSubscriberTests.system) with ImplicitSender
-//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
-//
-//  implicit val timeout = Timeout(10.seconds)
-//
-//  // Used to start and stop the event service Redis instance used for the test
-//  //  var eventAdmin: EventServiceAdmin = _
-//
-//  // Get the event service by looking up the name with the location service.
-//  val eventService = Await.result(EventService(), timeout.duration)
-//
-//  override def beforeAll() = {
-//    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
-//    // Start redis and register it with the location service on a random free port.
-//    // The following is the equivalent of running this from the command line:
-//    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
-//    //    EventServiceAdmin.startEventService()
-//
-//    // Get the event service by looking it up the name with the location service.
-//    //    eventService = Await.result(EventService(), timeout.duration)
-//
-//    // This is only used to stop the Redis instance that was started for this test
-//    //    eventAdmin = EventServiceAdmin(eventService)
-//  }
-//
-//  override protected def afterAll(): Unit = {
-//    // Shutdown Redis (Only do this in tests that also started the server)
-//    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
-//    TestKit.shutdownActorSystem(system)
-//  }
-//
-//  val assemblyContext = AssemblyTestData.TestAssemblyContext
-//  import assemblyContext._
-//
-//  def newTestEventSubscriber(nssInUseIn: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]): TestActorRef[TromboneEventSubscriber] = {
-//    val props = TromboneEventSubscriber.props(assemblyContext, nssInUseIn, followActor, eventService)
-//    TestActorRef(props)
-//  }
-//
-//  def newEventSubscriber(nssInUse: BooleanItem, followActor: Option[ActorRef], eventService: Option[EventService]): ActorRef = {
-//    val props = TromboneEventSubscriber.props(assemblyContext, nssInUse, followActor, eventService)
-//    system.actorOf(props)
-//  }
-//
-//  describe("basic event subscriber tests") {
-//
-//    it("should be created with no issues") {
-//      val fakeFollowActor = TestProbe()
-//
-//      val es = newTestEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
-//
-//      es.underlyingActor.nssZenithAngle should equal(za(0.0))
-//      es.underlyingActor.initialFocusError should equal(fe(0.0))
-//      es.underlyingActor.initialZenithAngle should equal(za(0.0))
-//      es.underlyingActor.nssInUseGlobal shouldBe setNssInUse(false)
-//
-//      es ! StopFollowing
-//      fakeFollowActor.expectNoMsg(20.milli)
-//    }
-//  }
-//
-//  describe("tests for proper operation") {
-//    import AssemblyTestData._
-//
-//    it("should make one event for an fe publish nssInUse") {
-//      val fakeFollowActor = TestProbe()
-//
-//      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), Some(eventService))
-//      // This injects the event service location
-//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-//      es ! evLocation
-//
-//      // first test that events are created for published focus error events
-//      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = eventService
-//
-//      // Default ZA is 0.0
-//      val testFE = 10.0
-//      // Publish a single focus error. This will generate a published event
-//      Await.ready(tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE))), 2.seconds)
-//
-//      val msg = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
-//
-//      msg.focusError should equal(fe(testFE))
-//      // 0.0 is the default value as well as nssZenithAngle
-//      msg.zenithAngle should equal(za(0.0))
-//
-//      system.stop(es)
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//    }
-//
-//    it("should make several events for an fe list publish with nssInUse but no ZA") {
-//      val fakeFollowActor = TestProbe()
-//
-//      val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), Some(eventService))
-//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-//      es ! evLocation
-//
-//      // first test that events are created for published focus error events
-//      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = eventService
-//
-//      // Publish a single focus error. This will generate a published event
-//      val feEvents = testFocusErrors.map(f => SystemEvent(focusErrorPrefix).add(fe(f)))
-//
-//      // These are fake messages for the FollowActor that will be sent to simulate the TCS
-//      val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-//
-//      feEvents.map(f => tcsRtc.publish(f))
-//
-//      val msgs2 = fakeFollowActor.receiveN(feEvents.size)
-//      msgs2.size shouldBe feEvents.size
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//
-//      // Should get no tcsEvents because not following
-//      tcsEvents.map(f => tcsRtc.publish(f))
-//
-//      system.stop(es)
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//    }
-//
-//    it("now enable follow should make several events for za and fe list publish nssNotInUse") {
-//      val fakeFollowActor = TestProbe()
-//
-//      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
-//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-//      es ! evLocation
-//
-//      // first test that events are created for published focus error events
-//      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = eventService
-//
-//      // Publish a single focus error. This will generate a published event
-//      val feEvents = testFocusErrors.map(f => SystemEvent(focusErrorPrefix).add(fe(f)))
-//
-//      // These are fake messages for the FollowActor that will be sent to simulate the TCS
-//      val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-//
-//      feEvents.map(f => tcsRtc.publish(f))
-//
-//      val feEventMsgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
-//      feEventMsgs.size should equal(feEvents.size)
-//      val fevals = feEventMsgs.map(f => f.focusError.head)
-//      // Should equal test vals
-//      fevals should equal(testFocusErrors)
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//
-//      // Should get no tcsEvents because not following
-//      tcsEvents.map(f => tcsRtc.publish(f))
-//
-//      // Should get several and the zenith angles should match since nssInUse was false
-//      val msgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(tcsEvents.size).asInstanceOf[Vector[UpdatedEventData]]
-//      val zavals = msgs.map(f => f.zenithAngle.head)
-//      // Should equal input za
-//      zavals should equal(testZenithAngles)
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//
-//      // Now turn it off
-//      es ! StopFollowing
-//      // Give a little wait for the usubscribe to kick in before the publish events
-//      fakeFollowActor.expectNoMsg(20.milli)
-//
-//      // Should get no tcsEvents because not following
-//      tcsEvents.map(f => tcsRtc.publish(f))
-//
-//      system.stop(es)
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//    }
-//
-//    it("alter nssInUse to see switch to nssZenithAngles") {
-//      val fakeFollowActor = TestProbe()
-//
-//      // Create with nssNotInuse so we get za events
-//      val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), Some(eventService))
-//      val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-//      es ! evLocation
-//
-//      // first test that events are created for published focus error events
-//      // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//      val tcsRtc = eventService
-//
-//      // Publish a single focus error. This will generate a published event
-//      val feEvents = testFocusErrors.map(f => SystemEvent(focusErrorPrefix).add(fe(f)))
-//
-//      // These are fake messages for the FollowActor that will be sent to simulate the TCS
-//      val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-//
-//      // Start following with nssInUse to send one event with a non zero zenith angle
-//      //es ! UpdateNssInUse(nssInUse)
-//
-//      val testZA = 45.0
-//      tcsRtc.publish(SystemEvent(zenithAnglePrefix).add(za(testZA)))
-//      val one: UpdatedEventData = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
-//      one.zenithAngle.head shouldBe testZA
-//
-//      // Now follow with nssInUse and send feEvents, should have 0.0 as ZA
-//      es ! UpdateNssInUse(setNssInUse(true))
-//
-//      // Now send the events
-//      feEvents.map(f => tcsRtc.publish(f))
-//      val msgs2: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
-//      // Each zenith angle with the message should be 0.0 now, not 45.0
-//      val zavals = msgs2.map(f => f.zenithAngle.head)
-//      zavals.filter(_ != 0.0) shouldBe empty
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//
-//      // Should get no tcsEvents because nssInUse = true
-//      tcsEvents.map(f => tcsRtc.publish(f))
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//
-//      // Now turn it off
-//      es ! StopFollowing
-//
-//      // Give a little wait for the usubscribe to kick in before the publish events
-//      fakeFollowActor.expectNoMsg(20.milli)
-//
-//      // Should get no tcsEvents because not following
-//      tcsEvents.map(f => tcsRtc.publish(f))
-//
-//      // No more messages please
-//      fakeFollowActor.expectNoMsg(100.milli)
-//    }
-//  }
-//
-//}
+package csw.examples.vsliceJava.assembly;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.testkit.JavaTestKit;
+import akka.testkit.TestActorRef;
+import akka.testkit.TestProbe;
+import akka.util.Timeout;
+import csw.services.loc.LocationService;
+import csw.util.config.BooleanItem;
+import javacsw.services.events.IEventService;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
+import static csw.examples.vsliceJava.assembly.AssemblyContext.*;
+import static csw.examples.vsliceJava.assembly.AssemblyTestData.testFocusErrors;
+import static csw.examples.vsliceJava.assembly.AssemblyTestData.testZenithAngles;
+import static csw.examples.vsliceJava.assembly.FollowActor.StopFollowing;
+import static csw.examples.vsliceJava.assembly.FollowActor.UpdatedEventData;
+import static csw.util.config.Events.SystemEvent;
+import static javacsw.util.config.JItems.jvalue;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+import static csw.examples.vsliceJava.assembly.TromboneEventSubscriber.UpdateNssInUse;
+
+/**
+ * Diag Pubisher Tests
+ */
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
+public class EventSubscriberTests extends JavaTestKit {
+
+  private static ActorSystem system;
+  private static LoggingAdapter logger;
+
+  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(10, TimeUnit.SECONDS));
+
+  private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
+
+  private static IEventService eventService;
+
+  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
+  ActorRef self() {
+    return getTestActor();
+  }
+
+  public EventSubscriberTests() {
+    super(system);
+  }
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    LocationService.initInterface();
+    system = ActorSystem.create();
+    logger = Logging.getLogger(system, system);
+
+    eventService = IEventService.getEventService(IEventService.defaultName, system, timeout)
+      .get(5, TimeUnit.SECONDS);
+    logger.info("Got Event Service!");
+  }
+
+  @AfterClass
+  public static void teardown() {
+    JavaTestKit.shutdownActorSystem(system);
+    system = null;
+  }
+
+  TestActorRef<TromboneEventSubscriber> newTestEventSubscriber(BooleanItem nssInUseIn, Optional<ActorRef> followActor, IEventService eventService) {
+    Props props = TromboneEventSubscriber.props(assemblyContext, nssInUseIn, followActor, eventService);
+    return TestActorRef.create(system, props);
+  }
+
+  ActorRef newEventSubscriber(BooleanItem nssInUse, Optional<ActorRef> followActor, IEventService eventService) {
+    Props props = TromboneEventSubscriber.props(assemblyContext, nssInUse, followActor, eventService);
+    return system.actorOf(props);
+  }
+
+  // --- basic event subscriber tests ---
+
+  @Test
+  public void test1() {
+    // should be created with no issues
+    TestProbe fakeFollowActor = new TestProbe(system);
+
+    TestActorRef<TromboneEventSubscriber> es = newTestEventSubscriber(assemblyContext.setNssInUse(false),
+      Optional.of(fakeFollowActor.ref()), eventService);
+
+    assertEquals(es.underlyingActor().nssZenithAngle, za(0.0));
+    assertEquals(es.underlyingActor().initialFocusError, fe(0.0));
+    assertEquals(es.underlyingActor().initialZenithAngle, za(0.0));
+    assertEquals(es.underlyingActor().nssInUseGlobal, assemblyContext.setNssInUse(false));
+
+    es.tell(new StopFollowing(), self());
+    fakeFollowActor.expectNoMsg(duration("20 milli"));
+  }
+
+  // --- tests for proper operation ---
+
+  @Test
+  public void test2() throws InterruptedException, ExecutionException, TimeoutException {
+    // should make one event for an fe publish nssInUse
+    TestProbe fakeFollowActor = new TestProbe(system);
+
+    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(true), Optional.of(fakeFollowActor.ref()), eventService);
+
+    // first test that events are created for published focus error events
+    // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
+    IEventService tcsRtc = eventService;
+
+    // Default ZA is 0.0
+    double testFE = 10.0;
+    // Publish a single focus error. This will generate a published event
+    tcsRtc.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE))).get(2, TimeUnit.SECONDS);
+
+    UpdatedEventData msg = fakeFollowActor.expectMsgClass(UpdatedEventData.class);
+
+    assertEquals(msg.focusError, fe(testFE));
+    // 0.0 is the default value as well as nssZenithAngle
+    assertEquals(msg.zenithAngle, za(0.0));
+
+    system.stop(es);
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+  }
+
+
+  @Test
+  public void test3() {
+    // should make several events for an fe list publish with nssInUse but no ZA
+    TestProbe fakeFollowActor = new TestProbe(system);
+
+    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(true), Optional.of(fakeFollowActor.ref()), eventService);
+
+    // first test that events are created for published focus error events
+    // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
+    IEventService tcsRtc = eventService;
+
+    // Publish a single focus error. This will generate a published event
+    List<SystemEvent> feEvents = testFocusErrors.stream().map(f -> new SystemEvent(focusErrorPrefix).add(fe(f)))
+      .collect(Collectors.toList());
+
+    // These are fake messages for the FollowActor that will be sent to simulate the TCS
+    List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
+      .collect(Collectors.toList());
+
+    feEvents.forEach(tcsRtc::publish);
+
+    assertEquals(fakeFollowActor.receiveN(feEvents.size(), timeout.duration()).size(), feEvents.size());
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    // Should get no tcsEvents because not following
+    tcsEvents.forEach(tcsRtc::publish);
+
+    system.stop(es);
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+  }
+
+  @Test
+  public void test4() {
+    // now enable follow should make several events for za and fe list publish nssNotInUse
+    TestProbe fakeFollowActor = new TestProbe(system);
+
+    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(false), Optional.of(fakeFollowActor.ref()), eventService);
+
+    // first test that events are created for published focus error events
+    // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
+    IEventService tcsRtc = eventService;
+
+    // Publish a single focus error. This will generate a published event
+    List<SystemEvent> feEvents = testFocusErrors.stream().map(f -> new SystemEvent(focusErrorPrefix).add(fe(f)))
+      .collect(Collectors.toList());
+
+    // These are fake messages for the FollowActor that will be sent to simulate the TCS
+    List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
+      .collect(Collectors.toList());
+
+    feEvents.forEach(tcsRtc::publish);
+
+    // XXX Note: The Scala version of this test uses receiveN, which doesn't have a Java API, so we need to convert here
+    List<UpdatedEventData> feEventMsgs =
+      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size()))
+        .stream().map(f -> (UpdatedEventData) f)
+        .collect(Collectors.toList());
+
+    assertEquals(feEventMsgs.size(), feEvents.size());
+    List<Double> fevals = feEventMsgs.stream().map(f -> jvalue(f.focusError))
+      .collect(Collectors.toList());
+
+    // Should equal test vals
+    assertEquals(fevals, testFocusErrors);
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    // Should get no tcsEvents because not following
+    tcsEvents.forEach(tcsRtc::publish);
+
+    // Should get several and the zenith angles should match since nssInUse was false
+    List<UpdatedEventData> msgs =
+      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(tcsEvents.size()))
+        .stream().map(f -> (UpdatedEventData) f)
+        .collect(Collectors.toList());
+
+    List<Double> zavals = msgs.stream().map(f -> jvalue(f.zenithAngle))
+      .collect(Collectors.toList());
+
+    // Should equal input za
+    assertEquals(zavals, testZenithAngles);
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    // Now turn it off
+    es.tell(new StopFollowing(), self());
+    // Give a little wait for the usubscribe to kick in before the publish events
+    fakeFollowActor.expectNoMsg(duration("20 milli"));
+
+    // Should get no tcsEvents because not following
+    tcsEvents.forEach(tcsRtc::publish);
+
+    system.stop(es);
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+  }
+
+  @Test
+  public void test5() {
+    // alter nssInUse to see switch to nssZenithAngles
+    TestProbe fakeFollowActor = new TestProbe(system);
+
+    // Create with nssNotInuse so we get za events
+    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(false), Optional.of(fakeFollowActor.ref()), eventService);
+
+    // first test that events are created for published focus error events
+    // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
+    IEventService tcsRtc = eventService;
+
+    // Publish a single focus error. This will generate a published event
+    List<SystemEvent> feEvents = testFocusErrors.stream().map(f -> new SystemEvent(focusErrorPrefix).add(fe(f)))
+      .collect(Collectors.toList());
+
+    // These are fake messages for the FollowActor that will be sent to simulate the TCS
+    List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
+      .collect(Collectors.toList());
+
+    double testZA = 45.0;
+    tcsRtc.publish(new SystemEvent(zenithAnglePrefix).add(za(testZA)));
+    UpdatedEventData one = fakeFollowActor.expectMsgClass(UpdatedEventData.class);
+    assertEquals(jvalue(one.zenithAngle), testZA);
+
+    // Now follow with nssInUse and send feEvents, should have 0.0 as ZA
+    es.tell(new UpdateNssInUse(assemblyContext.setNssInUse(true)), self());
+
+    // Now send the events
+    feEvents.forEach(tcsRtc::publish);
+
+    List<UpdatedEventData> msgs2 =
+      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size()))
+        .stream().map(f -> (UpdatedEventData) f)
+        .collect(Collectors.toList());
+
+    // Each zenith angle with the message should be 0.0 now, not 45.0
+    List<Double> zavals = msgs2.stream().map(f -> jvalue(f.zenithAngle))
+      .collect(Collectors.toList());
+
+    assertTrue(zavals.stream().filter(f -> f != 0.0).collect(Collectors.toList()).isEmpty());
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    // Should get no tcsEvents because nssInUse = true
+    tcsEvents.forEach(tcsRtc::publish);
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    // Now turn it off
+    es.tell(new StopFollowing(), self());
+
+    // Give a little wait for the usubscribe to kick in before the publish events
+    fakeFollowActor.expectNoMsg(duration("20 milli"));
+
+    // Should get no tcsEvents because not following
+    tcsEvents.forEach(tcsRtc::publish);
+
+    // No more messages please
+    fakeFollowActor.expectNoMsg(duration("100 milli"));
+  }
+}

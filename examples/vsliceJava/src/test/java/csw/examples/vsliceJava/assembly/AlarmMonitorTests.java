@@ -86,7 +86,7 @@ public class AlarmMonitorTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
-    alarmService = IAlarmService.getAlarmService(IAlarmService.defaultName, system, timeout).get();
+    alarmService = IAlarmService.getAlarmService(system, timeout).get();
     alarmAdmin = new JAlarmServiceAdmin(alarmService, system);
     setupAlarms();
   }

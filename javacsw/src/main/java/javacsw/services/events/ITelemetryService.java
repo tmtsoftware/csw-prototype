@@ -33,10 +33,17 @@ public interface ITelemetryService {
   }
 
   /**
-   * Returns the TelemetryService connection for the given, or default name
+   * Returns the TelemetryService connection for the given name
    */
   static Connection.TcpConnection telemetryServiceConnection(String name) {
     return TelemetryService$.MODULE$.telemetryServiceConnection(name);
+  }
+
+  /**
+   * Returns the TelemetryService connection for the default name
+   */
+  static Connection.TcpConnection telemetryServiceConnection() {
+    return TelemetryService$.MODULE$.telemetryServiceConnection(defaultName);
   }
 
   /**

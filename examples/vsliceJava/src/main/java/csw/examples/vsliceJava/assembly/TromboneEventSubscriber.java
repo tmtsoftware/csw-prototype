@@ -40,15 +40,15 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
   // If state of NSS is false, then subscriber provides 0 for zenith distance with updates to subscribers
 
   // This value is used when NSS is in Use
-  private final DoubleItem nssZenithAngle;
+  final DoubleItem nssZenithAngle;
 
   // Kim possibly set these initial values from config or get them from telemetry store
   // These vars are needed since updates from RTC and TCS will happen at different times and we need both values
   // Could have two events but that requries follow actor to keep values
-  private final DoubleItem initialZenithAngle;
-  private DoubleItem initialFocusError;
+  final DoubleItem initialZenithAngle;
+  DoubleItem initialFocusError;
   // This is used to keep track since it can be updated
-  private BooleanItem nssInUseGlobal;
+  BooleanItem nssInUseGlobal;
 
   // This var is needed to capture the Monitor used for subscriptions
   private final EventService.EventMonitor subscribeMonitor;
@@ -139,7 +139,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
   private void unsubscribeKeys(EventMonitor monitor, ConfigKey... configKeys) {
     log.debug("Unsubscribing to: " + Arrays.toString(configKeys));
     for(ConfigKey configKey : configKeys) {
-      monitor.unsubscribe(configKey.prefix());
+      monitor.unsubscribeFrom(configKey.prefix());
     }
   }
 

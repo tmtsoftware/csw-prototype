@@ -104,15 +104,21 @@ object EventService {
      *
      * @param prefix one or more prefixes of events, may include wildcard
      */
-    def subscribeTo(prefix: String): Unit = subscribe(prefix)
+    def subscribeTo(prefix: String): Unit = subscribe(prefix) // Note: Needed to avoid varargs issues in Java
 
     /**
      * Ubsubscribes from events matching the given prefixes.
      *
      * @param prefixes one or more prefixes of events, may include wildcard
      */
-    @varargs
     def unsubscribe(prefixes: String*): Unit
+
+    /**
+     * Ubsubscribes from events matching the given prefix.
+     *
+     * @param prefix one or more prefixes of events, may include wildcard
+     */
+    def unsubscribeFrom(prefix: String): Unit = unsubscribe(prefix) // Note: Needed to avoid varargs issues in Java
 
     /**
      * A reference to the subscribing actor (could be used to watch the actor to detect if it stops for some reason)
