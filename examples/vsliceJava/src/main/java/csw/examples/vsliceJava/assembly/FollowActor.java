@@ -56,6 +56,7 @@ public class FollowActor extends AbstractActor {
   private final Optional<ActorRef> engPublisher;
 
   private final TromboneCalculationConfig calculationConfig;
+  public final DoubleItem initialElevation;
 
   /**
    * Constructor
@@ -69,6 +70,7 @@ public class FollowActor extends AbstractActor {
   private FollowActor(AssemblyContext ac, DoubleItem initialElevation, BooleanItem inNSSMode, Optional<ActorRef> tromboneControl,
                      Optional<ActorRef> aoPublisher, Optional<ActorRef> engPublisher) {
     this.ac = ac;
+    this.initialElevation = initialElevation;
     this.inNSSMode = inNSSMode;
     this.tromboneControl = tromboneControl;
     this.aoPublisher = aoPublisher;

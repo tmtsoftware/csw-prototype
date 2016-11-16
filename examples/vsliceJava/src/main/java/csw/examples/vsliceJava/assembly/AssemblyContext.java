@@ -84,9 +84,9 @@ public class AssemblyContext {
   // Follow submit command
   public final String followPrefix;
   public final ConfigKey followCK;
-  public final BooleanKey nssInUseKey;
+  public static final BooleanKey nssInUseKey = BooleanKey("nssInUse");
 
-  public BooleanItem setNssInUse(boolean value) {
+  public static BooleanItem setNssInUse(boolean value) {
     return jset(nssInUseKey, value);
   }
 
@@ -207,7 +207,6 @@ public class AssemblyContext {
     // Follow submit command
     followPrefix = componentPrefix + ".follow";
     followCK = new ConfigKey(followPrefix);
-    nssInUseKey = BooleanKey("nssInUse");
 
     // A list of all commands
     allCommandKeys = new ConfigKey[]{initCK, datumCK, stopCK, moveCK, positionCK, setElevationCK, setAngleCK, followCK};

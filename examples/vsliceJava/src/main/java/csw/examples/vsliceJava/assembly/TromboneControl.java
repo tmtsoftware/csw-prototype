@@ -95,6 +95,28 @@ class TromboneControl extends AbstractActor {
     GoToStagePosition(DoubleItem stagePosition) {
       this.stagePosition = stagePosition;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      GoToStagePosition that = (GoToStagePosition) o;
+
+      return stagePosition != null ? stagePosition.equals(that.stagePosition) : that.stagePosition == null;
+    }
+
+    @Override
+    public int hashCode() {
+      return stagePosition != null ? stagePosition.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+      return "GoToStagePosition{" +
+        "stagePosition=" + stagePosition +
+        '}';
+    }
   }
 }
 

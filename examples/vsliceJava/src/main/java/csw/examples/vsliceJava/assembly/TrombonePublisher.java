@@ -209,6 +209,31 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
       this.naElevation = naElevation;
       this.naRange = naRange;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      AOESWUpdate that = (AOESWUpdate) o;
+
+      return naElevation.equals(that.naElevation) && naRange.equals(that.naRange);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = naElevation.hashCode();
+      result = 31 * result + naRange.hashCode();
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      return "AOESWUpdate{" +
+        "naElevation=" + naElevation +
+        ", naRange=" + naRange +
+        '}';
+    }
   }
 
   /**
@@ -230,6 +255,24 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
       this.focusError = focusError;
       this.stagePosition = stagePosition;
       this.zenithAngle = zenithAngle;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      EngrUpdate that = (EngrUpdate) o;
+
+      return focusError.equals(that.focusError) && stagePosition.equals(that.stagePosition) && zenithAngle.equals(that.zenithAngle);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = focusError.hashCode();
+      result = 31 * result + stagePosition.hashCode();
+      result = 31 * result + zenithAngle.hashCode();
+      return result;
     }
   }
 

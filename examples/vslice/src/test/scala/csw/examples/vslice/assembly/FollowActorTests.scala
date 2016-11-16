@@ -1,9 +1,10 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
 import csw.examples.vslice.assembly.TromboneControl.GoToStagePosition
 import csw.examples.vslice.assembly.TrombonePublisher.{AOESWUpdate, EngrUpdate}
@@ -46,7 +47,7 @@ object FollowActorTests {
 
     import TestSubscriber._
 
-    var msgs = Vector.empty[Event]
+    var msgs: Vector[Event] = Vector.empty[Event]
 
     def receive: Receive = {
       case event: SystemEvent =>
@@ -76,12 +77,12 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   //  var eventAdmin: EventServiceAdmin = _
 
   // Get the event service by looking up the name with the location service.
-  val eventService = Await.result(EventService(), timeout.duration)
+  val eventService: EventService = Await.result(EventService(), timeout.duration)
 
   // Get the telemetry service by looking up the name with the location service. -- Used in the last test
-  val telemetryService = Await.result(TelemetryService(), timeout.duration)
+  val telemetryService: TelemetryService = Await.result(TelemetryService(), timeout.duration)
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
     // Start redis and register it with the location service on a random free port.
     // The following is the equivalent of running this from the command line:
@@ -102,8 +103,8 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   }
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext
-  val calculationConfig = assemblyContext.calculationConfig
-  val controlConfig = assemblyContext.controlConfig
+  val calculationConfig: TromboneCalculationConfig = assemblyContext.calculationConfig
+  val controlConfig: TromboneControlConfig = assemblyContext.controlConfig
 
   import assemblyContext._
 
@@ -120,11 +121,13 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     val fakeEng = TestProbe()
 
     it("should allow creation with defaults") {
+      // test1
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
 
       fakeTC.expectNoMsg(1.seconds)
+      system.stop(cal)
     }
   }
 
@@ -134,9 +137,11 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     val fakeEng = TestProbe()
 
     it("should be default before") {
+      // test2
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
+      system.stop(cal)
     }
 
     /*
@@ -171,6 +176,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     val fakeEng = TestProbe()
 
     it("should at least handle and send messages") {
+      // test3
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       // This should result in two messages being sent, one to each actor in the given order
@@ -178,9 +184,11 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       fakeTC.expectMsgClass(classOf[GoToStagePosition])
       fakePub.expectMsgClass(classOf[AOESWUpdate])
+      system.stop(cal)
     }
 
     it("should ignore if units wrong") {
+      // test4
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       // This should result in two messages being sent, one to each actor in the given order
@@ -188,9 +196,11 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       cal ! UpdatedEventData(zenithAngleKey -> 0, focusErrorKey -> 0, EventTime())
 
       fakeTC.expectNoMsg(100.milli)
+      system.stop(cal)
     }
 
     it("should ignore if inputs out of range") {
+      // test5
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       // This should result in two messages being sent, one to each actor in the given order
@@ -200,6 +210,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       cal ! UpdatedEventData(za(0.0), fe(42.0), EventTime())
       fakeTC.expectNoMsg(100.milli)
+      system.stop(cal)
     }
   }
 
@@ -220,6 +231,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     val fakeEng = TestProbe()
 
     it("should work when only changing zenith angle") {
+      // test6
       val follower = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       // Generate a list of fake event updates for a range of zenith angles and focus error 10mm
@@ -258,9 +270,11 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       val engExpected = calcTestData.map(f => EngrUpdate(focusErrorKey -> testFocusError withUnits micrometers, stagePositionKey -> rangeDistanceToStagePosition(gettrd(f)) withUnits millimeters, zenithAngleKey -> getza(f) withUnits degrees))
       engExpected should equal(engMsgs)
+      system.stop(follower)
     }
 
     it("should get other events when nssInUse but not aoesw events") {
+      // test7
       val follower = newFollower(setNssInUse(true), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       // Generate a list of fake event updates for a range of zenith angles and focus error 10mm
@@ -294,6 +308,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       val engExpected = calcTestData.map(f => EngrUpdate(focusErrorKey -> testFocusError withUnits micrometers, stagePositionKey -> rangeDistanceToStagePosition(gettrd(f)) withUnits millimeters, zenithAngleKey -> getza(f) withUnits degrees))
       engExpected should equal(engMsgs)
+      system.stop(follower)
     }
 
     /**
@@ -327,6 +342,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
      * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
      */
     it("creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance") {
+      // test8
       import TestSubscriber._
 
       val tromboneHCD = startHCD
@@ -356,9 +372,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       val followActor = newFollower(nssUsage, tromboneControl, publisherActorRef, publisherActorRef)
 
       // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-      val es = system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), eventService))
-      //val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-      //es ! evLocation
+      val tromboneEventSubscriber = system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Some(followActor), eventService))
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
       val tcsRtc = Some(eventService)
@@ -440,8 +454,15 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       val zaEngExpected = calcTestData.map(f => StatusEvent(engStatusEventPrefix).madd(focusErrorKey -> testFE withUnits focusErrorUnits, stagePositionKey -> rangeDistanceToStagePosition(gettrd(f)) withUnits stagePositionUnits, zenithAngleKey -> getza(f) withUnits zenithAngleUnits))
       val engExpected = firstEng +: zaEngExpected
       result2.msgs should equal(engExpected)
-    }
 
+      tromboneHCD ! PoisonPill
+      system.stop(publisherActorRef)
+      system.stop(tromboneControl)
+      system.stop(followActor)
+      system.stop(tromboneEventSubscriber)
+      system.stop(resultSubscriber1)
+      system.stop(resultSubscriber2)
+    }
   }
 
 }

@@ -192,7 +192,8 @@ public class EventSubscriberTests extends JavaTestKit {
 
     feEvents.forEach(tcsRtc::publish);
 
-    // XXX Note: The Scala version of this test uses receiveN, which doesn't have a Java API, so we need to convert here
+    // XXX Note: The Scala version of this test uses TestKit.receiveN, which returns a Scala Seq, so we need to convert here
+    // (I didn't find a Java API for this)
     List<UpdatedEventData> feEventMsgs =
       scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size()))
         .stream().map(f -> (UpdatedEventData) f)

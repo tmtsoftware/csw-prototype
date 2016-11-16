@@ -98,7 +98,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       val tla = newTestTrombone(fakeSupervisor.ref)
 
       fakeSupervisor.expectMsg(Initialized)
-      fakeSupervisor.expectMsg(Started)
+      fakeSupervisor.expectMsg(10.seconds, Started)
 
       fakeSupervisor.send(tla, Running)
 
@@ -134,7 +134,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -165,7 +165,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -201,7 +201,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -233,7 +233,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -266,7 +266,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -314,7 +314,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -371,7 +371,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -415,7 +415,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -466,7 +466,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -510,7 +510,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
 
@@ -554,7 +554,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
       val monitor = TestProbe()
       monitor.watch(tromboneAssembly)
-      tromboneAssembly ! PoisonPill
+      system.stop(tromboneAssembly)
       monitor.expectTerminated(tromboneAssembly)
     }
   }
@@ -619,7 +619,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
     val monitor = TestProbe()
     monitor.watch(tromboneAssembly)
-    tromboneAssembly ! PoisonPill
+    system.stop(tromboneAssembly)
     monitor.expectTerminated(tromboneAssembly)
 
   }

@@ -430,7 +430,7 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
     var sinfos = infos
     stagedCommand(sinfos.nonEmpty, info.creationDelay) {
       val sinfo: SupervisorInfo = sinfos.head
-      log.debug(s"Sending $cmd to: ${sinfo.componentInfo.componentName}")
+      log.debug(s"Sending $cmd to: ${sinfo.componentInfo.componentName} with delay ${info.creationDelay}")
       sinfo.supervisor ! cmd
       sinfos = sinfos.tail
     }
