@@ -7,7 +7,7 @@ import csw.examples.vslice.assembly.FollowActor.SetZenithAngle
 import csw.examples.vslice.assembly.FollowCommand.StopFollowing
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
-import csw.services.ccs.CommandStatus2._
+import csw.services.ccs.CommandStatus._
 import csw.services.ccs.SequentialExecutor.{CommandStart, ExecuteOne, StopCurrentCommand}
 import csw.services.ccs.MultiStateMatcherActor.StartMatch
 import csw.services.ccs.{DemandMatcher, MultiStateMatcherActor, StateMatcher}
@@ -203,7 +203,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
 
       // Execute the command actor asynchronously, pass the command status back, kill the actor and go back to waiting
       for {
-        cs <- (currentCommand ? CommandStart).mapTo[CommandStatus2]
+        cs <- (currentCommand ? CommandStart).mapTo[CommandStatus]
       } {
         commandOriginator.foreach(_ ! cs)
         currentCommand ! PoisonPill
@@ -237,13 +237,13 @@ object TromboneCommandHandler {
     Props(new TromboneCommandHandler(assemblyContext, tromboneHCDIn, allEventPublisher))
 
   def executeMatch(context: ActorContext, stateMatcher: StateMatcher, currentStateSource: ActorRef, replyTo: Option[ActorRef] = None,
-                   timeout: Timeout = Timeout(5.seconds))(codeBlock: PartialFunction[CommandStatus2, Unit]): Unit = {
+                   timeout: Timeout = Timeout(5.seconds))(codeBlock: PartialFunction[CommandStatus, Unit]): Unit = {
     import context.dispatcher
     implicit val t = Timeout(timeout.duration + 1.seconds)
 
     val matcher = context.actorOf(MultiStateMatcherActor.props(currentStateSource, timeout))
     for {
-      cmdStatus <- (matcher ? StartMatch(stateMatcher)).mapTo[CommandStatus2]
+      cmdStatus <- (matcher ? StartMatch(stateMatcher)).mapTo[CommandStatus]
     } {
       codeBlock(cmdStatus)
       replyTo.foreach(_ ! cmdStatus)

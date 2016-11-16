@@ -13,7 +13,7 @@ import akka.util.Timeout;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component;
-import csw.services.pkg.Supervisor3;
+import csw.services.pkg.Supervisor;
 import csw.util.config.BooleanItem;
 import csw.util.config.DoubleItem;
 import csw.util.config.Events;
@@ -46,8 +46,8 @@ import static csw.util.config.Events.*;
 import static csw.util.config.StateVariable.CurrentState;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
-import static javacsw.services.pkg.JSupervisor3.LifecycleInitialized;
-import static javacsw.services.pkg.JSupervisor3.LifecycleRunning;
+import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
+import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static javacsw.util.config.JItems.jadd;
 import static javacsw.util.config.JItems.jset;
 import static javacsw.util.config.JPublisherActor.Subscribe;
@@ -199,7 +199,7 @@ public class FollowActorTests extends JavaTestKit {
       DoNotRegister, Collections.singleton(AkkaType), FiniteDuration.create(1, TimeUnit.SECONDS)
     );
 
-    return Supervisor3.apply(testInfo);
+    return Supervisor.apply(testInfo);
   }
 
   // --- Test for handling of Update events ---

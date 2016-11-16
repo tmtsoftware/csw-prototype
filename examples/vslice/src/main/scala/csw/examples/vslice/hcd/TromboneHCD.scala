@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigFactory
 import csw.services.ccs.HcdController
 import csw.services.loc.ComponentType
 import csw.services.pkg.Component.HcdInfo
-import csw.services.pkg.Supervisor3._
+import csw.services.pkg.Supervisor._
 import csw.services.pkg.Hcd
 import csw.util.config.Configurations.{ConfigKey, SetupConfig}
 import csw.util.config.StateVariable.CurrentState

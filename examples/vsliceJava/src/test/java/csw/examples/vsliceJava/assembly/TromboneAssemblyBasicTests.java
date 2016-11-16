@@ -8,13 +8,13 @@
 //import com.typesafe.scalalogging.slf4j.LazyLogging
 //import csw.examples.vslice.hcd.TromboneHCD
 //import csw.services.ccs.AssemblyController2.Submit
-//import csw.services.ccs.CommandStatus2._
+//import csw.services.ccs.CommandStatus._
 //import csw.services.ccs.Validation.WrongInternalStateIssue
 //import csw.services.loc.ConnectionType.AkkaType
 //import csw.services.loc.LocationService
 //import csw.services.pkg.Component.{AssemblyInfo, HcdInfo, RegisterAndTrackServices}
-//import csw.services.pkg.Supervisor3
-//import csw.services.pkg.Supervisor3._
+//import csw.services.pkg.Supervisor
+//import csw.services.pkg.Supervisor._
 //import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 //import csw.util.config.Configurations
 //import csw.util.config.Configurations.SetupConfig
@@ -44,7 +44,7 @@
 //      RegisterAndTrackServices, Set(AkkaType), 1.second
 //    )
 //
-//    Supervisor3(testInfo)
+//    Supervisor(testInfo)
 //  }
 //
 //  override def afterAll = {

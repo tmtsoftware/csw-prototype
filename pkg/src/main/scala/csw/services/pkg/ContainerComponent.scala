@@ -11,7 +11,7 @@ import csw.services.loc.ComponentType._
 import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager._
-import csw.services.pkg.Supervisor.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
+import csw.services.pkg.SupervisorOld.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
@@ -88,7 +88,7 @@ object ContainerComponent {
    * @return the actorRefs for the created components
    */
   def createStandalone(config: Config): Try[List[ActorRef]] = {
-    parseConfig(config).map(_.toList.map(Supervisor3(_)))
+    parseConfig(config).map(_.toList.map(Supervisor(_)))
   }
 
   def create(containerInfo: ContainerInfo): ActorRef = {
@@ -421,7 +421,7 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
         log.error(s"In supervisor ${info.componentName}, component ${componentInfo.componentName} already exists")
         None
       case None =>
-        val supervisor = Supervisor3(componentInfo)
+        val supervisor = Supervisor(componentInfo)
         Some(SupervisorInfo(supervisor, componentInfo))
     }
   }

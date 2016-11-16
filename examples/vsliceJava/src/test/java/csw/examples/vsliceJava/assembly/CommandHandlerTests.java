@@ -8,12 +8,12 @@ import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
-import csw.services.ccs.CommandStatus2;
+import csw.services.ccs.CommandStatus;
 import csw.services.ccs.SequentialExecutor;
 import csw.services.ccs.Validation;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component;
-import csw.services.pkg.Supervisor3;
+import csw.services.pkg.Supervisor;
 import csw.util.config.Configurations;
 import javacsw.services.events.IEventService;
 import javacsw.services.pkg.JComponent;
@@ -26,25 +26,23 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisUpdate;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxisUpdateNow;
-import static csw.services.ccs.CommandStatus2.CommandResult;
-import static csw.services.ccs.CommandStatus2.NoLongerValid;
+import static csw.services.ccs.CommandStatus.CommandResult;
+import static csw.services.ccs.CommandStatus.NoLongerValid;
 import static csw.services.ccs.SequentialExecutor.StartTheSequence;
 import static csw.services.pkg.SupervisorExternal.LifecycleStateChanged;
 import static csw.services.pkg.SupervisorExternal.SubscribeLifecycleCallback;
 import static csw.util.config.Configurations.SetupConfig;
 import static csw.util.config.Configurations.SetupConfigArg;
-import static javacsw.services.ccs.JCommandStatus2.*;
+import static javacsw.services.ccs.JCommandStatus.*;
 import static javacsw.services.ccs.JSequentialExecutor.ExecuteOne;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
-import static javacsw.services.pkg.JSupervisor3.LifecycleInitialized;
-import static javacsw.services.pkg.JSupervisor3.LifecycleRunning;
+import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
+import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
@@ -93,7 +91,7 @@ public class CommandHandlerTests extends JavaTestKit {
       DoNotRegister, Collections.singleton(AkkaType), FiniteDuration.create(1, TimeUnit.SECONDS)
     );
 
-    return Supervisor3.apply(testInfo);
+    return Supervisor.apply(testInfo);
   }
 
   ActorRef newCommandHandler(ActorRef tromboneHCD, Optional<ActorRef> allEventPublisher) {
@@ -121,8 +119,8 @@ public class CommandHandlerTests extends JavaTestKit {
 
     ch.tell(ExecuteOne(sc, Optional.of(fakeAssembly.ref())), self());
 
-    CommandStatus2.CommandStatus2 msg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
-      CommandStatus2.CommandStatus2.class);
+    CommandStatus.CommandStatus msg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
+      CommandStatus.CommandStatus.class);
     assertEquals(msg, Completed);
     //info("Final: " + msg)
 
@@ -130,8 +128,8 @@ public class CommandHandlerTests extends JavaTestKit {
     ch.tell(new TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false)), self());
     ch.tell(ExecuteOne(sc, Optional.of(fakeAssembly.ref())), self());
 
-    CommandStatus2.CommandStatus2 errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
-      CommandStatus2.CommandStatus2.class);
+    CommandStatus.CommandStatus errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
+      CommandStatus.CommandStatus.class);
 
     assertTrue(errMsg instanceof NoLongerValid);
 
@@ -165,7 +163,7 @@ public class CommandHandlerTests extends JavaTestKit {
 //
 //    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 //
-//    val msg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    val msg: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
 //    msg shouldBe Completed
 //    //info("Final: " + msg
 //
@@ -174,7 +172,7 @@ public class CommandHandlerTests extends JavaTestKit {
 //
 //    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 //
-//    val errMsg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    val errMsg: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
 //    errMsg shouldBe a[NoLongerValid]
 //    errMsg.asInstanceOf[NoLongerValid].issue shouldBe a[RequiredHCDUnavailableIssue]
 //
@@ -182,7 +180,7 @@ public class CommandHandlerTests extends JavaTestKit {
 //    ch ! resolvedHCD
 //
 //    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
-//    val msg2: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+//    val msg2: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
 //    msg2 shouldBe Completed
 //
 //    val monitor = TestProbe()
@@ -230,7 +228,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     CommandResult errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS), CommandResult.class);
     assertEquals(errMsg.overall(), Incomplete);
-    CommandStatus2.CommandStatus2 e1 = errMsg.details().getResults().get(0).first();
+    CommandStatus.CommandStatus e1 = errMsg.details().getResults().get(0).first();
     assertTrue(e1 instanceof NoLongerValid);
     assertTrue(((NoLongerValid)e1).issue() instanceof Validation.WrongInternalStateIssue);
 
@@ -303,7 +301,7 @@ public class CommandHandlerTests extends JavaTestKit {
     double testPosition = 90.0;
     ch.tell(ExecuteOne(ac.moveSC(testPosition), Optional.of(fakeAssembly.ref())), self());
 
-    fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandStatus2.CommandStatus2.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandStatus.CommandStatus.class);
     int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testPosition);
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking
@@ -491,7 +489,7 @@ public class CommandHandlerTests extends JavaTestKit {
     double testEl = 150.0;
     ch.tell(ExecuteOne(ac.setElevationSC(testEl), Optional.of(fakeAssembly.ref())), self());
 
-    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus2.CommandStatus2.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus.CommandStatus.class);
     int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testEl);
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking

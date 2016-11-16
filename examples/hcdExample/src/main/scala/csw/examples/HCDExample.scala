@@ -6,7 +6,7 @@ import csw.services.events.{EventServiceSettings, TelemetryService}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
-import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor3}
+import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.config.Configurations.SetupConfig
@@ -115,7 +115,7 @@ class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd w
   import HCDExample._
   import PosGenerator._
   import HCDExample._
-  import Supervisor3._
+  import Supervisor._
 
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")
@@ -149,6 +149,6 @@ object HCDExampleApp extends App {
   println("Starting!")
   val componentId = ComponentId(HCDExample.hcdName, ComponentType.HCD)
   val hcdInfo = HcdInfo(hcdName, prefix, className, RegisterOnly, Set(AkkaType), 1.second)
-  val supervisor = Supervisor3(hcdInfo)
+  val supervisor = Supervisor(hcdInfo)
 }
 

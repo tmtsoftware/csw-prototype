@@ -8,7 +8,7 @@
 //import akka.actor.{AbstractActor, ActorRef}
 //import akka.util.Timeout
 //import csw.services.ccs.AssemblyController2
-//import csw.services.ccs.CommandStatus2.CommandStatus2
+//import csw.services.ccs.CommandStatus.CommandStatus
 //import csw.services.loc.Connection
 //import csw.services.loc.LocationService.Location
 //import csw.services.pkg.{Assembly, LifecycleHandler}
@@ -94,7 +94,7 @@
 //  override protected def notifySubscribers(a: CurrentStates): Unit = super.notifySubscribers(a)
 //
 //  protected def distributeSetupConfigs(locationsResolved: Boolean, configArg: SetupConfigArg,
-//                                       replyTo: Optional[ActorRef]): CommandStatus2 =
+//                                       replyTo: Optional[ActorRef]): CommandStatus =
 //    super.distributeSetupConfigs(locationsResolved, configArg, replyTo.asScala)
 //
 //  /**

@@ -108,7 +108,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {
-      val status = expectMsgType[CommandStatus.Completed]
+      val status = expectMsgType[CommandStatusOld.Completed]
       logger.debug(s"Done (2). Received reply from matcher with current state: $status")
     }
   }

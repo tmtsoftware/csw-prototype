@@ -97,13 +97,13 @@ class SingleStateMatcherActor(currentStateReceiver: ActorRef, timeout: Timeout) 
       log.debug(s"received current state: $current")
       if (matcher.prefix == current.prefix && matcher.check(current)) {
         timer.cancel()
-        mysender ! CommandStatus2.Completed
+        mysender ! CommandStatus.Completed
         currentStateReceiver ! Unsubscribe
         context.stop(self)
       }
 
     case `timeout` =>
-      mysender ! CommandStatus2.Error("Current state matching timed out")
+      mysender ! CommandStatus.Error("Current state matching timed out")
       currentStateReceiver ! Unsubscribe
       context.stop(self)
 
@@ -173,7 +173,7 @@ class MultiStateMatcherActor(stateSource: ActorRef, timeout: Timeout) extends Ac
         if (newMatchers.isEmpty) {
           timer.cancel()
           stateSource ! Unsubscribe
-          mysender ! CommandStatus2.Completed
+          mysender ! CommandStatus.Completed
           context.stop(self)
         } else {
           // Call again with a smaller list of demands!
@@ -183,7 +183,7 @@ class MultiStateMatcherActor(stateSource: ActorRef, timeout: Timeout) extends Ac
 
     case `timeout` =>
       log.debug(s"received timeout")
-      mysender ! CommandStatus2.Error("MultiStateMatcherActor state matching timed out")
+      mysender ! CommandStatus.Error("MultiStateMatcherActor state matching timed out")
       stateSource ! Unsubscribe
       context.stop(self)
 
@@ -231,7 +231,7 @@ class MultiStateMatcherActor2(stateSource: ActorRef) extends Actor with ActorLog
         val newMatchers = matchers.diff(matched)
         if (newMatchers.isEmpty) {
           stateSource ! Unsubscribe
-          mysender ! CommandStatus2.Completed
+          mysender ! CommandStatus.Completed
           context.stop(self)
         } else {
           // Call again with a smaller list of matchers!

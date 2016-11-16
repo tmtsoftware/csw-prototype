@@ -21,9 +21,9 @@ case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val t
   /**
    * Submits the given config to the assembly and returns the future (final) command status
    */
-  def submit(config: SetupConfigArg): Future[CommandStatus] = {
+  def submit(config: SetupConfigArg): Future[CommandStatusOld] = {
     val wrapper = context.actorOf(AssemblyWrapper.props(assemblyController))
-    (wrapper ? Submit(config)).mapTo[CommandStatus]
+    (wrapper ? Submit(config)).mapTo[CommandStatusOld]
   }
 
   /**
@@ -52,7 +52,7 @@ case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val t
  */
 case class BlockingAssemblyClient(client: AssemblyControllerClient)(implicit val timeout: Timeout, context: ActorRefFactory) {
 
-  def submit(config: SetupConfigArg): CommandStatus = {
+  def submit(config: SetupConfigArg): CommandStatusOld = {
     Await.result(client.submit(config), timeout.duration)
   }
 
@@ -95,7 +95,7 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
   }
 
   def waitingForStatus(replyTo: ActorRef): Receive = {
-    case s: CommandStatus =>
+    case s: CommandStatusOld =>
       if (s.isDone) {
         replyTo ! s
         context.stop(self)

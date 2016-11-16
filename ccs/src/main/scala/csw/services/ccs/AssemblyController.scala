@@ -150,9 +150,9 @@ trait AssemblyController extends LocationTrackerClientActor with PublisherActor[
     }
     valid match {
       case Valid =>
-        replyTo ! CommandStatus.Accepted(config.info.runId)
+        replyTo ! CommandStatusOld.Accepted(config.info.runId)
       case Invalid(reason) =>
-        replyTo ! CommandStatus.Error(config.info.runId, reason.reason)
+        replyTo ! CommandStatusOld.Error(config.info.runId, reason.reason)
     }
   }
 

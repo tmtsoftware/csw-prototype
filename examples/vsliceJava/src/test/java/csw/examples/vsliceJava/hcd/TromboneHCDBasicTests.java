@@ -27,7 +27,7 @@ import static javacsw.util.config.JItems.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static javacsw.services.pkg.JSupervisor3.*;
+import static javacsw.services.pkg.JSupervisor.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})

@@ -2,13 +2,13 @@ package csw.examples
 
 import akka.actor.ActorRef
 import csw.services.ccs.Validation._
-import csw.services.ccs.{AssemblyController, CommandStatus}
+import csw.services.ccs.{AssemblyController, CommandStatusOld}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
-import csw.services.pkg.Supervisor3.{Initialized, Started}
-import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor3}
+import csw.services.pkg.Supervisor.{Initialized, Started}
+import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 import scala.concurrent.Await
@@ -60,7 +60,7 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
 
       // If a replyTo actor was given, reply with the command status
       if (replyTo.isDefined) {
-        replyTo.get ! CommandStatus.Completed(configArg.info.runId)
+        replyTo.get ! CommandStatusOld.Completed(configArg.info.runId)
       }
     }
     valid
@@ -80,13 +80,13 @@ object AssemblyExampleApp extends App {
   val hcdConnections: Set[Connection] = Set(targetHcdConnection)
   val prefix = "tcs.mobie.blue.filter"
   val assemblyInfo = AssemblyInfo(assemblyName, prefix, className, RegisterOnly, Set(AkkaType), hcdConnections)
-  val (supervisorSystem, supervisor) = Supervisor3.create(assemblyInfo)
+  val (supervisorSystem, supervisor) = Supervisor.create(assemblyInfo)
 
   // The code below shows how you could shut down the assembly
   if (false) {
     import supervisorSystem.dispatcher
     supervisorSystem.scheduler.scheduleOnce(15.seconds) {
-      Supervisor3.haltComponent(supervisor)
+      Supervisor.haltComponent(supervisor)
       Await.ready(supervisorSystem.whenTerminated, 5.seconds)
       System.exit(0)
     }

@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, Props}
 import csw.services.ccs.HcdController
 import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.HcdInfo
-import csw.services.pkg.Supervisor3.{Initialized, Started}
+import csw.services.pkg.Supervisor.{Initialized, Started}
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 

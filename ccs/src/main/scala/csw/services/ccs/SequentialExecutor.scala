@@ -3,7 +3,7 @@ package csw.services.ccs
 import java.util.Optional
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import csw.services.ccs.CommandStatus2._
+import csw.services.ccs.CommandStatus._
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 import scala.compat.java8.OptionConverters._
@@ -22,7 +22,7 @@ class SequentialExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef
     case StartTheSequence(commandHandler) =>
       val configs = sca.configs
       // Start the first one
-      context.become(executingReceive(configs, commandHandler, CommandStatus2.CommandResults()))
+      context.become(executingReceive(configs, commandHandler, CommandStatus.CommandResults()))
       self ! SequentialExecute(configs.head)
     case x => log.error(s"TromboneCommandHandler:waitingReceive received an unknown message: $x")
   }
@@ -38,7 +38,7 @@ class SequentialExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef
       log.info(s"Received stop on: $sca")
       commandHandler ! StopCurrentCommand
 
-    case cs @ CommandStatus2.Completed =>
+    case cs @ CommandStatus.Completed =>
       // Save record of sequential successes
       val execResultsOut = execResultsIn :+ (cs, configsIn.head)
       val configsOut = configsIn.tail

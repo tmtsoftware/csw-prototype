@@ -16,8 +16,8 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation, Unresolved}
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor3
-import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor
+import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.Events.{StatusEvent, SystemEvent}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
@@ -83,7 +83,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       DoNotRegister, Set(AkkaType), 1.second
     )
 
-    Supervisor3(testInfo)
+    Supervisor(testInfo)
   }
 
   implicit val timeout = Timeout(10.seconds)

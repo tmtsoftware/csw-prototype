@@ -6,12 +6,12 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.containerCmd.ContainerCmd
 import csw.services.ccs.AssemblyController2.Submit
-import csw.services.ccs.CommandStatus2._
+import csw.services.ccs.CommandStatus._
 import csw.services.ccs.Validation.WrongInternalStateIssue
 import csw.services.events.EventService
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.AssemblyInfo
-import csw.services.pkg.Supervisor3._
+import csw.services.pkg.Supervisor._
 import csw.util.config.Configurations
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.Events.SystemEvent

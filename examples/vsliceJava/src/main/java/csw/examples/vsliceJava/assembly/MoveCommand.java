@@ -8,11 +8,10 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
-import csw.services.ccs.CommandStatus2;
+import csw.services.ccs.CommandStatus;
 import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
 import csw.util.config.DoubleItem;
-import csw.util.config.JavaHelpers;
 import javacsw.services.ccs.JSequentialExecutor;
 
 import java.util.Optional;
@@ -20,10 +19,10 @@ import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
-import static csw.services.ccs.CommandStatus2.NoLongerValid;
+import static csw.services.ccs.CommandStatus.NoLongerValid;
 import static csw.services.ccs.Validation.WrongInternalStateIssue;
 import static csw.util.config.Configurations.SetupConfig;
-import static javacsw.services.ccs.JCommandStatus2.Completed;
+import static javacsw.services.ccs.JCommandStatus.Completed;
 import static javacsw.util.config.JConfigDSL.sc;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
@@ -62,8 +61,8 @@ public class MoveCommand extends AbstractActor {
           TromboneCommandHandler.executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender), timeout, status -> {
             if (status == Completed)
               sendState(new SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss));
-            else if (status instanceof CommandStatus2.Error)
-              log.error("Move command match failed with message: " + ((CommandStatus2.Error) status).message());
+            else if (status instanceof CommandStatus.Error)
+              log.error("Move command match failed with message: " + ((CommandStatus.Error) status).message());
           });
         }
       }).

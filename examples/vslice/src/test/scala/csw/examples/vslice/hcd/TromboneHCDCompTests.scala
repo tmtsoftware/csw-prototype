@@ -6,9 +6,9 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.TromboneAssembly
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
-import csw.services.pkg.Supervisor3
+import csw.services.pkg.Supervisor
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import org.scalatest.{BeforeAndAfterAll, _}
@@ -45,7 +45,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       DoNotRegister, Set(AkkaType), 1.second
     )
 
-    Supervisor3(testInfo)
+    Supervisor(testInfo)
   }
 
   def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
@@ -452,7 +452,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
   def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration): Unit = {
     //system.scheduler.scheduleOnce(timeout) {
     println("STOPPING")
-    Supervisor3.haltComponent(supervisor)
+    Supervisor.haltComponent(supervisor)
     Await.ready(supervisorSystem.whenTerminated, 5.seconds)
     //system.terminate()
     System.exit(0)

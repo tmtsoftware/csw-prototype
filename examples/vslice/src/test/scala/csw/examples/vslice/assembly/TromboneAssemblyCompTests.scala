@@ -7,11 +7,11 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.AssemblyController2.Submit
-import csw.services.ccs.CommandStatus2.{Accepted, AllCompleted, CommandResult, Completed}
+import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult, Completed}
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.AssemblyInfo
-import csw.services.pkg.Supervisor3
-import csw.services.pkg.Supervisor3._
+import csw.services.pkg.Supervisor
+import csw.services.pkg.Supervisor._
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.Configurations
 import csw.util.config.Configurations.SetupConfig
@@ -31,7 +31,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
   import assemblyContext._
 
   def newTrombone(assemblyInfo: AssemblyInfo = assemblyContext.info): ActorRef = {
-    Supervisor3(assemblyInfo)
+    Supervisor(assemblyInfo)
   }
 
   describe("comp tests") {

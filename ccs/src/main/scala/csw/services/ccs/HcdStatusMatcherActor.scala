@@ -60,7 +60,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
           val set = results + current
           if (set.size == demands.size) {
             timer.cancel()
-            replyTo ! CommandStatus.Completed(runId)
+            replyTo ! CommandStatusOld.Completed(runId)
             hcds.foreach(_ ! PublisherActor.Unsubscribe)
             context.stop(self)
           } else context.become(waiting(set))
@@ -69,7 +69,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
 
     case `timeout` =>
       log.debug(s"received timeout")
-      replyTo ! CommandStatus.Error(runId, "Command timed out")
+      replyTo ! CommandStatusOld.Error(runId, "Command timed out")
       hcds.foreach(_ ! PublisherActor.Unsubscribe)
       context.stop(self)
 

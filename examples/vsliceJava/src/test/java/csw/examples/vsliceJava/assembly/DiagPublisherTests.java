@@ -13,7 +13,7 @@ import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.loc.Connection;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component;
-import csw.services.pkg.Supervisor3;
+import csw.services.pkg.Supervisor;
 import csw.util.config.Events;
 import javacsw.services.events.ITelemetryService;
 import javacsw.services.pkg.JComponent;
@@ -43,8 +43,8 @@ import static csw.util.config.Events.StatusEvent;
 import static csw.util.config.Events.SystemEvent;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
-import static javacsw.services.pkg.JSupervisor3.LifecycleInitialized;
-import static javacsw.services.pkg.JSupervisor3.LifecycleRunning;
+import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
+import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -157,7 +157,7 @@ public class DiagPublisherTests extends JavaTestKit {
       DoNotRegister, Collections.singleton(AkkaType), FiniteDuration.apply(1, TimeUnit.SECONDS)
     );
 
-    return Supervisor3.apply(testInfo);
+    return Supervisor.apply(testInfo);
   }
 
   // This is possible since trombone HCD has only one HCD

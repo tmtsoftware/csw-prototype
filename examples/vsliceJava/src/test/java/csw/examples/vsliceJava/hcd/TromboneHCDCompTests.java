@@ -11,7 +11,7 @@ import akka.testkit.TestProbe;
 import akka.util.Timeout;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component.HcdInfo;
-import csw.services.pkg.Supervisor3;
+import csw.services.pkg.Supervisor;
 import csw.services.pkg.SupervisorExternal.*;
 import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.StateVariable.CurrentState;
@@ -31,7 +31,7 @@ import static javacsw.util.config.JItems.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static javacsw.services.pkg.JSupervisor3.*;
+import static javacsw.services.pkg.JSupervisor.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
@@ -79,7 +79,7 @@ public class TromboneHCDCompTests extends JavaTestKit {
 
 
   ActorRef startHCD() {
-    return Supervisor3.apply(testInfo);
+    return Supervisor.apply(testInfo);
   }
 
   @SuppressWarnings("Duplicates")

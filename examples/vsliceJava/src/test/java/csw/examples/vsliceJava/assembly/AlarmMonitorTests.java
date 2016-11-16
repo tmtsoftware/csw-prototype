@@ -10,10 +10,10 @@ import akka.testkit.TestProbe;
 import akka.util.Timeout;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.alarms.AlarmKey;
-import csw.services.ccs.CommandStatus2;
+import csw.services.ccs.CommandStatus;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component;
-import csw.services.pkg.Supervisor3;
+import csw.services.pkg.Supervisor;
 import javacsw.services.alarms.IAlarmService;
 import javacsw.services.alarms.IAlarmServiceAdmin;
 import javacsw.services.alarms.JAlarmServiceAdmin;
@@ -40,8 +40,8 @@ import static javacsw.services.alarms.JAlarmModel.JSeverityLevel.Okay;
 import static javacsw.services.alarms.JAlarmModel.JSeverityLevel.Warning;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
-import static javacsw.services.pkg.JSupervisor3.LifecycleInitialized;
-import static javacsw.services.pkg.JSupervisor3.LifecycleRunning;
+import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
+import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static javacsw.util.config.JConfigDSL.cs;
 import static javacsw.util.config.JItems.jadd;
 import static javacsw.util.config.JItems.jset;
@@ -121,7 +121,7 @@ public class AlarmMonitorTests extends JavaTestKit {
       DoNotRegister, Collections.singleton(AkkaType), FiniteDuration.apply(1, TimeUnit.SECONDS)
     );
 
-    return Supervisor3.apply(testInfo);
+    return Supervisor.apply(testInfo);
   }
 
   ActorRef newCommandHandler(ActorRef tromboneHCD, Optional<ActorRef> allEventPublisher) {
@@ -255,8 +255,8 @@ public class AlarmMonitorTests extends JavaTestKit {
 
     ch.tell(JSequentialExecutor.ExecuteOne(ac.moveSC(limitPosition), Optional.of(fakeAssembly.ref())), self());
     // Watch for command completion
-    CommandStatus2.CommandStatus2 result = fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS),
-      CommandStatus2.CommandStatus2.class);
+    CommandStatus.CommandStatus result = fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS),
+      CommandStatus.CommandStatus.class);
     logger.info("Result: " + result);
 
     expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS)); // A bit of time for processing and update of AlarmService due to move
@@ -268,7 +268,7 @@ public class AlarmMonitorTests extends JavaTestKit {
 
     // Now move it out of the limit and see that the alarm is cleared
     ch.tell(JSequentialExecutor.ExecuteOne(ac.moveSC(clearPosition), Optional.of(fakeAssembly.ref())), self());
-    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus2.CommandStatus2.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus.CommandStatus.class);
 
     expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS)); // A bit of time for processing and update of AlarmService
 

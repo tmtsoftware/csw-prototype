@@ -9,7 +9,7 @@ import akka.japi.pf.ReceiveBuilder;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import csw.services.loc.ComponentType;
-import csw.services.pkg.Supervisor3;
+import csw.services.pkg.Supervisor;
 import csw.util.config.*;
 import javacsw.services.cs.akka.JConfigServiceClient;
 import javacsw.services.loc.JComponentType;
@@ -22,7 +22,7 @@ import scala.runtime.BoxedUnit;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JConfigDSL.*;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
-import static javacsw.services.pkg.JSupervisor3.*;
+import static javacsw.services.pkg.JSupervisor.*;
 
 import static csw.util.config.Configurations.SetupConfig;
 import static csw.util.config.Configurations.ConfigKey;
@@ -120,7 +120,7 @@ public class TromboneHCD extends JHcdController {
         // Just say complete for now
         supervisor.tell(ShutdownComplete, self());
       })
-      .match(Supervisor3.LifecycleFailureInfo.class, e -> {
+      .match(Supervisor.LifecycleFailureInfo.class, e -> {
         log.info("Received failed state: " + e.state() + " for reason: " + e.reason());
       })
       .matchEquals(TromboneEngineering.GetAxisStats, e -> {

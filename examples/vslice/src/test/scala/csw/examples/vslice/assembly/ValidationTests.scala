@@ -1,7 +1,7 @@
 package csw.examples.vslice.assembly
 
-import csw.services.ccs.CommandStatus2
-import csw.services.ccs.CommandStatus2.NotAccepted
+import csw.services.ccs.CommandStatus
+import csw.services.ccs.CommandStatus.NotAccepted
 import csw.services.ccs.Validation._
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.UnitsOfMeasure.kilometers
@@ -292,12 +292,12 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
     }
 
     it("should convert validation invalid successfully to a CommandStatus invalid") {
-      //import csw.services.ccs.CommandStatus2.Invalid
+      //import csw.services.ccs.CommandStatus.Invalid
       val testmessage = "test message"
 
       val t1 = Invalid(WrongConfigKeyIssue(testmessage))
 
-      val c1 = CommandStatus2.Invalid(t1)
+      val c1 = CommandStatus.Invalid(t1)
       c1.issue shouldBe a[WrongConfigKeyIssue]
       c1.issue.reason should equal(testmessage)
 
@@ -314,19 +314,19 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
       validations(2) shouldBe a[Invalid]
 
       // Convert to pairs
-      val cresult = CommandStatus2.validationsToCommandResultPairs(sca.configs, validations)
+      val cresult = CommandStatus.validationsToCommandResultPairs(sca.configs, validations)
       cresult.size should equal(sca.configs.size)
-      cresult.head._1 shouldBe CommandStatus2.Valid
+      cresult.head._1 shouldBe CommandStatus.Valid
       cresult.head._2 should equal(sca.configs.head)
 
-      cresult(1)._1 shouldBe a[CommandStatus2.Invalid]
+      cresult(1)._1 shouldBe a[CommandStatus.Invalid]
       cresult(1)._2 should equal(sca.configs(1))
 
-      cresult(2)._1 shouldBe a[CommandStatus2.Invalid]
+      cresult(2)._1 shouldBe a[CommandStatus.Invalid]
       cresult(2)._2 should equal(sca.configs(2))
 
       // Is correct overall returned
-      CommandStatus2.validationsToOverallCommandStatus(validations) shouldBe NotAccepted
+      CommandStatus.validationsToOverallCommandStatus(validations) shouldBe NotAccepted
 
       // Same with no errors
       val sca2 = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), positionSC(22.0), moveSC(44.0))

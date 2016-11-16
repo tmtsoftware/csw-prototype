@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.ccs.CommandStatus2.{CommandStatus2, Completed, Error}
+import csw.services.ccs.CommandStatus.{CommandStatus, Completed, Error}
 import csw.services.ccs.CurrentStateReceiver.{AddPublisher, RemovePublisher}
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.IntKey
@@ -113,11 +113,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val ds = DemandState(moveCK).add(posKey -> testPosition)
       val matcher = singleMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus2])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
 
       msgOut should be(Completed)
 
@@ -140,11 +140,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val ds = DemandState(moveCK).add(posKey -> testPosition)
       val matcher = singleMatcher(sr, 2.seconds)
 
-      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus2])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
 
       msgOut should be(Error("Current state matching timed out"))
 
@@ -167,11 +167,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
       val ds = DemandState(moveCK).add(posKey -> testPosition)
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus2])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
 
       msgOut should be(Completed)
 
@@ -199,11 +199,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds2), DemandMatcher(ds))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds2), DemandMatcher(ds))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus2])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
 
       msgOut should be(Completed)
 
@@ -228,11 +228,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds), PresenceMatcher(datumCK.prefix))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds), PresenceMatcher(datumCK.prefix))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus2])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
 
       msgOut should be(Completed)
 
@@ -259,11 +259,11 @@ class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHand
 
       val matcher = multiMatcher(sr)
 
-      (matcher ? StartMatch(DemandMatcher(ds, withUnits = true))).mapTo[CommandStatus2].pipeTo(fakeSender.ref)
+      (matcher ? StartMatch(DemandMatcher(ds, withUnits = true))).mapTo[CommandStatus].pipeTo(fakeSender.ref)
 
       writeStates(listOfPosStates, sr)
 
-      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus2])
+      val msgOut = fakeSender.expectMsgClass(classOf[CommandStatus])
 
       msgOut should be(Completed)
 

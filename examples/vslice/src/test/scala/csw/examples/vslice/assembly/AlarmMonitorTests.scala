@@ -8,13 +8,13 @@ import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.alarms.AlarmModel.SeverityLevel.{Okay, Warning}
 import csw.services.alarms.{AlarmKey, AlarmService, AlarmServiceAdmin}
-import csw.services.ccs.CommandStatus2.CommandStatus2
+import csw.services.ccs.CommandStatus.CommandStatus
 import csw.services.ccs.SequentialExecutor.ExecuteOne
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor3
-import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor
+import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.UnitsOfMeasure.encoder
@@ -98,7 +98,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
       DoNotRegister, Set(AkkaType), 1.second
     )
 
-    Supervisor3(testInfo)
+    Supervisor(testInfo)
   }
 
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None): ActorRef = {
@@ -231,7 +231,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     // Move to the 0 position
     ch ! ExecuteOne(moveSC(limitPosition), Some(fakeAssembly.ref))
     // Watch for command completion
-    val result = fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus2])
+    val result = fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus])
     logger.info("Result: " + result)
 
     expectNoMsg(1.second) // A bit of time for processing and update of AlarmService
@@ -243,7 +243,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
     // Now move it out of the limit and see that the alarm is cleared
     ch ! ExecuteOne(moveSC(clearPosition), Some(fakeAssembly.ref))
-    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus2])
+    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus])
 
     expectNoMsg(1.second) // A bit of time for processing and update of AlarmService
 

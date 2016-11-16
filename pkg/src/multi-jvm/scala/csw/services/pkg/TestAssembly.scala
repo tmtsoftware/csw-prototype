@@ -5,7 +5,7 @@ import csw.services.ccs.AssemblyController
 import csw.services.ccs.Validation._
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
-import csw.services.pkg.Supervisor3.{Initialized, Started}
+import csw.services.pkg.Supervisor.{Initialized, Started}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 

@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD.GetAxisUpdateNow
-import csw.services.ccs.CommandStatus2._
+import csw.services.ccs.CommandStatus._
 import csw.services.ccs.SequentialExecutor
 import csw.services.ccs.SequentialExecutor.{ExecuteOne, StartTheSequence}
 import csw.services.ccs.Validation.{RequiredHCDUnavailableIssue, WrongInternalStateIssue}
@@ -18,8 +18,8 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.loc.LocationService.{ResolvedAkkaLocation, ResolvedTcpLocation, Unresolved}
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor3
-import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor
+import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.Configurations
 import csw.util.config.Configurations.SetupConfig
@@ -60,7 +60,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
       DoNotRegister, Set(AkkaType), 1.second
     )
 
-    Supervisor3(testInfo)
+    Supervisor(testInfo)
   }
 
   def newCommandHandler(tromboneHCD: ActorRef, allEventPublisher: Option[ActorRef] = None) = {
@@ -90,7 +90,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 
-    val msg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    val msg: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
     msg shouldBe Completed
     //info("Final: " + msg)
 
@@ -98,7 +98,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     ch ! TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false))
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 
-    val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
     errMsg shouldBe a[NoLongerValid]
 
     val monitor = TestProbe()
@@ -129,7 +129,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 
-    val msg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    val msg: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
     msg shouldBe Completed
     //info("Final: " + msg
 
@@ -138,7 +138,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
 
-    val errMsg: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    val errMsg: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
     errMsg shouldBe a[NoLongerValid]
     errMsg.asInstanceOf[NoLongerValid].issue shouldBe a[RequiredHCDUnavailableIssue]
 
@@ -146,7 +146,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     ch ! resolvedHCD
 
     ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
-    val msg2: CommandStatus2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus2])
+    val msg2: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
     msg2 shouldBe Completed
 
     val monitor = TestProbe()
@@ -259,7 +259,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     val testPosition = 90.0
     ch ! ExecuteOne(ac.moveSC(testPosition), Some(fakeAssembly.ref))
 
-    fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus2])
+    fakeAssembly.expectMsgClass(35.seconds, classOf[CommandStatus])
     val finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testPosition)
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking
@@ -433,7 +433,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     val testEl = 150.0
     ch ! ExecuteOne(ac.setElevationSC(testEl), Some(fakeAssembly.ref))
 
-    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus2])
+    fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus])
     val finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testEl)
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking

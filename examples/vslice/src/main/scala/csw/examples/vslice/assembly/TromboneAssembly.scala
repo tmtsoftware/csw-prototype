@@ -17,7 +17,7 @@ import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService._
 import csw.services.loc._
 import csw.services.pkg.Component.AssemblyInfo
-import csw.services.pkg.{Assembly, Supervisor3}
+import csw.services.pkg.{Assembly, Supervisor}
 import csw.util.config.Configurations.SetupConfigArg
 
 import scala.concurrent.Await
@@ -30,7 +30,7 @@ import scala.language.postfixOps
 class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
     extends Assembly with AssemblyController2 {
 
-  import Supervisor3._
+  import Supervisor._
 
   // Get the assembly configuration from the config service or resource file (XXX TODO: Change to be non-blocking like the HCD version)
   val (calculationConfig, controlConfig) = getAssemblyConfigs

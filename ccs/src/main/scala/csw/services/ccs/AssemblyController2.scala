@@ -40,7 +40,7 @@ object AssemblyController2 {
 trait AssemblyController2 {
   this: Actor =>
 
-  import CommandStatus2._
+  import CommandStatus._
   import AssemblyController2._
   import context.dispatcher
 

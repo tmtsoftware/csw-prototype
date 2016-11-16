@@ -5,7 +5,7 @@ import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient, CommandStatus}
+import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient, CommandStatusOld}
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
@@ -70,8 +70,8 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
 
             // Use actor API
             assembly1 ! Submit(TestConfig.testConfigArg)
-            expectMsgType[CommandStatus.Accepted]
-            expectMsgType[CommandStatus.Completed]
+            expectMsgType[CommandStatusOld.Accepted]
+            expectMsgType[CommandStatusOld.Completed]
 
             // Use client wrapper
             val client = AssemblyControllerClient(assembly1)

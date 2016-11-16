@@ -15,7 +15,7 @@ import csw.services.loc.Connection;
 import csw.services.loc.LocationService.*;
 import csw.services.loc.LocationSubscriberActor;
 import csw.services.pkg.Component;
-import csw.services.pkg.Supervisor3;
+import csw.services.pkg.Supervisor;
 import javacsw.services.alarms.IAlarmService;
 import javacsw.services.events.IEventService;
 import javacsw.services.events.ITelemetryService;
@@ -33,7 +33,7 @@ import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneCalculati
 import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneControlConfig;
 import static csw.services.loc.Connection.TcpConnection;
 import static csw.util.config.Configurations.SetupConfigArg;
-import static javacsw.services.pkg.JSupervisor3.*;
+import static javacsw.services.pkg.JSupervisor.*;
 
 /**
  * TMT Source Code: 6/10/16.
@@ -195,7 +195,7 @@ public class TromboneAssembly extends JAssemblyController2 {
         tromboneHCD.ifPresent(actorRef -> actorRef.tell(DoShutdown, self()));
         supervisor.tell(ShutdownComplete, self());
       }).
-      match(Supervisor3.LifecycleFailureInfo.class, t -> {
+      match(Supervisor.LifecycleFailureInfo.class, t -> {
         // This is an error condition so log it
         log.error("TromboneAssembly received failed lifecycle state: " + t.state() + " for reason: " + t.reason());
       }).

@@ -79,7 +79,7 @@ object Validation {
 
   /**
    * Base trait for the results of validating incoming configs
-   * Only a subset of CommandStatus2 entries are also Validation (Valid, Invalid)
+   * Only a subset of CommandStatus entries are also Validation (Valid, Invalid)
    */
   sealed trait Validation
 

@@ -8,7 +8,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
-import csw.services.ccs.CommandStatus2;
+import csw.services.ccs.CommandStatus;
 import csw.services.ccs.HcdController;
 import csw.services.ccs.Validation;
 import javacsw.services.ccs.JSequentialExecutor;
@@ -19,9 +19,9 @@ import java.util.concurrent.TimeUnit;
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.axisDatumCK;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.cancelSC;
-import static csw.services.ccs.CommandStatus2.NoLongerValid;
+import static csw.services.ccs.CommandStatus.NoLongerValid;
 import static csw.util.config.Configurations.SetupConfig;
-import static javacsw.services.ccs.JCommandStatus2.Completed;
+import static javacsw.services.ccs.JCommandStatus.Completed;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class DatumCommand extends AbstractActor {
@@ -48,8 +48,8 @@ public class DatumCommand extends AbstractActor {
           TromboneCommandHandler.executeMatch(context(), TromboneCommandHandler.idleMatcher(), tromboneHCD,  Optional.of(mySender), timeout, status -> {
             if (status == Completed)
               sendState(new SetState(cmdReady, moveIndexed, false, false));
-            else if (status instanceof CommandStatus2.Error)
-              log.error("Data command match failed with error: " + ((CommandStatus2.Error)status).message());
+            else if (status instanceof CommandStatus.Error)
+              log.error("Data command match failed with error: " + ((CommandStatus.Error)status).message());
           });
         }
       }).

@@ -13,8 +13,8 @@
 //import csw.services.loc.ConnectionType.AkkaType
 //import csw.services.loc.LocationService
 //import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-//import csw.services.pkg.Supervisor3
-//import csw.services.pkg.Supervisor3.{LifecycleInitialized, LifecycleRunning}
+//import csw.services.pkg.Supervisor
+//import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
 //import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 //import csw.util.config.Configurations.SetupConfig
 //import csw.util.config.DoubleItem
@@ -353,7 +353,7 @@
 //        DoNotRegister, Set(AkkaType), 1.second
 //      )
 //
-//      Supervisor3(testInfo)
+//      Supervisor(testInfo)
 //    }
 //
 //    /**

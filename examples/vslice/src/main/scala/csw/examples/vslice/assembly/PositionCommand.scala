@@ -3,7 +3,7 @@ package csw.examples.vslice.assembly
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.examples.vslice.assembly.TromboneStateActor._
 import csw.examples.vslice.hcd.TromboneHCD._
-import csw.services.ccs.CommandStatus2.{Completed, Error, NoLongerValid}
+import csw.services.ccs.CommandStatus.{Completed, Error, NoLongerValid}
 import csw.services.ccs.HcdController
 import csw.services.ccs.SequentialExecutor.{CommandStart, StopCurrentCommand}
 import csw.services.ccs.Validation.WrongInternalStateIssue

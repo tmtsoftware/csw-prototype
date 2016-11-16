@@ -5,7 +5,7 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor3._
+import csw.services.pkg.Supervisor._
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, FunSpecLike, ShouldMatchers}
@@ -486,13 +486,13 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneHCDBasicTests")
     //          TromboneHCD.trombonePrefix,
     //          TromboneHCD.componentClassName,
     //          DoNotRegister, Set(AkkaType), 1.second)
-    //        Supervisor3(testInfo)
+    //        Supervisor(testInfo)
     //      }
 
     //    def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
     //      //system.scheduler.scheduleOnce(timeout) {
     //      println("STOPPING")
-    //      Supervisor3.haltComponent(supervisor)
+    //      Supervisor.haltComponent(supervisor)
     //      Await.ready(supervisorSystem.whenTerminated, 5.seconds)
     //      system.terminate()
     //      System.exit(0)
