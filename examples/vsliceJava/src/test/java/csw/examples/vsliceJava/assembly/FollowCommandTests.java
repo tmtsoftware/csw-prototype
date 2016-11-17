@@ -327,7 +327,7 @@ public class FollowCommandTests extends JavaTestKit {
     assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
 
     // Check that nothing is happening - not needed
-    expectNoMsg(duration("200 milli"));
+//    expectNoMsg(duration("200 milli"));
 
     // Stop this follow command
     system.stop(fc);
