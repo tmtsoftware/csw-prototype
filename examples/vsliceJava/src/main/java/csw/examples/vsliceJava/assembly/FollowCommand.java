@@ -61,10 +61,15 @@ class FollowCommand extends AbstractActor {
   private final AssemblyContext ac;
   private final DoubleItem initialElevation;
   private final Optional<ActorRef> eventPublisher;
-  private final IEventService eventService; // XXX FIXME: remove Optional!
+  private final IEventService eventService;
 
   // Create the trombone publisher for publishing SystemEvents to AOESW, etc if one is not provided
   private final ActorRef tromboneControl;
+
+  // These are accessed by the tests
+  final BooleanItem nssInUseIn;
+  final Optional<ActorRef> tromboneHCDIn;
+
 
   /**
    * Constructor
@@ -78,6 +83,8 @@ class FollowCommand extends AbstractActor {
   private FollowCommand(AssemblyContext ac, DoubleItem initialElevation, BooleanItem nssInUseIn, Optional<ActorRef> tromboneHCDIn,
                         Optional<ActorRef> eventPublisher, IEventService eventService) {
     this.ac = ac;
+    this.nssInUseIn = nssInUseIn;
+    this.tromboneHCDIn = tromboneHCDIn;
     this.initialElevation = initialElevation;
     this.eventPublisher = eventPublisher;
     this.eventService = eventService;
@@ -111,11 +118,6 @@ class FollowCommand extends AbstractActor {
           context().become(followReceive(t.nssInUse, newFollowActor, newEventSubscriber, tromboneHCD));
         }
       }).
-//      match(SetElevation.class, t -> {
-//        // This updates the current elevation and then causes an internal update to move things
-//        log.info("Received setElevation, setting to: " + t.elevation);
-//        followActor.tell(t, sender());
-//      }).
       match(SetZenithAngle.class, t -> {
         log.info("Got angle: " + t.zenithAngle);
         followActor.tell(t, sender());

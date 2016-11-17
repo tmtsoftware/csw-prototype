@@ -61,7 +61,7 @@ class TromboneControl extends AbstractActor {
         int encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, jvalue(newPosition));
 
         // Final check before sending off to hardware
-        log.info("epos: $encoderPosition, minLimit: " + ac.controlConfig.minEncoderLimit + ", maxEnc: " + ac.controlConfig.maxEncoderLimit);
+        log.info("epos: " + encoderPosition + ", minLimit: " + ac.controlConfig.minEncoderLimit + ", maxEnc: " + ac.controlConfig.maxEncoderLimit);
         assert (encoderPosition > ac.controlConfig.minEncoderLimit && encoderPosition < ac.controlConfig.maxEncoderLimit);
 
         log.debug("Setting trombone axis to stage position: " + jvalue(newPosition) + " and encoder: " + encoderPosition);

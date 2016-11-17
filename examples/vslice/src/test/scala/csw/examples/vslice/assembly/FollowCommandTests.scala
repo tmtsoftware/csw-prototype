@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -22,7 +22,6 @@ import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
 
 object FollowCommandTests {
   LocationService.initInterface()
@@ -166,6 +165,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
   describe("basic event command setup") {
 
     it("should be created with no issues") {
+      // test0
       val fakeTromboneHCD = TestProbe()
 
       val fc: TestActorRef[FollowCommand] = newTestFollowCommand(setNssInUse(false), Some(fakeTromboneHCD.ref), None)
@@ -189,6 +189,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
      * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
      */
     it("1 creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance - nssNotInUse") {
+      // test1
       import AssemblyTestData._
       import Algorithms._
       import TestSubscriber._
@@ -293,6 +294,10 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       val zaEngExpected = calcTestData.map(f => StatusEvent(engStatusEventPrefix).madd(focusErrorKey -> testFE withUnits focusErrorUnits, stagePositionKey -> rangeDistanceToStagePosition(gettrd(f)) withUnits stagePositionUnits, zenithAngleKey -> getza(f) withUnits zenithAngleUnits))
       val engExpected = firstEng +: zaEngExpected
       result2.msgs should equal(engExpected)
+
+      tromboneHCD ! PoisonPill
+      system.stop(resultSubscriber1)
+      system.stop(resultSubscriber2)
     }
 
     /**
@@ -394,6 +399,10 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       val engs = results.msgs.map(_.asInstanceOf[StatusEvent])
       // Verify that the za is always 0.0 when inNssMode
       engs.map(f => f.item(zenithAngleKey).head).filter(_ != 0.0) shouldBe empty
+
+      tromboneHCD ! PoisonPill
+      system.stop(resultSubscriber1)
+      system.stop(resultSubscriber2)
     }
 
     /**
@@ -462,6 +471,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       // Stop this follow command
       system.stop(fc)
       system.stop(eventPublisher)
+      tromboneHCD ! PoisonPill
     }
 
   }
