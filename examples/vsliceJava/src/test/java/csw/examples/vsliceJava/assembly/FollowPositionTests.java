@@ -1,361 +1,437 @@
-//package csw.examples.vsliceJava.assembly
-//
-//import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-//import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-//import akka.util.Timeout
-//import com.typesafe.scalalogging.slf4j.LazyLogging
-//import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
-//import csw.examples.vslice.assembly.TromboneControl.GoToStagePosition
-//import csw.examples.vslice.hcd.TromboneHCD
-//import csw.examples.vslice.hcd.TromboneHCD._
-//import csw.services.ccs.HcdController._
-//import csw.services.events.{EventService, EventServiceAdmin}
-//import csw.services.loc.ConnectionType.AkkaType
-//import csw.services.loc.LocationService
-//import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-//import csw.services.pkg.Supervisor
-//import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
-//import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
-//import csw.util.config.Configurations.SetupConfig
-//import csw.util.config.DoubleItem
-//import csw.util.config.Events.{EventTime, SystemEvent}
-//import csw.util.config.StateVariable.CurrentState
-//import csw.util.config.UnitsOfMeasure._
-//import org.scalatest.{FunSpecLike, _}
-//
-//import scala.concurrent.Await
-//import scala.concurrent.duration._
-//import scala.util.Try
-//
-//object FollowPositionTests {
-//  LocationService.initInterface()
-//  val system = ActorSystem("FollowPositionTests")
-//
-//  val initialElevation = 90.0
-//
-//  // Test subscriber actor for telemetry
-//  object TestSubscriber {
-//    def props(): Props = Props(new TestSubscriber())
-//
-//    case object GetResults
-//
-//    case class Results(msgs: Vector[SystemEvent])
-//
-//  }
-//
-//  class TestSubscriber() extends Actor with ActorLogging {
-//
-//    import TestSubscriber._
-//
-//    var msgs = Vector.empty[SystemEvent]
-//
-//    def receive: Receive = {
-//      case event: SystemEvent =>
-//        msgs = msgs :+ event
-//        log.info(s"Received event: $event")
-//
-//      case GetResults => sender() ! Results(msgs)
-//    }
-//  }
-//}
-//
-///**
-// * These tests are about testing the calculated values for the trombone position when following.
-// */
-//class FollowPositionTests extends TestKit(FollowPositionTests.system) with ImplicitSender
-//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
-//  import Algorithms._
-//  import TromboneAssembly._
-//
-//  import system.dispatcher
-//
-//  implicit val timeout = Timeout(10.seconds)
-//
-//  // Used to start and stop the event service Redis instance used for the test
-//  //  var eventAdmin: EventServiceAdmin = _
-//
-//  // Get the event service by looking up the name with the location service.
-//  val eventService = Await.result(EventService(), timeout.duration)
-//
-//  override def beforeAll() = {
-//    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
-//    // Start redis and register it with the location service on a random free port.
-//    // The following is the equivalent of running this from the command line:
-//    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
-//    //    EventServiceAdmin.startEventService()
-//
-//    // Get the event service by looking it up the name with the location service.
-//    //    eventService = Await.result(EventService(), timeout.duration)
-//
-//    // This is only used to stop the Redis instance that was started for this test
-//    //    eventAdmin = EventServiceAdmin(eventService)
-//  }
-//
-//  override protected def afterAll(): Unit = {
-//    // Shutdown Redis (Only do this in tests that also started the server)
-//    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
-//    TestKit.shutdownActorSystem(system)
-//  }
-//
-//  val assemblyContext = AssemblyTestData.TestAssemblyContext
-//  val controlConfig = assemblyContext.controlConfig
-//  val calculationConfig = assemblyContext.calculationConfig
-//  import assemblyContext._
-//
-//  def pos(position: Double): DoubleItem = stagePositionKey -> position withUnits stagePositionUnits
-//
-//
-//  // Used for creating followers
-//  val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
-//  def newFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): TestActorRef[FollowActor] = {
-//    val props = FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), tromboneControl, publisher)
-//    TestActorRef(props)
-//  }
-//
-//  def newTestElPublisher(tromboneControl: Option[ActorRef]): TestActorRef[FollowActor] = {
-//    val testEventServiceProps = TrombonePublisher.props(assemblyContext, Some(eventService))
-//    val publisherActorRef = system.actorOf(testEventServiceProps)
-//    newFollower(tromboneControl, Some(publisherActorRef))
-//  }
-//
-//  /**
-//   * Shortcut for creating zenith angle DoubleItem
-//   * @param angle angle in degrees
-//   * @return DoubleItem with value and degrees
-//   */
-//  def za(angle: Double): DoubleItem = zenithAngleKey -> angle withUnits degrees
-//
-//  /**
-//   * Shortcut for creating focus error DoubleItem
-//   * @param error focus error in millimeters
-//   * @return DoubleItem with value and millimeters units
-//   */
-//  def fe(error: Double): DoubleItem = focusErrorKey -> error withUnits micrometers
-//
-//  /**
-//   * Test Description: This test tests the CalculatorActor to a fake TromboneHCD to inspect the messages
-//   * provided by the CalculatorActor.  fakeTromboneEventSubscriber sends an UpdatedEventData event to
-//   * CalculatorActor, which after performing a calculation provides an HCDTromboneUpdate message to the
-//   * fakeTrombonePublisher. This tests input/output of CalculatorActor.
-//   */
-//  describe("connect output of calculator actor to the trombone publisher") {
-//    import AssemblyTestData._
-//    import Algorithms._
-//
-//    it("tests total RD to encoder is within values") {
-//      val maxEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(maxTotalRD))
-//      val minEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(minTotalRD))
-//
-//      minEncoder shouldBe >(controlConfig.minEncoderLimit)
-//      maxEncoder shouldBe <(controlConfig.maxEncoderLimit)
-//    }
-//
-//    // This isn't a great test, but a real system would know this transformation and test it
-//    // Using expected encoder values for test inputs
-//    it("encoder values should test") {
-//      val result = encoderTestValues.map(_._1).map(f => stagePositionToEncoder(controlConfig, f))
-//      val answers = encoderTestValues.map(_._2)
-//
-//      result should equal(answers)
-//    }
-//
-//    /**
-//     * Test Description: This test uses a fake trombone event subscriber to send an UpdatedEventData message to the
-//     * followActor to see that it generates a RangeDistance message to send to the trombone hardware HCD
-//     */
-//    it("should allow one update") {
-//
-//      val fakeTromboneControl = TestProbe()
-//
-//      val fakeTromboneEventSubscriber = TestProbe()
-//
-//      // The following None ingores the events for AOESW from calculator
-//      val followActor = newFollower(Some(fakeTromboneControl.ref), None)
-//
-//      // This should result in two messages being sent, one to each actor in the given order
-//      // zenith angle 0 = 94 km, fe 0 = 0 so total is default initial value
-//      fakeTromboneEventSubscriber.send(followActor, UpdatedEventData(za(0), fe(0), EventTime()))
-//
-//      val msg = fakeTromboneControl.expectMsgClass(classOf[GoToStagePosition])
-//      msg should equal(GoToStagePosition(stagePositionKey -> calculationConfig.defaultInitialElevation withUnits stagePositionUnits))
-//    }
-//
-//    /**
-//     * Test Description: Similar to previous test, but with many values to test calculation and event flow.
-//     * Values are precalculated to it's not testing algorithms, it's testing the flow from input events to output
-//     */
-//    it("should create a proper set of HCDPositionUpdate messages") {
-//
-//      val fakeTromboneControl = TestProbe()
-//
-//      // The following None ingores the events for AOESW from calculator
-//      val followActor = newFollower(Some(fakeTromboneControl.ref), None)
-//
-//      val testFE = 10.0
-//      val testdata = newRangeAndElData(testFE)
-//      // These are the events that will be sent to the calculator to trigger position updates - range of ZA
-//      val updateMessages = testZenithAngles.map(f => UpdatedEventData(za(f), fe(testFE), EventTime()))
-//
-//      // fakeTromboneEventSubscriber simulates the events recevied from the Event Service and sent to CalculatorActor
-//      // This should result in two messages being sent, one to each actor in the given order
-//      val fakeTromboneEventSubscriber = TestProbe()
-//      updateMessages.foreach(ev => fakeTromboneEventSubscriber.send(followActor, ev))
-//
-//      // The following constructs the expected messages that contain the stage positions
-//      // The following assumes we have models for what is to come out of the assembly.  Here we are just
-//      // reusing the actual equations to test that the events are proper
-//      // First keep focus error fixed at 10 um
-//
-//      // This uses the new range values from above to create RangeDistance messages that are being delivered tothe trombonecontrol actor
-//      val msgsExpected = testdata.map(p => GoToStagePosition(stagePositionKey -> p._1 withUnits stagePositionUnits))
-//
-//      // This collects the messages from the calculator setup above that are generated by the updateMessages.foreach above
-//      val msgs = fakeTromboneControl.receiveN(msgsExpected.size)
-//
-//      // The two should be equal
-//      msgsExpected should equal(msgs)
-//    }
-//
-//    /**
-//     * Test Description: This adds the use of the Event Service. The test sends Zenith Angle updates from the
-//     * "TCS" through event service and generates trombone positions that are received by the fakeTromboneControl.
-//     */
-//    it("should create a proper published events from fake TCS flowing through Event Service to produce HCD encoder motion updates") {
-//
-//      // Fake actor that handles sending to HCD
-//      val fakeTromboneControl = TestProbe()
-//
-//      val nssUse = setNssInUse(false)
-//      // Create the follow actor and give it the actor ref of the publisher for sending calculated events
-//      val followActor = system.actorOf(FollowActor.props(assemblyContext, initialElevation, nssUse, Some(fakeTromboneControl.ref), None))
-//      // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), Some(eventService)))
-//
-//      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
-//      val tcsRtc = eventService
-//
-//      val testFE = 10.0
-//      // Publish a single focus error. This will generate a published event
-//      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
-//
-//      // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
-//      val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-//
-//      // This should result in the length of tcsEvents being published, which is 15
-//      tcsEvents.map(f => tcsRtc.publish(f))
-//
-//      // This is to give actors time to run and subscriptions to register
-//      expectNoMsg(100.milli)
-//
-//      // The following constructs the expected messages that contain the encoder positions
-//      // The following assumes we have models for what is to come out of the assembly.  Here we are just
-//      // reusing the actual equations to test that the events are proper
-//      // First keep focus error fixed at 10 um
-//      val testdata = newRangeAndElData(testFE)
-//      // This uses the new range values from above to create RangeDistance messages that are being delivered tothe trombonecontrol actor
-//      val msgsExpected = testdata.map(p => GoToStagePosition(stagePositionKey -> p._1 withUnits stagePositionUnits))
-//
-//      // Expect one message for the setting fe
-//      fakeTromboneControl.expectMsg(msgsExpected(0))
-//      // This collects the messages from the calculator setup above
-//      val msgs = fakeTromboneControl.receiveN(msgsExpected.size)
-//
-//      // The two should be equal
-//      msgsExpected should equal(msgs)
-//    }
-//  }
-//
-//  /**
-//   * Test Description: This test sends one upate through FollowActor to a fakeTromboneHCD,
-//   * through the actual TromboneControl actor that converts stage position to encoder units and commands for HCD.
-//   */
-//  describe("check output of follow actor to the TromboneHCD through the trombone control sending one event") {
-//    import AssemblyTestData._
-//
-//    it("should allow one update") {
-//      import TromboneHCD._
-//
-//      val fakeTromboneHCD = TestProbe()
-//
-//      // Create the trombone control actor with the fake tromboneHCD
-//      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext))
-//      tromboneControl ! UpdateTromboneHCD(Some(fakeTromboneHCD.ref))
-//
-//      // This is simulating the events that are received from RTC and TCS
-//      val fakeTromboneEventSubscriber = TestProbe()
-//
-//      // The following None ingores the events for AOESW from calculator
-//      val followActor = newFollower(Some(tromboneControl), None)
-//
-//      // This should result in one message being sent to the fakeTromboneHCD
-//      val testFE = 0.0
-//      val testZA = 0.0
-//      fakeTromboneEventSubscriber.send(followActor, UpdatedEventData(za(testZA), fe(testFE), EventTime()))
-//
-//      val (totalRange, _) = focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, testFE, testZA)
-//      val expectedEnc = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(totalRange))
-//
-//      // Difference here is that fakeTromboneHCD receives a Submit commaand with an encoder value only
-//      val msg = fakeTromboneHCD.expectMsgClass(classOf[Submit])
-//      msg should equal(Submit(SetupConfig(axisMoveCK).add(positionKey -> expectedEnc withUnits positionUnits)))
-//    }
-//
-//    /**
-//     * Test Description: This test creates a set of UpdatedEventData messages, sends them to FollowActor, which
-//     * passes them to the TromboneControl which creates the Submit messages for the HCD which are received by
-//     * a "fake" HCD and tested
-//     */
-//    it("should create a proper set of Submit messages for the fakeTromboneHCD") {
-//      import TromboneHCD._
-//
-//      val fakeTromboneHCD = TestProbe()
-//
-//      // Create the trombone control actor with the fake tromboneHCD
-//      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext))
-//      tromboneControl ! UpdateTromboneHCD(Some(fakeTromboneHCD.ref))
-//
-//      // The following None ingores the events for AOESW from calculator
-//      val followActor = newFollower(Some(tromboneControl), None)
-//
-//      // These are the events that will be sent to the calculator to trigger position updates
-//      val testFE = -10.0
-//      val updateMessages = testZenithAngles.map(f => UpdatedEventData(za(f), fe(testFE), EventTime()))
-//
-//      // This should result in two messages being sent, one to each actor in the given order
-//      val fakeTromboneSubscriber = TestProbe()
-//      updateMessages.foreach { ev =>
-//        fakeTromboneSubscriber.send(followActor, ev)
-//        // This allows the processed messages to interleave
-//        Thread.sleep(5)
-//      }
-//
-//      // The following constructs the expected messages that contain the encoder positions
-//      // The following assumes we have models for what is to come out of the assembly.  Here we are just
-//      // reusing the actual equations to test that the events are proper
-//      val calcData = calculatedTestData(calculationConfig, controlConfig, testFE)
-//      // This uses to two to create the expected messages from the calculatorActor
-//      val msgsExpected = calcData.map(p => Submit(positionSC(getenc(p))))
-//
-//      // This collects the set of messages from the calculator setup above
-//      val msgs = fakeTromboneHCD.receiveN(msgsExpected.size)
-//
-//      // The two should be equal
-//      msgsExpected should equal(msgs)
-//    }
-//
-//    // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
-//    // The following are used to start a tromboneHCD for testing purposes
-//    def startHCD: ActorRef = {
-//      val testInfo = HcdInfo(
-//        TromboneHCD.componentName,
-//        TromboneHCD.trombonePrefix,
-//        TromboneHCD.componentClassName,
-//        DoNotRegister, Set(AkkaType), 1.second
-//      )
-//
-//      Supervisor(testInfo)
-//    }
-//
+package csw.examples.vsliceJava.assembly;
+
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.japi.Creator;
+import akka.japi.Pair;
+import akka.japi.pf.ReceiveBuilder;
+import akka.testkit.JavaTestKit;
+import akka.testkit.TestActorRef;
+import akka.testkit.TestProbe;
+import akka.util.Timeout;
+import csw.examples.vsliceJava.assembly.TromboneAssembly.UpdateTromboneHCD;
+import csw.examples.vsliceJava.assembly.TromboneControl.GoToStagePosition;
+import csw.examples.vsliceJava.hcd.TromboneHCD;
+import csw.services.ccs.HcdController;
+import csw.services.ccs.HcdController.Submit;
+import csw.services.loc.LocationService;
+import csw.services.pkg.Component;
+import csw.services.pkg.Supervisor;
+import csw.util.config.BooleanItem;
+import csw.util.config.Configurations;
+import csw.util.config.DoubleItem;
+import csw.util.config.Events;
+import javacsw.services.events.IEventService;
+import javacsw.services.pkg.JComponent;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Vector;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static csw.examples.vsliceJava.assembly.Algorithms.focusZenithAngleToElevationAndRangeDistance;
+import static csw.examples.vsliceJava.assembly.Algorithms.rangeDistanceToStagePosition;
+import static csw.examples.vsliceJava.assembly.Algorithms.stagePositionToEncoder;
+import static csw.examples.vsliceJava.assembly.AssemblyContext.*;
+import static csw.examples.vsliceJava.assembly.AssemblyTestData.*;
+import static csw.examples.vsliceJava.assembly.FollowActor.UpdatedEventData;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.axisMoveCK;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.positionKey;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.positionSC;
+import static csw.util.config.Configurations.*;
+import static csw.util.config.Events.EventServiceEvent;
+import static csw.util.config.Events.SystemEvent;
+import static javacsw.services.loc.JConnectionType.AkkaType;
+import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.util.config.JItems.jadd;
+import static javacsw.util.config.JItems.jset;
+import static javacsw.util.config.JUnitsOfMeasure.degrees;
+import static javacsw.util.config.JUnitsOfMeasure.micrometers;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+
+/**
+ * Diag Pubisher Tests
+ */
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
+public class FollowPositionTests extends JavaTestKit {
+
+  @SuppressWarnings("WeakerAccess")
+ /*
+  * Test event service client, subscribes to some event
+  */
+  private static class TestSubscriber extends AbstractActor {
+    private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+    public static Props props() {
+      return Props.create(new Creator<TestSubscriber>() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public TestSubscriber create() throws Exception {
+          return new TestSubscriber();
+        }
+      });
+    }
+
+    // --- Actor message classes ---
+    static class GetResults {
+    }
+
+    static class Results {
+      public final Vector<EventServiceEvent> msgs;
+
+      public Results(Vector<EventServiceEvent> msgs) {
+        this.msgs = msgs;
+      }
+    }
+
+    Vector<EventServiceEvent> msgs = new Vector<>();
+
+    public TestSubscriber() {
+      receive(ReceiveBuilder.
+        match(SystemEvent.class, event -> {
+          msgs.add(event);
+          log.info("Received event: " + event);
+        }).
+        match(GetResults.class, t -> sender().tell(new Results(msgs), self())).
+        matchAny(t -> log.warning("Unknown message received: " + t)).
+        build());
+    }
+  }
+
+  private static ActorSystem system;
+  private static LoggingAdapter logger;
+
+  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(10, TimeUnit.SECONDS));
+
+  private static IEventService eventService;
+
+  private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
+  TromboneCalculationConfig calculationConfig = assemblyContext.calculationConfig;
+  TromboneControlConfig controlConfig = assemblyContext.controlConfig;
+
+  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
+  ActorRef self() {
+    return getTestActor();
+  }
+
+  public FollowPositionTests() {
+    super(system);
+  }
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    LocationService.initInterface();
+    system = ActorSystem.create();
+    logger = Logging.getLogger(system, system);
+
+    eventService = IEventService.getEventService(IEventService.defaultName, system, timeout)
+      .get(5, TimeUnit.SECONDS);
+  }
+
+  @AfterClass
+  public static void teardown() {
+    JavaTestKit.shutdownActorSystem(system);
+    system = null;
+  }
+
+  DoubleItem pos(double position) { return jset(stagePositionKey, position).withUnits(stagePositionUnits); }
+
+  // Used for creating followers
+  DoubleItem initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation);
+
+  TestActorRef<FollowActor> newFollower(Optional<ActorRef> tromboneControl, Optional<ActorRef> publisher) {
+    Props props = FollowActor.props(assemblyContext, initialElevation, setNssInUse(false), tromboneControl, publisher, Optional.empty());
+    return TestActorRef.create(system, props);
+  }
+
+  TestActorRef<FollowActor> newTestElPublisher(Optional<ActorRef> tromboneControl) {
+    Props testEventServiceProps = TrombonePublisher.props(assemblyContext, Optional.of(eventService), Optional.empty());
+    ActorRef publisherActorRef = system.actorOf(testEventServiceProps);
+    return newFollower(tromboneControl, Optional.of(publisherActorRef));
+  }
+
+  /**
+   * Shortcut for creating zenith angle DoubleItem
+   * @param angle angle in degrees
+   * @return DoubleItem with value and degrees
+   */
+  DoubleItem za(double angle) {return jset(zenithAngleKey, angle).withUnits(degrees);}
+
+  /**
+   * Shortcut for creating focus error DoubleItem
+   * @param error focus error in millimeters
+   * @return DoubleItem with value and millimeters units
+   */
+  DoubleItem fe(double error) {return jset(focusErrorKey, error).withUnits(micrometers);}
+
+  /*
+   * Test Description: This test tests the CalculatorActor to a fake TromboneHCD to inspect the messages
+   * provided by the CalculatorActor.  fakeTromboneEventSubscriber sends an UpdatedEventData event to
+   * CalculatorActor, which after performing a calculation provides an HCDTromboneUpdate message to the
+   * fakeTrombonePublisher. This tests input/output of CalculatorActor.
+   */
+
+  // --- connect output of calculator actor to the trombone publisher ---
+
+  @Test
+  public void test1() {
+    // tests total RD to encoder is within values
+      int maxEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(maxTotalRD));
+      int minEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(minTotalRD));
+
+      assertTrue(minEncoder > controlConfig.minEncoderLimit);
+      assertTrue(maxEncoder < controlConfig.maxEncoderLimit);
+    }
+
+    // This isn't a great test, but a real system would know this transformation and test it
+    // Using expected encoder values for test inputs
+  @Test
+  public void test2(){
+    // encoder values should test
+      List<Integer> result = encoderTestValues.stream().map(Pair::first).map(f -> stagePositionToEncoder(controlConfig, f))
+        .collect(Collectors.toList());
+    List<Integer> answers = encoderTestValues.stream().map(Pair::second)
+      .collect(Collectors.toList());
+
+      assertEquals(result, answers);
+    }
+
+    /**
+     * Test Description: This test uses a fake trombone event subscriber to send an UpdatedEventData message to the
+     * followActor to see that it generates a RangeDistance message to send to the trombone hardware HCD
+     */
+    @Test
+    public void test3() {
+      // should allow one update
+
+      TestProbe fakeTromboneControl = new TestProbe(system);
+
+      TestProbe fakeTromboneEventSubscriber = new TestProbe(system);
+
+      // The following Optional.empty() ingores the events for AOESW from calculator
+      TestActorRef<FollowActor> followActor = newFollower(Optional.of(fakeTromboneControl.ref()), Optional.empty());
+
+      // This should result in two messages being sent, one to each actor in the given order
+      // zenith angle 0 = 94 km, fe 0 = 0 so total is default initial value
+      fakeTromboneEventSubscriber.send(followActor, new UpdatedEventData(za(0), fe(0), Events.getEventTime()));
+
+      GoToStagePosition msg = fakeTromboneControl.expectMsgClass(GoToStagePosition.class);
+      assertEquals(msg, new GoToStagePosition(jset(stagePositionKey, calculationConfig.defaultInitialElevation).withUnits(stagePositionUnits)));
+    }
+
+    /**
+     * Test Description: Similar to previous test, but with many values to test calculation and event flow.
+     * Values are precalculated to it's not testing algorithms, it's testing the flow from input events to output
+     */
+    @Test
+    public void test4() {
+      // should create a proper set of HCDPositionUpdate messages
+
+      TestProbe fakeTromboneControl = new TestProbe(system);
+
+      // The following Optional.empty() ingores the events for AOESW from calculator
+      TestActorRef<FollowActor> followActor = newFollower(Optional.of(fakeTromboneControl.ref()), Optional.empty());
+
+      double testFE = 10.0;
+      List<Pair<Double, Double>> testdata = newRangeAndElData(testFE);
+      // These are the events that will be sent to the calculator to trigger position updates - range of ZA
+      List<UpdatedEventData> updateMessages = testZenithAngles.stream().map(f -> new UpdatedEventData(za(f), fe(testFE), Events.getEventTime()))
+        .collect(Collectors.toList());
+
+      // fakeTromboneEventSubscriber simulates the events recevied from the Event Service and sent to CalculatorActor
+      // This should result in two messages being sent, one to each actor in the given order
+      TestProbe fakeTromboneEventSubscriber = new TestProbe(system);
+      updateMessages.forEach(ev -> fakeTromboneEventSubscriber.send(followActor, ev));
+
+      // The following constructs the expected messages that contain the stage positions
+      // The following assumes we have models for what is to come out of the assembly.  Here we are just
+      // reusing the actual equations to test that the events are proper
+      // First keep focus error fixed at 10 um
+
+      // This uses the new range values from above to create RangeDistance messages that are being delivered tothe trombonecontrol actor
+      List<GoToStagePosition> msgsExpected = testdata.stream().map(p ->
+        new GoToStagePosition(jset(stagePositionKey, p.first()).withUnits(stagePositionUnits)))
+        .collect(Collectors.toList());
+
+      // This collects the messages from the calculator setup above that are generated by the updateMessages.foreach above
+      List<?> msgs = scala.collection.JavaConversions.asJavaCollection(
+        fakeTromboneControl.receiveN(msgsExpected.size())).stream().collect(Collectors.toList());
+
+      // The two should be equal
+      assertEquals(msgsExpected, msgs);
+    }
+
+    /**
+     * Test Description: This adds the use of the Event Service. The test sends Zenith Angle updates from the
+     * "TCS" through event service and generates trombone positions that are received by the fakeTromboneControl.
+     */
+    @Test
+    public void test5() {
+      // should create a proper published events from fake TCS flowing through Event Service to produce HCD encoder motion updates
+
+      // Fake actor that handles sending to HCD
+      TestProbe fakeTromboneControl = new TestProbe(system);
+
+      BooleanItem nssUse = setNssInUse(false);
+      // Create the follow actor and give it the actor ref of the publisher for sending calculated events
+      ActorRef followActor = system.actorOf(FollowActor.props(assemblyContext, initialElevation, nssUse, Optional.of(fakeTromboneControl.ref()),
+        Optional.empty(), Optional.empty()));
+      // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
+      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Optional.of(followActor), eventService));
+
+      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
+      IEventService tcsRtc = eventService;
+
+      double testFE = 10.0;
+      // Publish a single focus error. This will generate a published event
+      tcsRtc.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE)));
+
+      // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
+      List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
+        .collect(Collectors.toList());
+
+      // This should result in the length of tcsEvents being published, which is 15
+      tcsEvents.forEach(tcsRtc::publish);
+
+      // This is to give actors time to run and subscriptions to register
+      expectNoMsg(duration("100 milli"));
+
+      // The following constructs the expected messages that contain the encoder positions
+      // The following assumes we have models for what is to come out of the assembly.  Here we are just
+      // reusing the actual equations to test that the events are proper
+      // First keep focus error fixed at 10 um
+      List<Pair<Double, Double>> testdata = newRangeAndElData(testFE);
+      // This uses the new range values from above to create RangeDistance messages that are being delivered tothe trombonecontrol actor
+      List<GoToStagePosition> msgsExpected = testdata.stream().map(p ->
+        new GoToStagePosition(jset(stagePositionKey, p.first()).withUnits(stagePositionUnits)))
+        .collect(Collectors.toList());
+
+      // Expect one message for the setting fe
+      fakeTromboneControl.expectMsg(msgsExpected.get(0));
+      // This collects the messages from the calculator setup above
+      List<?> msgs = scala.collection.JavaConversions.asJavaCollection(
+        fakeTromboneControl.receiveN(msgsExpected.size())).stream().collect(Collectors.toList());
+
+      // The two should be equal
+      assertEquals(msgsExpected, msgs);
+    }
+
+  /**
+   * Test Description: This test sends one upate through FollowActor to a fakeTromboneHCD,
+   * through the actual TromboneControl actor that converts stage position to encoder units and commands for HCD.
+   */
+
+  // --- check output of follow actor to the TromboneHCD through the trombone control sending one event ---
+  @Test
+  public void test6() {
+    // should allow one update
+
+    TestProbe fakeTromboneHCD = new TestProbe(system);
+
+    // Create the trombone control actor with the fake tromboneHCD
+    ActorRef tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.empty()));
+    tromboneControl.tell(new UpdateTromboneHCD(Optional.of(fakeTromboneHCD.ref())), self());
+
+    // This is simulating the events that are received from RTC and TCS
+    TestProbe fakeTromboneEventSubscriber = new TestProbe(system);
+
+    // The following Optional.empty() ingores the events for AOESW from calculator
+    TestActorRef<FollowActor> followActor = newFollower(Optional.of(tromboneControl), Optional.empty());
+
+    // This should result in one message being sent to the fakeTromboneHCD
+    double testFE = 0.0;
+    double testZA = 0.0;
+    fakeTromboneEventSubscriber.send(followActor, new UpdatedEventData(za(testZA), fe(testFE), Events.getEventTime()));
+
+    double totalRange = focusZenithAngleToElevationAndRangeDistance(calculationConfig, calculationConfig.defaultInitialElevation, testFE, testZA).first();
+
+    int expectedEnc = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(totalRange));
+
+    // Difference here is that fakeTromboneHCD receives a Submit commaand with an encoder value only
+    Submit msg = fakeTromboneHCD.expectMsgClass(Submit.class);
+    assertEquals(msg, new Submit(jadd(new SetupConfig(axisMoveCK.prefix()),
+      jset(positionKey, expectedEnc).withUnits(TromboneHCD.positionUnits))));
+  }
+
+    /**
+     * Test Description: This test creates a set of UpdatedEventData messages, sends them to FollowActor, which
+     * passes them to the TromboneControl which creates the Submit messages for the HCD which are received by
+     * a "fake" HCD and tested
+     */
+    @Test
+    public void test7() {
+      // should create a proper set of Submit messages for the fakeTromboneHCD
+
+      TestProbe fakeTromboneHCD = new TestProbe(system);
+
+      // Create the trombone control actor with the fake tromboneHCD
+      ActorRef tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.empty()));
+      tromboneControl.tell(new UpdateTromboneHCD(Optional.of(fakeTromboneHCD.ref())), self());
+
+      // The following Optional.empty() ingores the events for AOESW from calculator
+      TestActorRef<FollowActor> followActor = newFollower(Optional.of(tromboneControl), Optional.empty());
+
+      // These are the events that will be sent to the calculator to trigger position updates
+      double testFE = -10.0;
+      List<UpdatedEventData> updateMessages = testZenithAngles.stream().map(f ->
+        new UpdatedEventData(za(f), fe(testFE), Events.getEventTime()))
+        .collect(Collectors.toList());
+
+      // This should result in two messages being sent, one to each actor in the given order
+      TestProbe fakeTromboneSubscriber = new TestProbe(system);
+      updateMessages.forEach(ev -> {
+        fakeTromboneSubscriber.send(followActor, ev);
+        // This allows the processed messages to interleave
+        try {
+          Thread.sleep(5);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      });
+
+      // The following constructs the expected messages that contain the encoder positions
+      // The following assumes we have models for what is to come out of the assembly.  Here we are just
+      // reusing the actual equations to test that the events are proper
+      List<TestValue> calcData = calculatedTestData(calculationConfig, controlConfig, testFE);
+      // This uses to two to create the expected messages from the calculatorActor
+      List<Submit> msgsExpected = calcData.stream().map(p ->
+        new Submit(positionSC(getenc(p))))
+        .collect(Collectors.toList());
+
+
+      // This collects the set of messages from the calculator setup above
+      List<?> msgs = scala.collection.JavaConversions.asJavaCollection(
+        fakeTromboneHCD.receiveN(msgsExpected.size())).stream().collect(Collectors.toList());
+
+      // The two should be equal
+      assertEquals(msgsExpected, msgs);
+    }
+
+    // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
+    // The following are used to start a tromboneHCD for testing purposes
+  ActorRef startHCD() {
+    Component.HcdInfo testInfo = JComponent.hcdInfo(
+      TromboneHCD.componentName,
+      TromboneHCD.trombonePrefix,
+      TromboneHCD.componentClassName,
+      DoNotRegister, Collections.singleton(AkkaType), FiniteDuration.apply(1, TimeUnit.SECONDS)
+    );
+
+    return Supervisor.apply(testInfo);
+  }
+
 //    /**
 //     * This will accept CurrentState messages until a state value is AXIS_IDLE
 //     * This is useful when you know there is one move and it will end without being updated
@@ -406,15 +482,15 @@
 //      val tromboneHCD = startHCD
 //
 //      // A test probe to act as the assembly for receiving CurrentState updates
-//      val fakeAssembly = TestProbe()
+//      val fakeAssembly = new TestProbe(system);
 //
 //      // Create the trombone control actor with the fake tromboneHCD
 //      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext))
-//      tromboneControl ! UpdateTromboneHCD(Some(tromboneHCD))
+//      tromboneControl ! UpdateTromboneHCD(Optional.of(tromboneHCD))
 //
 //      // The following is to synchronize the test with the HCD entering Running state
 //      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
+//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref())
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
 //      //info("Running")
@@ -423,8 +499,8 @@
 //      fakeAssembly.send(tromboneHCD, Subscribe)
 //
 //      // Now we are ready to test
-//      // The following None ingores the events for AOESW from calculator
-//      val followActor = newFollower(Some(tromboneControl), None)
+//      // The following Optional.empty() ingores the events for AOESW from calculator
+//      val followActor = newFollower(Optional.of(tromboneControl), Optional.empty())
 //
 //      // These are the events that will be sent to the calculator to trigger position updates
 //      val testFE = 10.0
@@ -432,7 +508,7 @@
 //
 //      // Fake TromboneSubscriber is acting as the actor that receives events from EventService
 //      // This should result in two messages being sent, one to each actor in the given order
-//      val fakeTromboneSubscriber = TestProbe()
+//      val fakeTromboneSubscriber = new TestProbe(system);
 //      updateMessages.foreach { ev =>
 //        fakeTromboneSubscriber.send(followActor, ev)
 //        // This sleep is not required, but it makes the test more interesting by allowing the actions of the assembly and HCD to interleave
@@ -471,9 +547,9 @@
 //      // startHCD creates an instance of the HCD
 //      val tromboneHCD = startHCD
 //
-//      val fakeAssembly = TestProbe()
+//      val fakeAssembly = new TestProbe(system);
 //
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
+//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref())
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
 //      //info("Running")
@@ -483,17 +559,17 @@
 //
 //      // Create the trombone control actor with the fake tromboneHCD
 //      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext))
-//      tromboneControl ! UpdateTromboneHCD(Some(tromboneHCD))
+//      tromboneControl ! UpdateTromboneHCD(Optional.of(tromboneHCD))
 //
 //      // The following ingores the events for AOESW from calculator
-//      val followActor = newFollower(Some(tromboneControl), None)
+//      val followActor = newFollower(Optional.of(tromboneControl), Optional.empty())
 //
 //      val testZA = 20.0
 //      // These are the events that will be sent to the calculator to trigger position updates
 //      val updateMessages = testFocusErrors.map(f => UpdatedEventData(za(testZA), fe(f), EventTime()))
 //
 //      // This should result in two messages being sent, one to each actor in the given order
-//      val fakeTromboneSubscriber = TestProbe()
+//      val fakeTromboneSubscriber = new TestProbe(system);
 //      updateMessages.foreach { ev =>
 //        fakeTromboneSubscriber.send(followActor, ev)
 //        // This delay is not needed, but makes the timing more challenging for the HCD motions
@@ -532,9 +608,9 @@
 //
 //      val tromboneHCD = startHCD
 //
-//      val fakeAssembly = TestProbe()
+//      val fakeAssembly = new TestProbe(system);
 //
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
+//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref())
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
 //      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
 //      //info("Running")
@@ -544,14 +620,14 @@
 //
 //      // Ignoring the messages for AO for the moment
 //      // Create the trombone control for receiving axis updates
-//      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Some(tromboneHCD)))
+//      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.of(tromboneHCD)))
 //
 //      // Create the follow actor and give it the actor ref of the publisher for sending calculated events
-//      // The following None ingores the events for AOESW from calculator
-//      val followActor = newFollower(Some(tromboneControl), None)
+//      // The following Optional.empty() ingores the events for AOESW from calculator
+//      val followActor = newFollower(Optional.of(tromboneControl), Optional.empty())
 //
 //      // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), Some(eventService)))
+//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Optional.of(followActor), Optional.of(eventService)))
 //
 //      fakeAssembly.expectNoMsg(200.milli)
 //
@@ -602,5 +678,4 @@
 //      msgs.last(inHighLimitKey).head should equal(false)
 //    }
 //
-//  }
-//}
+}

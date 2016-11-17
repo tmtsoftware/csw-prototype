@@ -190,8 +190,6 @@ public class CommandHandlerTests extends JavaTestKit {
 //  }
 
 
-
-
   @Test
   public void shouldAllowRunningDatumThroughSequentialExecutor() {
     ActorRef tromboneHCD = startHCD();
@@ -230,7 +228,7 @@ public class CommandHandlerTests extends JavaTestKit {
     assertEquals(errMsg.overall(), Incomplete);
     CommandStatus.CommandStatus e1 = errMsg.details().getResults().get(0).first();
     assertTrue(e1 instanceof NoLongerValid);
-    assertTrue(((NoLongerValid)e1).issue() instanceof Validation.WrongInternalStateIssue);
+    assertTrue(((NoLongerValid) e1).issue() instanceof Validation.WrongInternalStateIssue);
 
     //info("Final: " + errMsg)
 
@@ -461,7 +459,7 @@ public class CommandHandlerTests extends JavaTestKit {
     //info("Final: " + msg)
 
     // Test
-    int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testRangeDistance[testRangeDistance.length-1]);
+    int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testRangeDistance[testRangeDistance.length - 1]);
     // Use the engineering GetAxisUpdate to get the current encoder for checking
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow);
     AxisUpdate upd = fakeAssembly.expectMsgClass(AxisUpdate.class);

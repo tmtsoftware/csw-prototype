@@ -48,8 +48,6 @@ import static javacsw.util.config.JItems.jset;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
 import static org.junit.Assert.assertEquals;
 
-// XXX TODO FIXME: Start alarm service and init with test-alarms.conf before tests!
-
 /**
  * These tests are for the Trombone AlarmMonitor.
  */
@@ -103,14 +101,6 @@ public class AlarmMonitorTests extends JavaTestKit {
 
     logger.info("Initializing alarm data");
   }
-
-//  void setupState(TromboneStateActor.TromboneState ts) {
-//    // These times are important to allow time for test actors to get and process the state updates when running tests
-//    expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
-//    system.eventStream().publish(ts);
-//    // This is here to allow the destination to run and set its state
-//    expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
-//  }
 
   // Initialize HCD for testing
   ActorRef startHCD() {
@@ -186,10 +176,10 @@ public class AlarmMonitorTests extends JavaTestKit {
     testLimitAlarm(highLimitAlarm, 2000.0, AssemblyTestData.maxReasonableStage);
   }
 
-    /*
-     * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
-     * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
-     */
+  /*
+   * Test Description: This test uses the actual HCD to drive the axis to the low limit and verify that the low
+   * alarm is set and that the AlarmMonitor sets the alarm in the alarm service to warning
+   */
   @Test
   public void testLowLimitAlarm() throws Exception {
     it("monitor should set a low alarm when receiving real encoder low limit using real HCD to generate data");

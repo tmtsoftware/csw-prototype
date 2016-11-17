@@ -166,17 +166,17 @@ public class FollowActorTests extends JavaTestKit {
   TestProbe fakeEng = new TestProbe(system);
 
   @Test
-    public void test1() {
-      // should allow creation with defaults
+  public void test1() {
+    // should allow creation with defaults
     TestActorRef<FollowActor> cal = newFollower(setNssInUse(false), fakeTC.ref(), fakePub.ref(), fakeEng.ref());
 
-      assertEquals(cal.underlyingActor().initialElevation, iElevation(calculationConfig.defaultInitialElevation));
+    assertEquals(cal.underlyingActor().initialElevation, iElevation(calculationConfig.defaultInitialElevation));
 
-      fakeTC.expectNoMsg(duration("1 seconds"));
-      system.stop(cal);
-    }
+    fakeTC.expectNoMsg(duration("1 seconds"));
+    system.stop(cal);
+  }
 
-    // --- Test set initial elevation ---
+  // --- Test set initial elevation ---
 
   @Test
   public void test2() {
@@ -206,45 +206,45 @@ public class FollowActorTests extends JavaTestKit {
 
   @Test
   public void test3() {
-  // should at least handle and send messages
+    // should at least handle and send messages
     TestActorRef<FollowActor> cal = newFollower(setNssInUse(false), fakeTC.ref(), fakePub.ref(), fakeEng.ref());
 
-      // This should result in two messages being sent, one to each actor in the given order
-      cal.tell(new UpdatedEventData(za(0), fe(0), Events.getEventTime()), self());
+    // This should result in two messages being sent, one to each actor in the given order
+    cal.tell(new UpdatedEventData(za(0), fe(0), Events.getEventTime()), self());
 
-      fakeTC.expectMsgClass(GoToStagePosition.class);
-      fakePub.expectMsgClass(AOESWUpdate.class);
-      system.stop(cal);
-    }
+    fakeTC.expectMsgClass(GoToStagePosition.class);
+    fakePub.expectMsgClass(AOESWUpdate.class);
+    system.stop(cal);
+  }
 
-    @Test
-      public void test4(){
-      // should ignore if units wrong
-      TestActorRef<FollowActor> cal = newFollower(setNssInUse(false), fakeTC.ref(), fakePub.ref(), fakeEng.ref());
+  @Test
+  public void test4() {
+    // should ignore if units wrong
+    TestActorRef<FollowActor> cal = newFollower(setNssInUse(false), fakeTC.ref(), fakePub.ref(), fakeEng.ref());
 
-      // This should result in two messages being sent, one to each actor in the given order
-      logger.info("Note: This produced an error message for improper units, which is okay!");
-      cal.tell(new UpdatedEventData(jset(zenithAngleKey, 0.0), jset(focusErrorKey, 0.0),
-        Events.getEventTime()), self());
+    // This should result in two messages being sent, one to each actor in the given order
+    logger.info("Note: This produced an error message for improper units, which is okay!");
+    cal.tell(new UpdatedEventData(jset(zenithAngleKey, 0.0), jset(focusErrorKey, 0.0),
+      Events.getEventTime()), self());
 
-      fakeTC.expectNoMsg(duration("100 milli"));
-      system.stop(cal);
-    }
+    fakeTC.expectNoMsg(duration("100 milli"));
+    system.stop(cal);
+  }
 
-    @Test
-    public void test5() {
-       // should ignore if inputs out of range
-      TestActorRef<FollowActor> cal = newFollower(setNssInUse(false), fakeTC.ref(), fakePub.ref(), fakeEng.ref());
+  @Test
+  public void test5() {
+    // should ignore if inputs out of range
+    TestActorRef<FollowActor> cal = newFollower(setNssInUse(false), fakeTC.ref(), fakePub.ref(), fakeEng.ref());
 
-      // This should result in two messages being sent, one to each actor in the given order
-      logger.info("Note: This produced two error messages for out of range data, which are okay!");
-      cal.tell(new UpdatedEventData(za(-10), fe(0), Events.getEventTime()), self());
-      fakeTC.expectNoMsg(duration("100 milli"));
+    // This should result in two messages being sent, one to each actor in the given order
+    logger.info("Note: This produced two error messages for out of range data, which are okay!");
+    cal.tell(new UpdatedEventData(za(-10), fe(0), Events.getEventTime()), self());
+    fakeTC.expectNoMsg(duration("100 milli"));
 
-      cal.tell(new UpdatedEventData(za(0.0), fe(42.0), Events.getEventTime()), self());
-      fakeTC.expectNoMsg(duration("100 milli"));
-      system.stop(cal);
-    }
+    cal.tell(new UpdatedEventData(za(0.0), fe(42.0), Events.getEventTime()), self());
+    fakeTC.expectNoMsg(duration("100 milli"));
+    system.stop(cal);
+  }
 
   /*
    * Test Description: This test provides simulated UpdatedEventData events to the FollowActor and then tests that the
@@ -370,186 +370,185 @@ public class FollowActorTests extends JavaTestKit {
     system.stop(follower);
   }
 
-    /**
-     * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
-     * Then it collects the one where it is the destination and the end message
-     *
-     * @param tp   TestProbe that is receiving the CurrentState messages
-     * @param dest a TestProbe acting as the assembly
-     *
-     * @return A sequence of CurrentState messages
-     */
-    List<CurrentState> expectMoveMsgsWithDest(TestProbe tp, int dest) {
-      final CurrentState[] msgs =
-        new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
-          protected CurrentState match(Object in) {
-            if (in instanceof CurrentState) {
-              CurrentState cs = (CurrentState) in;
-              if ((cs.prefix().contains(TromboneHCD.axisStatePrefix) && !JavaHelpers.jvalue(cs, positionKey).equals(dest))
-                || cs.prefix().equals(TromboneHCD.axisStatsPrefix))
-                return cs;
-            }
-            throw noMatch();
+  /**
+   * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
+   * Then it collects the one where it is the destination and the end message
+   *
+   * @param tp   TestProbe that is receiving the CurrentState messages
+   * @param dest a TestProbe acting as the assembly
+   * @return A sequence of CurrentState messages
+   */
+  List<CurrentState> expectMoveMsgsWithDest(TestProbe tp, int dest) {
+    final CurrentState[] msgs =
+      new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
+        protected CurrentState match(Object in) {
+          if (in instanceof CurrentState) {
+            CurrentState cs = (CurrentState) in;
+            if ((cs.prefix().contains(TromboneHCD.axisStatePrefix) && !JavaHelpers.jvalue(cs, positionKey).equals(dest))
+              || cs.prefix().equals(TromboneHCD.axisStatsPrefix))
+              return cs;
           }
-        }.get(); // this extracts the received messages
-
-      CurrentState fmsg1 = tp.expectMsgClass(CurrentState.class); // last one with current == target
-      CurrentState fmsg2 = tp.expectMsgClass(CurrentState.class); // the the end event with IDLE
-      List<CurrentState> allmsgs = Arrays.asList(msgs);
-      allmsgs.add(fmsg1);
-      allmsgs.add(fmsg2);
-      return allmsgs;
-    }
-
-    /**
-     * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
-     * This tests the entire path with fake TCS sending events through Event Service, which are received by
-     * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
-     * which sends them to the TromboneHCD, which replies with StateUpdates.
-     * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
-     * and subscribed to by test clients, that collect their events for checking at the end
-     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-     */
-    @Test
-    public void test8() {
-      // creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance
-      ActorRef tromboneHCD = startHCD();
-
-      TestProbe fakeAssembly = new TestProbe(system);
-
-      tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
-      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
-      fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
-
-      // This has HCD sending updates back to this Assembly
-      fakeAssembly.send(tromboneHCD, Subscribe);
-
-      // Ignoring the messages for TrombonePosition
-      // Create the trombone publisher for publishing SystemEvents to AOESW
-      ActorRef publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Optional.of(eventService), Optional.of(telemetryService)));
-
-      // Ignoring the messages for AO for the moment
-      // Create the trombone publisher for publishing SystemEvents to AOESW
-      ActorRef tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.empty()));
-      tromboneControl.tell(new UpdateTromboneHCD(Optional.of(tromboneHCD)), self());
-
-      BooleanItem nssUsage = setNssInUse(false);
-      // Create the follow actor and give it the actor ref of the publisher for sending calculated events
-      // The following uses the same publisher actor for both AOESW and Eng events
-      TestActorRef<FollowActor> followActor = newFollower(nssUsage, tromboneControl, publisherActorRef, publisherActorRef);
-
-      // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-      ActorRef tromboneEventSubscriber = system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Optional.of(followActor), eventService));
-
-      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
-      Optional<IEventService> tcsRtc = Optional.of(eventService);
-
-      double testFE = 20.0;
-      // Publish a single focus error. This will generate a published event
-      tcsRtc.ifPresent(f -> f.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE))));
-
-      // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
-      ActorRef resultSubscriber1 = system.actorOf(TestSubscriber.props());
-      eventService.subscribe(resultSubscriber1, false, assemblyContext.aoSystemEventPrefix);
-
-      ActorRef resultSubscriber2 = system.actorOf(TestSubscriber.props());
-      eventService.subscribe(resultSubscriber2, false, assemblyContext.engStatusEventPrefix);
-
-      // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
-      List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f ->
-        new SystemEvent(zaConfigKey.prefix()).add(za(f))).collect(Collectors.toList());
-
-      // This should result in the length of tcsEvents being published, which is 15
-      tcsEvents.forEach(f -> {
-        logger.info("Publish: " + f);
-        tcsRtc.ifPresent(t -> t.publish(f));
-        // The following is not required, but is added to make the event timing more interesting
-        // Varying this delay from 50 to 10 shows completion of moves and at 10 update of move positions before finishing
-        try {
-          Thread.sleep(500); // 500 makes it seem more interesting to watch, but is not needed for proper operation
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+          throw noMatch();
         }
-      });
+      }.get(); // this extracts the received messages
 
-      // ---- Everything from here on is about gathering the data and checking
+    CurrentState fmsg1 = tp.expectMsgClass(CurrentState.class); // last one with current == target
+    CurrentState fmsg2 = tp.expectMsgClass(CurrentState.class); // the the end event with IDLE
+    List<CurrentState> allmsgs = Arrays.asList(msgs);
+    allmsgs.add(fmsg1);
+    allmsgs.add(fmsg2);
+    return allmsgs;
+  }
 
-      // The following constructs the expected messages that contain the encoder positions
-      // The following assumes we have models for what is to come out of the assembly.  Here we are just
-      // reusing the actual equations to test that the events are working properly.
-      // First keep focus error fixed at 10 um
-      List<TestValue> testdata = calculatedTestData(calculationConfig, controlConfig, testFE);
+  /**
+   * Test Description: This test creates a trombone HCD to receive events from the FollowActor when nssNotInUse.
+   * This tests the entire path with fake TCS sending events through Event Service, which are received by
+   * TromboneSubscriber and then processed by FollowActor, which sends them to TromboneControl
+   * which sends them to the TromboneHCD, which replies with StateUpdates.
+   * The FollowActor is also publishing eng and sodiumLayer StatusEvents, which are published to the event service
+   * and subscribed to by test clients, that collect their events for checking at the end
+   * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+   */
+  @Test
+  public void test8() {
+    // creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance
+    ActorRef tromboneHCD = startHCD();
 
-      // This uses the total elevation to get expected values for encoder position
-      int encExpected = getenc(testdata.get(testdata.size()-1));
-      logger.info("encExpected1: " + encExpected);
+    TestProbe fakeAssembly = new TestProbe(system);
 
-      // This gets the first set of CurrentState messages for moving to the FE 10 mm position
-      List<CurrentState> msgs = expectMoveMsgsWithDest(fakeAssembly, encExpected);
-      CurrentState last = msgs.get(msgs.size()-1);
-      assertEquals(JavaHelpers.jvalue(last, positionKey), Integer.valueOf(encExpected));
-      assertEquals(JavaHelpers.jvalue(last, stateKey), AXIS_IDLE);
-      assertEquals(JavaHelpers.jvalue(last, inLowLimitKey), Boolean.valueOf(false));
-      assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
+    tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+    fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+    fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
 
-      // Check that nothing is happening - not needed
-      fakeAssembly.expectNoMsg(duration("200 milli"));
+    // This has HCD sending updates back to this Assembly
+    fakeAssembly.send(tromboneHCD, Subscribe);
 
-      resultSubscriber1.tell(new TestSubscriber.GetResults(), self());
-      // Check the events received through the Event Service
-      TestSubscriber.Results result1 = expectMsgClass(TestSubscriber.Results.class);
-      //logger.info("Result 1: " + result1)
+    // Ignoring the messages for TrombonePosition
+    // Create the trombone publisher for publishing SystemEvents to AOESW
+    ActorRef publisherActorRef = system.actorOf(TrombonePublisher.props(assemblyContext, Optional.of(eventService), Optional.of(telemetryService)));
 
-      // Calculate expected events
-      List<Pair<Double, Double>> testResult = newRangeAndElData(testFE);
+    // Ignoring the messages for AO for the moment
+    // Create the trombone publisher for publishing SystemEvents to AOESW
+    ActorRef tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.empty()));
+    tromboneControl.tell(new UpdateTromboneHCD(Optional.of(tromboneHCD)), self());
 
-      SystemEvent firstOne = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
-        jset(naElevationKey, testResult.get(0).second()).withUnits(naElevationUnits),
-        jset(naRangeDistanceKey, testResult.get(0).first()).withUnits(naRangeDistanceUnits));
+    BooleanItem nssUsage = setNssInUse(false);
+    // Create the follow actor and give it the actor ref of the publisher for sending calculated events
+    // The following uses the same publisher actor for both AOESW and Eng events
+    TestActorRef<FollowActor> followActor = newFollower(nssUsage, tromboneControl, publisherActorRef, publisherActorRef);
 
-      List<SystemEvent> zaExpected = testResult.stream().map(f ->
-        jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
-          jset(naElevationKey, f.second()).withUnits(naElevationUnits),
-          jset(naRangeDistanceKey, f.first()).withUnits(naRangeDistanceUnits)))
-        .collect(Collectors.toList());
+    // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
+    ActorRef tromboneEventSubscriber = system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUsage, Optional.of(followActor), eventService));
 
-      List<SystemEvent> aoeswExpected = new ArrayList<>();
-      aoeswExpected.add(firstOne);
-      aoeswExpected.addAll(zaExpected);
-      assertEquals(result1.msgs, aoeswExpected);
+    // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
+    Optional<IEventService> tcsRtc = Optional.of(eventService);
 
-      resultSubscriber2.tell(new TestSubscriber.GetResults(), self());
-      // Check the events received through the Event Service
-      TestSubscriber.Results result2 = expectMsgClass(TestSubscriber.Results.class);
+    double testFE = 20.0;
+    // Publish a single focus error. This will generate a published event
+    tcsRtc.ifPresent(f -> f.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE))));
 
-      List<TestValue> calcTestData = calculatedTestData(calculationConfig, controlConfig, testFE);
+    // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
+    ActorRef resultSubscriber1 = system.actorOf(TestSubscriber.props());
+    eventService.subscribe(resultSubscriber1, false, assemblyContext.aoSystemEventPrefix);
 
-      double firstStage = rangeDistanceToStagePosition(gettrd(calcTestData.get(0)));
-      double firstZA = getza(calcTestData.get(0));
+    ActorRef resultSubscriber2 = system.actorOf(TestSubscriber.props());
+    eventService.subscribe(resultSubscriber2, false, assemblyContext.engStatusEventPrefix);
 
-      StatusEvent firstEng = jadd(new StatusEvent(assemblyContext.engStatusEventPrefix),
+    // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
+    List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f ->
+      new SystemEvent(zaConfigKey.prefix()).add(za(f))).collect(Collectors.toList());
+
+    // This should result in the length of tcsEvents being published, which is 15
+    tcsEvents.forEach(f -> {
+      logger.info("Publish: " + f);
+      tcsRtc.ifPresent(t -> t.publish(f));
+      // The following is not required, but is added to make the event timing more interesting
+      // Varying this delay from 50 to 10 shows completion of moves and at 10 update of move positions before finishing
+      try {
+        Thread.sleep(500); // 500 makes it seem more interesting to watch, but is not needed for proper operation
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    });
+
+    // ---- Everything from here on is about gathering the data and checking
+
+    // The following constructs the expected messages that contain the encoder positions
+    // The following assumes we have models for what is to come out of the assembly.  Here we are just
+    // reusing the actual equations to test that the events are working properly.
+    // First keep focus error fixed at 10 um
+    List<TestValue> testdata = calculatedTestData(calculationConfig, controlConfig, testFE);
+
+    // This uses the total elevation to get expected values for encoder position
+    int encExpected = getenc(testdata.get(testdata.size() - 1));
+    logger.info("encExpected1: " + encExpected);
+
+    // This gets the first set of CurrentState messages for moving to the FE 10 mm position
+    List<CurrentState> msgs = expectMoveMsgsWithDest(fakeAssembly, encExpected);
+    CurrentState last = msgs.get(msgs.size() - 1);
+    assertEquals(JavaHelpers.jvalue(last, positionKey), Integer.valueOf(encExpected));
+    assertEquals(JavaHelpers.jvalue(last, stateKey), AXIS_IDLE);
+    assertEquals(JavaHelpers.jvalue(last, inLowLimitKey), Boolean.valueOf(false));
+    assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
+
+    // Check that nothing is happening - not needed
+    fakeAssembly.expectNoMsg(duration("200 milli"));
+
+    resultSubscriber1.tell(new TestSubscriber.GetResults(), self());
+    // Check the events received through the Event Service
+    TestSubscriber.Results result1 = expectMsgClass(TestSubscriber.Results.class);
+    //logger.info("Result 1: " + result1)
+
+    // Calculate expected events
+    List<Pair<Double, Double>> testResult = newRangeAndElData(testFE);
+
+    SystemEvent firstOne = jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
+      jset(naElevationKey, testResult.get(0).second()).withUnits(naElevationUnits),
+      jset(naRangeDistanceKey, testResult.get(0).first()).withUnits(naRangeDistanceUnits));
+
+    List<SystemEvent> zaExpected = testResult.stream().map(f ->
+      jadd(new SystemEvent(assemblyContext.aoSystemEventPrefix),
+        jset(naElevationKey, f.second()).withUnits(naElevationUnits),
+        jset(naRangeDistanceKey, f.first()).withUnits(naRangeDistanceUnits)))
+      .collect(Collectors.toList());
+
+    List<SystemEvent> aoeswExpected = new ArrayList<>();
+    aoeswExpected.add(firstOne);
+    aoeswExpected.addAll(zaExpected);
+    assertEquals(result1.msgs, aoeswExpected);
+
+    resultSubscriber2.tell(new TestSubscriber.GetResults(), self());
+    // Check the events received through the Event Service
+    TestSubscriber.Results result2 = expectMsgClass(TestSubscriber.Results.class);
+
+    List<TestValue> calcTestData = calculatedTestData(calculationConfig, controlConfig, testFE);
+
+    double firstStage = rangeDistanceToStagePosition(gettrd(calcTestData.get(0)));
+    double firstZA = getza(calcTestData.get(0));
+
+    StatusEvent firstEng = jadd(new StatusEvent(assemblyContext.engStatusEventPrefix),
+      jset(focusErrorKey, testFE).withUnits(focusErrorUnits),
+      jset(stagePositionKey, firstStage).withUnits(stagePositionUnits),
+      jset(zenithAngleKey, firstZA).withUnits(zenithAngleUnits));
+
+    List<StatusEvent> zaEngExpected = calcTestData.stream().map(f ->
+      jadd(new StatusEvent(assemblyContext.engStatusEventPrefix),
         jset(focusErrorKey, testFE).withUnits(focusErrorUnits),
-        jset(stagePositionKey, firstStage).withUnits(stagePositionUnits),
-        jset(zenithAngleKey, firstZA).withUnits(zenithAngleUnits));
+        jset(stagePositionKey, rangeDistanceToStagePosition(gettrd(f))).withUnits(stagePositionUnits),
+        jset(zenithAngleKey, getza(f)).withUnits(zenithAngleUnits)))
+      .collect(Collectors.toList());
 
-      List<StatusEvent> zaEngExpected = calcTestData.stream().map(f ->
-        jadd(new StatusEvent(assemblyContext.engStatusEventPrefix),
-          jset(focusErrorKey, testFE).withUnits(focusErrorUnits),
-          jset(stagePositionKey, rangeDistanceToStagePosition(gettrd(f))).withUnits(stagePositionUnits),
-          jset(zenithAngleKey, getza(f)).withUnits(zenithAngleUnits)))
-        .collect(Collectors.toList());
+    List<StatusEvent> engExpected = new ArrayList<>();
+    engExpected.add(firstEng);
+    engExpected.addAll(zaEngExpected);
+    assertEquals(result2.msgs, engExpected);
 
-      List<StatusEvent> engExpected = new ArrayList<>();
-      engExpected.add(firstEng);
-      engExpected.addAll(zaEngExpected);
-      assertEquals(result2.msgs, engExpected);
-
-      tromboneHCD.tell(PoisonPill.getInstance(), self());
-      system.stop(publisherActorRef);
-      system.stop(tromboneControl);
-      system.stop(followActor);
-      system.stop(tromboneEventSubscriber);
-      system.stop(resultSubscriber1);
-      system.stop(resultSubscriber2);
-    }
+    tromboneHCD.tell(PoisonPill.getInstance(), self());
+    system.stop(publisherActorRef);
+    system.stop(tromboneControl);
+    system.stop(followActor);
+    system.stop(tromboneEventSubscriber);
+    system.stop(resultSubscriber1);
+    system.stop(resultSubscriber2);
+  }
 }

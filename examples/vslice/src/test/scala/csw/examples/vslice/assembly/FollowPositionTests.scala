@@ -30,7 +30,7 @@ object FollowPositionTests {
   LocationService.initInterface()
   val system = ActorSystem("FollowPositionTests")
 
-  val initialElevation = 90.0
+//  val initialElevation = 90.0
 
   // Test subscriber actor for telemetry
   object TestSubscriber {
@@ -139,6 +139,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
     import Algorithms._
 
     it("tests total RD to encoder is within values") {
+      // test1
       val maxEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(maxTotalRD))
       val minEncoder = stagePositionToEncoder(controlConfig, rangeDistanceToStagePosition(minTotalRD))
 
@@ -149,6 +150,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
     // This isn't a great test, but a real system would know this transformation and test it
     // Using expected encoder values for test inputs
     it("encoder values should test") {
+      // test2
       val result = encoderTestValues.map(_._1).map(f => stagePositionToEncoder(controlConfig, f))
       val answers = encoderTestValues.map(_._2)
 
@@ -160,6 +162,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
      * followActor to see that it generates a RangeDistance message to send to the trombone hardware HCD
      */
     it("should allow one update") {
+      // test3
 
       val fakeTromboneControl = TestProbe()
 
@@ -181,6 +184,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
      * Values are precalculated to it's not testing algorithms, it's testing the flow from input events to output
      */
     it("should create a proper set of HCDPositionUpdate messages") {
+      // test4
 
       val fakeTromboneControl = TestProbe()
 
@@ -217,6 +221,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
      * "TCS" through event service and generates trombone positions that are received by the fakeTromboneControl.
      */
     it("should create a proper published events from fake TCS flowing through Event Service to produce HCD encoder motion updates") {
+      // test5
 
       // Fake actor that handles sending to HCD
       val fakeTromboneControl = TestProbe()
@@ -238,7 +243,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
       // This should result in the length of tcsEvents being published, which is 15
-      tcsEvents.map(f => tcsRtc.publish(f))
+      tcsEvents.foreach(tcsRtc.publish)
 
       // This is to give actors time to run and subscriptions to register
       expectNoMsg(100.milli)
@@ -269,6 +274,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
     import AssemblyTestData._
 
     it("should allow one update") {
+      // test6
       import TromboneHCD._
 
       val fakeTromboneHCD = TestProbe()
@@ -302,6 +308,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
      * a "fake" HCD and tested
      */
     it("should create a proper set of Submit messages for the fakeTromboneHCD") {
+      // test7
       import TromboneHCD._
 
       val fakeTromboneHCD = TestProbe()

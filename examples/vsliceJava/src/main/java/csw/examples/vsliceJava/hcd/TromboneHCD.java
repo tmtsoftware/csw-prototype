@@ -254,6 +254,7 @@ public class TromboneHCD extends JHcdController {
   public static final ChoiceKey stateKey = new ChoiceKey("axisState",
     Choices.from(AXIS_IDLE.toString(), AXIS_MOVING.toString(), AXIS_ERROR.toString()));
   public static final IntKey positionKey = new IntKey("position");
+  public static final UnitsOfMeasure.Units positionUnits = encoder;
   public static final BooleanKey inLowLimitKey = new BooleanKey("lowLimit");
   public static final BooleanKey inHighLimitKey = new BooleanKey("highLimit");
   public static final BooleanKey inHomeKey = new BooleanKey("homed");

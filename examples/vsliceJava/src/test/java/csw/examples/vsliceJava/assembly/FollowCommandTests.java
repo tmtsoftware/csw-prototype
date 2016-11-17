@@ -503,7 +503,7 @@ public class FollowCommandTests extends JavaTestKit {
       .collect(Collectors.toList());
 
     // Verify that the za is always 0.0 when inNssMode
-    List<Double> l = engs.stream().map(f -> (double)JavaHelpers.jvalue(f, zenithAngleKey)).filter(f -> !f.equals(0.0))
+    List<Double> l = engs.stream().map(f -> (double) JavaHelpers.jvalue(f, zenithAngleKey)).filter(f -> !f.equals(0.0))
       .collect(Collectors.toList());
 
     assertTrue(l.isEmpty());
