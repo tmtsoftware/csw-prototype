@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -177,6 +177,8 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
       val msg = fakeTromboneControl.expectMsgClass(classOf[GoToStagePosition])
       msg should equal(GoToStagePosition(stagePositionKey -> calculationConfig.defaultInitialElevation withUnits stagePositionUnits))
+
+      system.stop(followActor)
     }
 
     /**
@@ -214,6 +216,8 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
       // The two should be equal
       msgsExpected should equal(msgs)
+
+      system.stop(followActor)
     }
 
     /**
@@ -230,7 +234,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       // Create the follow actor and give it the actor ref of the publisher for sending calculated events
       val followActor = system.actorOf(FollowActor.props(assemblyContext, initialElevation, nssUse, Some(fakeTromboneControl.ref), None))
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), eventService))
+      val tromboneEventSubscriber = system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Some(followActor), eventService))
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
       val tcsRtc = eventService
@@ -263,6 +267,9 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
       // The two should be equal
       msgsExpected should equal(msgs)
+
+      system.stop(followActor)
+      system.stop(tromboneEventSubscriber)
     }
   }
 
@@ -300,6 +307,9 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       // Difference here is that fakeTromboneHCD receives a Submit commaand with an encoder value only
       val msg = fakeTromboneHCD.expectMsgClass(classOf[Submit])
       msg should equal(Submit(SetupConfig(axisMoveCK).add(positionKey -> expectedEnc withUnits positionUnits)))
+
+      system.stop(tromboneControl)
+      system.stop(followActor)
     }
 
     /**
@@ -344,6 +354,9 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
       // The two should be equal
       msgsExpected should equal(msgs)
+
+      system.stop(tromboneControl)
+      system.stop(followActor)
     }
 
     // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
@@ -404,6 +417,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
      * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion and other purposes.
      */
     it("should create a proper set of HCDPositionUpdate messages for zenith angle changes through to HCD instance") {
+      // test8
 
       // startHCD creates an instance of the HCD
       val tromboneHCD = startHCD
@@ -458,6 +472,10 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       msgs.last(stateKey).head should equal(AXIS_IDLE)
       msgs.last(inLowLimitKey).head should equal(false)
       msgs.last(inHighLimitKey).head should equal(false)
+
+      system.stop(tromboneControl)
+      system.stop(followActor)
+      tromboneHCD ! PoisonPill
     }
 
     /**
@@ -470,6 +488,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
      * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
      */
     it("should create a proper set of HCDPositionUpdate messages for focus error changes through HCD") {
+      // test9
 
       // startHCD creates an instance of the HCD
       val tromboneHCD = startHCD
@@ -521,6 +540,10 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       msgs.last(stateKey).head should equal(AXIS_IDLE)
       msgs.last(inLowLimitKey).head should equal(false)
       msgs.last(inHighLimitKey).head should equal(false)
+
+      system.stop(tromboneControl)
+      system.stop(followActor)
+      tromboneHCD ! PoisonPill
     }
 
     /**
@@ -532,6 +555,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
      * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
      */
     it("creates fake TCS/RTC events with Event Service through calculator and back to HCD instance") {
+      // test10
 
       val tromboneHCD = startHCD
 
@@ -554,7 +578,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       val followActor = newFollower(Some(tromboneControl), None)
 
       // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), eventService))
+      val tromboneEventSubscriber = system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Some(followActor), eventService))
 
       fakeAssembly.expectNoMsg(200.milli)
 
@@ -603,6 +627,11 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       msgs.last(stateKey).head should equal(AXIS_IDLE)
       msgs.last(inLowLimitKey).head should equal(false)
       msgs.last(inHighLimitKey).head should equal(false)
+
+      system.stop(tromboneEventSubscriber)
+      system.stop(tromboneControl)
+      system.stop(followActor)
+      tromboneHCD ! PoisonPill
     }
 
   }

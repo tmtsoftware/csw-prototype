@@ -1,9 +1,6 @@
 package csw.examples.vsliceJava.assembly;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
+import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
@@ -16,15 +13,13 @@ import akka.util.Timeout;
 import csw.examples.vsliceJava.assembly.TromboneAssembly.UpdateTromboneHCD;
 import csw.examples.vsliceJava.assembly.TromboneControl.GoToStagePosition;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
-import csw.services.ccs.HcdController;
 import csw.services.ccs.HcdController.Submit;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component;
 import csw.services.pkg.Supervisor;
-import csw.util.config.BooleanItem;
-import csw.util.config.Configurations;
-import csw.util.config.DoubleItem;
-import csw.util.config.Events;
+import csw.services.pkg.SupervisorExternal;
+import csw.util.config.*;
+import csw.util.config.StateVariable.CurrentState;
 import javacsw.services.events.IEventService;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
@@ -32,10 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -45,16 +37,17 @@ import static csw.examples.vsliceJava.assembly.Algorithms.stagePositionToEncoder
 import static csw.examples.vsliceJava.assembly.AssemblyContext.*;
 import static csw.examples.vsliceJava.assembly.AssemblyTestData.*;
 import static csw.examples.vsliceJava.assembly.FollowActor.UpdatedEventData;
-import static csw.examples.vsliceJava.hcd.TromboneHCD.axisMoveCK;
-import static csw.examples.vsliceJava.hcd.TromboneHCD.positionKey;
-import static csw.examples.vsliceJava.hcd.TromboneHCD.positionSC;
+import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
 import static csw.util.config.Configurations.*;
 import static csw.util.config.Events.EventServiceEvent;
 import static csw.util.config.Events.SystemEvent;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
+import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static javacsw.util.config.JItems.jadd;
 import static javacsw.util.config.JItems.jset;
+import static javacsw.util.config.JPublisherActor.Subscribe;
 import static javacsw.util.config.JUnitsOfMeasure.degrees;
 import static javacsw.util.config.JUnitsOfMeasure.micrometers;
 import static junit.framework.TestCase.assertEquals;
@@ -229,6 +222,8 @@ public class FollowPositionTests extends JavaTestKit {
 
       GoToStagePosition msg = fakeTromboneControl.expectMsgClass(GoToStagePosition.class);
       assertEquals(msg, new GoToStagePosition(jset(stagePositionKey, calculationConfig.defaultInitialElevation).withUnits(stagePositionUnits)));
+
+      system.stop(followActor);
     }
 
     /**
@@ -271,6 +266,8 @@ public class FollowPositionTests extends JavaTestKit {
 
       // The two should be equal
       assertEquals(msgsExpected, msgs);
+
+      system.stop(followActor);
     }
 
     /**
@@ -289,7 +286,7 @@ public class FollowPositionTests extends JavaTestKit {
       ActorRef followActor = system.actorOf(FollowActor.props(assemblyContext, initialElevation, nssUse, Optional.of(fakeTromboneControl.ref()),
         Optional.empty(), Optional.empty()));
       // create the subscriber that listens for events from TCS for zenith angle and focus error from RTC
-      system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Optional.of(followActor), eventService));
+      ActorRef tromboneEventSubscriber = system.actorOf(TromboneEventSubscriber.props(assemblyContext, nssUse, Optional.of(followActor), eventService));
 
       // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
       IEventService tcsRtc = eventService;
@@ -326,6 +323,9 @@ public class FollowPositionTests extends JavaTestKit {
 
       // The two should be equal
       assertEquals(msgsExpected, msgs);
+
+      system.stop(followActor);
+      system.stop(tromboneEventSubscriber);
     }
 
   /**
@@ -363,6 +363,9 @@ public class FollowPositionTests extends JavaTestKit {
     Submit msg = fakeTromboneHCD.expectMsgClass(Submit.class);
     assertEquals(msg, new Submit(jadd(new SetupConfig(axisMoveCK.prefix()),
       jset(positionKey, expectedEnc).withUnits(TromboneHCD.positionUnits))));
+
+    system.stop(tromboneControl);
+    system.stop(followActor);
   }
 
     /**
@@ -417,6 +420,9 @@ public class FollowPositionTests extends JavaTestKit {
 
       // The two should be equal
       assertEquals(msgsExpected, msgs);
+
+      system.stop(tromboneControl);
+      system.stop(followActor);
     }
 
     // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
@@ -432,250 +438,319 @@ public class FollowPositionTests extends JavaTestKit {
     return Supervisor.apply(testInfo);
   }
 
-//    /**
-//     * This will accept CurrentState messages until a state value is AXIS_IDLE
-//     * This is useful when you know there is one move and it will end without being updated
-//     * @param tp TestProbe that is the destination of the CurrentState messages
-//     * @return a Sequence of CurrentState messages
-//     */
-//    def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
-//      val msgs = tp.receiveWhile(5.seconds) {
-//        case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
-//        // This is present to pick up the first status message
-//        case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
-//      }
-//      val fmsg = tp.expectMsgClass(classOf[CurrentState]) // last one -- with AXIS_IDLE
-//      val allmsgs = msgs :+ fmsg
-//      allmsgs
-//    }
-//
-//    /**
-//     * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
-//     * Then it collects the one where it is the destination and the end message
-//     * @param tp TestProbe that is receiving the CurrentState messages
-//     * @param dest a TestProbe acting as the assembly
-//     * @return A sequence of CurrentState messages
-//     */
-//    def expectMoveMsgsWithDest(tp: TestProbe, dest: Int): Seq[CurrentState] = {
-//      val msgs = tp.receiveWhile(5.seconds) {
-//        case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.positionKey).head != dest => m
-//        // This is present to pick up the first status message
-//        case st @ CurrentState(ck, _) if ck.prefix.equals(TromboneHCD.axisStatsPrefix) => st
-//      }
-//      val fmsg1 = tp.expectMsgClass(classOf[CurrentState]) // last one with current == target
-//      val fmsg2 = tp.expectMsgClass(classOf[CurrentState]) // the the end event with IDLE
-//      val allmsgs = msgs :+ fmsg1 :+ fmsg2
-//      allmsgs
-//    }
-//
-//    /**
-//     * Test Description: This test creates a trombone HCD to receive events from the CalculatorActor.
-//     * The first part is about starting the HCD and waiting for it to reach the running lifecycle state where it can receive events
-//     * UpdatedEventData messages are constructed and sent to the CalculatorActor, which uses them to create position updates.
-//     * A fake TCS sends Zenith Angle SystemEvents to the CalculatorActor which receives them
-//     * processes them, and sends them to the HCD which replies with CurrentState updates.
-//     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion and other purposes.
-//     */
-//    it("should create a proper set of HCDPositionUpdate messages for zenith angle changes through to HCD instance") {
-//
-//      // startHCD creates an instance of the HCD
-//      val tromboneHCD = startHCD
-//
-//      // A test probe to act as the assembly for receiving CurrentState updates
-//      val fakeAssembly = new TestProbe(system);
-//
-//      // Create the trombone control actor with the fake tromboneHCD
-//      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext))
-//      tromboneControl ! UpdateTromboneHCD(Optional.of(tromboneHCD))
-//
-//      // The following is to synchronize the test with the HCD entering Running state
-//      // This is boiler plate for setting up an HCD for testing
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref())
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//      //info("Running")
-//
-//      // This has HCD sending updates back to Assembly
-//      fakeAssembly.send(tromboneHCD, Subscribe)
-//
-//      // Now we are ready to test
-//      // The following Optional.empty() ingores the events for AOESW from calculator
-//      val followActor = newFollower(Optional.of(tromboneControl), Optional.empty())
-//
-//      // These are the events that will be sent to the calculator to trigger position updates
-//      val testFE = 10.0
-//      val updateMessages = testZenithAngles.map(f => UpdatedEventData(za(f), fe(testFE), EventTime()))
-//
-//      // Fake TromboneSubscriber is acting as the actor that receives events from EventService
-//      // This should result in two messages being sent, one to each actor in the given order
-//      val fakeTromboneSubscriber = new TestProbe(system);
-//      updateMessages.foreach { ev =>
-//        fakeTromboneSubscriber.send(followActor, ev)
-//        // This sleep is not required, but it makes the test more interesting by allowing the actions of the assembly and HCD to interleave
-//        Thread.sleep(10)
-//      }
-//
-//      // The following constructs the expected messages that contain the encoder positions
-//      // The following assumes we have models for what is to come out of the assembly.  Here we are just
-//      // reusing the actual equations to test that the events are proper
-//      // First keep focus error fixed at 10 mm
-//
-//      val calcData = calculatedTestData(calculationConfig, controlConfig, testFE)
-//      val encExpected = calcData.map(getenc)
-//      //info(s"encEx: $encExpected")
-//
-//      // This collects the messages from the follower setup above - it is difficult to predict what messages will arrive from the HCD because it depends on timing of inputs
-//      // So we only wait for messages to stop and inspect the last message that indicates we are in the right place
-//      val msgs = expectMoveMsgsWithDest(fakeAssembly, encExpected.last)
-//      msgs.last(positionKey).head should equal(encExpected.last)
-//      msgs.last(stateKey).head should equal(AXIS_IDLE)
-//      msgs.last(inLowLimitKey).head should equal(false)
-//      msgs.last(inHighLimitKey).head should equal(false)
-//    }
-//
-//    /**
-//     * Test Description: This test is similar to the previous test, but it simulates changes to the focus error
-//     * rather than changes to the zenith angle.
-//     * This test creates a trombone HCD to receive events from the CalculatorActor.
-//     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-//     * A fake RTC sends focus error events to the CalculatorActor which receives them, processes them, calculates new values,
-//     * and sends commands to the HCD which replies with CurrentState updates.
-//     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
-//     */
-//    it("should create a proper set of HCDPositionUpdate messages for focus error changes through HCD") {
-//
-//      // startHCD creates an instance of the HCD
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = new TestProbe(system);
-//
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref())
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//      //info("Running")
-//
-//      // This has HCD sending updates back to Assembly
-//      fakeAssembly.send(tromboneHCD, Subscribe)
-//
-//      // Create the trombone control actor with the fake tromboneHCD
-//      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext))
-//      tromboneControl ! UpdateTromboneHCD(Optional.of(tromboneHCD))
-//
-//      // The following ingores the events for AOESW from calculator
-//      val followActor = newFollower(Optional.of(tromboneControl), Optional.empty())
-//
-//      val testZA = 20.0
-//      // These are the events that will be sent to the calculator to trigger position updates
-//      val updateMessages = testFocusErrors.map(f => UpdatedEventData(za(testZA), fe(f), EventTime()))
-//
-//      // This should result in two messages being sent, one to each actor in the given order
-//      val fakeTromboneSubscriber = new TestProbe(system);
-//      updateMessages.foreach { ev =>
-//        fakeTromboneSubscriber.send(followActor, ev)
-//        // This delay is not needed, but makes the timing more challenging for the HCD motions
-//        Thread.sleep(10)
-//      }
-//
-//      // The following constructs the expected messages that contain the encoder positions
-//      // The following assumes we have models for what is to come out of the assembly.  Here we are just
-//      // reusing the actual equations to test that the events are proper
-//      // First keep zenith angle at 10.0 and vary the focus error values and construct the total altitude
-//      // Look at final fe value
-//      //val lastFE = testFocusErrors.last
-//
-//      // This produces a vector of ((fe, rangedistnace), enc) values
-//      val testdata = calculatedFETestData(calculationConfig, controlConfig, calculationConfig.defaultInitialElevation, testZA)
-//      val encExpected = getenc(testdata.last)
-//      //info("encEx: " + encExpected)
-//
-//      // This collects the messages from the calculator setup above - it is difficult to predict what messages will arrive from the HCD because it depends on timing of inputs
-//      val msgs = expectMoveMsgsWithDest(fakeAssembly, encExpected)
-//      msgs.last(positionKey).head should equal(encExpected)
-//      msgs.last(stateKey).head should equal(AXIS_IDLE)
-//      msgs.last(inLowLimitKey).head should equal(false)
-//      msgs.last(inHighLimitKey).head should equal(false)
-//    }
-//
-//    /**
-//     * Test Description: This test creates a trombone HCD to receive events from the FollowActor.
-//     * This tests the entire path with fake TCS sending events through Event Service, which are received by
-//     * TromboneSubscriber and then processed by FollowActor, and sends them to TromboneControl
-//     * which sends them to the TromboneHCD, which replies with StateUpdates.
-//     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
-//     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
-//     */
-//    it("creates fake TCS/RTC events with Event Service through calculator and back to HCD instance") {
-//
-//      val tromboneHCD = startHCD
-//
-//      val fakeAssembly = new TestProbe(system);
-//
-//      tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref())
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//      //info("Running")
-//
-//      // This has HCD sending updates back to this Assembly
-//      fakeAssembly.send(tromboneHCD, Subscribe)
-//
-//      // Ignoring the messages for AO for the moment
-//      // Create the trombone control for receiving axis updates
-//      val tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.of(tromboneHCD)))
-//
-//      // Create the follow actor and give it the actor ref of the publisher for sending calculated events
-//      // The following Optional.empty() ingores the events for AOESW from calculator
-//      val followActor = newFollower(Optional.of(tromboneControl), Optional.empty())
-//
-//      // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
-//      system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Optional.of(followActor), Optional.of(eventService)))
-//
-//      fakeAssembly.expectNoMsg(200.milli)
-//
-//      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
-//      val tcsRtc = eventService
-//
-//      val testFE = 10.0
-//      // Publish a single focus error. This will generate a published event
-//      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
-//      //Thread.sleep(50)
-//
-//      // The following constructs the expected messages that contain the encoder positions
-//      // The following assumes we have models for what is to come out of the assembly.  Here we are just
-//      // reusing the actual equations to test that the events are working properly.
-//      // First keep focus error fixed at 10 um
-//      val testdata = calculatedTestData(calculationConfig, controlConfig, testFE)
-//
-//      // This uses the total elevation to get expected values for encoder position
-//      var encExpected = getenc(testdata.head)
-//      //info(s"encExpected1: $encExpected")
-//
-//      // This gets the first set of CurrentState messages for moving to the FE 10 mm position
-//      var msgs = waitForMoveMsgs(fakeAssembly)
-//      msgs.last(positionKey).head should be(encExpected)
-//      msgs.last(stateKey).head should equal(AXIS_IDLE)
-//      msgs.last(inLowLimitKey).head should equal(false)
-//      msgs.last(inHighLimitKey).head should equal(false)
-//
-//      // These are fake messages for the FollowActor that will be sent to simulate the TCS
-//      val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-//
-//      // This should result in the length of tcsEvents being published, which is 15
-//      tcsEvents.foreach { f =>
-//        logger.info("Publish: " + f)
-//        tcsRtc.publish(f)
-//        // The following is not required, but is added to make the event timing more interesting
-//        // Varying this delay from 50 to 10 shows completion of moves and at 10 update of move positions before finishing
-//        Thread.sleep(15)
-//      }
-//
-//      // This collects the messages from the calculator setup above - it is difficult to predict what messages will arrive from the HCD because it depends on timing of inputs
-//      encExpected = getenc(testdata.last)
-//      //info(s"encExpected2: $encExpected")
-//      msgs = expectMoveMsgsWithDest(fakeAssembly, encExpected)
-//      msgs.last(positionKey).head should equal(encExpected)
-//      msgs.last(stateKey).head should equal(AXIS_IDLE)
-//      msgs.last(inLowLimitKey).head should equal(false)
-//      msgs.last(inHighLimitKey).head should equal(false)
-//    }
-//
+    /**
+     * This will accept CurrentState messages until a state value is AXIS_IDLE
+     * This is useful when you know there is one move and it will end without being updated
+     * @return a Sequence of CurrentState messages
+     */
+    List<CurrentState> waitForMoveMsgs() {
+    final CurrentState[] msgs =
+      new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
+        protected CurrentState match(Object in) {
+          if (in instanceof CurrentState) {
+            CurrentState cs = (CurrentState) in;
+            if ((cs.prefix().contains(TromboneHCD.axisStatePrefix) && JavaHelpers.jvalue(cs, stateKey).equals(TromboneHCD.AXIS_MOVING))
+              || cs.prefix().equals(TromboneHCD.axisStatsPrefix))
+              return cs;
+          }
+          throw noMatch();
+        }
+      }.get(); // this extracts the received messages
+
+    CurrentState fmsg = expectMsgClass(CurrentState.class); // last one with current == target
+    List<CurrentState> allmsgs = new ArrayList<>();
+    allmsgs.addAll(Arrays.asList(msgs));
+    allmsgs.add(fmsg);
+    return allmsgs;
+  }
+
+    /**
+     * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
+     * Then it collects the one where it is the destination and the end message
+     * @param dest a TestProbe acting as the assembly
+     * @return A sequence of CurrentState messages
+     */
+    List<CurrentState> expectMoveMsgsWithDest(int dest) {
+      final CurrentState[] msgs =
+        new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
+          protected CurrentState match(Object in) {
+            if (in instanceof CurrentState) {
+              CurrentState cs = (CurrentState) in;
+              if ((cs.prefix().contains(TromboneHCD.axisStatePrefix) && !JavaHelpers.jvalue(cs, positionKey).equals(dest))
+                || cs.prefix().equals(TromboneHCD.axisStatsPrefix))
+                return cs;
+            }
+            throw noMatch();
+          }
+        }.get(); // this extracts the received messages
+
+      CurrentState fmsg1 = expectMsgClass(CurrentState.class); // last one with current == target
+      CurrentState fmsg2 = expectMsgClass(CurrentState.class); // the the end event with IDLE
+      List<CurrentState> allmsgs = new ArrayList<>();
+      allmsgs.addAll(Arrays.asList(msgs));
+      allmsgs.add(fmsg1);
+      allmsgs.add(fmsg2);
+      return allmsgs;
+    }
+
+    /**
+     * Test Description: This test creates a trombone HCD to receive events from the CalculatorActor.
+     * The first part is about starting the HCD and waiting for it to reach the running lifecycle state where it can receive events
+     * UpdatedEventData messages are constructed and sent to the CalculatorActor, which uses them to create position updates.
+     * A fake TCS sends Zenith Angle SystemEvents to the CalculatorActor which receives them
+     * processes them, and sends them to the HCD which replies with CurrentState updates.
+     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion and other purposes.
+     */
+    @Test
+    public void test8() {
+      // should create a proper set of HCDPositionUpdate messages for zenith angle changes through to HCD instance
+
+      // startHCD creates an instance of the HCD
+      ActorRef tromboneHCD = startHCD();
+
+      // A test probe to act as the assembly for receiving CurrentState updates
+      // For Java API use self(), to make working with receiveWhile easier
+      ActorRef fakeAssembly = self();
+
+      // Create the trombone control actor with the fake tromboneHCD
+      ActorRef tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.empty()));
+      tromboneControl.tell(new UpdateTromboneHCD(Optional.of(tromboneHCD)), self());
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SupervisorExternal.SubscribeLifecycleCallback(fakeAssembly), self());
+      expectMsgEquals(new SupervisorExternal.LifecycleStateChanged(LifecycleInitialized));
+      expectMsgEquals(new SupervisorExternal.LifecycleStateChanged(LifecycleRunning));
+      //info("Running")
+
+      // This has HCD sending updates back to Assembly
+      tromboneHCD.tell(Subscribe, fakeAssembly);
+
+      // Now we are ready to test
+      // The following Optional.empty() ingores the events for AOESW from calculator
+      TestActorRef<FollowActor> followActor = newFollower(Optional.of(tromboneControl), Optional.empty());
+
+      // These are the events that will be sent to the calculator to trigger position updates
+      double testFE = 10.0;
+      List<UpdatedEventData> updateMessages = testZenithAngles.stream().map(f -> new UpdatedEventData(za(f), fe(testFE), Events.getEventTime()))
+        .collect(Collectors.toList());
+
+      // Fake TromboneSubscriber is acting as the actor that receives events from EventService
+      // This should result in two messages being sent, one to each actor in the given order
+      TestProbe fakeTromboneSubscriber = new TestProbe(system);
+      updateMessages.forEach(ev -> {
+        fakeTromboneSubscriber.send(followActor, ev);
+        // This sleep is not required, but it makes the test more interesting by allowing the actions of the assembly and HCD to interleave
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      });
+
+      // The following constructs the expected messages that contain the encoder positions
+      // The following assumes we have models for what is to come out of the assembly.  Here we are just
+      // reusing the actual equations to test that the events are proper
+      // First keep focus error fixed at 10 mm
+
+      List<TestValue> calcData = calculatedTestData(calculationConfig, controlConfig, testFE);
+      int encExpected = getenc(calcData.get(calcData.size() - 1));
+      //info(s"encEx: $encExpected")
+
+      // This collects the messages from the follower setup above - it is difficult to predict what messages will arrive from the HCD because it depends on timing of inputs
+      // So we only wait for messages to stop and inspect the last message that indicates we are in the right place
+      List<CurrentState> msgs = expectMoveMsgsWithDest(encExpected);
+      CurrentState last = msgs.get(msgs.size() - 1);
+      assertEquals(JavaHelpers.jvalue(last, positionKey), Integer.valueOf(encExpected));
+      assertEquals(JavaHelpers.jvalue(last, stateKey), AXIS_IDLE);
+      assertEquals(JavaHelpers.jvalue(last, inLowLimitKey), Boolean.valueOf(false));
+      assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
+
+      system.stop(tromboneControl);
+      system.stop(followActor);
+      tromboneHCD.tell(PoisonPill.getInstance(), self());
+    }
+
+
+    /**
+     * Test Description: This test is similar to the previous test, but it simulates changes to the focus error
+     * rather than changes to the zenith angle.
+     * This test creates a trombone HCD to receive events from the CalculatorActor.
+     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+     * A fake RTC sends focus error events to the CalculatorActor which receives them, processes them, calculates new values,
+     * and sends commands to the HCD which replies with CurrentState updates.
+     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
+     */
+    @Test
+    public void test9() {
+      // should create a proper set of HCDPositionUpdate messages for focus error changes through HCD
+
+      // startHCD creates an instance of the HCD
+      ActorRef tromboneHCD = startHCD();
+
+      // A test probe to act as the assembly for receiving CurrentState updates
+      // For Java API use self(), to make working with receiveWhile easier
+      ActorRef fakeAssembly = self();
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SupervisorExternal.SubscribeLifecycleCallback(fakeAssembly), self());
+      expectMsgEquals(new SupervisorExternal.LifecycleStateChanged(LifecycleInitialized));
+      expectMsgEquals(new SupervisorExternal.LifecycleStateChanged(LifecycleRunning));
+      //info("Running")
+
+      // This has HCD sending updates back to Assembly
+      tromboneHCD.tell(Subscribe, fakeAssembly);
+
+      // Create the trombone control actor with the fake tromboneHCD
+      ActorRef tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.empty()));
+      tromboneControl.tell(new UpdateTromboneHCD(Optional.of(tromboneHCD)), self());
+
+      // Now we are ready to test
+      // The following ingores the events for AOESW from calculator
+      TestActorRef<FollowActor> followActor = newFollower(Optional.of(tromboneControl), Optional.empty());
+
+      double testZA = 20.0;
+      // These are the events that will be sent to the calculator to trigger position updates
+      List<UpdatedEventData> updateMessages = testFocusErrors.stream().map(f -> new UpdatedEventData(za(testZA), fe(f), Events.getEventTime()))
+        .collect(Collectors.toList());
+
+      // This should result in two messages being sent, one to each actor in the given order
+      TestProbe fakeTromboneSubscriber = new TestProbe(system);
+      updateMessages.forEach(ev -> {
+        fakeTromboneSubscriber.send(followActor, ev);
+        // This delay is not needed, but makes the timing more challenging for the HCD motions
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      });
+
+      // The following constructs the expected messages that contain the encoder positions
+      // The following assumes we have models for what is to come out of the assembly.  Here we are just
+      // reusing the actual equations to test that the events are proper
+      // First keep zenith angle at 10.0 and vary the focus error values and construct the total altitude
+      // Look at final fe value
+      //val lastFE = testFocusErrors.last
+
+      // This produces a vector of ((fe, rangedistnace), enc) values
+      List<TestValue> testdata = calculatedFETestData(calculationConfig, controlConfig, calculationConfig.defaultInitialElevation, testZA);
+      int encExpected = getenc(testdata.get(testdata.size() - 1));
+      //info("encEx: " + encExpected)
+
+      // This collects the messages from the calculator setup above - it is difficult to predict what messages will arrive from the HCD because it depends on timing of inputs
+      List<CurrentState> msgs = expectMoveMsgsWithDest(encExpected);
+      CurrentState last = msgs.get(msgs.size() - 1);
+      assertEquals(JavaHelpers.jvalue(last, positionKey), Integer.valueOf(encExpected));  // XXX TODO FIXME: test gets: 208 did not equal 343
+      assertEquals(JavaHelpers.jvalue(last, stateKey), AXIS_IDLE);
+      assertEquals(JavaHelpers.jvalue(last, inLowLimitKey), Boolean.valueOf(false));
+      assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
+
+      system.stop(tromboneControl);
+      system.stop(followActor);
+      tromboneHCD.tell(PoisonPill.getInstance(), self());
+    }
+
+    /**
+     * Test Description: This test creates a trombone HCD to receive events from the FollowActor.
+     * This tests the entire path with fake TCS sending events through Event Service, which are received by
+     * TromboneSubscriber and then processed by FollowActor, and sends them to TromboneControl
+     * which sends them to the TromboneHCD, which replies with StateUpdates.
+     * The first part is about starting the HCD and waiting for it to reach the runing lifecycle state where it can receive events
+     * The fake Assembly subscribes to CurrentState messages from the HCD to check for completion
+     */
+    @Test
+    public void test10() {
+      // creates fake TCS/RTC events with Event Service through calculator and back to HCD instance
+
+      // startHCD creates an instance of the HCD
+      ActorRef tromboneHCD = startHCD();
+
+      // A test probe to act as the assembly for receiving CurrentState updates
+      // For Java API use self(), to make working with receiveWhile easier
+      ActorRef fakeAssembly = self();
+
+      // The following is to synchronize the test with the HCD entering Running state
+      // This is boiler plate for setting up an HCD for testing
+      tromboneHCD.tell(new SupervisorExternal.SubscribeLifecycleCallback(fakeAssembly), self());
+      expectMsgEquals(new SupervisorExternal.LifecycleStateChanged(LifecycleInitialized));
+      expectMsgEquals(new SupervisorExternal.LifecycleStateChanged(LifecycleRunning));
+      //info("Running")
+
+      // This has HCD sending updates back to Assembly
+      tromboneHCD.tell(Subscribe, fakeAssembly);
+
+      // Ignoring the messages for AO for the moment
+      // Create the trombone control for receiving axis updates
+      ActorRef tromboneControl = system.actorOf(TromboneControl.props(assemblyContext, Optional.of(tromboneHCD)));
+
+      // Create the follow actor and give it the actor ref of the publisher for sending calculated events
+      // The following Optional.empty() ingores the events for AOESW from calculator
+      TestActorRef<FollowActor> followActor = newFollower(Optional.of(tromboneControl), Optional.empty());
+
+      // create the subscriber that receives events from TCS for zenith angle and focus error from RTC
+      ActorRef tromboneEventSubscriber = system.actorOf(TromboneEventSubscriber.props(assemblyContext, setNssInUse(false), Optional.of(followActor), eventService));
+
+      expectNoMsg(duration("200 milli"));
+
+      // This eventService is used to simulate the TCS and RTC publishing zenith angle and focus error
+      IEventService tcsRtc = eventService;
+
+      double testFE = 10.0;
+      // Publish a single focus error. This will generate a published event
+      tcsRtc.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE)));
+      //Thread.sleep(50)
+
+      // The following constructs the expected messages that contain the encoder positions
+      // The following assumes we have models for what is to come out of the assembly.  Here we are just
+      // reusing the actual equations to test that the events are working properly.
+      // First keep focus error fixed at 10 um
+      List<TestValue> testdata = calculatedTestData(calculationConfig, controlConfig, testFE);
+
+      // This uses the total elevation to get expected values for encoder position
+      int encExpected = getenc(testdata.get(0));
+      //info(s"encExpected1: $encExpected")
+
+      // This gets the first set of CurrentState messages for moving to the FE 10 mm position
+      List<CurrentState> msgs = waitForMoveMsgs();
+      CurrentState last = msgs.get(msgs.size() - 1);
+      assertEquals(JavaHelpers.jvalue(last, positionKey), Integer.valueOf(encExpected));
+      assertEquals(JavaHelpers.jvalue(last, stateKey), AXIS_IDLE);
+      assertEquals(JavaHelpers.jvalue(last, inLowLimitKey), Boolean.valueOf(false));
+      assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
+
+      // These are fake messages for the FollowActor that will be sent to simulate the TCS
+      List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
+        .collect(Collectors.toList());
+
+      // This should result in the length of tcsEvents being published, which is 15
+      tcsEvents.forEach(f -> {
+        logger.info("Publish: " + f);
+        tcsRtc.publish(f);
+        // The following is not required, but is added to make the event timing more interesting
+        // Varying this delay from 50 to 10 shows completion of moves and at 10 update of move positions before finishing
+        try {
+          Thread.sleep(15);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      });
+
+      // This collects the messages from the calculator setup above - it is difficult to predict what messages will arrive from the HCD because it depends on timing of inputs
+      encExpected = getenc(testdata.get(testdata.size()-1));
+      //info(s"encExpected2: $encExpected")
+      msgs = expectMoveMsgsWithDest(encExpected);
+      CurrentState last2 = msgs.get(msgs.size() - 1);
+      assertEquals(JavaHelpers.jvalue(last2, positionKey), Integer.valueOf(encExpected));
+      assertEquals(JavaHelpers.jvalue(last2, stateKey), AXIS_IDLE);
+      assertEquals(JavaHelpers.jvalue(last2, inLowLimitKey), Boolean.valueOf(false));
+      assertEquals(JavaHelpers.jvalue(last2, inHighLimitKey), Boolean.valueOf(false));
+
+      system.stop(tromboneEventSubscriber);
+      system.stop(tromboneControl);
+      system.stop(followActor);
+      tromboneHCD.tell(PoisonPill.getInstance(), self());
+    }
+
 }
