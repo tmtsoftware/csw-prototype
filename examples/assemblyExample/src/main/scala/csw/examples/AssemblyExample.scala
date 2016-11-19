@@ -2,7 +2,7 @@ package csw.examples
 
 import akka.actor.ActorRef
 import csw.services.ccs.Validation._
-import csw.services.ccs.{AssemblyController, CommandStatusOld}
+import csw.services.ccs.{AssemblyControllerOld, CommandStatusOld}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
@@ -19,7 +19,7 @@ import scala.concurrent.duration._
  *
  * @param info contains information about the assembly and the components it depends on
  */
-class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController with LifecycleHandler {
+class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyControllerOld with LifecycleHandler {
   supervisor ! Initialized
   supervisor ! Started
 

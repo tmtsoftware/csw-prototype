@@ -6,7 +6,7 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient, CommandStatusOld}
-import csw.services.ccs.AssemblyController.Submit
+import csw.services.ccs.AssemblyControllerOld.Submit
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}

@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
-import csw.services.ccs.AssemblyController
+import csw.services.ccs.AssemblyControllerOld
 import csw.services.ccs.Validation._
 import csw.services.loc.LocationService.Location
 import csw.services.pkg.Component.AssemblyInfo
@@ -16,9 +16,9 @@ import scala.concurrent.Future
   * @param info contains information about the assembly and the components it depends on
   */
 case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
-  extends Assembly with AssemblyController with LifecycleHandler {
+  extends Assembly with AssemblyControllerOld with LifecycleHandler {
 
-  import AssemblyController._
+  import AssemblyControllerOld._
 
   supervisor ! Initialized
   supervisor ! Started

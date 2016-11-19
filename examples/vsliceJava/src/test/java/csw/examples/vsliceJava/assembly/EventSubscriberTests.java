@@ -35,9 +35,6 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static csw.examples.vsliceJava.assembly.TromboneEventSubscriber.UpdateNssInUse;
 
-/**
- * Diag Pubisher Tests
- */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
 public class EventSubscriberTests extends JavaTestKit {
 

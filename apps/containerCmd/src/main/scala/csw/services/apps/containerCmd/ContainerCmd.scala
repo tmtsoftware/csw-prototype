@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.LocationService
 import csw.services.pkg.ContainerComponent
 import org.slf4j.LoggerFactory
+import scala.collection.JavaConverters._
 
 object ContainerCmd {
   LocationService.initInterface()
@@ -35,11 +36,43 @@ object ContainerCmd {
  * @param resources optional map of name to config file (under src/main/resources, "" maps to the default resource)
  */
 case class ContainerCmd(name: String, args: Array[String], resources: Map[String, String] = Map.empty) {
+
+  /**
+    * Java API:
+    * Can be used by a command line application to create a container with components
+    * (HCDs, assemblies) specified in a config file, which can be either a resource or
+    * a local file.
+    * Note that all the dependencies for the created components must already be in the classpath.
+    *
+    * The optional resources argument lets you use the --start option to pass a name (such as "hcd" or "assembly")
+    * that maps to a resource file to use to start that component.
+    * For example:
+    * {{{
+    *     val m = Map("hcd" -> "tromboneHCD.conf", "assembly" -> "tromboneAssembly.conf", "" -> "tromboneContainer.conf")
+    *     ContainerCmd("vslice", args, m)
+    * }}}
+    *
+    * If no --start option is given, the default resource at the empty key ("") is used ("tromboneContainer.conf" here).
+    *
+    * @param name      the name of the application
+    * @param args      the command line arguments
+    * @param resources map of name to config file (under src/main/resources, "" maps to the default resource)
+    */
+  def this(name: String, args: Array[String], resources: java.util.Map[String, String]) =
+    this(name, args, resources.asScala.toMap)
+
   val logger: Logger = Logger(LoggerFactory.getLogger(ContainerCmd.getClass))
   val choices: String = resources.keys.toList.filter(_.nonEmpty).mkString(", ")
 
-  // For use in tests that need to kill the created actors: The list of actors created.
+  /**
+    * For use in tests that need to kill the created actors: The list of actors created.
+    */
   var actors: List[ActorRef] = Nil
+
+  /**
+    * Java API: For use in tests that need to kill the created actors: The list of actors created.
+    */
+  def getActors: java.util.List[ActorRef] = actors.asJava
 
   /**
    * Command line options: file

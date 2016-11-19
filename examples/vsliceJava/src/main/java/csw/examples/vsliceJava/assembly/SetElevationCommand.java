@@ -8,7 +8,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
-import csw.services.ccs.CommandStatus;
+import csw.services.ccs.CommandStatus.Error;
 import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
 import csw.util.config.DoubleItem;
@@ -55,7 +55,7 @@ public class SetElevationCommand extends AbstractActor {
         } else {
           ActorRef mySender = sender();
           // Note that units have already been verified here
-          DoubleItem elevationItem = jitem(sc, ac.naElevationKey);
+          DoubleItem elevationItem = jitem(sc, AssemblyContext.naElevationKey);
 
           // Let the elevation be the range distance
           // Convert range distance to encoder units from mm
@@ -75,8 +75,8 @@ public class SetElevationCommand extends AbstractActor {
             if (status == Completed)
               // NOTE ---> This is the place where sodium layer state gets set to TRUE
               sendState(new SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(true), startState.nss));
-            else if (status instanceof CommandStatus.Error)
-              log.error("setElevation command match failed with message: " + ((CommandStatus.Error)status).message());
+            else if (status instanceof Error)
+              log.error("setElevation command match failed with message: " + ((Error)status).message());
           });
 
         }

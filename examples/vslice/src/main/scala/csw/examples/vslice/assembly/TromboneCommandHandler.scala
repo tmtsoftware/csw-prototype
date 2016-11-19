@@ -128,7 +128,9 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
           self ! CommandStart
 
         case ac.followCK =>
-          if (cmd(currentState) == cmdUninitialized || (move(currentState) != moveIndexed && move(currentState) != moveMoving) || !sodiumLayer(currentState)) {
+          if (cmd(currentState) == cmdUninitialized
+            || (move(currentState) != moveIndexed && move(currentState) != moveMoving)
+            || !sodiumLayer(currentState)) {
             commandOriginator.foreach(_ ! NoLongerValid(WrongInternalStateIssue(s"Assembly state of ${cmd(currentState)}/${move(currentState)}/${sodiumLayer(currentState)} does not allow follow")))
           } else {
             // No state set during follow

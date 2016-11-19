@@ -10,7 +10,7 @@ import csw.services.alarms.AlarmService
 import csw.services.ccs.SequentialExecutor
 import csw.services.ccs.SequentialExecutor.StartTheSequence
 import csw.services.ccs.Validation.ValidationList
-import csw.services.ccs.{AssemblyController2, Validation}
+import csw.services.ccs.{AssemblyController, Validation}
 import csw.services.cs.akka.ConfigServiceClient
 import csw.services.events.{EventService, TelemetryService}
 import csw.services.loc.Connection.TcpConnection
@@ -28,7 +28,7 @@ import scala.language.postfixOps
  * TMT Source Code: 6/10/16.
  */
 class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
-    extends Assembly with AssemblyController2 {
+    extends Assembly with AssemblyController {
 
   import Supervisor._
 
@@ -83,13 +83,16 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
 
   def handleLocations(location: Location): Unit = {
     location match {
+
       case l: ResolvedAkkaLocation =>
         log.info(s"Got actorRef: ${l.actorRef}")
         tromboneHCD = l.actorRef
         // trackerSubscriber ! l
         supervisor ! Started
+
       case h: ResolvedHttpLocation =>
         log.info(s"HTTP Service Damn it: ${h.connection}")
+
       case t: ResolvedTcpLocation =>
         log.info(s"Received TCP Location: ${t.connection}")
         // Verify that it is the event service
@@ -117,6 +120,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
         log.info(s"Unresolved: ${u.connection}")
         //if (u.connection == EventService.eventServiceConnection()) eventService = badEventService
         if (u.connection.componentId == ac.hcdComponentId) tromboneHCD = badHCDReference
+
       case ut: UnTrackedLocation =>
         log.info(s"UnTracked: ${ut.connection}")
     }

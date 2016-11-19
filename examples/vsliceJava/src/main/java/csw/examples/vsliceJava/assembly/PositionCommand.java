@@ -8,7 +8,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
-import csw.services.ccs.CommandStatus;
+import csw.services.ccs.CommandStatus.Error;
 import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
 import csw.util.config.DoubleItem;
@@ -64,8 +64,8 @@ public class PositionCommand extends AbstractActor {
           TromboneCommandHandler.executeMatch(context(), stateMatcher, tromboneHCD,  Optional.of(mySender), timeout, status -> {
             if (status == Completed)
               sendState(new SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss));
-            else if (status instanceof CommandStatus.Error)
-              log.error("Position command match failed with message: " + ((CommandStatus.Error)status).message());
+            else if (status instanceof Error)
+              log.error("Position command match failed with message: " + ((Error)status).message());
           });
 
         }

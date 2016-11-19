@@ -30,7 +30,7 @@ object FollowPositionTests {
   LocationService.initInterface()
   val system = ActorSystem("FollowPositionTests")
 
-//  val initialElevation = 90.0
+  //  val initialElevation = 90.0
 
   // Test subscriber actor for telemetry
   object TestSubscriber {

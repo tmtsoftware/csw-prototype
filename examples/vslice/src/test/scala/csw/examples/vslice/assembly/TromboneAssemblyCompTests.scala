@@ -6,7 +6,7 @@ package csw.examples.vslice.assembly
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.ccs.AssemblyController2.Submit
+import csw.services.ccs.AssemblyController.Submit
 import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult, Completed}
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.AssemblyInfo

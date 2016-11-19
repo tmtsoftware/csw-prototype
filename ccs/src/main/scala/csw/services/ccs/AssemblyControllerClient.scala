@@ -3,7 +3,7 @@ package csw.services.ccs
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import csw.services.ccs.AssemblyController._
+import csw.services.ccs.AssemblyControllerOld._
 import csw.util.akka.PublisherActor.RequestCurrent
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 import csw.util.config.StateVariable.CurrentState

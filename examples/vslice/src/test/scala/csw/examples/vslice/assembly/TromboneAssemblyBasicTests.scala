@@ -5,7 +5,7 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.containerCmd.ContainerCmd
-import csw.services.ccs.AssemblyController2.Submit
+import csw.services.ccs.AssemblyController.Submit
 import csw.services.ccs.CommandStatus._
 import csw.services.ccs.Validation.WrongInternalStateIssue
 import csw.services.events.EventService
@@ -75,10 +75,9 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
   describe("low-level instrumented trombone assembly tests") {
 
     it("should get initialized with configs from files (same as AlgorithmData") {
+      // test1
       val supervisor = TestProbe()
       val tla = newTestTrombone(supervisor.ref)
-
-      //      Thread.sleep(3000) // XXX allow for timeout if config service not running
 
       tla.underlyingActor.controlConfig.stageZero should be(AssemblyTestData.TestControlConfig.stageZero)
       tla.underlyingActor.controlConfig.positionScale should be(AssemblyTestData.TestControlConfig.positionScale)
@@ -94,6 +93,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should lifecycle properly with a fake supervisor") {
+      // test2
       val fakeSupervisor = TestProbe()
       val tla = newTestTrombone(fakeSupervisor.ref)
 

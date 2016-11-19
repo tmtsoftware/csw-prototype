@@ -8,7 +8,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
-import csw.services.ccs.CommandStatus;
+import csw.services.ccs.CommandStatus.Error;
 import csw.services.ccs.DemandMatcher;
 import csw.services.ccs.HcdController;
 import csw.util.config.DoubleItem;
@@ -27,7 +27,7 @@ import static javacsw.util.config.JConfigDSL.sc;
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JUnitsOfMeasure.encoder;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "WeakerAccess"})
 public class MoveCommand extends AbstractActor {
 
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
@@ -44,7 +44,7 @@ public class MoveCommand extends AbstractActor {
             "Assembly state of " + cmd(startState) + "/" + move(startState) + " does not allow move")), self());
         } else {
           ActorRef mySender = sender();
-          DoubleItem stagePosition = jitem(sc, ac.stagePositionKey);
+          DoubleItem stagePosition = jitem(sc, AssemblyContext.stagePositionKey);
 
           // Convert to encoder units from mm
           int encoderPosition = Algorithms.stagePositionToEncoder(ac.controlConfig, jvalue(stagePosition));
@@ -61,8 +61,8 @@ public class MoveCommand extends AbstractActor {
           TromboneCommandHandler.executeMatch(context(), stateMatcher, tromboneHCD, Optional.of(mySender), timeout, status -> {
             if (status == Completed)
               sendState(new SetState(cmdItem(cmdReady), moveItem(moveIndexed), sodiumItem(false), startState.nss));
-            else if (status instanceof CommandStatus.Error)
-              log.error("Move command match failed with message: " + ((CommandStatus.Error) status).message());
+            else if (status instanceof Error)
+              log.error("Move command match failed with message: " + ((Error) status).message());
           });
         }
       }).

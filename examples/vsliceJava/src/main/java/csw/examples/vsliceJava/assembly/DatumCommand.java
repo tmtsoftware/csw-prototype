@@ -8,7 +8,7 @@ import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
-import csw.services.ccs.CommandStatus;
+import csw.services.ccs.CommandStatus.Error;
 import csw.services.ccs.HcdController;
 import csw.services.ccs.Validation;
 import javacsw.services.ccs.JSequentialExecutor;
@@ -48,8 +48,8 @@ public class DatumCommand extends AbstractActor {
           TromboneCommandHandler.executeMatch(context(), TromboneCommandHandler.idleMatcher(), tromboneHCD,  Optional.of(mySender), timeout, status -> {
             if (status == Completed)
               sendState(new SetState(cmdReady, moveIndexed, false, false));
-            else if (status instanceof CommandStatus.Error)
-              log.error("Data command match failed with error: " + ((CommandStatus.Error)status).message());
+            else if (status instanceof Error)
+              log.error("Data command match failed with error: " + ((Error)status).message());
           });
         }
       }).

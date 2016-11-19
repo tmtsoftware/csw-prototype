@@ -21,7 +21,7 @@ import javacsw.services.events.IEventService;
 import javacsw.services.events.ITelemetryService;
 import javacsw.services.loc.JComponentType;
 import javacsw.services.loc.JLocationSubscriberActor;
-import javacsw.services.pkg.JAssemblyController2;
+import javacsw.services.pkg.JAssemblyController;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 
@@ -39,7 +39,7 @@ import static javacsw.services.pkg.JSupervisor.*;
  * TMT Source Code: 6/10/16.
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
-public class TromboneAssembly extends JAssemblyController2 {
+public class TromboneAssembly extends JAssemblyController {
 
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
@@ -143,12 +143,17 @@ public class TromboneAssembly extends JAssemblyController2 {
         alarmService = Optional.of(IAlarmService.getAlarmService(t.host(), t.port(), context()));
         log.info("Alarm Service at: " + alarmService);
       }
+
     } else if (location instanceof Unresolved) {
       log.info("Unresolved: " + location.connection());
       if (location.connection().componentId().equals(ac.hcdComponentId))
         tromboneHCD = badHCDReference;
+
     } else if (location instanceof UnTrackedLocation) {
       log.info("UnTracked: " + location.connection());
+
+    } else {
+      log.warning("Unknown connection: " + location.connection()); // XXX
     }
   }
 

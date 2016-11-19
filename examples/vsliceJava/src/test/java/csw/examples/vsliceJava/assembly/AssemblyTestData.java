@@ -21,9 +21,6 @@ import static csw.examples.vsliceJava.assembly.Algorithms.*;
 import static javacsw.services.pkg.JComponent.RegisterAndTrackServices;
 import static javacsw.util.JUtils.*;
 
-/**
- * TMT Source Code: 8/12/16.
- */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class AssemblyTestData {
 

@@ -2,7 +2,7 @@ package csw.services.pkg
 
 import akka.actor.FSM.{CurrentState, SubscribeTransitionCallBack, Transition}
 import akka.actor._
-import csw.services.ccs.AssemblyController.AssemblyControllerMessage
+import csw.services.ccs.AssemblyControllerOld.AssemblyControllerMessage
 import csw.services.ccs.HcdController.HcdControllerMessage
 import csw.services.loc.ComponentType.{Assembly, HCD}
 import csw.services.loc.{ComponentId, LocationService}

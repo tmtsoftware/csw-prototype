@@ -8,10 +8,14 @@ import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
-import csw.services.ccs.CommandStatus;
+import csw.services.ccs.CommandStatus.CommandStatus;
 import csw.services.ccs.SequentialExecutor;
 import csw.services.ccs.Validation;
+import csw.services.loc.Connection.AkkaConnection;
 import csw.services.loc.LocationService;
+import csw.services.loc.LocationService.Location;
+import csw.services.loc.LocationService.ResolvedAkkaLocation;
+import csw.services.loc.LocationService.Unresolved;
 import csw.services.pkg.Component;
 import csw.services.pkg.Supervisor;
 import csw.util.config.Configurations;
@@ -22,6 +26,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -119,8 +125,8 @@ public class CommandHandlerTests extends JavaTestKit {
 
     ch.tell(ExecuteOne(sc, Optional.of(fakeAssembly.ref())), self());
 
-    CommandStatus.CommandStatus msg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
-      CommandStatus.CommandStatus.class);
+    CommandStatus msg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
+      CommandStatus.class);
     assertEquals(msg, Completed);
     //info("Final: " + msg)
 
@@ -128,8 +134,8 @@ public class CommandHandlerTests extends JavaTestKit {
     ch.tell(new TromboneState(cmdItem(cmdUninitialized), moveItem(moveUnindexed), sodiumItem(false), nssItem(false)), self());
     ch.tell(ExecuteOne(sc, Optional.of(fakeAssembly.ref())), self());
 
-    CommandStatus.CommandStatus errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
-      CommandStatus.CommandStatus.class);
+    CommandStatus errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
+      CommandStatus.class);
 
     assertTrue(errMsg instanceof NoLongerValid);
 
@@ -140,54 +146,55 @@ public class CommandHandlerTests extends JavaTestKit {
     monitor.expectTerminated(ch, FiniteDuration.create(1, TimeUnit.SECONDS));
   }
 
-// XXX TODO: Was added after Java port
-//  it("datum should handle change in HCD") {
-//    val tromboneHCD = startHCD
-//    val fakeAssembly = TestProbe()
-//
-//    // The following is to synchronize the test with the HCD entering Running state
-//    // This is boiler plate for setting up an HCD for testing
-//    tromboneHCD ! SubscribeLifecycleCallback(fakeAssembly.ref)
-//    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//    fakeAssembly.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//    //info("Running")
-//
-//    //val tsa = system.actorOf(TromboneStateActor.props)
-//
-//    // Start with good HCD
-//    val ch = newCommandHandler(tromboneHCD)
-//
-//    setupState(TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false)))
-//
-//    val sc = SetupConfig(ac.datumCK)
-//
-//    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
-//
-//    val msg: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
-//    msg shouldBe Completed
-//    //info("Final: " + msg
-//
-//    val unresolvedHCD = Unresolved(AkkaConnection(ac.hcdComponentId))
-//    ch ! unresolvedHCD
-//
-//    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
-//
-//    val errMsg: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
-//    errMsg shouldBe a[NoLongerValid]
-//    errMsg.asInstanceOf[NoLongerValid].issue shouldBe a[RequiredHCDUnavailableIssue]
-//
-//    val resolvedHCD = ResolvedAkkaLocation(AkkaConnection(ac.hcdComponentId), new URI("http://help"), "", Some(tromboneHCD))
-//    ch ! resolvedHCD
-//
-//    ch ! ExecuteOne(sc, Some(fakeAssembly.ref))
-//    val msg2: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
-//    msg2 shouldBe Completed
-//
-//    val monitor = TestProbe()
-//    monitor.watch(ch)
-//    ch ! PoisonPill
-//    monitor.expectTerminated(ch)
-//  }
+  @Test
+  public void datumShouldHandleChangeInHCD() throws URISyntaxException {
+    ActorRef tromboneHCD = startHCD();
+    TestProbe fakeAssembly = new TestProbe(system);
+
+    // The following is to synchronize the test with the HCD entering Running state
+    // This is boiler plate for setting up an HCD for testing
+    tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
+    fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+    fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+    // Start with good HCD
+    ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
+
+    setupState(new TromboneState(cmdItem(cmdReady), moveItem(moveUnindexed), sodiumItem(false), nssItem(false)));
+
+    Configurations.SetupConfig sc = new SetupConfig(ac.datumCK.prefix());
+
+    ch.tell(ExecuteOne(sc, Optional.of(fakeAssembly.ref())), self());
+
+    CommandStatus msg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
+      CommandStatus.class);
+    assertEquals(msg, Completed);
+    //info("Final: " + msg)
+
+    Location unresolvedHCD = new Unresolved(new AkkaConnection(ac.hcdComponentId));
+    ch.tell(unresolvedHCD, self());
+
+    ch.tell(ExecuteOne(sc, Optional.of(fakeAssembly.ref())), self());
+
+    // XXX TODO: Check problem here
+    CommandStatus errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS),
+      CommandStatus.class);
+
+    assertTrue(errMsg instanceof NoLongerValid);
+    assertTrue(((NoLongerValid)errMsg).issue() instanceof Validation.RequiredHCDUnavailableIssue);
+
+    Location resolvedHCD = new ResolvedAkkaLocation(new AkkaConnection(ac.hcdComponentId), new URI("http://help"), "", Optional.of(tromboneHCD));
+    ch.tell(resolvedHCD, self());
+
+    ch.tell(ExecuteOne(sc, Optional.of(fakeAssembly.ref())), self());
+    CommandStatus msg2 = fakeAssembly.expectMsgClass(duration("10 seconds"), CommandStatus.class);
+    assertEquals(msg2, Completed);
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(ch);
+    system.stop(ch);
+    monitor.expectTerminated(ch, FiniteDuration.create(1, TimeUnit.SECONDS));
+  }
 
 
   @Test
@@ -226,7 +233,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     CommandResult errMsg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS), CommandResult.class);
     assertEquals(errMsg.overall(), Incomplete);
-    CommandStatus.CommandStatus e1 = errMsg.details().getResults().get(0).first();
+    CommandStatus e1 = errMsg.details().getResults().get(0).first();
     assertTrue(e1 instanceof NoLongerValid);
     assertTrue(((NoLongerValid) e1).issue() instanceof Validation.WrongInternalStateIssue);
 
@@ -299,7 +306,7 @@ public class CommandHandlerTests extends JavaTestKit {
     double testPosition = 90.0;
     ch.tell(ExecuteOne(ac.moveSC(testPosition), Optional.of(fakeAssembly.ref())), self());
 
-    fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandStatus.CommandStatus.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS), CommandStatus.class);
     int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testPosition);
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking
@@ -456,7 +463,7 @@ public class CommandHandlerTests extends JavaTestKit {
     se2.tell(new StartTheSequence(ch), self());
 
     CommandResult msg = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS), CommandResult.class);
-    //info("Final: " + msg)
+    logger.info("Final: " + msg);
 
     // Test
     int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testRangeDistance[testRangeDistance.length - 1]);
@@ -487,7 +494,7 @@ public class CommandHandlerTests extends JavaTestKit {
     double testEl = 150.0;
     ch.tell(ExecuteOne(ac.setElevationSC(testEl), Optional.of(fakeAssembly.ref())), self());
 
-    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus.CommandStatus.class);
+    fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus.class);
     int finalPos = Algorithms.stagePositionToEncoder(ac.controlConfig, testEl);
 
     // Use the engineering GetAxisUpdate to get the current encoder for checking

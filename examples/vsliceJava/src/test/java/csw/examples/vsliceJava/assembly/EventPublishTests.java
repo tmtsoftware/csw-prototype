@@ -37,9 +37,6 @@ import static javacsw.util.config.JItems.jadd;
 import static javacsw.util.config.JItems.jset;
 import static junit.framework.TestCase.assertEquals;
 
-/**
- * Diag Pubisher Tests
- */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
 public class EventPublishTests extends JavaTestKit {
 

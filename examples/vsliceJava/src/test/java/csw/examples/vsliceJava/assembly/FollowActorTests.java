@@ -54,9 +54,6 @@ import static javacsw.util.config.JPublisherActor.Subscribe;
 import static javacsw.util.config.JUnitsOfMeasure.*;
 import static junit.framework.TestCase.assertEquals;
 
-/**
- * Diag Pubisher Tests
- */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
 public class FollowActorTests extends JavaTestKit {
 

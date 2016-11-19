@@ -3,7 +3,7 @@ package javacsw.services.pkg
 import java.util.Optional
 
 import akka.actor.{AbstractActor, ActorRef}
-import csw.services.ccs.AssemblyController2
+import csw.services.ccs.AssemblyController
 import csw.services.pkg.{Assembly, LifecycleHandler}
 import csw.util.config.Configurations.{ObserveConfigArg, SetupConfigArg}
 import csw.util.config.StateVariable.CurrentStates
@@ -16,8 +16,8 @@ import scala.compat.java8.OptionConverters._
 /**
  * Supports Java subclasses of AssemblyController and LifecycleHandler
  */
-abstract class AbstractAssemblyController2(override val info: AssemblyInfo) extends AbstractActor
-    with Assembly with AssemblyController2 {
+abstract class AbstractAssemblyController(override val info: AssemblyInfo) extends AbstractActor
+    with Assembly with AssemblyController {
 
   /**
    * The default actor receive method for an assembly.
