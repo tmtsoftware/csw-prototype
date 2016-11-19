@@ -90,6 +90,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       tla.underlyingActor.calculationConfig.zenithFactor should be(AssemblyTestData.TestCalculationConfig.zenithFactor)
 
       expectNoMsg(2.seconds)
+      system.stop(tla)
     }
 
     it("should lifecycle properly with a fake supervisor") {
@@ -105,9 +106,11 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       fakeSupervisor.send(tla, DoShutdown)
       fakeSupervisor.expectMsg(ShutdownComplete)
       logger.info("Shutdown Complete")
+      system.stop(tla)
     }
 
     it("datum without an init should fail") {
+      // test3
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()

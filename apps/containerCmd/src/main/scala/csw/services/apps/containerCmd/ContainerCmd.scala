@@ -38,26 +38,26 @@ object ContainerCmd {
 case class ContainerCmd(name: String, args: Array[String], resources: Map[String, String] = Map.empty) {
 
   /**
-    * Java API:
-    * Can be used by a command line application to create a container with components
-    * (HCDs, assemblies) specified in a config file, which can be either a resource or
-    * a local file.
-    * Note that all the dependencies for the created components must already be in the classpath.
-    *
-    * The optional resources argument lets you use the --start option to pass a name (such as "hcd" or "assembly")
-    * that maps to a resource file to use to start that component.
-    * For example:
-    * {{{
-    *     val m = Map("hcd" -> "tromboneHCD.conf", "assembly" -> "tromboneAssembly.conf", "" -> "tromboneContainer.conf")
-    *     ContainerCmd("vslice", args, m)
-    * }}}
-    *
-    * If no --start option is given, the default resource at the empty key ("") is used ("tromboneContainer.conf" here).
-    *
-    * @param name      the name of the application
-    * @param args      the command line arguments
-    * @param resources map of name to config file (under src/main/resources, "" maps to the default resource)
-    */
+   * Java API:
+   * Can be used by a command line application to create a container with components
+   * (HCDs, assemblies) specified in a config file, which can be either a resource or
+   * a local file.
+   * Note that all the dependencies for the created components must already be in the classpath.
+   *
+   * The optional resources argument lets you use the --start option to pass a name (such as "hcd" or "assembly")
+   * that maps to a resource file to use to start that component.
+   * For example:
+   * {{{
+   *     val m = Map("hcd" -> "tromboneHCD.conf", "assembly" -> "tromboneAssembly.conf", "" -> "tromboneContainer.conf")
+   *     ContainerCmd("vslice", args, m)
+   * }}}
+   *
+   * If no --start option is given, the default resource at the empty key ("") is used ("tromboneContainer.conf" here).
+   *
+   * @param name      the name of the application
+   * @param args      the command line arguments
+   * @param resources map of name to config file (under src/main/resources, "" maps to the default resource)
+   */
   def this(name: String, args: Array[String], resources: java.util.Map[String, String]) =
     this(name, args, resources.asScala.toMap)
 
@@ -65,13 +65,13 @@ case class ContainerCmd(name: String, args: Array[String], resources: Map[String
   val choices: String = resources.keys.toList.filter(_.nonEmpty).mkString(", ")
 
   /**
-    * For use in tests that need to kill the created actors: The list of actors created.
-    */
+   * For use in tests that need to kill the created actors: The list of actors created.
+   */
   var actors: List[ActorRef] = Nil
 
   /**
-    * Java API: For use in tests that need to kill the created actors: The list of actors created.
-    */
+   * Java API: For use in tests that need to kill the created actors: The list of actors created.
+   */
   def getActors: java.util.List[ActorRef] = actors.asJava
 
   /**
@@ -110,6 +110,15 @@ case class ContainerCmd(name: String, args: Array[String], resources: Map[String
     case None          => System.exit(1)
   }
 
+  private def createComponent(options: Config, c: com.typesafe.config.Config): List[ActorRef] = {
+    if (options.standalone) {
+      ContainerComponent.createStandalone(c).getOrElse(Nil)
+    } else {
+      val t = ContainerComponent.create(c)
+      if (t.isFailure) Nil else List(t.get)
+    }
+  }
+
   private def run(options: Config): Unit = {
     val mode = if (options.standalone) "standalone mode" else "container"
     options.file match {
@@ -120,12 +129,7 @@ case class ContainerCmd(name: String, args: Array[String], resources: Map[String
         }
         logger.debug(s" Using file: $file in $mode")
         val config = ConfigFactory.parseFileAnySyntax(file).resolve(ConfigResolveOptions.noSystem())
-        actors = if (options.standalone) {
-          ContainerComponent.createStandalone(config).getOrElse(Nil)
-        } else {
-          val t = ContainerComponent.create(config)
-          if (t.isFailure) Nil else List(t.get)
-        }
+        actors = createComponent(options, config)
 
       case None =>
         if (resources.isEmpty) {
@@ -136,10 +140,7 @@ case class ContainerCmd(name: String, args: Array[String], resources: Map[String
           case Some(resource) =>
             logger.info(s" Using configuration: $resource in $mode")
             val config = ConfigFactory.load(resource)
-            if (options.standalone)
-              ContainerComponent.createStandalone(config)
-            else
-              ContainerComponent.create(config)
+            actors = createComponent(options, config)
           case None =>
             logger.error("Error: No default configuration was specified")
             System.exit(1)

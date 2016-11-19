@@ -11,8 +11,18 @@ import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
 import csw.services.apps.containerCmd.ContainerCmd;
+import csw.services.ccs.AssemblyController;
+import csw.services.ccs.AssemblyController.Submit;
+import csw.services.ccs.CommandStatus;
+import csw.services.ccs.CommandStatus.CommandResult;
+import csw.services.ccs.CommandStatus.NoLongerValid;
+import csw.services.ccs.Validation;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component.AssemblyInfo;
+import csw.util.config.Configurations;
+import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.SetupConfigArg;
+import javacsw.services.ccs.JCommandStatus;
 import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -26,6 +36,9 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.pkg.JSupervisor.*;
+import static javacsw.util.config.JUnitsOfMeasure.seconds;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 @SuppressWarnings({"WeakerAccess", "OptionalUsedAsFieldOrParameterType", "MismatchedReadAndWriteOfArray"})
 public class TromboneAssemblyBasicTests extends JavaTestKit {
@@ -59,8 +72,9 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
 
     // Starts the HCD used in the test
     Map<String, String> configMap = Collections.singletonMap("", "tromboneHCD.conf");
-    ContainerCmd cmd = new ContainerCmd("vslice", new String[]{"--standalone"}, configMap);
+    ContainerCmd cmd = new ContainerCmd("tromboneHCD", new String[]{"--standalone"}, configMap);
     hcdActors = cmd.getActors();
+    if (hcdActors.size() == 0) System.out.println("XXX Problem creating Trombone HCD");
 
   }
 
@@ -130,40 +144,45 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
 
       fakeSupervisor.send(tla, DoShutdown);
       fakeSupervisor.expectMsg(ShutdownComplete);
+
       logger.info("Shutdown Complete");
+      system.stop(tla);
     }
 
-//    it("datum without an init should fail") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(datumCK))
-//
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification succeeds because verification does not look at state
-//      val acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      logger.info(s"Accepted: $acceptedMsg")
-//
-//      // This should fail due to wrong internal state
-//      val completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe Incomplete
-//      completeMsg.details.status(0) shouldBe a[NoLongerValid]
-//      completeMsg.details.status(0).asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
+    @Test
+    public void test3() {
+      // datum without an init should fail
+      TestProbe fakeSupervisor = new TestProbe(system);
+      ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+      TestProbe fakeClient = new TestProbe(system);
+
+      //val fakeSupervisor = TestProbe()
+      fakeSupervisor.expectMsg(Initialized);
+      fakeSupervisor.expectMsg(Started);
+      fakeSupervisor.send(tromboneAssembly, Running);
+
+      SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId", new SetupConfig(assemblyContext.datumCK.prefix()));
+
+      fakeClient.send(tromboneAssembly, new Submit(sca));
+
+      // This first one is the accept/verification succeeds because verification does not look at state
+      CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+      assertEquals(acceptedMsg.overall(), JCommandStatus.Accepted);
+      logger.info("Accepted: " + acceptedMsg);
+
+      // This should fail due to wrong internal state
+      CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+      System.out.println("XXX " + ((NoLongerValid)completeMsg.details().status(0)).issue());
+      assertEquals(completeMsg.overall(), JCommandStatus.Incomplete);
+      assertTrue(completeMsg.details().status(0) instanceof NoLongerValid);
+      assertTrue(((NoLongerValid)completeMsg.details().status(0)).issue() instanceof Validation.WrongInternalStateIssue);
+
+      TestProbe monitor = new TestProbe(system);
+      monitor.watch(tromboneAssembly);
+      system.stop(tromboneAssembly);
+      monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    }
+
 //    it("should allow a datum") {
 //      val fakeSupervisor = TestProbe()
 //      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
