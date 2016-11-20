@@ -89,7 +89,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
     isHCDAvailable = !tromboneHCD.equals(badHCDReference);
     tromboneStateActor = context().actorOf(TromboneStateActor.props());
     this.allEventPublisher = allEventPublisher;
-    setElevationItem = ac.naElevation(ac.calculationConfig.defaultInitialElevation);
+    setElevationItem = AssemblyContext.naElevation(ac.calculationConfig.defaultInitialElevation);
     int moveCnt = 0;
     log.info("System  is: " + context().system());
 
@@ -173,7 +173,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
 
         } else if (configKey.equals(ac.setElevationCK)) {
           // Setting the elevation state here for a future follow command
-          setElevationItem = jitem(sc, ac.naElevationKey);
+          setElevationItem = jitem(sc, AssemblyContext.naElevationKey);
           log.info("Setting elevation to: " + setElevationItem);
           // Note that units have already been verified here
           ActorRef setElevationActorRef = context().actorOf(SetElevationCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
@@ -190,7 +190,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           } else {
             // No state set during follow
             // At this point, parameters have been checked so direct access is okay
-            BooleanItem nssItem = jitem(sc, ac.nssInUseKey);
+            BooleanItem nssItem = jitem(sc, AssemblyContext.nssInUseKey);
 
             log.info("Set elevation is: " + setElevationItem);
 
@@ -240,7 +240,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
 
           // At this point, parameters have been checked so direct access is okay
           // Send the SetElevation to the follow actor
-          DoubleItem zenithAngleItem = jitem(sc, ac.zenithAngleKey);
+          DoubleItem zenithAngleItem = jitem(sc, AssemblyContext.zenithAngleKey);
           followActor.tell(new FollowActor.SetZenithAngle(zenithAngleItem), self());
           Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
           executeMatch(context(), idleMatcher(), tromboneHCD, commandOriginator, timeout, status -> {
