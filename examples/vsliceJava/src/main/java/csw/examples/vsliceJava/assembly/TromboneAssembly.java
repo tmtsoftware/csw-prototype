@@ -226,9 +226,9 @@ public class TromboneAssembly extends JAssemblyController {
     // Returns validations for all
     List<Validation.Validation> validations = validateSequenceConfigArg(sca);
     if (Validation.isAllValid(validations)) {
-      if (sca.jconfigs().size() == 1 && sca.jconfigs().get(0).configKey().equals(ac.stopCK)) {
+      if (sca.getConfigs().size() == 1 && sca.getConfigs().get(0).configKey().equals(ac.stopCK)) {
         // Special handling for stop which needs to interrupt the currently executing sequence
-        commandHandler.tell(sca.jconfigs().get(0), self());
+        commandHandler.tell(sca.getConfigs().get(0), self());
       } else {
         ActorRef executor = newExecutor(sca, commandOriginator);
         executor.tell(new SequentialExecutor.StartTheSequence(commandHandler), self());

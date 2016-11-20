@@ -189,7 +189,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
     errMsg.overall should equal(Incomplete)
-    val e1 = errMsg.details.results.head._1
+    val e1 = errMsg.details.results.head.status
     e1 shouldBe a[NoLongerValid]
     e1.asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
 
@@ -468,7 +468,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     val errMsg = fakeAssembly.expectMsgClass(35.seconds, classOf[CommandResult])
     errMsg.overall should equal(Incomplete)
-    errMsg.details.results.head._1 shouldBe a[NoLongerValid]
+    errMsg.details.results.head.status shouldBe a[NoLongerValid]
 
     system.stop(ch)
     tromboneHCD ! PoisonPill

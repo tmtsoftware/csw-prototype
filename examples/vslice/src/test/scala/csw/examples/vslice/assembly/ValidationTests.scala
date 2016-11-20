@@ -283,7 +283,12 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
 
     it("should show multiple issues") {
       // positionCK needs an argument and moveCK has the wrong units
-      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(positionCK), SetupConfig(moveCK).add(stagePositionKey -> 22 withUnits kilometers))
+      val sca = Configurations.createSetupConfigArg(
+        "testobsId",
+        SetupConfig(initCK),
+        SetupConfig(positionCK),
+        SetupConfig(moveCK).add(stagePositionKey -> 22 withUnits kilometers)
+      )
       val issues = invalidsInTromboneSetupConfigArg(sca)
       issues should not be empty
       issues.size should be(2)
@@ -316,14 +321,14 @@ class ValidationTests extends FunSpec with ShouldMatchers with Inspectors with B
       // Convert to pairs
       val cresult = CommandStatus.validationsToCommandResultPairs(sca.configs, validations)
       cresult.size should equal(sca.configs.size)
-      cresult.head._1 shouldBe CommandStatus.Valid
-      cresult.head._2 should equal(sca.configs.head)
+      cresult.head.status shouldBe CommandStatus.Valid
+      cresult.head.config should equal(sca.configs.head)
 
-      cresult(1)._1 shouldBe a[CommandStatus.Invalid]
-      cresult(1)._2 should equal(sca.configs(1))
+      cresult(1).status shouldBe a[CommandStatus.Invalid]
+      cresult(1).config should equal(sca.configs(1))
 
-      cresult(2)._1 shouldBe a[CommandStatus.Invalid]
-      cresult(2)._2 should equal(sca.configs(2))
+      cresult(2).status shouldBe a[CommandStatus.Invalid]
+      cresult(2).config should equal(sca.configs(2))
 
       // Is correct overall returned
       CommandStatus.validationsToOverallCommandStatus(validations) shouldBe NotAccepted

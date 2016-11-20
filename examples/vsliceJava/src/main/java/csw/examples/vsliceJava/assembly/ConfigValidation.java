@@ -4,15 +4,21 @@ import csw.util.config.Configurations.ConfigKey;
 import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.Configurations.SetupConfigArg;
 import csw.util.config.DoubleItem;
+import csw.util.config.StringItem;
+import csw.util.config.StringKey;
+import javacsw.services.ccs.JCommandStatus;
 import javacsw.services.ccs.JValidation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static csw.examples.vsliceJava.assembly.AssemblyContext.*;
+import static csw.examples.vsliceJava.assembly.AssemblyContext.configurationVersionKey;
 import static csw.services.ccs.Validation.Invalid;
 import static csw.services.ccs.Validation.Validation;
 import static javacsw.services.ccs.JValidation.*;
+import static javacsw.util.config.JItems.jget;
 import static javacsw.util.config.JItems.jitem;
 import static javacsw.util.config.JItems.jvalue;
 
@@ -24,16 +30,17 @@ public class ConfigValidation {
 
   /**
    * Looks for any SetupConfigs in a SetupConfigArg that fail validation and returns as a list of only Invalid
+   *
    * @param sca input SetupConfigArg for checking
-   * @param ac AssemblyContext provides command names
+   * @param ac  AssemblyContext provides command names
    * @return scala [[List]] that includes only the Invalid configurations in the SetupConfigArg
    */
   public static List<Invalid> invalidsInTromboneSetupConfigArg(SetupConfigArg sca, AssemblyContext ac) {
     // Returns a list of all failed validations in config arg
     List<Validation> list = validateTromboneSetupConfigArg(sca, ac);
     List<Invalid> badList = new ArrayList<>();
-    for(Validation v : list) {
-      if (v instanceof Invalid) badList.add((Invalid)v);
+    for (Validation v : list) {
+      if (v instanceof Invalid) badList.add((Invalid) v);
     }
     return badList;
   }
@@ -57,7 +64,7 @@ public class ConfigValidation {
   // Validates a SetupConfigArg for Trombone Assembly
   public static List<Validation> validateTromboneSetupConfigArg(SetupConfigArg sca, AssemblyContext ac) {
     List<Validation> result = new ArrayList<>();
-    for(SetupConfig config : sca.jconfigs()) {
+    for (SetupConfig config : sca.getConfigs()) {
       result.add(validateOneSetupConfig(config, ac));
     }
     return result;
@@ -65,6 +72,7 @@ public class ConfigValidation {
 
   /**
    * Validation for the init SetupConfig
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */
@@ -80,14 +88,19 @@ public class ConfigValidation {
     if (size == 2) {
       // Check for correct keys and types
       // This example assumes that we want only these two keys
-      Set<String> missing = sc.jMissingKeys(ac.configurationNameKey, ac.configurationVersionKey);
+      Set<String> missing = sc.jMissingKeys(configurationNameKey, configurationVersionKey);
+
       if (!missing.isEmpty())
         return Invalid(MissingKeyIssue("The 2 parameter init SetupConfig requires keys: "
-          + ac.configurationNameKey + " and " + ac.configurationVersionKey));
-//      if (!(jitem(sc, ac.configurationNameKey) instanceof StringItem)
-//        || !(jitem(sc, ac.configurationVersionKey) instanceof StringItem))
-//        return Invalid(WrongItemTypeIssue("The init SetupConfig requires StringItems named: "
-//          + ac.configurationVersionKey + " and " + ac.configurationVersionKey));
+          + configurationNameKey + " and " + configurationVersionKey));
+
+      try {
+        StringItem i1 = jitem(sc, configurationNameKey);
+        StringItem i2 = jitem(sc, configurationVersionKey);
+      } catch (Exception ex) {
+        return Invalid(JValidation.WrongItemTypeIssue("The init SetupConfig requires StringItems named: "
+          + configurationVersionKey + " and " + configurationVersionKey));
+      }
       return JValidation.Valid;
     }
     return Invalid(WrongNumberOfItemsIssue("The init configuration requires 0 or 2 items, but " + size + " were received"));
@@ -95,21 +108,28 @@ public class ConfigValidation {
 
   /**
    * Validation for the datum SetupConfig -- currently nothing to validate
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */
-  public static Validation datumValidation(SetupConfig sc) { return JValidation.Valid; }
+  public static Validation datumValidation(SetupConfig sc) {
+    return JValidation.Valid;
+  }
 
   /**
    * Validation for the stop SetupConfig -- currently nothing to validate
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */
-  public static Validation stopValidation(SetupConfig sc) { return JValidation.Valid; }
+  public static Validation stopValidation(SetupConfig sc) {
+    return JValidation.Valid;
+  }
 
   /**
    * Validation for the move SetupConfig
    * Note: position is optional, if not present, it moves to home
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */
@@ -139,6 +159,7 @@ public class ConfigValidation {
 
   /**
    * Validation for the position SetupConfig -- must have a single parameter named rangeDistance
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */
@@ -146,33 +167,34 @@ public class ConfigValidation {
     if (!sc.configKey().equals(ac.positionCK)) {
       return Invalid(WrongConfigKeyIssue("The SetupConfig is not a position configuration."));
     }
-      // The spec says parameter is not required, but doesn't explain so requiring parameter
-      // Check for correct key and type -- only checks that essential key is present, not strict
-      if (!sc.exists(ac.naRangeDistanceKey)) {
-        return Invalid(MissingKeyIssue("The position SetupConfig must have a DoubleItem named: " + ac.naRangeDistanceKey));
-      }
-      DoubleItem di = jitem(sc, ac.naRangeDistanceKey);
+    // The spec says parameter is not required, but doesn't explain so requiring parameter
+    // Check for correct key and type -- only checks that essential key is present, not strict
+    if (!sc.exists(ac.naRangeDistanceKey)) {
+      return Invalid(MissingKeyIssue("The position SetupConfig must have a DoubleItem named: " + ac.naRangeDistanceKey));
+    }
+    DoubleItem di = jitem(sc, ac.naRangeDistanceKey);
 //      if (!(di instanceof DoubleItem)) {
 //        return Invalid(WrongItemTypeIssue("The position SetupConfig must have a DoubleItem named: " + ac.naRangeDistanceKey));
 //      }
-      if (di.units() != ac.naRangeDistanceUnits) {
-        return Invalid(WrongUnitsIssue("The position SetupConfig parameter: "
-          + ac.naRangeDistanceKey
-          + " must have units of: "
-          + ac.naRangeDistanceUnits));
-      }
+    if (di.units() != ac.naRangeDistanceUnits) {
+      return Invalid(WrongUnitsIssue("The position SetupConfig parameter: "
+        + ac.naRangeDistanceKey
+        + " must have units of: "
+        + ac.naRangeDistanceUnits));
+    }
 
-        double el = jvalue(di);
-        if (el < 0) {
-          return Invalid(ItemValueOutOfRangeIssue("Range distance value of "
-            + el
-          + " for position must be greater than or equal 0 km."));
-        }
-        return JValidation.Valid;
+    double el = jvalue(di);
+    if (el < 0) {
+      return Invalid(ItemValueOutOfRangeIssue("Range distance value of "
+        + el
+        + " for position must be greater than or equal 0 km."));
+    }
+    return JValidation.Valid;
   }
 
   /**
    * Validation for the setElevation SetupConfig
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */
@@ -199,6 +221,7 @@ public class ConfigValidation {
 
   /**
    * Validation for the setAngle SetupConfig
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */
@@ -225,6 +248,7 @@ public class ConfigValidation {
 
   /**
    * Validation for the follow SetupConfig
+   *
    * @param sc the received SetupConfig
    * @return Valid or Invalid
    */

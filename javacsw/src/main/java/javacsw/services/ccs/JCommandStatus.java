@@ -1,6 +1,8 @@
 package javacsw.services.ccs;
 
 import csw.services.ccs.CommandStatus;
+import csw.services.ccs.Validation;
+import csw.services.ccs.Validation.ValidationIssue;
 
 /**
  * Java access to Scala CommandStatus constant objects
@@ -8,39 +10,28 @@ import csw.services.ccs.CommandStatus;
 public class JCommandStatus {
 
   /**
+   * The configuration or set of configurations was not valid before starting
+   * @param issue an issue that caused the input configuration to be invalid
+   */
+  public static CommandStatus.CommandStatus Invalid(ValidationIssue issue) {
+    return new CommandStatus.Invalid(issue);
+  }
+
+  // This is present to support returning a Validation as a CommandStatus
+  public static CommandStatus.Invalid Invalid(Validation.Invalid in) {
+    return CommandStatus.createInvalid(in);
+  }
+
+  /**
    * The configuration or set of configurations was valid and started
    */
   public static final CommandStatus.CommandStatus Valid = CommandStatus.Valid$.MODULE$;
 
 
-//  /**
-//   * The command was valid when received, but is no longer valid because of itervening activities
-//   */
-//  public static CommandStatus.CommandStatus NoLongerValid(Validation.ValidationIssue issue) {
-//      return new CommandStatus.NoLongerValid(issue);
-//  }
-
   /**
    * The command has completed successfully
    */
   public static final CommandStatus.CommandStatus Completed = CommandStatus.Completed$.MODULE$;
-
-//  /**
-//   * Command Completed with a result
-//   * @param result - currently a SetupConfig - would like to add ResultConfiguration to types in Configuration and use it here
-//   */
-//  final case class CompletedWithResult(result: SetupConfig) extends CommandStatus
-
-//  /**
-//   * The command is currently executing or has not yet started
-//   * When used for a specific command, it indicates the command has not yet executed or is currently executing and is providing an update
-//   */
-//  final case class InProgress(message: String = "") extends CommandStatus
-
-//  /**
-//   * The command was started, but ended with error with the given message
-//   */
-//  final case class Error(message: String) extends CommandStatus
 
   /**
    * The command was aborted
@@ -53,11 +44,6 @@ public class JCommandStatus {
    * Cancelled means the command/actions were stopped at the next convenient place. This is usually appropriate for
    */
   public static final CommandStatus.CommandStatus Cancelled = CommandStatus.Cancelled$.MODULE$;
-
-//  /**
-//   * The following describe the overall status of a config arg when sent as a group
-//   */
-//  sealed trait OverallCommandStatus
 
   /**
    * A multi-config arg has been accepted for all parts

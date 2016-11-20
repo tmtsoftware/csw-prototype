@@ -416,7 +416,7 @@ object Configurations {
     /**
      * Java API: Returns the list of configs
      */
-    def jconfigs: java.util.List[SetupConfig] = configs.asJava
+    def getConfigs: java.util.List[SetupConfig] = configs.asJava
   }
 
   object SetupConfigArg {

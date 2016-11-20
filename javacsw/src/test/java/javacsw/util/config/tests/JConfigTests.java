@@ -315,7 +315,7 @@ public class JConfigTests {
     SetupConfig sc2 = jadd(sc(ck1), jset(xOffset, 1), jset(yOffset, 2));
     SetupConfigArg configArg = Configurations.createSetupConfigArg(obsId, sc1, sc2);
     assertTrue(configArg.info().obsId().obsId().equals(obsId));
-    assertTrue(configArg.jconfigs().equals(Arrays.asList(sc1, sc2)));
+    assertTrue(configArg.getConfigs().equals(Arrays.asList(sc1, sc2)));
   }
 
   @Test

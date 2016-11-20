@@ -24,8 +24,13 @@ object CommandStatus {
 
   object Invalid {
     // This is present to support returning a Validation as a CommandStatus
-    def apply(in: Validation.Invalid): CommandStatus.Invalid = CommandStatus.Invalid(in.issue)
+    def apply(in: Validation.Invalid): CommandStatus.Invalid = new CommandStatus.Invalid(in.issue)
   }
+
+  /**
+   * Java API: This is present to support returning a Validation as a CommandStatus
+   */
+  def createInvalid(in: Validation.Invalid): CommandStatus.Invalid = Invalid(in)
 
   /**
    * Converts a validation result to a CommandStatus result
@@ -46,13 +51,29 @@ object CommandStatus {
    * Note: The validations must be done elsewhere and must be one to one with the configs
    * @param configs sequence of configs that were validated
    * @param validations sequence of validation results cooresponding to the sequence of configs
-   * @return sequence of CommandResultPair where validations have been converted to cooresponding CommandStatus types
+   * @return sequence of CommandResultPair where validations have been converted to corresponding CommandStatus types
    */
   def validationsToCommandResultPairs(configs: Seq[SequenceConfig], validations: List[Validation]): List[CommandResultPair] =
-    validations.map(f => validationAsCommandStatus(f)).zip(configs)
+    validations.map(f => validationAsCommandStatus(f)).zip(configs).map(p => CommandResultPair(p._1, p._2))
+
+  /**
+   * Java API: Function converts a list of configs with their corresponding Validations to a list of pairs
+   * of (CommandStatus, SequenceConfig) that can be included in a CommandResult
+   *
+   * Note: The validations must be done elsewhere and must be one to one with the configs
+   * @param configs sequence of configs that were validated
+   * @param validations sequence of validation results cooresponding to the sequence of configs
+   * @return sequence of CommandResultPair where validations have been converted to corresponding CommandStatus types
+   */
+  def validationsToCommandResultPairs(configs: java.util.List[SequenceConfig], validations: java.util.List[Validation]): java.util.List[CommandResultPair] =
+    validationsToCommandResultPairs(configs.asScala, validations.asScala.toList).asJava
 
   def validationsToOverallCommandStatus(validations: List[Validation]): OverallCommandStatus =
     if (!validations.exists(_ != Validation.Valid)) Accepted else NotAccepted
+
+  // Java API
+  def validationsToOverallCommandStatus(validations: java.util.List[Validation]): OverallCommandStatus =
+    validationsToOverallCommandStatus(validations.asScala.toList)
 
   def validationsToCommandResult(runId: RunId, configs: Seq[SequenceConfig], validations: List[Validation]): CommandResult = {
     val commandResultPairs = validationsToCommandResultPairs(configs, validations)
@@ -131,18 +152,19 @@ object CommandStatus {
    */
   case object AllCompleted extends OverallCommandStatus
 
-  type CommandResultPair = (CommandStatus, SequenceConfig)
+  // Using a class instead of a pair to make it easier for Java to access...
+  case class CommandResultPair(status: CommandStatus, config: SequenceConfig)
 
   final case class CommandResults(results: List[CommandResultPair] = List.empty[CommandResultPair]) {
     def :+(pair: CommandResultPair) = CommandResults(results = results :+ pair)
-    def status(index: Int): CommandStatus = results(index)._1
-    def config(index: Int): SequenceConfig = results(index)._2
+    def status(index: Int): CommandStatus = results(index).status
+    def config(index: Int): SequenceConfig = results(index).config
 
     /**
      * Java API to access results
      */
     def getResults: java.util.List[akka.japi.Pair[CommandStatus, SequenceConfig]] = {
-      results.map(p => new akka.japi.Pair(p._1, p._2)).asJava
+      results.map(p => new akka.japi.Pair(p.status, p.config)).asJava
     }
   }
 

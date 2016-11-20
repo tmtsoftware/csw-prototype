@@ -40,7 +40,7 @@ class SequentialExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef
 
     case cs @ CommandStatus.Completed =>
       // Save record of sequential successes
-      val execResultsOut = execResultsIn :+ (cs, configsIn.head)
+      val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       val configsOut = configsIn.tail
       if (configsOut.isEmpty) {
         // If there are no more in the sequence, return the completion for all and be done
@@ -58,14 +58,14 @@ class SequentialExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef
       log.info(s"Validation Issue: $cs")
       // Save record of sequential successes
       context.become(receive)
-      val execResultsOut = execResultsIn :+ (cs, configsIn.head)
+      val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       commandOriginator.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
       context.stop(self)
 
     case cs: Error =>
       log.info(s"Received error: ${cs.message}")
       // Save record of sequential successes
-      val execResultsOut = execResultsIn :+ (cs, configsIn.head)
+      val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       context.become(receive)
       // This returns the cumulative results to the original sender of the message to the sequenctial executor
       commandOriginator.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
@@ -74,7 +74,7 @@ class SequentialExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef
     case cs: Invalid =>
       log.info(s"Received Invalid: ${cs.issue}")
       // Save record of sequential successes
-      val execResultsOut = execResultsIn :+ (cs, configsIn.head)
+      val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       context.become(receive)
       commandOriginator.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
       context.stop(self)
@@ -82,7 +82,7 @@ class SequentialExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef
     case cs @ Cancelled =>
       log.info(s"Received Cancelled")
       // Save record of sequential successes
-      val execResultsOut = execResultsIn :+ (cs, configsIn.head)
+      val execResultsOut = execResultsIn :+ CommandResultPair(cs, configsIn.head)
       context.become(receive)
       commandOriginator.foreach(_ ! CommandResult(sca.info.runId, Incomplete, execResultsOut))
       context.stop(self)
