@@ -441,6 +441,15 @@ object Configurations {
   def createSetupConfigArg(obsId: String, configs: SetupConfig*): SetupConfigArg = SetupConfigArg(ConfigInfo(ObsId(obsId)), configs: _*)
 
   /**
+   * For the Java API
+   *
+   * @param obsId   the obs id string
+   * @param configs one or more configs
+   * @return a new SetupConfigArg containing the obsId and configs
+   */
+  def createSetupConfigArg(obsId: String, configs: java.util.List[SetupConfig]): SetupConfigArg = SetupConfigArg(ConfigInfo(ObsId(obsId)), configs.asScala: _*)
+
+  /**
    * Combines multiple ObserveConfigs together with a ConfigInfo object containing the obsId and runId
    *
    * @param info    contains the obsId, runId

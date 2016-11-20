@@ -1,119 +1,154 @@
-//package csw.examples.vsliceJava.assembly
-//
-///**
-// * TMT Source Code: 10/10/16.
-// */
-//import akka.actor.{ActorRef, ActorSystem}
-//import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-//import com.typesafe.scalalogging.slf4j.LazyLogging
-//import csw.services.ccs.AssemblyController2.Submit
-//import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult, Completed}
-//import csw.services.loc.LocationService
-//import csw.services.pkg.Component.AssemblyInfo
-//import csw.services.pkg.Supervisor
-//import csw.services.pkg.Supervisor._
-//import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
-//import csw.util.config.Configurations
-//import csw.util.config.Configurations.SetupConfig
-//import org.scalatest.{BeforeAndAfterAll, _}
-//
-//import scala.concurrent.duration._
-//
-//object TromboneAssemblyCompTests {
-//  LocationService.initInterface()
-//
-//  val system = ActorSystem("TromboneAssemblyCompTests")
-//}
-//class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system) with ImplicitSender
-//    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
-//
-//  val assemblyContext = AssemblyTestData.TestAssemblyContext
-//  import assemblyContext._
-//
-//  def newTrombone(assemblyInfo: AssemblyInfo = assemblyContext.info): ActorRef = {
-//    Supervisor(assemblyInfo)
-//  }
-//
-//  describe("comp tests") {
-//
-//    it("should just startup") {
-//      val tla = newTrombone()
-//      val fakeSequencer = TestProbe()
-//
-//      tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
-//      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      fakeSequencer.expectNoMsg(12.seconds) // wait for connections
-//    }
-//
-//    it("should allow a datum") {
-//      val tla = newTrombone()
-//      val fakeSequencer = TestProbe()
-//
-//      tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
-//      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
-//
-//      fakeSequencer.expectNoMsg(12.seconds) // wait for connections
-//
-//      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(datumCK))
-//
-//      fakeSequencer.send(tla, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      val acceptedMsg = fakeSequencer.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      val completeMsg = fakeSequencer.expectMsgClass(3.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.status(0) shouldBe Completed
-//      // Wait a bit to see if there is any spurious messages
-//      fakeSequencer.expectNoMsg(250.milli)
-//      info("Msg: " + completeMsg)
-//    }
-//
-//    it("should allow a datum then a set of positions as separate sca") {
-//      val tla = newTrombone()
-//      val fakeSequencer = TestProbe()
-//
-//      tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
-//      fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-//      fakeSequencer.expectMsg(20.seconds, LifecycleStateChanged(LifecycleRunning))
-//
-//      //fakeSequencer.expectNoMsg(12.seconds)  // wait for connections
-//
-//      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(datumCK))
-//      fakeSequencer.send(tla, Submit(datum))
-//
-//      // This first one is the accept/verification
-//      var acceptedMsg = fakeSequencer.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg1: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Second one is completion of the executed ones
-//      var completeMsg = fakeSequencer.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg2: " + completeMsg)
-//      completeMsg.overall shouldBe AllCompleted
-//
-//      // This will send a config arg with 10 position commands
-//      val testRangeDistance = 90 to 180 by 10
-//      val positionConfigs = testRangeDistance.map(f => positionSC(f))
-//
-//      val sca = Configurations.createSetupConfigArg("testobsId", positionConfigs: _*)
-//      fakeSequencer.send(tla, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      acceptedMsg = fakeSequencer.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg1: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Second one is completion of the executed ones - give this some extra time to complete
-//      completeMsg = fakeSequencer.expectMsgClass(10.seconds, classOf[CommandResult])
-//      logger.info("msg2: " + completeMsg)
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.results.size shouldBe sca.configs.size
-//    }
-//  }
-//
-//}
+package csw.examples.vsliceJava.assembly;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
+import akka.testkit.JavaTestKit;
+import akka.testkit.TestProbe;
+import csw.services.ccs.AssemblyController.Submit;
+import csw.services.ccs.CommandStatus.CommandResult;
+import csw.services.loc.LocationService;
+import csw.services.pkg.SupervisorExternal.SubscribeLifecycleCallback;
+import csw.util.config.Configurations;
+import csw.util.config.Configurations.SetupConfig;
+import csw.util.config.Configurations.SetupConfigArg;
+import javacsw.services.pkg.JSupervisor;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static csw.services.pkg.SupervisorExternal.LifecycleStateChanged;
+import static javacsw.services.ccs.JCommandStatus.*;
+import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
+import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
+import static junit.framework.TestCase.assertEquals;
+
+@SuppressWarnings({"WeakerAccess", "OptionalUsedAsFieldOrParameterType", "MismatchedReadAndWriteOfArray"})
+public class TromboneAssemblyCompTests extends JavaTestKit {
+  private static ActorSystem system;
+  private static LoggingAdapter logger;
+
+  private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
+
+  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
+  ActorRef self() {
+    return getTestActor();
+  }
+
+  public TromboneAssemblyCompTests() {
+    super(system);
+  }
+
+  @BeforeClass
+  public static void setup() throws Exception {
+    LocationService.initInterface();
+    system = ActorSystem.create();
+    logger = Logging.getLogger(system, system);
+  }
+
+  @AfterClass
+  public static void teardown() {
+    JavaTestKit.shutdownActorSystem(system);
+    system = null;
+  }
+
+  ActorRef newTrombone() {
+    return JSupervisor.create(assemblyContext.info);
+  }
+
+  // --- comp tests ---
+
+  @Test
+  public void test1() {
+    // should just startup
+    ActorRef tla = newTrombone();
+    TestProbe fakeSequencer = new TestProbe(system);
+
+    tla.tell(new SubscribeLifecycleCallback(fakeSequencer.ref()), self());
+    fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+    fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+    fakeSequencer.expectNoMsg(duration("3 seconds")); // wait for connections
+  }
+
+  @Test
+  public void test2() {
+    // should allow a datum
+    ActorRef tla = newTrombone();
+    TestProbe fakeSequencer = new TestProbe(system);
+
+    tla.tell(new SubscribeLifecycleCallback(fakeSequencer.ref()), self());
+    fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+    fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+    fakeSequencer.expectNoMsg(duration("3 seconds")); // wait for connections
+
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()), new SetupConfig(assemblyContext.datumCK.prefix()));
+
+    fakeSequencer.send(tla, new Submit(sca));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeSequencer.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    CommandResult completeMsg = fakeSequencer.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().status(0), Completed);
+    // Wait a bit to see if there is any spurious messages
+    fakeSequencer.expectNoMsg(duration("250 milli"));
+    logger.info("Msg: " + completeMsg);
+  }
+
+  @Test
+  public void test3() {
+    // should allow a datum then a set of positions as separate sca
+    ActorRef tla = newTrombone();
+    TestProbe fakeSequencer = new TestProbe(system);
+
+    tla.tell(new SubscribeLifecycleCallback(fakeSequencer.ref()), self());
+    fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
+    fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+
+    fakeSequencer.expectNoMsg(duration("3 seconds")); // wait for connections
+
+    SetupConfigArg datum = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()), new SetupConfig(assemblyContext.datumCK.prefix()));
+
+    fakeSequencer.send(tla, new Submit(datum));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeSequencer.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg1: " + acceptedMsg);
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    CommandResult completeMsg = fakeSequencer.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg2: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+//------
+
+    // This will send a config arg with 10 position commands
+    int[] testRangeDistance = new int[]{90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
+    List<SetupConfig> positionConfigs = Arrays.stream(testRangeDistance).mapToObj(f -> assemblyContext.positionSC(f))
+      .collect(Collectors.toList());
+
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId", positionConfigs);
+    fakeSequencer.send(tla, new Submit(sca));
+
+    // This first one is the accept/verification
+    acceptedMsg = fakeSequencer.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg1: " + acceptedMsg);
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones - give this some extra time to complete
+    completeMsg = fakeSequencer.expectMsgClass(duration("10 seconds"), CommandResult.class);
+    logger.info("msg2: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().results().size(), sca.configs().size());
+  }
+}

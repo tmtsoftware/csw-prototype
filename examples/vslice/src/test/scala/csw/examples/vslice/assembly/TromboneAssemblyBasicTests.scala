@@ -142,6 +142,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should allow a datum") {
+      // test4
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -173,6 +174,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should show a move without a datum as an error because trombone in wrong state") {
+      // test5
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -209,6 +211,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should allow an init, datum then 2 moves") {
+      // test6
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -241,6 +244,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should allow an init, datum then a position") {
+      // test7
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -274,6 +278,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should allow an init, datum then a set of positions as separate sca") {
+      // test8
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -322,6 +327,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should allow an init, datum then move and stop") {
+      // test9
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -379,6 +385,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should allow an init, setElevation") {
+      // test10
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -423,6 +430,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should get an error for SetAngle without fillowing after good setup") {
+      // test11
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -474,50 +482,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     }
 
     it("should allow an init, setElevation, follow, stop") {
-      val fakeSupervisor = TestProbe()
-      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-      val fakeClient = TestProbe()
-
-      //val fakeSupervisor = TestProbe()
-      fakeSupervisor.expectMsg(Initialized)
-      fakeSupervisor.expectMsg(Started)
-      fakeSupervisor.expectNoMsg(200.milli)
-      fakeSupervisor.send(tromboneAssembly, Running)
-
-      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-      fakeClient.send(tromboneAssembly, Submit(datum))
-
-      // This first one is the accept/verification
-      var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-      acceptedMsg.overall shouldBe Accepted
-      // Second one is completion of the executed datum
-      var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-      completeMsg.overall shouldBe AllCompleted
-
-      val testEl = 150.0
-      val sca = Configurations.createSetupConfigArg("testobsId", setElevationSC(testEl), followSC(false), SetupConfig(stopCK))
-
-      // Send the setElevation
-      fakeClient.send(tromboneAssembly, Submit(sca))
-
-      // This first one is the accept/verification
-      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-      acceptedMsg.overall shouldBe Accepted
-      //logger.info(s"AcceptedMsg: $acceptedMsg")
-
-      // Second one is completion of the executed ones
-      completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-      logger.info(s"completeMsg: $completeMsg")
-      completeMsg.overall shouldBe AllCompleted
-      completeMsg.details.results.size shouldBe sca.configs.size
-
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
-    }
-
-    it("should allow an init, setElevation, follow, 2 setAngles, and a stop") {
+      // test12
       val fakeSupervisor = TestProbe()
       val tromboneAssembly = newTrombone(fakeSupervisor.ref)
       val fakeClient = TestProbe()
@@ -563,6 +528,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
   }
 
   it("should allow an init, setElevation, follow, a bunch of events and a stop") {
+    // test13
 
     val fakeSupervisor = TestProbe()
     val tromboneAssembly = newTrombone(fakeSupervisor.ref)
@@ -613,7 +579,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
     // This should result in the length of tcsEvents being published
-    tcsEvents.map { f =>
+    tcsEvents.foreach { f =>
       logger.info(s"Publish: $f")
       tcsRtc.publish(f)
     }

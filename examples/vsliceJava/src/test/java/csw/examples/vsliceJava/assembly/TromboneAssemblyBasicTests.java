@@ -11,32 +11,29 @@ import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
 import csw.services.apps.containerCmd.ContainerCmd;
-import csw.services.ccs.AssemblyController;
 import csw.services.ccs.AssemblyController.Submit;
-import csw.services.ccs.CommandStatus;
 import csw.services.ccs.CommandStatus.CommandResult;
 import csw.services.ccs.CommandStatus.NoLongerValid;
-import csw.services.ccs.Validation;
+import csw.services.ccs.Validation.WrongInternalStateIssue;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component.AssemblyInfo;
 import csw.util.config.Configurations;
 import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.Configurations.SetupConfigArg;
-import javacsw.services.ccs.JCommandStatus;
+import csw.util.config.Events.SystemEvent;
 import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import static csw.examples.vsliceJava.assembly.AssemblyContext.*;
+import static javacsw.services.ccs.JCommandStatus.*;
 import static javacsw.services.pkg.JSupervisor.*;
-import static javacsw.util.config.JUnitsOfMeasure.seconds;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -52,11 +49,6 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
   // List of top level actors that were created for the HCD (for clean up)
   private static List<ActorRef> hcdActors;
 
-
-  // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
-  ActorRef self() {
-    return getTestActor();
-  }
 
   public TromboneAssemblyBasicTests() {
     super(system);
@@ -74,8 +66,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     Map<String, String> configMap = Collections.singletonMap("", "tromboneHCD.conf");
     ContainerCmd cmd = new ContainerCmd("tromboneHCD", new String[]{"--standalone"}, configMap);
     hcdActors = cmd.getActors();
-    if (hcdActors.size() == 0) System.out.println("XXX Problem creating Trombone HCD");
-
+    if (hcdActors.size() == 0) logger.error("Failed to create trombone HCD");
   }
 
   @AfterClass
@@ -90,19 +81,9 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     return TromboneAssembly.props(assemblyInfo, supervisorIn.get());
   }
 
-  ActorRef newTrombone(ActorRef supervisor, AssemblyInfo assemblyInfo) {
-    Props props = getTromboneProps(assemblyInfo, Optional.of(supervisor));
-    return system.actorOf(props);
-  }
-
   ActorRef newTrombone(ActorRef supervisor) {
     Props props = getTromboneProps(assemblyContext.info, Optional.of(supervisor));
     return system.actorOf(props);
-  }
-
-  TestActorRef<TromboneAssembly> newTestTrombone(ActorRef supervisor, AssemblyInfo assemblyInfo) {
-    Props props = getTromboneProps(assemblyInfo, Optional.of(supervisor));
-    return TestActorRef.create(system, props);
   }
 
   TestActorRef<TromboneAssembly> newTestTrombone(ActorRef supervisor) {
@@ -137,536 +118,535 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     TestProbe fakeSupervisor = new TestProbe(system);
     TestActorRef<TromboneAssembly> tla = newTestTrombone(fakeSupervisor.ref());
 
-      fakeSupervisor.expectMsg(Initialized);
-      fakeSupervisor.expectMsg(duration("10 seconds"), Started);
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(duration("10 seconds"), Started);
 
-      fakeSupervisor.send(tla, Running);
+    fakeSupervisor.send(tla, Running);
 
-      fakeSupervisor.send(tla, DoShutdown);
-      fakeSupervisor.expectMsg(ShutdownComplete);
+    fakeSupervisor.send(tla, DoShutdown);
+    fakeSupervisor.expectMsg(ShutdownComplete);
 
-      logger.info("Shutdown Complete");
-      system.stop(tla);
-    }
+    logger.info("Shutdown Complete");
+    system.stop(tla);
+  }
 
-    @Test
-    public void test3() {
-      // datum without an init should fail
-      TestProbe fakeSupervisor = new TestProbe(system);
-      ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
-      TestProbe fakeClient = new TestProbe(system);
+  @Test
+  public void test3() {
+    // datum without an init should fail
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
 
-      //val fakeSupervisor = TestProbe()
-      fakeSupervisor.expectMsg(Initialized);
-      fakeSupervisor.expectMsg(Started);
-      fakeSupervisor.send(tromboneAssembly, Running);
+    //val fakeSupervisor = TestProbe()
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.send(tromboneAssembly, Running);
 
-      SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId", new SetupConfig(assemblyContext.datumCK.prefix()));
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId", new SetupConfig(assemblyContext.datumCK.prefix()));
 
-      fakeClient.send(tromboneAssembly, new Submit(sca));
+    fakeClient.send(tromboneAssembly, new Submit(sca));
 
-      // This first one is the accept/verification succeeds because verification does not look at state
-      CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
-      assertEquals(acceptedMsg.overall(), JCommandStatus.Accepted);
-      logger.info("Accepted: " + acceptedMsg);
+    // This first one is the accept/verification succeeds because verification does not look at state
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+    logger.info("Accepted: " + acceptedMsg);
 
-      // This should fail due to wrong internal state
-      CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
-      System.out.println("XXX " + ((NoLongerValid)completeMsg.details().status(0)).issue());
-      assertEquals(completeMsg.overall(), JCommandStatus.Incomplete);
-      assertTrue(completeMsg.details().status(0) instanceof NoLongerValid);
-      assertTrue(((NoLongerValid)completeMsg.details().status(0)).issue() instanceof Validation.WrongInternalStateIssue);
+    // This should fail due to wrong internal state
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    System.out.println("XXX " + ((NoLongerValid) completeMsg.details().status(0)).issue());
+    assertEquals(completeMsg.overall(), Incomplete);
+    assertTrue(completeMsg.details().status(0) instanceof NoLongerValid);
+    assertTrue(((NoLongerValid) completeMsg.details().status(0)).issue() instanceof WrongInternalStateIssue);
 
-      TestProbe monitor = new TestProbe(system);
-      monitor.watch(tromboneAssembly);
-      system.stop(tromboneAssembly);
-      monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
-    }
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
 
-//    it("should allow a datum") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      val acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      val completeMsg = fakeClient.expectMsgClass(5.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.status(0) shouldBe Completed
-//      // Wait a bit to see if there is any spurious messages
-//      fakeClient.expectNoMsg(250.milli)
-//      //logger.info("Completed: " + completeMsg)
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should show a move without a datum as an error because trombone in wrong state") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      // Sending an Init first so we can see the dataum issue
-//      val testPosition = 90.0
-//      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), moveSC(testPosition))
-//
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification -- note that it is accepted because there is no static validation errors
-//      val acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg1: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//      // This should fail due to wrong internal state
-//      val completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("Completed Msg: " + completeMsg)
-//      completeMsg.overall shouldBe Incomplete
-//      // First completes no issue
-//      completeMsg.details.status(0) shouldBe Completed
-//      // Second is for move and it should be invalid
-//      completeMsg.details.status(1) shouldBe a[NoLongerValid]
-//      completeMsg.details.status(1).asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should allow an init, datum then 2 moves") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.expectNoMsg(200.milli)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val testMove = 90.0
-//      val testMove2 = 100.0
-//      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK), moveSC(testMove), moveSC(testMove2))
-//
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      val acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Second one is completion of the executed ones
-//      val completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg2: " + completeMsg)
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.results.size shouldBe sca.configs.size
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should allow an init, datum then a position") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.expectNoMsg(200.milli)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val testRangeDistance = 125.0
-//      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK), positionSC(testRangeDistance))
-//
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      val acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      //logger.info("msg1: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Second one is completion of the executed ones
-//      val completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg2: " + completeMsg)
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.results.size shouldBe sca.configs.size
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should allow an init, datum then a set of positions as separate sca") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.expectNoMsg(200.milli)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//      fakeClient.send(tromboneAssembly, Submit(datum))
-//
-//      // This first one is the accept/verification
-//      var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      //logger.info("acceptedMsg: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Second one is completion of the executed ones
-//      var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("completeMsg: " + completeMsg)
-//      completeMsg.overall shouldBe AllCompleted
-//
-//      // This will send a config arg with 10 position commands
-//      val testRangeDistance = 90 to 180 by 10
-//      val positionConfigs = testRangeDistance.map(f => positionSC(f))
-//
-//      val sca = Configurations.createSetupConfigArg("testobsId", positionConfigs: _*)
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      //logger.info("acceptedMsg: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Second one is completion of the executed ones - give this some extra time to complete
-//      completeMsg = fakeClient.expectMsgClass(10.seconds, classOf[CommandResult])
-//      logger.info("completeMsg: " + completeMsg)
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.results.size shouldBe sca.configs.size
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should allow an init, datum then move and stop") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.expectNoMsg(200.milli)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//      fakeClient.send(tromboneAssembly, Submit(datum))
-//
-//      // This first one is the accept/verification
-//      var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      // Second one is completion of the executed datum
-//      var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe AllCompleted
-//
-//      // Now start a long move
-//      val testMove = 150.1
-//      val sca = Configurations.createSetupConfigArg("testobsId", moveSC(testMove))
-//      // Send the move
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Now send the stop after a bit of delay to let it get going
-//      // This is a timing thing that may not work on all machines
-//      fakeSupervisor.expectNoMsg(200.millis)
-//      val stop = Configurations.createSetupConfigArg("testobsId", SetupConfig(stopCK))
-//      // Send the stop
-//      fakeClient.send(tromboneAssembly, Submit(stop))
-//
-//      // Stop must be accepted too
-//      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("acceptedmsg2: " + acceptedMsg)
-//      completeMsg.overall shouldBe AllCompleted
-//
-//      // Second one is completion of the stop
-//      completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg22: " + completeMsg)
-//      completeMsg.overall shouldBe Incomplete
-//      completeMsg.details.status(0) shouldBe Cancelled
-//      // Checking that no talking
-//      fakeClient.expectNoMsg(100.milli)
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should allow an init, setElevation") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.expectNoMsg(200.milli)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//      fakeClient.send(tromboneAssembly, Submit(datum))
-//
-//      // This first one is the accept/verification
-//      var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      // Second one is completion of the executed datum
-//      var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe AllCompleted
-//
-//      val testEl = 150.0
-//      val sca = Configurations.createSetupConfigArg("testobsId", setElevationSC(testEl))
-//
-//      // Send the setElevation
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      //logger.info(s"AcceptedMsg: $acceptedMsg")
-//
-//      // Second one is completion of the executed ones
-//      completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info(s"completeMsg: $completeMsg")
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.results.size shouldBe sca.configs.size
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should get an error for SetAngle without fillowing after good setup") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      // Sending an Init first so we can see the datum issue
-//      val sca = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification -- note that it is accepted because there is no static validation errors
-//      var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("acceptedMsg1: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // Second one is completion of the executed init/datum
-//      var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe AllCompleted
-//      logger.info(s"completedMsg1: $completeMsg")
-//
-//      // Now try a setAngle
-//      val setAngleValue = 22.0
-//      val sca2 = Configurations.createSetupConfigArg("testobsId", setAngleSC(setAngleValue))
-//      // Send the command
-//      fakeClient.send(tromboneAssembly, Submit(sca2))
-//
-//      // This first one is the accept/verification -- note that it is accepted because there is no static validation errors
-//      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("msg1: " + acceptedMsg)
-//      acceptedMsg.overall shouldBe Accepted
-//
-//      // This should fail due to wrong internal state
-//      completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info("Completed Msg2: " + completeMsg)
-//
-//      completeMsg.overall shouldBe Incomplete
-//      // First is not valid
-//      completeMsg.details.status(0) shouldBe a[NoLongerValid]
-//      completeMsg.details.status(0).asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should allow an init, setElevation, follow, stop") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.expectNoMsg(200.milli)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//      fakeClient.send(tromboneAssembly, Submit(datum))
-//
-//      // This first one is the accept/verification
-//      var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      // Second one is completion of the executed datum
-//      var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe AllCompleted
-//
-//      val testEl = 150.0
-//      val sca = Configurations.createSetupConfigArg("testobsId", setElevationSC(testEl), followSC(false), SetupConfig(stopCK))
-//
-//      // Send the setElevation
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      //logger.info(s"AcceptedMsg: $acceptedMsg")
-//
-//      // Second one is completion of the executed ones
-//      completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info(s"completeMsg: $completeMsg")
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.results.size shouldBe sca.configs.size
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//
-//    it("should allow an init, setElevation, follow, 2 setAngles, and a stop") {
-//      val fakeSupervisor = TestProbe()
-//      val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//      val fakeClient = TestProbe()
-//
-//      //val fakeSupervisor = TestProbe()
-//      fakeSupervisor.expectMsg(Initialized)
-//      fakeSupervisor.expectMsg(Started)
-//      fakeSupervisor.expectNoMsg(200.milli)
-//      fakeSupervisor.send(tromboneAssembly, Running)
-//
-//      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//      fakeClient.send(tromboneAssembly, Submit(datum))
-//
-//      // This first one is the accept/verification
-//      var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      // Second one is completion of the executed datum
-//      var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      completeMsg.overall shouldBe AllCompleted
-//
-//      val testEl = 150.0
-//      val sca = Configurations.createSetupConfigArg("testobsId", setElevationSC(testEl), followSC(false), SetupConfig(stopCK))
-//
-//      // Send the setElevation
-//      fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//      // This first one is the accept/verification
-//      acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      acceptedMsg.overall shouldBe Accepted
-//      //logger.info(s"AcceptedMsg: $acceptedMsg")
-//
-//      // Second one is completion of the executed ones
-//      completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//      logger.info(s"completeMsg: $completeMsg")
-//      completeMsg.overall shouldBe AllCompleted
-//      completeMsg.details.results.size shouldBe sca.configs.size
-//
-//      val monitor = TestProbe()
-//      monitor.watch(tromboneAssembly)
-//      system.stop(tromboneAssembly)
-//      monitor.expectTerminated(tromboneAssembly)
-//    }
-//  }
-//
-//  it("should allow an init, setElevation, follow, a bunch of events and a stop") {
-//
-//    val fakeSupervisor = TestProbe()
-//    val tromboneAssembly = newTrombone(fakeSupervisor.ref)
-//    val fakeClient = TestProbe()
-//
-//    //val fakeSupervisor = TestProbe()
-//    fakeSupervisor.expectMsg(Initialized)
-//    fakeSupervisor.expectMsg(Started)
-//    fakeSupervisor.expectNoMsg(200.milli)
-//    fakeSupervisor.send(tromboneAssembly, Running)
-//
-//    val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
-//    fakeClient.send(tromboneAssembly, Submit(datum))
-//
-//    // This first one is the accept/verification
-//    var acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//    acceptedMsg.overall shouldBe Accepted
-//    // Second one is completion of the executed datum
-//    var completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//    completeMsg.overall shouldBe AllCompleted
-//
-//    val testEl = 150.0
-//    val sca = Configurations.createSetupConfigArg("testobsId", setElevationSC(testEl), followSC(false))
-//
-//    // Send the setElevation
-//    fakeClient.send(tromboneAssembly, Submit(sca))
-//
-//    // This first one is the accept/verification
-//    acceptedMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//    acceptedMsg.overall shouldBe Accepted
-//    //logger.info(s"AcceptedMsg: $acceptedMsg")
-//
-//    // Second one is completion of the executed ones
-//    completeMsg = fakeClient.expectMsgClass(3.seconds, classOf[CommandResult])
-//    logger.info(s"completeMsg: $completeMsg")
-//    completeMsg.overall shouldBe AllCompleted
-//
-//    // Now send some events
-//    // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
-//    val tcsRtc = eventService
-//
-//    val testFE = 10.0
-//    // Publish a single focus error. This will generate a published event
-//    tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
-//
-//    val testZenithAngles = 0.0 to 40.0 by 5.0
-//    // These are fake messages for the FollowActor that will be sent to simulate the TCS
-//    val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-//
-//    // This should result in the length of tcsEvents being published
-//    tcsEvents.map { f =>
-//      logger.info(s"Publish: $f")
-//      tcsRtc.publish(f)
-//    }
-//
-//    expectNoMsg(10.seconds)
-//
-//    val monitor = TestProbe()
-//    monitor.watch(tromboneAssembly)
-//    system.stop(tromboneAssembly)
-//    monitor.expectTerminated(tromboneAssembly)
-//
-//  }
-//
+  @Test
+  public void test4() {
+    // should allow a datum
+
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()));
+
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("5 seconds"), CommandResult.class);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().status(0), Completed);
+    // Wait a bit to see if there is any spurious messages
+    fakeClient.expectNoMsg(duration("250 milli"));
+    //logger.info("Completed: " + completeMsg)
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test5() {
+    // should show a move without a datum as an error because trombone in wrong state
+
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    // Sending an Init first so we can see the dataum issue
+    double testPosition = 90.0;
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()), assemblyContext.moveSC(testPosition));
+
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification -- note that it is accepted because there is no static validation errors
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg1: " + acceptedMsg);
+    assertEquals(acceptedMsg.overall(), Accepted);
+    // This should fail due to wrong internal state
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("Completed Msg: " + completeMsg);
+    assertEquals(completeMsg.overall(), Incomplete);
+    // First completes no issue
+    assertEquals(completeMsg.details().status(0), Completed);
+    // Second is for move and it should be invalid
+    assertTrue(completeMsg.details().status(1) instanceof NoLongerValid);
+    assertTrue(((NoLongerValid) completeMsg.details().status(1)).issue() instanceof WrongInternalStateIssue);
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test6() {
+    // should allow an init, datum then 2 moves
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    double testMove = 90.0;
+    double testMove2 = 100.0;
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()),
+      assemblyContext.moveSC(testMove),
+      assemblyContext.moveSC(testMove2));
+
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg2: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().results().size(), sca.configs().size());
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test7() {
+    // should allow an init, datum then a position
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    double testRangeDistance = 125.0;
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()),
+      assemblyContext.positionSC(testRangeDistance));
+
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("msg1: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg2: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().results().size(), sca.configs().size());
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test8() {
+    // should allow an init, datum then a set of positions as separate sca
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    SetupConfigArg datum = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()));
+    fakeClient.send(tromboneAssembly, new Submit(datum));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("acceptedMsg: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("completeMsg: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    // This will send a config arg with 10 position commands
+    int[] testRangeDistance = new int[]{90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
+    List<SetupConfig> positionConfigs = Arrays.stream(testRangeDistance).mapToObj(f -> assemblyContext.positionSC(f))
+      .collect(Collectors.toList());
+
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId", positionConfigs);
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("acceptedMsg: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones - give this some extra time to complete
+    completeMsg = fakeClient.expectMsgClass(duration("10 seconds"), CommandResult.class);
+    logger.info("completeMsg: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().results().size(), sca.configs().size());
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test9() {
+    // should allow an init, datum then move and stop
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    SetupConfigArg datum = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()));
+    fakeClient.send(tromboneAssembly, new Submit(datum));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("acceptedMsg: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("completeMsg: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    // Now start a long move
+    double testMove = 150.1;
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId", assemblyContext.moveSC(testMove));
+    // Send the move
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Now send the stop after a bit of delay to let it get going
+    // This is a timing thing that may not work on all machines
+    fakeSupervisor.expectNoMsg(duration("200 millis"));
+    SetupConfigArg stop = Configurations.createSetupConfigArg("testobsId", new SetupConfig(assemblyContext.stopCK.prefix()));
+    // Send the stop
+    fakeClient.send(tromboneAssembly, new Submit(stop));
+
+    // Stop must be accepted too
+    acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("acceptedmsg2: " + acceptedMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    // Second one is completion of the stop
+    completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg22: " + completeMsg);
+    assertEquals(completeMsg.overall(), Incomplete);
+    assertEquals(completeMsg.details().status(0), Cancelled);
+    // Checking that no talking
+    fakeClient.expectNoMsg(duration("100 milli"));
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test10() {
+    // should allow an init, setElevation
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    SetupConfigArg datum = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()));
+    fakeClient.send(tromboneAssembly, new Submit(datum));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("acceptedMsg: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    double testEl = 150.0;
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId", assemblyContext.setElevationSC(testEl));
+
+    // Send the setElevation
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+    //logger.info(s"AcceptedMsg: $acceptedMsg")
+
+    // Second one is completion of the executed ones
+    completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("completeMsg: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().results().size(), sca.configs().size());
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test11() {
+    // should get an error for SetAngle without fillowing after good setup
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    SetupConfigArg datum = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()));
+    fakeClient.send(tromboneAssembly, new Submit(datum));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("acceptedMsg: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    // Now try a setAngle
+    double setAngleValue = 22.0;
+    SetupConfigArg sca2 = Configurations.createSetupConfigArg("testobsId", assemblyContext.setAngleSC(setAngleValue));
+    // Send the command
+    fakeClient.send(tromboneAssembly, new Submit(sca2));
+
+    // This first one is the accept/verification -- note that it is accepted because there is no static validation errors
+    acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("msg1: " + acceptedMsg);
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // This should fail due to wrong internal state
+    completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("Completed Msg2: " + completeMsg);
+
+    assertEquals(completeMsg.overall(), Incomplete);
+    // First is not valid
+    assertTrue(completeMsg.details().status(0) instanceof NoLongerValid);
+    assertTrue(((NoLongerValid) completeMsg.details().status(0)).issue() instanceof WrongInternalStateIssue);
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test12() {
+    // should allow an init, setElevation, follow, stop
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    SetupConfigArg datum = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()));
+    fakeClient.send(tromboneAssembly, new Submit(datum));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("acceptedMsg: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    double testEl = 150.0;
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId",
+      assemblyContext.setElevationSC(testEl), assemblyContext.followSC(false),
+      new SetupConfig(assemblyContext.stopCK.prefix()));
+
+    // Send the setElevation
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+    //logger.info(s"AcceptedMsg: $acceptedMsg")
+
+    // Second one is completion of the executed ones
+    completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("completeMsg: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+    assertEquals(completeMsg.details().results().size(), sca.configs().size());
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
+
+  @Test
+  public void test() {
+    // should allow an init, setElevation, follow, a bunch of events and a stop
+    TestProbe fakeSupervisor = new TestProbe(system);
+    ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
+    TestProbe fakeClient = new TestProbe(system);
+
+    fakeSupervisor.expectMsg(Initialized);
+    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectNoMsg(duration("200 milli"));
+    fakeSupervisor.send(tromboneAssembly, Running);
+
+    SetupConfigArg datum = Configurations.createSetupConfigArg("testobsId",
+      new SetupConfig(assemblyContext.initCK.prefix()),
+      new SetupConfig(assemblyContext.datumCK.prefix()));
+    fakeClient.send(tromboneAssembly, new Submit(datum));
+
+    // This first one is the accept/verification
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    //logger.info("acceptedMsg: " + acceptedMsg)
+    assertEquals(acceptedMsg.overall(), Accepted);
+
+    // Second one is completion of the executed ones
+    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    double testEl = 150.0;
+    SetupConfigArg sca = Configurations.createSetupConfigArg("testobsId",
+      assemblyContext.setElevationSC(testEl), assemblyContext.followSC(false));
+
+    // Send the setElevation
+    fakeClient.send(tromboneAssembly, new Submit(sca));
+
+    // This first one is the accept/verification
+    acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    assertEquals(acceptedMsg.overall(), Accepted);
+    //logger.info(s"AcceptedMsg: $acceptedMsg")
+
+    // Second one is completion of the executed ones
+    completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    logger.info("completeMsg: " + completeMsg);
+    assertEquals(completeMsg.overall(), AllCompleted);
+
+    // Now send some events
+    // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
+    IEventService tcsRtc = eventService;
+
+    double testFE = 10.0;
+    // Publish a single focus error. This will generate a published event
+    tcsRtc.publish(new SystemEvent(AssemblyContext.focusErrorPrefix).add(fe(testFE)));
+
+    double[] testZenithAngles = new double[]{0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0};
+    // These are fake messages for the FollowActor that will be sent to simulate the TCS
+    List<SystemEvent> tcsEvents = Arrays.stream(testZenithAngles).mapToObj(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
+      .collect(Collectors.toList());
+
+    // This should result in the length of tcsEvents being published
+    tcsEvents.forEach(f -> {
+      logger.info("Publish: " + f);
+      tcsRtc.publish(f);
+    });
+
+    expectNoMsg(duration("10 seconds"));
+
+    TestProbe monitor = new TestProbe(system);
+    monitor.watch(tromboneAssembly);
+    system.stop(tromboneAssembly);
+    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+  }
 }

@@ -54,9 +54,11 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
 
   def handleLocations(location: Location): Unit = {
     location match {
+
       case l: ResolvedAkkaLocation =>
         log.debug(s"CommandHandler receive an actorRef: ${l.actorRef}")
         tromboneHCD = l.actorRef.getOrElse(badHCDReference)
+
       case t: ResolvedTcpLocation =>
         log.info(s"Received TCP Location: ${t.connection} from ${sender()}")
         // Verify that it is the event service
@@ -67,10 +69,12 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
           eventService = Some(EventService.get(t.host, t.port))
           log.info(s"Event Service at: $eventService")
         }
+
       case u: Unresolved =>
         log.info(s"Unresolved: ${u.connection}")
         if (u.connection == EventService.eventServiceConnection()) eventService = badEventService
         if (u.connection.componentId == ac.hcdComponentId) tromboneHCD = badHCDReference
+
       case default =>
         log.info(s"EventSubscriber received some other location: $default")
     }

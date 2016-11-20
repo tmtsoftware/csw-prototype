@@ -97,11 +97,9 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
   }
 
   private void handleLocations(Location location) {
-    log.info("CommandHandler: " + location);
-
     if (location instanceof ResolvedAkkaLocation) {
       ResolvedAkkaLocation l = (ResolvedAkkaLocation) location;
-      log.info("Got actorRef: " + l.getActorRef());
+      log.debug("CommandHandler receive an actorRef: " + l.getActorRef());
       tromboneHCD = l.getActorRef().orElse(badHCDReference);
 
     } else if (location instanceof ResolvedTcpLocation) {
