@@ -72,8 +72,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     tla.tell(new SubscribeLifecycleCallback(fakeSequencer.ref()), self());
     fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
     fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleRunning));
-
-    fakeSequencer.expectNoMsg(duration("3 seconds")); // wait for connections
+    system.stop(tla);
   }
 
   @Test
@@ -103,6 +102,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     // Wait a bit to see if there is any spurious messages
     fakeSequencer.expectNoMsg(duration("250 milli"));
     logger.info("Msg: " + completeMsg);
+    system.stop(tla);
   }
 
   @Test
@@ -130,7 +130,6 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     CommandResult completeMsg = fakeSequencer.expectMsgClass(duration("3 seconds"), CommandResult.class);
     logger.info("msg2: " + completeMsg);
     assertEquals(completeMsg.overall(), AllCompleted);
-//------
 
     // This will send a config arg with 10 position commands
     int[] testRangeDistance = new int[]{90, 100, 110, 120, 130, 140, 150, 160, 170, 180};
@@ -150,5 +149,6 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     logger.info("msg2: " + completeMsg);
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
+    system.stop(tla);
   }
 }

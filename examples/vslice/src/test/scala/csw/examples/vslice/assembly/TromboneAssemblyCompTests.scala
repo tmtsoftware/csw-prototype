@@ -43,8 +43,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
-
-      fakeSequencer.expectNoMsg(3.seconds) // wait for connections
+      system.stop(tla)
     }
 
     it("should allow a datum") {
@@ -71,6 +70,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       // Wait a bit to see if there is any spurious messages
       fakeSequencer.expectNoMsg(250.milli)
       info("Msg: " + completeMsg)
+      system.stop(tla)
     }
 
     it("should allow a datum then a set of positions as separate sca") {
@@ -113,6 +113,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       logger.info("msg2: " + completeMsg)
       completeMsg.overall shouldBe AllCompleted
       completeMsg.details.results.size shouldBe sca.configs.size
+      system.stop(tla)
     }
   }
 
