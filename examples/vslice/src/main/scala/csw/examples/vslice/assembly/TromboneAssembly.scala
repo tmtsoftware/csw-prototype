@@ -198,29 +198,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
 
-  //  // The configuration for the calculator that provides reasonable values
-  //  def getCalculationConfig: TromboneCalculationConfig = {
-  //    val defaultInitialElevation = getConfigDouble("calculation-config.defaultInitialElevation")
-  //    val focusGainError = getConfigDouble("calculation-config.focusErrorGain")
-  //    val upperFocusLimit = getConfigDouble("calculation-config.upperFocusLimit")
-  //    val lowerFocusLimit = getConfigDouble("calculation-config.lowerFocusLimit")
-  //    val zenithFactor = getConfigDouble("calculation-config.zenithFactor")
-  //    TromboneCalculationConfig(defaultInitialElevation, focusGainError, upperFocusLimit, lowerFocusLimit, zenithFactor)
-  //  }
-  //
-  //  // The configuration for the trombone position mm to encoder
-  //  def getTromboneControlConfig: TromboneControlConfig = {
-  //    val positionScale = getConfigDouble("control-config.positionScale")
-  //    val stageZero = getConfigDouble("control-config.stageZero")
-  //    val minStageEncoder = getConfigInt("control-config.minStageEncoder")
-  //    val minEncoderLimit = getConfigInt("control-config.minEncoderLimit")
-  //    val maxEncoderLimit = getConfigInt("control-config.maxEncoderLimit")
-  //    TromboneControlConfig(positionScale, stageZero, minStageEncoder, minEncoderLimit, maxEncoderLimit)
-  //  }
-  //
-  //  def getConfigDouble(name: String): Double = context.system.settings.config.getDouble(s"csw.examples.Trombone.assembly.$name")
-  //  def getConfigInt(name: String): Int = context.system.settings.config.getInt(s"csw.examples.Trombone.assembly.$name")
-
   // Gets the assembly configurations from the config service, or a resource file, if not found and
   // returns the two parsed objects.
   private def getAssemblyConfigs: (TromboneCalculationConfig, TromboneControlConfig) = {

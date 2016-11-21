@@ -41,7 +41,7 @@ public class EventSubscriberTests extends JavaTestKit {
   private static ActorSystem system;
   private static LoggingAdapter logger;
 
-  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(10, TimeUnit.SECONDS));
+  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(20, TimeUnit.SECONDS));
 
   private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
 
@@ -100,6 +100,7 @@ public class EventSubscriberTests extends JavaTestKit {
 
     es.tell(new StopFollowing(), self());
     fakeFollowActor.expectNoMsg(duration("20 milli"));
+    system.stop(es);
   }
 
   // --- tests for proper operation ---
@@ -126,10 +127,9 @@ public class EventSubscriberTests extends JavaTestKit {
     // 0.0 is the default value as well as nssZenithAngle
     assertEquals(msg.zenithAngle, za(0.0));
 
-    system.stop(es);
-
     // No more messages please
     fakeFollowActor.expectNoMsg(duration("100 milli"));
+    system.stop(es);
   }
 
 
@@ -162,10 +162,10 @@ public class EventSubscriberTests extends JavaTestKit {
     // Should get no tcsEvents because not following
     tcsEvents.forEach(tcsRtc::publish);
 
-    system.stop(es);
-
     // No more messages please
     fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    system.stop(es);
   }
 
   @Test
@@ -173,7 +173,7 @@ public class EventSubscriberTests extends JavaTestKit {
     // now enable follow should make several events for za and fe list publish nssNotInUse
     TestProbe fakeFollowActor = new TestProbe(system);
 
-    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(false), Optional.of(fakeFollowActor.ref()), eventService);
+    ActorRef es = newEventSubscriber(setNssInUse(false), Optional.of(fakeFollowActor.ref()), eventService);
 
     // first test that events are created for published focus error events
     // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -192,7 +192,7 @@ public class EventSubscriberTests extends JavaTestKit {
     // XXX Note: The Scala version of this test uses TestKit.receiveN, which returns a Scala Seq, so we need to convert here
     // (I didn't find a Java API for this)
     List<UpdatedEventData> feEventMsgs =
-      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size()))
+      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size(), duration("10 seconds")))
         .stream().map(f -> (UpdatedEventData) f)
         .collect(Collectors.toList());
 
@@ -232,14 +232,14 @@ public class EventSubscriberTests extends JavaTestKit {
     // Should get no tcsEvents because not following
     tcsEvents.forEach(tcsRtc::publish);
 
-    system.stop(es);
-
     // No more messages please
     fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    system.stop(es);
   }
 
   @Test
-  public void test5() {
+  public void test5() throws ExecutionException, InterruptedException {
     // alter nssInUse to see switch to nssZenithAngles
     TestProbe fakeFollowActor = new TestProbe(system);
 
@@ -264,7 +264,7 @@ public class EventSubscriberTests extends JavaTestKit {
     assertEquals(jvalue(one.zenithAngle), testZA);
 
     // Now follow with nssInUse and send feEvents, should have 0.0 as ZA
-    es.tell(new UpdateNssInUse(assemblyContext.setNssInUse(true)), self());
+    es.tell(new UpdateNssInUse(setNssInUse(true)), self());
 
     // Now send the events
     feEvents.forEach(tcsRtc::publish);
@@ -300,5 +300,7 @@ public class EventSubscriberTests extends JavaTestKit {
 
     // No more messages please
     fakeFollowActor.expectNoMsg(duration("100 milli"));
+
+    system.stop(es);
   }
 }

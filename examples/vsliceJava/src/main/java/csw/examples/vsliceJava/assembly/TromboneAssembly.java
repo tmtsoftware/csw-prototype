@@ -259,7 +259,6 @@ public class TromboneAssembly extends JAssemblyController {
     File tromboneConfigFile = new File("trombone/tromboneAssembly.conf");
     File resource = new File("tromboneAssembly.conf");
 
-    // XXX TODO: Use config service (deal with timeout issues, if not running: Note: tests wait for 3 seconds...)
     //    implicit val timeout = Timeout(1.seconds)
     //    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
     //    // parse the future (optional) config (XXX waiting for the result for now, need to wait longer than the timeout: FIXME)

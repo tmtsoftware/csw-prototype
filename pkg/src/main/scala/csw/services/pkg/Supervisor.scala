@@ -71,6 +71,10 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   private def terminated(actorRef: ActorRef): Unit = {
     log.info(s"$name: $actorRef has terminated")
     unregisterFromLocationService()
+
+    // XXX allan: Temp: For now, make sure the actor system is not left over between test cases...
+    context.stop(self)
+    context.system.terminate
   }
 
   private def haltComponent(): Unit = {
@@ -130,7 +134,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   def lifecycleInitializedPF: Receive = {
     case Started =>
       logState(LifecycleInitialized, LifecycleRunning)
-      log.info("lifecycleInitialized: sending Running to component")
+      log.info(s"lifecycleInitialized: sending Running to component $component")
       component ! Running
       lifecycleState = LifecycleRunning
       context.become(lifecycleRunning)

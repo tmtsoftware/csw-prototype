@@ -2,10 +2,12 @@ package csw.examples.vsliceJava.assembly;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
+import csw.services.apps.containerCmd.ContainerCmd;
 import csw.services.ccs.AssemblyController.Submit;
 import csw.services.ccs.CommandStatus.CommandResult;
 import csw.services.loc.LocationService;
@@ -19,7 +21,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static csw.services.pkg.SupervisorExternal.LifecycleStateChanged;
@@ -35,6 +39,9 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
 
   private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
 
+  // List of top level actors that were created for the HCD (for clean up)
+  private static List<ActorRef> hcdActors;
+
   // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
   ActorRef self() {
     return getTestActor();
@@ -49,10 +56,17 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
+
+    // Starts the HCD used in the test
+    Map<String, String> configMap = Collections.singletonMap("", "tromboneHCD.conf");
+    ContainerCmd cmd = new ContainerCmd("tromboneHCD", new String[]{"--standalone"}, configMap);
+    hcdActors = cmd.getActors();
+    if (hcdActors.size() == 0) logger.error("Failed to create trombone HCD");
   }
 
   @AfterClass
   public static void teardown() {
+    hcdActors.forEach(actorRef -> actorRef.tell(PoisonPill.getInstance(), ActorRef.noSender()));
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }

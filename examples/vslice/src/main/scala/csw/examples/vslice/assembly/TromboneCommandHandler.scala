@@ -76,7 +76,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
         if (u.connection.componentId == ac.hcdComponentId) tromboneHCD = badHCDReference
 
       case default =>
-        log.info(s"EventSubscriber received some other location: $default")
+        log.info(s"CommandHandler received some other location: $default")
     }
   }
 

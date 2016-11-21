@@ -27,7 +27,7 @@ object EventSubscriberTests {
 class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(20.seconds)
 
   // Used to start and stop the event service Redis instance used for the test
   //  var eventAdmin: EventServiceAdmin = _
@@ -84,6 +84,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       es ! StopFollowing
       fakeFollowActor.expectNoMsg(20.milli)
+      system.stop(es)
     }
   }
 
@@ -114,10 +115,9 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // 0.0 is the default value as well as nssZenithAngle
       msg.zenithAngle should equal(za(0.0))
 
-      system.stop(es)
-
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
+      system.stop(es)
     }
 
     it("should make several events for an fe list publish with nssInUse but no ZA") {
@@ -149,10 +149,8 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // Should get no tcsEvents because not following
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
-      system.stop(es)
-
-      // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
+      system.stop(es)
     }
 
     it("now enable follow should make several events for za and fe list publish nssNotInUse") {
@@ -203,10 +201,10 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // Should get no tcsEvents because not following
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
-      system.stop(es)
-
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
+
+      system.stop(es)
     }
 
     it("alter nssInUse to see switch to nssZenithAngles") {
@@ -268,6 +266,8 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
+
+      system.stop(es)
     }
   }
 

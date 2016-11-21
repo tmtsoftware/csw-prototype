@@ -97,6 +97,7 @@ public class TromboneHCD extends JHcdController {
     return publisherReceive().orElse(ReceiveBuilder
       .matchEquals(Running, e -> {
         // When Running is received, transition to running Receive
+        log.debug("received Running");
         context().become(runningReceive());
       })
       .matchAny(x -> log.warning("Unexpected message in TromboneHCD (Not running yet): " + x))
@@ -238,7 +239,7 @@ public class TromboneHCD extends JHcdController {
   }
 
   // HCD Info
-  public static final String componentName = "tromboneHCD";
+  public static final String componentName = "lgsTromboneHCD";
   public static final ComponentType componentType = JComponentType.HCD;
   public static final String componentClassName = "csw.examples.vsliceJava.hcd.TromboneHCD";
   public static final String trombonePrefix = "nfiraos.ncc.tromboneHCD";

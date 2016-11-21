@@ -121,7 +121,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
         tromboneHCD = badHCDReference;
 
     } else {
-      log.info("EventSubscriber received some other location: " + location);
+      log.info("CommandHandler received some other location: " + location);
     }
   }
 

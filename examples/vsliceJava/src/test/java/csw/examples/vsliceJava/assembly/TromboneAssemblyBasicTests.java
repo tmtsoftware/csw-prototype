@@ -429,7 +429,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
   }
 
   @Test
-  public void test10() {
+  public void test10() throws InterruptedException {
     // should allow an init, setElevation
     TestProbe fakeSupervisor = new TestProbe(system);
     ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());

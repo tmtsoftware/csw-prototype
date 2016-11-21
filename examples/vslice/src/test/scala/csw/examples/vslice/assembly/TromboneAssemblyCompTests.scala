@@ -3,9 +3,10 @@ package csw.examples.vslice.assembly
 /**
  * TMT Source Code: 10/10/16.
  */
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.services.apps.containerCmd.ContainerCmd
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult, Completed}
 import csw.services.loc.LocationService
@@ -32,6 +33,20 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
 
   def newTrombone(assemblyInfo: AssemblyInfo = assemblyContext.info): ActorRef = {
     Supervisor(assemblyInfo)
+  }
+
+  // List of top level actors that were created for the HCD (for clean up)
+  var hcdActors: List[ActorRef] = Nil
+
+  override def beforeAll: Unit = {
+    // Starts the HCD used in the test
+    val cmd = ContainerCmd("vslice", Array("--standalone"), Map("" -> "tromboneHCD.conf"))
+    hcdActors = cmd.actors
+  }
+
+  override def afterAll: Unit = {
+    hcdActors.foreach(_ ! PoisonPill)
+    TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
   }
 
   describe("comp tests") {
