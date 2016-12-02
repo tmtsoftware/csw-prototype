@@ -20,16 +20,27 @@
 #
 
 REDIS_SERVER=/usr/local/bin/redis-server
-REDIS_CLIENT=/usr/local/bin/redis-cli
 
+# We need at least this version of Redis
+MIN_REDIS_VERSION=3.2.5
+
+# Look in the default location first, since installing from the source puts it there, otherwise look in the path
 if test ! -x $REDIS_SERVER ; then
-    echo "$REDIS_SERVER not found"
-    exit 1
+    REDIS_SERVER=redis-server
 fi
-if test ! -x $REDIS_CLIENT ; then
-    echo "$REDIS_CLIENT not found"
-    exit 1
+if ! type $REDIS_SERVER &> /dev/null; then
+  echo "Can't find $REDIS_SERVER. Please install Redis version $MIN_REDIS_VERSION or greater"
+  exit 1
 fi
+
+# Make sure we have the min redis version
+function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+redis_version=`$REDIS_SERVER --version | awk '{sub(/-.*/,"",$3);print $3}' | sed -e 's/v=//'`
+if version_gt $MIN_REDIS_VERSION $redis_version; then
+     echo "Error: required Redis version is $MIN_REDIS_VERSION, but only version $redis_version was found"
+     exit 1
+fi
+REDIS_CLIENT=`echo $REDIS_SERVER | sed -e 's/-server/-cli/'`
 
 # Set to yes to start the config service
 START_CONFIG_SERVICE=no
