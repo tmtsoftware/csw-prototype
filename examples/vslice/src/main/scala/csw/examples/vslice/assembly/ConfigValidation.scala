@@ -2,7 +2,6 @@ package csw.examples.vslice.assembly
 
 import csw.services.ccs.Validation._
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
-import csw.util.config.StringItem
 
 import scala.util.Try
 

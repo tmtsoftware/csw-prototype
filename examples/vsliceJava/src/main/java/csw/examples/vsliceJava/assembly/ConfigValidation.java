@@ -5,8 +5,6 @@ import csw.util.config.Configurations.SetupConfig;
 import csw.util.config.Configurations.SetupConfigArg;
 import csw.util.config.DoubleItem;
 import csw.util.config.StringItem;
-import csw.util.config.StringKey;
-import javacsw.services.ccs.JCommandStatus;
 import javacsw.services.ccs.JValidation;
 
 import java.util.ArrayList;
@@ -18,7 +16,6 @@ import static csw.examples.vsliceJava.assembly.AssemblyContext.configurationVers
 import static csw.services.ccs.Validation.Invalid;
 import static csw.services.ccs.Validation.Validation;
 import static javacsw.services.ccs.JValidation.*;
-import static javacsw.util.config.JItems.jget;
 import static javacsw.util.config.JItems.jitem;
 import static javacsw.util.config.JItems.jvalue;
 
@@ -140,19 +137,20 @@ public class ConfigValidation {
     if (sc.size() == 0) return JValidation.Valid;
 
     // Check for correct key and type -- only checks that essential key is present, not strict
-    if (!sc.exists(ac.stagePositionKey)) {
-      return Invalid(MissingKeyIssue("The move SetupConfig must have a DoubleItem named: " + ac.stagePositionKey));
+    if (!sc.exists(stagePositionKey)) {
+      return Invalid(MissingKeyIssue("The move SetupConfig must have a DoubleItem named: " + stagePositionKey));
     }
 
-    DoubleItem di = jitem(sc, ac.stagePositionKey);
-//    if (!(di instanceof DoubleItem)) {
-//      return Invalid(WrongItemTypeIssue("The move SetupConfig must have a DoubleItem named: " + ac.stagePositionKey));
-//    }
-    if (di.units() != ac.stagePositionUnits) {
+    try {
+      jitem(sc, stagePositionKey);
+    } catch(Exception ex) {
+      return Invalid(WrongItemTypeIssue("The move SetupConfig must have a DoubleItem named: " + stagePositionKey));
+    }
+    if (jitem(sc, stagePositionKey).units() != stagePositionUnits) {
       return Invalid(WrongUnitsIssue("The move SetupConfig parameter: "
-        + ac.stagePositionKey
+        + stagePositionKey
         + " must have units of: "
-        + ac.stagePositionUnits));
+        + stagePositionUnits));
     }
     return JValidation.Valid;
   }
@@ -167,28 +165,33 @@ public class ConfigValidation {
     if (!sc.configKey().equals(ac.positionCK)) {
       return Invalid(WrongConfigKeyIssue("The SetupConfig is not a position configuration."));
     }
+
     // The spec says parameter is not required, but doesn't explain so requiring parameter
     // Check for correct key and type -- only checks that essential key is present, not strict
-    if (!sc.exists(ac.naRangeDistanceKey)) {
-      return Invalid(MissingKeyIssue("The position SetupConfig must have a DoubleItem named: " + ac.naRangeDistanceKey));
-    }
-    DoubleItem di = jitem(sc, ac.naRangeDistanceKey);
-//      if (!(di instanceof DoubleItem)) {
-//        return Invalid(WrongItemTypeIssue("The position SetupConfig must have a DoubleItem named: " + ac.naRangeDistanceKey));
-//      }
-    if (di.units() != ac.naRangeDistanceUnits) {
-      return Invalid(WrongUnitsIssue("The position SetupConfig parameter: "
-        + ac.naRangeDistanceKey
-        + " must have units of: "
-        + ac.naRangeDistanceUnits));
+    if (!sc.exists(naRangeDistanceKey)) {
+      return Invalid(MissingKeyIssue("The position SetupConfig must have a DoubleItem named: " + naRangeDistanceKey));
     }
 
-    double el = jvalue(di);
+    try {
+      jitem(sc, naRangeDistanceKey);
+    } catch(Exception ex) {
+      return Invalid(WrongItemTypeIssue("The position SetupConfig must have a DoubleItem named: " + naRangeDistanceKey));
+    }
+
+    if (jitem(sc, naRangeDistanceKey).units() != naRangeDistanceUnits) {
+      return Invalid(WrongUnitsIssue("The position SetupConfig parameter: "
+        + naRangeDistanceKey
+        + " must have units of: "
+        + naRangeDistanceUnits));
+    }
+
+    double el = jvalue(jitem(sc, naRangeDistanceKey));
     if (el < 0) {
       return Invalid(ItemValueOutOfRangeIssue("Range distance value of "
         + el
         + " for position must be greater than or equal 0 km."));
     }
+
     return JValidation.Valid;
   }
 
@@ -202,20 +205,25 @@ public class ConfigValidation {
     if (!sc.configKey().equals(ac.setElevationCK)) {
       return Invalid(WrongConfigKeyIssue("The SetupConfig is not a setElevation configuration"));
     }
+
     // Check for correct key and type -- only checks that essential key is present, not strict
-    if (!sc.jMissingKeys(ac.naElevationKey).isEmpty()) {
-      return Invalid(MissingKeyIssue("The setElevation SetupConfig must have a parameter named: " + ac.naElevationKey));
+    if (!sc.jMissingKeys(naElevationKey).isEmpty()) {
+      return Invalid(MissingKeyIssue("The setElevation SetupConfig must have a parameter named: " + naElevationKey));
     }
-//    if (!sc(ac.naElevationKey).isInstanceOf[DoubleItem]) {
-//      Invalid(WrongItemTypeIssue(s"The setElevation SetupConfig must have a parameter: ${ac.naElevationKey} as a DoubleItem"))
-//    }
-    DoubleItem di = jitem(sc, ac.naElevationKey);
-    if (di.units() != ac.naRangeDistanceUnits) {
+
+    try {
+      jitem(sc, naElevationKey);
+    } catch(Exception ex) {
+      return Invalid(WrongItemTypeIssue("The setElevation SetupConfig must have a parameter: " + naElevationKey + " as a DoubleItem"));
+    }
+
+    if (jitem(sc, naElevationKey).units() != naRangeDistanceUnits) {
       return Invalid(WrongUnitsIssue("The move SetupConfig parameter: "
-        + ac.naElevationKey
+        + naElevationKey
         + " must have units: "
-        + ac.naElevationUnits));
+        + naElevationUnits));
     }
+
     return Valid;
   }
 
@@ -229,20 +237,26 @@ public class ConfigValidation {
     if (!sc.configKey().equals(ac.setAngleCK)) {
       return Invalid(WrongConfigKeyIssue("The SetupConfig is not a setAngle configuration"));
     }
+
     // Check for correct key and type -- only checks that essential key is present, not strict
-    if (!sc.exists(ac.zenithAngleKey)) {
-      return Invalid(MissingKeyIssue("The setAngle SetupConfig must have a DoubleItem named: " + ac.zenithAngleKey));
+    if (!sc.exists(zenithAngleKey)) {
+      return Invalid(MissingKeyIssue("The setAngle SetupConfig must have a DoubleItem named: " + zenithAngleKey));
     }
-//    if (!sc(ac.zenithAngleKey).isInstanceOf[DoubleItem]) {
-//      Invalid(WrongItemTypeIssue(s"The setAngle SetupConfig must have a DoubleItem named: ${ac.zenithAngleKey}"))
-//    }
-    DoubleItem di = jitem(sc, ac.zenithAngleKey);
-    if (di.units() != ac.zenithAngleUnits) {
+
+    try {
+      jitem(sc, zenithAngleKey);
+    } catch(Exception ex) {
+      return Invalid(WrongItemTypeIssue("The setAngle SetupConfig must have a DoubleItem named: " + zenithAngleKey));
+    }
+
+    DoubleItem di = jitem(sc, zenithAngleKey);
+    if (di.units() != zenithAngleUnits) {
       return Invalid(WrongUnitsIssue("The setAngle SetupConfig parameter: "
-        + ac.zenithAngleKey
+        + zenithAngleKey
         + " must have units: "
-        + ac.zenithAngleUnits));
+        + zenithAngleUnits));
     }
+
     return Valid;
   }
 
@@ -257,15 +271,16 @@ public class ConfigValidation {
       return Invalid(WrongConfigKeyIssue("The SetupConfig is not a follow configuration"));
     }
     // Check for correct key and type -- only checks that essential key is present, not strict
-    if (!sc.exists(ac.nssInUseKey)) {
-      return Invalid(MissingKeyIssue("The follow SetupConfig must have a BooleanItem named: " + ac.nssInUseKey));
+    if (!sc.exists(nssInUseKey)) {
+      return Invalid(MissingKeyIssue("The follow SetupConfig must have a BooleanItem named: " + nssInUseKey));
     }
 
-    // XXX FIXME
-//    if (!sc(ac.nssInUseKey).isInstanceOf[BooleanItem]) {
-//      Invalid(WrongItemTypeIssue(s"The follow SetupConfig must have a BooleanItem named ${ac.nssInUseKey}"))
-//    }
+    try {
+      jitem(sc, nssInUseKey);
+    } catch(Exception ex) {
+      return Invalid(WrongItemTypeIssue("The follow SetupConfig must have a BooleanItem named " + nssInUseKey));
+    }
+
     return Valid;
   }
-
 }
