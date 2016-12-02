@@ -64,7 +64,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
 
     // Starts the HCD used in the test
     Map<String, String> configMap = Collections.singletonMap("", "tromboneHCD.conf");
-    ContainerCmd cmd = new ContainerCmd("tromboneHCD", new String[]{"--standalone"}, configMap);
+    ContainerCmd cmd = new ContainerCmd("vsliceJava", new String[]{"--standalone"}, configMap);
     hcdActors = cmd.getActors();
     if (hcdActors.size() == 0) logger.error("Failed to create trombone HCD");
   }

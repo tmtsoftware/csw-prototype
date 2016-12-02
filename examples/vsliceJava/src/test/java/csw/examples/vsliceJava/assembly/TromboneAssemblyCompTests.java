@@ -59,9 +59,10 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
 
     // Starts the HCD used in the test
     Map<String, String> configMap = Collections.singletonMap("", "tromboneHCD.conf");
-    ContainerCmd cmd = new ContainerCmd("tromboneHCD", new String[]{"--standalone"}, configMap);
+    ContainerCmd cmd = new ContainerCmd("vsliceJava", new String[]{"--standalone"}, configMap);
     hcdActors = cmd.getActors();
     if (hcdActors.size() == 0) logger.error("Failed to create trombone HCD");
+    else System.out.println("Created HCD actor: " + hcdActors);
   }
 
   @AfterClass
@@ -86,7 +87,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     tla.tell(new SubscribeLifecycleCallback(fakeSequencer.ref()), self());
     fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
     fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleRunning));
-    system.stop(tla);
+    tla.tell(PoisonPill.getInstance(), self());
   }
 
   @Test
@@ -116,7 +117,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     // Wait a bit to see if there is any spurious messages
     fakeSequencer.expectNoMsg(duration("250 milli"));
     logger.info("Msg: " + completeMsg);
-    system.stop(tla);
+    tla.tell(PoisonPill.getInstance(), self());
   }
 
   @Test
@@ -163,6 +164,6 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     logger.info("msg2: " + completeMsg);
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
-    system.stop(tla);
+    tla.tell(PoisonPill.getInstance(), self());
   }
 }

@@ -173,7 +173,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
   }
 
   /**
-   * Validates a received config arg and returns the first
+   * Validates a received config arg
    */
   private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
     // Are all of the configs really for us and correctly formatted, etc?
