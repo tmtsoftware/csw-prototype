@@ -183,9 +183,8 @@ object Component {
   def create(context: ActorContext, componentInfo: ComponentInfo, supervisorIn: Optional[ActorRef]): ActorRef = create(context, componentInfo, supervisorIn.asScala)
 }
 
-trait Component extends Actor with PrefixedActorLogging {
+trait Component extends Actor with ActorLogging {
   def info: ComponentInfo
-  override def prefix: String = info.prefix
 }
 
 trait Assembly extends Component

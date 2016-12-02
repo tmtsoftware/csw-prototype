@@ -122,7 +122,7 @@ class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd w
   lifecycle(supervisor, Initialized)
 
   // Create an actor to generate position events
-  val posEventGenerator = context.actorOf(PosGenerator.props(prefix))
+  val posEventGenerator = context.actorOf(PosGenerator.props(info.prefix))
 
   // Process a config message
   override def process(sc: SetupConfig): Unit = {

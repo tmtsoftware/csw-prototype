@@ -2,13 +2,12 @@ package javacsw.services.ccs
 
 import akka.actor.{AbstractActor, ActorLogging}
 import csw.services.ccs.AssemblyControllerOld
-import csw.services.log.PrefixedActorLogging
 import csw.util.config.StateVariable.CurrentStates
 
 /**
  * Supports Java subclasses of HcdController
  */
-abstract class AbstractAssemblyControllerOld extends AbstractActor with PrefixedActorLogging with AssemblyControllerOld {
+abstract class AbstractAssemblyControllerOld extends AbstractActor with ActorLogging with AssemblyControllerOld {
   /**
    * Notifies all subscribers with the given value (Need to override to keep java happy)
    */

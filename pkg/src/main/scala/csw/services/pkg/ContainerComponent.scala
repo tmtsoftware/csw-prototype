@@ -8,7 +8,6 @@ import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.loc.ConnectionType._
 import csw.services.loc._
 import csw.services.loc.ComponentType._
-import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager._
 import csw.services.pkg.SupervisorOld.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
@@ -334,8 +333,6 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
   private var registrationOpt: Option[LocationService.RegistrationResult] = None
 
   registerWithLocationService()
-
-  override def prefix: String = info.prefix
 
   def receive = Actor.emptyBehavior
   context.become(runningReceive(Nil))

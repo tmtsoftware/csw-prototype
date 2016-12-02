@@ -6,7 +6,6 @@ import csw.services.ccs.AssemblyControllerOld.AssemblyControllerMessage
 import csw.services.ccs.HcdController.HcdControllerMessage
 import csw.services.loc.ComponentType.{Assembly, HCD}
 import csw.services.loc.{ComponentId, LocationService}
-import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.{ComponentInfo, DoNotRegister}
 import csw.services.pkg.LifecycleManager._
 import csw.util.akka.{PublisherActor, SetLogLevelActor}
@@ -115,8 +114,8 @@ object SupervisorOld {
  * A supervisor actor that manages the component actor given by the arguments
  * (see props() for argument descriptions).
  */
-private final class SupervisorOld(val componentInfo: ComponentInfo, override val prefix: String)
-    extends Actor with PrefixedActorLogging with SetLogLevelActor {
+private final class SupervisorOld(val componentInfo: ComponentInfo, val prefix: String)
+    extends Actor with ActorLogging with SetLogLevelActor {
 
   import SupervisorOld._
 

@@ -1,8 +1,7 @@
 package csw.services.pkg
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.ccs.HcdController
-import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.HcdInfo
 import csw.services.pkg.Supervisor.{Initialized, Started}
 import csw.util.config.Configurations.SetupConfig
@@ -49,7 +48,7 @@ object TestWorker {
 
 
 //class TestWorker(demand: SetupConfig) extends Actor with ActorLogging {
-class TestWorker(demand: SetupConfig, override val prefix: String) extends Actor with PrefixedActorLogging {
+class TestWorker(demand: SetupConfig, prefix: String) extends Actor with ActorLogging {
 
   import TestWorker._
   import context.dispatcher
