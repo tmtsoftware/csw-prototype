@@ -7,7 +7,6 @@ import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
-import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
 import csw.services.apps.containerCmd.ContainerCmd;
@@ -86,37 +85,13 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     return system.actorOf(props);
   }
 
-  TestActorRef<TromboneAssembly> newTestTrombone(ActorRef supervisor) {
-    Props props = getTromboneProps(assemblyContext.info, Optional.of(supervisor));
-    return TestActorRef.create(system, props);
-  }
-
   // --- low-level instrumented trombone assembly tests ---
-
-//  @Test
-//  public void test1() {
-//    // should get initialized with configs from files (same as AlgorithmData
-//      val supervisor = TestProbe()
-//      val tla = newTestTrombone(supervisor.ref)
-//
-//      tla.underlyingActor.controlConfig.stageZero should be(AssemblyTestData.TestControlConfig.stageZero)
-//      tla.underlyingActor.controlConfig.positionScale should be(AssemblyTestData.TestControlConfig.positionScale)
-//      tla.underlyingActor.controlConfig.minStageEncoder should be(AssemblyTestData.TestControlConfig.minStageEncoder)
-//
-//      tla.underlyingActor.calculationConfig.defaultInitialElevation should be(AssemblyTestData.TestCalculationConfig.defaultInitialElevation)
-//      tla.underlyingActor.calculationConfig.focusErrorGain should be(AssemblyTestData.TestCalculationConfig.focusErrorGain)
-//      tla.underlyingActor.calculationConfig.lowerFocusLimit should be(AssemblyTestData.TestCalculationConfig.lowerFocusLimit)
-//      tla.underlyingActor.calculationConfig.upperFocusLimit should be(AssemblyTestData.TestCalculationConfig.upperFocusLimit)
-//      tla.underlyingActor.calculationConfig.zenithFactor should be(AssemblyTestData.TestCalculationConfig.zenithFactor)
-//
-//      expectNoMsg(2.seconds)
-//    }
 
   @Test
   public void test2() {
     // should lifecycle properly with a fake supervisor
     TestProbe fakeSupervisor = new TestProbe(system);
-    TestActorRef<TromboneAssembly> tla = newTestTrombone(fakeSupervisor.ref());
+    ActorRef tla = newTrombone(fakeSupervisor.ref());
 
     fakeSupervisor.expectMsg(Initialized);
     fakeSupervisor.expectMsg(duration("10 seconds"), Started);
@@ -435,8 +410,11 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     ActorRef tromboneAssembly = newTrombone(fakeSupervisor.ref());
     TestProbe fakeClient = new TestProbe(system);
 
+    // XXX
+    FiniteDuration d = duration("10 seconds");
+
     fakeSupervisor.expectMsg(Initialized);
-    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectMsg(d, Started);
     fakeSupervisor.expectNoMsg(duration("200 milli"));
     fakeSupervisor.send(tromboneAssembly, Running);
 
@@ -446,12 +424,12 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     fakeClient.send(tromboneAssembly, new Submit(datum));
 
     // This first one is the accept/verification
-    CommandResult acceptedMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    CommandResult acceptedMsg = fakeClient.expectMsgClass(d, CommandResult.class);
     //logger.info("acceptedMsg: " + acceptedMsg)
     assertEquals(acceptedMsg.overall(), Accepted);
 
     // Second one is completion of the executed ones
-    CommandResult completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    CommandResult completeMsg = fakeClient.expectMsgClass(d, CommandResult.class);
     assertEquals(completeMsg.overall(), AllCompleted);
 
     double testEl = 150.0;

@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.Actor
 import csw.util.akka.PublisherActor
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.Configurations._

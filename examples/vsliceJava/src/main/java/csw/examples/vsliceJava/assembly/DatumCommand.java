@@ -26,8 +26,6 @@ import static javacsw.services.ccs.JCommandStatus.Completed;
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class DatumCommand extends AbstractActor {
 
-//  private static final String prefix = "NFIRAOS.cc.lgsTrombone";
-
   private LoggingAdapter log = Logging.getLogger(getContext().system(), this);
   private final Optional<ActorRef> stateActor;
 
@@ -54,7 +52,7 @@ public class DatumCommand extends AbstractActor {
         }
       }).
       matchEquals(JSequentialExecutor.StopCurrentCommand(), t -> {
-        log.info(">>>>>>>>>>>>>>>>>>>>>>>>>>  DATUM STOP STOP");
+        log.info(">> DATUM STOPPED");
         tromboneHCD.tell(new HcdController.Submit(cancelSC), self());
       }).
       matchAny(t -> log.warning("Unknown message received: " + t)).

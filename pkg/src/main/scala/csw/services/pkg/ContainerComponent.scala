@@ -5,12 +5,13 @@ import java.util.concurrent.TimeUnit
 import akka.actor._
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.ConnectionType._
 import csw.services.loc._
-import csw.services.loc.ComponentType._
+import csw.services.loc.ComponentType.{Assembly, HCD}
+import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager._
-import csw.services.pkg.SupervisorOld.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
@@ -183,7 +184,6 @@ object ContainerComponent {
       case _ => None
     }
     info
-
   }
 
   private[pkg] def parseName(name: String, conf: Config): Try[String] = {
@@ -346,14 +346,13 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
     case Stop                                  => stop(supervisors)
     case Halt                                  => halt(supervisors)
     case Restart                               => restart(supervisors)
-    case LifecycleStateChanged(state)          => log.debug("Received state while running: " + state)
     case Terminated(actorRef)                  => componentDied(actorRef)
     case x                                     => log.debug(s"Unhandled command in runningReceive: $x")
   }
 
   private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {
     case LifecycleStateChanged(state) =>
-      if (state == Loaded) {
+      if (state == LifecycleInitialized) {
         sender() ! UnsubscribeLifecycleCallback(self)
         val reloaded = (supervisors.find(_.supervisor == sender()) ++ restarted).toList
         if (reloaded.size == supervisors.size) {

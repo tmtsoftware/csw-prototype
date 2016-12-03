@@ -53,7 +53,11 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
   private final ActorRef badHCDReference;
 
   private ActorRef tromboneHCD;
-  private boolean isHCDAvailable;
+
+  private boolean isHCDAvailable() {
+    return !tromboneHCD.equals(badHCDReference);
+
+  }
 
   private Optional<IEventService> badEventService = Optional.empty();
   private Optional<IEventService> eventService = badEventService;
@@ -80,18 +84,18 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
   }
 
   public TromboneCommandHandler(AssemblyContext ac, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> allEventPublisher) {
-    subscribeToLocationUpdates();
-    context().system().eventStream().subscribe(self(), TromboneState.class);
-
     this.ac = ac;
     badHCDReference = context().system().deadLetters();
     this.tromboneHCD = tromboneHCDIn.orElse(badHCDReference);
-    isHCDAvailable = !tromboneHCD.equals(badHCDReference);
     tromboneStateActor = context().actorOf(TromboneStateActor.props());
     this.allEventPublisher = allEventPublisher;
     setElevationItem = AssemblyContext.naElevation(ac.calculationConfig.defaultInitialElevation);
     int moveCnt = 0;
     log.info("System  is: " + context().system());
+
+    subscribeToLocationUpdates();
+    context().system().eventStream().subscribe(self(), TromboneState.class);
+
 
     receive(noFollowReceive());
   }
@@ -142,7 +146,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           commandOriginator.ifPresent(actorRef -> actorRef.tell(Completed, self()));
 
         } else if (configKey.equals(ac.datumCK)) {
-          if (isHCDAvailable) {
+          if (isHCDAvailable()) {
             log.info("Datums State: " + currentState());
             ActorRef datumActorRef = context().actorOf(DatumCommand.props(sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
             context().become(actorExecutingReceive(datumActorRef, commandOriginator));
@@ -150,14 +154,14 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           } else hcdNotAvailableResponse(commandOriginator);
 
         } else if (configKey.equals(ac.moveCK)) {
-          if (isHCDAvailable) {
+          if (isHCDAvailable()) {
             ActorRef moveActorRef = context().actorOf(MoveCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
             context().become(actorExecutingReceive(moveActorRef, commandOriginator));
             self().tell(JSequentialExecutor.CommandStart(), self());
           } else hcdNotAvailableResponse(commandOriginator);
 
         } else if (configKey.equals(ac.positionCK)) {
-          if (isHCDAvailable) {
+          if (isHCDAvailable()) {
             ActorRef positionActorRef = context().actorOf(PositionCommand.props(ac, sc, tromboneHCD, currentState(), Optional.of(tromboneStateActor)));
             context().become(actorExecutingReceive(positionActorRef, commandOriginator));
             self().tell(JSequentialExecutor.CommandStart(), self());

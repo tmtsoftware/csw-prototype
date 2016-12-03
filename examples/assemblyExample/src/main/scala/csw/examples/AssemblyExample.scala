@@ -2,13 +2,14 @@ package csw.examples
 
 import akka.actor.ActorRef
 import csw.services.ccs.Validation._
-import csw.services.ccs.{AssemblyControllerOld, CommandStatusOld}
+import csw.services.ccs.{AssemblyController, Validation}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
-import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
+import csw.services.loc.LocationService.ResolvedAkkaLocation
+import csw.services.loc._
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
 import csw.services.pkg.Supervisor.{Initialized, Started}
-import csw.services.pkg.{Assembly, LifecycleHandler, Supervisor}
+import csw.services.pkg.{Assembly, Supervisor}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
 import scala.concurrent.Await
@@ -19,22 +20,34 @@ import scala.concurrent.duration._
  *
  * @param info contains information about the assembly and the components it depends on
  */
-class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyControllerOld with LifecycleHandler {
+class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController {
+  // The HCD actor (located via the location service)
+  private var hcd: ActorRef = _
+
+  // This tracks the HCD
+  private val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
+  trackerSubscriber ! LocationSubscriberActor.Subscribe
+  LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
+
   supervisor ! Initialized
-  supervisor ! Started
 
-  // Get the connection to the HCD this assembly uses and track it
-  trackConnections(info.connections)
+  override def receive: Receive = controllerReceive orElse {
 
-  override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
+    // Receive the HCD's location
+    case l: ResolvedAkkaLocation =>
+      if (l.actorRef.isDefined) {
+        log.info(s"Got actorRef: $hcd")
+        hcd = l.actorRef.get
+        supervisor ! Started
+      }
+
     case x => log.error(s"Unexpected message: $x")
   }
 
   /**
    * Validates a received config arg
    */
-  private def validate(config: SetupConfigArg): Validation = { // XXX TODO FIXME: Return list[Validation]?
-
+  private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
     // Checks a single setup config
     def validateConfig(sc: SetupConfig): Validation = {
       if (sc.configKey.prefix != HCDExample.prefix) {
@@ -47,24 +60,19 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
       }
     }
 
-    val list = config.configs.map(validateConfig).filter(_ != Valid)
-    if (list.nonEmpty) list.head else Valid
+    sca.configs.map(validateConfig).toList
   }
 
-  override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
-                               replyTo: Option[ActorRef]): Validation = {
-    val valid = validate(configArg)
-    if (valid == Valid) {
-      // Call a convenience method that will forward the config to the HCD based on the prefix
-      distributeSetupConfigs(locationsResolved, configArg, None)
-
-      // If a replyTo actor was given, reply with the command status
-      if (replyTo.isDefined) {
-        replyTo.get ! CommandStatusOld.Completed(configArg.info.runId)
-      }
+  override def setup(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ValidationList = {
+    // Returns validations for all
+    val validations: ValidationList = validateSequenceConfigArg(sca)
+    if (Validation.isAllValid(validations)) {
+      // For this trivial test we just forward the configs to the HCD
+      sca.configs.foreach(hcd ! _)
     }
-    valid
+    validations
   }
+
 }
 
 /**

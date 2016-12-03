@@ -1,7 +1,7 @@
 package csw.services.pkg
 
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
-import csw.util.config.{Key, StringKey}
+import csw.util.config.StringKey
 
 // XXX TODO: This class is left over from previous versions
 object TestConfig {

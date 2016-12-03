@@ -1,52 +1,51 @@
 package csw.services.pkg
 
 import akka.actor.ActorRef
-import csw.services.ccs.AssemblyControllerOld
+import csw.services.ccs.{AssemblyController, ConfigDistributor, Validation}
 import csw.services.ccs.Validation._
-import csw.services.loc.LocationService.Location
+import csw.services.loc.Connection.AkkaConnection
+import csw.services.loc.LocationService.ResolvedAkkaLocation
+import csw.services.loc.LocationSubscriberActor
 import csw.services.pkg.Component.AssemblyInfo
-import csw.services.pkg.Supervisor.{Initialized, Started}
-import csw.util.config.StateVariable.CurrentState
+import csw.services.pkg.Supervisor.{Initialized, Running, Started}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
-import scala.concurrent.Future
 /**
   * A test assembly that just forwards configs to HCDs based on prefix
   *
   * @param info contains information about the assembly and the components it depends on
   */
-case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
-  extends Assembly with AssemblyControllerOld with LifecycleHandler {
+case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController {
 
-  import AssemblyControllerOld._
+  // The HCD actors (located via the location service)
+  private var connections: Map[AkkaConnection, ResolvedAkkaLocation] = Map.empty
+
+  // This tracks the HCDs
+  private val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
+  trackerSubscriber ! LocationSubscriberActor.Subscribe
+  LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
 
   supervisor ! Initialized
-  supervisor ! Started
 
-  // Get the connections to the HCDs this assembly uses and track them
-  trackConnections(info.connections)
+  override def receive: Receive = controllerReceive orElse {
+    // Receive the HCD's location
+    case l: ResolvedAkkaLocation =>
+      connections += l.connection -> l
+      if (l.actorRef.isDefined) {
+        log.info(s"Got actorRef: ${l.actorRef.get}")
+        if (connections.size == 2 && connections.values.forall(_.isResolved))
+          supervisor ! Started
+      }
 
-  log.info("Message from TestAssembly")
-
-  override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
-    // Current state received from one of the HCDs: Just forward it to the assembly, which subscribes to the HCD's status
-    case s: CurrentState =>
+    case Running =>
 
     case x => log.error(s"Unexpected message: $x")
   }
 
   /**
-    * Called when all HCD locations are resolved.
-    * Overridden here to subscribe to status values from the HCDs.
-    */
-  override protected def allResolved(locations: Set[Location]): Unit = {
-    subscribe(locations)
-  }
-
-  /**
     * Validates a received config arg
     */
-  private def validate(config: SetupConfigArg): Validation = {
+  private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
     // Checks a single setup config
     def validateConfig(sc: SetupConfig): Validation = {
       if (sc.configKey.prefix != TestConfig.testConfig1.configKey.prefix
@@ -59,23 +58,17 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
         else Valid
       }
     }
-    val list = config.configs.map(validateConfig).filter(_ != Valid)
-    if (list.nonEmpty) list.head else Valid // XXX TODO FIXME: Return list
+    sca.configs.map(validateConfig).toList
   }
 
-  override protected def setup(locationsResolved: Boolean, configArg: SetupConfigArg,
-                      replyTo: Option[ActorRef]): Validation = {
-    val valid = validate(configArg)
-    if (valid == Valid) {
-      // The call below just distributes the configs to the HCDs based on matching prefix,
-      // but you could just as well generate new configs and send them here...
-      distributeSetupConfigs(locationsResolved, configArg, replyTo)
-    } else valid
-  }
-
-  // Implement the request feature to return dummy data
-  override protected def request(locationsResolved: Boolean, config: SetupConfig): Future[RequestResult] = {
-    Future.successful(RequestResult(RequestOK, Some(TestConfig.testConfig2)))
+  override def setup(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ValidationList = {
+    // Returns validations for all
+    val validations: ValidationList = validateSequenceConfigArg(sca)
+    if (Validation.isAllValid(validations)) {
+      // For this trivial test we just forward the configs to the HCDs based on prefix
+      ConfigDistributor(context, connections.values.toSet).distributeSetupConfigs(sca)
+    }
+    validations
   }
 
 }

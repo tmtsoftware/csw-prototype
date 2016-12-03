@@ -85,6 +85,13 @@ public interface IAlarmService {
   /**
    * Returns the AlarmService connection for the given, or default name
    */
+  static Connection.TcpConnection alarmServiceConnection() {
+    return AlarmService$.MODULE$.alarmServiceConnection(IAlarmService.defaultName);
+  }
+
+  /**
+   * Returns the AlarmService connection for the given, or default name
+   */
   static Connection.TcpConnection alarmServiceConnection(String name) {
     return AlarmService$.MODULE$.alarmServiceConnection(name);
   }

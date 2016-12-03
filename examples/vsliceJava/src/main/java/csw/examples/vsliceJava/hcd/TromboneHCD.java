@@ -41,7 +41,13 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * TMT Source Code: 6/20/16.
+ * TromboneHCD -- This is the Top Level Actor for the TromboneHCD
+ * It's main responsibilties are to interact with the trombone HCD axis (a simulator)
+ * It also:
+ * - initializes itself from Configiuration Service
+ * - Works with the Supervisor to implement the lifecycle
+ * - Handles incoming commands
+ * - Generates CurrentState for the Assembly
  */
 @SuppressWarnings({"unused", "CodeBlock2Expr", "OptionalUsedAsFieldOrParameterType", "WeakerAccess"})
 public class TromboneHCD extends JHcdController {

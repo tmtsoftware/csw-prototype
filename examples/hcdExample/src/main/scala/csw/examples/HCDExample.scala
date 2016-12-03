@@ -1,18 +1,20 @@
 package csw.examples
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.util.Timeout
 import csw.services.ccs.HcdController
-import csw.services.events.{EventServiceSettings, TelemetryService}
+import csw.services.events.TelemetryService
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
-import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
+import csw.services.pkg.{Hcd, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.Events.StatusEvent
 import csw.util.config.IntKey
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -55,7 +57,8 @@ object HCDExample {
     import TimeService._
 
     val rand = Random
-    val eventService = TelemetryService(EventServiceSettings(context.system))
+    implicit val timeout = Timeout(5.seconds)
+    val eventService = Await.result(TelemetryService(), timeout.duration)
 
     // Create a subscriber to positions (just for test)
     val subscriberActor = context.actorOf(Props(classOf[EventPosSubscriber]))
@@ -111,7 +114,7 @@ object HCDExample {
   }
 }
 
-class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
+class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController with TimeServiceScheduler {
   import HCDExample._
   import PosGenerator._
   import HCDExample._
@@ -136,7 +139,7 @@ class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd w
   }
 
   // Receive actor methods
-  def receive = controllerReceive orElse lifecycleHandlerReceive
+  def receive = controllerReceive
 
 }
 

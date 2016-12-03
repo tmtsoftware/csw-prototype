@@ -6,7 +6,8 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient, CommandStatusOld}
-import csw.services.ccs.AssemblyControllerOld.Submit
+import csw.services.ccs.AssemblyController._
+import csw.services.ccs.CommandStatus.AllCompleted
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}
@@ -75,13 +76,13 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
 
             // Use client wrapper
             val client = AssemblyControllerClient(assembly1)
-            assert(Await.result(client.submit(TestConfig.testConfigArg), timeout.duration).isSuccess)
+            val result = Await.result(client.submit(TestConfig.testConfigArg), timeout.duration)
+            assert(result.overall == AllCompleted)
 
             // Test dummy request and blocking client
             val blockingClient = BlockingAssemblyClient(client)
-            val result = blockingClient.request(TestConfig.testConfig1)
-            assert(result.status.isSuccess)
-            assert(result.resp.get == TestConfig.testConfig2)
+            val result2 = blockingClient.submit(TestConfig.testConfigArg)
+            assert(result2.overall == AllCompleted)
           }
         }
         println("\nContainer1 tests passed\n")

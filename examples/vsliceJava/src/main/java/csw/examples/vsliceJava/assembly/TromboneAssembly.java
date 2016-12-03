@@ -36,7 +36,14 @@ import static csw.util.config.Configurations.SetupConfigArg;
 import static javacsw.services.pkg.JSupervisor.*;
 
 /**
- * TMT Source Code: 6/10/16.
+ * Top Level Actor for Trombone Assembly
+ *
+ * TromboneAssembly starts up the component doing the following:
+ * creating all needed actors,
+ * handling initialization,
+ * participating in lifecycle with Supervisor,
+ * handles locations for distribution throughout component
+ * receives comamnds and forwards them to the CommandHandler by extending the AssemblyController
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
 public class TromboneAssembly extends JAssemblyController {
@@ -95,9 +102,9 @@ public class TromboneAssembly extends JAssemblyController {
     // This tracks the HCD
     LocationSubscriberActor.trackConnections(info.connections(), trackerSubscriber);
     // This tracks required services
-    LocationSubscriberActor.trackConnection(TromboneAssembly.eventServiceConnection, trackerSubscriber);
-    LocationSubscriberActor.trackConnection(TromboneAssembly.telemetryServiceConnection, trackerSubscriber);
-    LocationSubscriberActor.trackConnection(TromboneAssembly.alarmServiceConnection, trackerSubscriber);
+    LocationSubscriberActor.trackConnection(IEventService.eventServiceConnection(), trackerSubscriber);
+    LocationSubscriberActor.trackConnection(ITelemetryService.telemetryServiceConnection(), trackerSubscriber);
+    LocationSubscriberActor.trackConnection(IAlarmService.alarmServiceConnection(), trackerSubscriber);
 
     // This actor handles all telemetry and system event publishing
     ActorRef eventPublisher = context().actorOf(TrombonePublisher.props(ac, Optional.empty(), Optional.empty()));
@@ -105,57 +112,12 @@ public class TromboneAssembly extends JAssemblyController {
     // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
     commandHandler = context().actorOf(TromboneCommandHandler.props(ac, tromboneHCD, Optional.of(eventPublisher)));
 
+    // This sets up the diagnostic data publisher
+    ActorRef diagPublisher = context().actorOf(DiagPublisher.props(ac, tromboneHCD, Optional.of(eventPublisher)));
+
     supervisor.tell(Initialized, self());
   }
 
-  private void handleLocations(Location location) {
-    if (location instanceof ResolvedAkkaLocation) {
-      ResolvedAkkaLocation l = (ResolvedAkkaLocation) location;
-      log.info("Got actorRef: " + l.getActorRef());
-      tromboneHCD = l.getActorRef();
-      supervisor.tell(Started, self());
-
-    } else if (location instanceof ResolvedHttpLocation) {
-      log.info("HTTP Service Damn it: " + location.connection());
-
-    } else if (location instanceof ResolvedTcpLocation) {
-      ResolvedTcpLocation t = (ResolvedTcpLocation) location;
-      log.info("Received TCP Location: " + t.connection());
-
-      // Verify that it is the event service
-      if (location.connection().equals(IEventService.eventServiceConnection())) {
-        log.info("Assembly received ES connection: " + t);
-        // Setting var here!
-        eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
-        log.info("Event Service at: " + eventService);
-      }
-
-      if (location.connection().equals(ITelemetryService.telemetryServiceConnection())) {
-        log.info("Assembly received TS connection: " + t);
-        // Setting var here!
-        telemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context()));
-        log.info("Telemetry Service at: " + telemetryService);
-      }
-
-      if (location.connection().equals(IAlarmService.alarmServiceConnection(IAlarmService.defaultName))) {
-        log.info("Assembly received AS connection: " + t);
-        // Setting var here!
-        alarmService = Optional.of(IAlarmService.getAlarmService(t.host(), t.port(), context()));
-        log.info("Alarm Service at: " + alarmService);
-      }
-
-    } else if (location instanceof Unresolved) {
-      log.info("Unresolved: " + location.connection());
-      if (location.connection().componentId().equals(ac.hcdComponentId))
-        tromboneHCD = badHCDReference;
-
-    } else if (location instanceof UnTrackedLocation) {
-      log.info("UnTracked: " + location.connection());
-
-    } else {
-      log.warning("Unknown connection: " + location.connection()); // XXX
-    }
-  }
 
   /**
    * This contains only commands that can be received during intialization
@@ -163,23 +125,72 @@ public class TromboneAssembly extends JAssemblyController {
    * @return Receive is a partial function
    */
   private PartialFunction<Object, BoxedUnit> initializingReceive() {
-    return ReceiveBuilder.
-      match(Location.class, this::handleLocations).
+    return locationReceive().orElse(ReceiveBuilder.
       matchEquals(Running, location -> {
         // When Running is received, transition to running Receive
         log.info("becoming runningReceive");
         context().become(runningReceive());
       }).
       matchAny(t -> log.warning("Unexpected message in TromboneAssembly:initializingReceive: " + t)).
-      build();
+      build());
   }
 
   private PartialFunction<Object, BoxedUnit> locationReceive() {
     return ReceiveBuilder.
-      match(Location.class, this::handleLocations).
+      match(Location.class, location ->    {
+          if (location instanceof ResolvedAkkaLocation) {
+            ResolvedAkkaLocation l = (ResolvedAkkaLocation) location;
+            log.info("Got actorRef: " + l.getActorRef());
+            tromboneHCD = l.getActorRef();
+            // When the HCD is located, Started is sent to Supervisor
+            supervisor.tell(Started, self());
+
+          } else if (location instanceof ResolvedHttpLocation) {
+            log.info("HTTP Service Damn it: " + location.connection());
+
+          } else if (location instanceof ResolvedTcpLocation) {
+            ResolvedTcpLocation t = (ResolvedTcpLocation) location;
+            log.info("Received TCP Location: " + t.connection());
+
+            // Verify that it is the event service
+            if (location.connection().equals(IEventService.eventServiceConnection())) {
+              log.info("Assembly received ES connection: " + t);
+              // Setting var here!
+              eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
+              log.info("Event Service at: " + eventService);
+            }
+
+            if (location.connection().equals(ITelemetryService.telemetryServiceConnection())) {
+              log.info("Assembly received TS connection: " + t);
+              // Setting var here!
+              telemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context()));
+              log.info("Telemetry Service at: " + telemetryService);
+            }
+
+            if (location.connection().equals(IAlarmService.alarmServiceConnection(IAlarmService.defaultName))) {
+              log.info("Assembly received AS connection: " + t);
+              // Setting var here!
+              alarmService = Optional.of(IAlarmService.getAlarmService(t.host(), t.port(), context()));
+              log.info("Alarm Service at: " + alarmService);
+            }
+
+          } else if (location instanceof Unresolved) {
+            log.info("Unresolved: " + location.connection());
+            if (location.connection().componentId().equals(ac.hcdComponentId))
+              tromboneHCD = badHCDReference;
+
+          } else if (location instanceof UnTrackedLocation) {
+            log.info("UnTracked: " + location.connection());
+
+          } else {
+            log.warning("Unknown connection: " + location.connection()); // XXX
+          }
+        }
+      ).
       build();
   }
 
+  // Receive partial function used when in Running state
   private PartialFunction<Object, BoxedUnit> runningReceive() {
     return locationReceive().orElse(controllerReceive()).orElse(lifecycleReceivePF()).orElse(unhandledPF());
   }
@@ -207,10 +218,34 @@ public class TromboneAssembly extends JAssemblyController {
       build();
   }
 
+  // Catchall unhandled message receive
   private PartialFunction<Object, BoxedUnit> unhandledPF() {
     return ReceiveBuilder.
       matchAny(t -> log.warning("Unexpected message in TromboneAssembly:unhandledPF: " + t)).
       build();
+  }
+
+  @Override
+  /**
+   * Function that overrides AssemblyController setup processes incoming SetupConfigArg messages
+   * @param sca received SetupConfgiArg
+   * @param commandOriginator the sender of the command
+   * @return a validation object that indicates if the received config is valid
+   */
+  public List<Validation.Validation> setup(SetupConfigArg sca, Optional<ActorRef> commandOriginator) {
+    // Returns validations for all
+    List<Validation.Validation> validations = validateSequenceConfigArg(sca);
+    if (Validation.isAllValid(validations)) {
+      if (sca.getConfigs().size() == 1 && sca.getConfigs().get(0).configKey().equals(ac.stopCK)) {
+        // Special handling for stop which needs to interrupt the currently executing sequence
+        commandHandler.tell(sca.getConfigs().get(0), self());
+      } else {
+        // Create a SequentialExecutor to process all SetupConfigs
+        ActorRef executor = newExecutor(sca, commandOriginator);
+        executor.tell(new SequentialExecutor.StartTheSequence(commandHandler), self());
+      }
+    }
+    return validations;
   }
 
   /**
@@ -221,22 +256,7 @@ public class TromboneAssembly extends JAssemblyController {
     return ConfigValidation.validateTromboneSetupConfigArg(sca, ac);
   }
 
-  @Override
-  public List<Validation.Validation> setup(SetupConfigArg sca, Optional<ActorRef> commandOriginator) {
-    // Returns validations for all
-    List<Validation.Validation> validations = validateSequenceConfigArg(sca);
-    if (Validation.isAllValid(validations)) {
-      if (sca.getConfigs().size() == 1 && sca.getConfigs().get(0).configKey().equals(ac.stopCK)) {
-        // Special handling for stop which needs to interrupt the currently executing sequence
-        commandHandler.tell(sca.getConfigs().get(0), self());
-      } else {
-        ActorRef executor = newExecutor(sca, commandOriginator);
-        executor.tell(new SequentialExecutor.StartTheSequence(commandHandler), self());
-      }
-    }
-    return validations;
-  }
-
+  // Convenience method to create a new SequentialExecutor
   private ActorRef newExecutor(SetupConfigArg sca, Optional<ActorRef> commandOriginator) {
     return context().actorOf(SequentialExecutor.props(sca, commandOriginator));
   }
@@ -300,11 +320,4 @@ public class TromboneAssembly extends JAssemblyController {
     }
   }
 
-  /**
-   * Services needed by Trombone Assembly
-   */
-  private static final Connection eventServiceConnection = new TcpConnection(new ComponentId(IEventService.defaultName, JComponentType.Service));
-  // Kim update when telmetry service merged
-  private static final Connection telemetryServiceConnection = new TcpConnection(new ComponentId(ITelemetryService.defaultName, JComponentType.Service));
-  private static final Connection alarmServiceConnection = new TcpConnection(new ComponentId(IAlarmService.defaultName, JComponentType.Service));
 }

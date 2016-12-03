@@ -88,7 +88,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
   // Get the telemetry service by looking up the name with the location service.
   private implicit val timeout = Timeout(10.seconds)
-  private val telemetryService:TelemetryService = Await.result(TelemetryService(), timeout.duration)
+  private val telemetryService: TelemetryService = Await.result(TelemetryService(), timeout.duration)
 
   override protected def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
@@ -105,7 +105,6 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     val props = DiagPublisher.props(assemblyContext, tromboneHCD, eventPublisher)
     TestActorRef[DiagPublisher](props)
   }
-
 
   describe("basic diag tests") {
     /**

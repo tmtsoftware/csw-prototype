@@ -164,7 +164,7 @@ public class DiagPublisherTests extends JavaTestKit {
   Connection.AkkaConnection tromboneHCDConnection = (AkkaConnection) assemblyContext.info.getConnections().get(0);
 
   TestActorRef<DiagPublisher> newDiagPublisher(ActorRef currentStateReceiver, Optional<ActorRef> tromboneHCD, Optional<ActorRef> eventPublisher) {
-    Props props = DiagPublisher.props(assemblyContext, currentStateReceiver, tromboneHCD, eventPublisher);
+    Props props = DiagPublisher.props(assemblyContext, tromboneHCD, eventPublisher);
     return TestActorRef.create(system, props);
   }
 

@@ -4,7 +4,6 @@ import csw.services.ccs.Validation.{Validation, ValidationIssue}
 import csw.util.config.Configurations.{SequenceConfig, SetupConfig}
 import csw.util.config.RunId
 
-import scala.compat.java8.OptionConverters._
 import scala.collection.JavaConverters._
 
 object CommandStatus {
@@ -154,7 +153,7 @@ object CommandStatus {
 
   // Using a class instead of a pair to make it easier for Java to access...
   case class CommandResultPair(status: CommandStatus, config: SequenceConfig) {
-    override def toString() = s"($status, $config)"
+    override def toString = s"($status, $config)"
   }
 
   final case class CommandResults(results: List[CommandResultPair] = List.empty[CommandResultPair]) {
@@ -162,7 +161,7 @@ object CommandStatus {
     def status(index: Int): CommandStatus = results(index).status
     def config(index: Int): SequenceConfig = results(index).config
 
-    override def toString = s"(${results})"
+    override def toString = s"($results)"
 
     /**
      * Java API to access results
