@@ -9,7 +9,25 @@ All notable changes to this project will be documented in this file.
 
 - Added Java APIs and tests
 
+- Added vslice and vsliceJava: detailed, vertical slice examples in Scala and Java
+
+- Added AlarmService
+
+- Added Scala and Java DSLs for working with configurations
+
+- Added csw-services.sh startup script
+
 ### Changed
+
+- Changed the APIs for HcdController, AssemblyController, Supervisor
+
+- Changed APIs for working with configurations in Scala and Java
+
+- Changed the Location Service APIs
+
+- Updated all dependency versions, Akka version
+
+- Changed APIs for Event and Telemetry Service
 
 
 ### Added
