@@ -30,7 +30,7 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
   // This is used to keep track since it can be updated
   var nssInUseGlobal = nssInUseIn
 
-  // This var is needed to capture the Monitor used for subscriptions
+  // This val is needed to capture the Monitor used for subscriptions
   val subscribeMonitor: EventMonitor = startupSubscriptions(eventService)
 
   private def startupSubscriptions(eventService: EventService): EventMonitor = {

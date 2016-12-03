@@ -1,7 +1,7 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.containerCmd.ContainerCmd
@@ -67,36 +67,12 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     system.actorOf(props)
   }
 
-  def newTestTrombone(supervisor: ActorRef, assemblyInfo: AssemblyInfo = assemblyContext.info): TestActorRef[TromboneAssembly] = {
-    val props = getTromboneProps(assemblyInfo, Some(supervisor))
-    TestActorRef(props)
-  }
-
   describe("low-level instrumented trombone assembly tests") {
-
-    it("should get initialized with configs from files (same as AlgorithmData") {
-      // test1
-      val supervisor = TestProbe()
-      val tla = newTestTrombone(supervisor.ref)
-
-      tla.underlyingActor.controlConfig.stageZero should be(AssemblyTestData.TestControlConfig.stageZero)
-      tla.underlyingActor.controlConfig.positionScale should be(AssemblyTestData.TestControlConfig.positionScale)
-      tla.underlyingActor.controlConfig.minStageEncoder should be(AssemblyTestData.TestControlConfig.minStageEncoder)
-
-      tla.underlyingActor.calculationConfig.defaultInitialElevation should be(AssemblyTestData.TestCalculationConfig.defaultInitialElevation)
-      tla.underlyingActor.calculationConfig.focusErrorGain should be(AssemblyTestData.TestCalculationConfig.focusErrorGain)
-      tla.underlyingActor.calculationConfig.lowerFocusLimit should be(AssemblyTestData.TestCalculationConfig.lowerFocusLimit)
-      tla.underlyingActor.calculationConfig.upperFocusLimit should be(AssemblyTestData.TestCalculationConfig.upperFocusLimit)
-      tla.underlyingActor.calculationConfig.zenithFactor should be(AssemblyTestData.TestCalculationConfig.zenithFactor)
-
-      expectNoMsg(2.seconds)
-      system.stop(tla)
-    }
 
     it("should lifecycle properly with a fake supervisor") {
       // test2
       val fakeSupervisor = TestProbe()
-      val tla = newTestTrombone(fakeSupervisor.ref)
+      val tla = newTrombone(fakeSupervisor.ref)
 
       fakeSupervisor.expectMsg(Initialized)
       fakeSupervisor.expectMsg(10.seconds, Started)

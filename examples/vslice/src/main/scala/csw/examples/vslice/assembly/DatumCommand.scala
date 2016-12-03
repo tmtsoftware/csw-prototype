@@ -16,8 +16,6 @@ class DatumCommand(sc: SetupConfig, tromboneHCD: ActorRef, startState: TromboneS
   import TromboneCommandHandler._
   import TromboneStateActor._
 
-  val prefix = "NFIRAOS.cc.lgsTrombone"
-
   // Not using stateReceive since no state updates are needed here only writes
   def receive: Receive = {
     case CommandStart =>
@@ -35,7 +33,7 @@ class DatumCommand(sc: SetupConfig, tromboneHCD: ActorRef, startState: TromboneS
         }
       }
     case StopCurrentCommand =>
-      log.debug(">>>>>>>>>>>>>>>>>>>>>>>>>>  DATUM STOPPED")
+      log.debug(">>  DATUM STOPPED")
       tromboneHCD ! HcdController.Submit(cancelSC)
   }
 

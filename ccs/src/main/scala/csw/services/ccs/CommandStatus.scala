@@ -153,12 +153,16 @@ object CommandStatus {
   case object AllCompleted extends OverallCommandStatus
 
   // Using a class instead of a pair to make it easier for Java to access...
-  case class CommandResultPair(status: CommandStatus, config: SequenceConfig)
+  case class CommandResultPair(status: CommandStatus, config: SequenceConfig) {
+    override def toString() = s"($status, $config)"
+  }
 
   final case class CommandResults(results: List[CommandResultPair] = List.empty[CommandResultPair]) {
     def :+(pair: CommandResultPair) = CommandResults(results = results :+ pair)
     def status(index: Int): CommandStatus = results(index).status
     def config(index: Int): SequenceConfig = results(index).config
+
+    override def toString = s"(${results})"
 
     /**
      * Java API to access results

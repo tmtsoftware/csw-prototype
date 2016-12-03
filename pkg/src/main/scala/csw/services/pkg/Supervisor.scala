@@ -31,7 +31,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   def startComponent(context: ActorContext, componentInfo: ComponentInfo): ActorRef = {
     // This is currently needed to give time to process a subscription, need a better way
     Thread.sleep(100)
-    log.info(s"Starting ${componentInfo.componentName}")
+    log.debug(s"Starting ${componentInfo.componentName}")
     val actorRef = Component.create(context, componentInfo)
     context.watch(actorRef)
     actorRef
@@ -109,7 +109,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
     case Initialized =>
       logState(LifecycleWaitingForInitialized, LifecycleInitialized)
       // Actions for moving to the next state
-      log.info("In Initialized, registering with Location Service")
+      log.debug("In Initialized, registering with Location Service")
       registerWithLocationService()
       lifecycleState = LifecycleInitialized
       // Transition to the new state
@@ -134,7 +134,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   def lifecycleInitializedPF: Receive = {
     case Started =>
       logState(LifecycleInitialized, LifecycleRunning)
-      log.info(s"lifecycleInitialized: sending Running to component $component")
+      log.debug(s"lifecycleInitialized: sending Running to component $component")
       component ! Running
       lifecycleState = LifecycleRunning
       context.become(lifecycleRunning)
@@ -159,7 +159,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   def lifecycleRunningPF: Receive = {
     case ExComponentOffline =>
       logState(LifecycleRunning, LifecycleRunningOffline)
-      log.info("lifecycleRunning: sending RunningOffline to component")
+      log.debug("lifecycleRunning: sending RunningOffline to component")
       component ! RunningOffline
       lifecycleState = LifecycleRunningOffline
       context.become(lifecycleRunningOffline)
@@ -167,19 +167,17 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
     // Stay
     case ExComponentRestart =>
       logState(LifecycleRunning, LifecycleWaitingForInitialized)
-      log.info("lifecycleRunning: sending DoRestart to component")
+      log.debug("lifecycleRunning: sending DoRestart to component")
       component ! DoRestart
-      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecycleWaitingForInitialized
       context.become(lifecycleWaitingForInitialized)
     case ExComponentShutdown =>
       logState(LifecycleRunning, LifecyclePreparingToShutdown)
-      log.info("lifecycleRunning: sending DoShutdown to component")
+      log.debug("lifecycleRunning: sending DoShutdown to component")
       component ! DoShutdown
       // This sets a timer to send a message if the component does not respond within shutdownTimeout
       shutdownTimer = Some(scheduleTimeout)
-      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecyclePreparingToShutdown
       // Transition indicates component is shutting down
@@ -204,15 +202,14 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
     // Stay
     case ExComponentOnline =>
       logState(LifecycleRunningOffline, LifecycleRunning)
-      log.info("lifecycleRunningOffline: sending Running to component")
+      log.debug("lifecycleRunningOffline: sending Running to component")
       component ! Running
       lifecycleState = LifecycleRunning
       context.become(lifecycleRunning)
     case ExComponentRestart =>
       logState(LifecycleRunningOffline, LifecycleWaitingForInitialized)
-      log.info("lifecycleRunningOffline: sending DoRestart to component")
+      log.debug("lifecycleRunningOffline: sending DoRestart to component")
       component ! DoRestart
-      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecycleWaitingForInitialized
       context.become(lifecycleWaitingForInitialized)
@@ -220,9 +217,8 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
       logState(LifecycleRunningOffline, LifecyclePreparingToShutdown)
       // This sets a timer to send a message if the component does not respond within shutdownTimeout
       shutdownTimer = Some(scheduleTimeout)
-      log.info("lifecycleRunningOffline: sending DoShutdown to component")
+      log.debug("lifecycleRunningOffline: sending DoShutdown to component")
       component ! DoShutdown
-      log.info("Unregister")
       unregisterFromLocationService()
       lifecycleState = LifecyclePreparingToShutdown
       context.become(lifecyclePreparingToShutdown)
@@ -237,7 +233,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
       // First cancel the shutdown timer
       shutdownTimer.map(_.cancel())
       logState(LifecyclePreparingToShutdown, LifecycleShutdown)
-      log.info("lifecycleWatingForShutdown: shutdown successful")
+      log.debug("lifecycleWatingForShutdown: shutdown successful")
       lifecycleState = LifecycleShutdown
       // Transition means component has shutdown
       notifyListeners(LifecycleStateChanged(LifecycleShutdown))
@@ -269,21 +265,21 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
 
   // Partial function for the lifecycleShutdown state
   def lifecycleShutdownPF: Receive = {
-    case x ⇒ log.info(s"Supervisor in lifecycleShutdown received an unexpected message: $x ")
+    case x ⇒ log.debug(s"Supervisor in lifecycleShutdown received an unexpected message: $x ")
   }
 
   /**
    * Receive method for the lifecycleFailure state
    */
   def lifecycleFailure: Receive = {
-    case x ⇒ log.info(s"Supervisor in lifecycleFailure received an unexpected message: $x ")
+    case x ⇒ log.debug(s"Supervisor in lifecycleFailure received an unexpected message: $x ")
   }
 
   /**
    * Recieve method for the lifecycleShutdownFailure state
    */
   def lifecycleShutdownFailure: Receive = {
-    case x ⇒ log.info(s"Supervisor in lifecycleShutdownFailure received an unexpected message: $x ")
+    case x ⇒ log.debug(s"Supervisor in lifecycleShutdownFailure received an unexpected message: $x ")
   }
 
   // Partial function combined with others to receive common messages
@@ -315,7 +311,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   }
 
   // Used to log messages for state changes
-  def logState(thisState: LifecycleState, nextState: LifecycleState) = log.info(s"In $thisState going to $nextState")
+  def logState(thisState: LifecycleState, nextState: LifecycleState) = log.debug(s"In $thisState going to $nextState")
 
   // The following is listener support for the container or other interested component
   private var listeners = Set[ActorRef]()

@@ -7,11 +7,9 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.services.alarms.AlarmService
-import csw.services.ccs.SequentialExecutor
 import csw.services.ccs.SequentialExecutor.StartTheSequence
 import csw.services.ccs.Validation.ValidationList
-import csw.services.ccs.{AssemblyController, Validation}
-import csw.services.cs.akka.ConfigServiceClient
+import csw.services.ccs.{AssemblyController, SequentialExecutor, Validation}
 import csw.services.events.{EventService, TelemetryService}
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService._
@@ -20,15 +18,20 @@ import csw.services.pkg.Component.AssemblyInfo
 import csw.services.pkg.{Assembly, Supervisor}
 import csw.util.config.Configurations.SetupConfigArg
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
- * TMT Source Code: 6/10/16.
+ * Top Level Actor for Trombone Assembly
+ *
+ * TromboneAssembly starts up the component doing the following:
+ * creating all needed actors,
+ * handling initialization,
+ * participating in lifecycle with Supervisor,
+ * handles locations for distribution throughout component
+ * receives comamnds and forwards them to the CommandHandler by extending the AssemblyController
  */
-class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
-    extends Assembly with AssemblyController {
+class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController {
 
   import Supervisor._
 
@@ -63,9 +66,9 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
   // This tracks the HCD
   LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
   // This tracks required services
-  LocationSubscriberActor.trackConnection(TromboneAssembly.eventServiceConnection, trackerSubscriber)
-  LocationSubscriberActor.trackConnection(TromboneAssembly.telemetryServiceConnection, trackerSubscriber)
-  LocationSubscriberActor.trackConnection(TromboneAssembly.alarmServiceConnection, trackerSubscriber)
+  LocationSubscriberActor.trackConnection(EventService.eventServiceConnection(), trackerSubscriber)
+  LocationSubscriberActor.trackConnection(TelemetryService.telemetryServiceConnection(), trackerSubscriber)
+  LocationSubscriberActor.trackConnection(AlarmService.alarmServiceConnection(), trackerSubscriber)
 
   // This actor handles all telemetry and system event publishing
   private val eventPublisher = context.actorOf(TrombonePublisher.props(ac, None))
@@ -77,54 +80,9 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
   private val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, Some(eventPublisher)))
 
   // This sets up the diagnostic data publisher
-  //val diagPublisher = context.actorOf(DiagPublisher.props(tromboneHCD, Some(tromboneHCD), Some(eventPublisher)))
+  val diagPublisher = context.actorOf(DiagPublisher.props(ac, tromboneHCD, Some(eventPublisher)))
 
   supervisor ! Initialized
-
-  def handleLocations(location: Location): Unit = {
-    location match {
-
-      case l: ResolvedAkkaLocation =>
-        log.info(s"Got actorRef: ${l.actorRef}")
-        tromboneHCD = l.actorRef
-        // trackerSubscriber ! l
-        supervisor ! Started
-
-      case h: ResolvedHttpLocation =>
-        log.info(s"HTTP Service Damn it: ${h.connection}")
-
-      case t: ResolvedTcpLocation =>
-        log.info(s"Received TCP Location: ${t.connection}")
-        // Verify that it is the event service
-        if (t.connection == EventService.eventServiceConnection()) {
-          log.info(s"Assembly received ES connection: $t")
-          // Setting var here!
-          eventService = Some(EventService.get(t.host, t.port))
-          log.info(s"Event Service at: $eventService")
-        }
-        if (t.connection == TelemetryService.telemetryServiceConnection()) {
-          log.info(s"Assembly received TS connection: $t")
-          // Setting var here!
-          telemetryService = Some(TelemetryService.get(t.host, t.port))
-          log.info(s"Event Service at: $telemetryService")
-        }
-        if (t.connection == AlarmService.alarmServiceConnection()) {
-          implicit val timeout = Timeout(10.seconds)
-          log.info(s"Assembly received AS connection: $t")
-          // Setting var here!
-          alarmService = Some(AlarmService.get(t.host, t.port))
-          log.info(s"Alarm Service at: $alarmService")
-        }
-
-      case u: Unresolved =>
-        log.info(s"Unresolved: ${u.connection}")
-        //if (u.connection == EventService.eventServiceConnection()) eventService = badEventService
-        if (u.connection.componentId == ac.hcdComponentId) tromboneHCD = badHCDReference
-
-      case ut: UnTrackedLocation =>
-        log.info(s"UnTracked: ${ut.connection}")
-    }
-  }
 
   /**
    * This contains only commands that can be received during intialization
@@ -142,14 +100,60 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
     case x => log.error(s"Unexpected message in TromboneAssembly:initializingReceive: $x")
   }
 
+  /**
+   * This Receive partial function processes changes to the services and TromboneHCD
+   * Ideally, we would wait for all services before sending Started, but it's not done yet
+   */
   def locationReceive: Receive = {
-    case l: Location =>
-      handleLocations(l)
+    case location: Location =>
+      location match {
+
+        case l: ResolvedAkkaLocation =>
+          log.info(s"Got actorRef: ${l.actorRef}")
+          tromboneHCD = l.actorRef
+          // When the HCD is located, Started is sent to Supervisor
+          supervisor ! Started
+
+        case h: ResolvedHttpLocation =>
+          log.info(s"HTTP Service Damn it: ${h.connection}")
+
+        case t: ResolvedTcpLocation =>
+          log.info(s"Received TCP Location: ${t.connection}")
+          // Verify that it is the event service
+          if (t.connection == EventService.eventServiceConnection()) {
+            log.info(s"Assembly received ES connection: $t")
+            // Setting var here!
+            eventService = Some(EventService.get(t.host, t.port))
+            log.info(s"Event Service at: $eventService")
+          }
+          if (t.connection == TelemetryService.telemetryServiceConnection()) {
+            log.info(s"Assembly received TS connection: $t")
+            // Setting var here!
+            telemetryService = Some(TelemetryService.get(t.host, t.port))
+            log.info(s"Event Service at: $telemetryService")
+          }
+          if (t.connection == AlarmService.alarmServiceConnection()) {
+            implicit val timeout = Timeout(10.seconds)
+            log.info(s"Assembly received AS connection: $t")
+            // Setting var here!
+            alarmService = Some(AlarmService.get(t.host, t.port))
+            log.info(s"Alarm Service at: $alarmService")
+          }
+
+        case u: Unresolved =>
+          log.info(s"Unresolved: ${u.connection}")
+          //if (u.connection == EventService.eventServiceConnection()) eventService = badEventService
+          if (u.connection.componentId == ac.hcdComponentId) tromboneHCD = badHCDReference
+
+        case ut: UnTrackedLocation =>
+          log.info(s"UnTracked: ${ut.connection}")
+      }
   }
 
-  // Idea syntax checking makes orElse orElse a syntax error though it isn't, but this makes it go away
+  // Receive partial function used when in Running state
   def runningReceive: Receive = locationReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
 
+  // Receive artial function to handle runtime lifecycle messages
   def lifecycleReceivePF: Receive = {
     case Running =>
     // Already running so ignore
@@ -168,18 +172,17 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
       log.error(s"TromboneAssembly received failed lifecycle state: $state for reason: $reason")
   }
 
+  // Catchall unhandled message receive
   def unhandledPF: Receive = {
     case x => log.error(s"Unexpected message in TromboneAssembly:unhandledPF: $x")
   }
 
   /**
-   * Validates a received config arg
+   * Function that overrides AssemblyController setup processes incoming SetupConfigArg messages
+   * @param sca received SetupConfgiArg
+   * @param commandOriginator the sender of the command
+   * @return a validation object that indicates if the received config is valid
    */
-  private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
-    // Are all of the configs really for us and correctly formatted, etc?
-    ConfigValidation.validateTromboneSetupConfigArg(sca)
-  }
-
   override def setup(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ValidationList = {
     // Returns validations for all
     val validations: ValidationList = validateSequenceConfigArg(sca)
@@ -188,6 +191,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
         // Special handling for stop which needs to interrupt the currently executing sequence
         commandHandler ! sca.configs.head
       } else {
+        // Create a SequentialExecutor to process all SetupConfigs
         val executor = newExecutor(sca, commandOriginator)
         executor ! StartTheSequence(commandHandler)
       }
@@ -195,6 +199,15 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef)
     validations
   }
 
+  /**
+   * Performs the initial validation of the incoming SetupConfgiArg
+   */
+  private def validateSequenceConfigArg(sca: SetupConfigArg): ValidationList = {
+    // Are all of the configs really for us and correctly formatted, etc?
+    ConfigValidation.validateTromboneSetupConfigArg(sca)
+  }
+
+  // Convenience method to create a new SequentialExecutor
   private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
     context.actorOf(SequentialExecutor.props(sca, commandOriginator))
 
@@ -232,12 +245,5 @@ object TromboneAssembly {
    * @param tromboneHCD the ActorRef of the tromboneHCD or None
    */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
-
-  /**
-   * Services needed by Trombone Assembly
-   */
-  val eventServiceConnection: Connection = TcpConnection(ComponentId(EventService.defaultName, ComponentType.Service))
-  val telemetryServiceConnection: Connection = TcpConnection(ComponentId(TelemetryService.defaultName, ComponentType.Service))
-  val alarmServiceConnection: Connection = TcpConnection(ComponentId(AlarmService.defaultName, ComponentType.Service))
 
 }

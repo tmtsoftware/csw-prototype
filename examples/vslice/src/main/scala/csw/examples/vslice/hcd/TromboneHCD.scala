@@ -22,7 +22,13 @@ import scala.concurrent.duration._
 import scala.language.implicitConversions
 
 /**
- * Example main class for the Trombone HCD
+ * TromboneHCD -- This is the Top Level Actor for the TromboneHCD
+ * It's main responsibilties are to interact with the trombone HCD axis (a simulator)
+ * It also:
+ * - initializes itself from Configiuration Service
+ * - Works with the Supervisor to implement the lifecycle
+ * - Handles incoming commands
+ * - Generates CurrentState for the Assembly
  */
 class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController {
 
@@ -44,10 +50,10 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   // and get the current values. Once that is done, we can tell the supervisor actor that we are ready
   // and then wait for the Running message from the supervisor before going to the running state.
   // Initialize axis from ConfigService
-  val axisConfig = Await.result(getAxisConfig, timeout.duration)
+  val axisConfig: AxisConfig = Await.result(getAxisConfig, timeout.duration)
 
   // Create an axis for simulating trombone motion
-  val tromboneAxis = setupAxis(axisConfig)
+  val tromboneAxis: ActorRef = setupAxis(axisConfig)
 
   // Initialize values -- This causes an update to the listener
   // The current axis position from the hardware axis, initialize to default value
@@ -71,7 +77,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     case x => log.error(s"Unexpected message in TromboneHCD (Not running yet): $x")
   }
 
-  // Running state
+  // Receive partial function to handle runtime lifecycle meessages
   private def runningReceive: Receive = controllerReceive orElse {
     case Running =>
       log.info("Received running")
