@@ -2,7 +2,7 @@ package csw.examples
 
 import akka.actor.ActorRef
 import csw.services.ccs.Validation._
-import csw.services.ccs.{AssemblyController, Validation}
+import csw.services.ccs.{AssemblyController, HcdController, Validation}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService.ResolvedAkkaLocation
@@ -71,7 +71,7 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
     val validations: ValidationList = validateSequenceConfigArg(sca)
     if (Validation.isAllValid(validations)) {
       // For this trivial test we just forward the configs to the HCD
-      sca.configs.foreach(hcd ! _)
+      sca.configs.foreach(hcd ! HcdController.Submit(_))
     }
     validations
   }

@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [CSW v0.3-PDR] - 2016-12-03
+
+### Added
+
+- Added Java APIs and tests
+
+### Changed
+
+
 ### Added
 - Added [BlockingConfigManager](src/main/scala/csw/services/cs/core/BlockingConfigManager.scala) 
   (a blocking API to the Config Service)

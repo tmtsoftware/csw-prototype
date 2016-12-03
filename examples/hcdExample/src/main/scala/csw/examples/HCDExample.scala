@@ -56,15 +56,15 @@ object HCDExample {
     import PosGenerator._
     import TimeService._
 
-    val rand = Random
-    implicit val timeout = Timeout(5.seconds)
-    val eventService = Await.result(TelemetryService(), timeout.duration)
+    private val rand = Random
+    private implicit val timeout = Timeout(5.seconds)
+    private val eventService = Await.result(TelemetryService(), timeout.duration)
 
     // Create a subscriber to positions (just for test)
-    val subscriberActor = context.actorOf(Props(classOf[EventPosSubscriber]))
+    private val subscriberActor = context.actorOf(Props(classOf[EventPosSubscriber]))
     eventService.subscribe(subscriberActor, postLastEvents = true, prefix)
 
-    var timer = setTimer(1000)
+    private var timer = setTimer(1000)
 
     // Sets the delay in ms between ticks
     private def setTimer(delay: Int): Cancellable = {
@@ -97,7 +97,7 @@ object HCDExample {
 
     import java.time._
 
-    val startTime = Instant.now
+    private val startTime = Instant.now
 
     def receive: Receive = {
       case event: StatusEvent =>
@@ -122,10 +122,11 @@ class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd w
 
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")
-  lifecycle(supervisor, Initialized)
+  supervisor ! Initialized
+  supervisor ! Started
 
   // Create an actor to generate position events
-  val posEventGenerator = context.actorOf(PosGenerator.props(info.prefix))
+  private val posEventGenerator = context.actorOf(PosGenerator.props(info.prefix))
 
   // Process a config message
   override def process(sc: SetupConfig): Unit = {
@@ -139,7 +140,11 @@ class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd w
   }
 
   // Receive actor methods
-  def receive = controllerReceive
+  def receive: Receive = controllerReceive orElse {
+    case Running => log.info("Running")
+
+    case x       => log.error(s"Unexpected message received: $x")
+  }
 
 }
 

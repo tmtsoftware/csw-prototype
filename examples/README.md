@@ -3,9 +3,10 @@ Examples
 
 This directory contains some example code:
 
-* assemblyExample - an example assembly that sends messages to the example HCD
- 
-* hcdExample - an example HCD that generates position events along with an event subscriber that logs them (for testing)
+* [assemblyExample](assemblyExample) - an example assembly that sends messages to the example HCD
+* [hcdExample](hcdExample) - an example HCD that generates position events along with an event subscriber that logs them (for testing)
+* [vslice](vslice) - a detailed, end to end, "Vertical Slice" example that demonstrates how to develop and test Assemblies and HCDs in Scala
+* [vsliceJava](vsliceJava) - a Java 8 version of the [vslice](vslice) example that demonstrates how to use the CSW software from Java 8
 
 The conf directory contains some logstash config files to demonstrate logging to LogStash, ElasticSearch and Kibana.
 

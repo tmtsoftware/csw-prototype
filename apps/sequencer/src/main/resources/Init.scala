@@ -15,6 +15,10 @@ import akka.pattern.ask
 import scala.concurrent.duration._
 import scala.util.{Try, Success, Failure}
 
+import csw.services.loc.ComponentId
+import csw.services.pkg.Component.AssemblyInfo
+import csw.util.config.UnitsOfMeasure._
+
 // Utility functions, shortcuts
 
 import csw.services.apps.sequencer.SequencerEnv
