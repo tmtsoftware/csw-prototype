@@ -30,6 +30,16 @@ public class JConnection {
     }
 
     /**
+     * A connection to a remote tcp based component
+     *
+     * @param componentId the id of the target component
+     * @return the connection object
+     */
+    public static TcpConnection tcpConnection(ComponentId componentId) {
+        return new TcpConnection(componentId);
+    }
+
+    /**
      * Gets a Connection from a string as output by Connection.toString
      *
      * @param s a string in the format output by Connection.toString

@@ -7,16 +7,13 @@ import akka.testkit.JavaTestKit;
 import akka.util.Timeout;
 import csw.services.alarms.AlarmKey;
 import csw.services.alarms.AscfValidation;
-import javacsw.services.alarms.IAlarmService;
-import javacsw.services.alarms.JAlarmKey;
+import javacsw.services.alarms.*;
 import javacsw.services.alarms.JAlarmModel.*;
 import javacsw.services.alarms.JAlarmState.*;
 import csw.services.alarms.AlarmModel;
 import csw.services.alarms.AlarmModel.*;
 import csw.services.alarms.AlarmService.*;
 import csw.services.loc.LocationService;
-import csw.services.trackLocation.TrackLocation;
-import javacsw.services.alarms.JProblem;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,7 +23,6 @@ import static org.junit.Assert.*;
 import scala.concurrent.duration.FiniteDuration;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.List;
@@ -42,7 +38,7 @@ public class JAlarmServiceTests {
   private static ActorSystem system;
   private static LoggingAdapter logger;
   private static IAlarmService alarmService;
-  private static Timeout timeout = new Timeout(FiniteDuration.create(60, TimeUnit.SECONDS));
+  private static Timeout timeout = new Timeout(FiniteDuration.create(15, TimeUnit.SECONDS));
 
   // Set a low refresh rate for the test
   private static int refreshSecs = 1;
@@ -56,36 +52,28 @@ public class JAlarmServiceTests {
   // Time in ms to wait to see if an alarm severity expired
   private static int delayMs = expireSecs * 1000 + shortDelayMs;
 
-  public JAlarmServiceTests() throws URISyntaxException {
-  }
-
   @BeforeClass
   public static void setup() throws ExecutionException, InterruptedException {
     LocationService.initInterface();
     system = ActorSystem.create();
-
-    String asName = "Alarm Service Test";
-
-    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis on a random port and register it with the location service.
-    // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port" --no-exit
-    Runnable task = () -> TrackLocation.main(new String[]{
-      "--name", asName,
-      "--command", "redis-server --port %port",
-      "--no-exit"
-    });
-    Thread thread = new Thread(task);
-    thread.start();
-
-    // Later, in another JVM...,
+    System.setProperty("csw.services.alarms.refreshSecs", String.valueOf(refreshSecs));
+//
+//    String asName = "Alarm Service Test";
+//
+//    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
+//    // Start redis on a random port and register it with the location service.
+//    // The following is the equivalent of running this from the command line:
+//    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port" --no-exit
+//    IAlarmServiceAdmin.startAlarmService(asName, true, system.dispatcher());
+//
     // Get the alarm service by looking up the name with the location service (using a small value for refreshSecs for testing)
-    alarmService = IAlarmService.getAlarmService(asName, refreshSecs, system, timeout).get();
+    alarmService = IAlarmService.getAlarmService(system, timeout).get();
   }
 
   @AfterClass
   public static void teardown() {
-    alarmService.shutdown();
+//    IAlarmServiceAdmin admin = new JAlarmServiceAdmin(alarmService, system);
+//    admin.shutdown();
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }
@@ -95,7 +83,7 @@ public class JAlarmServiceTests {
   private static Optional<Health> callbackHealth = Optional.empty();
 
   // Called when alarm severity changes
-  static IAlarmService.AlarmHandler alarmHandler = new IAlarmService.AlarmHandler() {
+  static IAlarmServiceAdmin.AlarmHandler alarmHandler = new IAlarmServiceAdmin.AlarmHandler() {
     public void handleAlarmStatus(AlarmStatus alarmStatus) {
       AlarmKey a = alarmStatus.alarmKey();
       logger.debug("Alarm Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + alarmStatus.currentSeverity());
@@ -104,7 +92,7 @@ public class JAlarmServiceTests {
   };
 
   // Called when health severity changes
-  static IAlarmService.HealthHandler healthHandler = new IAlarmService.HealthHandler() {
+  static IAlarmServiceAdmin.HealthHandler healthHandler = new IAlarmServiceAdmin.HealthHandler() {
     public void handleHealthStatus(HealthStatus healthStatus) {
       AlarmKey a = healthStatus.key();
       logger.debug("Health Status: " + a.subsystem() + ":" + a.component() + ":" + a.name() + ": " + healthStatus.health());
@@ -122,13 +110,14 @@ public class JAlarmServiceTests {
     URL url = JAlarmServiceTests.class.getResource("/test-alarms.conf");
     File ascf = Paths.get(url.toURI()).toFile();
 
-    // initialize the list of alarms in Redis
-    List<AscfValidation.Problem> problems = alarmService.initAlarms(ascf, false).get();
+    // initialize the list of alarms in Redis (This is only for the test and should not be done by normal clients)
+    IAlarmServiceAdmin admin = new JAlarmServiceAdmin(alarmService, system);
+    List<AscfValidation.Problem> problems = admin.initAlarms(ascf, false).get();
     JProblem.printProblems(problems);
     assertTrue(JProblem.errorCount(problems) == 0);
 
     // List all the alarms that were written to Redis
-    List<AlarmModel> alarms = alarmService.getAlarms(JAlarmKey.create()).get();
+    List<AlarmModel> alarms = admin.getAlarms(JAlarmKey.create()).get();
     for (AlarmModel alarm : alarms) {
       // XXX TODO: compare results
       logger.debug("List Alarm: " + alarm);
@@ -139,98 +128,96 @@ public class JAlarmServiceTests {
     AlarmKey key2 = new AlarmKey("NFIRAOS", "envCtrl", "minTemperature");
     AlarmKey key3 = new AlarmKey("NFIRAOS", "envCtrl", "maxTemperature");
 
-    AlarmMonitor alarmMonitor = alarmService.monitorHealth(key1,
-      Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler), false);
+    AlarmMonitor alarmMonitor = admin.monitorAlarms(key1, alarmHandler, healthHandler, false);
     Thread.sleep(shortDelayMs); // make sure actor has started
 
     alarmService.setSeverity(key1, JSeverityLevel.Critical).get();
     Thread.sleep(delayMs); // wait for severity to expire
 
     // alarm is latched, so stays at critical
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Critical));
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Critical));
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Critical));
 
     alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
     // alarm is latched, so stays at critical
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Critical));
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Critical));
     Thread.sleep(shortDelayMs);
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Critical));
 
     // Acknowledge the alarm, which clears it, resets it back to Okay
-    alarmService.acknowledgeAndResetAlarm(key1).get();
+    admin.acknowledgeAndResetAlarm(key1).get();
     alarmService.setSeverity(key1, JSeverityLevel.Okay).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback, so the test below passes
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay)); // alarm was cleared
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay)); // alarm was cleared
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay));
 
     Thread.sleep(delayMs); // wait for severity to expire and become "Disconnected"
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Disconnected)); // alarm severity key expired
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Disconnected)); // alarm severity key expired
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Disconnected));
 
     // Test alarm in shelved state
-    alarmService.setShelvedState(key1, JShelvedState.Shelved).get();
+    admin.setShelvedState(key1, JShelvedState.Shelved).get();
     alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     // getSeverity should return the severity that was set ...
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
     // but the callback should not have been called, since alarm is shelved (callbackSev should have previous value)
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Disconnected, JSeverityLevel.Disconnected));
     // un-shelve the alarm and try it again
-    alarmService.setShelvedState(key1, JShelvedState.Normal).get();
+    admin.setShelvedState(key1, JShelvedState.Normal).get();
     alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
     // Since the alarm is no longer shelved, the callback should be called this time
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
 
     // Test alarm in deactivated state
-    alarmService.acknowledgeAndResetAlarm(key1).get();
+    admin.acknowledgeAndResetAlarm(key1).get();
     alarmService.setSeverity(key1, JSeverityLevel.Okay).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
-    alarmService.setActivationState(key1, JActivationState.OutOfService).get();
+    admin.setActivationState(key1, JActivationState.OutOfService).get();
     alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
     // callback should not have been called, callbackSev should have previous value
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Okay, JSeverityLevel.Okay));
-    alarmService.setActivationState(key1, JActivationState.Normal).get();
+    admin.setActivationState(key1, JActivationState.Normal).get();
     alarmService.setSeverity(key1, JSeverityLevel.Warning).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     // This time the callback should have been called
     assertEquals(callbackSev, new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
-    assertEquals(alarmService.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
+    assertEquals(admin.getSeverity(key1).get(), new CurrentSeverity(JSeverityLevel.Warning, JSeverityLevel.Warning));
 
     // Test health monitor
     alarmMonitor.stop();
     AlarmKey nfKey = JAlarmKey.create(Optional.of("NFIRAOS"));
-    AlarmMonitor healthMonitor = alarmService.monitorHealth(nfKey,
-      Optional.empty(), Optional.of(alarmHandler), Optional.of(healthHandler), false);
+    AlarmMonitor healthMonitor = admin.monitorAlarms(nfKey, alarmHandler, healthHandler, false);
     Thread.sleep(shortDelayMs); // make sure actor has started
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
     alarmService.setSeverity(key3, JSeverityLevel.Okay).get();
     Thread.sleep(shortDelayMs);
-    assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Good);
+    assertEquals(admin.getHealth(nfKey).get(), JHealth.Good);
     Thread.sleep(shortDelayMs);
     assertEquals(callbackHealth.get(), JHealth.Good);
 
     Thread.sleep(delayMs); // wait for severity to expire and become "Disconnected"
     assertEquals(callbackHealth.get(), JHealth.Bad);
-    assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Bad);
-    assertEquals(alarmService.getHealth(JAlarmKey.create()).get(), JHealth.Bad);
+    assertEquals(admin.getHealth(nfKey).get(), JHealth.Bad);
+    assertEquals(admin.getHealth(JAlarmKey.create()).get(), JHealth.Bad);
 
     alarmService.setSeverity(key2, JSeverityLevel.Major).get();
     alarmService.setSeverity(key3, JSeverityLevel.Okay).get();
 
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     assertEquals(callbackHealth.get(), JHealth.Ill);
-    assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Ill);
-    alarmService.acknowledgeAndResetAlarm(key2).get();
+    assertEquals(admin.getHealth(nfKey).get(), JHealth.Ill);
+    admin.acknowledgeAndResetAlarm(key2).get();
 
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
     alarmService.setSeverity(key3, JSeverityLevel.Critical).get();
     Thread.sleep(shortDelayMs); // Give redis time to notify the callback
     assertEquals(callbackHealth.get(), JHealth.Bad);
-    assertEquals(alarmService.getHealth(nfKey).get(), JHealth.Bad);
+    assertEquals(admin.getHealth(nfKey).get(), JHealth.Bad);
 
     // Stop the actors monitoring the alarm and health
     healthMonitor.stop();

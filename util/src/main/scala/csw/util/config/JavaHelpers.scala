@@ -314,6 +314,14 @@ private[config] object JavaHelpers {
     }
   }
 
+  def jvalue[S, I <: Item[S], T <: ConfigType[T], J](sc: T, key: Key[S, I]): J = {
+    val item = sc.get(key)
+    item match {
+      case Some(x) => x.values(0).asInstanceOf[J]
+      case None    => throw new NoSuchElementException(s"Item: $key not found")
+    }
+  }
+
   def jvalues[S, I <: Item[S], T <: ConfigType[T], J](sc: T, key: Key[S, I]): java.util.List[J] = {
     val item = sc.get(key)
     item match {
@@ -322,4 +330,31 @@ private[config] object JavaHelpers {
     }
   }
 
+  // ChoiceItem
+  def jvalue(item: ChoiceItem): Choice = item.values(0)
+
+  def jvalue(item: ChoiceItem, index: Int): Choice = item.values(index)
+
+  def jvalues(item: ChoiceItem): java.util.List[Choice] = item.values.map(i => i: Choice).asJava
+
+  def jget(item: ChoiceItem, index: Int): java.util.Optional[Choice] = item.get(index).map(i => i: Choice).asJava
+
+  def jset(key: ChoiceKey, v: java.util.List[Choice], units: Units): ChoiceItem = ChoiceItem(key.keyName, key.choices, v.asScala.toVector.map(i => i: Choice), units)
+
+  @varargs
+  def jset(key: ChoiceKey, v: Choice*) = ChoiceItem(key.keyName, key.choices, v.map(i => i: Choice).toVector, units = UnitsOfMeasure.NoUnits)
+
+  // StructItem
+  def jvalue(item: StructItem): Struct = item.values(0)
+
+  def jvalue(item: StructItem, index: Int): Struct = item.values(index)
+
+  def jvalues(item: StructItem): java.util.List[Struct] = item.values.map(i => i: Struct).asJava
+
+  def jget(item: StructItem, index: Int): java.util.Optional[Struct] = item.get(index).map(i => i: Struct).asJava
+
+  def jset(key: StructKey, v: java.util.List[Struct], units: Units): StructItem = StructItem(key.keyName, v.asScala.toVector.map(i => i: Struct), units)
+
+  @varargs
+  def jset(key: StructKey, v: Struct*) = StructItem(key.keyName, v.map(i => i: Struct).toVector, units = UnitsOfMeasure.NoUnits)
 }

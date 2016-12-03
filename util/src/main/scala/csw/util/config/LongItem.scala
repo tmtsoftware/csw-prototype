@@ -1,11 +1,9 @@
 package csw.util.config
 
-import scala.annotation.varargs
-import scala.collection.JavaConverters._
+import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
+
 import scala.collection.immutable.Vector
 import scala.language.implicitConversions
-import csw.util.config.UnitsOfMeasure.{NoUnits, Units}
-import scala.compat.java8.OptionConverters._
 
 /**
  * The type of a value for an LongKey

@@ -2,17 +2,24 @@ package javacsw.services.events.tests;
 
 import akka.actor.ActorSystem;
 import akka.testkit.JavaTestKit;
+import akka.util.Timeout;
+import csw.services.loc.LocationService;
 import csw.util.config.DoubleKey;
 import csw.util.config.Events.*;
 import csw.util.config.IntKey;
 import csw.util.config.StringKey;
 import javacsw.services.events.ITelemetryService;
+import javacsw.services.events.ITelemetryServiceAdmin;
+import javacsw.services.events.JTelemetryServiceAdmin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static javacsw.util.config.JItems.*;
 import static javacsw.util.config.JItems.jitem;
@@ -24,23 +31,38 @@ import static junit.framework.TestCase.assertTrue;
  */
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class JTelemetryServiceTest {
+  private static Timeout timeout = new Timeout(FiniteDuration.create(15, TimeUnit.SECONDS));
+  private static ActorSystem system;
+
   private static final IntKey infoValue = new IntKey("infoValue");
   private static final StringKey infoStr = new StringKey("infoStr");
   private static final DoubleKey exposureTime = new DoubleKey("exposureTime");
-
-  private static ActorSystem system;
 
   // The target for this test
   private static ITelemetryService ts;
 
   @BeforeClass
-  public static void setup() {
+  public static void setup() throws ExecutionException, InterruptedException {
+    LocationService.initInterface();
     system = ActorSystem.create();
-    ts = ITelemetryService.getTelemetryService(system);
+
+//    String tsName = "Telemetry Service Test";
+
+    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
+    // Start redis on a random port and register it with the location service.
+    // The following is the equivalent of running this from the command line:
+    //   tracklocation --name "Telemetry Service Test" --command "redis-server --port %port" --no-exit
+//    ITelemetryServiceAdmin.startTelemetryService(tsName, true, system.dispatcher());
+
+    // Later, in another JVM...,
+    // Get the telemetry service by looking up the name with the location service
+    ts = ITelemetryService.getTelemetryService(ITelemetryService.defaultName, system, timeout).get();
   }
 
   @AfterClass
   public static void teardown() {
+//    ITelemetryServiceAdmin admin = new JTelemetryServiceAdmin(ts, system);
+//    admin.shutdown();
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }
@@ -49,12 +71,12 @@ public class JTelemetryServiceTest {
   // In a real application, you could use other methods...
   @Test
   public void testSetandGet() throws Exception {
-    String prefix1 = "tcs.test1";
+    String prefix1 = "tcs.telem.test1";
     StatusEvent event1 = StatusEvent(prefix1)
       .add(jset(infoValue, 1))
       .add(jset(infoStr, "info 1"));
 
-    String prefix2 = "tcs.test2";
+    String prefix2 = "tcs.telem.test2";
     StatusEvent event2 = StatusEvent(prefix2)
       .add(jset(infoValue, 2))
       .add(jset(infoStr, "info 2"));
@@ -79,7 +101,7 @@ public class JTelemetryServiceTest {
 
   @Test
   public void TestSetGetAndGetHistory() throws Exception {
-    String prefix = "tcs.testPrefix";
+    String prefix = "tcs.telem.testPrefix";
     StatusEvent event = StatusEvent(prefix)
       .add(jset(exposureTime, 2.0));
 

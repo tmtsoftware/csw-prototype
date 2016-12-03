@@ -12,10 +12,6 @@
  *  trackLocation application to register a
  *  Redis instance with the location service and then look up the host and port to use for it.
  * <p>
- *  The {@link javacsw.services.events.IBlockingEventService} interface
- *  provides factory methods to create an event service instance. This API blocks while waiting for replies from
- *  the server.
- * <p>
  *  The {@link javacsw.services.events.IEventService} interface also provides factory
  *  methods to create an event service instance, but provides a non-blocking API based on futures.
  * <p>
@@ -39,7 +35,7 @@
  * <p>
  *  <strong>Example Event Subscriber (callback method)</strong>
  * <p>
- *  The EventService.subscribe method takes an optional ActorRef of an arbitrary actor and an optional callback function to be called
+ *  The EventService.subscribe method takes an ActorRef of an arbitrary actor and a callback function to be called
  *  when an event matching the given prefixes is received. In the example below, we only provide the callback
  *  argument value. You could also provide an ActorRef of some actor that should receive the Event message.
  * <p>

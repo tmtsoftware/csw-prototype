@@ -1,45 +1,70 @@
 package csw.services.events
 
 import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import csw.util.config.Events.StatusEvent
-import csw.util.config.{DoubleKey, IntKey, StringKey}
-import org.scalatest.FunSuiteLike
+import csw.util.config.{BooleanKey, DoubleKey, IntKey, StringKey}
+import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.pattern.ask
+import csw.services.loc.LocationService
 
 object TelemetryServiceTests {
+  LocationService.initInterface()
+  val system = ActorSystem("TelemetryServiceTests")
 
   // Define keys for testing
   val infoValue = IntKey("infoValue")
 
   val infoStr = StringKey("infoStr")
 
+  val boolValue = BooleanKey("boolValue")
+
+  val exposureTime = DoubleKey("exposureTime")
+
 }
 
 // Added annotation below, since test depends on Redis server running (Remove to include in tests)
 //@DoNotDiscover
 class TelemetryServiceTests
-    extends TestKit(ActorSystem("Test"))
-    with ImplicitSender with FunSuiteLike with LazyLogging {
+    extends TestKit(TelemetryServiceTests.system)
+    with ImplicitSender with FunSuiteLike with LazyLogging with BeforeAndAfterAll {
 
   import TelemetryServiceTests._
   import system.dispatcher
 
-  val settings = EventServiceSettings(system)
-  val ts = TelemetryService(settings)
-  implicit val timeout = Timeout(5.seconds)
-  val bts = BlockingTelemetryService(timeout.duration, ts)
-  val exposureTime = DoubleKey("exposureTime")
+  implicit val timeout = Timeout(10.seconds)
+
+  // Used to start and stop the telemetry service Redis instance used for the test
+  val ts = Await.result(TelemetryService(), timeout.duration)
+  val tsAdmin = TelemetryServiceAdmin(ts)
+
+  override protected def beforeAll(): Unit = {
+    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
+    // Start redis and register it with the location service on a random free port.
+    // The following is the equivalent of running this from the command line:
+    //   tracklocation --name "Telemetry service Test" --command "redis-server --port %port"
+    //    TelemetryServiceAdmin.startTelemetryService()
+    // Get the telemetry service by looking up the name with the location service.
+    //    ts = Await.result(TelemetryService(), timeout.duration)
+    //    tsAdmin = TelemetryServiceAdmin(ts)
+  }
+
+  override protected def afterAll(): Unit = {
+    // Shutdown Redis (Only do this in tests that also started the server)
+    //    if (tsAdmin != null) Await.ready(tsAdmin.shutdown(), timeout.duration)
+    system.terminate()
+  }
 
   // --
 
   test("Test simplified API with blocking set and get") {
-    val prefix = "tcs.test"
+    val bts = BlockingTelemetryService(ts, 5.seconds)
+    val prefix = "tcs.telem.test"
     val event1 = StatusEvent(prefix)
       .add(infoValue.set(1))
       .add(infoStr.set("info 1"))
@@ -70,7 +95,8 @@ class TelemetryServiceTests
   }
 
   test("Test blocking set, get and getHistory") {
-    val prefix = "tcs.test2"
+    val bts = BlockingTelemetryService(ts, 5.seconds)
+    val prefix = "tcs.telem.test2"
     val event = StatusEvent(prefix).add(exposureTime.set(2.0))
     val n = 3
 
@@ -94,7 +120,7 @@ class TelemetryServiceTests
   // --
 
   test("Test async set and get") {
-    val prefix = "tcs.test"
+    val prefix = "tcs.telem.test"
     val event1 = StatusEvent(prefix)
       .add(infoValue.set(1))
       .add(infoStr.set("info 1"))
@@ -104,13 +130,13 @@ class TelemetryServiceTests
       .add(infoStr.set("info 2"))
 
     for {
-      res1 <- ts.publish(event1)
+      _ <- ts.publish(event1)
       val1 <- ts.get(prefix)
-      res2 <- ts.publish(event2)
+      _ <- ts.publish(event2)
       val2 <- ts.get(prefix)
       _ <- ts.delete(prefix)
       res3 <- ts.get(prefix)
-      res4 <- ts.delete(prefix)
+      _ <- ts.delete(prefix)
     } yield {
       assert(val1.exists(_.prefix == prefix))
       assert(val1.exists(_(infoValue).head == 1))
@@ -122,7 +148,7 @@ class TelemetryServiceTests
   }
 
   test("Test async set, get and getHistory") {
-    val prefix = "tcs.test2"
+    val prefix = "tcs.telem.test2"
     val event = StatusEvent(prefix).add(exposureTime.set(2.0))
     val n = 3
 
@@ -146,8 +172,27 @@ class TelemetryServiceTests
     Await.result(f, 5.seconds)
   }
 
+  test("Test future usage") {
+    val prefix = "tcs.telem.test3"
+    val event = StatusEvent(prefix)
+      .add(infoValue.set(2))
+      .add(infoStr.set("info 2"))
+      .add(boolValue.set(true))
+
+    ts.publish(event).onSuccess {
+      case _ =>
+        ts.get(prefix).onSuccess {
+          case Some(statusEvent: StatusEvent) =>
+            assert(statusEvent(infoValue).head == 2)
+            assert(statusEvent(infoStr).head == "info 2")
+            assert(statusEvent(boolValue).head)
+            statusEvent
+        }
+    }
+  }
+
   test("Test subscribing to events via subscribe method") {
-    val prefix = "tcs.test4"
+    val prefix = "tcs.telem.test4"
     val event = StatusEvent(prefix)
       .add(infoValue.set(4))
       .add(infoStr.set("info 4"))
@@ -156,10 +201,11 @@ class TelemetryServiceTests
       eventReceived = Some(ev)
       logger.info(s"Listener received event: $ev")
     }
-    val monitor = ts.subscribe(Some(self), Some(listener), prefix)
+    val monitor1 = ts.subscribe(self, true, prefix)
+    val monitor2 = ts.subscribe(listener _, true, prefix)
     try {
       Thread.sleep(500) // wait for actor to start
-      ts.publish(event)
+      Await.ready(ts.publish(event), 5.seconds)
       val e = expectMsgType[StatusEvent](5.seconds)
       logger.info(s"Actor received event: $e")
       assert(e == event)
@@ -167,15 +213,17 @@ class TelemetryServiceTests
       assert(eventReceived.isDefined)
       assert(e == eventReceived.get)
     } finally {
-      monitor.stop()
+      monitor1.stop()
+      monitor2.stop()
     }
   }
 
   // --
 
   test("Test subscribing to telemetry using a subscriber actor to receive status events") {
-    val prefix1 = "tcs.test1"
-    val prefix2 = "tcs.test2"
+    val bts = BlockingTelemetryService(ts, 5.seconds)
+    val prefix1 = "tcs.telem.test1"
+    val prefix2 = "tcs.telem.test2"
 
     val event1 = StatusEvent(prefix1)
       .add(infoValue.set(1))
@@ -187,6 +235,7 @@ class TelemetryServiceTests
 
     // See below for actor class
     val mySubscriber = system.actorOf(MySubscriber.props(prefix1, prefix2))
+    ts.subscribe(mySubscriber, true, prefix1, prefix2)
 
     // This is just to make sure the actor has time to subscribe before we proceed
     Thread.sleep(1000)
@@ -216,14 +265,12 @@ object MySubscriber {
   case class Results(count1: Int, count2: Int)
 }
 
-class MySubscriber(prefix1: String, prefix2: String) extends EventSubscriber {
+class MySubscriber(prefix1: String, prefix2: String) extends Actor {
   import MySubscriber._
   import TelemetryServiceTests._
 
   var count1 = 0
   var count2 = 0
-
-  subscribe(prefix1, prefix2)
 
   def receive: Receive = {
     case event: StatusEvent if event.prefix == prefix1 =>

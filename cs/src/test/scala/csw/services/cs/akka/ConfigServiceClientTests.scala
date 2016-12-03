@@ -7,7 +7,7 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import csw.services.cs.core.ConfigManagerTestHelper
-import csw.services.cs.core.git.GitConfigManager
+import csw.services.cs.core.svn.SvnConfigManager
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.duration._
@@ -60,7 +60,7 @@ class ConfigServiceClientTests extends TestKit(ActorSystem("mySystem"))
     logger.debug(s"--- Verify config service: oversize = $oversize ---")
 
     // create a test repository and use it to create the actor
-    GitConfigManager.deleteDirectoryRecursively(settings.localRepository)
+    SvnConfigManager.deleteDirectoryRecursively(settings.localRepository)
     val manager = settings.getConfigManager
 
     // Create the actor

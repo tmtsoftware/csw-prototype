@@ -9,15 +9,6 @@ object CsClientOpts {
 
   /**
    * Command line options
-   *
-   * @param csName     optional name of the config service to use (as registered with the location service)
-   * @param subcmd     subcommand (create, update, etc.)
-   * @param path       path in the the repo
-   * @param inputFile  file to read data from
-   * @param outputFile file to write data to
-   * @param id         optional file version id
-   * @param oversize   set to true to use large/binary file handling
-   * @param comment    optional create or update comment
    */
   case class Options(
     csName:     Option[String] = None,
@@ -35,7 +26,7 @@ object CsClientOpts {
 
     opt[String]("cs-name") action { (x, c) =>
       c.copy(csName = Some(x))
-    } text "optional name of the config service to use (as registered with the location service)"
+    } text "optional name of the config service to use (as registered with the location service: Default taken from config file)"
 
     cmd("get") action { (_, c) =>
       c.copy(subcmd = "get")

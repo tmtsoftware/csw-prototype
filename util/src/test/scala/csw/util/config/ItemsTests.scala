@@ -1,5 +1,6 @@
 package csw.util.config
 
+import csw.util.config.Configurations.SetupConfig
 import csw.util.config.UnitsOfMeasure.{degrees, meters, seconds}
 import org.scalatest.{FunSpec, ShouldMatchers}
 
@@ -874,6 +875,86 @@ class ItemsTests extends FunSpec with ShouldMatchers {
       di.units should be theSameInstanceAs meters
       di.value(0) should equal(lm1)
       di.values should equal(listIn)
+    }
+  }
+
+  describe("testing ChoiceItem") {
+    it("should allow creating with Choices object") {
+      // Choices as object with String input
+      val choices = Choices.from("A", "B", "C")
+
+      val ci1 = ChoiceKey("mode", choices)
+      ci1.choices should equal(choices)
+      ci1.keyName should be("mode")
+
+      val ci = ci1.set("A")
+      ci.head should equal(Choice("A"))
+      // Check that non-choice fails
+      an[AssertionError] should be thrownBy (ci1.set("D"))
+    }
+
+    it("should allow creating with varargs of Strings") {
+      // Create directly with keyname, and Choice names
+      val ci2 = ChoiceKey("test", "A", "B")
+      ci2.choices should equal(Choices.from("A", "B"))
+      ci2.keyName should be("test")
+
+      val ci = ci2.set("A")
+      ci.head should equal(Choice("A"))
+      // Check that non-choice fails
+      an[AssertionError] should be thrownBy (ci2.set("C"))
+    }
+
+    it("should allow creation with individual Choice items") {
+      // Now create with individual Choice items
+      val uninitialized = Choice("uninitialized")
+      val ready = Choice("ready")
+      val busy = Choice("busy")
+      val continuous = Choice("continuous")
+      val error = Choice("error")
+
+      val cmd = ChoiceKey("cmd", uninitialized, ready, busy, continuous, error)
+      cmd.choices should be(Choices(Set(uninitialized, ready, busy, continuous, error)))
+
+      // setting values
+      var ci = cmd.set(ready)
+      ci.head should equal(ready)
+    }
+  }
+
+  describe("testing StructItem") {
+    it("should allow creating one of them") {
+      val skey = StructKey("myStruct")
+
+      val ra = StringKey("ra")
+      val dec = StringKey("dec")
+      val epoch = DoubleKey("epoch")
+      val sc1 = Struct("probe1").madd(ra.set("12:13:14.1"), dec.set("32:33:34.4"), epoch.set(1950.0))
+
+      val citem = skey.set(sc1)
+
+      println(citem)
+
+    }
+  }
+
+  describe("testing StructItem") {
+    it("should allow creating Struct items") {
+      val skey = StructKey("myStruct")
+
+      val ra = StringKey("ra")
+      val dec = StringKey("dec")
+      val epoch = DoubleKey("epoch")
+      val sc1 = Struct("probe1").madd(ra.set("12:13:14.1"), dec.set("32:33:34.4"), epoch.set(1950.0))
+
+      val citem = skey.set(sc1)
+
+      assert(citem.size == 1)
+      assert(citem.head.size == 3)
+      assert(citem.head.get(ra).head.head == "12:13:14.1")
+      assert(citem.head.get(dec).head.head == "32:33:34.4")
+      assert(citem.head.get(epoch).head.head == 1950.0)
+
     }
   }
 }

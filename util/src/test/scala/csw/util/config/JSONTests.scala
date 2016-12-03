@@ -202,7 +202,7 @@ class JSONTests extends FunSpec {
       val e1out = ConfigJSON.writeEvent(e1)
       val e1in = ConfigJSON.readEvent[StatusEvent](e1out)
       assert(e1in(k3).head == 1234L)
-      assert(e1in.info.time == e1.info.time)
+      assert(e1in.info.eventTime == e1.info.eventTime)
       assert(e1in == e1)
     }
 
@@ -507,7 +507,7 @@ class JSONTests extends FunSpec {
 
   describe("Test Choice items") {
     it("Should allow choice/enum values") {
-      val k1 = ChoiceKey("myChoice", Choices.get("A", "B", "C"))
+      val k1 = ChoiceKey("myChoice", Choices.from("A", "B", "C"))
       val c1 = Choice("B")
       val i1 = k1.set(c1)
       val sc1 = SetupConfig(ck).add(i1)
@@ -515,6 +515,33 @@ class JSONTests extends FunSpec {
 
       val sc1out = ConfigJSON.writeConfig(sc1)
       //      info("sc1out: " + sc1out.prettyPrint)
+
+      val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
+      assert(sc1.equals(sc1in))
+      assert(sc1in(k1).head == c1)
+
+      val sc2 = SetupConfig(ck).add(k1.set(c1))
+      assert(sc2 == sc1)
+    }
+  }
+
+  describe("testing StructItem JSON support") {
+    it("should allow Struct values") {
+      val k1 = StructKey("myStruct")
+
+      val ra = StringKey("ra")
+      val dec = StringKey("dec")
+      val epoch = DoubleKey("epoch")
+      val c1 = Struct("probe1").madd(ra.set("12:13:14.1"), dec.set("32:33:34.4"), epoch.set(1950.0))
+      val i1 = k1.set(c1)
+
+      val sc1 = SetupConfig(ck).add(i1)
+      assert(sc1(k1).head == c1)
+
+      val sc1out = ConfigJSON.writeConfig(sc1)
+
+      //      val s = sc1out.prettyPrint
+      //      println(s"XXX $s")
 
       val sc1in = ConfigJSON.readConfig[SetupConfig](sc1out)
       assert(sc1.equals(sc1in))

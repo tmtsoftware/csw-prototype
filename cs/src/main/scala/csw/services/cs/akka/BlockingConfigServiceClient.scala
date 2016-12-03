@@ -20,15 +20,14 @@ object BlockingConfigServiceClient {
    * then fetching the contents of the file using a config service client.
    * (Use only for small files.)
    *
-   * @param csName the name of the config service (the name it was registered with, from it's config file)
-   * @param path the path of the file in the config service
-   * @param id optional id of a specific version of the file
-   * @param system actor system needed to access config service
+   * @param path    the path of the file in the config service
+   * @param id      optional id of a specific version of the file
+   * @param system  actor system needed to access config service
    * @param timeout time to wait for a reply
    * @return the contents of the file as a ConfigData object, if found
    */
-  def getFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Option[ConfigData] =
-    Await.result(ConfigServiceClient.getFromConfigService(csName, path, id), timeout.duration)
+  def getFromConfigService(path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Option[ConfigData] =
+    Await.result(ConfigServiceClient.getFromConfigService(path, id), timeout.duration)
 
   /**
    * Convenience method that gets the contents of the given file from the config service
@@ -36,15 +35,14 @@ object BlockingConfigServiceClient {
    * then fetching the contents of the file using a config service client.
    * (Use only for small files.)
    *
-   * @param csName the name of the config service (the name it was registered with, from it's config file)
-   * @param path the path of the file in the config service
-   * @param id optional id of a specific version of the file
-   * @param system actor system needed to access config service
+   * @param path    the path of the file in the config service
+   * @param id      optional id of a specific version of the file
+   * @param system  actor system needed to access config service
    * @param timeout time to wait for a reply
    * @return the contents of the file as a string, if the file was found
    */
   def getStringFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Option[String] =
-    Await.result(ConfigServiceClient.getStringFromConfigService(csName, path, id), timeout.duration)
+    Await.result(ConfigServiceClient.getStringFromConfigService(path, id), timeout.duration)
 
   /**
    * Convenience method that gets a Typesafe Config from the config service
@@ -53,15 +51,15 @@ object BlockingConfigServiceClient {
    * Finally, the file contents is parsed as a Typesafe config file and the
    * Config object returned.
    *
-   * @param csName the name of the config service (the name it was registered with, from it's config file)
-   * @param path the path of the file in the config service
-   * @param id optional id of a specific version of the file
-   * @param system actor system needed to access config service
-   * @param timeout time to wait for a reply
+   * @param path     the path of the file in the config service
+   * @param id       optional id of a specific version of the file
+   * @param resource optional resource file to use in case the file can't be retrieved from the config service for some reason
+   * @param system   actor system needed to access config service
+   * @param timeout  time to wait for a reply
    * @return the future config, parsed from the file
    */
-  def getConfigFromConfigService(csName: String, path: File, id: Option[ConfigId] = None)(implicit system: ActorSystem, timeout: Timeout): Option[Config] =
-    Await.result(ConfigServiceClient.getConfigFromConfigService(csName, path, id), timeout.duration)
+  def getConfigFromConfigService(path: File, id: Option[ConfigId] = None, resource: Option[File] = None)(implicit system: ActorSystem, timeout: Timeout): Option[Config] =
+    Await.result(ConfigServiceClient.getConfigFromConfigService(path, id, resource), timeout.duration)
 }
 
 /**

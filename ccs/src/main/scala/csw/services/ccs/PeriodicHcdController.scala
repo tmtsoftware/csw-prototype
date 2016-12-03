@@ -1,7 +1,6 @@
 package csw.services.ccs
 
 import akka.actor._
-import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 
 import scala.collection.immutable.Queue
@@ -16,6 +15,7 @@ object PeriodicHcdController {
 
   /**
    * Tells the controller to check its inputs and update its outputs
+   * * Allows changing the update rate of processing.
    *
    * @param interval the amount of time until the next update
    */
@@ -35,7 +35,7 @@ object PeriodicHcdController {
  * @deprecated use [[HcdController]]
  */
 trait PeriodicHcdController {
-  this: Actor with PrefixedActorLogging =>
+  this: Actor with ActorLogging =>
 
   import HcdController._
   import PeriodicHcdController._

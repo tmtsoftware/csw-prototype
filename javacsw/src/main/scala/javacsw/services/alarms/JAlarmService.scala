@@ -1,18 +1,16 @@
 package javacsw.services.alarms
 
-import java.io.File
 import java.util
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
-import javacsw.services.alarms.IAlarmService.{AlarmHandler, HealthHandler}
 
-import akka.actor.{ActorRef, ActorRefFactory}
+import akka.actor.ActorRefFactory
 import akka.util.Timeout
-import csw.services.alarms.AlarmModel.{AlarmStatus, AlarmType, CurrentSeverity, Health, HealthStatus, SeverityLevel}
-import csw.services.alarms.AlarmService.AlarmMonitor
-import csw.services.alarms.{AlarmKey, AlarmModel, AlarmService, AlarmState}
+import csw.services.alarms.AlarmModel.{AlarmType, Health, SeverityLevel}
+import csw.services.alarms._
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
+import scala.concurrent.duration._
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
@@ -59,7 +57,7 @@ private[alarms] object JAlarmService {
     import system.dispatcher
     implicit val sys = system
     implicit val t = timeout
-    AlarmService(asName, refreshSecs).map(JAlarmService(_, sys).asInstanceOf[IAlarmService]).toJava.toCompletableFuture
+    AlarmService(asName).map(JAlarmService(_, sys).asInstanceOf[IAlarmService]).toJava.toCompletableFuture
   }
 
   /**
@@ -148,7 +146,6 @@ private[alarms] object JAlarmService {
     val Ill = Health.Ill
     val Bad = Health.Bad
   }
-
 }
 
 /**
@@ -157,55 +154,20 @@ private[alarms] object JAlarmService {
 case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) extends IAlarmService {
   import system.dispatcher
 
-  override def refreshSecs(): Int = alarmService.refreshSecs
-
-  override def initAlarms(inputFile: File, reset: Boolean): CompletableFuture[util.List[Problem]] =
-    alarmService.initAlarms(inputFile, reset).map(_.asJava).toJava.toCompletableFuture
-
-  override def getAlarms(alarmKey: AlarmKey): CompletableFuture[util.List[AlarmModel]] =
-    alarmService.getAlarms(alarmKey).map(_.asJava).toJava.toCompletableFuture
-
-  override def getAlarm(key: AlarmKey): CompletableFuture[AlarmModel] =
-    alarmService.getAlarm(key).toJava.toCompletableFuture
-
-  override def getAlarmState(key: AlarmKey): CompletableFuture[AlarmState] =
-    alarmService.getAlarmState(key).toJava.toCompletableFuture
-
   override def setSeverity(alarmKey: AlarmKey, severity: SeverityLevel): CompletableFuture[Unit] =
     alarmService.setSeverity(alarmKey, severity).toJava.toCompletableFuture
 
-  override def getSeverity(alarmKey: AlarmKey): CompletableFuture[CurrentSeverity] =
-    alarmService.getSeverity(alarmKey).toJava.toCompletableFuture
-
-  override def acknowledgeAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
-    alarmService.acknowledgeAlarm(alarmKey).toJava.toCompletableFuture
-
-  override def resetAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
-    alarmService.resetAlarm(alarmKey).toJava.toCompletableFuture
-
-  override def acknowledgeAndResetAlarm(alarmKey: AlarmKey): CompletableFuture[Unit] =
-    alarmService.acknowledgeAndResetAlarm(alarmKey).toJava.toCompletableFuture
-
-  override def setShelvedState(alarmKey: AlarmKey, shelvedState: ShelvedState): CompletableFuture[Unit] =
-    alarmService.setShelvedState(alarmKey, shelvedState).toJava.toCompletableFuture
-
-  override def setActivationState(alarmKey: AlarmKey, activationState: ActivationState): CompletableFuture[Unit] =
-    alarmService.setActivationState(alarmKey, activationState).toJava.toCompletableFuture
-
-  override def getHealth(alarmKey: AlarmKey): CompletableFuture[Health] =
-    alarmService.getHealth(alarmKey).toJava.toCompletableFuture
-
-  override def monitorHealth(alarmKey: AlarmKey, subscriber: Optional[ActorRef],
-                             notifyAlarm:  Optional[AlarmHandler],
-                             notifyHealth: Optional[HealthHandler],
-                             notifyAll:    Boolean): AlarmMonitor = {
-    alarmService.monitorHealth(alarmKey, subscriber.asScala,
-      notifyAlarm.asScala.map(f => (alarmStatus: AlarmStatus) => f.handleAlarmStatus(alarmStatus)),
-      notifyHealth.asScala.map(f => (healthStatus: HealthStatus) => f.handleHealthStatus(healthStatus)),
-      notifyAll)
+  /**
+   * Alternate constructor to use the Redis instance at the given host and port
+   *
+   * @param host the Redis host name or IP address
+   * @param port the Redis port
+   * @return a new JAlarmService instance
+   */
+  def this(host: String, port: Int, sys: ActorRefFactory) {
+    this(AlarmService.get(host, port)(sys, Timeout(5.seconds)), sys)
   }
 
-  override def shutdown(): Unit = alarmService.shutdown()
 }
 
 /**

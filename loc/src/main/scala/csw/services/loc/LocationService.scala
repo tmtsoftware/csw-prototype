@@ -1,19 +1,20 @@
 package csw.services.loc
 
 import java.net.{Inet6Address, InetAddress, NetworkInterface, URI}
+import java.util.Optional
 import javax.jmdns._
 
 import akka.actor._
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.Connection.{AkkaConnection, HttpConnection}
+import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.LocationTrackerWorker.LocationsReady
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
-
 import collection.JavaConverters._
+import scala.compat.java8.OptionConverters._
 
 /**
  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
@@ -39,11 +40,11 @@ object LocationService {
   private var initialized = false
 
   /**
-   * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
+   * Sets the "akka.remote.artery.canonical.hostname" and net.mdns.interface system properties, if not already
    * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
    * This method should be called before creating any actors or web services that depend on the location service.
    *
-   * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
+   * Note that calling this method overrides any setting for akka.remote.artery.canonical.hostname in the akka config file.
    * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
    * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
    */
@@ -57,6 +58,7 @@ object LocationService {
         // Don't use ipv6 addresses yet, since it seems to not be working with the current akka version
         !a.addr.isLoopbackAddress && !a.addr.isInstanceOf[Inet6Address]
       }
+
       // Get this host's primary IP address.
       // Note: The trick to getting the right one seems to be in sorting by network interface index
       // and then ignoring the loopback address.
@@ -65,13 +67,13 @@ object LocationService {
       def getIpAddress: String = {
         import scala.collection.JavaConversions._
         val addresses = for {
-          i <- NetworkInterface.getNetworkInterfaces
+          i <- NetworkInterface.getNetworkInterfaces.filter(iface => iface.isUp && iface.supportsMulticast)
           a <- i.getInetAddresses
         } yield Addr(i.getIndex, a)
         addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
       }
 
-      val akkaKey = "akka.remote.netty.tcp.hostname"
+      val akkaKey = "akka.remote.artery.canonical.hostname"
       val mdnsKey = "net.mdns.interface"
       //    val config = ConfigFactory.load()
       val mdnsHost = Option(System.getProperty(mdnsKey))
@@ -89,14 +91,14 @@ object LocationService {
   // Get JmDNS instance
   private def getRegistry: JmDNS = {
     if (!initialized) logger.warn("LocationService.initInterface() should be called once before using this class or starting any actors!")
-    val hostname = Option(System.getProperty("akka.remote.netty.tcp.hostname"))
+    val hostname = Option(System.getProperty("akka.remote.artery.canonical.hostname"))
     val registry = if (hostname.isDefined) {
       val addr = InetAddress.getByName(hostname.get)
       JmDNS.create(addr, hostname.get)
     } else {
       JmDNS.create()
     }
-    logger.debug(s"Using host = ${registry.getHostName} (${registry.getInterface})")
+    logger.debug(s"Using host = ${registry.getHostName} (${registry.getInetAddress})")
     sys.addShutdownHook(registry.close())
     registry
   }
@@ -117,6 +119,11 @@ object LocationService {
    * Represents a registered connection to a HTTP based service
    */
   final case class HttpRegistration(connection: HttpConnection, port: Int, path: String) extends Registration
+
+  /**
+   * Represents a registered connection to a TCP based service
+   */
+  final case class TcpRegistration(connection: TcpConnection, port: Int) extends Registration
 
   // Multicast DNS service type
   private val dnsType = "_csw._tcp.local."
@@ -153,9 +160,24 @@ object LocationService {
 
   final case class ResolvedAkkaLocation(connection: AkkaConnection, uri: URI, prefix: String = "", actorRef: Option[ActorRef] = None) extends Location {
     override val isResolved = true
+
+    /**
+     * Java constructor
+     */
+    def this(connection: AkkaConnection, uri: URI, prefix: String, actorRef: Optional[ActorRef]) = this(connection, uri, prefix, actorRef.asScala)
+
+    /**
+     * Java API to get actorRef
+     * @return
+     */
+    def getActorRef: Optional[ActorRef] = actorRef.asJava
   }
 
   final case class ResolvedHttpLocation(connection: HttpConnection, uri: URI, path: String) extends Location {
+    override val isResolved = true
+  }
+
+  final case class ResolvedTcpLocation(connection: TcpConnection, host: String, port: Int) extends Location {
     override val isResolved = true
   }
 
@@ -190,11 +212,11 @@ object LocationService {
    */
   def register(reg: Registration)(implicit system: ActorSystem): Future[RegistrationResult] = {
     reg match {
-      case AkkaRegistration(connection, component, prefix) =>
-        registerAkkaConnection(connection.componentId, component, prefix)
+      case AkkaRegistration(connection, component, prefix) => registerAkkaConnection(connection.componentId, component, prefix)
 
-      case HttpRegistration(connection, port, path) =>
-        registerHttpConnection(connection.componentId, port, path)
+      case HttpRegistration(connection, port, path)        => registerHttpConnection(connection.componentId, port, path)
+
+      case TcpRegistration(connection, port)               => registerTcpConnection(connection.componentId, port)
     }
   }
 
@@ -243,6 +265,29 @@ object LocationService {
       val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
       registry.registerService(service)
       logger.debug(s"Registered HTTP $connection")
+      RegisterResult(registry, service, componentId)
+    }
+  }
+
+  /**
+   * Registers the given service as a Service for the local host and the given port
+   * (The full name of the local host will be used)
+   *
+   * @param componentId describes the component or service
+   * @param port        the port the service is running on
+   * @return h object that can be used to close the connection and unregister the service
+   */
+  def registerTcpConnection(componentId: ComponentId, port: Int)(implicit system: ActorSystem): Future[RegistrationResult] = {
+    import system.dispatcher
+    val connection = TcpConnection(componentId)
+    Future {
+      val values = Map(
+        PATH_KEY -> ""
+      )
+      val service = ServiceInfo.create(dnsType, connection.toString, port, 0, 0, values.asJava)
+      println("Service: " + service)
+      registry.registerService(service)
+      logger.debug(s"Registered TCP $connection")
       RegisterResult(registry, service, componentId)
     }
   }
@@ -319,7 +364,6 @@ object LocationService {
       case Failure(ex) =>
         val failed = registration.map(_.connection)
         log.error(s"Registration failed for $failed", ex)
-        // XXX allan: Shoud an error message be sent to replyTo?
         system.stop(a)
     }
 
@@ -350,6 +394,9 @@ object LocationService {
     // Private loc is for testing
     private[loc] var connections = Map.empty[Connection, Location]
 
+    // The future for this promise completes the next time the serviceResolved() method is called
+    private var updateInfo = Promise[Unit]()
+
     registry.addServiceListener(dnsType, this)
 
     override def postStop: Unit = {
@@ -357,7 +404,13 @@ object LocationService {
     }
 
     override def serviceAdded(event: ServiceEvent): Unit = {
-      log.debug(s"Listener serviceAdded: ${event.getName}")
+      Connection(event.getName).map { connection =>
+        if (!connections.contains(connection)) {
+          val unc = UnTrackedLocation(connection)
+          connections += connection -> unc
+          // Should we send an update here?
+        }
+      }
     }
 
     override def serviceRemoved(event: ServiceEvent): Unit = {
@@ -377,15 +430,15 @@ object LocationService {
           sendLocationUpdate(unc)
         }
       }
+
       connections.get(connection).foreach(rm)
     }
 
     // Check to see if a connection is already resolved, and if so, resolve the service
     private def tryToResolve(connection: Connection): Unit = {
       connections.get(connection) match {
-        case Some(Unresolved(c)) =>
+        case Some(Unresolved(_)) =>
           val s = Option(registry.getServiceInfo(dnsType, connection.toString))
-          log.debug(s"Try to resolve connection: $connection: Result: $s")
           s.foreach(resolveService(connection, _))
         case x =>
           log.warning(s"Attempt to track and already tracked connection: $x")
@@ -393,10 +446,9 @@ object LocationService {
     }
 
     override def serviceResolved(event: ServiceEvent): Unit = {
-      // Gets the connection from the name and, if we are tracking the connection, resolve it
-      Connection(event.getName).foreach(connections.get(_).filter(_.isTracked).foreach { loc =>
-        resolveService(loc.connection, event.getInfo)
-      })
+      // Complete the promise so that the related future completes, in case the WaitToTrack() method is waiting for it
+      updateInfo.success(())
+      updateInfo = Promise[Unit]()
     }
 
     private def resolveService(connection: Connection, info: ServiceInfo): Unit = {
@@ -414,7 +466,6 @@ object LocationService {
 
         info.getURLs(connection.connectionType.name).toList.flatMap(getUri).foreach {
           uri =>
-            log.debug(s"Resolve service: resolve URI = $uri")
             connection match {
               case ac: AkkaConnection =>
                 val prefix = info.getPropertyString(PREFIX_KEY)
@@ -426,9 +477,14 @@ object LocationService {
                 val path = info.getPropertyString(PATH_KEY)
                 val rhc = ResolvedHttpLocation(hc, uri, path)
                 connections += (connection -> rhc)
-                log.debug("Resolved HTTP: " + connections.values.toList)
+                log.debug(s"Resolved HTTP: ${connections.values.toList}")
                 // Here is where the resolved message is sent for an Http Connection
                 sendLocationUpdate(rhc)
+              case tcp: TcpConnection =>
+                // A TCP-based connection is ended here
+                val rtc = ResolvedTcpLocation(tcp, uri.getHost, uri.getPort)
+                connections += (connection -> rtc)
+                sendLocationUpdate(rtc)
             }
         }
       } catch {
@@ -438,7 +494,7 @@ object LocationService {
 
     private def getAkkaUri(uriStr: String, userInfo: String): Option[URI] = try {
       val uri = new URI(uriStr)
-      Some(new URI("akka.tcp", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))
+      Some(new URI("akka", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))
     } catch {
       case e: Exception =>
         // some issue with ipv6 addresses?
@@ -465,7 +521,6 @@ object LocationService {
         // Watch the actor for death
         context.watch(actorRefOpt.get)
         // Here is where the resolved message is sent for an Akka Connection
-        log.debug("Resolved: " + connections.values.toList)
         sendLocationUpdate(newrc)
       } else {
         log.warning(s"Could not identify actor for ${rs.connection} ${rs.uri}")
@@ -476,32 +531,49 @@ object LocationService {
       replyTo.getOrElse(context.parent) ! location
     }
 
+    def waitToTrack(connection: Connection): Unit = {
+      import context.dispatcher
+      updateInfo.future.onComplete { _ =>
+        self ! TrackConnection(connection: Connection)
+      }
+    }
+
     // Receive messages
     override def receive: Receive = {
 
       // Result of sending an Identify message to the actor's URI (actorSelection)
       case ActorIdentity(id, actorRefOpt) =>
         id match {
-          case rs: ResolvedAkkaLocation => actorIdentified(actorRefOpt, rs)
-          case _                        => log.warning(s"Received unexpected ActorIdentity id: $id")
+          case rs: ResolvedAkkaLocation =>
+            actorIdentified(actorRefOpt, rs)
+          case _ => log.warning(s"Received unexpected ActorIdentity id: $id")
         }
 
       case TrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, add it
+        log.debug("----------------Received track connection: " + connection)
         if (!connections.contains(connection)) {
-          val unc = Unresolved(connection)
-          connections += connection -> unc
-          // Should we send an update here?
-          sendLocationUpdate(unc)
+          waitToTrack(connection)
+        } else {
+          // In this case, there is some entry already in our table, meaning at least serviceAdded has been called
+          // There is a chance that it has already been resolved since this is shared across the JVM?
+          connections(connection) match {
+            case UnTrackedLocation(_) =>
+              val unc = Unresolved(connection)
+              connections += (connection -> unc)
+              tryToResolve(connection)
+            case u: Unresolved =>
+              log.error("Should not have an Unresolved connection when initiating tracking: " + u)
+            case r @ _ =>
+              sendLocationUpdate(r)
+          }
         }
-        // Note this will be called whether we are currently tracking or not, could already be resolved
-        tryToResolve(connection)
 
       case UntrackConnection(connection: Connection) =>
         // This is called from outside, so if it isn't in the tracking list, ignore it
         if (connections.contains(connection)) {
           // Remove from the map and send an updated Resolved List
-          connections -= connection
+          connections += (connection -> UnTrackedLocation(connection))
           // Send Untrack back so state can be updated
           replyTo.getOrElse(context.parent) ! UnTrackedLocation(connection)
         }
@@ -523,3 +595,4 @@ object LocationService {
   }
 
 }
+

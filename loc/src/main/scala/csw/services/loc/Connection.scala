@@ -1,6 +1,6 @@
 package csw.services.loc
 
-import csw.services.loc.ConnectionType.{AkkaType, HttpType}
+import csw.services.loc.ConnectionType.{AkkaType, HttpType, TcpType}
 
 import scala.util.{Failure, Success, Try}
 
@@ -12,6 +12,11 @@ sealed trait Connection {
    * Holds the component name and type (assembly, hcd, etc.)
    */
   def componentId: ComponentId
+
+  /**
+   * Returns a connection's name
+   */
+  def name = componentId.name
 
   /**
    * Indicates how the component is accessed (http, akka)
@@ -43,6 +48,13 @@ object Connection {
   }
 
   /**
+   * A connection to a remote tcp based component
+   */
+  final case class TcpConnection(componentId: ComponentId) extends Connection {
+    val connectionType = TcpType
+  }
+
+  /**
    * Gets a Connection from a string as output by toString
    */
   def apply(s: String): Try[Connection] = {
@@ -50,6 +62,7 @@ object Connection {
     ConnectionType(typ.drop(1)) match {
       case Success(AkkaType) => ComponentId(id).map(AkkaConnection)
       case Success(HttpType) => ComponentId(id).map(HttpConnection)
+      case Success(TcpType)  => ComponentId(id).map(TcpConnection)
       case Failure(ex)       => Failure(ex)
     }
   }
@@ -61,6 +74,7 @@ object Connection {
     connectionType match {
       case AkkaType => AkkaConnection(componentId)
       case HttpType => HttpConnection(componentId)
+      case TcpType  => TcpConnection(componentId)
     }
   }
 }

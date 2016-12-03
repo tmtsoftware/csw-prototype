@@ -1,18 +1,20 @@
 package csw.examples
 
-import akka.actor.{Actor, ActorLogging, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.util.Timeout
 import csw.services.ccs.HcdController
-import csw.services.events.{EventServiceSettings, EventSubscriber, TelemetryService}
+import csw.services.events.TelemetryService
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.pkg.Component.{HcdInfo, RegisterOnly}
-import csw.services.pkg.{Hcd, LifecycleHandler, Supervisor}
+import csw.services.pkg.{Hcd, Supervisor}
 import csw.services.ts.TimeService
 import csw.services.ts.TimeService.TimeServiceScheduler
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.Events.StatusEvent
 import csw.util.config.IntKey
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Random
 
@@ -54,13 +56,15 @@ object HCDExample {
     import PosGenerator._
     import TimeService._
 
-    val rand = Random
-    val eventService = TelemetryService(EventServiceSettings(context.system))
+    private val rand = Random
+    private implicit val timeout = Timeout(5.seconds)
+    private val eventService = Await.result(TelemetryService(), timeout.duration)
 
     // Create a subscriber to positions (just for test)
-    context.actorOf(Props(classOf[EventPosSubscriber], "ev subscriber", prefix))
+    private val subscriberActor = context.actorOf(Props(classOf[EventPosSubscriber]))
+    eventService.subscribe(subscriberActor, postLastEvents = true, prefix)
 
-    var timer = setTimer(1000)
+    private var timer = setTimer(1000)
 
     // Sets the delay in ms between ticks
     private def setTimer(delay: Int): Cancellable = {
@@ -85,7 +89,7 @@ object HCDExample {
     }
   }
 
-  class EventPosSubscriber(name: String, prefix: String) extends EventSubscriber {
+  class EventPosSubscriber extends Actor with ActorLogging {
 
     import PosGenerator._
 
@@ -93,8 +97,7 @@ object HCDExample {
 
     import java.time._
 
-    val startTime = Instant.now
-    subscribe(prefix)
+    private val startTime = Instant.now
 
     def receive: Receive = {
       case event: StatusEvent =>
@@ -111,7 +114,7 @@ object HCDExample {
   }
 }
 
-class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with TimeServiceScheduler with LifecycleHandler {
+class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd with HcdController with TimeServiceScheduler {
   import HCDExample._
   import PosGenerator._
   import HCDExample._
@@ -119,10 +122,11 @@ class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with
 
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")
-  lifecycle(supervisor)
+  supervisor ! Initialized
+  supervisor ! Started
 
   // Create an actor to generate position events
-  val posEventGenerator = context.actorOf(PosGenerator.props(prefix))
+  private val posEventGenerator = context.actorOf(PosGenerator.props(info.prefix))
 
   // Process a config message
   override def process(sc: SetupConfig): Unit = {
@@ -136,7 +140,11 @@ class HCDExample(override val info: HcdInfo) extends Hcd with HcdController with
   }
 
   // Receive actor methods
-  def receive = controllerReceive orElse lifecycleHandlerReceive
+  def receive: Receive = controllerReceive orElse {
+    case Running => log.info("Running")
+
+    case x       => log.error(s"Unexpected message received: $x")
+  }
 
 }
 

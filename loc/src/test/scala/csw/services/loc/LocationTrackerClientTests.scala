@@ -146,15 +146,10 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
 
     // Note: According to the spec the record disappears from the cache 1s after it has been unregistered
 
-    // An AllResolved message is received first (Probably due to call to LocationService.tryToResolve())
-    tester ! QueryResolved
-    val locations1 = testProbe.expectMsgType[AllResolved](t).locations
-    assert(locations.size == 1)
-
     // Shortly afterwards we should receive the notification that the service was removed
     tester ! QueryResolved
-    val locations2 = testProbe.expectMsgType[NotAllResolved](t).locations
-    assert(locations2.size == 1)
+    val locations1 = testProbe.expectMsgType[NotAllResolved](t).locations
+    assert(locations.size == 1)
 
     system.stop(tester)
   }

@@ -38,7 +38,7 @@ object CsClient extends App {
     } yield result
 
     f.onComplete {
-      case Success(client) =>
+      case Success(_) =>
         system.terminate()
         System.exit(0)
       case Failure(ex) =>

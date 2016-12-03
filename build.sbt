@@ -29,14 +29,32 @@ val csw = (project in file("."))
       "CSWSRC" -> s"https://github.com/tmtsoftware/csw/tree/${git.gitCurrentBranch.value}",
       "DOCROOT" -> "latest/api/index.html"
     )
-  ).aggregate(util, support, log, events, event_old, alarms, loc, ccs, cs, pkg, ts,
-  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample, trackLocation, asConsole, sysControl, javacsw)
+  ).aggregate(util, support, log, loc, events, event_old, alarms, ccs, cs, pkg, ts,
+  containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample,
+  trackLocation, asConsole, sysControl, javacsw, vslice, vsliceJava
+)
 
 // Utility classes
 lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaHttpSprayJson, scalaReflect) ++
+      test(scalaTest, junit)
+  ) dependsOn log
+
+// AAS- Authorization and Authentication service
+lazy val aas = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor) ++
+      test(scalaTest, junit)
+  ) dependsOn log
+
+// Database service
+lazy val dbs = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(slick, postgresql, HikariCP) ++
       test(scalaTest, junit)
   ) dependsOn log
 
@@ -61,7 +79,7 @@ lazy val events = project
   .settings(libraryDependencies ++=
     compile(akkaActor, redisScala, logback) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(util, log)
+  ) dependsOn(util, log, loc, trackLocation)
 
 // Alarm Service
 lazy val alarms = project
@@ -69,7 +87,7 @@ lazy val alarms = project
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaHttpSprayJson, redisScala, jsonSchemaValidator, ficus) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(util, log, loc, trackLocation % "test->test")
+  ) dependsOn(util, log, loc, trackLocation)
 
 // Location Service
 lazy val loc = project
@@ -131,11 +149,17 @@ lazy val ts = project
 // Java APIs
 lazy val javacsw = project
   .settings(defaultSettings: _*)
+  .settings(// fix problems with javadoc errors?
+    publishArtifact in(Compile, packageDoc) := false,
+    publishArtifact in packageDoc := false,
+    sources in(Compile, doc) := Seq.empty
+  )
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
-      test(akkaTestKit, junit, junitInterface, scalaJava8Compat)
+      test(akkaTestKit, junit, junitInterface, scalaJava8Compat, assertj)
   ) dependsOn(util, support, log, events, loc, ccs, cs, pkg, event_old, ts, containerCmd,
   events % "test->test", alarms % "test->test;compile->compile", trackLocation % "test->test")
+
 
 // -- Apps --
 
@@ -171,7 +195,7 @@ lazy val trackLocation = Project(id = "trackLocation", base = file("apps/trackLo
   .settings(libraryDependencies ++=
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(loc, log, cs % "test->test;compile->compile", events % "test->test")
+  ) dependsOn(loc, log, cs % "test->test;compile->compile")
 
 // Track the location of an external application
 lazy val asConsole = Project(id = "asConsole", base = file("apps/asConsole"))
@@ -180,7 +204,7 @@ lazy val asConsole = Project(id = "asConsole", base = file("apps/asConsole"))
   .settings(libraryDependencies ++=
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(loc, log, alarms, trackLocation % "test->test")
+  ) dependsOn(loc, log, alarms, trackLocation)
 
 // Track the location of an external application
 lazy val sysControl = Project(id = "sysControl", base = file("apps/sysControl"))
@@ -189,7 +213,7 @@ lazy val sysControl = Project(id = "sysControl", base = file("apps/sysControl"))
   .settings(libraryDependencies ++=
     compile(scopt, akkaActor) ++
       test(scalaTest, akkaTestKit)
-  ) dependsOn(loc, log, pkg, cs % "test->test;compile->compile")
+  ) dependsOn(loc, log, pkg, cs)
 
 // Build the config service annex application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
@@ -213,3 +237,20 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
   .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
   .dependsOn(pkg, ts, hcdExample)
 
+// EndToEnd Example project
+lazy val vslice = Project(id = "vslice", base = file("examples/vslice"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(packageSettings("VerticalSlice", "Vertical Slice Example", "More complicated example showing CSW features"): _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor, akkaRemote, akkaHttp) ++
+      test(scalaTest, specs2, akkaTestKit)
+  ).dependsOn(pkg, cs, ccs, loc, ts, events, util, alarms, containerCmd)
+
+// EndToEnd Example project Java version
+lazy val vsliceJava = Project(id = "vsliceJava", base = file("examples/vsliceJava"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(packageSettings("VerticalSliceJava", "Vertical Slice Java Example", "More complicated example showing CSW Java features"): _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor, akkaRemote, akkaHttp) ++
+      test(akkaTestKit, junit, junitInterface, scalaJava8Compat)
+  ).dependsOn(javacsw)

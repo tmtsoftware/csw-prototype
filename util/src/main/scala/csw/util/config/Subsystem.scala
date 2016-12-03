@@ -56,7 +56,7 @@ object Subsystem {
 
   val subsystems: Set[Subsystem] = Set(AOESW, APS, CIS, CSW, DMS, DPS, ENC, ESEN, ESW,
     GMS, IRIS, IRMS, LGSF, M1CS, M2CS, M3CS, MCS,
-    NFIRAOS, NSCU, OSS, PFCS, PSFR, RPG, SCMS,
+    NFIRAOS, NSCU, OSS, PFCS, PSFR, RTC, RPG, SCMS,
     SOSS, STR, SUM, TCS, TINC, WFOS)
 
   val jSubsystems: java.util.Set[Subsystem] = subsystems.asJava

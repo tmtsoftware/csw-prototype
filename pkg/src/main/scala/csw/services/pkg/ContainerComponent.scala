@@ -3,14 +3,15 @@ package csw.services.pkg
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.Logger
-import csw.services.loc.ConnectionType._
 import csw.services.loc._
-import csw.services.loc.ComponentType._
+import csw.services.loc.ComponentType.{Assembly, HCD}
+import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component._
 import csw.services.pkg.LifecycleManager._
-import csw.services.pkg.Supervisor.{HaltComponent, LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
@@ -82,6 +83,14 @@ object ContainerComponent {
     parseConfigToContainerInfo(config).map(create)
   }
 
+  /**
+   * Creates the components described in the config without creating a container.
+   * @return the actorRefs for the created components
+   */
+  def createStandalone(config: Config): Try[List[ActorRef]] = {
+    parseConfig(config).map(_.toList.map(Supervisor(_)))
+  }
+
   def create(containerInfo: ContainerInfo): ActorRef = {
     val name = containerInfo.componentName
     val system = ActorSystem(s"$name-system")
@@ -99,7 +108,7 @@ object ContainerComponent {
   class Terminator(ref: ActorRef) extends Actor with ActorLogging {
     context watch ref
 
-    def receive = {
+    def receive: Receive = {
       case Terminated(_) =>
         log.debug("{} has terminated, shutting down system", ref.path)
         context.system.terminate()
@@ -175,7 +184,6 @@ object ContainerComponent {
       case _ => None
     }
     info
-
   }
 
   private[pkg] def parseName(name: String, conf: Config): Try[String] = {
@@ -211,7 +219,6 @@ object ContainerComponent {
         throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNECTION_TYPE)}< for component: $name")
       set.map(_.asInstanceOf[Success[ConnectionType]].get)
     }
-
   }
 
   // Parse the "connectionType" section of the component config
@@ -231,7 +238,7 @@ object ContainerComponent {
   private[pkg] def parseDuration(name: String, configName: String, conf: Config, defaultDuration: FiniteDuration): FiniteDuration = {
     import scala.concurrent.duration._
     val t = Try(FiniteDuration(conf.getDuration(configName).getSeconds, TimeUnit.SECONDS))
-    if (t.isFailure) logger.debug(s"Container $configName for $name is missing or not valid, returning: $defaultDuration.")
+    //    if (t.isFailure) logger.debug(s"Container $configName for $name is missing or not valid, returning: $defaultDuration.")
     t.getOrElse(defaultDuration)
   }
 
@@ -255,8 +262,18 @@ object ContainerComponent {
     }
   }
 
+  /**
+   * A function that can be used to parse a container config from a string.  Primarily useful for testing.
+   */
+  def parseStringConfig(s: String): Config = {
+    val options = ConfigParseOptions.defaults().
+      setOriginDescription("string container config").
+      setSyntax(ConfigSyntax.CONF)
+    ConfigFactory.parseString(s, options)
+  }
+
   // Parse the "services" section of the component config
-  private[pkg] def parseHcd(name: String, conf: Config): Option[HcdInfo] = {
+  def parseHcd(name: String, conf: Config): Option[HcdInfo] = {
     val x = for {
       componentClassName <- parseClassName(name, conf)
       prefix <- parsePrefix(name, conf)
@@ -268,7 +285,7 @@ object ContainerComponent {
   }
 
   // Parse the "services" section of the component config
-  private[pkg] def parseAssembly(name: String, conf: Config): Option[AssemblyInfo] = {
+  def parseAssembly(name: String, conf: Config): Option[AssemblyInfo] = {
     val x = for {
       componentClassName <- parseClassName(name, conf)
       prefix <- parsePrefix(name, conf)
@@ -279,7 +296,7 @@ object ContainerComponent {
     x.toOption
   }
 
-  private[pkg] def parseConfigToContainerInfo(config: Config): Try[ContainerInfo] = {
+  def parseConfigToContainerInfo(config: Config): Try[ContainerInfo] = {
     for {
       componentConfigs <- parseConfig(config)
       containerConfig <- Try(config.getConfig(CONTAINER))
@@ -329,15 +346,13 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
     case Stop                                  => stop(supervisors)
     case Halt                                  => halt(supervisors)
     case Restart                               => restart(supervisors)
-    //    case CreateComponents(infos)               => createComponents(infos, supervisors)
-    case LifecycleStateChanged(state)          => log.debug("Received state while running: " + state)
     case Terminated(actorRef)                  => componentDied(actorRef)
     case x                                     => log.debug(s"Unhandled command in runningReceive: $x")
   }
 
   private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {
     case LifecycleStateChanged(state) =>
-      if (state == Loaded) {
+      if (state == LifecycleInitialized) {
         sender() ! UnsubscribeLifecycleCallback(self)
         val reloaded = (supervisors.find(_.supervisor == sender()) ++ restarted).toList
         if (reloaded.size == supervisors.size) {
@@ -411,7 +426,7 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
     var sinfos = infos
     stagedCommand(sinfos.nonEmpty, info.creationDelay) {
       val sinfo: SupervisorInfo = sinfos.head
-      log.debug(s"Sending $cmd to: ${sinfo.componentInfo.componentName}")
+      log.debug(s"Sending $cmd to: ${sinfo.componentInfo.componentName} with delay ${info.creationDelay}")
       sinfo.supervisor ! cmd
       sinfos = sinfos.tail
     }

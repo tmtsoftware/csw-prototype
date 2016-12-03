@@ -8,7 +8,7 @@
  * <p>
  *  There is no Alarm Service executable. The Alarm Service consists of an instance of Redis
  *  that is registered with the CSW Location Service ({@link csw.services.loc.LocationService})
- *  using the <em>trackLocation application</em> ({@Link csw.services.trackLocation.TrackLocation}).
+ *  using the <em>trackLocation application</em> ({@link csw.services.trackLocation.TrackLocation}).
  *  For example, the following command could be used to start a dedicated Redis instance for the Alarm Service on port 7777:
  * <p>
  * <pre> {@code

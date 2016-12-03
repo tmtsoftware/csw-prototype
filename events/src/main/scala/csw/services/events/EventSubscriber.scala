@@ -16,11 +16,9 @@ import EventServiceImpl._
  * Adds the ability to an actor to subscribe to events from the event service.
  * The subscribed actor will receive messages of type Event for the given event prefixes.
  */
-abstract class EventSubscriber extends Actor with ActorLogging {
+private[events] abstract class EventSubscriber(redisHost: String, redisPort: Int) extends Actor with ActorLogging {
 
-  private val settings = EventServiceSettings(context.system)
-
-  private lazy val redis = context.actorOf(SubscribeActor.props(self, settings.redisHostname, settings.redisPort)
+  private lazy val redis = context.actorOf(SubscribeActor.props(self, redisHost, redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
 
   /**
@@ -52,11 +50,9 @@ abstract class EventSubscriber extends Actor with ActorLogging {
  * Helper class For Java API: Adds the ability to subscribe to events.
  * The subscribed actor will receive messages of type Event for the given prefixes.
  */
-abstract class JAbstractSubscriber extends AbstractActor {
+abstract class JAbstractSubscriber(redisHost: String, redisPort: Int) extends AbstractActor {
 
-  private val settings = EventServiceSettings(context.system)
-
-  private lazy val redis = context.actorOf(SubscribeActor.props(self, settings.redisHostname, settings.redisPort)
+  private lazy val redis = context.actorOf(SubscribeActor.props(self, redisHost, redisPort)
     .withDispatcher(SubscribeActor.dispatcherName))
 
   /**
@@ -99,13 +95,25 @@ private object SubscribeActor {
 // Note we could extend RedisSubscriberActor, but I'm doing it this way, so we can
 // customize the type of the message received if needed (RedisSubscriberActor forces Message(String)).
 private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort: Int)
-    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (b: Boolean) => ()) with DecodeReplies {
+    extends RedisWorkerIO(new InetSocketAddress(redisHost, redisPort), (_: Boolean) => ()) with DecodeReplies {
 
   /**
    * Keep states of channels and actor in case of connection reset
    */
   private var channelsSubscribed = Set[String]()
   private var patternsSubscribed = Set[String]()
+
+  override def preStart() {
+    super.preStart()
+    if (channelsSubscribed.nonEmpty) {
+      write(SUBSCRIBE(channelsSubscribed.toSeq: _*).toByteString)
+      log.debug(s"Subscribed to channels ${channelsSubscribed.mkString(", ")}")
+    }
+    if (patternsSubscribed.nonEmpty) {
+      write(PSUBSCRIBE(patternsSubscribed.toSeq: _*).toByteString)
+      log.debug(s"Subscribed to patterns ${patternsSubscribed.mkString(", ")}")
+    }
+  }
 
   override def writing: Receive = {
     case message: SubscribeMessage =>
@@ -122,7 +130,9 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
     ByteString.empty
   }
 
-  override def onConnectionClosed() {}
+  override def onConnectionClosed(): Unit = {
+    log.debug("Connection to Redis closed")
+  }
 
   override def onWriteSent() {}
 

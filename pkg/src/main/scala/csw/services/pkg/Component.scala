@@ -1,10 +1,13 @@
 package csw.services.pkg
 
+import java.util.Optional
+
 import akka.actor._
 import csw.services.loc.{ComponentType, Connection, ConnectionType}
 import csw.services.loc.ComponentType._
 import csw.services.log.PrefixedActorLogging
 import csw.services.pkg.Component.ComponentInfo
+import scala.collection.JavaConverters._
 
 import scala.concurrent.duration.{FiniteDuration, _}
 
@@ -94,6 +97,11 @@ object Component {
       connections:          Set[Connection]
   ) extends ComponentInfo {
     val componentType = Assembly
+
+    /**
+     * Java API to get the list of connections for the assembly
+     */
+    def getConnections: java.util.List[Connection] = connections.toList.asJava
   }
 
   /**
@@ -121,42 +129,62 @@ object Component {
     val prefix = ""
   }
 
-  private def createHCD(context: ActorContext, cinfo: ComponentInfo): ActorRef = {
+  private def createHCD(context: ActorContext, cinfo: ComponentInfo, supervisorIn: Option[ActorRef]): ActorRef = {
+
+    val supervisor = supervisorIn match {
+      case None                => context.self // Will be parent which is supervisor
+      case Some(supervisorRef) => supervisorRef
+    }
+
     // Form props for component
-    val props = Props(Class.forName(cinfo.componentClassName), cinfo)
+    val props = Props(Class.forName(cinfo.componentClassName), cinfo, supervisor)
 
     context.actorOf(props, s"${cinfo.componentName}-${cinfo.componentType}")
   }
 
-  private def createAssembly(context: ActorContext, cinfo: AssemblyInfo): ActorRef = {
-    val props = Props(Class.forName(cinfo.componentClassName), cinfo)
+  private def createAssembly(context: ActorContext, cinfo: AssemblyInfo, supervisorIn: Option[ActorRef]): ActorRef = {
+
+    val supervisor = supervisorIn match {
+      case None                => context.self // Will be parent which is supervisor
+      case Some(supervisorRef) => supervisorRef
+    }
+
+    val props = Props(Class.forName(cinfo.componentClassName), cinfo, supervisor)
 
     context.actorOf(props, s"${cinfo.componentName}-${cinfo.componentType}")
   }
 
-  def create(context: ActorContext, componentInfo: ComponentInfo): ActorRef = componentInfo match {
+  /**
+   * Creates a component from the given componentInfo
+   * @param context the actor context
+   * @param componentInfo describes the component
+   * @param supervisorIn optional supervisor actor to use instead of the default
+   * @return the component's supervisor
+   */
+  def create(context: ActorContext, componentInfo: ComponentInfo, supervisorIn: Option[ActorRef] = None): ActorRef = componentInfo match {
     case hcd: HcdInfo =>
-      createHCD(context, hcd)
+      createHCD(context, hcd, supervisorIn)
     case ass: AssemblyInfo =>
-      createAssembly(context, ass)
+      createAssembly(context, ass, supervisorIn)
     case cont: ContainerInfo =>
       ContainerComponent.create(cont)
   }
 
-}
-
-trait Component extends Actor with PrefixedActorLogging {
-  def info: ComponentInfo
-  override def prefix = info.prefix
+  // This is for JComponent create
+  import scala.compat.java8.OptionConverters._
 
   /**
-   * A reference to this component's supervisor actor
+   * Java API to create a component from the given componentInfo
+   * @param context the actor context
+   * @param componentInfo describes the component
+   * @param supervisorIn optional supervisor actor to use instead of the default
+   * @return the component's supervisor
    */
-  def supervisor = context.parent
+  def create(context: ActorContext, componentInfo: ComponentInfo, supervisorIn: Optional[ActorRef]): ActorRef = create(context, componentInfo, supervisorIn.asScala)
+}
 
-  override def postStop: Unit = {
-    log.debug(s"Post Stop: !!")
-  }
+trait Component extends Actor with ActorLogging {
+  def info: ComponentInfo
 }
 
 trait Assembly extends Component

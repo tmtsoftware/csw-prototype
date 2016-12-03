@@ -1,8 +1,7 @@
 package csw.services.ccs
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
-import csw.services.log.PrefixedActorLogging
 import csw.util.akka.PublisherActor
 import csw.util.config.StateVariable
 import csw.util.config.StateVariable.{CurrentState, DemandState, Matcher}
@@ -21,14 +20,12 @@ object HcdStatusMatcherActor {
    * @param runId   the runId to use in the reply
    * @param timeout the amount of time to wait for a match before giving up and replying with a Timeout message
    * @param matcher the function used to compare the demand and current states
-   * @param prefix  the subsystem.component prefix of the caller (defaults to "")
    */
   def props(demands: List[DemandState], hcds: Set[ActorRef], replyTo: ActorRef,
             runId:   RunId   = RunId(),
             timeout: Timeout = Timeout(60.seconds),
-            matcher: Matcher = StateVariable.defaultMatcher,
-            prefix:  String  = ""): Props =
-    Props(classOf[HcdStatusMatcherActor], demands, hcds, replyTo, runId, timeout, matcher, prefix)
+            matcher: Matcher = StateVariable.defaultMatcher): Props =
+    Props(classOf[HcdStatusMatcherActor], demands, hcds, replyTo, runId, timeout, matcher)
 }
 
 /**
@@ -39,7 +36,7 @@ object HcdStatusMatcherActor {
  * See props for a description of the arguments.
  */
 class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], replyTo: ActorRef, runId: RunId,
-                            timeout: Timeout, matcher: Matcher, override val prefix: String) extends Actor with PrefixedActorLogging {
+                            timeout: Timeout, matcher: Matcher) extends Actor with ActorLogging {
 
   import context.dispatcher
 
@@ -60,7 +57,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
           val set = results + current
           if (set.size == demands.size) {
             timer.cancel()
-            replyTo ! CommandStatus.Completed(runId)
+            replyTo ! CommandStatusOld.Completed(runId)
             hcds.foreach(_ ! PublisherActor.Unsubscribe)
             context.stop(self)
           } else context.become(waiting(set))
@@ -69,7 +66,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
 
     case `timeout` =>
       log.debug(s"received timeout")
-      replyTo ! CommandStatus.Error(runId, "Command timed out")
+      replyTo ! CommandStatusOld.Error(runId, "Command timed out")
       hcds.foreach(_ ! PublisherActor.Unsubscribe)
       context.stop(self)
 

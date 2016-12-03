@@ -11,27 +11,41 @@ import scala.language.implicitConversions
 object Events {
   import Configurations._
 
-  case class EventTime(time: Instant) {
+  case class EventTime(time: Instant = Instant.now(Clock.systemUTC)) {
     override def toString = time.toString
   }
 
   object EventTime {
     implicit def toEventTime(time: Instant): EventTime = EventTime(time)
 
-    implicit def toCurrent = EventTime(Instant.now(Clock.systemUTC))
+    implicit def toCurrent = EventTime()
   }
+
+  /**
+   * Java API to get current time as EventTime
+   */
+  def getEventTime: EventTime = EventTime()
 
   /**
    * This will include information related to the observation that is related to a configuration.
    * This will grow and develop.
    *
    * @param source the source subsystem and prefix for the component
-   * @param time time of the event
+   * @param eventTime time of the event
    * @param obsId optional observation id
    * @param eventId automatically generated unique event id
    */
-  case class EventInfo(source: ConfigKey, time: EventTime, obsId: Option[ObsId], eventId: String = UUID.randomUUID().toString) {
-    override def toString = s"$source: eId: $eventId, time: $time, obsId: $obsId"
+  case class EventInfo(source: ConfigKey, eventTime: EventTime, obsId: Option[ObsId], eventId: String = UUID.randomUUID().toString) {
+    override def toString = s"$source: eId: $eventId, time: $eventTime, obsId: $obsId"
+
+    override def equals(that: Any): Boolean = {
+      that match {
+        case that: EventInfo =>
+          // Ignore the event ID && time to allow comparing events.  Is this right?
+          this.source == that.source && this.obsId == that.obsId // && this.time == that.time
+        case _ => false
+      }
+    }
   }
 
   object EventInfo {
@@ -59,7 +73,7 @@ object Events {
    *
    * @tparam T the subclass of ConfigType
    */
-  sealed trait EventType[T <: EventType[T]] extends ConfigType[T] {
+  sealed trait EventType[T <: EventType[T]] extends ConfigType[T] with ConfigKeyType {
     self: T =>
 
     /**
@@ -77,7 +91,7 @@ object Events {
     /**
      * The time the event was created
      */
-    def rawTime: EventTime = info.time
+    def eventTime: EventTime = info.eventTime
 
     /**
      * The event id

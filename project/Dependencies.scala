@@ -6,8 +6,8 @@ object Dependencies {
 
   val scalaVersion = "2.11.8"
 
-  val akkaVersion = "2.4.7"
-  val akkaStreamsVersion = "2.4.7"
+  val akkaVersion = "2.4.11"
+  val akkaStreamsVersion = "2.4.11"
 
   val hornetqVersion = "2.4.7.Final"
 
@@ -40,6 +40,9 @@ object Dependencies {
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
   val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11" // TMate Open Source License
 
+  val slick = "com.typesafe.slick" % "slick_2.11" % "3.1.1" // BSD 3-clause
+  val postgresql = "org.postgresql" % "postgresql" % "9.4.1211" // POSTGRESQL
+  val HikariCP = "com.zaxxer" % "HikariCP" % "2.5.1" // ApacheV2
 
   val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0" // ApacheV2
 
@@ -52,7 +55,7 @@ object Dependencies {
   val scopt = "com.github.scopt" %% "scopt" % "3.3.0"//  MIT License
   val jsonSchemaValidator = "com.github.fge" % "json-schema-validator" % "2.2.6"  // LGPL/ASL
 
-  val jmdns = "javax.jmdns" % "jmdns" % "3.4.1" // ApacheV2
+  val jmdns = "org.jmdns" % "jmdns" % "3.5.1" // ApacheV2
 
   // Test dependencies
   val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion // ApacheV2
@@ -64,7 +67,8 @@ object Dependencies {
   val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" // ApacheV2
   val junit = "com.novocode" % "junit-interface" % "0.11" // Two-clause BSD-style license
   val junitInterface = "com.novocode" % "junit-interface" % "0.11"
-  val specs2 = "org.specs2" %% "specs2" % "3.7" // MIT-style
+  val specs2 = "org.specs2" %% "specs2-core" % "3.7" // MIT-style
+  val assertj = "org.assertj" % "assertj-core" % "3.5.2" // ApacheV2
 
   // REPL dependencies
   val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion // Scala License: BSD 3-Clause

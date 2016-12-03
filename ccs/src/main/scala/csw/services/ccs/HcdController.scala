@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.Actor
 import csw.util.akka.PublisherActor
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.Configurations._
@@ -20,20 +20,20 @@ object HcdController {
    *
    * @param config describes the setup parameters to which the HCD should be configured
    */
-  case class Submit(config: SetupConfig) extends HcdControllerMessage
+  final case class Submit(config: SetupConfig) extends HcdControllerMessage
 
   // --- Inherited messages that this actor receives ---
 
   /**
    * Message to subscribe the sender to the HCD's state.
-   * The sender will receive [[CurrentState]] messages from the HCD whenever it's state changes.
+   * The sender will receive CurrentState messages from the HCD whenever it's state changes.
    */
   val Subscribe = PublisherActor.Subscribe
 
   /**
    * Message to unsubscribes from the HCD's state messages.
    */
-  val Unubscribe = PublisherActor.Unsubscribe
+  val Unsubscribe = PublisherActor.Unsubscribe
 
   /**
    * Message to request that the HCD's current state be sent to all subscribers

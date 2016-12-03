@@ -34,7 +34,7 @@ public class JItems {
   }
 
   public static BooleanItem jset(BooleanKey key, java.util.List<Boolean> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static BooleanItem jset(BooleanKey key, java.util.List<Boolean> v, UnitsOfMeasure.Units units) {
@@ -67,7 +67,7 @@ public class JItems {
   }
 
   public static ByteArrayItem jset(ByteArrayKey key, java.util.List<ByteArray> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ByteArrayItem jset(ByteArrayKey key, java.util.List<ByteArray> v, UnitsOfMeasure.Units units) {
@@ -83,7 +83,7 @@ public class JItems {
     for (byte[] dv : vin) {
       v.add(ByteArray(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ByteArrayItem jset(ByteArrayKey key, ByteArray... v) {
@@ -116,7 +116,7 @@ public class JItems {
   }
 
   public static ByteMatrixItem jset(ByteMatrixKey key, java.util.List<ByteMatrix> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ByteMatrixItem jset(ByteMatrixKey key, java.util.List<ByteMatrix> v, UnitsOfMeasure.Units units) {
@@ -140,7 +140,7 @@ public class JItems {
     for (byte[][] dv : vin) {
       v.add(ByteMatrix(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ByteMatrix ByteMatrix(byte[][] value) {
@@ -170,7 +170,7 @@ public class JItems {
   }
 
   public static CharItem jset(CharKey key, java.util.List<Character> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static CharItem jset(CharKey key, java.util.List<Character> v, UnitsOfMeasure.Units units) {
@@ -181,7 +181,7 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
-  // FloatItem
+  // DoubleItem
   public static DoubleKey DoubleKey(String name) {
     return new DoubleKey(name);
   }
@@ -203,7 +203,7 @@ public class JItems {
   }
 
   public static DoubleItem jset(DoubleKey key, java.util.List<Double> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static DoubleItem jset(DoubleKey key, java.util.List<Double> v, UnitsOfMeasure.Units units) {
@@ -236,7 +236,7 @@ public class JItems {
   }
 
   public static DoubleArrayItem jset(DoubleArrayKey key, java.util.List<DoubleArray> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static DoubleArrayItem jset(DoubleArrayKey key, java.util.List<DoubleArray> v, UnitsOfMeasure.Units units) {
@@ -252,7 +252,7 @@ public class JItems {
     for (double[] dv : vin) {
       v.add(DoubleArray(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static DoubleArrayItem jset(DoubleArrayKey key, DoubleArray... v) {
@@ -285,7 +285,7 @@ public class JItems {
   }
 
   public static DoubleMatrixItem jset(DoubleMatrixKey key, java.util.List<DoubleMatrix> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static DoubleMatrixItem jset(DoubleMatrixKey key, java.util.List<DoubleMatrix> v, UnitsOfMeasure.Units units) {
@@ -309,7 +309,7 @@ public class JItems {
     for (double[][] dv : vin) {
       v.add(DoubleMatrix(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static DoubleMatrix DoubleMatrix(double[][] value) {
@@ -338,7 +338,7 @@ public class JItems {
   }
 
   public static FloatItem jset(FloatKey key, java.util.List<Float> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static FloatItem jset(FloatKey key, java.util.List<Float> v, UnitsOfMeasure.Units units) {
@@ -371,7 +371,7 @@ public class JItems {
   }
 
   public static FloatArrayItem jset(FloatArrayKey key, java.util.List<FloatArray> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static FloatArrayItem jset(FloatArrayKey key, java.util.List<FloatArray> v, UnitsOfMeasure.Units units) {
@@ -387,7 +387,7 @@ public class JItems {
     for (float[] dv : vin) {
       v.add(FloatArray(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static FloatArrayItem jset(FloatArrayKey key, FloatArray... v) {
@@ -421,7 +421,7 @@ public class JItems {
   }
 
   public static FloatMatrixItem jset(FloatMatrixKey key, java.util.List<FloatMatrix> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static FloatMatrixItem jset(FloatMatrixKey key, java.util.List<FloatMatrix> v, UnitsOfMeasure.Units units) {
@@ -445,7 +445,7 @@ public class JItems {
     for (float[][] dv : vin) {
       v.add(FloatMatrix(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static FloatMatrix FloatMatrix(float[][] value) {
@@ -474,7 +474,7 @@ public class JItems {
   }
 
   public static IntItem jset(IntKey key, java.util.List<Integer> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static IntItem jset(IntKey key, java.util.List<Integer> v, UnitsOfMeasure.Units units) {
@@ -507,7 +507,7 @@ public class JItems {
   }
 
   public static IntArrayItem jset(IntArrayKey key, java.util.List<IntArray> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static IntArrayItem jset(IntArrayKey key, java.util.List<IntArray> v, UnitsOfMeasure.Units units) {
@@ -523,7 +523,7 @@ public class JItems {
     for (int[] dv : vin) {
       v.add(IntArray(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static IntArrayItem jset(IntArrayKey key, IntArray... v) {
@@ -556,7 +556,7 @@ public class JItems {
   }
 
   public static IntMatrixItem jset(IntMatrixKey key, java.util.List<IntMatrix> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static IntMatrixItem jset(IntMatrixKey key, java.util.List<IntMatrix> v, UnitsOfMeasure.Units units) {
@@ -580,7 +580,7 @@ public class JItems {
     for (int[][] dv : vin) {
       v.add(IntMatrix(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static IntMatrix IntMatrix(int[][] value) {
@@ -610,7 +610,7 @@ public class JItems {
   }
 
   public static LongItem jset(LongKey key, java.util.List<Long> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static LongItem jset(LongKey key, java.util.List<Long> v, UnitsOfMeasure.Units units) {
@@ -643,7 +643,7 @@ public class JItems {
   }
 
   public static LongArrayItem jset(LongArrayKey key, java.util.List<LongArray> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static LongArrayItem jset(LongArrayKey key, java.util.List<LongArray> v, UnitsOfMeasure.Units units) {
@@ -659,7 +659,7 @@ public class JItems {
     for (long[] dv : vin) {
       v.add(LongArray(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static LongArrayItem jset(LongArrayKey key, LongArray... v) {
@@ -692,7 +692,7 @@ public class JItems {
   }
 
   public static LongMatrixItem jset(LongMatrixKey key, java.util.List<LongMatrix> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static LongMatrixItem jset(LongMatrixKey key, java.util.List<LongMatrix> v, UnitsOfMeasure.Units units) {
@@ -716,7 +716,7 @@ public class JItems {
     for (long[][] dv : vin) {
       v.add(LongMatrix(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static LongMatrix LongMatrix(long[][] value) {
@@ -745,7 +745,7 @@ public class JItems {
   }
 
   public static ShortItem jset(ShortKey key, java.util.List<Short> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ShortItem jset(ShortKey key, java.util.List<Short> v, UnitsOfMeasure.Units units) {
@@ -778,7 +778,7 @@ public class JItems {
   }
 
   public static ShortArrayItem jset(ShortArrayKey key, java.util.List<ShortArray> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ShortArrayItem jset(ShortArrayKey key, java.util.List<ShortArray> v, UnitsOfMeasure.Units units) {
@@ -794,7 +794,7 @@ public class JItems {
     for (short[] dv : vin) {
       v.add(ShortArray(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ShortArrayItem jset(ShortArrayKey key, ShortArray... v) {
@@ -827,7 +827,7 @@ public class JItems {
   }
 
   public static ShortMatrixItem jset(ShortMatrixKey key, java.util.List<ShortMatrix> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ShortMatrixItem jset(ShortMatrixKey key, java.util.List<ShortMatrix> v, UnitsOfMeasure.Units units) {
@@ -851,7 +851,7 @@ public class JItems {
     for (short[][] dv : vin) {
       v.add(ShortMatrix(dv));
     }
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static ShortMatrix ShortMatrix(short[][] value) {
@@ -880,7 +880,7 @@ public class JItems {
   }
 
   public static StringItem jset(StringKey key, java.util.List<String> v) {
-    return JavaHelpers.jset(key, v, JUnitsOfMeasure.NoUnits);
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
   }
 
   public static StringItem jset(StringKey key, java.util.List<String> v, UnitsOfMeasure.Units units) {
@@ -891,10 +891,85 @@ public class JItems {
     return JavaHelpers.jset(key, v);
   }
 
+  // ChoiceItem
+  public static ChoiceKey ChoiceKey(String name, String... choices) {
+    return new ChoiceKey(name, Choices.from(choices));
+  }
+
+  public static Choice Choice(String s) {
+    return new Choice(s);
+  }
+
+  public static Choice jvalue(ChoiceItem item) {
+    return JavaHelpers.jvalue(item);
+  }
+
+  public static Choice jvalue(ChoiceItem item, int index) {
+    return JavaHelpers.jvalue(item, index);
+  }
+
+  public static List<Choice> jvalues(ChoiceItem item) {
+    return JavaHelpers.jvalues(item);
+  }
+
+  public static Optional<Choice> jget(ChoiceItem item, int index) {
+    return JavaHelpers.jget(item, index);
+  }
+
+  public static ChoiceItem jset(ChoiceKey key, java.util.List<Choice> v) {
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
+  }
+
+  public static ChoiceItem jset(ChoiceKey key, java.util.List<Choice> v, UnitsOfMeasure.Units units) {
+    return JavaHelpers.jset(key, v, units);
+  }
+
+  public static ChoiceItem jset(ChoiceKey key, Choice... v) {
+    return JavaHelpers.jset(key, v);
+  }
+
+  // StructItem
+  public static StructKey StructKey(String name) {
+    return new StructKey(name);
+  }
+
+  public static Struct jvalue(StructItem item) {
+    return JavaHelpers.jvalue(item);
+  }
+
+  public static Struct jvalue(StructItem item, int index) {
+    return JavaHelpers.jvalue(item, index);
+  }
+
+  public static List<Struct> jvalues(StructItem item) {
+    return JavaHelpers.jvalues(item);
+  }
+
+  public static Optional<Struct> jget(StructItem item, int index) {
+    return JavaHelpers.jget(item, index);
+  }
+
+  public static StructItem jset(StructKey key, java.util.List<Struct> v) {
+    return JavaHelpers.jset(key, v, JUnitsOfMeasure.none);
+  }
+
+  public static StructItem jset(StructKey key, java.util.List<Struct> v, UnitsOfMeasure.Units units) {
+    return JavaHelpers.jset(key, v, units);
+  }
+
+  public static StructItem jset(StructKey key, Struct... v) {
+    return JavaHelpers.jset(key, v);
+  }
+
+
   // ---------------- Configuration level
 
   public static SetupConfig SetupConfig(String name) {
     return new SetupConfig(name);
+  }
+
+  public static SetupConfig SetupConfig(ConfigKey key) {
+    return new SetupConfig(key, new scala.collection.immutable.HashSet<>());
   }
 
   public static ObserveConfig ObserveConfig(String name) {
@@ -944,7 +1019,7 @@ public class JItems {
     return JavaHelpers.jget(sc, key, index);
   }
 
-  // I believe it's okay to do this annotation since J is a reasonably known type based on items
+  // I believe it's okay to do this annotation since I is a reasonably known type based on items
   @SafeVarargs
   public static <I extends Item<?>, T extends ConfigType<T>> T jadd(T sc, I... itemsIn) {
     List<I> ilist = Arrays.asList(itemsIn);

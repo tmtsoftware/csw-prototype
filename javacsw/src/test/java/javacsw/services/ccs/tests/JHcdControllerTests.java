@@ -1,31 +1,10 @@
 package javacsw.services.ccs.tests;
 
 import akka.actor.*;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
-import akka.japi.Creator;
-import akka.japi.pf.ReceiveBuilder;
 import akka.testkit.JavaTestKit;
-import akka.util.Timeout;
-import csw.services.ccs.CommandStatus;
-import csw.services.ccs.HcdController.Submit;
-import csw.util.config.Configurations.SetupConfig;
-import csw.util.config.RunId;
-import csw.util.config.StateVariable.CurrentState;
-import csw.util.config.StateVariable.DemandState;
 import csw.util.config.StringKey;
-import javacsw.services.ccs.JHcdController;
-import javacsw.services.ccs.JHcdStatusMatcherActorFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Test;
-import scala.PartialFunction;
-import scala.concurrent.duration.FiniteDuration;
-import scala.runtime.BoxedUnit;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
 
 /**
  * Tests the java API of HcdController.

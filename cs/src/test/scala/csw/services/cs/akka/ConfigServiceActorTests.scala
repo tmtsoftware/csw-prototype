@@ -131,8 +131,8 @@ class ConfigServiceActorTests extends TestKit(ActorSystem("testsys"))
       configServiceActor ! ExistsRequest(path2)
       checkExistsResult(path2, exists = false)
 
-      // XXX TODO FIXME: Doesn't work to get history of deleted file with svnkit
-      // XXX TODO FIXME unless you specify an existing revision (works ok with jgit)
+      // Choice TODO FIXME: Doesn't work to get history of deleted file with svnkit
+      // Choice TODO FIXME unless you specify an existing revision (works ok with jgit)
 
       //      configServiceActor ! HistoryRequest(path1)
       //      checkHistoryResult(path1, 3, List(comment3, comment2, comment1))

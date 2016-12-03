@@ -3,6 +3,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [CSW v0.3-PDR] - 2016-12-03
+
+### Added
+
+- Added Java APIs and tests
+
+- Added vslice and vsliceJava: detailed, vertical slice examples in Scala and Java
+
+- Added AlarmService
+
+- Added Scala and Java DSLs for working with configurations
+
+- Added csw-services.sh startup script
+
+### Changed
+
+- Changed the APIs for HcdController, AssemblyController, Supervisor
+
+- Changed APIs for working with configurations in Scala and Java
+
+- Changed the Location Service APIs
+
+- Updated all dependency versions, Akka version
+
+- Changed APIs for Event and Telemetry Service
+
+
 ### Added
 - Added [BlockingConfigManager](src/main/scala/csw/services/cs/core/BlockingConfigManager.scala) 
   (a blocking API to the Config Service)

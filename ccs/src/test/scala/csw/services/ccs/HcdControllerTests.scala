@@ -4,7 +4,6 @@ import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.services.ccs.HcdController.Submit
-import csw.services.log.PrefixedActorLogging
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.StringKey
@@ -22,9 +21,7 @@ object HcdControllerTests {
     def props(): Props = Props(classOf[TestHcdController])
   }
 
-  class TestHcdController extends HcdController with Actor with PrefixedActorLogging {
-    override val prefix = testPrefix
-
+  class TestHcdController extends HcdController with Actor with ActorLogging {
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
     val worker = context.actorOf(TestWorker.props())
@@ -56,14 +53,12 @@ object HcdControllerTests {
     case object RequestCurrentState
   }
 
-  class TestWorker extends Actor with PrefixedActorLogging {
-    override val prefix = testPrefix
-
+  class TestWorker extends Actor with ActorLogging {
     import TestWorker._
     import context.dispatcher
 
     // Simulate getting the initial state from the device
-    val initialState = CurrentState(prefix).add(position.set("None"))
+    val initialState = CurrentState(testPrefix).add(position.set("None"))
 
     // Simulated current state
     var currentState = initialState
@@ -108,7 +103,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {
-      val status = expectMsgType[CommandStatus.Completed]
+      val status = expectMsgType[CommandStatusOld.Completed]
       logger.debug(s"Done (2). Received reply from matcher with current state: $status")
     }
   }
