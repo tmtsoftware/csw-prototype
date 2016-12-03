@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -44,19 +44,20 @@
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">case class</span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">Supervisor</span><span class="params">(<span name="componentProps">componentProps: <span class="extype" name="akka.actor.Props">Props</span></span>, <span name="serviceId">serviceId: <a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a></span>, <span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="services">services: <a href="../../../scala/package.html#List[+A]=List[A]" class="extmbr" name="scala.List">List</a>[<a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a>]</span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <span class="name">Supervisor</span><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A supervisor actor that manages the component actor given by the arguments
-(see props() for argument descriptions).
-</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//pkg/src/main/scala/csw/services/pkg/Supervisor.scala" target="_blank">Supervisor.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Equals" class="extype" target="_top">Equals</a>, <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span>, <span class="extype" name="akka.actor.Actor">Actor</span>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="akka.actor.ActorLogging">ActorLogging</span>, <span class="extype" name="akka.actor.Actor">Actor</span>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
+                <span class="toggle diagram-link">Type Hierarchy</span>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 196.00 118.00" height="118pt" width="196pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 192,-114 192,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="csw.services.pkg.Supervisor (this class)" xlink:href="#inheritance-diagram"><polygon points="130,-49 40,-49 40,-24 130,-24 130,-49" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-43.5" x="50" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-33.5" x="71" text-anchor="start">Supervisor</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="akka.actor.Actor"><polygon points="68,-110 0,-110 0,-85 68,-85 68,-110" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-94.5" x="31" text-anchor="start">Actor</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="Supervisor is a subtype of Actor"><path d="M47.3732,-81.0291C56.0065,-71.0415 67.0573,-58.2572 74.945,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="46.0218,-79.9164 44.076,-84.8435 48.6697,-82.2052 46.0218,-79.9164" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="akka.actor.ActorLogging"><polygon points="188,-110 86,-110 86,-85 188,-85 188,-110" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-104.5" x="96" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-94.5" x="117" text-anchor="start">ActorLogging</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="Supervisor is a subtype of ActorLogging"><path d="M123.365,-81.0291C114.562,-71.0415 103.294,-58.2572 95.2522,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="122.108,-82.2495 126.726,-84.8435 124.733,-79.9353 122.108,-82.2495" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
         
 
       <div id="mbrsel">
@@ -66,20 +67,25 @@
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="csw.services.pkg.Supervisor"><span>Supervisor</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="akka.actor.ActorLogging"><span>ActorLogging</span></li><li class="in" name="akka.actor.Actor"><span>Actor</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="csw.services.pkg.Supervisor"><span>Supervisor</span></li><li class="in" name="akka.actor.ActorLogging"><span>ActorLogging</span></li><li class="in" name="akka.actor.Actor"><span>Actor</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+                <span class="filtertype">Implicitly<br />
+                </span>
+                <ol id="implicits"> <li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -93,7 +99,7 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="csw.services.pkg.Supervisor#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(componentProps:akka.actor.Props,serviceId:csw.services.loc.ServiceId,prefix:String,services:List[csw.services.loc.ServiceId]):csw.services.pkg.Supervisor"></a>
+      <a id="&lt;init&gt;(componentInfo:csw.services.pkg.Component.ComponentInfo,testComponent:Option[akka.actor.ActorRef]):csw.services.pkg.Supervisor"></a>
       <a id="&lt;init&gt;:Supervisor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -101,10 +107,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">Supervisor</span><span class="params">(<span name="componentProps">componentProps: <span class="extype" name="akka.actor.Props">Props</span></span>, <span name="serviceId">serviceId: <a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a></span>, <span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="services">services: <a href="../../../scala/package.html#List[+A]=List[A]" class="extmbr" name="scala.List">List</a>[<a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a>]</span>)</span>
+        <span class="name">Supervisor</span><span class="params">(<span name="componentInfo">componentInfo: <a href="Component$$ComponentInfo.html" class="extype" name="csw.services.pkg.Component.ComponentInfo">ComponentInfo</a></span>, <span name="testComponent">testComponent: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="akka.actor.ActorRef">ActorRef</span>]</span>)</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@&lt;init&gt;(componentProps:akka.actor.Props,serviceId:csw.services.loc.ServiceId,prefix:String,services:List[csw.services.loc.ServiceId]):csw.services.pkg.Supervisor" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@&lt;init&gt;(componentInfo:csw.services.pkg.Component.ComponentInfo,testComponent:Option[akka.actor.ActorRef]):csw.services.pkg.Supervisor" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -123,7 +129,7 @@
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">Receive</span><span class="result"> = <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
+        <span class="name">Receive</span><span class="result"> = <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@Receive=akka.actor.Actor.Receive" title="Permalink" target="_top">
@@ -147,7 +153,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@!=(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -164,7 +170,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@##():Int" title="Permalink" target="_top">
@@ -172,6 +178,51 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Predef.any2stringadd#+" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="+(other:String):String"></a>
+      <a id="+(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $plus" class="implicit">+</span><span class="params">(<span name="other">other: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@+(other:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method any2stringadd in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="-&gt;[B](y:B):(A,B)"></a>
+      <a id="-&gt;[B](B):(Supervisor,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>, <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
@@ -181,7 +232,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@==(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -198,7 +249,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPostRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">aroundPostRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@aroundPostRestart(reason:Throwable):Unit" title="Permalink" target="_top">
@@ -215,7 +266,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPostStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">aroundPostStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@aroundPostStop():Unit" title="Permalink" target="_top">
@@ -232,7 +283,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPreRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">aroundPreRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@aroundPreRestart(reason:Throwable,message:Option[Any]):Unit" title="Permalink" target="_top">
@@ -249,7 +300,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPreStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">aroundPreStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@aroundPreStart():Unit" title="Permalink" target="_top">
@@ -266,7 +317,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundReceive</span><span class="params">(<span name="receive">receive: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">aroundReceive</span><span class="params">(<span name="receive">receive: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@aroundReceive(receive:akka.actor.Actor.Receive,msg:Any):Unit" title="Permalink" target="_top">
@@ -314,6 +365,23 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="csw.services.pkg.Supervisor#commonMessagesPF" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="commonMessagesPF:Supervisor.this.Receive"></a>
+      <a id="commonMessagesPF:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">commonMessagesPF</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@commonMessagesPF:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="csw.services.pkg.Supervisor#component" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="component:akka.actor.ActorRef"></a>
       <a id="component:ActorRef"></a>
@@ -331,19 +399,19 @@
       </a>
     </span>
       
-    </li><li name="csw.services.pkg.Supervisor#componentProps" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="componentProps:akka.actor.Props"></a>
-      <a id="componentProps:Props"></a>
+    </li><li name="csw.services.pkg.Supervisor#componentInfo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="componentInfo:csw.services.pkg.Component.ComponentInfo"></a>
+      <a id="componentInfo:ComponentInfo"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">componentProps</span><span class="result">: <span class="extype" name="akka.actor.Props">Props</span></span>
+        <span class="name">componentInfo</span><span class="result">: <a href="Component$$ComponentInfo.html" class="extype" name="csw.services.pkg.Component.ComponentInfo">ComponentInfo</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@componentProps:akka.actor.Props" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@componentInfo:csw.services.pkg.Component.ComponentInfo" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -365,6 +433,90 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring((Supervisor)⇒Boolean,⇒Any):Supervisor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean):A"></a>
+      <a id="ensuring((Supervisor)⇒Boolean):Supervisor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring(Boolean,⇒Any):Supervisor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean):A"></a>
+      <a id="ensuring(Boolean):Supervisor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@ensuring(cond:Boolean):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -374,7 +526,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -382,6 +534,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@equals(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <a id="finalize():Unit"></a>
@@ -391,7 +560,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@finalize():Unit" title="Permalink" target="_top">
@@ -403,6 +572,30 @@
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
     </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="formatted(fmtstr:String):String"></a>
+      <a id="formatted(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">formatted</span><span class="params">(<span name="fmtstr">fmtstr: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@formatted(fmtstr:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method StringFormat in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
               
         </dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -422,23 +615,40 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor#initialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="initialized(targetState:csw.services.pkg.Supervisor.LifecycleState):Supervisor.this.Receive"></a>
-      <a id="initialized(LifecycleState):Receive"></a>
+    </li><li name="csw.services.pkg.Supervisor#handleLifecycleFailure" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="handleLifecycleFailure(state:csw.services.pkg.Supervisor.LifecycleState,reason:String):Unit"></a>
+      <a id="handleLifecycleFailure(LifecycleState,String):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">initialized</span><span class="params">(<span name="targetState">targetState: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>)</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+        <span class="name">handleLifecycleFailure</span><span class="params">(<span name="state">state: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>, <span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@initialized(targetState:csw.services.pkg.Supervisor.LifecycleState):Supervisor.this.Receive" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@handleLifecycleFailure(state:csw.services.pkg.Supervisor.LifecycleState,reason:String):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@hashCode():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -448,7 +658,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
@@ -456,36 +666,249 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor#lifecycleStateListeners" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="lifecycleStateListeners:scala.collection.immutable.Map[akka.actor.ActorRef,Boolean]"></a>
-      <a id="lifecycleStateListeners:Map[ActorRef,Boolean]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">var</span>
-      </span>
-      <span class="symbol">
-        <span class="name">lifecycleStateListeners</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.immutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="akka.actor.ActorRef">ActorRef</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleStateListeners:scala.collection.immutable.Map[akka.actor.ActorRef,Boolean]" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="csw.services.pkg.Supervisor#loaded" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="loaded(targetState:csw.services.pkg.Supervisor.LifecycleState):Supervisor.this.Receive"></a>
-      <a id="loaded(LifecycleState):Receive"></a>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleFailure" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleFailure:Supervisor.this.Receive"></a>
+      <a id="lifecycleFailure:Receive"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">loaded</span><span class="params">(<span name="targetState">targetState: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>)</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+        <span class="name">lifecycleFailure</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@loaded(targetState:csw.services.pkg.Supervisor.LifecycleState):Supervisor.this.Receive" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleFailure:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Receive method for the lifecycleFailure state
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleInitialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleInitialized:PartialFunction[Any,Unit]"></a>
+      <a id="lifecycleInitialized:PartialFunction[Any,Unit]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleInitialized</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleInitialized:PartialFunction[Any,Unit]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Receive method for the lifecycleInitialized state
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleInitializedPF" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleInitializedPF:Supervisor.this.Receive"></a>
+      <a id="lifecycleInitializedPF:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleInitializedPF</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleInitializedPF:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor#lifecyclePreparingToShutdown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecyclePreparingToShutdown:Supervisor.this.Receive"></a>
+      <a id="lifecyclePreparingToShutdown:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecyclePreparingToShutdown</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecyclePreparingToShutdown:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Receive method for the lifecyclePreparingToShutdown state
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleRunning" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleRunning:PartialFunction[Any,Unit]"></a>
+      <a id="lifecycleRunning:PartialFunction[Any,Unit]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleRunning</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleRunning:PartialFunction[Any,Unit]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Receive method for the lifecycleRunning state
+Note that order is important because lifecycleRuninng passes all messages right now
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleRunningOffline" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleRunningOffline:PartialFunction[Any,Unit]"></a>
+      <a id="lifecycleRunningOffline:PartialFunction[Any,Unit]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleRunningOffline</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleRunningOffline:PartialFunction[Any,Unit]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Receive method for the lifecycleRunningOffline state
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleRunningOfflinePF" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleRunningOfflinePF:Supervisor.this.Receive"></a>
+      <a id="lifecycleRunningOfflinePF:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleRunningOfflinePF</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleRunningOfflinePF:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor#lifecycleRunningPF" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleRunningPF:Supervisor.this.Receive"></a>
+      <a id="lifecycleRunningPF:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleRunningPF</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleRunningPF:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor#lifecycleShutdown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleShutdown:PartialFunction[Any,Unit]"></a>
+      <a id="lifecycleShutdown:PartialFunction[Any,Unit]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleShutdown</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleShutdown:PartialFunction[Any,Unit]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Receive method for the lifecycleShutdown state
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleShutdownFailure" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleShutdownFailure:Supervisor.this.Receive"></a>
+      <a id="lifecycleShutdownFailure:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleShutdownFailure</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleShutdownFailure:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Recieve method for the lifecycleShutdownFailure state
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleShutdownPF" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleShutdownPF:Supervisor.this.Receive"></a>
+      <a id="lifecycleShutdownPF:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleShutdownPF</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleShutdownPF:Supervisor.this.Receive" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor#lifecycleState" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleState:csw.services.pkg.Supervisor.LifecycleState"></a>
+      <a id="lifecycleState:LifecycleState"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">var</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleState</span><span class="result">: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleState:csw.services.pkg.Supervisor.LifecycleState" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor#lifecycleWaitingForInitialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleWaitingForInitialized:PartialFunction[Any,Unit]"></a>
+      <a id="lifecycleWaitingForInitialized:PartialFunction[Any,Unit]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleWaitingForInitialized</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleWaitingForInitialized:PartialFunction[Any,Unit]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Receive method for the lifecycleWaitingForInitialized state
+</p>
+    </li><li name="csw.services.pkg.Supervisor#lifecycleWaitingForInitializedPF" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="lifecycleWaitingForInitializedPF:Supervisor.this.Receive"></a>
+      <a id="lifecycleWaitingForInitializedPF:Receive"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycleWaitingForInitializedPF</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@lifecycleWaitingForInitializedPF:Supervisor.this.Receive" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -507,19 +930,19 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ActorLogging</dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor#name" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="name:String"></a>
-      <a id="name:String"></a>
+    </li><li name="csw.services.pkg.Supervisor#logState" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="logState(thisState:csw.services.pkg.Supervisor.LifecycleState,nextState:csw.services.pkg.Supervisor.LifecycleState):Unit"></a>
+      <a id="logState(LifecycleState,LifecycleState):Unit"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">val</span>
+        <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">name</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">logState</span><span class="params">(<span name="thisState">thisState: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>, <span name="nextState">nextState: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@name:String" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@logState(thisState:csw.services.pkg.Supervisor.LifecycleState,nextState:csw.services.pkg.Supervisor.LifecycleState):Unit" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -533,7 +956,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -550,7 +973,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@notify():Unit" title="Permalink" target="_top">
@@ -567,7 +990,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@notifyAll():Unit" title="Permalink" target="_top">
@@ -584,7 +1007,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">postRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">postRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@postRestart(reason:Throwable):Unit" title="Permalink" target="_top">
@@ -607,7 +1030,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">postStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">postStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@postStop():Unit" title="Permalink" target="_top">
@@ -630,7 +1053,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">preRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">preRestart</span><span class="params">(<span name="reason">reason: <a href="../../../scala/package.html#Throwable=Throwable" class="extmbr" name="scala.Throwable">Throwable</a></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@preRestart(reason:Throwable,message:Option[Any]):Unit" title="Permalink" target="_top">
@@ -653,7 +1076,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">preStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">preStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@preStart():Unit" title="Permalink" target="_top">
@@ -667,70 +1090,53 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor#prefix" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="prefix:String"></a>
-      <a id="prefix:String"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">prefix</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@prefix:String" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
     </li><li name="csw.services.pkg.Supervisor#receive" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="receive:Supervisor.this.Receive"></a>
-      <a id="receive:Receive"></a>
+      <a id="receive:PartialFunction[Any,Unit]"></a>
+      <a id="receive:PartialFunction[Any,Unit]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">receive</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+        <span class="name">receive</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@receive:Supervisor.this.Receive" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@receive:PartialFunction[Any,Unit]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> → Actor</dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor#registration" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="registration:Option[csw.services.loc.LocationService.Registration]"></a>
-      <a id="registration:Option[Registration]"></a>
+    </li><li name="csw.services.pkg.Supervisor#registrationOpt" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="registrationOpt:Option[csw.services.loc.LocationService.RegistrationResult]"></a>
+      <a id="registrationOpt:Option[RegistrationResult]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">registration</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="../loc/LocationService$$Registration.html" class="extype" name="csw.services.loc.LocationService.Registration">Registration</a>]</span>
+        <span class="name">registrationOpt</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="../loc/LocationService$$RegistrationResult.html" class="extype" name="csw.services.loc.LocationService.RegistrationResult">RegistrationResult</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@registration:Option[csw.services.loc.LocationService.Registration]" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@registrationOpt:Option[csw.services.loc.LocationService.RegistrationResult]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
-    </li><li name="csw.services.pkg.Supervisor#running" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="running(targetState:csw.services.pkg.Supervisor.LifecycleState):Supervisor.this.Receive"></a>
-      <a id="running(LifecycleState):Receive"></a>
+    </li><li name="csw.services.pkg.Supervisor#scheduleTimeout" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="scheduleTimeout:akka.actor.Cancellable"></a>
+      <a id="scheduleTimeout:Cancellable"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">running</span><span class="params">(<span name="targetState">targetState: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>)</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
+        <span class="name">scheduleTimeout</span><span class="result">: <span class="extype" name="akka.actor.Cancellable">Cancellable</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@running(targetState:csw.services.pkg.Supervisor.LifecycleState):Supervisor.this.Receive" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@scheduleTimeout:akka.actor.Cancellable" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -769,53 +1175,36 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor#serviceId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="serviceId:csw.services.loc.ServiceId"></a>
-      <a id="serviceId:ServiceId"></a>
+    </li><li name="csw.services.pkg.Supervisor#startComponent" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="startComponent(context:akka.actor.ActorContext,componentInfo:csw.services.pkg.Component.ComponentInfo):akka.actor.ActorRef"></a>
+      <a id="startComponent(ActorContext,ComponentInfo):ActorRef"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">val</span>
+        <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">serviceId</span><span class="result">: <a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a></span>
+        <span class="name">startComponent</span><span class="params">(<span name="context">context: <span class="extype" name="akka.actor.ActorContext">ActorContext</span></span>, <span name="componentInfo">componentInfo: <a href="Component$$ComponentInfo.html" class="extype" name="csw.services.pkg.Component.ComponentInfo">ComponentInfo</a></span>)</span><span class="result">: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@serviceId:csw.services.loc.ServiceId" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@startComponent(context:akka.actor.ActorContext,componentInfo:csw.services.pkg.Component.ComponentInfo):akka.actor.ActorRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
-    </li><li name="csw.services.pkg.Supervisor#serviceRefs" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="serviceRefs:scala.collection.immutable.Set[csw.services.loc.ServiceRef]"></a>
-      <a id="serviceRefs:Set[ServiceRef]"></a>
+    </li><li name="csw.services.pkg.Supervisor#supervisorReceivePF" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="supervisorReceivePF:Supervisor.this.Receive"></a>
+      <a id="supervisorReceivePF:Receive"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">val</span>
+        <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">serviceRefs</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.immutable.Set" class="extype" target="_top">Set</a>[<a href="../loc/ServiceRef.html" class="extype" name="csw.services.loc.ServiceRef">ServiceRef</a>]</span>
+        <span class="name">supervisorReceivePF</span><span class="result">: <a href="#Receive=akka.actor.Actor.Receive" class="extmbr" name="csw.services.pkg.Supervisor.Receive">Receive</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@serviceRefs:scala.collection.immutable.Set[csw.services.loc.ServiceRef]" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="csw.services.pkg.Supervisor#services" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="services:List[csw.services.loc.ServiceId]"></a>
-      <a id="services:List[ServiceId]"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">services</span><span class="result">: <a href="../../../scala/package.html#List[+A]=List[A]" class="extmbr" name="scala.List">List</a>[<a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor@services:List[csw.services.loc.ServiceId]" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@supervisorReceivePF:Supervisor.this.Receive" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -854,6 +1243,23 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@toString():String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="akka.actor.Actor#unhandled" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="unhandled(message:Any):Unit"></a>
       <a id="unhandled(Any):Unit"></a>
@@ -863,7 +1269,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">unhandled</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">unhandled</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@unhandled(message:Any):Unit" title="Permalink" target="_top">
@@ -880,7 +1286,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@wait():Unit" title="Permalink" target="_top">
@@ -903,7 +1309,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
@@ -926,7 +1332,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor@wait(x$1:Long):Unit" title="Permalink" target="_top">
@@ -940,6 +1346,27 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="→[B](y:B):(A,B)"></a>
+      <a id="→[B](B):(Supervisor,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>, <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor@→[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
     </li></ol>
             </div>
 
@@ -949,24 +1376,32 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></h3>
-            </div><div class="parent" name="java.io.Serializable">
-              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
-            </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a></h3>
-            </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Equals" class="extype" target="_top">Equals</a></h3>
-            </div><div class="parent" name="akka.actor.ActorLogging">
+        <div class="parent" name="akka.actor.ActorLogging">
               <h3>Inherited from <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></h3>
             </div><div class="parent" name="akka.actor.Actor">
               <h3>Inherited from <span class="extype" name="akka.actor.Actor">Actor</span></h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
-        
+        <div class="conversion" name="scala.Predef.any2stringadd">
+              <h3>Inherited by implicit conversion any2stringadd from
+                <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.StringFormat">
+              <h3>Inherited by implicit conversion StringFormat from
+                <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.Ensuring">
+              <h3>Inherited by implicit conversion Ensuring from
+                <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.ArrowAssoc">
+              <h3>Inherited by implicit conversion ArrowAssoc from
+                <a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a> to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.pkg.Supervisor">Supervisor</a>]
+              </h3>
+            </div>
         </div>
 
         <div id="groupedMembers">

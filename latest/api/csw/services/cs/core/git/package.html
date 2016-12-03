@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../../index.html';
@@ -47,10 +47,10 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Contains the git specific code for the config service.</p><p><a href="GitConfigManager.html" class="extype" name="csw.services.cs.core.git.GitConfigManager">csw.services.cs.core.git.GitConfigManager</a> defines the Scala API.</p><p><a href="JGitConfigManager.html" class="extype" name="csw.services.cs.core.git.JGitConfigManager">csw.services.cs.core.git.JGitConfigManager</a> defines a Java API wrapper.
-</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Contains the git specific code for the config service.</p><p><a href="GitConfigManager.html" class="extype" name="csw.services.cs.core.git.GitConfigManager">csw.services.cs.core.git.GitConfigManager</a> defines the Scala API.
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//cs/src/main/scala/csw/services/cs/core/git/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -61,7 +61,7 @@
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -74,7 +74,7 @@
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -115,42 +115,6 @@ be able to handle the concurrent usage, but not the local repo, which has files 
 working directory. Having the files checked out in working directory should help avoid
 having to download them every time an application starts.</p><p>Only one instance of this class should exist for a given local Git repository.
 </p></div></div>
-    </li><li name="csw.services.cs.core.git.JGitConfigData" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="JGitConfigDataextendsJConfigDatawithProductwithSerializable"></a>
-      <a id="JGitConfigData:JGitConfigData"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="JGitConfigData.html"><span class="name">JGitConfigData</span></a><span class="params">(<span name="configData">configData: <a href="../ConfigData.html" class="extype" name="csw.services.cs.core.ConfigData">ConfigData</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="../../JConfigData.html" class="extype" name="csw.services.cs.JConfigData">JConfigData</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../../index.html#csw.services.cs.core.git.package@JGitConfigDataextendsJConfigDatawithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="csw.services.cs.core.git.JGitConfigManager" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="JGitConfigManagerextendsJConfigManagerwithProductwithSerializable"></a>
-      <a id="JGitConfigManager:JGitConfigManager"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="JGitConfigManager.html"><span class="name">JGitConfigManager</span></a><span class="params">(<span name="gitWorkDir">gitWorkDir: <span class="extype" name="java.io.File">File</span></span>, <span name="remoteRepo">remoteRepo: <span class="extype" name="java.net.URI">URI</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="../../JConfigManager.html" class="extype" name="csw.services.cs.JConfigManager">JConfigManager</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../../index.html#csw.services.cs.core.git.package@JGitConfigManagerextendsJConfigManagerwithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Uses JGit to manage versions of configuration files.</p><div class="fullcomment"><div class="comment cmt"><p>Uses JGit to manage versions of configuration files.</p><p>Note: This version is for use by Java applications. Scala applications should use
-<a href="GitConfigManager.html" class="extype" name="csw.services.cs.core.git.GitConfigManager">csw.services.cs.core.git.GitConfigManager</a>.
-</p></div></div>
     </li></ol>
             </div>
 
@@ -188,7 +152,7 @@ having to download them every time an application starts.</p><p>Only one instanc
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

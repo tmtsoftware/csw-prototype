@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -48,13 +48,13 @@
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><h4> Configuration Service </h4><p>This project implements the Configuration Service, which is used to manage configuration
-files by storing them in a Git repository.</p><h5> Config Service API </h5><p>The config service can be accessed by sending messages to the config service actor,
+files by storing them in a Git or Subversion repository.</p><h5> Config Service API </h5><p>The config service can be accessed by sending messages to the config service actor,
 however the ConfigServiceClient wrapper class implements the ConfigManager trait
 and provides a somewhat simpler API.</p><h5> Config Service Application </h5><p>Before starting the config service, the <i>location service</i>
 and the the <i>config service annex server</i>
 should both be running.
 You can start the config service with the <code>cs</code> command (found under target/universal/stage/bin).
-The default config service name and the location of the local and main Git repositories is defined in resources/reference.conf.
+The default config service name and the locations of the repositories are defined in resources/reference.conf.
 Alternatively you can specify a different config file on the command line in the same format.
 You can also override the values with system properties. For example:</p><pre>cs -Dcsw.services.cs.name=MyConfigServiceName
    -Dcsw.services.cs.main-repository=http:<span class="cmt">//myHost/MyMainRepo/</span>
@@ -65,7 +65,7 @@ The HTTP/REST interface to the command service follows the scala and java APIs.<
 The <code>path</code> query argument is always required. All other query arguments are optional.
 The <code>id</code> argument (a <code>ConfigId</code>) must be taken from the JSON result of <code>create</code>, <code>update</code>, <code>list</code>, or <code>history</code>.</p><p>The format of the JSON returned from <code>create</code> and <code>update</code> is:
 <code>{&quot;ConfigId&quot;:&quot;da807342bcc21766316c3a91a01f4a513a1adbb3&quot;}</code>. The <code>id</code> query argument passed to the other methods is
- the value at right.</p><h5> Example or using curl to access the Config Service Http Server </h5><p>Assuming that the config service http server is running on localhost on port 8541 (see config file, default: reference.conf):</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/create?path=some/test1/TestConfig1&comment=comment+here' --data-binary @TestConfig1</span></pre><p>   Creates a new file in the config service named some/test1/TestConfig1 using the data in the local file TestConfig1.</p><pre>curl 'http:<span class="cmt">//localhost:8541/get?path=some/test1/TestConfig1' > TestConfig1a</span></pre><p>   Gets the contents of some/test1/TestConfig1 from the service and store in a local file.</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1</span></pre><p>   Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.</p><pre>curl -s 'http:<span class="cmt">//localhost:8541/history?path=some/test1/TestConfig1'</span></pre><p>   Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:</p><pre>[
+the value at right.</p><h5> Example or using curl to access the Config Service Http Server </h5><p>Assuming that the config service http server is running on localhost on port 8541 (see config file, default: reference.conf):</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/create?path=some/test1/TestConfig1&comment=comment+here' --data-binary @TestConfig1</span></pre><p>Creates a new file in the config service named some/test1/TestConfig1 using the data in the local file TestConfig1.</p><pre>curl 'http:<span class="cmt">//localhost:8541/get?path=some/test1/TestConfig1' > TestConfig1a</span></pre><p>Gets the contents of some/test1/TestConfig1 from the service and store in a local file.</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1</span></pre><p>Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.</p><pre>curl -s 'http:<span class="cmt">//localhost:8541/history?path=some/test1/TestConfig1'</span></pre><p>Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:</p><pre>[
    {
       <span class="lit">"comment"</span> : <span class="lit">"update 2 comment"</span>,
       <span class="lit">"time"</span> : <span class="num">1421010506000</span>,
@@ -81,7 +81,7 @@ The <code>id</code> argument (a <code>ConfigId</code>) must be taken from the JS
       <span class="lit">"time"</span> : <span class="num">1421010505000</span>,
       <span class="lit">"id"</span> : <span class="lit">"f6e5266afc159f5d870ea1ac48c048ffa3913434"</span>
    }
-]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/list'</span></pre><p>   Returns JSON listing the files in the config service repository.</p><pre>[
+]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/list'</span></pre><p>Returns JSON listing the files in the config service repository.</p><pre>[
    {
       <span class="lit">"comment"</span> : <span class="lit">"create comment"</span>,
       <span class="lit">"id"</span> : <span class="lit">"f6e5266afc159f5d870ea1ac48c048ffa3913434"</span>,
@@ -97,25 +97,21 @@ The <code>id</code> argument (a <code>ConfigId</code>) must be taken from the JS
       <span class="lit">"id"</span> : <span class="lit">"77c35d529c1e46113bd2f68b6f0550e81d8dbfec"</span>,
       <span class="lit">"path"</span> : <span class="lit">"README"</span>
    }
-]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/getDefault?path=some/test1/TestConfig1</span></pre><p>   Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'</span></pre><p>   Sets the default version of the file to the one with the given id (an id returned by the history command).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/resetDefault?path=some/test1/TestConfig1'</span></pre><p>   Resets the default version of the file to be the latest version.</p><h5> Main Packages </h5><ul><li>core - the core implementation of the API based on JGit</li><li>akka - (based on core) the Akka actor interface as well as the http server and client interfaces.</li></ul><p>Large/binary files can slow down the Git repository, so these are stored separately using
-the the ConfigServiceAnnex http file server.</p><p>When you first create a config file, you can choose to store it in the normal way (in the Git repository)
+]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/getDefault?path=some/test1/TestConfig1</span></pre><p>Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'</span></pre><p>Sets the default version of the file to the one with the given id (an id returned by the history command).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/resetDefault?path=some/test1/TestConfig1'</span></pre><p>Resets the default version of the file to be the latest version.</p><h5> Main Packages </h5><p>- core - the core implementation of the API (based on Git or Svn)
+- akka - (based on core) the Akka actor interface as well as the http server and client interfaces.</p><p>Large/binary files can slow down the repository, so these are stored separately using
+the the ConfigServiceAnnex http file server.</p><p>When you first create a config file, you can choose to store it in the normal way (in the repository)
 or as a *large/binary* file, in which case only *$file.sha1* is checked in, containing the SHA-1 hash of the
 file's contents. The actual binary file is then stored on the annex server in a file name based on the SHA-1 hash.</p><p>The config service also supports the concept of *default versions* of files. In this case a file named
-  *$file.default* is checked in to Git behind the scenes and contains the id of the default version of the file.
+*$file.default* is checked in behind the scenes and contains the id of the default version of the file.
 If there is no default, this file is not present and the latest version is always considered the default.</p><p>The config service can be started as a standalone application. *sbt stage* installs the command under
 target/universal/stage/bin.
 The standalone configs service registers itself with the location service so that it
-can be found by other applications.</p><p>The contents of the files are exchanged using [Akka reactive streams](http://www.typesafe.com/activator/template/akka-stream-scala).</p><h5> No concurrent access to local Git repository </h5><p>Note that each instance of the config service should manage its own local Git repository.
-All of the local repositories may reference a common central repository, however it is probably not
-safe to allow concurrent access to the local Git repository, which reads and writes files
-in the Git working directory.</p><p>Having copies of the files in the Git working directory has the advantage of being a kind of *cache*,
-so that the files do not have to be pulled from the server each time they are needed.
-However care needs to be taken not to allow different threads to potentially read and write the
-same files at once.</p><h5> Running the tests </h5><p>To run the unit tests, use <code>sbt test</code>.
+can be found by other applications.</p><p>The contents of the files are exchanged using [Akka reactive streams](http://www.typesafe.com/activator/template/akka-stream-scala).</p><h5> No concurrent access to local repository </h5><p>Note that each instance of the config service actor should manage its own local repository, in order to ensure that
+there are no conflicting, concurrent activities in the repository.</p><h5> Running the tests </h5><p>To run the unit tests, use <code>sbt test</code>.
 To run the multi-jvm tests, use <code>sbt multi-jvm:test</code>.
-</p></div><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//cs/src/main/scala/csw/services/cs/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -126,7 +122,7 @@ To run the multi-jvm tests, use <code>sbt multi-jvm:test</code>.
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -139,7 +135,7 @@ To run the multi-jvm tests, use <code>sbt multi-jvm:test</code>.
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -152,44 +148,7 @@ To run the multi-jvm tests, use <code>sbt multi-jvm:test</code>.
         <div id="allMembers">
         
 
-        <div id="types" class="types members">
-              <h3>Type Members</h3>
-              <ol><li name="csw.services.cs.JConfigData" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="JConfigDataextendsObject"></a>
-      <a id="JConfigData:JConfigData"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="JConfigData.html"><span class="name">JConfigData</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.cs.package@JConfigDataextendsObject" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="csw.services.cs.JConfigManager" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="JConfigManagerextendsObject"></a>
-      <a id="JConfigManager:JConfigManager"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="JConfigManager.html"><span class="name">JConfigManager</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.cs.package@JConfigManagerextendsObject" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li></ol>
-            </div>
+        
 
         
 
@@ -243,7 +202,7 @@ Akka streams are used to transfer files between client and server.
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

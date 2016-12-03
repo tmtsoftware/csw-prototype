@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -49,13 +49,17 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>TimeServiceSchedule provides a component actor with timed messages
-scheduleOne -  sends a message to an actor once some time in the future
-schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled</p><p>Must extend an Actor with ActorLogging
-</p></div><dl class="attributes block"> <dt>Self Type</dt><dd><a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> with <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>TimeServiceSchedule provides a component actor with timed messages</p><p>scheduleOnce -  sends a message to an actor once some time in the future</p><p>schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled</p><p>Must extend an Actor with ActorLogging
+</p></div><dl class="attributes block"> <dt>Self Type</dt><dd><a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> with <span class="extype" name="akka.actor.Actor">Actor</span></dd><dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//ts/src/main/scala/csw/services/ts/TimeService.scala" target="_blank">TimeService.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block">
+            <span class="toggle">Known Subclasses</span>
+            <div class="subClasses hiddenContent"><a href="AbstractTimeServiceScheduler.html" class="extype" name="csw.services.ts.AbstractTimeServiceScheduler">AbstractTimeServiceScheduler</a>, <a href="../../examples/vsliceJava/assembly/DiagPublisher.html" class="extype" name="csw.examples.vsliceJava.assembly.DiagPublisher">DiagPublisher</a>, <a href="../../examples/vslice/assembly/DiagPublisher.html" class="extype" name="csw.examples.vslice.assembly.DiagPublisher">DiagPublisher</a>, <a href="../../examples/HCDExample.html" class="extype" name="csw.examples.HCDExample">HCDExample</a>, <a href="../../../javacsw/services/ts/JTimeServiceScheduler.html" class="extype" name="javacsw.services.ts.JTimeServiceScheduler">JTimeServiceScheduler</a>, <a href="JavaTimeServiceScheduler.html" class="extype" name="csw.services.ts.JavaTimeServiceScheduler">JavaTimeServiceScheduler</a>, <a href="../../examples/vslice/hcd/MotionWorker.html" class="extype" name="csw.examples.vslice.hcd.MotionWorker">MotionWorker</a>, <a href="../../examples/HCDExample$$PosGenerator.html" class="extype" name="csw.examples.HCDExample.PosGenerator">PosGenerator</a>, <a href="../../examples/vsliceJava/hcd/SingleAxisSimulator.html" class="extype" name="csw.examples.vsliceJava.hcd.SingleAxisSimulator">SingleAxisSimulator</a>, <a href="../../examples/vslice/hcd/SingleAxisSimulator.html" class="extype" name="csw.examples.vslice.hcd.SingleAxisSimulator">SingleAxisSimulator</a></div>
+          </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
+                <span class="toggle diagram-link">Type Hierarchy</span>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 1002.50 155.00" height="155pt" width="1003pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 998.5,-151 998.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="csw.services.ts.TimeService.TimeServiceScheduler (this trait)" xlink:href="#inheritance-diagram"><polygon points="589,-86 448,-86 448,-61 589,-61 589,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-80.5" x="458.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="479.5" text-anchor="start">TimeServiceScheduler</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="csw.services.ts.AbstractTimeServiceScheduler" xlink:href="AbstractTimeServiceScheduler.html#inheritance-diagram"><polygon points="177,-25 1.42109e-14,-25 1.42109e-14,-0 177,-0 177,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="31.5" text-anchor="start">AbstractTimeServiceScheduler</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="AbstractTimeServiceScheduler is a subtype of TimeServiceScheduler"><path d="M442.593,-62.0849C366.853,-51.6926 250.762,-35.7639 172.344,-25.0042" stroke="#d4d4d4" fill="none"></path><polygon points="442.784,-63.8774 447.976,-62.8234 443.26,-60.4099 442.784,-63.8774" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="csw.examples.vslice.assembly.DiagPublisher" xlink:href="../../examples/vslice/assembly/DiagPublisher.html#inheritance-diagram"><polygon points="300,-25 195,-25 195,-0 300,-0 300,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="205.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="226.5" text-anchor="start">DiagPublisher</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="DiagPublisher is a subtype of TimeServiceScheduler"><path d="M460.489,-59.8703C412.968,-49.5244 346.294,-35.0086 300.261,-24.9868" stroke="#d4d4d4" fill="none"></path><polygon points="460.347,-61.6304 465.605,-60.9841 461.092,-58.2105 460.347,-61.6304" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="csw.examples.HCDExample" xlink:href="../../examples/HCDExample.html#inheritance-diagram"><polygon points="421,-25 318,-25 318,-0 421,-0 421,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="328.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="349.5" text-anchor="start">HCDExample</text></a></g></g><!-- node0&#45;&gt;node3 --><g class="edge inheritance" id="graph1_0_3"><g id="a_inheritance|graph1_0_3"><a xlink:title="HCDExample is a subtype of TimeServiceScheduler"><path d="M484.698,-59.1152C458.806,-48.8627 423.452,-34.8634 398.763,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="484.124,-60.7704 489.418,-60.9841 485.413,-57.5162 484.124,-60.7704" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node4 --><g class="node class" id="graph1_4"><g id="a_class|graph1_4"><a xlink:title="csw.services.ts.JavaTimeServiceScheduler" xlink:href="JavaTimeServiceScheduler.html#inheritance-diagram"><polygon points="598,-25 439,-25 439,-0 598,-0 598,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="449.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="470.5" text-anchor="start">JavaTimeServiceScheduler</text></a></g></g><!-- node0&#45;&gt;node4 --><g class="edge inheritance" id="graph1_0_4"><g id="a_inheritance|graph1_0_4"><a xlink:title="JavaTimeServiceScheduler is a subtype of TimeServiceScheduler"><path d="M518.5,-55.6874C518.5,-45.9173 518.5,-33.8534 518.5,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="516.75,-55.8435 518.5,-60.8435 520.25,-55.8435 516.75,-55.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node5 --><g class="node class" id="graph1_5"><g id="a_class|graph1_5"><a xlink:title="csw.examples.vslice.hcd.MotionWorker" xlink:href="../../examples/vslice/hcd/MotionWorker.html#inheritance-diagram"><polygon points="721,-25 616,-25 616,-0 721,-0 721,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="626.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="647.5" text-anchor="start">MotionWorker</text></a></g></g><!-- node0&#45;&gt;node5 --><g class="edge inheritance" id="graph1_0_5"><g id="a_inheritance|graph1_0_5"><a xlink:title="MotionWorker is a subtype of TimeServiceScheduler"><path d="M552.529,-59.1152C578.595,-48.8627 614.186,-34.8634 639.04,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="551.79,-57.5253 547.778,-60.9841 553.071,-60.7825 551.79,-57.5253" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node6 --><g class="node class" id="graph1_6"><g id="a_class|graph1_6"><a xlink:title="csw.examples.HCDExample.PosGenerator" xlink:href="../../examples/HCDExample$$PosGenerator.html#inheritance-diagram"><polygon points="844,-25 739,-25 739,-0 844,-0 844,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="749.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="770.5" text-anchor="start">PosGenerator</text></a></g></g><!-- node0&#45;&gt;node6 --><g class="edge inheritance" id="graph1_0_6"><g id="a_inheritance|graph1_0_6"><a xlink:title="PosGenerator is a subtype of TimeServiceScheduler"><path d="M576.956,-59.8666C624.987,-49.4864 692.432,-34.9103 738.814,-24.8864" stroke="#d4d4d4" fill="none"></path><polygon points="576.303,-58.2174 571.785,-60.9841 577.042,-61.6384 576.303,-58.2174" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node7 --><g class="node class" id="graph1_7"><g id="a_class|graph1_7"><a xlink:title="csw.examples.vslice.hcd.SingleAxisSimulator" xlink:href="../../examples/vslice/hcd/SingleAxisSimulator.html#inheritance-diagram"><polygon points="994.5,-25 862.5,-25 862.5,-0 994.5,-0 994.5,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="872.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="893.5" text-anchor="start">SingleAxisSimulator</text></a></g></g><!-- node0&#45;&gt;node7 --><g class="edge inheritance" id="graph1_0_7"><g id="a_inheritance|graph1_0_7"><a xlink:title="SingleAxisSimulator is a subtype of TimeServiceScheduler"><path d="M594.354,-61.9935C662.276,-52.5264 764.58,-38.1207 853.5,-25 856.367,-24.577 859.295,-24.1417 862.253,-23.6994" stroke="#d4d4d4" fill="none"></path><polygon points="593.827,-60.2999 589.117,-62.7232 594.31,-63.7664 593.827,-60.2999" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node8 --><g class="node class" id="graph1_8"><g id="a_class|graph1_8"><a xlink:title="scala.AnyRef"><polygon points="556.5,-147 480.5,-147 480.5,-122 556.5,-122 556.5,-147" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-141.5" x="490.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-131.5" x="511.5" text-anchor="start">AnyRef</text></a></g></g><!-- node8&#45;&gt;node0 --><g class="edge inheritance" id="graph1_8_0"><g id="a_inheritance|graph1_8_0"><a xlink:title="TimeServiceScheduler is a subtype of AnyRef"><path d="M518.5,-116.687C518.5,-106.917 518.5,-94.8534 518.5,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="516.75,-116.843 518.5,-121.843 520.25,-116.844 516.75,-116.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
         
 
       <div id="mbrsel">
@@ -65,7 +69,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -75,10 +79,15 @@ schedule    -  waits until a specific time and then sends periodic message to an
                   <li class="in" name="csw.services.ts.TimeService.TimeServiceScheduler"><span>TimeServiceScheduler</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
+                <span class="filtertype">Implicitly<br />
+                </span>
+                <ol id="implicits"> <li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
+                </ol>
+              </div><div id="ancestors">
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -106,7 +115,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@!=(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -123,7 +132,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@##():Int" title="Permalink" target="_top">
@@ -131,6 +140,51 @@ schedule    -  waits until a specific time and then sends periodic message to an
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Predef.any2stringadd#+" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="+(other:String):String"></a>
+      <a id="+(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $plus" class="implicit">+</span><span class="params">(<span name="other">other: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@+(other:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method any2stringadd in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="-&gt;[B](y:B):(A,B)"></a>
+      <a id="-&gt;[B](B):(TimeServiceScheduler,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>, <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a>
       <a id="==(Any):Boolean"></a>
@@ -140,7 +194,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@==(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -197,7 +251,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">ec</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.concurrent.ExecutionContextExecutor" class="extype" target="_top">ExecutionContextExecutor</a></span>
+        <span class="name">ec</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.concurrent.ExecutionContextExecutor" class="extype" target="_top">ExecutionContextExecutor</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@ec:scala.concurrent.ExecutionContextExecutor" title="Permalink" target="_top">
@@ -205,6 +259,90 @@ schedule    -  waits until a specific time and then sends periodic message to an
       </a>
     </span>
       
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring((TimeServiceScheduler)⇒Boolean,⇒Any):TimeServiceScheduler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean):A"></a>
+      <a id="ensuring((TimeServiceScheduler)⇒Boolean):TimeServiceScheduler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring(Boolean,⇒Any):TimeServiceScheduler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean):A"></a>
+      <a id="ensuring(Boolean):TimeServiceScheduler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@ensuring(cond:Boolean):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -214,7 +352,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -231,7 +369,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@equals(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -248,7 +386,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@finalize():Unit" title="Permalink" target="_top">
@@ -260,6 +398,30 @@ schedule    -  waits until a specific time and then sends periodic message to an
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
     </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="formatted(fmtstr:String):String"></a>
+      <a id="formatted(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">formatted</span><span class="params">(<span name="fmtstr">fmtstr: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@formatted(fmtstr:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method StringFormat in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
               
         </dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -288,7 +450,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@hashCode():Int" title="Permalink" target="_top">
@@ -305,7 +467,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
@@ -322,7 +484,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -339,7 +501,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@notify():Unit" title="Permalink" target="_top">
@@ -356,7 +518,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@notifyAll():Unit" title="Permalink" target="_top">
@@ -373,7 +535,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">schedule</span><span class="params">(<span name="startTime">startTime: <span class="extype" name="java.time.LocalTime">LocalTime</span></span>, <span name="period">period: <span class="extype" name="java.time.Duration">Duration</span></span>, <span name="receiver">receiver: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <span class="extype" name="akka.actor.Cancellable">Cancellable</span></span>
+        <span class="name">schedule</span><span class="params">(<span name="startTime">startTime: <span class="extype" name="java.time.LocalTime">LocalTime</span></span>, <span name="period">period: <span class="extype" name="java.time.Duration">Duration</span></span>, <span name="receiver">receiver: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <span class="extype" name="akka.actor.Cancellable">Cancellable</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@schedule(startTime:java.time.LocalTime,period:java.time.Duration,receiver:akka.actor.ActorRef,message:Any):akka.actor.Cancellable" title="Permalink" target="_top">
@@ -382,7 +544,8 @@ schedule    -  waits until a specific time and then sends periodic message to an
     </span>
       <p class="shortcomment cmt">Schedule a message to be sent periodically to an actor starting at a future time.</p><div class="fullcomment"><div class="comment cmt"><p>Schedule a message to be sent periodically to an actor starting at a future time. The scheduler must be
 cancelled to stop the message.
-Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="param">startTime</dt><dd class="cmt"><p>a LocalTime when the first message should be sent</p></dd><dt class="param">period</dt><dd class="cmt"><p>the Duration between messages</p></dd><dt class="param">receiver</dt><dd class="cmt"><p>an actorRef for an actor that will receive the message</p></dd><dt class="param">message</dt><dd class="cmt"><p>some message to be sent</p></dd><dt>returns</dt><dd class="cmt"><p>a Cancellable that can be used to cancel the timer</p></dd></dl></div>
+Uses Java 8 java.time types.
+</p></div><dl class="paramcmts block"><dt class="param">startTime</dt><dd class="cmt"><p>a LocalTime when the first message should be sent</p></dd><dt class="param">period</dt><dd class="cmt"><p>the Duration between messages</p></dd><dt class="param">receiver</dt><dd class="cmt"><p>an actorRef for an actor that will receive the message</p></dd><dt class="param">message</dt><dd class="cmt"><p>some message to be sent</p></dd><dt>returns</dt><dd class="cmt"><p>a Cancellable that can be used to cancel the timer</p></dd></dl></div>
     </li><li name="csw.services.ts.TimeService.TimeServiceScheduler#scheduleOnce" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="scheduleOnce(startTime:java.time.LocalTime,receiver:akka.actor.ActorRef,message:Any):akka.actor.Cancellable"></a>
       <a id="scheduleOnce(LocalTime,ActorRef,Any):Cancellable"></a>
@@ -392,7 +555,7 @@ Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="par
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">scheduleOnce</span><span class="params">(<span name="startTime">startTime: <span class="extype" name="java.time.LocalTime">LocalTime</span></span>, <span name="receiver">receiver: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <span class="extype" name="akka.actor.Cancellable">Cancellable</span></span>
+        <span class="name">scheduleOnce</span><span class="params">(<span name="startTime">startTime: <span class="extype" name="java.time.LocalTime">LocalTime</span></span>, <span name="receiver">receiver: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <span class="extype" name="akka.actor.Cancellable">Cancellable</span></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@scheduleOnce(startTime:java.time.LocalTime,receiver:akka.actor.ActorRef,message:Any):akka.actor.Cancellable" title="Permalink" target="_top">
@@ -400,7 +563,8 @@ Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="par
       </a>
     </span>
       <p class="shortcomment cmt">Schedule a message to be sent once to an actor at a future time.</p><div class="fullcomment"><div class="comment cmt"><p>Schedule a message to be sent once to an actor at a future time.
-Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="param">startTime</dt><dd class="cmt"><p>a LocalTime when the message should be sent</p></dd><dt class="param">receiver</dt><dd class="cmt"><p>an actorRef for an actor that will receive the message</p></dd><dt class="param">message</dt><dd class="cmt"><p>some message to be sent</p></dd><dt>returns</dt><dd class="cmt"><p>a Cancellable that can be used to cancel the timer</p></dd></dl></div>
+Uses Java 8 java.time types.
+</p></div><dl class="paramcmts block"><dt class="param">startTime</dt><dd class="cmt"><p>a LocalTime when the message should be sent</p></dd><dt class="param">receiver</dt><dd class="cmt"><p>an actorRef for an actor that will receive the message</p></dd><dt class="param">message</dt><dd class="cmt"><p>some message to be sent</p></dd><dt>returns</dt><dd class="cmt"><p>a Cancellable that can be used to cancel the timer</p></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -444,7 +608,7 @@ Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="par
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@wait():Unit" title="Permalink" target="_top">
@@ -467,7 +631,7 @@ Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="par
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
@@ -490,7 +654,7 @@ Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="par
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@wait(x$1:Long):Unit" title="Permalink" target="_top">
@@ -504,6 +668,27 @@ Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="par
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="→[B](y:B):(A,B)"></a>
+      <a id="→[B](B):(TimeServiceScheduler,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>, <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$$TimeServiceScheduler@→[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
     </li></ol>
             </div>
 
@@ -516,9 +701,25 @@ Uses Java 8 java.time types.</p></div><dl class="paramcmts block"><dt class="par
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
-        
+        <div class="conversion" name="scala.Predef.any2stringadd">
+              <h3>Inherited by implicit conversion any2stringadd from
+                <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.StringFormat">
+              <h3>Inherited by implicit conversion StringFormat from
+                <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.Ensuring">
+              <h3>Inherited by implicit conversion Ensuring from
+                <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.ArrowAssoc">
+              <h3>Inherited by implicit conversion ArrowAssoc from
+                <a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a> to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a>]
+              </h3>
+            </div>
         </div>
 
         <div id="groupedMembers">

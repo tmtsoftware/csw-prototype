@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../index.html';
@@ -75,7 +75,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="ContainerCmd.html"><span class="name">ContainerCmd</span></a><span class="params">(<span name="args">args: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="resource">resource: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../../../scala/package.html">None</a></span></span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ContainerCmd.html"><span class="name">ContainerCmd</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="args">args: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="resources">resources: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map.empty</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.containerCmd.package@ContainerCmdextendsProductwithSerializable" title="Permalink" target="_top">
@@ -83,12 +83,15 @@
       </a>
     </span>
       <p class="shortcomment cmt">Can be used by a command line application to create a container with components
-(HCDs, assemblies) specified in a config file, which can be either a resource,
-a local file, or a file checked out from the config service.</p><div class="fullcomment"><div class="comment cmt"><p>Can be used by a command line application to create a container with components
-(HCDs, assemblies) specified in a config file, which can be either a resource,
-a local file, or a file checked out from the config service.
-Note that all the dependencies for the created components must already be in the classpath.
-</p></div><dl class="paramcmts block"><dt class="param">args</dt><dd class="cmt"><p>the command line arguments</p></dd><dt class="param">resource</dt><dd class="cmt"><p>optional name of default config file (under src/main/resources)</p></dd></dl></div>
+(HCDs, assemblies) specified in a config file, which can be either a resource or
+a local file.</p><div class="fullcomment"><div class="comment cmt"><p>Can be used by a command line application to create a container with components
+(HCDs, assemblies) specified in a config file, which can be either a resource or
+a local file.
+Note that all the dependencies for the created components must already be in the classpath.</p><p>The optional resources argument lets you use the --start option to pass a name (such as &quot;hcd&quot; or &quot;assembly&quot;)
+that maps to a resource file to use to start that component.
+For example:</p><pre><span class="kw">val</span> m = <span class="std">Map</span>(<span class="lit">"hcd"</span> -&gt; <span class="lit">"tromboneHCD.conf"</span>, <span class="lit">"assembly"</span> -&gt; <span class="lit">"tromboneAssembly.conf"</span>, <span class="lit">""</span> -&gt; <span class="lit">"tromboneContainer.conf"</span>)
+ContainerCmd(<span class="lit">"vslice"</span>, args, m)</pre><p>If no --start option is given, the default resource at the empty key (&quot;&quot;) is used (&quot;tromboneContainer.conf&quot; here).
+</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>the name of the application</p></dd><dt class="param">args</dt><dd class="cmt"><p>the command line arguments</p></dd><dt class="param">resources</dt><dd class="cmt"><p>optional map of name to config file (under src/main/resources, &quot;&quot; maps to the default resource)</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -105,7 +108,7 @@ Note that all the dependencies for the created components must already be in the
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="ContainerCmd$.html"><span class="name">ContainerCmd</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ContainerCmd$.html"><span class="name">ContainerCmd</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.containerCmd.package@ContainerCmd" title="Permalink" target="_top">

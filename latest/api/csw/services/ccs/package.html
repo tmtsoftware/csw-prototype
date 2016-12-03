@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -47,66 +47,37 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>This package defines actors and actor traits for use by Assembly and HCD implementations.
-The API to an actor consists of the message it receives (normally defined in the companion object)
-and the replies it sends. These are documented in the individual actor classes.</p><p>This is an <a href="http://akka.io/" target="_blank">Akka actor</a> based project.
-The main actors (or actor traits) here are:</p><p>- <b><a href="AssemblyController.html" class="extype" name="csw.services.ccs.AssemblyController">csw.services.ccs.AssemblyController</a></b> - trait for an actor that accepts configurations for an Assembly and communicates with
-one or more HCDs or other assemblies before replying with a command status</p><p>- <b><a href="HcdController.html" class="extype" name="csw.services.ccs.HcdController">HcdController</a></b> - trait for an actor that accepts configurations (from an Assembly) for an HCD.
-The HCD controller sets a state variable, which is used by the assembly to determine when a command has completed.</p><p>- <b><a href="PeriodicHcdController.html" class="extype" name="csw.services.ccs.PeriodicHcdController">PeriodicHcdController</a></b> - like HcdController, but has a Queue of configurations that it checks at a specified rate.
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><h4> CCS - Command and Control Service </h4><p>The ccs project defines the basic classes and traits for the <i>Command and Control Service</i>.</p><p>Related projects are the <i>util</i> project, which defines the types for <i>configurations</i> and the
+<i>pkg</i> project, which defines the Hcd and Assembly classes, lifecycle manager and supervisor for components.</p><p>This is an actor based project.
+The main actors (or actor traits) here are:</p><p>- <code>AssemblyController</code> - trait for an actor that accepts configurations for an Assembly and communicates with
+one or more HCDs or other assemblies before replying with a command status</p><p>- <code>HcdController</code> - trait for an actor that accepts configurations (from an Assembly) for an HCD.
+The HCD controller publishes its *current state*, and the assembly can subscribe to it to determine when a command has completed.</p><p>- <code>HcdStatusMatcherActor</code> - an actor used to match demand and current state by subscribing to HCD status messages and then notifying a given actor</p><p>The following classes are deprecated and may be removed in a future release:</p><p>- <code>PeriodicHcdController</code> - like HcdController, but has a Queue of configurations that it checks at a specified rate.
 This controller wakes up regularly, checks the incoming queue and updates its state variable with the current
-state of the HCD.</p><p>- <b><a href="StateMatcherActor.html" class="extype" name="csw.services.ccs.StateMatcherActor">StateMatcherActor</a></b> - an actor used to match demand and current state and then notify a given actor</p><h5> Example </h5><p>Here is an example periodic controller. It delegates tasks to a worker actor.
-The <code>additionalReceive</code> method could be used to receive custom actor messages.
-The <code>process</code> method, called periodically, at a configured rate, is supposed
-to process any incoming configs in its queue (which it gets with the <code>nextConfig</code> method),
-and then update its state variables (done by the worker):</p><pre><span class="kw">class</span> TestPeriodicHcdController <span class="kw">extends</span> PeriodicHcdController {
+state of the HCD.</p><p>- <code>StateVariableMatcherActor</code> - an actor used to match demand and current state and then notify a given actor</p><p>The <code>CommandStatus</code> class defines status messages to be returned from assemblies to indicate the completion status of a <i>submit</i>.</p><h5> Example HCD Controller Usage </h5><pre><span class="kw">class</span> TestHcdController <span class="kw">extends</span> HcdController <span class="kw">with</span> Actor <span class="kw">with</span> ActorLogging {
 
   <span class="cmt">// Use single worker actor to do work in the background</span>
   <span class="cmt">// (could also use a worker per job/message if needed)</span>
   <span class="kw">val</span> worker = context.actorOf(TestWorker.props())
 
-  <span class="kw">override</span> <span class="kw">def</span> additionalReceive: Receive = Actor.emptyBehavior
-
-  <span class="kw">override</span> <span class="kw">protected</span> <span class="kw">def</span> process(): <span class="std">Unit</span> = {
-    <span class="cmt">// Note: There could be some logic here to decide when to take the next config,</span>
-    <span class="cmt">// if there is more than one in the queue. (nextConfig is an Option, so this</span>
-    <span class="cmt">// only takes one config from the queue, if there is one there).</span>
-    nextConfig.foreach { config ⇒
-      worker ! config
-    }
+  <span class="cmt">// Send the config to the worker for processing</span>
+  <span class="kw">override</span> <span class="kw">protected</span> <span class="kw">def</span> process(config: SetupConfig): <span class="std">Unit</span> = {
+    worker ! config
   }
-}</pre><p>Here is the test worker actor. In this case it simulates doing some work
-and then updates a state variable with the current settings.</p><pre><span class="kw">class</span> TestWorker <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging {
 
-  <span class="kw">import</span> TestWorker._
-  <span class="kw">import</span> context.dispatcher
-
-  <span class="kw">val</span> settings = KvsSettings(context.system)
-  <span class="kw">val</span> svs = StateVariableStore(settings)
-
-  <span class="cmt">// Simulate getting the initial state from the device and publishing to the kvs</span>
-  <span class="kw">val</span> initialState = SetupConfig(testPrefix1).set(position, <span class="lit">"None"</span>)
-  svs.set(initialState)
-
-  <span class="kw">def</span> receive: Receive = {
-    <span class="kw">case</span> config: SetupConfig ⇒
-      <span class="cmt">// Update the demand state variable</span>
-      svs.setDemand(config)
-      <span class="cmt">// Simulate doing work</span>
-      log.info(s<span class="lit">"Start processing $config"</span>)
-      context.system.scheduler.scheduleOnce(<span class="num">2.</span>seconds, self, WorkDone(config))
-
-    <span class="kw">case</span> WorkDone(config) ⇒
-      log.info(s<span class="lit">"Done processing $config"</span>)
-      <span class="cmt">// Simulate getting the current value from the device and publishing it to the kvs</span>
-      log.info(s<span class="lit">"Publishing $config"</span>)
-      svs.set(config)
-
-    <span class="kw">case</span> x ⇒ log.error(s<span class="lit">"Unexpected message $x"</span>)
+  <span class="cmt">// Optional override: Ask the worker actor to send us the current state (handled by parent trait)</span>
+  <span class="kw">override</span> <span class="kw">protected</span> <span class="kw">def</span> requestCurrent(): <span class="std">Unit</span> = {
+    worker ! TestWorker.RequestCurrentState
   }
-}</pre></div><div class="toggleContainer block">
+
+  <span class="cmt">// Use the default actor receive method defined in the parent</span>
+  <span class="kw">override</span> <span class="kw">def</span> receive: Receive = controllerReceive
+}</pre></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//ccs/src/main/scala/csw/services/ccs/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="content-diagram-container">
+                <span class="toggle diagram-link">Content Hierarchy</span>
+                <div class="diagram" id="content-diagram"><svg class="package-diagram" id="graph1" viewBox="0.00 0.00 408.50 94.00" height="94pt" width="409pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 90)" class="graph" id="graph0"><polygon points="-4,4 -4,-90 404.5,-90 404.5,4 -4,4" stroke="none" fill="white"></polygon><!-- node0 --><g class="node class" id="graph1_0"><g id="a_class|graph1_0"><a xlink:title="csw.services.ccs.DemandMatcher" xlink:href="DemandMatcher.html#inheritance-diagram"><polygon points="116,-25 7.10543e-15,-25 7.10543e-15,-0 116,-0 116,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="31" text-anchor="start">DemandMatcher</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="csw.services.ccs.DemandMatcherAll" xlink:href="DemandMatcherAll.html#inheritance-diagram"><polygon points="261.5,-25 134.5,-25 134.5,-0 261.5,-0 261.5,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="145" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="166" text-anchor="start">DemandMatcherAll</text></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="csw.services.ccs.StateMatcher" xlink:href="StateMatcher.html#inheritance-diagram"><polygon points="249.5,-86 146.5,-86 146.5,-61 249.5,-61 249.5,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-80.5" x="157" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="178" text-anchor="start">StateMatcher</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="DemandMatcher is a subtype of StateMatcher"><path d="M165.952,-58.9941C141.734,-48.788 108.83,-34.921 85.7353,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="165.387,-60.655 170.674,-60.9841 166.746,-57.4297 165.387,-60.655" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2&#45;&gt;node1 --><g class="edge inheritance" id="graph1_2_1"><g id="a_inheritance|graph1_2_1"><a xlink:title="DemandMatcherAll is a subtype of StateMatcher"><path d="M198,-55.6874C198,-45.9173 198,-33.8534 198,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="196.25,-55.8435 198,-60.8435 199.75,-55.8435 196.25,-55.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="csw.services.ccs.PresenceMatcher" xlink:href="PresenceMatcher.html#inheritance-diagram"><polygon points="400.5,-25 279.5,-25 279.5,-0 400.5,-0 400.5,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="290" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="311" text-anchor="start">PresenceMatcher</text></a></g></g><!-- node2&#45;&gt;node3 --><g class="edge inheritance" id="graph1_2_3"><g id="a_inheritance|graph1_2_3"><a xlink:title="PresenceMatcher is a subtype of StateMatcher"><path d="M230.506,-58.9941C255.07,-48.788 288.444,-34.921 311.868,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="229.662,-57.4496 225.716,-60.9841 231.005,-60.6817 229.662,-57.4496" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
         
 
       <div id="mbrsel">
@@ -116,7 +87,7 @@ and then updates a state variable with the current settings.</p><pre><span class
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -129,7 +100,7 @@ and then updates a state variable with the current settings.</p><pre><span class
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -144,26 +115,8 @@ and then updates a state variable with the current settings.</p><pre><span class
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="csw.services.ccs.AssemblyClient" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="AssemblyClientextendsProductwithSerializable"></a>
-      <a id="AssemblyClient:AssemblyClient"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="AssemblyClient.html"><span class="name">AssemblyClient</span></a><span class="params">(<span name="assemblyController">assemblyController: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>, <span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@AssemblyClientextendsProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">A client API for assemblies that hides the actor API.</p><div class="fullcomment"><div class="comment cmt"><p>A client API for assemblies that hides the actor API.
-</p></div><dl class="paramcmts block"><dt class="param">assemblyController</dt><dd class="cmt"><p>the actor for the target assembly</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>amount of time to wait for a command to complete before reporting an error</p></dd></dl></div>
-    </li><li name="csw.services.ccs.AssemblyController" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="AssemblyControllerextendsActorwithActorLogging"></a>
+              <ol><li name="csw.services.ccs.AssemblyController" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="AssemblyControllerextendsAnyRef"></a>
       <a id="AssemblyController:AssemblyController"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -171,14 +124,32 @@ and then updates a state variable with the current settings.</p><pre><span class
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="AssemblyController.html"><span class="name">AssemblyController</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+        <a href="AssemblyController.html"><span class="name">AssemblyController</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@AssemblyControllerextendsActorwithActorLogging" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.ccs.package@AssemblyControllerextendsAnyRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Base trait for an assembly controller actor that reacts immediately to SetupConfigArg messages.</p>
+    </li><li name="csw.services.ccs.AssemblyControllerClient" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="AssemblyControllerClientextendsProductwithSerializable"></a>
+      <a id="AssemblyControllerClient:AssemblyControllerClient"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="AssemblyControllerClient.html"><span class="name">AssemblyControllerClient</span></a><span class="params">(<span name="assemblyController">assemblyController: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>, <span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@AssemblyControllerClientextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A client API for assemblies that hides the actor API.</p><div class="fullcomment"><div class="comment cmt"><p>A client API for assemblies that hides the actor API.
+</p></div><dl class="paramcmts block"><dt class="param">assemblyController</dt><dd class="cmt"><p>the actor for the target assembly</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>amount of time to wait for a command to complete before reporting an error</p></dd></dl></div>
     </li><li name="csw.services.ccs.BlockingAssemblyClient" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="BlockingAssemblyClientextendsProductwithSerializable"></a>
       <a id="BlockingAssemblyClient:BlockingAssemblyClient"></a>
@@ -188,7 +159,7 @@ and then updates a state variable with the current settings.</p><pre><span class
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="BlockingAssemblyClient.html"><span class="name">BlockingAssemblyClient</span></a><span class="params">(<span name="client">client: <a href="AssemblyClient.html" class="extype" name="csw.services.ccs.AssemblyClient">AssemblyClient</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>, <span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="BlockingAssemblyClient.html"><span class="name">BlockingAssemblyClient</span></a><span class="params">(<span name="client">client: <a href="AssemblyControllerClient.html" class="extype" name="csw.services.ccs.AssemblyControllerClient">AssemblyControllerClient</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>, <span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ccs.package@BlockingAssemblyClientextendsProductwithSerializable" title="Permalink" target="_top">
@@ -197,43 +168,117 @@ and then updates a state variable with the current settings.</p><pre><span class
     </span>
       <p class="shortcomment cmt">A synchronous, blocking client API for assemblies that hides the actor API.</p><div class="fullcomment"><div class="comment cmt"><p>A synchronous, blocking client API for assemblies that hides the actor API.
 </p></div><dl class="paramcmts block"><dt class="param">client</dt><dd class="cmt"><p>a client for the target assembly</p></dd></dl></div>
-    </li><li name="csw.services.ccs.CommandStatus" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="CommandStatusextendsAnyRef"></a>
-      <a id="CommandStatus:CommandStatus"></a>
+    </li><li name="csw.services.ccs.CommandStatusOld" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="CommandStatusOldextendsAnyRef"></a>
+      <a id="CommandStatusOld:CommandStatusOld"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">sealed </span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="CommandStatus.html"><span class="name">CommandStatus</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a href="CommandStatusOld.html"><span class="name">CommandStatusOld</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@CommandStatusextendsAnyRef" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.ccs.package@CommandStatusOldextendsAnyRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">The status of a running command
 </p>
-    </li><li name="csw.services.ccs.DistributorController" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="DistributorControllerextendsActorwithActorLoggingwithProductwithSerializable"></a>
-      <a id="DistributorController:DistributorController"></a>
+    </li><li name="csw.services.ccs.ConfigDistributor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigDistributorextendsProductwithSerializable"></a>
+      <a id="ConfigDistributor:ConfigDistributor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="DistributorController.html"><span class="name">DistributorController</span></a><span class="params">(<span name="serviceRefs">serviceRefs: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="../loc/ServiceRef.html" class="extype" name="csw.services.loc.ServiceRef">ServiceRef</a>]</span>, <span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ConfigDistributor.html"><span class="name">ConfigDistributor</span></a><span class="params">(<span name="context">context: <span class="extype" name="akka.actor.ActorContext">ActorContext</span></span>, <span name="locations">locations: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="../loc/LocationService$$ResolvedAkkaLocation.html" class="extype" name="csw.services.loc.LocationService.ResolvedAkkaLocation">ResolvedAkkaLocation</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@DistributorControllerextendsActorwithActorLoggingwithProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.ccs.package@ConfigDistributorextendsProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
+      <p class="shortcomment cmt">Created by abrighto on 02/12/16.</p>
+    </li><li name="csw.services.ccs.CurrentStateReceiver" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CurrentStateReceiverextendsActorwithActorLogging"></a>
+      <a id="CurrentStateReceiver:CurrentStateReceiver"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="CurrentStateReceiver.html"><span class="name">CurrentStateReceiver</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@CurrentStateReceiverextendsActorwithActorLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This class distributes CurrentState events within the single ActorSystem of a component allowing &quot;handlers&quot;
+to access a single stream of CurrentState events.</p><div class="fullcomment"><div class="comment cmt"><p>This class distributes CurrentState events within the single ActorSystem of a component allowing &quot;handlers&quot;
+to access a single stream of CurrentState events. The subscribe/unsubscriber messages are the same as the
+ones used in HcdController</p><p>Example:
+<pre>
+  import CurrentStateReceiver._
+
+  val stateReceiver = system.actorOf(CurrentStateReceiver.props)
+
+  // Add an HCD publisher
+  stateReceiver ! AddPublisher(hcdActorRef)
+
+  // An actor wishing to receive CurrentState uses
+  stateReceiver ! AddCurrentStateHandler(handlerActorRef)
+
+  // Later, it can stop receiving CurrentState using
+  stateReceiver ! RemoveCurrentStateHandler(handlerActorRef)
+</pre></p></div></div>
+    </li><li name="csw.services.ccs.DemandMatcher" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="DemandMatcherextendsStateMatcherwithProductwithSerializable"></a>
+      <a id="DemandMatcher:DemandMatcher"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="DemandMatcher.html"><span class="name">DemandMatcher</span></a><span class="params">(<span name="demand">demand: <a href="../../util/config/StateVariable$$DemandState.html" class="extype" name="csw.util.config.StateVariable.DemandState">DemandState</a></span>, <span name="withUnits">withUnits: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>)</span><span class="result"> extends <a href="StateMatcher.html" class="extype" name="csw.services.ccs.StateMatcher">StateMatcher</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@DemandMatcherextendsStateMatcherwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The DemandMatcher checks the CurrentStatus for equality with the items in the DemandState.</p><div class="fullcomment"><div class="comment cmt"><p>The DemandMatcher checks the CurrentStatus for equality with the items in the DemandState.
+This version tests for equality so it may not work the best with floating point values.
+Note: If the withUnits flag is set, the equality check with also compare units. False is the default
+so normally units are ignored for this purpose.
+</p></div><dl class="paramcmts block"><dt class="param">demand</dt><dd class="cmt"><p>a DemandState that will provide the items for determining completion with the CurrentState</p></dd><dt class="param">withUnits</dt><dd class="cmt"><p>when True, units are compared. When false, units are not compared. Default is false.</p></dd></dl></div>
+    </li><li name="csw.services.ccs.DemandMatcherAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="DemandMatcherAllextendsStateMatcherwithProductwithSerializable"></a>
+      <a id="DemandMatcherAll:DemandMatcherAll"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="DemandMatcherAll.html"><span class="name">DemandMatcherAll</span></a><span class="params">(<span name="demand">demand: <a href="../../util/config/StateVariable$$DemandState.html" class="extype" name="csw.util.config.StateVariable.DemandState">DemandState</a></span>)</span><span class="result"> extends <a href="StateMatcher.html" class="extype" name="csw.services.ccs.StateMatcher">StateMatcher</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@DemandMatcherAllextendsStateMatcherwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The DemandMatcherAll checks for equality between the CurrentState and the DemandState.</p><div class="fullcomment"><div class="comment cmt"><p>The DemandMatcherAll checks for equality between the CurrentState and the DemandState.
+This is more inclusive than DemandMatcher and may not be used regularly
+</p></div><dl class="paramcmts block"><dt class="param">demand</dt><dd class="cmt"><p>a DemandState that will be tested for equality with each CurrentState</p></dd></dl></div>
     </li><li name="csw.services.ccs.HcdController" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="HcdControllerextendsActorwithActorLogging"></a>
+      <a id="HcdControllerextendsPublisherActor[csw.util.config.StateVariable.CurrentState]"></a>
       <a id="HcdController:HcdController"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -241,16 +286,177 @@ and then updates a state variable with the current settings.</p><pre><span class
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="HcdController.html"><span class="name">HcdController</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+        <a href="HcdController.html"><span class="name">HcdController</span></a><span class="result"> extends <a href="../../util/akka/PublisherActor.html" class="extype" name="csw.util.akka.PublisherActor">PublisherActor</a>[<a href="../../util/config/StateVariable$$CurrentState.html" class="extype" name="csw.util.config.StateVariable.CurrentState">CurrentState</a>]</span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@HcdControllerextendsActorwithActorLogging" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.ccs.package@HcdControllerextendsPublisherActor[csw.util.config.StateVariable.CurrentState]" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Base trait for an HCD controller actor that reacts immediately to SetupConfig messages.</p>
-    </li><li name="csw.services.ccs.PeriodicHcdController" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="PeriodicHcdControllerextendsActorwithActorLogging"></a>
+    </li><li name="csw.services.ccs.HcdControllerClient" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="HcdControllerClientextendsPublisherActorClient"></a>
+      <a id="HcdControllerClient:HcdControllerClient"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="HcdControllerClient.html"><span class="name">HcdControllerClient</span></a><span class="result"> extends <a href="../../util/akka/PublisherActorClient.html" class="extype" name="csw.util.akka.PublisherActorClient">PublisherActorClient</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@HcdControllerClientextendsPublisherActorClient" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A client API for the HcdController actor.</p><div class="fullcomment"><div class="comment cmt"><p>A client API for the HcdController actor.</p><p>Note that Subscribers to the HCD's state will receive CurrentState messages
+whenever the HCD's state changes.
+</p></div></div>
+    </li><li name="csw.services.ccs.HcdStatusMatcherActor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="HcdStatusMatcherActorextendsActorwithActorLogging"></a>
+      <a id="HcdStatusMatcherActor:HcdStatusMatcherActor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="HcdStatusMatcherActor.html"><span class="name">HcdStatusMatcherActor</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@HcdStatusMatcherActorextendsActorwithActorLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Subscribes to the current state values of a set of HCDs and notifies the
+replyTo actor with the command status when they all match the respective demand states,
+or with an error status message if the given timeout expires.</p><div class="fullcomment"><div class="comment cmt"><p>Subscribes to the current state values of a set of HCDs and notifies the
+replyTo actor with the command status when they all match the respective demand states,
+or with an error status message if the given timeout expires.</p><p>See props for a description of the arguments.
+</p></div></div>
+    </li><li name="csw.services.ccs.MultiStateMatcherActor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MultiStateMatcherActorextendsActorwithActorLogging"></a>
+      <a id="MultiStateMatcherActor:MultiStateMatcherActor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="MultiStateMatcherActor.html"><span class="name">MultiStateMatcherActor</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@MultiStateMatcherActorextendsActorwithActorLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
+sender with the command status when they all match the respective demand states,
+or with an error status message if the given timeout expires.</p><div class="fullcomment"><div class="comment cmt"><p>Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
+sender with the command status when they all match the respective demand states,
+or with an error status message if the given timeout expires.</p><p>See props for a description of the arguments for the class and message that start the match.
+</p></div></div>
+    </li><li name="csw.services.ccs.MultiStateMatcherActor2" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MultiStateMatcherActor2extendsActorwithActorLogging"></a>
+      <a id="MultiStateMatcherActor2:MultiStateMatcherActor2"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="MultiStateMatcherActor2.html"><span class="name">MultiStateMatcherActor2</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@MultiStateMatcherActor2extendsActorwithActorLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
+sender with the command status when they all match the respective demand states,
+This version does not time out and relies on a higher level future to timeout.</p><div class="fullcomment"><div class="comment cmt"><p>Subscribes to the current state values of a set of HCDs through the CurrentStateReceiver and notifies the
+sender with the command status when they all match the respective demand states,
+This version does not time out and relies on a higher level future to timeout.</p><p>See props for a description of the arguments for the class and message that start the match.
+</p></div></div>
+    </li><li name="csw.services.ccs.PresenceMatcher" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="PresenceMatcherextendsStateMatcherwithProductwithSerializable"></a>
+      <a id="PresenceMatcher:PresenceMatcher"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="PresenceMatcher.html"><span class="name">PresenceMatcher</span></a><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="StateMatcher.html" class="extype" name="csw.services.ccs.StateMatcher">StateMatcher</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@PresenceMatcherextendsStateMatcherwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">PresenceMatcher only checks for the existence of a CurrentState with a given prefix.</p><div class="fullcomment"><div class="comment cmt"><p>PresenceMatcher only checks for the existence of a CurrentState with a given prefix.
+</p></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>the prefix to match against the CurrentState</p></dd></dl></div>
+    </li><li name="csw.services.ccs.SequentialExecutor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SequentialExecutorextendsActorwithActorLogging"></a>
+      <a id="SequentialExecutor:SequentialExecutor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SequentialExecutor.html"><span class="name">SequentialExecutor</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@SequentialExecutorextendsActorwithActorLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">TMT Source Code: 9/6/16.</p>
+    </li><li name="csw.services.ccs.SingleStateMatcherActor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="SingleStateMatcherActorextendsActorwithActorLogging"></a>
+      <a id="SingleStateMatcherActor:SingleStateMatcherActor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="SingleStateMatcherActor.html"><span class="name">SingleStateMatcherActor</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@SingleStateMatcherActorextendsActorwithActorLogging" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Subscribes to the current state values of a single HCD through the CurrentStateReceiver and notifies the
+sender with the command status when the strea matches the demand state,
+or with an error status message if the given timeout expires.</p><div class="fullcomment"><div class="comment cmt"><p>Subscribes to the current state values of a single HCD through the CurrentStateReceiver and notifies the
+sender with the command status when the strea matches the demand state,
+or with an error status message if the given timeout expires.</p><p>See props for a description of the arguments for the class and message that starts the match.
+</p></div></div>
+    </li><li name="csw.services.ccs.StateMatcher" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="StateMatcherextendsAnyRef"></a>
+      <a id="StateMatcher:StateMatcher"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="StateMatcher.html"><span class="name">StateMatcher</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@StateMatcherextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A StateMatcher provides a prefix and a check method that checks the CurrentState and returns
+a boolean if completion has occured or false in no completion
+</p>
+    </li><li name="csw.services.ccs.PeriodicHcdController" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="PeriodicHcdControllerextendsAnyRef"></a>
       <a id="PeriodicHcdController:PeriodicHcdController"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -258,37 +464,17 @@ and then updates a state variable with the current settings.</p><pre><span class
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="PeriodicHcdController.html"><span class="name">PeriodicHcdController</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+        <a href="PeriodicHcdController.html"><span class="name deprecated" title="Deprecated: use scala.tools.nsc.doc.base.MemberLookupBase$$anon$1@7a2464c8">PeriodicHcdController</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@PeriodicHcdControllerextendsActorwithActorLogging" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.ccs.package@PeriodicHcdControllerextendsAnyRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       <p class="shortcomment cmt">Base trait for an HCD controller actor that checks its queue for inputs and updates its
-state variables at a given rate.</p>
-    </li><li name="csw.services.ccs.StateMatcherActor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="StateMatcherActorextendsSubscriber[csw.util.cfg.Configurations.StateVariable.CurrentState]"></a>
-      <a id="StateMatcherActor:StateMatcherActor"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a href="StateMatcherActor.html"><span class="name">StateMatcherActor</span></a><span class="result"> extends <a href="../kvs/Subscriber.html" class="extype" name="csw.services.kvs.Subscriber">Subscriber</a>[<a href="../../util/cfg/Configurations$$StateVariable$$CurrentState.html" class="extype" name="csw.util.cfg.Configurations.StateVariable.CurrentState">CurrentState</a>]</span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@StateMatcherActorextendsSubscriber[csw.util.cfg.Configurations.StateVariable.CurrentState]" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Subscribes to the current values for the given demand values and notifies the
-replyTo actor with the command status when they all match the respective demand states,
-or with an error status message if the given timeout expires.</p><div class="fullcomment"><div class="comment cmt"><p>Subscribes to the current values for the given demand values and notifies the
-replyTo actor with the command status when they all match the respective demand states,
-or with an error status message if the given timeout expires.</p><p>See props for a description of the arguments.
-</p></div></div>
+state variables at a given rate.</p><div class="fullcomment"><div class="comment cmt"><p>Base trait for an HCD controller actor that checks its queue for inputs and updates its
+state variables at a given rate.
+</p></div><dl class="attributes block"> <dt>Deprecated</dt><dd class="cmt"><p>use <a href="HcdController.html" class="extype" name="csw.services.ccs.HcdController">HcdController</a></p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -312,8 +498,24 @@ or with an error status message if the given timeout expires.</p><p>See props fo
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Defines the Assembly controller actor messages
-</p>
+      
+    </li><li name="csw.services.ccs.AssemblyMessages" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="AssemblyMessages"></a>
+      <a id="AssemblyMessages:AssemblyMessages"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="AssemblyMessages$.html"><span class="name">AssemblyMessages</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@AssemblyMessages" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">TMT Source Code: 10/9/16.</p>
     </li><li name="csw.services.ccs.CommandStatus" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="CommandStatus"></a>
       <a id="CommandStatus:CommandStatus"></a>
@@ -330,31 +532,42 @@ or with an error status message if the given timeout expires.</p><p>See props fo
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Command status
-</p>
-    </li><li name="csw.services.ccs.DistributorController" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="DistributorController"></a>
-      <a id="DistributorController:DistributorController"></a>
+      
+    </li><li name="csw.services.ccs.CommandStatusOld" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandStatusOld"></a>
+      <a id="CommandStatusOld:CommandStatusOld"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="DistributorController$.html"><span class="name">DistributorController</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="CommandStatusOld$.html"><span class="name">CommandStatusOld</span></a>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@DistributorController" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.ccs.package@CommandStatusOld" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">A controller that forwards lists of configs (SetupConfigArg) to assemblies based on
-the prefix (as registered with the location service).</p><div class="fullcomment"><div class="comment cmt"><p>A controller that forwards lists of configs (SetupConfigArg) to assemblies based on
-the prefix (as registered with the location service).</p><p>The list of possible target assemblies must be passed in the serviceRefs argument.</p><p>Once all the replies are in from the assemblies, a single command status message
-is sent back to the sender (Either Completed or, if any of the commands failed,
-an Error message).</p><p>An error command status is also returned to the sender if the replies are not received
-in the given timeout period.
-</p></div></div>
+      <p class="shortcomment cmt">Command status
+</p>
+    </li><li name="csw.services.ccs.CurrentStateReceiver" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CurrentStateReceiver"></a>
+      <a id="CurrentStateReceiver:CurrentStateReceiver"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="CurrentStateReceiver$.html"><span class="name">CurrentStateReceiver</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@CurrentStateReceiver" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="csw.services.ccs.HcdController" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="HcdController"></a>
       <a id="HcdController:HcdController"></a>
@@ -373,6 +586,57 @@ in the given timeout period.
     </span>
       <p class="shortcomment cmt">Command service controller
 </p>
+    </li><li name="csw.services.ccs.HcdMessages" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HcdMessages"></a>
+      <a id="HcdMessages:HcdMessages"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="HcdMessages$.html"><span class="name">HcdMessages</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@HcdMessages" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.ccs.HcdStatusMatcherActor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HcdStatusMatcherActor"></a>
+      <a id="HcdStatusMatcherActor:HcdStatusMatcherActor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="HcdStatusMatcherActor$.html"><span class="name">HcdStatusMatcherActor</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@HcdStatusMatcherActor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.ccs.MultiStateMatcherActor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="MultiStateMatcherActor"></a>
+      <a id="MultiStateMatcherActor:MultiStateMatcherActor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="MultiStateMatcherActor$.html"><span class="name">MultiStateMatcherActor</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@MultiStateMatcherActor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="csw.services.ccs.PeriodicHcdController" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="PeriodicHcdController"></a>
       <a id="PeriodicHcdController:PeriodicHcdController"></a>
@@ -390,23 +654,57 @@ in the given timeout period.
       </a>
     </span>
       
-    </li><li name="csw.services.ccs.StateMatcherActor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="StateMatcherActor"></a>
-      <a id="StateMatcherActor:StateMatcherActor"></a>
+    </li><li name="csw.services.ccs.SequentialExecutor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SequentialExecutor"></a>
+      <a id="SequentialExecutor:SequentialExecutor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="StateMatcherActor$.html"><span class="name">StateMatcherActor</span></a>
+        <a href="SequentialExecutor$.html"><span class="name">SequentialExecutor</span></a>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ccs.package@StateMatcherActor" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.ccs.package@SequentialExecutor" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
+    </li><li name="csw.services.ccs.SingleStateMatcherActor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="SingleStateMatcherActor"></a>
+      <a id="SingleStateMatcherActor:SingleStateMatcherActor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="SingleStateMatcherActor$.html"><span class="name">SingleStateMatcherActor</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@SingleStateMatcherActor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.ccs.Validation" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Validation"></a>
+      <a id="Validation:Validation"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Validation$.html"><span class="name">Validation</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ccs.package@Validation" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">TMT Source Code: 8/25/16.</p>
     </li></ol>
             </div>
 
@@ -419,7 +717,7 @@ in the given timeout period.
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

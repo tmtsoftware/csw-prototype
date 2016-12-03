@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -52,31 +52,31 @@ The necessary support for this should already be available on Mac and Linux mach
 The Location Service helps you to find out the hostname and port number for a service,
 as well as other information for determining the correct URI to use, such as the path,
 the actor system name and the config prefix.</p><p>Two types of services are currently supported: Akka/actor based and HTTP based services.
-To register an Akka actor based service, you can use code like this:</p><pre>LocationService.registerAkkaService(serviceId, self, <span class="lit">"test.akka.prefix"</span>)</pre><p>Where self is a reference to the services own actorRef and the prefix argument indicates the
-part of a configuration the actor is interested in receiving.</p><p>To register an HTTP based service, you can make a call like this:</p><pre>LocationService.registerHttpService(serviceId, port)</pre><p>Here you specify the port and the DNS name for the local host is automatically determined.</p><h5> Using the Location Service </h5><p>The Location Service actor can be used in an actor based application to be notified whenever
+To register an Akka actor based service, you can use code like this:</p><pre>LocationService.registerAkkaConnection(componentId, self, <span class="lit">"test.akka.prefix"</span>)</pre><p>Where self is a reference to the services own actorRef and the prefix argument indicates the
+part of a configuration the actor is interested in receiving.</p><p>To register an HTTP based service, you can make a call like this:</p><pre>LocationService.registerHttpConnection(componentId, port)</pre><p>Here you specify the port and the DNS name for the local host is automatically determined.</p><h5> Using the Location Service </h5><p>The Location Service actor can be used in an actor based application to be notified whenever
 a set of required services is available or not. In the following example, <code>TestServiceClient</code>
 depends on <code>TestAkkaService</code> and <code>TestHttpService</code> and will receive a <code>ServicesReady</code> message
 with the contact information (URI, actorRef, prefix, ...) when they are both available.
 If any of the required services goes down, a Disconnected message is sent.</p><pre><span class="kw">class</span> TestServiceClient <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging {
-  <span class="kw">val</span> serviceRefs = <span class="std">Set</span>(TestAkkaService.serviceRef, TestHttpService.serviceRef)
-  context.actorOf(LocationService.props(serviceRefs))
+  <span class="kw">val</span> connections = <span class="std">Set</span>(TestAkkaService.connection, TestHttpService.connection)
+  context.actorOf(LocationService.props(connections))
 
   <span class="kw">override</span> <span class="kw">def</span> receive: Receive = {
     <span class="kw">case</span> ServicesReady(services) <span class="kw">=&gt;</span>
-      log.info(s<span class="lit">"Received services: ${services.values.map(_.serviceRef.serviceId.name).mkString("</span>, <span class="lit">")}"</span>)
+      log.debug(s<span class="lit">"Received services: ${services.values.map(_.connection.componentId.name).mkString("</span>, <span class="lit">")}"</span>)
 
-    <span class="kw">case</span> Disconnected(serviceRef) <span class="kw">=&gt;</span>
-      log.info(s<span class="lit">"Disconnected service: ${serviceRef.serviceId.name}"</span>)
+    <span class="kw">case</span> Disconnected(connection) <span class="kw">=&gt;</span>
+      log.debug(s<span class="lit">"Disconnected service: ${connection.componentId.name}"</span>)
 
     <span class="kw">case</span> x <span class="kw">=&gt;</span>
       log.error(s<span class="lit">"Received unexpected message $x"</span>)
   }
 }</pre><h5> Command Line Tools </h5><p>On a Mac, you can use the dns-sd command to view information about registered services.
-For example:</p><pre>dns-sd -B _csw._tcp</pre><p>will continuously display CSW services added or removed, while:</p><pre>dns-sd -L TestAkkaService-assembly-akka _csw._tcp</pre><p>will list information about the application with the DNS name <code>TestAkkaService-assembly-akka</code> (not case sensitive).</p><p><code>_csw._tcp</code> is the mDNS type used for all CSW services. The default domain is <code>local.</code>.</p><p>The CSW/mDNS application names here are in the format: <i>name-serviceType-accessType</i>,
-where <i>serviceType</i> is assembly, hcd, etc. and <i>accessType</i> is <code>http</code> or <code>akka</code>.
-</p></div><div class="toggleContainer block">
+For example:</p><pre>dns-sd -B _csw._tcp</pre><p>will continuously display CSW services added or removed, while:</p><pre>dns-sd -L TestAkkaService-assembly-akka _csw._tcp</pre><p>will list information about the application with the DNS name <code>TestAkkaService-assembly-akka</code> (not case sensitive).</p><p><code>_csw._tcp</code> is the mDNS type used for all CSW services. The default domain is <code>local.</code>.</p><p>The CSW/mDNS application names here are in the format: <i>name-componentType-connectionType</i>,
+where <i>componentType</i> is assembly, hcd, etc. and <i>connectionType</i> is <code>http</code> or <code>akka</code>.
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//loc/src/main/scala/csw/services/loc/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -87,7 +87,7 @@ where <i>serviceType</i> is assembly, hcd, etc. and <i>accessType</i> is <code>h
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -100,7 +100,7 @@ where <i>serviceType</i> is assembly, hcd, etc. and <i>accessType</i> is <code>h
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -115,112 +115,166 @@ where <i>serviceType</i> is assembly, hcd, etc. and <i>accessType</i> is <code>h
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="csw.services.loc.AccessType" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="AccessTypeextendsAnyRef"></a>
-      <a id="AccessType:AccessType"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">sealed </span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a href="AccessType.html"><span class="name">AccessType</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@AccessTypeextendsAnyRef" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Access type: Indicate if it is an http server or an akka actor.</p>
-    </li><li name="csw.services.loc.LocationService" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="LocationServiceextendsActorwithActorLoggingwithServiceListenerwithProductwithSerializable"></a>
-      <a id="LocationService:LocationService"></a>
+              <ol><li name="csw.services.loc.ComponentId" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ComponentIdextendsProductwithSerializable"></a>
+      <a id="ComponentId:ComponentId"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="LocationService.html"><span class="name">LocationService</span></a><span class="params">(<span name="serviceRefs">serviceRefs: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="ServiceRef.html" class="extype" name="csw.services.loc.ServiceRef">ServiceRef</a>]</span>, <span name="replyTo">replyTo: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="akka.actor.ActorRef">ActorRef</span>] = <span class="symbol"><span class="name"><a href="../../../scala/package.html">None</a></span></span></span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span> with <span class="extype" name="javax.jmdns.ServiceListener">ServiceListener</span> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ComponentId.html"><span class="name">ComponentId</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="componentType">componentType: <a href="ComponentType.html" class="extype" name="csw.services.loc.ComponentType">ComponentType</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@LocationServiceextendsActorwithActorLoggingwithServiceListenerwithProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.loc.package@ComponentIdextendsProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">An actor that notifies the replyTo actor when all the requested services are available.</p><div class="fullcomment"><div class="comment cmt"><p>An actor that notifies the replyTo actor when all the requested services are available.
-If all services are available, a ServicesReady message is sent. If any of the requested
-services stops being available, a Disconnected messages is sent.
-</p></div><dl class="paramcmts block"><dt class="param">serviceRefs</dt><dd class="cmt"><p>set of requested services</p></dd><dt class="param">replyTo</dt><dd class="cmt"><p>optional actorRef to reply to (default: parent of this actor)</p></dd></dl></div>
-    </li><li name="csw.services.loc.LocationServiceWorker" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="LocationServiceWorkerextendsActorwithActorLogging"></a>
-      <a id="LocationServiceWorker:LocationServiceWorker"></a>
+      <p class="shortcomment cmt">Used to identify a component
+</p><div class="fullcomment"><div class="comment cmt"><p>Used to identify a component
+</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>the service name</p></dd><dt class="param">componentType</dt><dd class="cmt"><p>HCD, Assembly, Service</p></dd></dl></div>
+    </li><li name="csw.services.loc.ComponentType" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ComponentTypeextendsAnyRef"></a>
+      <a id="ComponentType:ComponentType"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ComponentType.html"><span class="name">ComponentType</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@ComponentTypeextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">CSW Component types
+</p>
+    </li><li name="csw.services.loc.Connection" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ConnectionextendsAnyRef"></a>
+      <a id="Connection:Connection"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Connection.html"><span class="name">Connection</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@ConnectionextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Describes a component and the way it is accessed (http, akka)
+</p>
+    </li><li name="csw.services.loc.ConnectionType" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ConnectionTypeextendsAnyRef"></a>
+      <a id="ConnectionType:ConnectionType"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ConnectionType.html"><span class="name">ConnectionType</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@ConnectionTypeextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Connection type: Indicate if it is an http server or an akka actor.</p>
+    </li><li name="csw.services.loc.LocationSubscriberActor" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="LocationSubscriberActorextendsActorwithActorLogging"></a>
+      <a id="LocationSubscriberActor:LocationSubscriberActor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a href="LocationServiceWorker.html"><span class="name">LocationServiceWorker</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
+        <a href="LocationSubscriberActor.html"><span class="name">LocationSubscriberActor</span></a><span class="result"> extends <span class="extype" name="akka.actor.Actor">Actor</span> with <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@LocationServiceWorkerextendsActorwithActorLogging" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.loc.package@LocationSubscriberActorextendsActorwithActorLogging" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
-    </li><li name="csw.services.loc.ServiceId" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ServiceIdextendsProductwithSerializable"></a>
-      <a id="ServiceId:ServiceId"></a>
+      <p class="shortcomment cmt">This class distributes Location events from a LocatonTracker within a single ActorSystem of a component.</p><div class="fullcomment"><div class="comment cmt"><p>This class distributes Location events from a LocatonTracker within a single ActorSystem of a component.</p><p>Any client actor that Subscribes will receive Location messages. It then sends the TrackConnection message
+to the TrackerSubscriber with a Connection to the TrackerSubscriber. This causes the LocationTracker to
+send updates in the form of Location messages, which are then passed to the subscriber.</p><p>Note that when the TrackConnection message is sent, the subscriber first receives an Unresolved message before
+it receives an ResolvedAkkaLocation or ResolvedHttpLocation.</p><p>It is also possible to send an UntrackConnection(connection) to the TrackerSubscriber to stop getting updates.</p><p>The Actor watches the subscriber and will unsubscribe it if the subscriber terminates, but it doesn't untrack the connections.</p><p>Example:
+<pre>
+import TrackerSubscriber._
+
+val trackerSubscriber = system.actorOf(TrackerSubscriber.props)
+
+val c1 = HttpConnection("lgsTromboneHCD", ComponentType.HCD)
+
+trackerSubscriber ! LocationService.Subscribe
+
+// An actor wishing to receive Location messages
+trackerSubscriber ! TrackConnecton(c1)
+
+// Later, it can stop receiving Location messages using
+trackerSubscriber ! UntrackConnection(c1)
+</pre></p></div></div>
+    </li><li name="csw.services.loc.LocationSubscriberClient" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="LocationSubscriberClientextendsActorLogging"></a>
+      <a id="LocationSubscriberClient:LocationSubscriberClient"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="ServiceId.html"><span class="name">ServiceId</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="serviceType">serviceType: <a href="ServiceType.html" class="extype" name="csw.services.loc.ServiceType">ServiceType</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@ServiceIdextendsProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Used to identify a service</p><div class="fullcomment"><div class="comment cmt"><p>Used to identify a service</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>the service name</p></dd><dt class="param">serviceType</dt><dd class="cmt"><p>HCD, Assembly, Service</p></dd></dl></div>
-    </li><li name="csw.services.loc.ServiceRef" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ServiceRefextendsProductwithSerializable"></a>
-      <a id="ServiceRef:ServiceRef"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="ServiceRef.html"><span class="name">ServiceRef</span></a><span class="params">(<span name="serviceId">serviceId: <a href="ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a></span>, <span name="accessType">accessType: <a href="AccessType.html" class="extype" name="csw.services.loc.AccessType">AccessType</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@ServiceRefextendsProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Describes a service and the way it is accessed (http, akka)</p><div class="fullcomment"><div class="comment cmt"><p>Describes a service and the way it is accessed (http, akka)</p></div><dl class="paramcmts block"><dt class="param">serviceId</dt><dd class="cmt"><p>holds the service name and type (assembly, hcd, etc.)</p></dd><dt class="param">accessType</dt><dd class="cmt"><p>indicates how the service is accessed (http, akka)</p></dd></dl></div>
-    </li><li name="csw.services.loc.ServiceType" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="ServiceTypeextendsAnyRef"></a>
-      <a id="ServiceType:ServiceType"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier">sealed </span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="ServiceType.html"><span class="name">ServiceType</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a href="LocationSubscriberClient.html"><span class="name">LocationSubscriberClient</span></a><span class="result"> extends <span class="extype" name="akka.actor.ActorLogging">ActorLogging</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@ServiceTypeextendsAnyRef" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.loc.package@LocationSubscriberClientextendsActorLogging" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">CSW Service types
-</p>
+      <p class="shortcomment cmt">LocationSubscriberClient can be used to receive updates to Locations.</p><div class="fullcomment"><div class="comment cmt"><p>LocationSubscriberClient can be used to receive updates to Locations.</p><p>The message received is a LocationService.Location, which can be a ResolvedAkkLocation, ResolvedHttpLocation, or a ResolvedServiceLocation</p></div></div>
+    </li><li name="csw.services.loc.LocationTrackerClient" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="LocationTrackerClientextendsProductwithSerializable"></a>
+      <a id="LocationTrackerClient:LocationTrackerClient"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="LocationTrackerClient.html"><span class="name">LocationTrackerClient</span></a><span class="params">(<span name="tracker">tracker: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="connections">connections: <a href="LocationTrackerClient$.html#LocationMap=Map[csw.services.loc.Connection,csw.services.loc.LocationService.Location]" class="extmbr" name="csw.services.loc.LocationTrackerClient.LocationMap">LocationMap</a> = <span class="symbol">Map.empty[Connection, Location]</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@LocationTrackerClientextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Wraps a LocationTracker actor in an immutable class
+</p><div class="fullcomment"><div class="comment cmt"><p>Wraps a LocationTracker actor in an immutable class
+</p></div><dl class="paramcmts block"><dt class="param">tracker</dt><dd class="cmt"><p>the LocationTracker actor ref</p></dd><dt class="param">connections</dt><dd class="cmt"><p>set of conection states</p></dd></dl></div>
+    </li><li name="csw.services.loc.LocationTrackerClientActor" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LocationTrackerClientActorextendsAnyRef"></a>
+      <a id="LocationTrackerClientActor:LocationTrackerClientActor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="LocationTrackerClientActor.html"><span class="name">LocationTrackerClientActor</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@LocationTrackerClientActorextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Can be used by an actor to keep track of component connections.</p>
     </li></ol>
             </div>
 
@@ -228,19 +282,70 @@ services stops being available, a Disconnected messages is sent.
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="csw.services.loc.AccessType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="AccessType"></a>
-      <a id="AccessType:AccessType"></a>
+              <ol><li name="csw.services.loc.ComponentId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ComponentId"></a>
+      <a id="ComponentId:ComponentId"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="AccessType$.html"><span class="name">AccessType</span></a>
+        <a href="ComponentId$.html"><span class="name">ComponentId</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@AccessType" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.loc.package@ComponentId" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.loc.ComponentType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ComponentType"></a>
+      <a id="ComponentType:ComponentType"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ComponentType$.html"><span class="name">ComponentType</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@ComponentType" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.loc.Connection" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Connection"></a>
+      <a id="Connection:Connection"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Connection$.html"><span class="name">Connection</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@Connection" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.loc.ConnectionType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConnectionType"></a>
+      <a id="ConnectionType:ConnectionType"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ConnectionType$.html"><span class="name">ConnectionType</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.loc.package@ConnectionType" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -254,83 +359,65 @@ services stops being available, a Disconnected messages is sent.
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="LocationService$.html"><span class="name">LocationService</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="LocationService$.html"><span class="name">LocationService</span></a>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.loc.package@LocationService" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Location Service based on Multicast DNS (AppleTalk, Bonjour).</p><div class="fullcomment"><div class="comment cmt"><p>Location Service based on Multicast DNS (AppleTalk, Bonjour).
-Note: On a mac, you can use the command line tool dns-sd to browser the registered services.
+      <p class="shortcomment cmt">Location Service based on Multicast DNS (AppleTalk, Bonjour).</p><div class="fullcomment"><div class="comment cmt"><p>Location Service based on Multicast DNS (AppleTalk, Bonjour).</p><p>The Location Service is based on Multicast DNS (AppleTalk, Bonjour) and can be used to register and lookup
+akka and http based services in the local network.</p><p>Every application using the location service should call the initInterface() method once at startup,
+before creating any actors.</p><p>Note: On a mac, you can use the command line tool dns-sd to browse the registered services.
+On Linux use avahi-browse.
 </p></div></div>
-    </li><li name="csw.services.loc.LocationServiceWorker" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="LocationServiceWorker"></a>
-      <a id="LocationServiceWorker:LocationServiceWorker"></a>
+    </li><li name="csw.services.loc.LocationSubscriberActor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LocationSubscriberActor"></a>
+      <a id="LocationSubscriberActor:LocationSubscriberActor"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="LocationServiceWorker$.html"><span class="name">LocationServiceWorker</span></a>
+        <a href="LocationSubscriberActor$.html"><span class="name">LocationSubscriberActor</span></a>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@LocationServiceWorker" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">A class that can be started from non-actor code that runs a location service actor until it
-gets a result.</p><div class="fullcomment"><div class="comment cmt"><p>A class that can be started from non-actor code that runs a location service actor until it
-gets a result.
-</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
-    </li><li name="csw.services.loc.ServiceId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ServiceId"></a>
-      <a id="ServiceId:ServiceId"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="ServiceId$.html"><span class="name">ServiceId</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@ServiceId" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.loc.package@LocationSubscriberActor" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
-    </li><li name="csw.services.loc.ServiceRef" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ServiceRef"></a>
-      <a id="ServiceRef:ServiceRef"></a>
+    </li><li name="csw.services.loc.LocationTrackerClient" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LocationTrackerClient"></a>
+      <a id="LocationTrackerClient:LocationTrackerClient"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="ServiceRef$.html"><span class="name">ServiceRef</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="LocationTrackerClient$.html"><span class="name">LocationTrackerClient</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@ServiceRef" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.loc.package@LocationTrackerClient" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
-    </li><li name="csw.services.loc.ServiceType" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ServiceType"></a>
-      <a id="ServiceType:ServiceType"></a>
+    </li><li name="csw.services.loc.LocationTrackerWorker" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LocationTrackerWorker"></a>
+      <a id="LocationTrackerWorker:LocationTrackerWorker"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="ServiceType$.html"><span class="name">ServiceType</span></a>
+        <a href="LocationTrackerWorker$.html"><span class="name">LocationTrackerWorker</span></a>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.loc.package@ServiceType" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.loc.package@LocationTrackerWorker" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
@@ -347,7 +434,7 @@ gets a result.
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

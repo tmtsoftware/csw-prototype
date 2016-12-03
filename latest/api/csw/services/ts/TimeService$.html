@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -51,9 +51,9 @@
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>TMT Prototype CSW Time Service
 Note this requires Java 8
-</p></div><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//ts/src/main/scala/csw/services/ts/TimeService.scala" target="_blank">TimeService.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -64,7 +64,7 @@ Note this requires Java 8
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -77,7 +77,7 @@ Note this requires Java 8
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -108,11 +108,7 @@ Note this requires Java 8
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">TimeServiceSchedule provides a component actor with timed messages
-scheduleOne -  sends a message to an actor once some time in the future
-schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled</p><div class="fullcomment"><div class="comment cmt"><p>TimeServiceSchedule provides a component actor with timed messages
-scheduleOne -  sends a message to an actor once some time in the future
-schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled</p><p>Must extend an Actor with ActorLogging
+      <p class="shortcomment cmt">TimeServiceSchedule provides a component actor with timed messages</p><div class="fullcomment"><div class="comment cmt"><p>TimeServiceSchedule provides a component actor with timed messages</p><p>scheduleOnce -  sends a message to an actor once some time in the future</p><p>schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled</p><p>Must extend an Actor with ActorLogging
 </p></div></div>
     </li></ol>
             </div>
@@ -130,7 +126,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -147,7 +143,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@##():Int" title="Permalink" target="_top">
@@ -164,7 +160,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@==(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -172,40 +168,6 @@ schedule    -  waits until a specific time and then sends periodic message to an
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="csw.services.ts.TimeService#GPSDateTimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="GPSDateTimeNow:java.time.LocalDateTime"></a>
-      <a id="GPSDateTimeNow:LocalDateTime"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">GPSDateTimeNow</span><span class="result">: <span class="extype" name="java.time.LocalDateTime">LocalDateTime</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ts.TimeService$@GPSDateTimeNow:java.time.LocalDateTime" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Returns the GPS data and time now.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the GPS data and time now.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime object with the GPS time.</p></dd></dl></div>
-    </li><li name="csw.services.ts.TimeService#GPSTimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="GPSTimeNow:java.time.LocalTime"></a>
-      <a id="GPSTimeNow:LocalTime"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">GPSTimeNow</span><span class="result">: <span class="extype" name="java.time.LocalTime">LocalTime</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.ts.TimeService$@GPSTimeNow:java.time.LocalTime" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Returns the GPS time now.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the GPS time now.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime object with the GPS time.</p></dd></dl></div>
     </li><li name="csw.services.ts.TimeService#TAIDateTimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="TAIDateTimeNow:java.time.LocalDateTime"></a>
       <a id="TAIDateTimeNow:LocalDateTime"></a>
@@ -222,7 +184,8 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns TAI as a data and time.</p><div class="fullcomment"><div class="comment cmt"><p>Returns TAI as a data and time.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime object with TAI time.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns TAI as a data and time.</p><div class="fullcomment"><div class="comment cmt"><p>Returns TAI as a data and time.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime object with TAI time.</p></dd></dl></div>
     </li><li name="csw.services.ts.TimeService#TAITimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="TAITimeNow:java.time.LocalTime"></a>
       <a id="TAITimeNow:LocalTime"></a>
@@ -239,7 +202,8 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns the TAI time now.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the TAI time now.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime object with TAI time.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns the TAI time now.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the TAI time now.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime object with TAI time.</p></dd></dl></div>
     </li><li name="csw.services.ts.TimeService#UTCDateTimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="UTCDateTimeNow:java.time.LocalDateTime"></a>
       <a id="UTCDateTimeNow:LocalDateTime"></a>
@@ -256,7 +220,8 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns the UTC now date and time.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the UTC now date and time.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime in UTC.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns the UTC now date and time.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the UTC now date and time.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime in UTC.</p></dd></dl></div>
     </li><li name="csw.services.ts.TimeService#UTCTimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="UTCTimeNow:java.time.LocalTime"></a>
       <a id="UTCTimeNow:LocalTime"></a>
@@ -273,7 +238,26 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns the UTC now time.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the UTC now time.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime in UTC.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns the UTC now time.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the UTC now time.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime in UTC.</p></dd></dl></div>
+    </li><li name="csw.services.ts.TimeService#ZoneIdOfTMTLocation" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ZoneIdOfTMTLocation:java.time.ZoneId"></a>
+      <a id="ZoneIdOfTMTLocation:ZoneId"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ZoneIdOfTMTLocation</span><span class="result">: <span class="extype" name="java.time.ZoneId">ZoneId</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.TimeService$@ZoneIdOfTMTLocation:java.time.ZoneId" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The zone id corresponding to the TMT telescope location (TODO: find location for telescope)
+</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -323,7 +307,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -340,7 +324,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -357,7 +341,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@finalize():Unit" title="Permalink" target="_top">
@@ -397,7 +381,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@hashCode():Int" title="Permalink" target="_top">
@@ -421,7 +405,9 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns the local date and time in Hawaii</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local date and time in Hawaii</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime now value in the &quot;US/Pacific&quot; zone.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns the local date and time in Hawaii
+</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local date and time in Hawaii
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime now value in the &quot;US/Pacific&quot; zone.</p></dd></dl></div>
     </li><li name="csw.services.ts.TimeService#hawaiiLocalTimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hawaiiLocalTimeNow:java.time.LocalTime"></a>
       <a id="hawaiiLocalTimeNow:LocalTime"></a>
@@ -438,7 +424,9 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns the local time now in Hawaii</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local time now in Hawaii</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime now value in the &quot;US/Pacific&quot; zone.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns the local time now in Hawaii
+</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local time now in Hawaii
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime now value in the &quot;US/Pacific&quot; zone.</p></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <a id="isInstanceOf[T0]:Boolean"></a>
@@ -448,7 +436,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
@@ -472,7 +460,8 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns the local date and time in the current time zone.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local date and time in the current time zone.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime now value.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns the local date and time in the current time zone.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local date and time in the current time zone.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalDateTime now value.</p></dd></dl></div>
     </li><li name="csw.services.ts.TimeService#localTimeNow" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="localTimeNow:java.time.LocalTime"></a>
       <a id="localTimeNow:LocalTime"></a>
@@ -489,7 +478,8 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Returns the local time in the current time zone.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local time in the current time zone.</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime now value.</p></dd></dl></div>
+      <p class="shortcomment cmt">Returns the local time in the current time zone.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the local time in the current time zone.
+</p></div><dl class="paramcmts block"><dt>returns</dt><dd class="cmt"><p>a LocalTime now value.</p></dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -499,7 +489,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -516,7 +506,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@notify():Unit" title="Permalink" target="_top">
@@ -533,7 +523,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@notifyAll():Unit" title="Permalink" target="_top">
@@ -584,7 +574,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@wait():Unit" title="Permalink" target="_top">
@@ -607,7 +597,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
@@ -630,7 +620,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.ts.TimeService$@wait(x$1:Long):Unit" title="Permalink" target="_top">
@@ -656,7 +646,7 @@ schedule    -  waits until a specific time and then sends periodic message to an
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

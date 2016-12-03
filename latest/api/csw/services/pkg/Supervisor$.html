@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -47,20 +47,17 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">Supervisor</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <span class="name">Supervisor</span>
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The Supervisor is an actor that supervises the component actors and deals with
-component lifecycle messages so components don't have to. There is one Supervisor per component.
-It registers with the location service and is responsible for starting and stopping the component
-as well as managing its state.
-All component messages go through the Supervisor, so it can reject any
-messages that are not allowed in a given lifecycle.</p><p>See the TMT document &quot;OSW TN012 - COMPONENT LIFECYCLE DESIGN&quot; for a description of CSW lifecycles.
-</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//pkg/src/main/scala/csw/services/pkg/Supervisor.scala" target="_blank">Supervisor.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="content-diagram-container">
+                <span class="toggle diagram-link">Content Hierarchy</span>
+                <div class="diagram" id="content-diagram"><svg class="package-diagram" id="graph1" viewBox="0.00 0.00 2713.00 94.00" height="94pt" width="2713pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 90)" class="graph" id="graph0"><polygon points="-4,4 -4,-90 2709,-90 2709,4 -4,4" stroke="none" fill="white"></polygon><!-- node0 --><g class="node object" id="graph1_0"><g id="a_object|graph1_0"><a xlink:title="csw.services.pkg.Supervisor.HaltComponent" xlink:href="Supervisor$$HaltComponent$.html#inheritance-diagram"><polygon points="111,-25 7.10543e-15,-25 7.10543e-15,-0 111,-0 111,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="31.5" text-anchor="start">HaltComponent</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="csw.services.pkg.Supervisor.ShutdownFailure" xlink:href="Supervisor$$ShutdownFailure.html#inheritance-diagram"><polygon points="246,-25 129,-25 129,-0 246,-0 246,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="139.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="160.5" text-anchor="start">ShutdownFailure</text></a></g></g><!-- node2 --><g class="node object" id="graph1_2"><g id="a_object|graph1_2"><a xlink:title="csw.services.pkg.Supervisor.ShutdownComplete" xlink:href="Supervisor$$ShutdownComplete$.html#inheritance-diagram"><polygon points="393,-25 264,-25 264,-0 393,-0 393,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="274.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="295.5" text-anchor="start">ShutdownComplete</text></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="csw.services.pkg.Supervisor.StartupFailure" xlink:href="Supervisor$$StartupFailure.html#inheritance-diagram"><polygon points="516,-25 411,-25 411,-0 516,-0 516,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="421.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="442.5" text-anchor="start">StartupFailure</text></a></g></g><!-- node4 --><g class="node object" id="graph1_4"><g id="a_object|graph1_4"><a xlink:title="csw.services.pkg.Supervisor.Started" xlink:href="Supervisor$$Started$.html#inheritance-diagram"><polygon points="610.5,-25 534.5,-25 534.5,-0 610.5,-0 610.5,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="544.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="565.5" text-anchor="start">Started</text></a></g></g><!-- node5 --><g class="node class" id="graph1_5"><g id="a_class|graph1_5"><a xlink:title="csw.services.pkg.Supervisor.InitializeFailure" xlink:href="Supervisor$$InitializeFailure.html#inheritance-diagram"><polygon points="738,-25 629,-25 629,-0 738,-0 738,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="639.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="660.5" text-anchor="start">InitializeFailure</text></a></g></g><!-- node6 --><g class="node object" id="graph1_6"><g id="a_object|graph1_6"><a xlink:title="csw.services.pkg.Supervisor.Initialized" xlink:href="Supervisor$$Initialized$.html#inheritance-diagram"><polygon points="841,-25 756,-25 756,-0 841,-0 841,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="766.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="787.5" text-anchor="start">Initialized</text></a></g></g><!-- node7 --><g class="node trait" id="graph1_7"><g id="a_trait|graph1_7"><a xlink:title="csw.services.pkg.Supervisor.FromComponentLifecycleMessage" xlink:href="Supervisor$$FromComponentLifecycleMessage.html#inheritance-diagram"><polygon points="561,-86 366,-86 366,-61 561,-61 561,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-80.5" x="376.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="397.5" text-anchor="start">FromComponentLifecycleMessage</text></a></g></g><!-- node7&#45;&gt;node0 --><g class="edge inheritance" id="graph1_7_0"><g id="a_inheritance|graph1_7_0"><a xlink:title="HaltComponent is a subtype of FromComponentLifecycleMessage"><path d="M367.472,-60.3013C298.392,-51.2674 203.064,-38.2715 119.5,-25 116.824,-24.575 114.088,-24.1287 111.325,-23.6687" stroke="#d4d4d4" fill="none"></path><polygon points="367.632,-62.087 372.816,-60.9992 368.085,-58.6165 367.632,-62.087" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node7&#45;&gt;node1 --><g class="edge inheritance" id="graph1_7_1"><g id="a_inheritance|graph1_7_1"><a xlink:title="ShutdownFailure is a subtype of FromComponentLifecycleMessage"><path d="M404.728,-59.9365C356.473,-49.6209 288.671,-35.1271 241.706,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="404.374,-61.6502 409.629,-60.9841 405.106,-58.2275 404.374,-61.6502" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node7&#45;&gt;node2 --><g class="edge inheritance" id="graph1_7_2"><g id="a_inheritance|graph1_7_2"><a xlink:title="ShutdownComplete is a subtype of FromComponentLifecycleMessage"><path d="M432.304,-58.8663C408.979,-48.6725 377.421,-34.8805 355.245,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="431.868,-60.5853 437.15,-60.9841 433.269,-57.3782 431.868,-60.5853" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node7&#45;&gt;node3 --><g class="edge inheritance" id="graph1_7_3"><g id="a_inheritance|graph1_7_3"><a xlink:title="StartupFailure is a subtype of FromComponentLifecycleMessage"><path d="M463.5,-55.6874C463.5,-45.9173 463.5,-33.8534 463.5,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="461.75,-55.8435 463.5,-60.8435 465.25,-55.8435 461.75,-55.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node7&#45;&gt;node4 --><g class="edge inheritance" id="graph1_7_4"><g id="a_inheritance|graph1_7_4"><a xlink:title="Started is a subtype of FromComponentLifecycleMessage"><path d="M489.4,-58.4807C508.159,-48.3269 533.225,-34.7588 550.906,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="488.339,-57.065 484.775,-60.9841 490.005,-60.143 488.339,-57.065" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node7&#45;&gt;node5 --><g class="edge inheritance" id="graph1_7_5"><g id="a_inheritance|graph1_7_5"><a xlink:title="InitializeFailure is a subtype of FromComponentLifecycleMessage"><path d="M511.517,-59.6226C549.902,-49.3286 603.235,-35.0257 640.292,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="510.817,-57.9987 506.44,-60.9841 511.723,-61.3792 510.817,-57.9987" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node7&#45;&gt;node6 --><g class="edge inheritance" id="graph1_7_6"><g id="a_inheritance|graph1_7_6"><a xlink:title="Initialized is a subtype of FromComponentLifecycleMessage"><path d="M543.55,-60.1877C600.331,-51.1803 678.26,-38.2635 746.5,-25 749.586,-24.4002 752.769,-23.7569 755.97,-23.0922" stroke="#d4d4d4" fill="none"></path><polygon points="543.132,-58.482 538.467,-60.9925 543.68,-61.9389 543.132,-58.482" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node8 --><g class="node class" id="graph1_8"><g id="a_class|graph1_8"><a xlink:title="csw.services.pkg.Supervisor.LifecycleFailureInfo" xlink:href="Supervisor$$LifecycleFailureInfo.html#inheritance-diagram"><polygon points="986,-25 859,-25 859,-0 986,-0 986,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="869.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="890.5" text-anchor="start">LifecycleFailureInfo</text></a></g></g><!-- node9 --><g class="node object" id="graph1_9"><g id="a_object|graph1_9"><a xlink:title="csw.services.pkg.Supervisor.RunningOffline" xlink:href="Supervisor$$RunningOffline$.html#inheritance-diagram"><polygon points="1111,-25 1004,-25 1004,-0 1111,-0 1111,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1014.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1035.5" text-anchor="start">RunningOffline</text></a></g></g><!-- node10 --><g class="node object" id="graph1_10"><g id="a_object|graph1_10"><a xlink:title="csw.services.pkg.Supervisor.Running" xlink:href="Supervisor$$Running$.html#inheritance-diagram"><polygon points="1209.5,-25 1129.5,-25 1129.5,-0 1209.5,-0 1209.5,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1139.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1160.5" text-anchor="start">Running</text></a></g></g><!-- node11 --><g class="node object" id="graph1_11"><g id="a_object|graph1_11"><a xlink:title="csw.services.pkg.Supervisor.DoRestart" xlink:href="Supervisor$$DoRestart$.html#inheritance-diagram"><polygon points="1315.5,-25 1227.5,-25 1227.5,-0 1315.5,-0 1315.5,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1237.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1258.5" text-anchor="start">DoRestart</text></a></g></g><!-- node12 --><g class="node object" id="graph1_12"><g id="a_object|graph1_12"><a xlink:title="csw.services.pkg.Supervisor.DoShutdown" xlink:href="Supervisor$$DoShutdown$.html#inheritance-diagram"><polygon points="1433,-25 1334,-25 1334,-0 1433,-0 1433,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1344.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1365.5" text-anchor="start">DoShutdown</text></a></g></g><!-- node13 --><g class="node trait" id="graph1_13"><g id="a_trait|graph1_13"><a xlink:title="csw.services.pkg.Supervisor.ToComponentLifecycleMessage" xlink:href="Supervisor$$ToComponentLifecycleMessage.html#inheritance-diagram"><polygon points="1261,-86 1078,-86 1078,-61 1261,-61 1261,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-80.5" x="1088.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="1109.5" text-anchor="start">ToComponentLifecycleMessage</text></a></g></g><!-- node13&#45;&gt;node8 --><g class="edge inheritance" id="graph1_13_8"><g id="a_inheritance|graph1_13_8"><a xlink:title="LifecycleFailureInfo is a subtype of ToComponentLifecycleMessage"><path d="M1116.38,-59.8112C1073.23,-49.5039 1012.87,-35.0865 971.01,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="1116.02,-61.5245 1121.29,-60.9841 1116.83,-58.1203 1116.02,-61.5245" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node13&#45;&gt;node9 --><g class="edge inheritance" id="graph1_13_9"><g id="a_inheritance|graph1_13_9"><a xlink:title="RunningOffline is a subtype of ToComponentLifecycleMessage"><path d="M1142.89,-58.4807C1123.61,-48.3269 1097.86,-34.7588 1079.69,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="1142.4,-60.202 1147.64,-60.9841 1144.03,-57.1054 1142.4,-60.202" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node13&#45;&gt;node10 --><g class="edge inheritance" id="graph1_13_10"><g id="a_inheritance|graph1_13_10"><a xlink:title="Running is a subtype of ToComponentLifecycleMessage"><path d="M1169.5,-55.6874C1169.5,-45.9173 1169.5,-33.8534 1169.5,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="1167.75,-55.8435 1169.5,-60.8435 1171.25,-55.8435 1167.75,-55.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node13&#45;&gt;node11 --><g class="edge inheritance" id="graph1_13_11"><g id="a_inheritance|graph1_13_11"><a xlink:title="DoRestart is a subtype of ToComponentLifecycleMessage"><path d="M1193.98,-58.3379C1211.54,-48.18 1234.92,-34.661 1251.39,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="1193.1,-56.8251 1189.65,-60.8435 1194.86,-59.8548 1193.1,-56.8251" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node13&#45;&gt;node12 --><g class="edge inheritance" id="graph1_13_12"><g id="a_inheritance|graph1_13_12"><a xlink:title="DoShutdown is a subtype of ToComponentLifecycleMessage"><path d="M1216.21,-59.6226C1253.55,-49.3286 1305.42,-35.0257 1341.47,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="1215.62,-57.9681 1211.27,-60.9841 1216.55,-61.3422 1215.62,-57.9681" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node14 --><g class="node object" id="graph1_14"><g id="a_object|graph1_14"><a xlink:title="csw.services.pkg.Supervisor.LifecycleShutdownFailure" xlink:href="Supervisor$$LifecycleShutdownFailure$.html#inheritance-diagram"><polygon points="1606,-25 1451,-25 1451,-0 1606,-0 1606,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1461.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1482.5" text-anchor="start">LifecycleShutdownFailure</text></a></g></g><!-- node15 --><g class="node object" id="graph1_15"><g id="a_object|graph1_15"><a xlink:title="csw.services.pkg.Supervisor.LifecycleShutdown" xlink:href="Supervisor$$LifecycleShutdown$.html#inheritance-diagram"><polygon points="1750.5,-25 1624.5,-25 1624.5,-0 1750.5,-0 1750.5,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1634.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1655.5" text-anchor="start">LifecycleShutdown</text></a></g></g><!-- node16 --><g class="node object" id="graph1_16"><g id="a_object|graph1_16"><a xlink:title="csw.services.pkg.Supervisor.LifecycleFailure" xlink:href="Supervisor$$LifecycleFailure$.html#inheritance-diagram"><polygon points="1880.5,-25 1768.5,-25 1768.5,-0 1880.5,-0 1880.5,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1778.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1799.5" text-anchor="start">LifecycleFailure</text></a></g></g><!-- node17 --><g class="node object" id="graph1_17"><g id="a_object|graph1_17"><a xlink:title="csw.services.pkg.Supervisor.LifecyclePreparingToShutdown" xlink:href="Supervisor$$LifecyclePreparingToShutdown$.html#inheritance-diagram"><polygon points="2075,-25 1898,-25 1898,-0 2075,-0 2075,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="1908.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="1929.5" text-anchor="start">LifecyclePreparingToShutdown</text></a></g></g><!-- node18 --><g class="node object" id="graph1_18"><g id="a_object|graph1_18"><a xlink:title="csw.services.pkg.Supervisor.LifecycleRunningOffline" xlink:href="Supervisor$$LifecycleRunningOffline$.html#inheritance-diagram"><polygon points="2238,-25 2093,-25 2093,-0 2238,-0 2238,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="2103.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="2124.5" text-anchor="start">LifecycleRunningOffline</text></a></g></g><!-- node19 --><g class="node object" id="graph1_19"><g id="a_object|graph1_19"><a xlink:title="csw.services.pkg.Supervisor.LifecycleRunning" xlink:href="Supervisor$$LifecycleRunning$.html#inheritance-diagram"><polygon points="2374.5,-25 2256.5,-25 2256.5,-0 2374.5,-0 2374.5,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="2266.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="2287.5" text-anchor="start">LifecycleRunning</text></a></g></g><!-- node20 --><g class="node object" id="graph1_20"><g id="a_object|graph1_20"><a xlink:title="csw.services.pkg.Supervisor.LifecycleInitialized" xlink:href="Supervisor$$LifecycleInitialized$.html#inheritance-diagram"><polygon points="2516,-25 2393,-25 2393,-0 2516,-0 2516,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="2403.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="2424.5" text-anchor="start">LifecycleInitialized</text></a></g></g><!-- node21 --><g class="node object" id="graph1_21"><g id="a_object|graph1_21"><a xlink:title="csw.services.pkg.Supervisor.LifecycleWaitingForInitialized" xlink:href="Supervisor$$LifecycleWaitingForInitialized$.html#inheritance-diagram"><polygon points="2705,-25 2534,-25 2534,-0 2705,-0 2705,-25" stroke="#102966" fill="#3556a7"></polygon><image xlink:href="../../../lib/object_diagram.png" y="-19.5" x="2544.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="2565.5" text-anchor="start">LifecycleWaitingForInitialized</text></a></g></g><!-- node22 --><g class="node trait" id="graph1_22"><g id="a_trait|graph1_22"><a xlink:title="csw.services.pkg.Supervisor.LifecycleState" xlink:href="Supervisor$$LifecycleState.html#inheritance-diagram"><polygon points="2128.5,-86 2022.5,-86 2022.5,-61 2128.5,-61 2128.5,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-80.5" x="2032.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="2053.5" text-anchor="start">LifecycleState</text></a></g></g><!-- node22&#45;&gt;node14 --><g class="edge inheritance" id="graph1_22_14"><g id="a_inheritance|graph1_22_14"><a xlink:title="LifecycleShutdownFailure is a subtype of LifecycleState"><path d="M2017.2,-67.0175C1929.82,-58.6787 1759.74,-41.9766 1615.5,-25 1612.47,-24.6438 1609.39,-24.2731 1606.27,-23.8923" stroke="#d4d4d4" fill="none"></path><polygon points="2017.18,-68.7734 2022.32,-67.5058 2017.51,-65.2891 2017.18,-68.7734" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node22&#45;&gt;node15 --><g class="edge inheritance" id="graph1_22_15"><g id="a_inheritance|graph1_22_15"><a xlink:title="LifecycleShutdown is a subtype of LifecycleState"><path d="M2017.11,-63.8869C1953.67,-54.4911 1849.35,-38.9282 1759.5,-25 1756.62,-24.554 1753.68,-24.0953 1750.71,-23.6298" stroke="#d4d4d4" fill="none"></path><polygon points="2017.16,-65.6633 2022.36,-64.6645 2017.67,-62.201 2017.16,-65.6633" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node22&#45;&gt;node16 --><g class="edge inheritance" id="graph1_22_16"><g id="a_inheritance|graph1_22_16"><a xlink:title="LifecycleFailure is a subtype of LifecycleState"><path d="M2021.52,-59.8112C1977.67,-49.5039 1916.33,-35.0865 1873.8,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="2021.24,-61.5435 2026.51,-60.9841 2022.04,-58.1364 2021.24,-61.5435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node22&#45;&gt;node17 --><g class="edge inheritance" id="graph1_22_17"><g id="a_inheritance|graph1_22_17"><a xlink:title="LifecyclePreparingToShutdown is a subtype of LifecycleState"><path d="M2053.75,-58.0789C2038.47,-47.9511 2018.3,-34.5802 2004.05,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="2052.78,-59.5394 2057.92,-60.8435 2054.72,-56.6222 2052.78,-59.5394" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node22&#45;&gt;node18 --><g class="edge inheritance" id="graph1_22_18"><g id="a_inheritance|graph1_22_18"><a xlink:title="LifecycleRunningOffline is a subtype of LifecycleState"><path d="M2097.5,-58.0789C2112.95,-47.9511 2133.34,-34.5802 2147.76,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="2096.5,-56.6386 2093.28,-60.8435 2098.42,-59.5658 2096.5,-56.6386" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node22&#45;&gt;node19 --><g class="edge inheritance" id="graph1_22_19"><g id="a_inheritance|graph1_22_19"><a xlink:title="LifecycleRunning is a subtype of LifecycleState"><path d="M2127.37,-59.7485C2169.28,-49.4454 2227.77,-35.0662 2268.36,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="2126.78,-58.091 2122.34,-60.9841 2127.62,-61.4898 2126.78,-58.091" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node22&#45;&gt;node20 --><g class="edge inheritance" id="graph1_22_20"><g id="a_inheritance|graph1_22_20"><a xlink:title="LifecycleInitialized is a subtype of LifecycleState"><path d="M2133.79,-63.6445C2195.74,-54.2013 2296.56,-38.744 2383.5,-25 2386.58,-24.5125 2389.74,-24.0106 2392.93,-23.5017" stroke="#d4d4d4" fill="none"></path><polygon points="2133.34,-61.9432 2128.66,-64.4265 2133.87,-65.4032 2133.34,-61.9432" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node22&#45;&gt;node21 --><g class="edge inheritance" id="graph1_22_21"><g id="a_inheritance|graph1_22_21"><a xlink:title="LifecycleWaitingForInitialized is a subtype of LifecycleState"><path d="M2133.56,-66.6824C2219.31,-58.0186 2384.88,-41.0226 2525.5,-25 2528.28,-24.6836 2531.1,-24.3585 2533.95,-24.0272" stroke="#d4d4d4" fill="none"></path><polygon points="2133.32,-64.9466 2128.53,-67.1902 2133.68,-68.4289 2133.32,-64.9466" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
         
 
       <div id="mbrsel">
@@ -70,20 +67,20 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
                 <span class="filtertype">Inherited<br />
                 </span>
                 <ol id="linearization">
-                  <li class="in" name="csw.services.pkg.Supervisor"><span>Supervisor</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  <li class="in" name="csw.services.pkg.Supervisor"><span>Supervisor</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -98,76 +95,60 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="csw.services.pkg.Supervisor.InitializeFailed" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="InitializeFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable"></a>
-      <a id="InitializeFailed:InitializeFailed"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$InitializeFailed.html"><span class="name">InitializeFailed</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$LifecycleError.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleError">LifecycleError</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@InitializeFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="csw.services.pkg.Supervisor.Initialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="InitializedextendsSupervisor.LifecycleStatewithProductwithSerializable"></a>
-      <a id="Initialized:Initialized"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$Initialized.html"><span class="name">Initialized</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@InitializedextendsSupervisor.LifecycleStatewithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="csw.services.pkg.Supervisor.LifecycleCommand" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="LifecycleCommandextendsAnyRef"></a>
-      <a id="LifecycleCommand:LifecycleCommand"></a>
+              <ol><li name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="FromComponentLifecycleMessageextendsAnyRef"></a>
+      <a id="FromComponentLifecycleMessage:FromComponentLifecycleMessage"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">sealed </span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$LifecycleCommand.html"><span class="name">LifecycleCommand</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a href="Supervisor$$FromComponentLifecycleMessage.html"><span class="name">FromComponentLifecycleMessage</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleCommandextendsAnyRef" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@FromComponentLifecycleMessageextendsAnyRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Commands sent to components to change the lifecycle
+      <p class="shortcomment cmt">Messages from component indicating events
 </p>
-    </li><li name="csw.services.pkg.Supervisor.LifecycleError" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="LifecycleErrorextendsAnyRef"></a>
-      <a id="LifecycleError:LifecycleError"></a>
+    </li><li name="csw.services.pkg.Supervisor.InitializeFailure" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="InitializeFailureextendsSupervisor.FromComponentLifecycleMessagewithProductwithSerializable"></a>
+      <a id="InitializeFailure:InitializeFailure"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier">sealed </span>
-        <span class="kind">trait</span>
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$LifecycleError.html"><span class="name">LifecycleError</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a href="Supervisor$$InitializeFailure.html"><span class="name">InitializeFailure</span></a><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleErrorextendsAnyRef" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@InitializeFailureextendsSupervisor.FromComponentLifecycleMessagewithProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Reply from component for failed lifecycle changes
-</p>
+      <p class="shortcomment cmt">Component indicates it failed to initialize with the given reason
+</p><div class="fullcomment"><div class="comment cmt"><p>Component indicates it failed to initialize with the given reason
+</p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>the reason for failing to initialize as a String</p></dd></dl></div>
+    </li><li name="csw.services.pkg.Supervisor.LifecycleFailureInfo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LifecycleFailureInfoextendsSupervisor.ToComponentLifecycleMessagewithProductwithSerializable"></a>
+      <a id="LifecycleFailureInfo:LifecycleFailureInfo"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleFailureInfo.html"><span class="name">LifecycleFailureInfo</span></a><span class="params">(<span name="state">state: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>, <span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$ToComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.ToComponentLifecycleMessage">ToComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleFailureInfoextendsSupervisor.ToComponentLifecycleMessagewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
     </li><li name="csw.services.pkg.Supervisor.LifecycleState" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="LifecycleStateextendsAnyRef"></a>
       <a id="LifecycleState:LifecycleState"></a>
@@ -184,126 +165,63 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Values that indicate the current lifecycle state for the named component.</p>
-    </li><li name="csw.services.pkg.Supervisor.LifecycleStateChanged" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="LifecycleStateChangedextendsProductwithSerializable"></a>
-      <a id="LifecycleStateChanged:LifecycleStateChanged"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$LifecycleStateChanged.html"><span class="name">LifecycleStateChanged</span></a><span class="params">(<span name="state">state: <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a></span>, <span name="error">error: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="Supervisor$$LifecycleError.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleError">LifecycleError</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleStateChangedextendsProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Message sent to subscribers of lifecycle states</p><div class="fullcomment"><div class="comment cmt"><p>Message sent to subscribers of lifecycle states</p></div><dl class="paramcmts block"><dt class="param">state</dt><dd class="cmt"><p>the current state</p></dd><dt class="param">error</dt><dd class="cmt"><p>set if there was an error preventing the lifecycle state change</p></dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor.Loaded" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="LoadedextendsSupervisor.LifecycleStatewithProductwithSerializable"></a>
-      <a id="Loaded:Loaded"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$Loaded.html"><span class="name">Loaded</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@LoadedextendsSupervisor.LifecycleStatewithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
       
-    </li><li name="csw.services.pkg.Supervisor.Running" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="RunningextendsSupervisor.LifecycleStatewithProductwithSerializable"></a>
-      <a id="Running:Running"></a>
+    </li><li name="csw.services.pkg.Supervisor.ShutdownFailure" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ShutdownFailureextendsSupervisor.FromComponentLifecycleMessagewithProductwithSerializable"></a>
+      <a id="ShutdownFailure:ShutdownFailure"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$Running.html"><span class="name">Running</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Supervisor$$ShutdownFailure.html"><span class="name">ShutdownFailure</span></a><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@RunningextendsSupervisor.LifecycleStatewithProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@ShutdownFailureextendsSupervisor.FromComponentLifecycleMessagewithProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="csw.services.pkg.Supervisor.ShutdownFailed" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ShutdownFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable"></a>
-      <a id="ShutdownFailed:ShutdownFailed"></a>
+      <p class="shortcomment cmt">Component indicates it has failed to shutdown properly with the given reason
+</p><div class="fullcomment"><div class="comment cmt"><p>Component indicates it has failed to shutdown properly with the given reason
+</p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>reason for failing to shutdown as a String</p></dd></dl></div>
+    </li><li name="csw.services.pkg.Supervisor.StartupFailure" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="StartupFailureextendsSupervisor.FromComponentLifecycleMessagewithProductwithSerializable"></a>
+      <a id="StartupFailure:StartupFailure"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$ShutdownFailed.html"><span class="name">ShutdownFailed</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$LifecycleError.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleError">LifecycleError</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Supervisor$$StartupFailure.html"><span class="name">StartupFailure</span></a><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@ShutdownFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@StartupFailureextendsSupervisor.FromComponentLifecycleMessagewithProductwithSerializable" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="csw.services.pkg.Supervisor.StartupFailed" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="StartupFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable"></a>
-      <a id="StartupFailed:StartupFailed"></a>
+      <p class="shortcomment cmt">Component indicates it failed to startup with the given reason
+</p><div class="fullcomment"><div class="comment cmt"><p>Component indicates it failed to startup with the given reason
+</p></div><dl class="paramcmts block"><dt class="param">reason</dt><dd class="cmt"><p>reason for failing to startup as a String</p></dd></dl></div>
+    </li><li name="csw.services.pkg.Supervisor.ToComponentLifecycleMessage" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ToComponentLifecycleMessageextendsAnyRef"></a>
+      <a id="ToComponentLifecycleMessage:ToComponentLifecycleMessage"></a>
       <h4 class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$StartupFailed.html"><span class="name">StartupFailed</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$LifecycleError.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleError">LifecycleError</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Supervisor$$ToComponentLifecycleMessage.html"><span class="name">ToComponentLifecycleMessage</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@StartupFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@ToComponentLifecycleMessageextendsAnyRef" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="csw.services.pkg.Supervisor.SubscribeToLifecycleStates" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="SubscribeToLifecycleStatesextendsProductwithSerializable"></a>
-      <a id="SubscribeToLifecycleStates:SubscribeToLifecycleStates"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$SubscribeToLifecycleStates.html"><span class="name">SubscribeToLifecycleStates</span></a><span class="params">(<span name="onlyRunning">onlyRunning: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@SubscribeToLifecycleStatesextendsProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">Message used to subscribe the sender to changes in lifecycle states</p><div class="fullcomment"><div class="comment cmt"><p>Message used to subscribe the sender to changes in lifecycle states</p></div><dl class="paramcmts block"><dt class="param">onlyRunning</dt><dd class="cmt"><p>true if only interested in receiving a message when the component is in the Running state</p></dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor.UninitializeFailed" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="UninitializeFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable"></a>
-      <a id="UninitializeFailed:UninitializeFailed"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$UninitializeFailed.html"><span class="name">UninitializeFailed</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="reason">reason: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="Supervisor$$LifecycleError.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleError">LifecycleError</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@UninitializeFailedextendsSupervisor.LifecycleErrorwithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
+      <p class="shortcomment cmt">Messages sent to components to notify of lifecycle changes
+</p>
     </li></ol>
             </div>
 
@@ -320,7 +238,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -337,7 +255,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@##():Int" title="Permalink" target="_top">
@@ -354,7 +272,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@==(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -362,92 +280,319 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor.Initialize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Initialize"></a>
-      <a id="Initialize:Initialize"></a>
+    </li><li name="csw.services.pkg.Supervisor.DoRestart" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DoRestart"></a>
+      <a id="DoRestart:DoRestart"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$Initialize$.html"><span class="name">Initialize</span></a><span class="result"> extends <a href="Supervisor$$LifecycleCommand.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleCommand">LifecycleCommand</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Supervisor$$DoRestart$.html"><span class="name">DoRestart</span></a><span class="result"> extends <a href="Supervisor$$ToComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.ToComponentLifecycleMessage">ToComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@Initialize" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@DoRestart" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
-    </li><li name="csw.services.pkg.Supervisor.Shutdown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Shutdown"></a>
-      <a id="Shutdown:Shutdown"></a>
+    </li><li name="csw.services.pkg.Supervisor.DoShutdown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="DoShutdown"></a>
+      <a id="DoShutdown:DoShutdown"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$Shutdown$.html"><span class="name">Shutdown</span></a><span class="result"> extends <a href="Supervisor$$LifecycleCommand.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleCommand">LifecycleCommand</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Supervisor$$DoShutdown$.html"><span class="name">DoShutdown</span></a><span class="result"> extends <a href="Supervisor$$ToComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.ToComponentLifecycleMessage">ToComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@Shutdown" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@DoShutdown" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
       
-    </li><li name="csw.services.pkg.Supervisor.Startup" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Startup"></a>
-      <a id="Startup:Startup"></a>
+    </li><li name="csw.services.pkg.Supervisor.HaltComponent" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="HaltComponent"></a>
+      <a id="HaltComponent:HaltComponent"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="Supervisor$$Startup$.html"><span class="name">Startup</span></a><span class="result"> extends <a href="Supervisor$$LifecycleCommand.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleCommand">LifecycleCommand</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="Supervisor$$HaltComponent$.html"><span class="name">HaltComponent</span></a><span class="result"> extends <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@Startup" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@HaltComponent" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      
-    </li><li name="csw.services.pkg.Supervisor.Uninitialize" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Uninitialize"></a>
-      <a id="Uninitialize:Uninitialize"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$Uninitialize$.html"><span class="name">Uninitialize</span></a><span class="result"> extends <a href="Supervisor$$LifecycleCommand.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleCommand">LifecycleCommand</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@Uninitialize" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="csw.services.pkg.Supervisor.UnregisterWithLocationService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="UnregisterWithLocationService"></a>
-      <a id="UnregisterWithLocationService:UnregisterWithLocationService"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="Supervisor$$UnregisterWithLocationService$.html"><span class="name">UnregisterWithLocationService</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@UnregisterWithLocationService" title="Permalink" target="_top">
-        <img src="../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      <p class="shortcomment cmt">When this message is received, the component is unregistered from the location service
+      <p class="shortcomment cmt">Diagnostic message to shutdown and then exit supervisor/component
 </p>
+    </li><li name="csw.services.pkg.Supervisor.Initialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Initialized"></a>
+      <a id="Initialized:Initialized"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$Initialized$.html"><span class="name">Initialized</span></a><span class="result"> extends <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@Initialized" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor.LifecycleFailure" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LifecycleFailure"></a>
+      <a id="LifecycleFailure:LifecycleFailure"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleFailure$.html"><span class="name">LifecycleFailure</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleFailure" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor/component after the component has indicated it could not initialize or startup
+successfully.</p>
+    </li><li name="csw.services.pkg.Supervisor.LifecycleInitialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LifecycleInitialized"></a>
+      <a id="LifecycleInitialized:LifecycleInitialized"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleInitialized$.html"><span class="name">LifecycleInitialized</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleInitialized" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor when Initialized after receiving the <a href="Supervisor$$Initialized$.html" class="extype" name="csw.services.pkg.Supervisor.Initialized">csw.services.pkg.Supervisor.Initialized</a>
+message (first) from the component
+</p>
+    </li><li name="csw.services.pkg.Supervisor.LifecyclePreparingToShutdown" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="LifecyclePreparingToShutdown"></a>
+      <a id="LifecyclePreparingToShutdown:LifecyclePreparingToShutdown"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecyclePreparingToShutdown$.html"><span class="name">LifecyclePreparingToShutdown</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecyclePreparingToShutdown" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor/component after receiving an <a href="SupervisorExternal$$ExComponentShutdown$.html" class="extype" name="csw.services.pkg.SupervisorExternal.ExComponentShutdown">csw.services.pkg.SupervisorExternal.ExComponentShutdown</a>
+message to shutdown the component.</p><div class="fullcomment"><div class="comment cmt"><p>State of the Supervisor/component after receiving an <a href="SupervisorExternal$$ExComponentShutdown$.html" class="extype" name="csw.services.pkg.SupervisorExternal.ExComponentShutdown">csw.services.pkg.SupervisorExternal.ExComponentShutdown</a>
+message to shutdown the component. The component receives the <a href="Supervisor$$DoShutdown$.html" class="extype" name="csw.services.pkg.Supervisor.DoShutdown">csw.services.pkg.Supervisor.DoShutdown</a>
+message indicating this.
+</p></div></div>
+    </li><li name="csw.services.pkg.Supervisor.LifecycleRunning" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="LifecycleRunning"></a>
+      <a id="LifecycleRunning:LifecycleRunning"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleRunning$.html"><span class="name">LifecycleRunning</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleRunning" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor after receiving the <a href="Supervisor$$Started$.html" class="extype" name="csw.services.pkg.Supervisor.Started">csw.services.pkg.Supervisor.Started</a>
+message (second) from the component.</p><div class="fullcomment"><div class="comment cmt"><p>State of the Supervisor after receiving the <a href="Supervisor$$Started$.html" class="extype" name="csw.services.pkg.Supervisor.Started">csw.services.pkg.Supervisor.Started</a>
+message (second) from the component. Component is Running and Online at this point.
+Component receives a <a href="Supervisor$$Running$.html" class="extype" name="csw.services.pkg.Supervisor.Running">csw.services.pkg.Supervisor.Running</a> message indicating this.
+</p></div></div>
+    </li><li name="csw.services.pkg.Supervisor.LifecycleRunningOffline" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="LifecycleRunningOffline"></a>
+      <a id="LifecycleRunningOffline:LifecycleRunningOffline"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleRunningOffline$.html"><span class="name">LifecycleRunningOffline</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleRunningOffline" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor/component after receiving an <a href="SupervisorExternal$$ExComponentOffline$.html" class="extype" name="csw.services.pkg.SupervisorExternal.ExComponentOffline">csw.services.pkg.SupervisorExternal.ExComponentOffline</a>
+message to place the component offline.</p><div class="fullcomment"><div class="comment cmt"><p>State of the Supervisor/component after receiving an <a href="SupervisorExternal$$ExComponentOffline$.html" class="extype" name="csw.services.pkg.SupervisorExternal.ExComponentOffline">csw.services.pkg.SupervisorExternal.ExComponentOffline</a>
+message to place the component offline. The component receives the <a href="Supervisor$$RunningOffline$.html" class="extype" name="csw.services.pkg.Supervisor.RunningOffline">csw.services.pkg.Supervisor.RunningOffline</a>
+message indicating this.
+</p></div></div>
+    </li><li name="csw.services.pkg.Supervisor.LifecycleShutdown" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LifecycleShutdown"></a>
+      <a id="LifecycleShutdown:LifecycleShutdown"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleShutdown$.html"><span class="name">LifecycleShutdown</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleShutdown" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor/component after the component has indicated it is ready to shutdown after receiving
+the <a href="Supervisor$$ShutdownComplete$.html" class="extype" name="csw.services.pkg.Supervisor.ShutdownComplete">csw.services.pkg.Supervisor.ShutdownComplete</a> message.</p>
+    </li><li name="csw.services.pkg.Supervisor.LifecycleShutdownFailure" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LifecycleShutdownFailure"></a>
+      <a id="LifecycleShutdownFailure:LifecycleShutdownFailure"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleShutdownFailure$.html"><span class="name">LifecycleShutdownFailure</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleShutdownFailure" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor/component when the component indicated it could not get ready to shutdown or failed
+to notify the Supervisor with the <a href="Supervisor$$ShutdownComplete$.html" class="extype" name="csw.services.pkg.Supervisor.ShutdownComplete">csw.services.pkg.Supervisor.ShutdownComplete</a> message within the
+timeout.</p>
+    </li><li name="csw.services.pkg.Supervisor.LifecycleWaitingForInitialized" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="LifecycleWaitingForInitialized"></a>
+      <a id="LifecycleWaitingForInitialized:LifecycleWaitingForInitialized"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$LifecycleWaitingForInitialized$.html"><span class="name">LifecycleWaitingForInitialized</span></a><span class="result"> extends <a href="Supervisor$$LifecycleState.html" class="extype" name="csw.services.pkg.Supervisor.LifecycleState">LifecycleState</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@LifecycleWaitingForInitialized" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">State of the Supervisor when started and waiting for the first lifecycle message from the component.</p>
+    </li><li name="csw.services.pkg.Supervisor.Running" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Running"></a>
+      <a id="Running:Running"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$Running$.html"><span class="name">Running</span></a><span class="result"> extends <a href="Supervisor$$ToComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.ToComponentLifecycleMessage">ToComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@Running" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor.RunningOffline" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RunningOffline"></a>
+      <a id="RunningOffline:RunningOffline"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$RunningOffline$.html"><span class="name">RunningOffline</span></a><span class="result"> extends <a href="Supervisor$$ToComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.ToComponentLifecycleMessage">ToComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@RunningOffline" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.pkg.Supervisor.ShutdownComplete" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ShutdownComplete"></a>
+      <a id="ShutdownComplete:ShutdownComplete"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$ShutdownComplete$.html"><span class="name">ShutdownComplete</span></a><span class="result"> extends <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@ShutdownComplete" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Component indicates it has completed shutting down successfully
+</p>
+    </li><li name="csw.services.pkg.Supervisor.Started" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Started"></a>
+      <a id="Started:Started"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Supervisor$$Started$.html"><span class="name">Started</span></a><span class="result"> extends <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@Started" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Component indicates it has started successfully
+</p>
+    </li><li name="csw.services.pkg.Supervisor#apply" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="apply(componentInfo:csw.services.pkg.Component.ComponentInfo):akka.actor.ActorRef"></a>
+      <a id="apply(ComponentInfo):ActorRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">apply</span><span class="params">(<span name="componentInfo">componentInfo: <a href="Component$$ComponentInfo.html" class="extype" name="csw.services.pkg.Component.ComponentInfo">ComponentInfo</a></span>)</span><span class="result">: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@apply(componentInfo:csw.services.pkg.Component.ComponentInfo):akka.actor.ActorRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a new supervisor actor managing the components described in the argument
+</p><div class="fullcomment"><div class="comment cmt"><p>Returns a new supervisor actor managing the components described in the argument
+</p></div><dl class="paramcmts block"><dt class="param">componentInfo</dt><dd class="cmt"><p>describes the components to create and manage</p></dd><dt>returns</dt><dd class="cmt"><p>the ActorRef for the supervisor (parent actor of the top level component)
+        and the component's new ActorSystem as a tuple.</p></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <a id="asInstanceOf[T0]:T0"></a>
@@ -488,6 +633,25 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="csw.services.pkg.Supervisor#create" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="create(componentInfo:csw.services.pkg.Component.ComponentInfo):(akka.actor.ActorSystem,akka.actor.ActorRef)"></a>
+      <a id="create(ComponentInfo):(ActorSystem,ActorRef)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">create</span><span class="params">(<span name="componentInfo">componentInfo: <a href="Component$$ComponentInfo.html" class="extype" name="csw.services.pkg.Component.ComponentInfo">ComponentInfo</a></span>)</span><span class="result">: (<span class="extype" name="akka.actor.ActorSystem">ActorSystem</span>, <span class="extype" name="akka.actor.ActorRef">ActorRef</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@create(componentInfo:csw.services.pkg.Component.ComponentInfo):(akka.actor.ActorSystem,akka.actor.ActorRef)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Returns a new actor system and supervisor actor managing the components described in the argument
+</p><div class="fullcomment"><div class="comment cmt"><p>Returns a new actor system and supervisor actor managing the components described in the argument
+</p></div><dl class="paramcmts block"><dt class="param">componentInfo</dt><dd class="cmt"><p>describes the components to create and manage</p></dd><dt>returns</dt><dd class="cmt"><p>the actorRef for the supervisor (parent actor of the top level component)</p></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -497,7 +661,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -514,7 +678,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -531,7 +695,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@finalize():Unit" title="Permalink" target="_top">
@@ -562,6 +726,24 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="csw.services.pkg.Supervisor#haltComponent" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="haltComponent(supervisor:akka.actor.ActorRef):Unit"></a>
+      <a id="haltComponent(ActorRef):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">haltComponent</span><span class="params">(<span name="supervisor">supervisor: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@haltComponent(supervisor:akka.actor.ActorRef):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Function called by a component to exit in a controlled way.</p><div class="fullcomment"><div class="comment cmt"><p>Function called by a component to exit in a controlled way.
+</p></div><dl class="paramcmts block"><dt class="param">supervisor</dt><dd class="cmt"><p>the ActorRef of the component's supervisor</p></dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <a id="hashCode():Int"></a>
@@ -571,7 +753,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@hashCode():Int" title="Permalink" target="_top">
@@ -588,7 +770,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
@@ -596,6 +778,24 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="csw.services.pkg.Supervisor#lifecycle" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="lifecycle(supervisor:akka.actor.ActorRef,command:csw.services.pkg.Supervisor.FromComponentLifecycleMessage):Unit"></a>
+      <a id="lifecycle(ActorRef,FromComponentLifecycleMessage):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">lifecycle</span><span class="params">(<span name="supervisor">supervisor: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="command">command: <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@lifecycle(supervisor:akka.actor.ActorRef,command:csw.services.pkg.Supervisor.FromComponentLifecycleMessage):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Function called by a component to indicate the lifecycle should be started.</p><div class="fullcomment"><div class="comment cmt"><p>Function called by a component to indicate the lifecycle should be started.
+</p></div><dl class="paramcmts block"><dt class="param">supervisor</dt><dd class="cmt"><p>the ActorRef of the component's supervisor</p></dd><dt class="param">command</dt><dd class="cmt"><p>the <a href="Supervisor$$FromComponentLifecycleMessage.html" class="extype" name="csw.services.pkg.Supervisor.FromComponentLifecycleMessage">FromComponentLifecycleMessage</a> to be sent to the supervisor</p></dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a>
       <a id="ne(AnyRef):Boolean"></a>
@@ -605,7 +805,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -622,7 +822,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@notify():Unit" title="Permalink" target="_top">
@@ -639,7 +839,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@notifyAll():Unit" title="Permalink" target="_top">
@@ -647,23 +847,42 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="csw.services.pkg.Supervisor#props" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="props(componentProps:akka.actor.Props,serviceId:csw.services.loc.ServiceId,prefix:String,services:List[csw.services.loc.ServiceId]):akka.actor.Props"></a>
-      <a id="props(Props,ServiceId,String,List[ServiceId]):Props"></a>
+    </li><li name="csw.services.pkg.Supervisor#props" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="props(componentInfo:csw.services.pkg.Component.ComponentInfo,componentActor:Option[akka.actor.ActorRef]):akka.actor.Props"></a>
+      <a id="props(ComponentInfo,Option[ActorRef]):Props"></a>
       <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">props</span><span class="params">(<span name="componentProps">componentProps: <span class="extype" name="akka.actor.Props">Props</span></span>, <span name="serviceId">serviceId: <a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a></span>, <span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="services">services: <a href="../../../scala/package.html#List[+A]=List[A]" class="extmbr" name="scala.List">List</a>[<a href="../loc/ServiceId.html" class="extype" name="csw.services.loc.ServiceId">ServiceId</a>]</span>)</span><span class="result">: <span class="extype" name="akka.actor.Props">Props</span></span>
+        <span class="name">props</span><span class="params">(<span name="componentInfo">componentInfo: <a href="Component$$ComponentInfo.html" class="extype" name="csw.services.pkg.Component.ComponentInfo">ComponentInfo</a></span>, <span name="componentActor">componentActor: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="akka.actor.ActorRef">ActorRef</span>]</span>)</span><span class="result">: <span class="extype" name="akka.actor.Props">Props</span></span>
       </span>
       </h4><span class="permalink">
-      <a href="../../../index.html#csw.services.pkg.Supervisor$@props(componentProps:akka.actor.Props,serviceId:csw.services.loc.ServiceId,prefix:String,services:List[csw.services.loc.ServiceId]):akka.actor.Props" title="Permalink" target="_top">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@props(componentInfo:csw.services.pkg.Component.ComponentInfo,componentActor:Option[akka.actor.ActorRef]):akka.actor.Props" title="Permalink" target="_top">
         <img src="../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Used to create the Supervisor actor</p><div class="fullcomment"><div class="comment cmt"><p>Used to create the Supervisor actor</p></div><dl class="paramcmts block"><dt class="param">componentProps</dt><dd class="cmt"><p>used to create the component</p></dd><dt class="param">serviceId</dt><dd class="cmt"><p>service used to register the component with the location service</p></dd><dt class="param">prefix</dt><dd class="cmt"><p>the configuration prefix (part of configs that component should receive)</p></dd><dt class="param">services</dt><dd class="cmt"><p>a list of service ids for the services the component depends on</p></dd><dt>returns</dt><dd class="cmt"><p>an object to be used to create the Supervisor actor</p></dd></dl></div>
+      
+    </li><li name="csw.services.pkg.Supervisor#props" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="props(componentInfo:csw.services.pkg.Component.ComponentInfo):akka.actor.Props"></a>
+      <a id="props(ComponentInfo):Props"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">props</span><span class="params">(<span name="componentInfo">componentInfo: <a href="Component$$ComponentInfo.html" class="extype" name="csw.services.pkg.Component.ComponentInfo">ComponentInfo</a></span>)</span><span class="result">: <span class="extype" name="akka.actor.Props">Props</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.pkg.Supervisor$@props(componentInfo:csw.services.pkg.Component.ComponentInfo):akka.actor.Props" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Used to create the Supervisor actor
+</p><div class="fullcomment"><div class="comment cmt"><p>Used to create the Supervisor actor
+</p></div><dl class="paramcmts block"><dt class="param">componentInfo</dt><dd class="cmt"><p>used to create the component</p></dd><dt>returns</dt><dd class="cmt"><p>an object to be used to create the Supervisor actor</p></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
       <a id="synchronized[T0](⇒T0):T0"></a>
@@ -707,7 +926,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@wait():Unit" title="Permalink" target="_top">
@@ -730,7 +949,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
@@ -753,7 +972,7 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../index.html#csw.services.pkg.Supervisor$@wait(x$1:Long):Unit" title="Permalink" target="_top">
@@ -776,14 +995,10 @@ messages that are not allowed in a given lifecycle.</p><p>See the TMT document &
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></h3>
-            </div><div class="parent" name="java.io.Serializable">
-              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
-            </div><div class="parent" name="scala.AnyRef">
+        <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

@@ -1,0 +1,414 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>events - csw.services.events</title>
+          <meta name="description" content="events - csw.services.events" />
+          <meta name="keywords" content="events csw.services.events" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'csw.services.events.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../lib/package_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="csw">csw</a>.<a href="../package.html" class="extype" name="csw.services">services</a></p>
+        <h1>events</h1><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">events</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><h4> Event Service </h4><p>This module implements an Event Service based on <a href="http://redis.io/" target="_blank">Redis</a>.
+An event can be published and subscribers can receive the events.
+The last n events are always saved for reference (where n is an optional argument).</p><p>Note that the tests assume the redis server is running. The host and port for the Redis instance can be configured
+in the application config file, or you can use the <code>trackLocation</code> application to register a
+Redis instance with the location service and then look up the host and port to use for it.</p><h5> Telemetry Service </h5><p>The Telemetry Service uses an EventService that deals only with StatusEvent objects.
+The API is *slightly* simpler than the generic <code>EventService</code>, since the concrete event type is known.</p><p>See the unit tests for some examples of the usage in Scala and Java.</p><h5> Blocking and Non-Blocking Versions </h5><p>For convenience, blocking and non-blocking APIs are provided. The base implementation is non-blocking
+(based on Akka actors). In some cases, it may be more convenient to use the simpler, blocking API.</p><h5> Example Event Publisher (blocking) </h5><pre><span class="kw">val</span> settings = EventServiceSettings(system)
+<span class="kw">val</span> eventService = BlockingEventService(<span class="num">5.</span>seconds, settings)
+
+<span class="kw">val</span> event1 = StatusEvent(<span class="lit">"tcs.test1"</span>)
+    .add(infoValue.set(<span class="num">1</span>))
+    .add(infoStr.set(<span class="lit">"info 1"</span>))
+
+eventService.publish(event1)
+eventService.get(event1.prefix).get <span class="kw">match</span> {
+    <span class="kw">case</span> event: StatusEvent <span class="kw">=&gt;</span>
+      assert(event.prefix == event1.prefix)
+      assert(event(infoValue).head == <span class="num">1</span>)
+      assert(event(infoStr).head == <span class="lit">"info 1"</span>)
+    <span class="kw">case</span> _ <span class="kw">=&gt;</span> fail(<span class="lit">"Expected a StatusEvent"</span>)
+}</pre><h5> Example Event Subscriber (callback method) </h5><p>The EventService.subscribe method takes an ActorRef of an arbitrary actor or a callback function to be called
+when an event matching the given prefixes is received. In the example below, we only provide the callback
+argument value. You could also provide an ActorRef of some actor that should receive the Event message.</p><pre><span class="kw">def</span> listener(ev: Event): <span class="std">Unit</span> = {
+  <span class="cmt">// ...</span>
+}
+
+<span class="kw">val</span> monitor = eventService.subscribe(<span class="std">None</span>, <span class="std">Some</span>(listener), prefix)</pre><h5> Example Event Subscriber Actor </h5><p>In the example below, a we create an actor that will receive Event messages that match the
+prefixes (prefix1, prefix2) in the call to subscribe.</p><p>The EventSubscriber class uses the values
+in the config file (resources/reference.conf or resources/application.conf) to open a connection
+to the Redis server.</p><pre><span class="kw">class</span> MySubscriber(prefix1: <span class="std">String</span>, prefix2: <span class="std">String</span>) <span class="kw">extends</span> EventSubscriber {
+
+  subscribe(prefix1, prefix2)
+
+  <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> event: Event <span class="kw">=&gt;</span>   ...
+  }
+}</pre></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//events/src/main/scala/csw/services/events/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="content-diagram-container">
+                <span class="toggle diagram-link">Content Hierarchy</span>
+                <div class="diagram" id="content-diagram"><svg class="package-diagram" id="graph1" viewBox="0.00 0.00 145.00 94.00" height="94pt" width="145pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 90)" class="graph" id="graph0"><polygon points="-4,4 -4,-90 141,-90 141,4 -4,4" stroke="none" fill="white"></polygon><!-- node0 --><g class="node trait" id="graph1_0"><g id="a_trait|graph1_0"><a xlink:title="csw.services.events.TelemetryService" xlink:href="TelemetryService.html#inheritance-diagram"><polygon points="128,-86 9,-86 9,-61 128,-61 128,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-80.5" x="19.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="40.5" text-anchor="start">TelemetryService</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="csw.services.events.TelemetryServiceImpl" xlink:href="TelemetryServiceImpl.html#inheritance-diagram"><polygon points="137,-25 0,-25 0,-0 137,-0 137,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="31.5" text-anchor="start">TelemetryServiceImpl</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="TelemetryServiceImpl is a subtype of TelemetryService"><path d="M68.5,-55.6874C68.5,-45.9173 68.5,-33.8534 68.5,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="66.7501,-55.8435 68.5,-60.8435 70.2501,-55.8435 66.7501,-55.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="csw.services.events"><span>events</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="csw.services.events.BlockingTelemetryService" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="BlockingTelemetryServiceextendsProductwithSerializable"></a>
+      <a id="BlockingTelemetryService:BlockingTelemetryService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="BlockingTelemetryService.html"><span class="name">BlockingTelemetryService</span></a><span class="params">(<span name="ts">ts: <a href="TelemetryService.html" class="extype" name="csw.services.events.TelemetryService">TelemetryService</a></span>, <span name="timeout">timeout: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.concurrent.duration.Duration" class="extype" target="_top">Duration</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@BlockingTelemetryServiceextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Provides a blocking, synchronous API to the telemetry service.</p><div class="fullcomment"><div class="comment cmt"><p>Provides a blocking, synchronous API to the telemetry service.
+</p></div><dl class="paramcmts block"><dt class="param">ts</dt><dd class="cmt"><p>the underlying async telemetry service to use</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>max amount of time to wait for a result before timing out</p></dd><dt class="param">context</dt><dd class="cmt"><p>environment needed for futures</p></dd></dl></div>
+    </li><li name="csw.services.events.Event" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Event=csw.util.config.Events.EventServiceEvent"></a>
+      <a id="Event:Event"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Event</span><span class="result"> = <a href="../../util/config/Events$$EventServiceEvent.html" class="extype" name="csw.util.config.Events.EventServiceEvent">EventServiceEvent</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@Event=csw.util.config.Events.EventServiceEvent" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An Event here is a system or observe event
+</p>
+    </li><li name="csw.services.events.EventService" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="EventServiceextendsAnyRef"></a>
+      <a id="EventService:EventService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="EventService.html"><span class="name">EventService</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@EventServiceextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The interface of a key value store.</p>
+    </li><li name="csw.services.events.EventServiceAdmin" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="EventServiceAdminextendsAnyRef"></a>
+      <a id="EventServiceAdmin:EventServiceAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="EventServiceAdmin.html"><span class="name">EventServiceAdmin</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@EventServiceAdminextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Defines the admin API for Event Service
+</p>
+    </li><li name="csw.services.events.EventServiceSettings" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="EventServiceSettingsextendsExtensionwithProductwithSerializable"></a>
+      <a id="EventServiceSettings:EventServiceSettings"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="EventServiceSettings.html"><span class="name">EventServiceSettings</span></a><span class="params">(<span name="redisHostname">redisHostname: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="redisPort">redisPort: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Extension">Extension</span> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@EventServiceSettingsextendsExtensionwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Describes the Redis connection information required by the Event Service.</p><div class="fullcomment"><div class="comment cmt"><p>Describes the Redis connection information required by the Event Service.</p></div><dl class="paramcmts block"><dt class="param">redisHostname</dt><dd class="cmt"><p>the host where Redis is running</p></dd><dt class="param">redisPort</dt><dd class="cmt"><p>the port for Redis</p></dd></dl></div>
+    </li><li name="csw.services.events.JAbstractSubscriber" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="JAbstractSubscriberextendsAbstractActor"></a>
+      <a id="JAbstractSubscriber:JAbstractSubscriber"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="JAbstractSubscriber.html"><span class="name">JAbstractSubscriber</span></a><span class="result"> extends <span class="extype" name="akka.actor.AbstractActor">AbstractActor</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@JAbstractSubscriberextendsAbstractActor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Helper class For Java API: Adds the ability to subscribe to events.</p><div class="fullcomment"><div class="comment cmt"><p>Helper class For Java API: Adds the ability to subscribe to events.
+The subscribed actor will receive messages of type Event for the given prefixes.
+</p></div></div>
+    </li><li name="csw.services.events.TelemetryService" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TelemetryServiceextendsAnyRef"></a>
+      <a id="TelemetryService:TelemetryService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TelemetryService.html"><span class="name">TelemetryService</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@TelemetryServiceextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">API for publishing, getting and subscribing to telemetry (StatusEvent objects).</p>
+    </li><li name="csw.services.events.TelemetryServiceAdmin" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TelemetryServiceAdminextendsAnyRef"></a>
+      <a id="TelemetryServiceAdmin:TelemetryServiceAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TelemetryServiceAdmin.html"><span class="name">TelemetryServiceAdmin</span></a><span class="result"> extends <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@TelemetryServiceAdminextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Defines the admin API for Telemetry Service
+</p>
+    </li><li name="csw.services.events.TelemetryServiceImpl" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="TelemetryServiceImplextendsTelemetryServicewithProductwithSerializable"></a>
+      <a id="TelemetryServiceImpl:TelemetryServiceImpl"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="TelemetryServiceImpl.html"><span class="name">TelemetryServiceImpl</span></a><span class="params">(<span name="redisClient">redisClient: <span class="extype" name="redis.RedisClient">RedisClient</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="_system">_system: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="TelemetryService.html" class="extype" name="csw.services.events.TelemetryService">TelemetryService</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@TelemetryServiceImplextendsTelemetryServicewithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A class for publishing, getting and subscribing to telemetry (StatusEvent objects).</p><div class="fullcomment"><div class="comment cmt"><p>A class for publishing, getting and subscribing to telemetry (StatusEvent objects).
+</p></div><dl class="paramcmts block"><dt class="param">redisClient</dt><dd class="cmt"><p>used to talk to Redis</p></dd><dt class="param">_system</dt><dd class="cmt"><p>Akka environment needed by the implementation</p></dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.services.events.EventService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EventService"></a>
+      <a id="EventService:EventService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="EventService$.html"><span class="name">EventService</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@EventService" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.events.EventServiceAdmin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EventServiceAdmin"></a>
+      <a id="EventServiceAdmin:EventServiceAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="EventServiceAdmin$.html"><span class="name">EventServiceAdmin</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@EventServiceAdmin" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Admin API for the event service.</p>
+    </li><li name="csw.services.events.EventServiceSettings" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="EventServiceSettings"></a>
+      <a id="EventServiceSettings:EventServiceSettings"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="EventServiceSettings$.html"><span class="name">EventServiceSettings</span></a><span class="result"> extends <span class="extype" name="akka.actor.ExtensionId">ExtensionId</span>[<a href="EventServiceSettings.html" class="extype" name="csw.services.events.EventServiceSettings">EventServiceSettings</a>] with <span class="extype" name="akka.actor.ExtensionIdProvider">ExtensionIdProvider</span> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@EventServiceSettings" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.events.TelemetryService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TelemetryService"></a>
+      <a id="TelemetryService:TelemetryService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TelemetryService$.html"><span class="name">TelemetryService</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@TelemetryService" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.events.TelemetryServiceAdmin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TelemetryServiceAdmin"></a>
+      <a id="TelemetryServiceAdmin:TelemetryServiceAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TelemetryServiceAdmin$.html"><span class="name">TelemetryServiceAdmin</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.events.package@TelemetryServiceAdmin" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Admin API for the telemetry service.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

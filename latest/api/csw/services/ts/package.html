@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../index.html';
@@ -48,9 +48,9 @@
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The TimeService provides a component actor with timed messages:</p><p>- scheduleOne -  sends a message to an actor once some time in the future</p><p>- schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled
-</p></div><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//ts/src/main/scala/csw/services/ts/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -61,7 +61,7 @@
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -74,7 +74,7 @@
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -87,13 +87,90 @@
         <div id="allMembers">
         
 
-        
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="csw.services.ts.AbstractTimeServiceScheduler" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="AbstractTimeServiceSchedulerextendsAbstractActorwithTimeService.TimeServiceScheduler"></a>
+      <a id="AbstractTimeServiceScheduler:AbstractTimeServiceScheduler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="AbstractTimeServiceScheduler.html"><span class="name">AbstractTimeServiceScheduler</span></a><span class="result"> extends <span class="extype" name="akka.actor.AbstractActor">AbstractActor</span> with <a href="TimeService$$TimeServiceScheduler.html" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.package@AbstractTimeServiceSchedulerextendsAbstractActorwithTimeService.TimeServiceScheduler" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An alternate version of a Java TimeServiceScheduler for use with Akka Java8 lambda syntax
+</p>
+    </li><li name="csw.services.ts.JavaTimeServiceScheduler" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="JavaTimeServiceSchedulerextendsUntypedActorwithTimeService.TimeServiceScheduler"></a>
+      <a id="JavaTimeServiceScheduler:JavaTimeServiceScheduler"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="JavaTimeServiceScheduler.html"><span class="name">JavaTimeServiceScheduler</span></a><span class="result"> extends <span class="extype" name="akka.actor.UntypedActor">UntypedActor</span> with <a href="TimeService$$TimeServiceScheduler.html" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">TimeServiceScheduler</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.package@JavaTimeServiceSchedulerextendsUntypedActorwithTimeService.TimeServiceScheduler" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A java friendly version of <a href="TimeService$$TimeServiceScheduler.html" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">csw.services.ts.TimeService.TimeServiceScheduler</a>.</p><div class="fullcomment"><div class="comment cmt"><p>A java friendly version of <a href="TimeService$$TimeServiceScheduler.html" class="extype" name="csw.services.ts.TimeService.TimeServiceScheduler">csw.services.ts.TimeService.TimeServiceScheduler</a>.
+This version is based on UntypedActor. See <a href="AbstractTimeServiceScheduler.html" class="extype" name="csw.services.ts.AbstractTimeServiceScheduler">AbstractTimeServiceScheduler</a>
+for an alternate version based on <span class="extype" name="AbstractActor">AbstractActor</span>.
+</p></div></div>
+    </li></ol>
+            </div>
 
         
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="csw.services.ts.TimeService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="csw.services.ts.Main" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Main"></a>
+      <a id="Main:Main"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="Main$.html"><span class="name">Main</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.App" class="extype" target="_top">App</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.package@Main" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.ts.TimeScale" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="TimeScale"></a>
+      <a id="TimeScale:TimeScale"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TimeScale$.html"><span class="name">TimeScale</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#csw.services.ts.package@TimeScale" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">TODO: Work in progress...</p><div class="fullcomment"><div class="comment cmt"><p>TODO: Work in progress...
+See https://confluence.qps.nl/display/KBE/UTC+to+GPS+Time+Correction for background information.</p><p>(Based on code contributed by Takashi Nakamoto)
+</p></div></div>
+    </li><li name="csw.services.ts.TimeService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="TimeService"></a>
       <a id="TimeService:TimeService"></a>
       <h4 class="signature">
@@ -124,7 +201,7 @@ Note this requires Java 8
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../index.html';
@@ -48,10 +48,13 @@
       </h4>
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Defines the Config Service actor, http server and client.
-</p></div><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//cs/src/main/scala/csw/services/cs/akka/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+          <div class="superTypes hiddenContent"><a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="content-diagram-container">
+                <span class="toggle diagram-link">Content Hierarchy</span>
+                <div class="diagram" id="content-diagram"><svg class="package-diagram" id="graph1" viewBox="0.00 0.00 320.00 94.00" height="94pt" width="320pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 90)" class="graph" id="graph0"><polygon points="-4,4 -4,-90 316,-90 316,4 -4,4" stroke="none" fill="white"></polygon><!-- node0 --><g class="node class" id="graph1_0"><g id="a_class|graph1_0"><a xlink:title="csw.services.cs.akka.ConfigServiceHttpClient" xlink:href="ConfigServiceHttpClient.html#inheritance-diagram"><polygon points="146,-25 0,-25 0,-0 146,-0 146,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="31" text-anchor="start">ConfigServiceHttpClient</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="csw.services.cs.akka.ConfigServiceJsonFormats" xlink:href="ConfigServiceJsonFormats.html#inheritance-diagram"><polygon points="234.5,-86 75.5,-86 75.5,-61 234.5,-61 234.5,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../../lib/trait_diagram.png" y="-80.5" x="86" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="107" text-anchor="start">ConfigServiceJsonFormats</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="ConfigServiceHttpClient is a subtype of ConfigServiceJsonFormats"><path d="M134.595,-57.8185C120.564,-47.7228 102.186,-34.4995 89.1669,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="133.719,-59.3438 138.799,-60.8435 135.763,-56.5027 133.719,-59.3438" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="csw.services.cs.akka.ConfigServiceHttpServer" xlink:href="ConfigServiceHttpServer.html#inheritance-diagram"><polygon points="312,-25 164,-25 164,-0 312,-0 312,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="174" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="195" text-anchor="start">ConfigServiceHttpServer</text></a></g></g><!-- node1&#45;&gt;node2 --><g class="edge inheritance" id="graph1_1_2"><g id="a_inheritance|graph1_1_2"><a xlink:title="ConfigServiceHttpServer is a subtype of ConfigServiceJsonFormats"><path d="M175.654,-57.8185C189.856,-47.7228 208.458,-34.4995 221.636,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="174.46,-56.5202 171.398,-60.8435 176.487,-59.3729 174.46,-56.5202" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
         
 
       <div id="mbrsel">
@@ -61,7 +64,7 @@
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -74,7 +77,7 @@
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -89,7 +92,24 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="csw.services.cs.akka.ConfigServiceActor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="csw.services.cs.akka.BlockingConfigServiceClient" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BlockingConfigServiceClientextendsBlockingConfigManager"></a>
+      <a id="BlockingConfigServiceClient:BlockingConfigServiceClient"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="BlockingConfigServiceClient.html"><span class="name">BlockingConfigServiceClient</span></a><span class="result"> extends <a href="../core/BlockingConfigManager.html" class="extype" name="csw.services.cs.core.BlockingConfigManager">BlockingConfigManager</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.akka.package@BlockingConfigServiceClientextendsBlockingConfigManager" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A blocking wrapper for a ConfigServiceClient.</p>
+    </li><li name="csw.services.cs.akka.ConfigServiceActor" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ConfigServiceActorextendsActorwithActorLogging"></a>
       <a id="ConfigServiceActor:ConfigServiceActor"></a>
       <h4 class="signature">
@@ -115,7 +135,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="ConfigServiceClient.html"><span class="name">ConfigServiceClient</span></a><span class="params">(<span name="configServiceActor">configServiceActor: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <span class="extype" name="akka.actor.ActorSystem">ActorSystem</span></span>, <span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>)</span><span class="result"> extends <a href="../core/ConfigManager.html" class="extype" name="csw.services.cs.core.ConfigManager">ConfigManager</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ConfigServiceClient.html"><span class="name">ConfigServiceClient</span></a><span class="params">(<span name="configServiceActor">configServiceActor: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="name">name: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;Config Service&quot;</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <span class="extype" name="akka.actor.ActorSystem">ActorSystem</span></span>, <span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>)</span><span class="result"> extends <a href="../core/ConfigManager.html" class="extype" name="csw.services.cs.core.ConfigManager">ConfigManager</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.cs.akka.package@ConfigServiceClientextendsConfigManagerwithProductwithSerializable" title="Permalink" target="_top">
@@ -123,8 +143,8 @@
       </a>
     </span>
       <p class="shortcomment cmt">Adds a convenience layer over the Akka actor interface to the configuration service.</p><div class="fullcomment"><div class="comment cmt"><p>Adds a convenience layer over the Akka actor interface to the configuration service.
-Note:Only one instance of this class should exist for a given local Git repository.
-</p></div><dl class="paramcmts block"><dt class="param">configServiceActor</dt><dd class="cmt"><p>the config service actor reference to use</p></dd><dt class="param">system</dt><dd class="cmt"><p>the caller's actor system</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>amount of time to wait for config service operations to complete</p></dd></dl></div>
+Note:Only one instance of this class should exist for a given repository.
+</p></div><dl class="paramcmts block"><dt class="param">configServiceActor</dt><dd class="cmt"><p>the config service actor reference to use (Get from location service, if needed)</p></dd><dt class="param">name</dt><dd class="cmt"><p>the config service name (defaults to &quot;Config Service&quot;)</p></dd><dt class="param">system</dt><dd class="cmt"><p>the caller's actor system</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>amount of time to wait for config service operations to complete</p></dd></dl></div>
     </li><li name="csw.services.cs.akka.ConfigServiceHttpClient" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ConfigServiceHttpClientextendsConfigManagerwithConfigServiceJsonFormatswithProductwithSerializable"></a>
       <a id="ConfigServiceHttpClient:ConfigServiceHttpClient"></a>
@@ -134,7 +154,7 @@ Note:Only one instance of this class should exist for a given local Git reposito
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="ConfigServiceHttpClient.html"><span class="name">ConfigServiceHttpClient</span></a><span class="params">(<span name="settings">settings: <a href="ConfigServiceSettings.html" class="extype" name="csw.services.cs.akka.ConfigServiceSettings">ConfigServiceSettings</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <span class="extype" name="akka.actor.ActorSystem">ActorSystem</span></span>)</span><span class="result"> extends <a href="../core/ConfigManager.html" class="extype" name="csw.services.cs.core.ConfigManager">ConfigManager</a> with <a href="ConfigServiceJsonFormats.html" class="extype" name="csw.services.cs.akka.ConfigServiceJsonFormats">ConfigServiceJsonFormats</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ConfigServiceHttpClient.html"><span class="name">ConfigServiceHttpClient</span></a><span class="params">(<span name="settings">settings: <a href="ConfigServiceSettings.html" class="extype" name="csw.services.cs.akka.ConfigServiceSettings">ConfigServiceSettings</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <span class="extype" name="akka.actor.ActorSystem">ActorSystem</span></span>)</span><span class="result"> extends <a href="../core/ConfigManager.html" class="extype" name="csw.services.cs.core.ConfigManager">ConfigManager</a> with <a href="ConfigServiceJsonFormats.html" class="extype" name="csw.services.cs.akka.ConfigServiceJsonFormats">ConfigServiceJsonFormats</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.cs.akka.package@ConfigServiceHttpClientextendsConfigManagerwithConfigServiceJsonFormatswithProductwithSerializable" title="Permalink" target="_top">
@@ -151,7 +171,7 @@ Note:Only one instance of this class should exist for a given local Git reposito
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="ConfigServiceHttpServer.html"><span class="name">ConfigServiceHttpServer</span></a><span class="params">(<span name="configServiceActor">configServiceActor: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="settings">settings: <a href="ConfigServiceSettings.html" class="extype" name="csw.services.cs.akka.ConfigServiceSettings">ConfigServiceSettings</a></span>, <span name="registerWithLoc">registerWithLoc: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>)</span><span class="result"> extends <a href="ConfigServiceJsonFormats.html" class="extype" name="csw.services.cs.akka.ConfigServiceJsonFormats">ConfigServiceJsonFormats</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ConfigServiceHttpServer.html"><span class="name">ConfigServiceHttpServer</span></a><span class="params">(<span name="configServiceActor">configServiceActor: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="settings">settings: <a href="ConfigServiceSettings.html" class="extype" name="csw.services.cs.akka.ConfigServiceSettings">ConfigServiceSettings</a></span>, <span name="registerWithLoc">registerWithLoc: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>)</span><span class="result"> extends <a href="ConfigServiceJsonFormats.html" class="extype" name="csw.services.cs.akka.ConfigServiceJsonFormats">ConfigServiceJsonFormats</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.cs.akka.package@ConfigServiceHttpServerextendsConfigServiceJsonFormatswithProductwithSerializable" title="Permalink" target="_top">
@@ -185,7 +205,7 @@ Note:Only one instance of this class should exist for a given local Git reposito
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="ConfigServiceSettings.html"><span class="name">ConfigServiceSettings</span></a><span class="params">(<span name="config">config: <span class="extype" name="com.typesafe.config.Config">Config</span></span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Extension">Extension</span> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ConfigServiceSettings.html"><span class="name">ConfigServiceSettings</span></a><span class="params">(<span name="config">config: <span class="extype" name="com.typesafe.config.Config">Config</span></span>)</span><span class="result"> extends <span class="extype" name="akka.actor.Extension">Extension</span> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.cs.akka.package@ConfigServiceSettingsextendsExtensionwithProductwithSerializable" title="Permalink" target="_top">
@@ -200,7 +220,24 @@ Note:Only one instance of this class should exist for a given local Git reposito
 
         <div id="values" class="values members">
               <h3>Value Members</h3>
-              <ol><li name="csw.services.cs.akka.ConfigService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+              <ol><li name="csw.services.cs.akka.BlockingConfigServiceClient" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BlockingConfigServiceClient"></a>
+      <a id="BlockingConfigServiceClient:BlockingConfigServiceClient"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="BlockingConfigServiceClient$.html"><span class="name">BlockingConfigServiceClient</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.akka.package@BlockingConfigServiceClient" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A blocking wrapper for a ConfigServiceClient.</p>
+    </li><li name="csw.services.cs.akka.ConfigService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ConfigService"></a>
       <a id="ConfigService:ConfigService"></a>
       <h4 class="signature">
@@ -209,7 +246,7 @@ Note:Only one instance of this class should exist for a given local Git reposito
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="ConfigService$.html"><span class="name">ConfigService</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.App" class="extype" target="_top">App</a></span>
+        <a href="ConfigService$.html"><span class="name">ConfigService</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.App" class="extype" target="_top">App</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.cs.akka.package@ConfigService" title="Permalink" target="_top">
@@ -233,16 +270,7 @@ Note:Only one instance of this class should exist for a given local Git reposito
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <p class="shortcomment cmt">Config service actor.</p><div class="fullcomment"><div class="comment cmt"><p>Config service actor.</p><p>Note: Only one instance of this actor should exist for a given local Git repository.</p><p>In this implementation, you should have a single config service actor managing a
-queue of commands that work on a single local repository, one command at a time.
-(This is enforced here by waiting for each command to complete before taking the
-next one from the queue.)
-This is because the current implementation reads and writes file to the local Git working directory.
-This has the advantage of being a cache for files, so they don't always have to
-be copied from the server. While it might be possible to avoid reading and writing files
-in the working directory using lower level JGit commands, it would still be necessary to
-have a single config service actor per local repository to avoid potential concurrency
-issues (Thread-safety might work within the JVM, but not with multiple applications at once).
+      <p class="shortcomment cmt">Config service actor.</p><div class="fullcomment"><div class="comment cmt"><p>Config service actor.</p><p>Note: Only one instance of this actor should exist for a given local repository.
 </p></div></div>
     </li><li name="csw.services.cs.akka.ConfigServiceClient" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ConfigServiceClient"></a>
@@ -253,7 +281,7 @@ issues (Thread-safety might work within the JVM, but not with multiple applicati
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="ConfigServiceClient$.html"><span class="name">ConfigServiceClient</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ConfigServiceClient$.html"><span class="name">ConfigServiceClient</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.cs.akka.package@ConfigServiceClient" title="Permalink" target="_top">
@@ -270,7 +298,7 @@ issues (Thread-safety might work within the JVM, but not with multiple applicati
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a href="ConfigServiceSettings$.html"><span class="name">ConfigServiceSettings</span></a><span class="result"> extends <span class="extype" name="akka.actor.ExtensionId">ExtensionId</span>[<a href="ConfigServiceSettings.html" class="extype" name="csw.services.cs.akka.ConfigServiceSettings">ConfigServiceSettings</a>] with <span class="extype" name="akka.actor.ExtensionIdProvider">ExtensionIdProvider</span> with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a href="ConfigServiceSettings$.html"><span class="name">ConfigServiceSettings</span></a><span class="result"> extends <span class="extype" name="akka.actor.ExtensionId">ExtensionId</span>[<a href="ConfigServiceSettings.html" class="extype" name="csw.services.cs.akka.ConfigServiceSettings">ConfigServiceSettings</a>] with <span class="extype" name="akka.actor.ExtensionIdProvider">ExtensionIdProvider</span> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.cs.akka.package@ConfigServiceSettings" title="Permalink" target="_top">
@@ -290,7 +318,7 @@ issues (Thread-safety might work within the JVM, but not with multiple applicati
         <div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
         
         </div>

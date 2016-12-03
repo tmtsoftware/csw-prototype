@@ -12,7 +12,7 @@
       <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
       <script type="text/javascript" src="../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
-      
+      <script type="text/javascript" src="../../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../../lib/diagrams.js" id="diagrams-js"></script>
       <script type="text/javascript">
          if(top === self) {
             var url = '../../../../index.html';
@@ -49,10 +49,13 @@
       </span>
       </h4>
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//apps/configServiceAnnex/src/main/scala/csw/services/apps/configServiceAnnex/FileUtils.scala" target="_blank">FileUtils.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.TraversableOnce" class="extype" target="_top">TraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.TraversableOnce" class="extype" target="_top">TraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
+                <span class="toggle diagram-link">Type Hierarchy</span>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 803.00 125.00" height="125pt" width="803pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 121)" class="graph" id="graph0"><polygon points="-4,4 -4,-121 799,-121 799,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><g class="cluster" id="clust3"></g><!-- node4 --><g class="node implicit-outgoing class" id="graph1_4"><g id="a_implicit-outgoing class|graph1_4"><a xlink:title="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator can be implicitly converted to CollectionsHaveToParArray[ByteBufferIterator, T] by the implicit method CollectionsHaveToParArray in  scala.collection.parallel"><polygon points="770.5,-49 515.5,-49 515.5,-24 770.5,-24 770.5,-49" stroke="#ababab" fill="#e1e1e1"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-43.5" x="526" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#7d7d7d" font-size="10.00" font-family="Arial" y="-33.5" x="547" text-anchor="start">CollectionsHaveToParArray[ByteBufferIterator, T]</text></a></g></g><!-- node3 --><g class="node implicit-outgoing class" id="graph1_3"><g id="a_implicit-outgoing class|graph1_3"><a xlink:title="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator can be implicitly converted to FlattenOps[Byte] by the implicit method flattenTraversableOnce in object scala.collection.TraversableOnce"><polygon points="497.5,-49 378.5,-49 378.5,-24 497.5,-24 497.5,-49" stroke="#ababab" fill="#e1e1e1"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-43.5" x="389" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#7d7d7d" font-size="10.00" font-family="Arial" y="-33.5" x="410" text-anchor="start">FlattenOps[Byte]</text></a></g></g><!-- node3&#45;&gt;node4 --><!-- node2 --><g class="node implicit-outgoing class" id="graph1_2"><g id="a_implicit-outgoing class|graph1_2"><a xlink:title="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator can be implicitly converted to MonadOps[ByteString] by the implicit method MonadOps in object scala.collection.TraversableOnce"><polygon points="360,-49 216,-49 216,-24 360,-24 360,-49" stroke="#ababab" fill="#e1e1e1"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-43.5" x="226" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#7d7d7d" font-size="10.00" font-family="Arial" y="-33.5" x="247" text-anchor="start">MonadOps[ByteString]</text></a></g></g><!-- node2&#45;&gt;node3 --><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator (this class)" xlink:href="#inheritance-diagram"><polygon points="144,-49 24,-49 24,-24 144,-24 144,-49" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-43.5" x="34" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-33.5" x="55" text-anchor="start">ByteBufferIterator</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge implicit-outgoing" id="0_2"><g id="a_implicit-outgoing|0_2"><a xlink:title="ByteBufferIterator can be implicitly converted to MonadOps[ByteString], FlattenOps[Byte], CollectionsHaveToParArray[ByteBufferIterator, T]"><path d="M151.609,-36.5C168.172,-36.5 186.105,-36.5 203.355,-36.5" stroke="#d4d4d4" fill="none"></path><polygon points="203.391,-38.2501 208.391,-36.5 203.391,-34.7501 203.391,-38.2501" stroke="#d4d4d4" fill="#d4d4d4"></polygon></a></g><text fill="#aaaaaa" font-size="10.00" font-family="Arial" y="-42.5" x="180" text-anchor="middle">implicitly</text></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="scala.collection.Iterator"><polygon points="147,-117 21,-117 21,-92 147,-92 147,-117" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../../lib/trait_diagram.png" y="-111.5" x="31" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-101.5" x="52" text-anchor="start">Iterator[ByteString]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="ByteBufferIterator is a subtype of Iterator[ByteString]"><path d="M84,-86.6005C84,-74.8849 84,-59.583 84,-49.1973" stroke="#d4d4d4" fill="none"></path><polygon points="82.2501,-86.7005 84,-91.7005 85.7501,-86.7006 82.2501,-86.7005" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
         
 
       <div id="mbrsel">
@@ -62,7 +65,7 @@
               <ol>
                 
                 <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By inheritance</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
               </ol>
             </div>
         <div id="ancestors">
@@ -72,10 +75,15 @@
                   <li class="in" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator"><span>ByteBufferIterator</span></li><li class="in" name="scala.collection.Iterator"><span>Iterator</span></li><li class="in" name="scala.collection.TraversableOnce"><span>TraversableOnce</span></li><li class="in" name="scala.collection.GenTraversableOnce"><span>GenTraversableOnce</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                 </ol>
               </div><div id="ancestors">
+                <span class="filtertype">Implicitly<br />
+                </span>
+                <ol id="implicits"> <li class="in" name="scala.collection.TraversableOnce.MonadOps" data-hidden="false"><span>by MonadOps</span></li><li class="in" name="scala.collection.TraversableOnce.flattenTraversableOnce" data-hidden="false"><span>by flattenTraversableOnce</span></li><li class="in" name="scala.collection.parallel.CollectionsHaveToParArray" data-hidden="false"><span>by CollectionsHaveToParArray</span></li><li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li><li class="in" name="scala.collection.TraversableOnce.alternateImplicit" data-hidden="true"><span>by alternateImplicit</span></li>
+                </ol>
+              </div><div id="ancestors">
             <span class="filtertype"></span>
             <ol>
               <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show all</span></li>
+              <li class="showall in"><span>Show All</span></li>
             </ol>
           </div>
         <div id="visbl">
@@ -97,7 +105,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">ByteBufferIterator</span><span class="params">(<span name="buffer">buffer: <span class="extype" name="java.nio.ByteBuffer">ByteBuffer</span></span>, <span name="chunkSize">chunkSize: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span>
+        <span class="name">ByteBufferIterator</span><span class="params">(<span name="buffer">buffer: <span class="extype" name="java.nio.ByteBuffer">ByteBuffer</span></span>, <span name="chunkSize">chunkSize: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@&lt;init&gt;(buffer:java.nio.ByteBuffer,chunkSize:Int):csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator" title="Permalink" target="_top">
@@ -119,7 +127,7 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">GroupedIterator</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="scala.collection.Iterator.A">A</span></span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.AbstractIterator" class="extype" target="_top">AbstractIterator</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Seq" class="extype" target="_top">Seq</a>[<span class="extype" name="scala.collection.Iterator.GroupedIterator.B">B</span>]] with <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Seq" class="extype" target="_top">Seq</a>[<span class="extype" name="scala.collection.Iterator.GroupedIterator.B">B</span>]]</span>
+        <span class="name">GroupedIterator</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="scala.collection.Iterator.A">A</span></span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.AbstractIterator" class="extype" target="_top">AbstractIterator</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Seq" class="extype" target="_top">Seq</a>[<span class="extype" name="scala.collection.Iterator.GroupedIterator.B">B</span>]] with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Seq" class="extype" target="_top">Seq</a>[<span class="extype" name="scala.collection.Iterator.GroupedIterator.B">B</span>]]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@GroupedIterator[B&gt;:A]extendsAbstractIterator[Seq[B]]withIterator[Seq[B]]" title="Permalink" target="_top">
@@ -143,7 +151,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@!=(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -160,7 +168,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@##():Int" title="Permalink" target="_top">
@@ -168,6 +176,27 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Predef.any2stringadd#+" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="+(other:String):String"></a>
+      <a id="+(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $plus" class="implicit">+</span><span class="params">(<span name="other">other: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@+(other:String):String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method any2stringadd in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
     </li><li name="scala.collection.Iterator#++" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="++[B&lt;:&lt;?&gt;](that:&lt;?&gt;):Iterator[B]"></a>
       <a id="++[B&gt;:ByteString](⇒GenTraversableOnce[B]):Iterator[B]"></a>
@@ -177,7 +206,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $plus$plus" class="name">++</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="that">that: ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.Iterator.++.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.++.B">B</span>]</span>
+        <span title="gt4s: $plus$plus" class="name">++</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="that">that: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.Iterator.++.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.++.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@++[B&gt;:A](that:=&gt;scala.collection.GenTraversableOnce[B]):Iterator[B]" title="Permalink" target="_top">
@@ -185,6 +214,30 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator</dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="-&gt;[B](y:B):(A,B)"></a>
+      <a id="-&gt;[B](B):(ByteBufferIterator,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>, <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="scala.collection.TraversableOnce#/:" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="/:[B](z:B)(op:(B,A)=&gt;B):B"></a>
       <a id="/:[B](B)((B,ByteString)⇒B):B"></a>
@@ -228,7 +281,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@==(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -237,7 +290,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.collection.TraversableOnce#addString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addString(b:&lt;?&gt;):StringBuilder"></a>
+      <a id="addString(b:StringBuilder):StringBuilder"></a>
       <a id="addString(StringBuilder):StringBuilder"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -254,7 +307,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>TraversableOnce</dd></dl></div>
     </li><li name="scala.collection.TraversableOnce#addString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addString(b:&lt;?&gt;,sep:&lt;?&gt;):StringBuilder"></a>
+      <a id="addString(b:StringBuilder,sep:String):StringBuilder"></a>
       <a id="addString(StringBuilder,String):StringBuilder"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -271,7 +324,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>TraversableOnce</dd></dl></div>
     </li><li name="scala.collection.TraversableOnce#addString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addString(b:&lt;?&gt;,start:&lt;?&gt;,sep:&lt;?&gt;,end:&lt;?&gt;):StringBuilder"></a>
+      <a id="addString(b:StringBuilder,start:String,sep:String,end:String):StringBuilder"></a>
       <a id="addString(StringBuilder,String,String,String):StringBuilder"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -370,7 +423,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">collect</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.collect.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.collect.B">B</span>]</span>
+        <span class="name">collect</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.collect.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.collect.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@collect[B](pf:PartialFunction[A,B]):Iterator[B]" title="Permalink" target="_top">
@@ -390,7 +443,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">collectFirst</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.TraversableOnce.collectFirst.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.collectFirst.B">B</span>]</span>
+        <span class="name">collectFirst</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="pf">pf: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.PartialFunction" class="extype" target="_top">PartialFunction</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.TraversableOnce.collectFirst.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.collectFirst.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@collectFirst[B](pf:PartialFunction[A,B]):Option[B]" title="Permalink" target="_top">
@@ -407,7 +460,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">contains</span><span class="params">(<span name="elem">elem: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">contains</span><span class="params">(<span name="elem">elem: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@contains(elem:Any):Boolean" title="Permalink" target="_top">
@@ -424,7 +477,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">copyToArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="xs">xs: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.Iterator.copyToArray.B">B</span>]</span>, <span name="start">start: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="len">len: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">copyToArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="xs">xs: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.Iterator.copyToArray.B">B</span>]</span>, <span name="start">start: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="len">len: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@copyToArray[B&gt;:A](xs:Array[B],start:Int,len:Int):Unit" title="Permalink" target="_top">
@@ -441,7 +494,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">copyToArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="xs">xs: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.TraversableOnce.copyToArray.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">copyToArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="xs">xs: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.TraversableOnce.copyToArray.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@copyToArray[B&gt;:A](xs:Array[B]):Unit" title="Permalink" target="_top">
@@ -458,7 +511,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">copyToArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="xs">xs: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.TraversableOnce.copyToArray.B">B</span>]</span>, <span name="start">start: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">copyToArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="xs">xs: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.TraversableOnce.copyToArray.B">B</span>]</span>, <span name="start">start: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@copyToArray[B&gt;:A](xs:Array[B],start:Int):Unit" title="Permalink" target="_top">
@@ -475,7 +528,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">copyToBuffer</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="dest">dest: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Buffer" class="extype" target="_top">Buffer</a>[<span class="extype" name="scala.collection.TraversableOnce.copyToBuffer.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">copyToBuffer</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="dest">dest: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.mutable.Buffer" class="extype" target="_top">Buffer</a>[<span class="extype" name="scala.collection.TraversableOnce.copyToBuffer.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@copyToBuffer[B&gt;:A](dest:scala.collection.mutable.Buffer[B]):Unit" title="Permalink" target="_top">
@@ -492,7 +545,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">corresponds</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.Iterator.corresponds.B">B</span>]</span>)</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.corresponds.B">B</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">corresponds</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.Iterator.corresponds.B">B</span>]</span>)</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.corresponds.B">B</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@corresponds[B](that:scala.collection.GenTraversableOnce[B])(p:(A,B)=&gt;Boolean):Boolean" title="Permalink" target="_top">
@@ -509,7 +562,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">count</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">count</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@count(p:A=&gt;Boolean):Int" title="Permalink" target="_top">
@@ -526,7 +579,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">drop</span><span class="params">(<span name="n">n: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">drop</span><span class="params">(<span name="n">n: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@drop(n:Int):Iterator[A]" title="Permalink" target="_top">
@@ -543,7 +596,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">dropWhile</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">dropWhile</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@dropWhile(p:A=&gt;Boolean):Iterator[A]" title="Permalink" target="_top">
@@ -560,7 +613,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">duplicate</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>])</span>
+        <span class="name">duplicate</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>])</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@duplicate:(Iterator[A],Iterator[A])" title="Permalink" target="_top">
@@ -568,6 +621,90 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring((ByteBufferIterator)⇒Boolean,⇒Any):ByteBufferIterator"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean):A"></a>
+      <a id="ensuring((ByteBufferIterator)⇒Boolean):ByteBufferIterator"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring(Boolean,⇒Any):ByteBufferIterator"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean):A"></a>
+      <a id="ensuring(Boolean):ByteBufferIterator"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@ensuring(cond:Boolean):A" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a>
       <a id="eq(AnyRef):Boolean"></a>
@@ -577,7 +714,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -594,7 +731,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@equals(x$1:Any):Boolean" title="Permalink" target="_top">
@@ -611,7 +748,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">exists</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">exists</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@exists(p:A=&gt;Boolean):Boolean" title="Permalink" target="_top">
@@ -620,7 +757,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator → TraversableOnce → GenTraversableOnce</dd></dl></div>
     </li><li name="scala.collection.Iterator#filter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="filter(p:&lt;?&gt;):Iterator[A]"></a>
+      <a id="filter(p:A=&gt;Boolean):Iterator[A]"></a>
       <a id="filter((ByteString)⇒Boolean):Iterator[ByteString]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -628,7 +765,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filter</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">filter</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@filter(p:A=&gt;Boolean):Iterator[A]" title="Permalink" target="_top">
@@ -645,7 +782,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filterNot</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">filterNot</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@filterNot(p:A=&gt;Boolean):Iterator[A]" title="Permalink" target="_top">
@@ -662,7 +799,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@finalize():Unit" title="Permalink" target="_top">
@@ -685,7 +822,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">find</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">find</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@find(p:A=&gt;Boolean):Option[A]" title="Permalink" target="_top">
@@ -694,7 +831,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator → TraversableOnce → GenTraversableOnce</dd></dl></div>
     </li><li name="scala.collection.Iterator#flatMap" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="flatMap[B&lt;:&lt;?&gt;](f:&lt;?&gt;):Iterator[B]"></a>
+      <a id="flatMap[B](f:A=&gt;scala.collection.GenTraversableOnce[B]):Iterator[B]"></a>
       <a id="flatMap[B]((ByteString)⇒GenTraversableOnce[B]):Iterator[B]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -702,7 +839,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flatMap</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.Iterator.flatMap.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.flatMap.B">B</span>]</span>
+        <span class="name">flatMap</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.Iterator.flatMap.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.flatMap.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@flatMap[B](f:A=&gt;scala.collection.GenTraversableOnce[B]):Iterator[B]" title="Permalink" target="_top">
@@ -710,6 +847,27 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator</dd></dl></div>
+    </li><li name="scala.collection.TraversableOnce.flattenTraversableOnce#flatten" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="flatten:Iterator[A]"></a>
+      <a id="flatten:Iterator[Byte]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">flatten</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Byte" class="extype" target="_top">Byte</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@flatten:Iterator[A]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.collection.TraversableOnce.FlattenOps">FlattenOps</span>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Byte" class="extype" target="_top">Byte</a>] performed by method flattenTraversableOnce in scala.collection.TraversableOnce.
+            
+          </dd><dt>Definition Classes</dt><dd>FlattenOps</dd></dl></div>
     </li><li name="scala.collection.TraversableOnce#fold" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="fold[A1&gt;:A](z:A1)(op:(A1,A1)=&gt;A1):A1"></a>
       <a id="fold[A1&gt;:ByteString](A1)((A1,A1)⇒A1):A1"></a>
@@ -770,7 +928,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">forall</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">forall</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@forall(p:A=&gt;Boolean):Boolean" title="Permalink" target="_top">
@@ -787,7 +945,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">foreach</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.Iterator.foreach.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">foreach</span><span class="tparams">[<span name="U">U</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.Iterator.foreach.U">U</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@foreach[U](f:A=&gt;U):Unit" title="Permalink" target="_top">
@@ -795,6 +953,30 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator → TraversableOnce → GenTraversableOnce</dd></dl></div>
+    </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="formatted(fmtstr:String):String"></a>
+      <a id="formatted(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">formatted</span><span class="params">(<span name="fmtstr">fmtstr: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@formatted(fmtstr:String):String" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method StringFormat in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <a id="getClass():Class[_]"></a>
@@ -821,7 +1003,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">grouped</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="size">size: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="#GroupedIterator[B&gt;:A]extendsAbstractIterator[Seq[B]]withIterator[Seq[B]]" class="extmbr" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator.GroupedIterator">GroupedIterator</a>[<span class="extype" name="scala.collection.Iterator.grouped.B">B</span>]</span>
+        <span class="name">grouped</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="size">size: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="#GroupedIterator[B&gt;:A]extendsAbstractIterator[Seq[B]]withIterator[Seq[B]]" class="extmbr" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator.GroupedIterator">GroupedIterator</a>[<span class="extype" name="scala.collection.Iterator.grouped.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@grouped[B&gt;:A](size:Int):Iterator.this.GroupedIterator[B]" title="Permalink" target="_top">
@@ -838,7 +1020,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hasDefiniteSize</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">hasDefiniteSize</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@hasDefiniteSize:Boolean" title="Permalink" target="_top">
@@ -855,7 +1037,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hasNext</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">hasNext</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@hasNext:Boolean" title="Permalink" target="_top">
@@ -872,7 +1054,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@hashCode():Int" title="Permalink" target="_top">
@@ -889,7 +1071,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">indexOf</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="elem">elem: <span class="extype" name="scala.collection.Iterator.indexOf.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">indexOf</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="elem">elem: <span class="extype" name="scala.collection.Iterator.indexOf.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@indexOf[B&gt;:A](elem:B):Int" title="Permalink" target="_top">
@@ -906,7 +1088,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">indexWhere</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">indexWhere</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@indexWhere(p:A=&gt;Boolean):Int" title="Permalink" target="_top">
@@ -923,7 +1105,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isEmpty</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">isEmpty</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@isEmpty:Boolean" title="Permalink" target="_top">
@@ -940,7 +1122,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
@@ -957,7 +1139,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isTraversableAgain</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">isTraversableAgain</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@isTraversableAgain:Boolean" title="Permalink" target="_top">
@@ -974,7 +1156,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">length</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">length</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@length:Int" title="Permalink" target="_top">
@@ -983,7 +1165,7 @@
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator</dd></dl></div>
     </li><li name="scala.collection.Iterator#map" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="map[B&lt;:&lt;?&gt;](f:&lt;?&gt;):Iterator[B]"></a>
+      <a id="map[B](f:A=&gt;B):Iterator[B]"></a>
       <a id="map[B]((ByteString)⇒B):Iterator[B]"></a>
       <h4 class="signature">
       <span class="modifier_kind">
@@ -991,7 +1173,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.Iterator.map.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.map.B">B</span>]</span>
+        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.Iterator.map.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.map.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@map[B](f:A=&gt;B):Iterator[B]" title="Permalink" target="_top">
@@ -1127,7 +1309,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
@@ -1161,7 +1343,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">nonEmpty</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">nonEmpty</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@nonEmpty:Boolean" title="Permalink" target="_top">
@@ -1178,7 +1360,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@notify():Unit" title="Permalink" target="_top">
@@ -1195,7 +1377,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@notifyAll():Unit" title="Permalink" target="_top">
@@ -1212,7 +1394,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">padTo</span><span class="tparams">[<span name="A1">A1 &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="len">len: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="elem">elem: <span class="extype" name="scala.collection.Iterator.padTo.A1">A1</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.padTo.A1">A1</span>]</span>
+        <span class="name">padTo</span><span class="tparams">[<span name="A1">A1 &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="len">len: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="elem">elem: <span class="extype" name="scala.collection.Iterator.padTo.A1">A1</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.padTo.A1">A1</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@padTo[A1&gt;:A](len:Int,elem:A1):Iterator[A1]" title="Permalink" target="_top">
@@ -1229,7 +1411,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">partition</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>])</span>
+        <span class="name">partition</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>])</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@partition(p:A=&gt;Boolean):(Iterator[A],Iterator[A])" title="Permalink" target="_top">
@@ -1246,7 +1428,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">patch</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="from">from: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="patchElems">patchElems: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.patch.B">B</span>]</span>, <span name="replaced">replaced: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.patch.B">B</span>]</span>
+        <span class="name">patch</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="from">from: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="patchElems">patchElems: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.patch.B">B</span>]</span>, <span name="replaced">replaced: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.patch.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@patch[B&gt;:A](from:Int,patchElems:Iterator[B],replaced:Int):Iterator[B]" title="Permalink" target="_top">
@@ -1314,7 +1496,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">reduceLeftOption</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="op">op: (<span class="extype" name="scala.collection.TraversableOnce.reduceLeftOption.B">B</span>, <span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.TraversableOnce.reduceLeftOption.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.reduceLeftOption.B">B</span>]</span>
+        <span class="name">reduceLeftOption</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="op">op: (<span class="extype" name="scala.collection.TraversableOnce.reduceLeftOption.B">B</span>, <span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.TraversableOnce.reduceLeftOption.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.reduceLeftOption.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@reduceLeftOption[B&gt;:A](op:(B,A)=&gt;B):Option[B]" title="Permalink" target="_top">
@@ -1331,7 +1513,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">reduceOption</span><span class="tparams">[<span name="A1">A1 &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="op">op: (<span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span>, <span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span>) ⇒ <span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span>]</span>
+        <span class="name">reduceOption</span><span class="tparams">[<span name="A1">A1 &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="op">op: (<span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span>, <span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span>) ⇒ <span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.reduceOption.A1">A1</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@reduceOption[A1&gt;:A](op:(A1,A1)=&gt;A1):Option[A1]" title="Permalink" target="_top">
@@ -1365,7 +1547,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">reduceRightOption</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="op">op: (<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.TraversableOnce.reduceRightOption.B">B</span>) ⇒ <span class="extype" name="scala.collection.TraversableOnce.reduceRightOption.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.reduceRightOption.B">B</span>]</span>
+        <span class="name">reduceRightOption</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="op">op: (<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.TraversableOnce.reduceRightOption.B">B</span>) ⇒ <span class="extype" name="scala.collection.TraversableOnce.reduceRightOption.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.collection.TraversableOnce.reduceRightOption.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@reduceRightOption[B&gt;:A](op:(A,B)=&gt;B):Option[B]" title="Permalink" target="_top">
@@ -1399,7 +1581,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sameElements</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[_]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+        <span class="name">sameElements</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[_]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@sameElements(that:Iterator[_]):Boolean" title="Permalink" target="_top">
@@ -1416,7 +1598,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">scanLeft</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="z">z: <span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span></span>)</span><span class="params">(<span name="op">op: (<span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span>, <span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span>]</span>
+        <span class="name">scanLeft</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="z">z: <span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span></span>)</span><span class="params">(<span name="op">op: (<span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span>, <span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.scanLeft.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@scanLeft[B](z:B)(op:(B,A)=&gt;B):Iterator[B]" title="Permalink" target="_top">
@@ -1433,7 +1615,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">scanRight</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="z">z: <span class="extype" name="scala.collection.Iterator.scanRight.B">B</span></span>)</span><span class="params">(<span name="op">op: (<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.scanRight.B">B</span>) ⇒ <span class="extype" name="scala.collection.Iterator.scanRight.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.scanRight.B">B</span>]</span>
+        <span class="name">scanRight</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="z">z: <span class="extype" name="scala.collection.Iterator.scanRight.B">B</span></span>)</span><span class="params">(<span name="op">op: (<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.scanRight.B">B</span>) ⇒ <span class="extype" name="scala.collection.Iterator.scanRight.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.scanRight.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@scanRight[B](z:B)(op:(A,B)=&gt;B):Iterator[B]" title="Permalink" target="_top">
@@ -1450,7 +1632,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">seq</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">seq</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@seq:Iterator[A]" title="Permalink" target="_top">
@@ -1467,7 +1649,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">size</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+        <span class="name">size</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@size:Int" title="Permalink" target="_top">
@@ -1484,7 +1666,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">slice</span><span class="params">(<span name="from">from: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="until">until: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">slice</span><span class="params">(<span name="from">from: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="until">until: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@slice(from:Int,until:Int):Iterator[A]" title="Permalink" target="_top">
@@ -1501,7 +1683,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sliding</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="size">size: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="step">step: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="#GroupedIterator[B&gt;:A]extendsAbstractIterator[Seq[B]]withIterator[Seq[B]]" class="extmbr" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator.GroupedIterator">GroupedIterator</a>[<span class="extype" name="scala.collection.Iterator.sliding.B">B</span>]</span>
+        <span class="name">sliding</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span name="size">size: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>, <span name="step">step: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="#GroupedIterator[B&gt;:A]extendsAbstractIterator[Seq[B]]withIterator[Seq[B]]" class="extmbr" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator.GroupedIterator">GroupedIterator</a>[<span class="extype" name="scala.collection.Iterator.sliding.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@sliding[B&gt;:A](size:Int,step:Int):Iterator.this.GroupedIterator[B]" title="Permalink" target="_top">
@@ -1518,7 +1700,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">span</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>])</span>
+        <span class="name">span</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: (<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>], <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>])</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@span(p:A=&gt;Boolean):(Iterator[A],Iterator[A])" title="Permalink" target="_top">
@@ -1569,7 +1751,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">take</span><span class="params">(<span name="n">n: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">take</span><span class="params">(<span name="n">n: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@take(n:Int):Iterator[A]" title="Permalink" target="_top">
@@ -1586,7 +1768,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">takeWhile</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">takeWhile</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@takeWhile(p:A=&gt;Boolean):Iterator[A]" title="Permalink" target="_top">
@@ -1603,7 +1785,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">to</span><span class="tparams">[<span name="Col">Col<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="cbf">cbf: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.generic.CanBuildFrom" class="extype" target="_top">CanBuildFrom</a>[<a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Nothing" class="extype" target="_top">Nothing</a>, <span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.TraversableOnce.to.Col">Col</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>]]</span>)</span><span class="result">: <span class="extype" name="scala.collection.TraversableOnce.to.Col">Col</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">to</span><span class="tparams">[<span name="Col">Col<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="cbf">cbf: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.generic.CanBuildFrom" class="extype" target="_top">CanBuildFrom</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Nothing" class="extype" target="_top">Nothing</a>, <span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.TraversableOnce.to.Col">Col</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>]]</span>)</span><span class="result">: <span class="extype" name="scala.collection.TraversableOnce.to.Col">Col</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@to[Col[_]](implicitcbf:scala.collection.generic.CanBuildFrom[Nothing,A,Col[A@scala.annotation.unchecked.uncheckedVariance]]):Col[A@scala.annotation.unchecked.uncheckedVariance]" title="Permalink" target="_top">
@@ -1620,7 +1802,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="scala.collection.TraversableOnce.toArray.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.TraversableOnce.toArray.B">B</span>]</span>
+        <span class="name">toArray</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.reflect.ClassTag" class="extype" target="_top">ClassTag</a>[<span class="extype" name="scala.collection.TraversableOnce.toArray.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Array" class="extype" target="_top">Array</a>[<span class="extype" name="scala.collection.TraversableOnce.toArray.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toArray[B&gt;:A](implicitevidence$1:scala.reflect.ClassTag[B]):Array[B]" title="Permalink" target="_top">
@@ -1637,7 +1819,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toBuffer</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.mutable.Buffer" class="extype" target="_top">Buffer</a>[<span class="extype" name="scala.collection.TraversableOnce.toBuffer.B">B</span>]</span>
+        <span class="name">toBuffer</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.mutable.Buffer" class="extype" target="_top">Buffer</a>[<span class="extype" name="scala.collection.TraversableOnce.toBuffer.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toBuffer[B&gt;:A]:scala.collection.mutable.Buffer[B]" title="Permalink" target="_top">
@@ -1654,7 +1836,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toIndexedSeq</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.immutable.IndexedSeq" class="extype" target="_top">IndexedSeq</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">toIndexedSeq</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.immutable.IndexedSeq" class="extype" target="_top">IndexedSeq</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toIndexedSeq:scala.collection.immutable.IndexedSeq[A]" title="Permalink" target="_top">
@@ -1671,7 +1853,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toIterable</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterable" class="extype" target="_top">Iterable</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">toIterable</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterable" class="extype" target="_top">Iterable</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toIterable:Iterable[A]" title="Permalink" target="_top">
@@ -1688,7 +1870,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toIterator</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">toIterator</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toIterator:Iterator[A]" title="Permalink" target="_top">
@@ -1722,7 +1904,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toMap</span><span class="tparams">[<span name="T">T</span>, <span name="U">U</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="ev">ev: <span class="extype" name="scala.Predef.&lt;:&lt;">&lt;:&lt;</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>, (<span class="extype" name="scala.collection.TraversableOnce.toMap.T">T</span>, <span class="extype" name="scala.collection.TraversableOnce.toMap.U">U</span>)]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.immutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="scala.collection.TraversableOnce.toMap.T">T</span>, <span class="extype" name="scala.collection.TraversableOnce.toMap.U">U</span>]</span>
+        <span class="name">toMap</span><span class="tparams">[<span name="T">T</span>, <span name="U">U</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="ev">ev: <span class="extype" name="scala.Predef.&lt;:&lt;">&lt;:&lt;</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>, (<span class="extype" name="scala.collection.TraversableOnce.toMap.T">T</span>, <span class="extype" name="scala.collection.TraversableOnce.toMap.U">U</span>)]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.immutable.Map" class="extype" target="_top">Map</a>[<span class="extype" name="scala.collection.TraversableOnce.toMap.T">T</span>, <span class="extype" name="scala.collection.TraversableOnce.toMap.U">U</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toMap[T,U](implicitev:&lt;:&lt;[A,(T,U)]):scala.collection.immutable.Map[T,U]" title="Permalink" target="_top">
@@ -1730,6 +1912,27 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>TraversableOnce → GenTraversableOnce</dd></dl></div>
+    </li><li name="scala.collection.parallel.CollectionsHaveToParArray#toParArray" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toParArray:scala.collection.parallel.mutable.ParArray[T]"></a>
+      <a id="toParArray:ParArray[T]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">toParArray</span><span class="result">: <span class="extype" name="scala.collection.parallel.mutable.ParArray">ParArray</span>[<span class="extype" name="scala.collection.parallel.CollectionsHaveToParArray.T">T</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toParArray:scala.collection.parallel.mutable.ParArray[T]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.collection.parallel.CollectionsHaveToParArray">CollectionsHaveToParArray</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>, <span class="extype" name="scala.collection.parallel.CollectionsHaveToParArray.T">T</span>] performed by method CollectionsHaveToParArray in scala.collection.parallel.
+            This conversion will take place only if an implicit value of type (<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.parallel.CollectionsHaveToParArray.T">T</span>] is in scope.
+          </dd><dt>Definition Classes</dt><dd>CollectionsHaveToParArray</dd></dl></div>
     </li><li name="scala.collection.TraversableOnce#toSeq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toSeq:Seq[A]"></a>
       <a id="toSeq:Seq[ByteString]"></a>
@@ -1739,7 +1942,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toSeq</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Seq" class="extype" target="_top">Seq</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">toSeq</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Seq" class="extype" target="_top">Seq</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toSeq:Seq[A]" title="Permalink" target="_top">
@@ -1756,7 +1959,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toSet</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.immutable.Set" class="extype" target="_top">Set</a>[<span class="extype" name="scala.collection.TraversableOnce.toSet.B">B</span>]</span>
+        <span class="name">toSet</span><span class="tparams">[<span name="B">B &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.immutable.Set" class="extype" target="_top">Set</a>[<span class="extype" name="scala.collection.TraversableOnce.toSet.B">B</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toSet[B&gt;:A]:scala.collection.immutable.Set[B]" title="Permalink" target="_top">
@@ -1807,7 +2010,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toTraversable</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Traversable" class="extype" target="_top">Traversable</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">toTraversable</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Traversable" class="extype" target="_top">Traversable</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@toTraversable:Traversable[A]" title="Permalink" target="_top">
@@ -1841,7 +2044,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@wait():Unit" title="Permalink" target="_top">
@@ -1864,7 +2067,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
@@ -1887,7 +2090,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@wait(x$1:Long):Unit" title="Permalink" target="_top">
@@ -1910,7 +2113,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withFilter</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+        <span class="name">withFilter</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@withFilter(p:A=&gt;Boolean):Iterator[A]" title="Permalink" target="_top">
@@ -1927,7 +2130,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">zip</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.zip.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[(<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.zip.B">B</span>)]</span>
+        <span class="name">zip</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.zip.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[(<span class="extype" name="akka.util.ByteString">ByteString</span>, <span class="extype" name="scala.collection.Iterator.zip.B">B</span>)]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@zip[B](that:Iterator[B]):Iterator[(A,B)]" title="Permalink" target="_top">
@@ -1944,7 +2147,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">zipAll</span><span class="tparams">[<span name="B">B</span>, <span name="A1">A1 &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>, <span name="B1">B1 &gt;: <span class="extype" name="scala.collection.Iterator.zipAll.B">B</span></span>]</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.zipAll.B">B</span>]</span>, <span name="thisElem">thisElem: <span class="extype" name="scala.collection.Iterator.zipAll.A1">A1</span></span>, <span name="thatElem">thatElem: <span class="extype" name="scala.collection.Iterator.zipAll.B1">B1</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[(<span class="extype" name="scala.collection.Iterator.zipAll.A1">A1</span>, <span class="extype" name="scala.collection.Iterator.zipAll.B1">B1</span>)]</span>
+        <span class="name">zipAll</span><span class="tparams">[<span name="B">B</span>, <span name="A1">A1 &gt;: <span class="extype" name="akka.util.ByteString">ByteString</span></span>, <span name="B1">B1 &gt;: <span class="extype" name="scala.collection.Iterator.zipAll.B">B</span></span>]</span><span class="params">(<span name="that">that: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="scala.collection.Iterator.zipAll.B">B</span>]</span>, <span name="thisElem">thisElem: <span class="extype" name="scala.collection.Iterator.zipAll.A1">A1</span></span>, <span name="thatElem">thatElem: <span class="extype" name="scala.collection.Iterator.zipAll.B1">B1</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[(<span class="extype" name="scala.collection.Iterator.zipAll.A1">A1</span>, <span class="extype" name="scala.collection.Iterator.zipAll.B1">B1</span>)]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@zipAll[B,A1&gt;:A,B1&gt;:B](that:Iterator[B],thisElem:A1,thatElem:B1):Iterator[(A1,B1)]" title="Permalink" target="_top">
@@ -1961,7 +2164,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">zipWithIndex</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[(<span class="extype" name="akka.util.ByteString">ByteString</span>, <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Int" class="extype" target="_top">Int</a>)]</span>
+        <span class="name">zipWithIndex</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[(<span class="extype" name="akka.util.ByteString">ByteString</span>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a>)]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@zipWithIndex:Iterator[(A,Int)]" title="Permalink" target="_top">
@@ -1969,27 +2172,167 @@
       </a>
     </span>
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Iterator</dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="→[B](y:B):(A,B)"></a>
+      <a id="→[B](B):(ByteBufferIterator,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>, <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@→[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
     </li></ol>
             </div>
 
-        
+        <div id="values" class="values members">
+              <h3>Shadowed Implicit Value Members</h3>
+              <ol><li name="scala.collection.TraversableOnce.MonadOps#filter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="filter(p:A=&gt;Boolean):scala.collection.TraversableOnce[A]"></a>
+      <a id="filter((ByteString)⇒Boolean):TraversableOnce[ByteString]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit shadowed">filter</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.TraversableOnce" class="extype" target="_top">TraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@filter(p:A=&gt;Boolean):scala.collection.TraversableOnce[A]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.collection.TraversableOnce.MonadOps">MonadOps</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>] performed by method MonadOps in scala.collection.TraversableOnce.
+            
+          </dd><dt class="implicit">Shadowing</dt><dd>This implicitly inherited member is shadowed by one or more members in this class.<br />To access this member you can use a <a href="http://stackoverflow.com/questions/2087250/what-is-the-purpose-of-type-ascription-in-scala" target="_blank">type ascription</a>:<br /><div class="cmt"><pre>(byteBufferIterator: MonadOps[ByteString]).filter(p)</pre></div></dd><dt>Definition Classes</dt><dd>MonadOps</dd></dl></div>
+    </li><li name="scala.collection.TraversableOnce.MonadOps#flatMap" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="flatMap[B](f:A=&gt;scala.collection.GenTraversableOnce[B]):scala.collection.TraversableOnce[B]"></a>
+      <a id="flatMap[B]((ByteString)⇒GenTraversableOnce[B]):TraversableOnce[B]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit shadowed">flatMap</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="scala.collection.TraversableOnce.MonadOps.flatMap.B">B</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.TraversableOnce" class="extype" target="_top">TraversableOnce</a>[<span class="extype" name="scala.collection.TraversableOnce.MonadOps.flatMap.B">B</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@flatMap[B](f:A=&gt;scala.collection.GenTraversableOnce[B]):scala.collection.TraversableOnce[B]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.collection.TraversableOnce.MonadOps">MonadOps</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>] performed by method MonadOps in scala.collection.TraversableOnce.
+            
+          </dd><dt class="implicit">Shadowing</dt><dd>This implicitly inherited member is shadowed by one or more members in this class.<br />To access this member you can use a <a href="http://stackoverflow.com/questions/2087250/what-is-the-purpose-of-type-ascription-in-scala" target="_blank">type ascription</a>:<br /><div class="cmt"><pre>(byteBufferIterator: MonadOps[ByteString]).flatMap(f)</pre></div></dd><dt>Definition Classes</dt><dd>MonadOps</dd></dl></div>
+    </li><li name="scala.collection.TraversableOnce.MonadOps#map" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="map[B](f:A=&gt;B):scala.collection.TraversableOnce[B]"></a>
+      <a id="map[B]((ByteString)⇒B):TraversableOnce[B]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit shadowed">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <span class="extype" name="scala.collection.TraversableOnce.MonadOps.map.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.TraversableOnce" class="extype" target="_top">TraversableOnce</a>[<span class="extype" name="scala.collection.TraversableOnce.MonadOps.map.B">B</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@map[B](f:A=&gt;B):scala.collection.TraversableOnce[B]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.collection.TraversableOnce.MonadOps">MonadOps</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>] performed by method MonadOps in scala.collection.TraversableOnce.
+            
+          </dd><dt class="implicit">Shadowing</dt><dd>This implicitly inherited member is shadowed by one or more members in this class.<br />To access this member you can use a <a href="http://stackoverflow.com/questions/2087250/what-is-the-purpose-of-type-ascription-in-scala" target="_blank">type ascription</a>:<br /><div class="cmt"><pre>(byteBufferIterator: MonadOps[ByteString]).map(f)</pre></div></dd><dt>Definition Classes</dt><dd>MonadOps</dd></dl></div>
+    </li><li name="scala.collection.TraversableOnce.MonadOps#withFilter" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="withFilter(p:A=&gt;Boolean):Iterator[A]"></a>
+      <a id="withFilter((ByteString)⇒Boolean):Iterator[ByteString]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit shadowed">withFilter</span><span class="params">(<span name="p">p: (<span class="extype" name="akka.util.ByteString">ByteString</span>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.apps.configServiceAnnex.FileUtils$$ByteBufferIterator@withFilter(p:A=&gt;Boolean):Iterator[A]" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to
+            <span class="extype" name="scala.collection.TraversableOnce.MonadOps">MonadOps</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>] performed by method MonadOps in scala.collection.TraversableOnce.
+            
+          </dd><dt class="implicit">Shadowing</dt><dd>This implicitly inherited member is shadowed by one or more members in this class.<br />To access this member you can use a <a href="http://stackoverflow.com/questions/2087250/what-is-the-purpose-of-type-ascription-in-scala" target="_blank">type ascription</a>:<br /><div class="cmt"><pre>(byteBufferIterator: MonadOps[ByteString]).withFilter(p)</pre></div></dd><dt>Definition Classes</dt><dd>MonadOps</dd></dl></div>
+    </li></ol>
+            </div>
 
         
         </div>
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.collection.Iterator">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.Iterator" class="extype" target="_top">Iterator</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</h3>
             </div><div class="parent" name="scala.collection.TraversableOnce">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.TraversableOnce" class="extype" target="_top">TraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.TraversableOnce" class="extype" target="_top">TraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</h3>
             </div><div class="parent" name="scala.collection.GenTraversableOnce">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.collection.GenTraversableOnce" class="extype" target="_top">GenTraversableOnce</a>[<span class="extype" name="akka.util.ByteString">ByteString</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.7/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
             </div>
-        
+        <div class="conversion" name="scala.collection.TraversableOnce.MonadOps">
+              <h3>Inherited by implicit conversion MonadOps from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.collection.TraversableOnce.MonadOps">MonadOps</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>]
+              </h3>
+            </div><div class="conversion" name="scala.collection.TraversableOnce.flattenTraversableOnce">
+              <h3>Inherited by implicit conversion flattenTraversableOnce from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.collection.TraversableOnce.FlattenOps">FlattenOps</span>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Byte" class="extype" target="_top">Byte</a>]
+              </h3>
+            </div><div class="conversion" name="scala.collection.parallel.CollectionsHaveToParArray">
+              <h3>Inherited by implicit conversion CollectionsHaveToParArray from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.collection.parallel.CollectionsHaveToParArray">CollectionsHaveToParArray</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>, <span class="extype" name="scala.collection.parallel.CollectionsHaveToParArray.T">T</span>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.any2stringadd">
+              <h3>Inherited by implicit conversion any2stringadd from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.StringFormat">
+              <h3>Inherited by implicit conversion StringFormat from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.Ensuring">
+              <h3>Inherited by implicit conversion Ensuring from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.ArrowAssoc">
+              <h3>Inherited by implicit conversion ArrowAssoc from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a>]
+              </h3>
+            </div><div class="conversion" name="scala.collection.TraversableOnce.alternateImplicit">
+              <h3>Inherited by implicit conversion alternateImplicit from
+                <a href="" class="extype" name="csw.services.apps.configServiceAnnex.FileUtils.ByteBufferIterator">ByteBufferIterator</a> to <span class="extype" name="scala.collection.TraversableOnce.ForceImplicitAmbiguity">ForceImplicitAmbiguity</span>
+              </h3>
+            </div>
         </div>
 
         <div id="groupedMembers">
