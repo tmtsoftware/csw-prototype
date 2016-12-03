@@ -8,7 +8,7 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.services.loc._
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
-import csw.services.pkg.Supervisor.{Initialized, Started}
+import csw.services.pkg.Supervisor.{Initialized, Running, Started}
 import csw.services.pkg.{Assembly, Supervisor}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
@@ -36,12 +36,15 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
     // Receive the HCD's location
     case l: ResolvedAkkaLocation =>
       if (l.actorRef.isDefined) {
-        log.info(s"Got actorRef: $hcd")
         hcd = l.actorRef.get
+        log.info(s"Got actorRef: $hcd")
         supervisor ! Started
       }
 
-    case x => log.error(s"Unexpected message: $x")
+    case Running =>
+      log.debug("received Running")
+
+    case x => log.error(s"Unexpected message: ${x.getClass}")
   }
 
   /**
