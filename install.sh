@@ -22,9 +22,6 @@ for i in bin lib ; do
     done
 done
 
-cp examples/vslice/scripts/lgsTromboneHCD.sh $dir/bin
-cp examples/vsliceJava/scripts/lgsTromboneHCD-java.sh $dir/bin
-
 cp scripts/*.sh $dir/bin
 chmod +x $dir/bin/*.sh
 

@@ -33,8 +33,11 @@ if ! type $REDIS_SERVER &> /dev/null; then
   exit 1
 fi
 
+SORT_VERSION="sort -V"
+test `uname` == Darwin && SORT_VERSION="sort"
+
 # Make sure we have the min redis version
-function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+function version_gt() { test "$(printf '%s\n' "$@" | $SORT_VERSION | head -n 1)" != "$1"; }
 redis_version=`$REDIS_SERVER --version | awk '{sub(/-.*/,"",$3);print $3}' | sed -e 's/v=//'`
 if version_gt $MIN_REDIS_VERSION $redis_version; then
      echo "Error: required Redis version is $MIN_REDIS_VERSION, but only version $redis_version was found"
