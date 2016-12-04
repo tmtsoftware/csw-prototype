@@ -1,0 +1,1000 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>JBlockingAlarmAdmin - javacsw.services.alarms.JBlockingAlarmAdmin</title>
+          <meta name="description" content="JBlockingAlarmAdmin - javacsw.services.alarms.JBlockingAlarmAdmin" />
+          <meta name="keywords" content="JBlockingAlarmAdmin javacsw.services.alarms.JBlockingAlarmAdmin" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
+      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../index.html';
+            var hash = 'javacsw.services.alarms.JBlockingAlarmAdmin';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="type">
+      <div id="definition">
+        <img alt="Class" src="../../../lib/class_big.png" />
+        <p id="owner"><a href="../../package.html" class="extype" name="javacsw">javacsw</a>.<a href="../package.html" class="extype" name="javacsw.services">services</a>.<a href="package.html" class="extype" name="javacsw.services.alarms">alarms</a></p>
+        <h1>JBlockingAlarmAdmin</h1><h3><span class="morelinks"><div>Related Doc:
+            <a href="package.html" class="extype" name="javacsw.services.alarms">package alarms</a>
+          </div></span></h3><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <span class="name">JBlockingAlarmAdmin</span><span class="params">(<span name="alarmService">alarmService: <a href="IBlockingAlarmService.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmService">IBlockingAlarmService</a></span>, <span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>, <span name="system">system: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Implements a blocking java admin API for the Alarm Service
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//javacsw/src/main/scala/javacsw/services/alarms/JBlockingAlarmAdmin.scala" target="_blank">JBlockingAlarmAdmin.scala</a></dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Equals" class="extype" target="_top">Equals</a>, <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a>, <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
+                <span class="toggle diagram-link">Type Hierarchy</span>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 355.50 118.00" height="118pt" width="356pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 351.5,-114 351.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="javacsw.services.alarms.JBlockingAlarmAdmin (this class)" xlink:href="#inheritance-diagram"><polygon points="265,-49 125,-49 125,-24 265,-24 265,-49" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../lib/class_diagram.png" y="-43.5" x="135" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-33.5" x="156" text-anchor="start">JBlockingAlarmAdmin</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="javacsw.services.alarms.IBlockingAlarmAdmin" xlink:href="IBlockingAlarmAdmin.html#inheritance-diagram"><polygon points="138,-110 0,-110 0,-85 138,-85 138,-110" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-94.5" x="31" text-anchor="start">IBlockingAlarmAdmin</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="JBlockingAlarmAdmin is a subtype of IBlockingAlarmAdmin"><path d="M98.3897,-82.7381C120.132,-72.5571 149.427,-58.8399 170.038,-49.1884" stroke="#d4d4d4" fill="none"></path><polygon points="97.3792,-81.2789 93.5932,-84.9841 98.8635,-84.4486 97.3792,-81.2789" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><polygon points="234,-110 156,-110 156,-85 234,-85 234,-110" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-104.5" x="166" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-94.5" x="187" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="JBlockingAlarmAdmin is a subtype of Product"><path d="M195,-79.6874C195,-69.9173 195,-57.8534 195,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="193.25,-79.8435 195,-84.8435 196.75,-79.8435 193.25,-79.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><polygon points="347.5,-110 252.5,-110 252.5,-85 347.5,-85 347.5,-110" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../lib/trait_diagram.png" y="-104.5" x="263" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-94.5" x="284" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="JBlockingAlarmAdmin is a subtype of Serializable"><path d="M275.05,-82.4807C256.98,-72.3269 232.834,-58.7588 215.801,-49.1884" stroke="#d4d4d4" fill="none"></path><polygon points="274.289,-84.0604 279.506,-84.9841 276.004,-81.0091 274.289,-84.0604" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="javacsw.services.alarms.JBlockingAlarmAdmin"><span>JBlockingAlarmAdmin</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="javacsw.services.alarms.IBlockingAlarmAdmin"><span>IBlockingAlarmAdmin</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+                <span class="filtertype">Implicitly<br />
+                </span>
+                <ol id="implicits"> <li class="in" name="scala.Predef.any2stringadd" data-hidden="true"><span>by any2stringadd</span></li><li class="in" name="scala.Predef.StringFormat" data-hidden="true"><span>by StringFormat</span></li><li class="in" name="scala.Predef.Ensuring" data-hidden="true"><span>by Ensuring</span></li><li class="in" name="scala.Predef.ArrowAssoc" data-hidden="true"><span>by ArrowAssoc</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="javacsw.services.alarms.JBlockingAlarmAdmin#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(alarmService:javacsw.services.alarms.IBlockingAlarmService,timeout:akka.util.Timeout,system:akka.actor.ActorRefFactory):javacsw.services.alarms.JBlockingAlarmAdmin"></a>
+      <a id="&lt;init&gt;:JBlockingAlarmAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">JBlockingAlarmAdmin</span><span class="params">(<span name="alarmService">alarmService: <a href="IBlockingAlarmService.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmService">IBlockingAlarmService</a></span>, <span name="timeout">timeout: <span class="extype" name="akka.util.Timeout">Timeout</span></span>, <span name="system">system: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@&lt;init&gt;(alarmService:javacsw.services.alarms.IBlockingAlarmService,timeout:akka.util.Timeout,system:akka.actor.ActorRefFactory):javacsw.services.alarms.JBlockingAlarmAdmin" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@!=(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@##():Int" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Predef.any2stringadd#+" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="+(other:String):String"></a>
+      <a id="+(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $plus" class="implicit">+</span><span class="params">(<span name="other">other: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@+(other:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method any2stringadd in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>any2stringadd</dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#-&gt;" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="-&gt;[B](y:B):(A,B)"></a>
+      <a id="-&gt;[B](B):(JBlockingAlarmAdmin,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $minus$greater" class="implicit">-&gt;</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>, <span class="extype" name="scala.Predef.ArrowAssoc.-&gt;.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@-&gt;[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@==(x$1:Any):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#acknowledgeAlarm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="acknowledgeAlarm(alarmKey:csw.services.alarms.AlarmKey):Unit"></a>
+      <a id="acknowledgeAlarm(AlarmKey):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">acknowledgeAlarm</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@acknowledgeAlarm(alarmKey:csw.services.alarms.AlarmKey):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#acknowledgeAndResetAlarm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="acknowledgeAndResetAlarm(alarmKey:csw.services.alarms.AlarmKey):Unit"></a>
+      <a id="acknowledgeAndResetAlarm(AlarmKey):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">acknowledgeAndResetAlarm</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@acknowledgeAndResetAlarm(alarmKey:csw.services.alarms.AlarmKey):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#alarmAdmin" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="alarmAdmin:csw.services.alarms.BlockingAlarmServiceAdmin"></a>
+      <a id="alarmAdmin:BlockingAlarmServiceAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">alarmAdmin</span><span class="result">: <a href="../../../csw/services/alarms/BlockingAlarmServiceAdmin.html" class="extype" name="csw.services.alarms.BlockingAlarmServiceAdmin">BlockingAlarmServiceAdmin</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@alarmAdmin:csw.services.alarms.BlockingAlarmServiceAdmin" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#alarmService" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="alarmService:javacsw.services.alarms.IBlockingAlarmService"></a>
+      <a id="alarmService:IBlockingAlarmService"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">alarmService</span><span class="result">: <a href="IBlockingAlarmService.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmService">IBlockingAlarmService</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@alarmService:javacsw.services.alarms.IBlockingAlarmService" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@asInstanceOf[T0]:T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@clone():Object" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring((JBlockingAlarmAdmin)⇒Boolean,⇒Any):JBlockingAlarmAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@ensuring(cond:A=&gt;Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:A=&gt;Boolean):A"></a>
+      <a id="ensuring((JBlockingAlarmAdmin)⇒Boolean):JBlockingAlarmAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: (<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>) ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@ensuring(cond:A=&gt;Boolean):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean,msg:=&gt;Any):A"></a>
+      <a id="ensuring(Boolean,⇒Any):JBlockingAlarmAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>, <span name="msg">msg: ⇒ <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></span>)</span><span class="result">: <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@ensuring(cond:Boolean,msg:=&gt;Any):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.Predef.Ensuring#ensuring" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ensuring(cond:Boolean):A"></a>
+      <a id="ensuring(Boolean):JBlockingAlarmAdmin"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">ensuring</span><span class="params">(<span name="cond">cond: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@ensuring(cond:Boolean):A" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method Ensuring in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>Ensuring</dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@finalize():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.Predef.StringFormat#formatted" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="formatted(fmtstr:String):String"></a>
+      <a id="formatted(String):String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="implicit">formatted</span><span class="params">(<span name="fmtstr">fmtstr: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@formatted(fmtstr:String):String" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method StringFormat in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>StringFormat</dd><dt>Annotations</dt><dd>
+                <span class="name">@inline</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#getAlarm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getAlarm(key:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmModel"></a>
+      <a id="getAlarm(AlarmKey):AlarmModel"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getAlarm</span><span class="params">(<span name="key">key: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <a href="../../../csw/services/alarms/AlarmModel.html" class="extype" name="csw.services.alarms.AlarmModel">AlarmModel</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@getAlarm(key:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmModel" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#getAlarmState" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getAlarmState(key:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmState"></a>
+      <a id="getAlarmState(AlarmKey):AlarmState"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getAlarmState</span><span class="params">(<span name="key">key: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <a href="../../../csw/services/alarms/AlarmState.html" class="extype" name="csw.services.alarms.AlarmState">AlarmState</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@getAlarmState(key:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmState" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#getAlarms" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getAlarms(alarmKey:csw.services.alarms.AlarmKey):java.util.List[csw.services.alarms.AlarmModel]"></a>
+      <a id="getAlarms(AlarmKey):List[AlarmModel]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getAlarms</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<a href="../../../csw/services/alarms/AlarmModel.html" class="extype" name="csw.services.alarms.AlarmModel">AlarmModel</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@getAlarms(alarmKey:csw.services.alarms.AlarmKey):java.util.List[csw.services.alarms.AlarmModel]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@getClass():Class[_]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#getHealth" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getHealth(alarmKey:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmModel.Health"></a>
+      <a id="getHealth(AlarmKey):Health"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getHealth</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <a href="../../../csw/services/alarms/AlarmModel$$Health.html" class="extype" name="csw.services.alarms.AlarmModel.Health">Health</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@getHealth(alarmKey:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmModel.Health" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#getSeverity" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getSeverity(alarmKey:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmModel.CurrentSeverity"></a>
+      <a id="getSeverity(AlarmKey):CurrentSeverity"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getSeverity</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <a href="../../../csw/services/alarms/AlarmModel$$CurrentSeverity.html" class="extype" name="csw.services.alarms.AlarmModel.CurrentSeverity">CurrentSeverity</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@getSeverity(alarmKey:csw.services.alarms.AlarmKey):csw.services.alarms.AlarmModel.CurrentSeverity" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#initAlarms" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="initAlarms(inputFile:java.io.File,reset:Boolean):java.util.List[csw.services.alarms.AscfValidation.Problem]"></a>
+      <a id="initAlarms(File,Boolean):List[Problem]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">initAlarms</span><span class="params">(<span name="inputFile">inputFile: <span class="extype" name="java.io.File">File</span></span>, <span name="reset">reset: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<a href="../../../csw/services/alarms/AscfValidation$$Problem.html" class="extype" name="csw.services.alarms.AscfValidation.Problem">Problem</a>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@initAlarms(inputFile:java.io.File,reset:Boolean):java.util.List[csw.services.alarms.AscfValidation.Problem]" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#monitorAlarms" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="monitorAlarms(alarmKey:csw.services.alarms.AlarmKey,notifyAlarm:javacsw.services.alarms.IAlarmServiceAdmin.AlarmHandler,notifyHealth:javacsw.services.alarms.IAlarmServiceAdmin.HealthHandler,notifyAll:Boolean):csw.services.alarms.AlarmService.AlarmMonitor"></a>
+      <a id="monitorAlarms(AlarmKey,AlarmHandler,HealthHandler,Boolean):AlarmMonitor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">monitorAlarms</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>, <span name="notifyAlarm">notifyAlarm: <span class="extype" name="javacsw.services.alarms.IAlarmServiceAdmin.AlarmHandler">AlarmHandler</span></span>, <span name="notifyHealth">notifyHealth: <span class="extype" name="javacsw.services.alarms.IAlarmServiceAdmin.HealthHandler">HealthHandler</span></span>, <span name="notifyAll">notifyAll: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="../../../csw/services/alarms/AlarmService$$AlarmMonitor.html" class="extype" name="csw.services.alarms.AlarmService.AlarmMonitor">AlarmMonitor</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@monitorAlarms(alarmKey:csw.services.alarms.AlarmKey,notifyAlarm:javacsw.services.alarms.IAlarmServiceAdmin.AlarmHandler,notifyHealth:javacsw.services.alarms.IAlarmServiceAdmin.HealthHandler,notifyAll:Boolean):csw.services.alarms.AlarmService.AlarmMonitor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#monitorAlarms" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="monitorAlarms(alarmKey:csw.services.alarms.AlarmKey,subscriber:akka.actor.ActorRef,notifyAll:Boolean):csw.services.alarms.AlarmService.AlarmMonitor"></a>
+      <a id="monitorAlarms(AlarmKey,ActorRef,Boolean):AlarmMonitor"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">monitorAlarms</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>, <span name="subscriber">subscriber: <span class="extype" name="akka.actor.ActorRef">ActorRef</span></span>, <span name="notifyAll">notifyAll: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>)</span><span class="result">: <a href="../../../csw/services/alarms/AlarmService$$AlarmMonitor.html" class="extype" name="csw.services.alarms.AlarmService.AlarmMonitor">AlarmMonitor</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@monitorAlarms(alarmKey:csw.services.alarms.AlarmKey,subscriber:akka.actor.ActorRef,notifyAll:Boolean):csw.services.alarms.AlarmService.AlarmMonitor" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@notify():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@notifyAll():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#resetAlarm" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="resetAlarm(alarmKey:csw.services.alarms.AlarmKey):Unit"></a>
+      <a id="resetAlarm(AlarmKey):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">resetAlarm</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@resetAlarm(alarmKey:csw.services.alarms.AlarmKey):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#setActivationState" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="setActivationState(alarmKey:csw.services.alarms.AlarmKey,activationState:csw.services.alarms.AlarmState.ActivationState):Unit"></a>
+      <a id="setActivationState(AlarmKey,ActivationState):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">setActivationState</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>, <span name="activationState">activationState: <a href="../../../csw/services/alarms/AlarmState$$ActivationState.html" class="extype" name="csw.services.alarms.AlarmState.ActivationState">ActivationState</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@setActivationState(alarmKey:csw.services.alarms.AlarmKey,activationState:csw.services.alarms.AlarmState.ActivationState):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#setShelvedState" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="setShelvedState(alarmKey:csw.services.alarms.AlarmKey,shelvedState:csw.services.alarms.AlarmState.ShelvedState):Unit"></a>
+      <a id="setShelvedState(AlarmKey,ShelvedState):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">setShelvedState</span><span class="params">(<span name="alarmKey">alarmKey: <a href="../../../csw/services/alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey">AlarmKey</a></span>, <span name="shelvedState">shelvedState: <a href="../../../csw/services/alarms/AlarmState$$ShelvedState.html" class="extype" name="csw.services.alarms.AlarmState.ShelvedState">ShelvedState</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@setShelvedState(alarmKey:csw.services.alarms.AlarmKey,shelvedState:csw.services.alarms.AlarmState.ShelvedState):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#shutdown" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="shutdown():Unit"></a>
+      <a id="shutdown():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">shutdown</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@shutdown():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> → <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#sys" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sys:akka.actor.ActorRefFactory"></a>
+      <a id="sys:ActorRefFactory"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">sys</span><span class="result">: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@sys:akka.actor.ActorRefFactory" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#system" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="system:akka.actor.ActorRefFactory"></a>
+      <a id="system:ActorRefFactory"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">system</span><span class="result">: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@system:akka.actor.ActorRefFactory" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#t" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="t:akka.util.Timeout"></a>
+      <a id="t:Timeout"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">t</span><span class="result">: <span class="extype" name="akka.util.Timeout">Timeout</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@t:akka.util.Timeout" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="javacsw.services.alarms.JBlockingAlarmAdmin#timeout" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="timeout:akka.util.Timeout"></a>
+      <a id="timeout:Timeout"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">timeout</span><span class="result">: <span class="extype" name="akka.util.Timeout">Timeout</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@timeout:akka.util.Timeout" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@wait():Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Long" class="extype" target="_top">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@wait(x$1:Long):Unit" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.Predef.ArrowAssoc#→" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="→[B](y:B):(A,B)"></a>
+      <a id="→[B](B):(JBlockingAlarmAdmin,B)"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $u2192" class="implicit">→</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="y">y: <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span></span>)</span><span class="result">: (<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>, <span class="extype" name="scala.Predef.ArrowAssoc.→.B">B</span>)</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../index.html#javacsw.services.alarms.JBlockingAlarmAdmin@→[B](y:B):(A,B)" title="Permalink" target="_top">
+        <img src="../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <div class="fullcomment"><dl class="attributes block"> <dt class="implicit">Implicit information</dt><dd>
+            This member is added by an implicit conversion from <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to
+            <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>] performed by method ArrowAssoc in scala.Predef.
+            
+          </dd><dt>Definition Classes</dt><dd>ArrowAssoc</dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.Serializable">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></h3>
+            </div><div class="parent" name="java.io.Serializable">
+              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+            </div><div class="parent" name="scala.Product">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a></h3>
+            </div><div class="parent" name="scala.Equals">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Equals" class="extype" target="_top">Equals</a></h3>
+            </div><div class="parent" name="javacsw.services.alarms.IBlockingAlarmAdmin">
+              <h3>Inherited from <a href="IBlockingAlarmAdmin.html" class="extype" name="javacsw.services.alarms.IBlockingAlarmAdmin">IBlockingAlarmAdmin</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        <div class="conversion" name="scala.Predef.any2stringadd">
+              <h3>Inherited by implicit conversion any2stringadd from
+                <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to <span class="extype" name="scala.Predef.any2stringadd">any2stringadd</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.StringFormat">
+              <h3>Inherited by implicit conversion StringFormat from
+                <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to <span class="extype" name="scala.Predef.StringFormat">StringFormat</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.Ensuring">
+              <h3>Inherited by implicit conversion Ensuring from
+                <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to <span class="extype" name="scala.Predef.Ensuring">Ensuring</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>]
+              </h3>
+            </div><div class="conversion" name="scala.Predef.ArrowAssoc">
+              <h3>Inherited by implicit conversion ArrowAssoc from
+                <a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a> to <span class="extype" name="scala.Predef.ArrowAssoc">ArrowAssoc</span>[<a href="" class="extype" name="javacsw.services.alarms.JBlockingAlarmAdmin">JBlockingAlarmAdmin</a>]
+              </h3>
+            </div>
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

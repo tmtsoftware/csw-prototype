@@ -25,12 +25,13 @@
 
 
         <ul>
-            <li><a href="https://github.com/tmtsoftware/csw/zipball/master">Download <strong>ZIP File</strong></a></li>
-            <li><a href="https://github.com/tmtsoftware/csw/tarball/master">Download <strong>TAR Ball</strong></a></li>
+            <li><a href="https://github.com/tmtsoftware/csw/zipball/master">Download <strong>CSW source as zip file</strong></a></li>
+            <li><a href="https://github.com/tmtsoftware/csw/tarball/master">Download <strong>CSW source as tar.gz</strong></a></li>
+            <li><a href="https://github.com/tmtsoftware/csw/releases/download/v0.3-PDR/csw-0.3-javadoc.tar.gz">Download <strong>Javadoc as tar.gz</strong></a></li>
+            <li><a href="https://github.com/tmtsoftware/csw/releases/download/v0.3-PDR/csw-0.3-scaladoc.tar.gz">Download <strong>Scaladoc as tar.gz</strong></a></li>
             <li><a href="https://github.com/tmtsoftware/csw">View On <strong>GitHub</strong></a></li>
         </ul>
     </header>
-
 
     <section>
         <h3>
@@ -39,47 +40,87 @@
 
         <p>
             This site contains links to the
-            <a href="latest/api/index.html">API documentation</a>
-            for the
+            <a href="api/scala/index.html">Scala</a>
+            and <a href="api/java/index.html">Java</a>
+            API documentation for the
             <a href="https://github.com/tmtsoftware/csw/tree/master">TMT Common Software (CSW)</a>.
         </p>
 
         <table style="width:100%">
             <tr>
-                <th>API Docs</th>
+                <th>Scala API Docs</th>
                 <th>Sources</th>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.services.ccs.package">Command and Control Service</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/ccs">ccs</a></td>
+                <td><a href="api/scala/index.html#csw.services.alarms.package">Alarm Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/alarms">ccs</a></td>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.services.cs.package">Config Service</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/cs">cs</a></td>
+                <td><a href="api/scala/index.html#csw.services.ccs.package">Command and Control Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/ccs">ccs</a></td>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.services.loc.package">Location Service</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/loc">loc</a></td>
+                <td><a href="api/scala/index.html#csw.services.cs.package">Config Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/cs">cs</a></td>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.services.pkg.package">Component Packaging</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/pkg">pkg</a></td>
+                <td><a href="api/scala/index.html#csw.services.events.package">Event Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/events">events</a></td>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.services.event_old.package">Event Service</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/event">event</a></td>
+                <td><a href="api/scala/index.html#csw.services.loc.package">Location Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/loc">loc</a></td>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.services.ts.package">Time Service</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/ts">ts</a></td>
+                <td><a href="api/scala/index.html#csw.services.pkg.package">Component Packaging</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/pkg">pkg</a></td>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.services.events.package">Key Value Store</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/kvs">kvs</a></td>
+                <td><a href="api/scala/index.html#csw.services.ts.package">Time Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/ts">ts</a></td>
             </tr>
             <tr>
-                <td><a href="latest/api/index.html#csw.util.cfg.package">Utilities (Configurations, Events)</a></td>
-                <td><a href="https://github.com/tmtsoftware/csw/tree/master/util">util</a></td>
+                <td><a href="api/scala/index.html#csw.util.cfg.package">Utilities (Configurations, Events)</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/util">util</a></td>
+            </tr>
+        </table>
+
+        <table style="width:100%">
+            <tr>
+                <th>Java API Docs</th>
+                <th>Sources</th>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.services.alarms.package">Alarm Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/alarms">ccs</a></td>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.services.ccs.package">Command and Control Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/ccs">ccs</a></td>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.services.cs.package">Config Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/cs">cs</a></td>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.services.events.package">Event Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/events">events</a></td>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.services.loc.package">Location Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/loc">loc</a></td>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.services.pkg.package">Component Packaging</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/pkg">pkg</a></td>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.services.ts.package">Time Service</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/ts">ts</a></td>
+            </tr>
+            <tr>
+                <td><a href="api/java/index.html#csw.util.cfg.package">Utilities (Configurations, Events)</a></td>
+                <td><a href="https://github.com/tmtsoftware/csw/tree/v0.3-PDR/util">util</a></td>
             </tr>
         </table>
 

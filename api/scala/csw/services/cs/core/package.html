@@ -1,0 +1,415 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>core - csw.services.cs.core</title>
+          <meta name="description" content="core - csw.services.cs.core" />
+          <meta name="keywords" content="core csw.services.cs.core" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      <script type="text/javascript" src="../../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../../lib/diagrams.js" id="diagrams-js"></script>
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'csw.services.cs.core.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../../lib/package_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="csw">csw</a>.<a href="../../package.html" class="extype" name="csw.services">services</a>.<a href="../package.html" class="extype" name="csw.services.cs">cs</a></p>
+        <h1>core</h1><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">core</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Defines the API for storing and retrieving configuration information.
+Akka streams are used to transfer files between client and server.
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//cs/src/main/scala/csw/services/cs/core/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div><div class="toggleContainer block diagram-container" id="content-diagram-container">
+                <span class="toggle diagram-link">Content Hierarchy</span>
+                <div class="diagram" id="content-diagram"><svg class="package-diagram" id="graph1" viewBox="0.00 0.00 559.00 94.00" height="94pt" width="559pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 90)" class="graph" id="graph0"><polygon points="-4,4 -4,-90 555,-90 555,4 -4,4" stroke="none" fill="white"></polygon><!-- node0 --><g class="node class" id="graph1_0"><g id="a_class|graph1_0"><a xlink:title="csw.services.cs.core.ConfigFile" xlink:href="ConfigFile.html#inheritance-diagram"><polygon points="87,-25 0,-25 0,-0 87,-0 87,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="31.5" text-anchor="start">ConfigFile</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="csw.services.cs.core.ConfigData" xlink:href="ConfigData.html#inheritance-diagram"><polygon points="256.5,-86 164.5,-86 164.5,-61 256.5,-61 256.5,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../../lib/trait_diagram.png" y="-80.5" x="174.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="195.5" text-anchor="start">ConfigData</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="ConfigFile is a subtype of ConfigData"><path d="M172.975,-59.2427C143.924,-48.979 104.084,-34.904 76.2985,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="172.607,-60.9686 177.904,-60.9841 173.773,-57.6685 172.607,-60.9686" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="csw.services.cs.core.ConfigString" xlink:href="ConfigString.html#inheritance-diagram"><polygon points="202,-25 105,-25 105,-0 202,-0 202,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="115.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="136.5" text-anchor="start">ConfigString</text></a></g></g><!-- node1&#45;&gt;node2 --><g class="edge inheritance" id="graph1_1_2"><g id="a_inheritance|graph1_1_2"><a xlink:title="ConfigString is a subtype of ConfigData"><path d="M195.554,-57.0291C185.904,-47.0415 173.554,-34.2572 164.738,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="194.506,-58.4634 199.239,-60.8435 197.023,-56.0316 194.506,-58.4634" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node4 --><g class="node class" id="graph1_4"><g id="a_class|graph1_4"><a xlink:title="csw.services.cs.core.ConfigBytes" xlink:href="ConfigBytes.html#inheritance-diagram"><polygon points="317,-25 220,-25 220,-0 317,-0 317,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="230.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="251.5" text-anchor="start">ConfigBytes</text></a></g></g><!-- node1&#45;&gt;node4 --><g class="edge inheritance" id="graph1_1_4"><g id="a_inheritance|graph1_1_4"><a xlink:title="ConfigBytes is a subtype of ConfigData"><path d="M225.709,-57.0291C235.527,-47.0415 248.095,-34.2572 257.065,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="224.216,-56.051 221.959,-60.8435 226.712,-58.5047 224.216,-56.051" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node5 --><g class="node class" id="graph1_5"><g id="a_class|graph1_5"><a xlink:title="csw.services.cs.core.ConfigSource" xlink:href="ConfigSource.html#inheritance-diagram"><polygon points="436.5,-25 334.5,-25 334.5,-0 436.5,-0 436.5,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="344.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="365.5" text-anchor="start">ConfigSource</text></a></g></g><!-- node1&#45;&gt;node5 --><g class="edge inheritance" id="graph1_1_5"><g id="a_inheritance|graph1_1_5"><a xlink:title="ConfigSource is a subtype of ConfigData"><path d="M249.446,-59.3697C279.921,-49.0954 321.893,-34.9445 351.13,-25.0875" stroke="#d4d4d4" fill="none"></path><polygon points="248.836,-57.7284 244.657,-60.9841 249.954,-61.045 248.836,-57.7284" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="csw.services.cs.core.ConfigIdImpl" xlink:href="ConfigIdImpl.html#inheritance-diagram"><polygon points="551,-25 454,-25 454,-0 551,-0 551,-25" stroke="#115f3b" fill="#0a955b"></polygon><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="464.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-9.5" x="485.5" text-anchor="start">ConfigIdImpl</text></a></g></g><!-- node6 --><g class="node trait" id="graph1_6"><g id="a_trait|graph1_6"><a xlink:title="csw.services.cs.core.ConfigId" xlink:href="ConfigId.html#inheritance-diagram"><polygon points="542,-86 463,-86 463,-61 542,-61 542,-86" stroke="#37657d" fill="#498aad"></polygon><image xlink:href="../../../../lib/trait_diagram.png" y="-80.5" x="473.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="10.00" font-family="Arial" y="-70.5" x="494.5" text-anchor="start">ConfigId</text></a></g></g><!-- node6&#45;&gt;node3 --><g class="edge inheritance" id="graph1_6_3"><g id="a_inheritance|graph1_6_3"><a xlink:title="ConfigIdImpl is a subtype of ConfigId"><path d="M502.5,-55.6874C502.5,-45.9173 502.5,-33.8534 502.5,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="500.75,-55.8435 502.5,-60.8435 504.25,-55.8435 500.75,-55.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+              </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="csw.services.cs.core"><span>core</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="csw.services.cs.core.BlockingConfigData" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BlockingConfigDataextendsProductwithSerializable"></a>
+      <a id="BlockingConfigData:BlockingConfigData"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="BlockingConfigData.html"><span class="name">BlockingConfigData</span></a><span class="params">(<span name="configData">configData: <a href="ConfigData.html" class="extype" name="csw.services.cs.core.ConfigData">ConfigData</a></span>, <span name="timeout">timeout: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.concurrent.duration.Duration" class="extype" target="_top">Duration</a> = <span class="symbol"><span class="name"><a href="../../../../scala/package.html">30.seconds</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@BlockingConfigDataextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.cs.core.BlockingConfigManager" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="BlockingConfigManagerextendsProductwithSerializable"></a>
+      <a id="BlockingConfigManager:BlockingConfigManager"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="BlockingConfigManager.html"><span class="name">BlockingConfigManager</span></a><span class="params">(<span name="manager">manager: <a href="ConfigManager.html" class="extype" name="csw.services.cs.core.ConfigManager">ConfigManager</a></span>, <span name="timeout">timeout: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.concurrent.duration.Duration" class="extype" target="_top">Duration</a> = <span class="symbol"><span class="name"><a href="../../../../scala/package.html">30.seconds</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="context">context: <span class="extype" name="akka.actor.ActorRefFactory">ActorRefFactory</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@BlockingConfigManagerextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A simple wrapper for ConfigManager that blocks while waiting for the return values to complete.</p>
+    </li><li name="csw.services.cs.core.ConfigBytes" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigBytesextendsConfigDatawithProductwithSerializable"></a>
+      <a id="ConfigBytes:ConfigBytes"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigBytes.html"><span class="name">ConfigBytes</span></a><span class="params">(<span name="bytes">bytes: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Byte" class="extype" target="_top">Byte</a>]</span>)</span><span class="result"> extends <a href="ConfigData.html" class="extype" name="csw.services.cs.core.ConfigData">ConfigData</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigBytesextendsConfigDatawithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.cs.core.ConfigData" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="ConfigDataextendsAnyRef"></a>
+      <a id="ConfigData:ConfigData"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigData.html"><span class="name">ConfigData</span></a><span class="result"> extends <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigDataextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This trait represents the contents of the files being managed.</p><div class="fullcomment"><div class="comment cmt"><p>This trait represents the contents of the files being managed.
+It is based on Akka streams.
+</p></div></div>
+    </li><li name="csw.services.cs.core.ConfigFile" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigFileextendsConfigDatawithProductwithSerializable"></a>
+      <a id="ConfigFile:ConfigFile"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigFile.html"><span class="name">ConfigFile</span></a><span class="params">(<span name="file">file: <span class="extype" name="java.io.File">File</span></span>, <span name="chunkSize">chunkSize: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a> = <span class="symbol">4096</span></span>)</span><span class="result"> extends <a href="ConfigData.html" class="extype" name="csw.services.cs.core.ConfigData">ConfigData</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigFileextendsConfigDatawithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.cs.core.ConfigFileHistory" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigFileHistoryextendsProductwithSerializable"></a>
+      <a id="ConfigFileHistory:ConfigFileHistory"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigFileHistory.html"><span class="name">ConfigFileHistory</span></a><span class="params">(<span name="id">id: <a href="ConfigId.html" class="extype" name="csw.services.cs.core.ConfigId">ConfigId</a></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="time">time: <span class="extype" name="java.util.Date">Date</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigFileHistoryextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Holds information about a specific version of a config file
+</p>
+    </li><li name="csw.services.cs.core.ConfigFileInfo" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigFileInfoextendsProductwithSerializable"></a>
+      <a id="ConfigFileInfo:ConfigFileInfo"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigFileInfo.html"><span class="name">ConfigFileInfo</span></a><span class="params">(<span name="path">path: <span class="extype" name="java.io.File">File</span></span>, <span name="id">id: <a href="ConfigId.html" class="extype" name="csw.services.cs.core.ConfigId">ConfigId</a></span>, <span name="comment">comment: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigFileInfoextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Contains information about a config file stored in the config service
+</p>
+    </li><li name="csw.services.cs.core.ConfigId" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ConfigIdextendsAnyRef"></a>
+      <a id="ConfigId:ConfigId"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigId.html"><span class="name">ConfigId</span></a><span class="result"> extends <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigIdextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Type of an id returned from ConfigManager create or update methods
+</p>
+    </li><li name="csw.services.cs.core.ConfigIdImpl" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigIdImplextendsConfigIdwithProductwithSerializable"></a>
+      <a id="ConfigIdImpl:ConfigIdImpl"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigIdImpl.html"><span class="name">ConfigIdImpl</span></a><span class="params">(<span name="id">id: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="ConfigId.html" class="extype" name="csw.services.cs.core.ConfigId">ConfigId</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigIdImplextendsConfigIdwithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Type of an id returned from ConfigManager create or update methods.</p>
+    </li><li name="csw.services.cs.core.ConfigManager" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ConfigManagerextendsAnyRef"></a>
+      <a id="ConfigManager:ConfigManager"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigManager.html"><span class="name">ConfigManager</span></a><span class="result"> extends <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigManagerextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Defines an interface for storing and retrieving configuration information
+</p>
+    </li><li name="csw.services.cs.core.ConfigSource" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigSourceextendsConfigDatawithProductwithSerializable"></a>
+      <a id="ConfigSource:ConfigSource"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigSource.html"><span class="name">ConfigSource</span></a><span class="params">(<span name="source">source: <span class="extype" name="akka.stream.scaladsl.Source">Source</span>[<span class="extype" name="akka.util.ByteString">ByteString</span>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a>]</span>)</span><span class="result"> extends <a href="ConfigData.html" class="extype" name="csw.services.cs.core.ConfigData">ConfigData</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigSourceextendsConfigDatawithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.cs.core.ConfigString" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigStringextendsConfigDatawithProductwithSerializable"></a>
+      <a id="ConfigString:ConfigString"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigString.html"><span class="name">ConfigString</span></a><span class="params">(<span name="str">str: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="ConfigData.html" class="extype" name="csw.services.cs.core.ConfigData">ConfigData</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigStringextendsConfigDatawithProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.services.cs.core.ConfigData" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigData"></a>
+      <a id="ConfigData:ConfigData"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigData$.html"><span class="name">ConfigData</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigData" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Provides various alternatives for constructing the data to be stored in the config service.</p>
+    </li><li name="csw.services.cs.core.ConfigId" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ConfigId"></a>
+      <a id="ConfigId:ConfigId"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="ConfigId$.html"><span class="name">ConfigId</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@ConfigId" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.cs.core.git" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="git"></a>
+      <a id="git:git"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="git/package.html"><span class="name">git</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@git" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Contains the git specific code for the config service.</p><div class="fullcomment"><div class="comment cmt"><p>Contains the git specific code for the config service.</p><p><a href="git/GitConfigManager.html" class="extype" name="csw.services.cs.core.git.GitConfigManager">csw.services.cs.core.git.GitConfigManager</a> defines the Scala API.
+</p></div></div>
+    </li><li name="csw.services.cs.core.svn" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="svn"></a>
+      <a id="svn:svn"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="svn/package.html"><span class="name">svn</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#csw.services.cs.core.package@svn" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Contains the svn specific code for the config service.</p><div class="fullcomment"><div class="comment cmt"><p>Contains the svn specific code for the config service.</p><p><a href="svn/SvnConfigManager.html" class="extype" name="csw.services.cs.core.svn.SvnConfigManager">csw.services.cs.core.svn.SvnConfigManager</a> defines the Scala API.
+</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

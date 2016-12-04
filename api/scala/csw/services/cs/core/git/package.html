@@ -1,0 +1,175 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>git - csw.services.cs.core.git</title>
+          <meta name="description" content="git - csw.services.cs.core.git" />
+          <meta name="keywords" content="git csw.services.cs.core.git" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../../lib/tools.tooltip.js"></script>
+      <script type="text/javascript" src="../../../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../../../lib/diagrams.js" id="diagrams-js"></script>
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../../index.html';
+            var hash = 'csw.services.cs.core.git.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../../../../lib/package_big.png" />
+        <p id="owner"><a href="../../../../package.html" class="extype" name="csw">csw</a>.<a href="../../../package.html" class="extype" name="csw.services">services</a>.<a href="../../package.html" class="extype" name="csw.services.cs">cs</a>.<a href="../package.html" class="extype" name="csw.services.cs.core">core</a></p>
+        <h1>git</h1><span class="permalink">
+      <a href="../../../../../index.html#csw.services.cs.core.git.package" title="Permalink" target="_top">
+        <img src="../../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">git</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Contains the git specific code for the config service.</p><p><a href="GitConfigManager.html" class="extype" name="csw.services.cs.core.git.GitConfigManager">csw.services.cs.core.git.GitConfigManager</a> defines the Scala API.
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/tmtsoftware/csw/tree/master//cs/src/main/scala/csw/services/cs/core/git/package.scala" target="_blank">package.scala</a></dd></dl><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="../../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="csw.services.cs.core.git"><span>git</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="csw.services.cs.core.git.GitConfigManager" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="GitConfigManagerextendsConfigManagerwithLazyLogging"></a>
+      <a id="GitConfigManager:GitConfigManager"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="GitConfigManager.html"><span class="name">GitConfigManager</span></a><span class="result"> extends <a href="../ConfigManager.html" class="extype" name="csw.services.cs.core.ConfigManager">ConfigManager</a> with <span class="extype" name="com.typesafe.scalalogging.slf4j.LazyLogging">LazyLogging</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../../index.html#csw.services.cs.core.git.package@GitConfigManagerextendsConfigManagerwithLazyLogging" title="Permalink" target="_top">
+        <img src="../../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Uses JGit to manage versions of configuration files.</p><div class="fullcomment"><div class="comment cmt"><p>Uses JGit to manage versions of configuration files.
+Special handling is available for large/binary files (oversize option in create).
+Oversize files are stored on an &quot;annex&quot; server using the SHA-1 hash of the file
+contents for the name (similar to the way Git stores file objects).</p><p>Note that although the API is non-blocking, we need to be careful when dealing
+with the file system (the local Git repo), which is static, and not attempt multiple
+conflicting file read, write or Git operations at once. The remote (bare) Git repo should
+be able to handle the concurrent usage, but not the local repo, which has files in the
+working directory. Having the files checked out in working directory should help avoid
+having to download them every time an application starts.</p><p>Only one instance of this class should exist for a given local Git repository.
+</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.services.cs.core.git.GitConfigManager" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GitConfigManager"></a>
+      <a id="GitConfigManager:GitConfigManager"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="GitConfigManager$.html"><span class="name">GitConfigManager</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../../index.html#csw.services.cs.core.git.package@GitConfigManager" title="Permalink" target="_top">
+        <img src="../../../../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Used to initialize an instance of GitConfigManager with a given repository directory
+</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="../../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>

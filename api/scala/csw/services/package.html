@@ -1,0 +1,619 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>services - csw.services</title>
+          <meta name="description" content="services - csw.services" />
+          <meta name="keywords" content="services csw.services" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'csw.services.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../lib/package_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="csw">csw</a></p>
+        <h1>services</h1><span class="permalink">
+      <a href="../../index.html#csw.services.package" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">services</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="csw.services.alarms" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="alarms"></a>
+      <a id="alarms:alarms"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="alarms/package.html"><span class="name">alarms</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@alarms" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This project implements the CSW Alarm Service as described in
+<b>OSW TN019 - ALARM SERVICE PROTOTYPE DESIGN, TMT.SFT.TEC.16.004.REL01.DRF02</b>.</p><div class="fullcomment"><div class="comment cmt"><h4> Alarm Service </h4><p>This project implements the CSW Alarm Service as described in
+<b>OSW TN019 - ALARM SERVICE PROTOTYPE DESIGN, TMT.SFT.TEC.16.004.REL01.DRF02</b>.</p><h5> Based on Redis </h5><p>There is no Alarm Service executable. The Alarm Service consists of an instance of Redis
+that is registered with the <a href="loc/LocationService$.html" class="extype" name="csw.services.loc.LocationService">csw.services.loc.LocationService</a>
+using the <a href="trackLocation/TrackLocation$.html" class="extype" name="csw.services.trackLocation.TrackLocation">csw.services.trackLocation.TrackLocation</a>.
+For example, the following command could be used to start a dedicated Redis instance for the Alarm Service on port 7777:</p><pre>tracklocation --name <span class="lit">"Alarm Service"</span> --command <span class="lit">"redis-server --port %port"</span> --port <span class="num">7777</span></pre><p>The string &quot;%port&quot; is replaced with the actual port number. If you left off the --port option, a random, free port
+would have been chosen.</p><p>The client API for the Alarm Service takes a name (default: &quot;Alarm Service&quot;) and uses it to lookup the Redis instance
+with the Location Service.</p><h5> How alarms are implemented and stored </h5><p>Alarms are stored in three places in Redis:</p><p>- The static Alarm data, which is imported from a config file, is stored in a Redis Hash.</p><p>- The Alarm's severity is stored in a separate Key and monitored for changes
+using <a href="http://redis.io/topics/notifications" target="_blank">Redis Keyspace Notifications</a>.</p><p>- The current state of an alarm is stored in a separate Redis hash that includes the
+latched and acknowledged state as well as the shelved and activation states of an alarm.</p><h5> Alarm Keys </h5><p>The <a href="alarms/AlarmKey.html" class="extype" name="csw.services.alarms.AlarmKey"><code>AlarmKey</code></a> class represents a key used to access
+information about an alarm, set or get the severity, the current state or the static alarm information.
+An alarm key is made up of the <code><code>subsystem</code></code> name, a <code><code>component</code></code> name and an alarm <code><code>name</code></code>.</p><h5> Internals </h5><p>The class provides three different keys to use to access the three locations mentioned above where the alarm data is stored:</p><p>- <code>AlarmKey(subsystem, component, name).key</code> is used to access the static alarm data</p><p>- <code>AlarmKey(subsystem, component, name).severityKey</code> is used to set/get the alarm's severity</p><p>- <code>AlarmKey(subsystem, component, name).stateKey</code> is used internally to set/get the alarm's state</p><p>The public API only deals with AlarmKey instances, so the above is only used internally.</p><h5> Wildcards in Alarm Keys </h5><p>Some Alarm Service methods allow Alarm keys to contain wildcards. The AlarmKey class lets you
+leave out any of the parameters, defaulting them to &quot;*&quot;, which matches any subsystem, component or alarm name.
+For example, to get a list all alarms in the TCS subsystem:</p><pre>alarmService.getAlarms(AlarmKey(<span class="lit">"TCS))</span></pre><p>Or to list all alarms in all subsystems:</p><pre>alarmService.getAlarms(AlarmKey())</pre><p>It is also possible to use the Redis wildcard syntax directly in the names passed to AlarmKey.</p><p>Note that some commands require a unique key. For example, to set or get an alarm's severity,
+you need a unique key with no wildcards.</p><h5> Alarm Service Configuration File (ASCF) </h5><p>The alarm database is populated from a config file in HOCON format. This file should be generated from
+information in the TMT ICD Database and contains descriptions of each alarm.
+Here is an example with dummy data used for testing that shows the format of the file:</p><pre>alarms = [
+  {
+    subsystem = NFIRAOS
+    component = envCtrl
+    name = maxTemperature
+    description = <span class="lit">"Warns when temperature too high"</span>
+    location = <span class="lit">"south side"</span>
+    alarmType = Absolute
+    severityLevels = [Indeterminate, Okay, Warning, Major, Critical]
+    probableCause = <span class="lit">"too hot..."</span>
+    operatorResponse = <span class="lit">"open window"</span>
+    acknowledge = <span class="kw">true</span>
+    latched = <span class="kw">true</span>
+  }
+   {
+    subsystem = NFIRAOS
+    component = envCtrl
+    name = minTemperature
+    description = <span class="lit">"Warns when temperature too low"</span>
+    location = <span class="lit">"north side"</span>
+    alarmType = Absolute
+    severityLevels = [Indeterminate, Okay, Warning, Major, Critical]
+    probableCause = <span class="lit">"too cold..."</span>
+    operatorResponse = <span class="lit">"close window"</span>
+    acknowledge = <span class="kw">true</span>
+    latched = <span class="kw">true</span>
+  }
+   {
+    subsystem = TCS
+    component = tcsPk
+    name = cpuExceededAlarm
+    description = <span class="lit">"This alarm is activated when the tcsPk Assembly can no longer calculate all of its pointing values in the time allocated. The CPU may lock power, or there may be pointing loops running that are not needed. Response: Check to see if pointing loops are executing that are not needed or see about a more powerful CPU."</span>
+    location = <span class="lit">"in computer..."</span>
+    alarmType = Absolute
+    severityLevels = [Indeterminate, Okay, Warning, Major, Critical]
+    probableCause = <span class="lit">"too fast..."</span>
+    operatorResponse = <span class="lit">"slow it down..."</span>
+    acknowledge = <span class="kw">true</span>
+    latched = <span class="kw">true</span>
+  }
+]</pre><h5> Static Alarm Model </h5><p>The <a href="alarms/AlarmModel.html" class="extype" name="csw.services.alarms.AlarmModel">csw.services.alarms.AlarmModel</a> class represents the static alarm data,
+as imported from the Alarm Service config file. This data is read-only.
+The allowed values for <code>alarmType</code> and <code>severityLevels</code> are also defined in the <a href="alarms/AlarmModel.html" class="extype" name="csw.services.alarms.AlarmModel">csw.services.alarms.AlarmModel</a> class.</p><h5> Alarm State </h5><p>The <a href="alarms/AlarmState.html" class="extype" name="csw.services.alarms.AlarmState">csw.services.alarms.AlarmState</a> class represents the runtime
+internal state for an alarm. For example, this is where you can determine if an alarm is currently <code><code>latched</code></code>
+or <code><code>activated</code></code>.</p><h5> Command Line Application: asconsole </h5><p>The asconsole application can be used from the command line to work with and test the Alarm Service.
+It can be used to initialize the alarm data, set and get an alarm's severity, monitor alarms, etc.</p><h5> Alarm Scala API </h5><p>The Alarm Service Scala API is defined in the <a href="alarms/AlarmService.html" class="extype" name="csw.services.alarms.AlarmService"><code>AlarmService</code></a> trait.
+</p></div></div>
+    </li><li name="csw.services.apps" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="apps"></a>
+      <a id="apps:apps"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="apps/package.html"><span class="name">apps</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@apps" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.asconsole" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="asconsole"></a>
+      <a id="asconsole:asconsole"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="asconsole/package.html"><span class="name">asconsole</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@asconsole" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.ccs" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ccs"></a>
+      <a id="ccs:ccs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="ccs/package.html"><span class="name">ccs</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@ccs" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The ccs project defines the basic classes and traits for the <i>Command and Control Service</i>.</p><div class="fullcomment"><div class="comment cmt"><h4> CCS - Command and Control Service </h4><p>The ccs project defines the basic classes and traits for the <i>Command and Control Service</i>.</p><p>Related projects are the <i>util</i> project, which defines the types for <i>configurations</i> and the
+<i>pkg</i> project, which defines the Hcd and Assembly classes, lifecycle manager and supervisor for components.</p><p>This is an actor based project.
+The main actors (or actor traits) here are:</p><p>- <code>AssemblyController</code> - trait for an actor that accepts configurations for an Assembly and communicates with
+one or more HCDs or other assemblies before replying with a command status</p><p>- <code>HcdController</code> - trait for an actor that accepts configurations (from an Assembly) for an HCD.
+The HCD controller publishes its *current state*, and the assembly can subscribe to it to determine when a command has completed.</p><p>- <code>HcdStatusMatcherActor</code> - an actor used to match demand and current state by subscribing to HCD status messages and then notifying a given actor</p><p>The following classes are deprecated and may be removed in a future release:</p><p>- <code>PeriodicHcdController</code> - like HcdController, but has a Queue of configurations that it checks at a specified rate.
+This controller wakes up regularly, checks the incoming queue and updates its state variable with the current
+state of the HCD.</p><p>- <code>StateVariableMatcherActor</code> - an actor used to match demand and current state and then notify a given actor</p><p>The <code>CommandStatus</code> class defines status messages to be returned from assemblies to indicate the completion status of a <i>submit</i>.</p><h5> Example HCD Controller Usage </h5><pre><span class="kw">class</span> TestHcdController <span class="kw">extends</span> HcdController <span class="kw">with</span> Actor <span class="kw">with</span> ActorLogging {
+
+  <span class="cmt">// Use single worker actor to do work in the background</span>
+  <span class="cmt">// (could also use a worker per job/message if needed)</span>
+  <span class="kw">val</span> worker = context.actorOf(TestWorker.props())
+
+  <span class="cmt">// Send the config to the worker for processing</span>
+  <span class="kw">override</span> <span class="kw">protected</span> <span class="kw">def</span> process(config: SetupConfig): <span class="std">Unit</span> = {
+    worker ! config
+  }
+
+  <span class="cmt">// Optional override: Ask the worker actor to send us the current state (handled by parent trait)</span>
+  <span class="kw">override</span> <span class="kw">protected</span> <span class="kw">def</span> requestCurrent(): <span class="std">Unit</span> = {
+    worker ! TestWorker.RequestCurrentState
+  }
+
+  <span class="cmt">// Use the default actor receive method defined in the parent</span>
+  <span class="kw">override</span> <span class="kw">def</span> receive: Receive = controllerReceive
+}</pre></div></div>
+    </li><li name="csw.services.cs" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cs"></a>
+      <a id="cs:cs"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="cs/package.html"><span class="name">cs</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@cs" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This project implements the Configuration Service, which is used to manage configuration
+files by storing them in a Git or Subversion repository.</p><div class="fullcomment"><div class="comment cmt"><h4> Configuration Service </h4><p>This project implements the Configuration Service, which is used to manage configuration
+files by storing them in a Git or Subversion repository.</p><h5> Config Service API </h5><p>The config service can be accessed by sending messages to the config service actor,
+however the ConfigServiceClient wrapper class implements the ConfigManager trait
+and provides a somewhat simpler API.</p><h5> Config Service Application </h5><p>Before starting the config service, the <i>location service</i>
+and the the <i>config service annex server</i>
+should both be running.
+You can start the config service with the <code>cs</code> command (found under target/universal/stage/bin).
+The default config service name and the locations of the repositories are defined in resources/reference.conf.
+Alternatively you can specify a different config file on the command line in the same format.
+You can also override the values with system properties. For example:</p><pre>cs -Dcsw.services.cs.name=MyConfigServiceName
+   -Dcsw.services.cs.main-repository=http:<span class="cmt">//myHost/MyMainRepo/</span>
+   -Dcsw.services.cs.local-repository=/myPath/MyLocalRepo</pre><p>Note that multiple config service instances may be running in the network, but the names an host:port combinations should
+each be unique. Only a single config service instance should access a given local repository.</p><h5> Config Service Http Server </h5><p>The config service application (cs) also starts an http server
+(optionally, if csw.services.cs.http.host is defined in the config file).
+The HTTP/REST interface to the command service follows the scala and java APIs.</p><p>The <code>create</code> and <code>update</code> methods expect the file data to be posted.
+The <code>path</code> query argument is always required. All other query arguments are optional.
+The <code>id</code> argument (a <code>ConfigId</code>) must be taken from the JSON result of <code>create</code>, <code>update</code>, <code>list</code>, or <code>history</code>.</p><p>The format of the JSON returned from <code>create</code> and <code>update</code> is:
+<code>{&quot;ConfigId&quot;:&quot;da807342bcc21766316c3a91a01f4a513a1adbb3&quot;}</code>. The <code>id</code> query argument passed to the other methods is
+the value at right.</p><h5> Example or using curl to access the Config Service Http Server </h5><p>Assuming that the config service http server is running on localhost on port 8541 (see config file, default: reference.conf):</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/create?path=some/test1/TestConfig1&comment=comment+here' --data-binary @TestConfig1</span></pre><p>Creates a new file in the config service named some/test1/TestConfig1 using the data in the local file TestConfig1.</p><pre>curl 'http:<span class="cmt">//localhost:8541/get?path=some/test1/TestConfig1' > TestConfig1a</span></pre><p>Gets the contents of some/test1/TestConfig1 from the service and store in a local file.</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/update?path=some/test1/TestConfig1&comment=some+comment' --data-binary @TestConfig1</span></pre><p>Updates the contents of some/test1/TestConfig1 in the config service with the contents of the local file.</p><pre>curl -s 'http:<span class="cmt">//localhost:8541/history?path=some/test1/TestConfig1'</span></pre><p>Returns JSON describing the history of some/test1/TestConfig1. You can pipe the output to json_pp to pretty print it:</p><pre>[
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"update 2 comment"</span>,
+      <span class="lit">"time"</span> : <span class="num">1421010506000</span>,
+      <span class="lit">"id"</span> : <span class="lit">"3007e3369de4c05d4fb85d515df0be417243ecca"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"update 1 comment"</span>,
+      <span class="lit">"time"</span> : <span class="num">1421010505000</span>,
+      <span class="lit">"id"</span> : <span class="lit">"0fff71d0f3f4f88aa5986aa02c32d3c495c1c652"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"create comment"</span>,
+      <span class="lit">"time"</span> : <span class="num">1421010505000</span>,
+      <span class="lit">"id"</span> : <span class="lit">"f6e5266afc159f5d870ea1ac48c048ffa3913434"</span>
+   }
+]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/list'</span></pre><p>Returns JSON listing the files in the config service repository.</p><pre>[
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"create comment"</span>,
+      <span class="lit">"id"</span> : <span class="lit">"f6e5266afc159f5d870ea1ac48c048ffa3913434"</span>,
+      <span class="lit">"path"</span> : <span class="lit">"some/test2/TestConfig2"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">"update 2 comment"</span>,
+      <span class="lit">"id"</span> : <span class="lit">"3007e3369de4c05d4fb85d515df0be417243ecca"</span>,
+      <span class="lit">"path"</span> : <span class="lit">"some/test1/TestConfig1"</span>
+   },
+   {
+      <span class="lit">"comment"</span> : <span class="lit">""</span>,
+      <span class="lit">"id"</span> : <span class="lit">"77c35d529c1e46113bd2f68b6f0550e81d8dbfec"</span>,
+      <span class="lit">"path"</span> : <span class="lit">"README"</span>
+   }
+]</pre><pre>curl 'http:<span class="cmt">//localhost:8541/getDefault?path=some/test1/TestConfig1</span></pre><p>Returns the content of the default version of the file, which may or may not be the same as the latest version (see below).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/setDefault?path=some/test1/TestConfig1&id=da807342bcc21766316c3a91a01f4a513a1adbb3'</span></pre><p>Sets the default version of the file to the one with the given id (an id returned by the history command).</p><pre>curl -X POST 'http:<span class="cmt">//localhost:8541/resetDefault?path=some/test1/TestConfig1'</span></pre><p>Resets the default version of the file to be the latest version.</p><h5> Main Packages </h5><p>- core - the core implementation of the API (based on Git or Svn)
+- akka - (based on core) the Akka actor interface as well as the http server and client interfaces.</p><p>Large/binary files can slow down the repository, so these are stored separately using
+the the ConfigServiceAnnex http file server.</p><p>When you first create a config file, you can choose to store it in the normal way (in the repository)
+or as a *large/binary* file, in which case only *$file.sha1* is checked in, containing the SHA-1 hash of the
+file's contents. The actual binary file is then stored on the annex server in a file name based on the SHA-1 hash.</p><p>The config service also supports the concept of *default versions* of files. In this case a file named
+*$file.default* is checked in behind the scenes and contains the id of the default version of the file.
+If there is no default, this file is not present and the latest version is always considered the default.</p><p>The config service can be started as a standalone application. *sbt stage* installs the command under
+target/universal/stage/bin.
+The standalone configs service registers itself with the location service so that it
+can be found by other applications.</p><p>The contents of the files are exchanged using [Akka reactive streams](http://www.typesafe.com/activator/template/akka-stream-scala).</p><h5> No concurrent access to local repository </h5><p>Note that each instance of the config service actor should manage its own local repository, in order to ensure that
+there are no conflicting, concurrent activities in the repository.</p><h5> Running the tests </h5><p>To run the unit tests, use <code>sbt test</code>.
+To run the multi-jvm tests, use <code>sbt multi-jvm:test</code>.
+</p></div></div>
+    </li><li name="csw.services.event_old" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="event_old"></a>
+      <a id="event_old:event_old"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="event_old/package.html"><span class="name">event_old</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@event_old" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The EventService class provides the method <i>publish(event)</i> to publish an object of type <i>Event</i>
+(a type alias for <i>EventServiceEvent</i>).</p><div class="fullcomment"><div class="comment cmt"><h4> Event Publisher </h4><p>The EventService class provides the method <i>publish(event)</i> to publish an object of type <i>Event</i>
+(a type alias for <i>EventServiceEvent</i>).</p><p>Example:</p><pre><span class="kw">val</span> settings = EventServiceSettings(context.system)
+<span class="kw">val</span> eventService = EventService(prefix, settings)
+<span class="kw">val</span> event = ObserveEvent(prefix)
+  .set(eventNum, num)
+  .set(exposureTime, <span class="num">1.0</span>)
+  .set(imageData, testImageData)
+eventService.publish(event)</pre><h4> Event Subscriber </h4><p>The EventSubscriber trait adds the method <i>subscribe(prefix)</i>. After calling this method, the actor
+will receive all Event messages published for the prefix. You can use wildcards in the prefix string.
+For example <i>tmt.mobie.red.dat.*</i> or <i>tmt.mobie.red.dat.#</i>, where <i>*</i> matches a single word and <i>#</i> matches
+multiple words separated by dots. Subscribers should be careful not to block when receiving messages,
+so that the actor queue does not fill up too much.</p><p>Example:</p><pre><span class="kw">class</span> Subscriber <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging <span class="kw">with</span> EventSubscriber {
+  subscribe(prefix)
+
+  <span class="kw">override</span> <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> event: ObserveEvent <span class="kw">=&gt;</span>  log.debug(s<span class="lit">"Received event: $event"</span>)
+  }
+}</pre></div></div>
+    </li><li name="csw.services.events" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="events"></a>
+      <a id="events:events"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="events/package.html"><span class="name">events</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@events" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This module implements an Event Service based on <a href="http://redis.io/" target="_blank">Redis</a>.</p><div class="fullcomment"><div class="comment cmt"><h4> Event Service </h4><p>This module implements an Event Service based on <a href="http://redis.io/" target="_blank">Redis</a>.
+An event can be published and subscribers can receive the events.
+The last n events are always saved for reference (where n is an optional argument).</p><p>Note that the tests assume the redis server is running. The host and port for the Redis instance can be configured
+in the application config file, or you can use the <code>trackLocation</code> application to register a
+Redis instance with the location service and then look up the host and port to use for it.</p><h5> Telemetry Service </h5><p>The Telemetry Service uses an EventService that deals only with StatusEvent objects.
+The API is *slightly* simpler than the generic <code>EventService</code>, since the concrete event type is known.</p><p>See the unit tests for some examples of the usage in Scala and Java.</p><h5> Blocking and Non-Blocking Versions </h5><p>For convenience, blocking and non-blocking APIs are provided. The base implementation is non-blocking
+(based on Akka actors). In some cases, it may be more convenient to use the simpler, blocking API.</p><h5> Example Event Publisher (blocking) </h5><pre><span class="kw">val</span> settings = EventServiceSettings(system)
+<span class="kw">val</span> eventService = BlockingEventService(<span class="num">5.</span>seconds, settings)
+
+<span class="kw">val</span> event1 = StatusEvent(<span class="lit">"tcs.test1"</span>)
+    .add(infoValue.set(<span class="num">1</span>))
+    .add(infoStr.set(<span class="lit">"info 1"</span>))
+
+eventService.publish(event1)
+eventService.get(event1.prefix).get <span class="kw">match</span> {
+    <span class="kw">case</span> event: StatusEvent <span class="kw">=&gt;</span>
+      assert(event.prefix == event1.prefix)
+      assert(event(infoValue).head == <span class="num">1</span>)
+      assert(event(infoStr).head == <span class="lit">"info 1"</span>)
+    <span class="kw">case</span> _ <span class="kw">=&gt;</span> fail(<span class="lit">"Expected a StatusEvent"</span>)
+}</pre><h5> Example Event Subscriber (callback method) </h5><p>The EventService.subscribe method takes an ActorRef of an arbitrary actor or a callback function to be called
+when an event matching the given prefixes is received. In the example below, we only provide the callback
+argument value. You could also provide an ActorRef of some actor that should receive the Event message.</p><pre><span class="kw">def</span> listener(ev: Event): <span class="std">Unit</span> = {
+  <span class="cmt">// ...</span>
+}
+
+<span class="kw">val</span> monitor = eventService.subscribe(<span class="std">None</span>, <span class="std">Some</span>(listener), prefix)</pre><h5> Example Event Subscriber Actor </h5><p>In the example below, a we create an actor that will receive Event messages that match the
+prefixes (prefix1, prefix2) in the call to subscribe.</p><p>The EventSubscriber class uses the values
+in the config file (resources/reference.conf or resources/application.conf) to open a connection
+to the Redis server.</p><pre><span class="kw">class</span> MySubscriber(prefix1: <span class="std">String</span>, prefix2: <span class="std">String</span>) <span class="kw">extends</span> EventSubscriber {
+
+  subscribe(prefix1, prefix2)
+
+  <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> event: Event <span class="kw">=&gt;</span>   ...
+  }
+}</pre></div></div>
+    </li><li name="csw.services.loc" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="loc"></a>
+      <a id="loc:loc"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="loc/package.html"><span class="name">loc</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@loc" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The Location Service implemented in this project is based on Multicast DNS.</p><div class="fullcomment"><div class="comment cmt"><h4> Location Service </h4><p>The Location Service implemented in this project is based on Multicast DNS.
+The necessary support for this should already be available on Mac and Linux machines.
+The Location Service helps you to find out the hostname and port number for a service,
+as well as other information for determining the correct URI to use, such as the path,
+the actor system name and the config prefix.</p><p>Two types of services are currently supported: Akka/actor based and HTTP based services.
+To register an Akka actor based service, you can use code like this:</p><pre>LocationService.registerAkkaConnection(componentId, self, <span class="lit">"test.akka.prefix"</span>)</pre><p>Where self is a reference to the services own actorRef and the prefix argument indicates the
+part of a configuration the actor is interested in receiving.</p><p>To register an HTTP based service, you can make a call like this:</p><pre>LocationService.registerHttpConnection(componentId, port)</pre><p>Here you specify the port and the DNS name for the local host is automatically determined.</p><h5> Using the Location Service </h5><p>The Location Service actor can be used in an actor based application to be notified whenever
+a set of required services is available or not. In the following example, <code>TestServiceClient</code>
+depends on <code>TestAkkaService</code> and <code>TestHttpService</code> and will receive a <code>ServicesReady</code> message
+with the contact information (URI, actorRef, prefix, ...) when they are both available.
+If any of the required services goes down, a Disconnected message is sent.</p><pre><span class="kw">class</span> TestServiceClient <span class="kw">extends</span> Actor <span class="kw">with</span> ActorLogging {
+  <span class="kw">val</span> connections = <span class="std">Set</span>(TestAkkaService.connection, TestHttpService.connection)
+  context.actorOf(LocationService.props(connections))
+
+  <span class="kw">override</span> <span class="kw">def</span> receive: Receive = {
+    <span class="kw">case</span> ServicesReady(services) <span class="kw">=&gt;</span>
+      log.debug(s<span class="lit">"Received services: ${services.values.map(_.connection.componentId.name).mkString("</span>, <span class="lit">")}"</span>)
+
+    <span class="kw">case</span> Disconnected(connection) <span class="kw">=&gt;</span>
+      log.debug(s<span class="lit">"Disconnected service: ${connection.componentId.name}"</span>)
+
+    <span class="kw">case</span> x <span class="kw">=&gt;</span>
+      log.error(s<span class="lit">"Received unexpected message $x"</span>)
+  }
+}</pre><h5> Command Line Tools </h5><p>On a Mac, you can use the dns-sd command to view information about registered services.
+For example:</p><pre>dns-sd -B _csw._tcp</pre><p>will continuously display CSW services added or removed, while:</p><pre>dns-sd -L TestAkkaService-assembly-akka _csw._tcp</pre><p>will list information about the application with the DNS name <code>TestAkkaService-assembly-akka</code> (not case sensitive).</p><p><code>_csw._tcp</code> is the mDNS type used for all CSW services. The default domain is <code>local.</code>.</p><p>The CSW/mDNS application names here are in the format: <i>name-componentType-connectionType</i>,
+where <i>componentType</i> is assembly, hcd, etc. and <i>connectionType</i> is <code>http</code> or <code>akka</code>.
+</p></div></div>
+    </li><li name="csw.services.log" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="log"></a>
+      <a id="log:log"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="log/package.html"><span class="name">log</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@log" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The Log Service package contains the config files for logging and optional, external applications
+(Logstash, Elasticsearch, Kibana) to view and process the log information.</p><div class="fullcomment"><div class="comment cmt"><h4> Log Service </h4><p>The Log Service package contains the config files for logging and optional, external applications
+(Logstash, Elasticsearch, Kibana) to view and process the log information.</p><p>A special logger PrefixedActorLogging is
+provided for Akka actors that implement TMT components, such as HCDs and assemblies.
+It inserts an <a href="http://logback.qos.ch/manual/mdc.html" target="_blank">MDC</a> prefix field into the log, where prefix
+is the component prefix, which is made up of the subsystem name, followed by a dot and the rest of the component prefix.</p><p>The standard logging framework used here is <code>slf4j</code> and <code>logback</code>. For packages that require <code>log4j</code>
+(like OPC UA), there is a bridge: <code>log4j-over-slf4j</code> that can be used instead of the log4j dependency.</p><h5> Configuring Logging </h5><p>Applications that wish to log can add this project as a dependency, so that the logback.xml config file
+will be found. This configures logging to go to the console and, if the system property &quot;application-name&quot; is
+defined, to ${application-name}.log in the current directory.
+</p></div></div>
+    </li><li name="csw.services.pkg" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="pkg"></a>
+      <a id="pkg:pkg"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="pkg/package.html"><span class="name">pkg</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@pkg" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">This project deals with the packaging of components, such as HCDs and Assemblies.</p><div class="fullcomment"><div class="comment cmt"><p>This project deals with the packaging of components, such as HCDs and Assemblies.</p><p>Components are usually created by a <a href="pkg/ContainerComponent.html" class="extype" name="csw.services.pkg.ContainerComponent">csw.services.pkg.ContainerComponent</a> from a configuration file
+and are then controlled by a <a href="pkg/Supervisor.html" class="extype" name="csw.services.pkg.Supervisor">csw.services.pkg.Supervisor</a> actor that intercepts <i>lifecycle</i> messages
+to determine the state of the component (Components that are not in the <i>Running</i> state, do not
+receive commands, for example).</p><p>Conponents can implement the <a href="pkg/LifecycleHandler.html" class="extype" name="csw.services.pkg.LifecycleHandler">csw.services.pkg.LifecycleHandler</a> trait to be notified about
+lifecycle changes, such as when the component is initialized, started and stopped.</p><p>A demo/test can be found in the multi-jvm directory and run with:</p><pre>sbt <span class="lit">"project pkg"</span> multi-jvm:test</pre><h5> Container Config Files </h5><p>Here is an example of a config file for creating a container with the name <i>Container-1</i> that
+contains one assembly (named <i>Assembly-1</i>) and depends on the services of two HCDs (<i>HCD-2A</i> and <i>HCD-2B</i>).
+The assembly is implemented by the given class (<code>csw.services.pkg.TestAssembly</code>).
+A <code>Supervisor</code> actor will be created to manage the assembly, which includes registering it with the
+location service, using the given name and prefix. The prefix can be used to distribute parts of the
+configurations to different HCDs. HCDs register themselves with the Location Service and specify a unique
+prefix that can be used for this purpose.</p><pre>container {
+name = Container-<span class="num">1</span>
+components {
+  Assembly-<span class="num">1</span> {
+    <span class="kw">type</span> = Assembly
+    <span class="kw">class</span> = csw.pkgDemo.assembly1.Assembly1
+    prefix = tcs.base.assembly1
+    connectionType: [akka]
+    connections = [
+      {
+        name: HCD-<span class="num">2</span>A
+        <span class="kw">type</span>: HCD
+        connectionType: [akka]
+      }
+      {
+        name: HCD-<span class="num">2</span>B
+        <span class="kw">type</span>: HCD
+        connectionType: [akka]
+      }
+    ]
+  }
+ }
+}</pre><p>Below is an example config file for the container with the HCDs referenced in the above example.
+In this case, <code>HCD-2A</code> and <code>HCD-2B</code> are both implemented by the <code>csw.services.pkg.TestHcd</code> class.
+These are periodic HCDs that will have their <code>process</code> methods called at the given rate
+(Each time process() is called, the HCDs check their input queues for configurations and update
+their <i>state variables</i> with the current states).</p><pre>container {
+  name = <span class="lit">"Container-2"</span>
+  components {
+    HCD-<span class="num">2</span>A {
+      <span class="kw">type</span> = HCD
+      <span class="kw">class</span> = csw.pkgDemo.hcd2.Hcd2
+      prefix = tcs.mobie.blue.filter
+      connectionType: [akka]
+      rate = <span class="num">1</span> second
+    }
+    HCD-<span class="num">2</span>B {
+      <span class="kw">type</span> = HCD
+      <span class="kw">class</span> = csw.pkgDemo.hcd2.Hcd2
+      prefix = tcs.mobie.blue.disperser
+      connectionType: [akka]
+      rate = <span class="num">1</span> second
+    }
+  }
+}</pre><p>HCDs do not reply when they receive a configuration. The only way to know if an HCD has completed
+its work is to check the value of its <i>state variable</i> in the key/value store.
+For this you can use the <i>StateMatcherActor</i> from the ccs project.
+</p></div></div>
+    </li><li name="csw.services.sysControl" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="sysControl"></a>
+      <a id="sysControl:sysControl"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="sysControl/package.html"><span class="name">sysControl</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@sysControl" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.trackLocation" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="trackLocation"></a>
+      <a id="trackLocation:trackLocation"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="trackLocation/package.html"><span class="name">trackLocation</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@trackLocation" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      
+    </li><li name="csw.services.ts" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ts"></a>
+      <a id="ts:ts"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="ts/package.html"><span class="name">ts</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#csw.services.package@ts" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The TimeService provides a component actor with timed messages:</p><div class="fullcomment"><div class="comment cmt"><p>The TimeService provides a component actor with timed messages:</p><p>- scheduleOne -  sends a message to an actor once some time in the future</p><p>- schedule    -  waits until a specific time and then sends periodic message to an actor until cancelled
+</p></div></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
