@@ -125,15 +125,16 @@ The examples directory contains the following example applications:
 * [vslice](examples/vslice) - a detailed, end to end, "Vertical Slice" example that demonstrates how to develop and test Assemblies and HCDs in Scala
 * [vsliceJava](examples/vsliceJava) - a Java 8 version of the [vslice](examples/vslice) example that demonstrates how to use the CSW software from Java 8
 
-Publishing the API Documentation
---------------------------------
+Publishing the API Documentation on GitHub
+------------------------------------------
 
 This project uses [GitHub Pages](https://pages.github.com/) for publishing the API documentation.
-Sbt plugins are used to generate the scaladoc and publish it.
-The most useful sbt tasks are *make-site* and *ghpages-push-site*, which generate the API docs and publish them on GitHub.
 
-The main page for the site is `src/site-preprocess/index.html`. That page contains pointers to the 
-API docs and the GitHub sources. Note that the links to the sources are always based on the branch
-you are working in.
+For CSW-0.2-PDR, the sbt-ghpages plugin was used to generate the scaladoc and publish it (using sbt *make-site* and *ghpages-push-site*).
+The main page for automatically generting the site is `src/site-preprocess/index.html`. That page contains pointers to the 
+API docs and the GitHub sources. Note that the links to the sources are always based on the branch  you are working in.
+
+For CSW-0.3-PDR, the gh-pages branch was updated manually, in order to include the Java and Scala API docs.
+(Using the sbt-ghpages plugin would overwrite the manual version, so don't use that now.)
 
 
