@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import csw.examples.vslice.TestEnv
 import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
@@ -29,10 +30,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
   override def beforeAll: Unit = {
-    // For the test, store the HCD's configuration in the config service (Normally, it would already be there)
-    val config = ConfigFactory.parseResources(TromboneHCD.resource.getPath)
-    implicit val timeout = Timeout(5.seconds)
-    Await.ready(ConfigServiceClient.saveConfigToConfigService(TromboneHCD.tromboneConfigFile, config), timeout.duration)
+    TestEnv.createTromboneHcdConfig()
   }
 
   override def afterAll: Unit = TestKit.shutdownActorSystem(system)

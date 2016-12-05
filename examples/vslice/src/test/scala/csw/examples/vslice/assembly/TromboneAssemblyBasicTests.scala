@@ -5,6 +5,7 @@ import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.services.apps.containerCmd.ContainerCmd
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.ccs.CommandStatus._
@@ -39,9 +40,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
   var hcdActors: List[ActorRef] = Nil
 
   override def beforeAll: Unit = {
-    // For the test, store the assembly's configuration in the config service (Normally, it would already be there)
-    val config = ConfigFactory.parseResources(TromboneAssembly.resource.getPath)
-    Await.ready(ConfigServiceClient.saveConfigToConfigService(TromboneAssembly.tromboneConfigFile, config), 5.seconds)
+    TestEnv.createTromboneAssemblyConfig()
 
     // Starts the HCD used in the test
     val cmd = ContainerCmd("vslice", Array("--standalone"), Map("" -> "tromboneHCD.conf"))
