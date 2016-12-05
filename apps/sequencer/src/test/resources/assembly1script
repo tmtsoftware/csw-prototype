@@ -1,4 +1,4 @@
-// Setup test environment for use with the sequencer and the code in csw/example:
+r// Setup test environment for use with the sequencer and the code in csw/example:
 // Pass this file as an argument to the csw sequencer command,
 // so you can set the rate interactively
 
