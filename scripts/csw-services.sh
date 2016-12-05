@@ -46,7 +46,7 @@ fi
 REDIS_CLIENT=`echo $REDIS_SERVER | sed -e 's/-server/-cli/'`
 
 # Set to yes to start the config service
-START_CONFIG_SERVICE=no
+START_CONFIG_SERVICE=yes
 
 REDIS_PORT=7777
 REDIS_SERVICES="Event Service,Alarm Service,Telemetry Service"

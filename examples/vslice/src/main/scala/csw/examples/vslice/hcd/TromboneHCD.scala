@@ -5,7 +5,6 @@ import java.io.File
 import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
 import csw.services.ccs.HcdController
 import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ComponentType
@@ -38,7 +37,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
 
   implicit val timeout = Timeout(2.seconds)
 
-  // Note: The following could be passed as parameters to context.become(), but are declared as
+  // Note: The following could be done with futures and passed as parameters to context.become(), but are declared as
   // vars here so that they can be examined by test cases
 
   // Initialize values -- This causes an update to the listener
@@ -46,23 +45,34 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
   var current: AxisUpdate = _
   var stats: AxisStatistics = _
 
+  // Create an axis for simulating trombone motion
+  var tromboneAxis: ActorRef = _
+
   // Get the axis config file from the config service, then use it to start the tromboneAxis actor
   // and get the current values. Once that is done, we can tell the supervisor actor that we are ready
   // and then wait for the Running message from the supervisor before going to the running state.
   // Initialize axis from ConfigService
-  val axisConfig: AxisConfig = Await.result(getAxisConfig, timeout.duration)
+  var axisConfig: AxisConfig = _
 
-  // Create an axis for simulating trombone motion
-  val tromboneAxis: ActorRef = setupAxis(axisConfig)
+  try {
+    // The following line could fail, if the config service is not running or the file is not found
+    axisConfig = Await.result(getAxisConfig, timeout.duration)
 
-  // Initialize values -- This causes an update to the listener
-  // The current axis position from the hardware axis, initialize to default value
-  current = Await.result((tromboneAxis ? InitialState).mapTo[AxisUpdate], timeout.duration)
-  stats = Await.result((tromboneAxis ? GetStatistics).mapTo[AxisStatistics], timeout.duration)
+    // Create an axis for simulating trombone motion
+    tromboneAxis = setupAxis(axisConfig)
 
-  // Required setup for Lifecycle in order to get messages
-  supervisor ! Initialized
-  supervisor ! Started
+    // Initialize values -- This causes an update to the listener
+    // The current axis position from the hardware axis, initialize to default value
+    current = Await.result((tromboneAxis ? InitialState).mapTo[AxisUpdate], timeout.duration)
+    stats = Await.result((tromboneAxis ? GetStatistics).mapTo[AxisStatistics], timeout.duration)
+
+    // Required setup for Lifecycle in order to get messages
+    supervisor ! Initialized
+    supervisor ! Started
+  } catch {
+    case ex: Exception =>
+      supervisor ! InitializeFailure(ex.getMessage)
+  }
 
   // Receive actor methods
   override def receive: Receive = initializingReceive
@@ -176,22 +186,18 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
     // This is required by the ConfigServiceClient
     implicit val system = context.system
 
-    // Get the trombone config file from the config service, or use the given resource file if that doesn't work
-    val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
-    val resource = new File("tromboneHCD.conf")
+    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
 
-    //    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
-    val f = Future {
-      Some(ConfigFactory.parseResources(resource.getPath))
-    }
-
-    // Convert the future (optional) config to an AxisConfig
-    f.map(configOpt => AxisConfig(configOpt.get))
+    f.map(_.map(AxisConfig(_)).get)
   }
 }
 
 object TromboneHCD {
   def props(hcdInfo: HcdInfo, supervisor: ActorRef) = Props(classOf[TromboneHCD], hcdInfo, supervisor)
+
+  // Get the trombone config file from the config service, or use the given resource file if that doesn't work
+  val tromboneConfigFile = new File("trombone/tromboneHCD.conf")
+  val resource = new File("tromboneHCD.conf")
 
   // HCD Info
   val componentName = "lgsTromboneHCD"
@@ -209,7 +215,7 @@ object TromboneHCD {
   val AXIS_ERROR = Choice(SingleAxisSimulator.AXIS_ERROR.toString)
   val stateKey = ChoiceKey("axisState", AXIS_IDLE, AXIS_MOVING, AXIS_ERROR)
   val positionKey = IntKey("position")
-  val positionUnits = encoder
+  val positionUnits: encoder.type = encoder
   val inLowLimitKey = BooleanKey("lowLimit")
   val inHighLimitKey = BooleanKey("highLimit")
   val inHomeKey = BooleanKey("homed")

@@ -4,20 +4,20 @@ import java.io.File
 
 import akka.actor.{ActorRef, Props}
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.services.alarms.AlarmService
 import csw.services.ccs.SequentialExecutor.StartTheSequence
 import csw.services.ccs.Validation.ValidationList
 import csw.services.ccs.{AssemblyController, SequentialExecutor, Validation}
+import csw.services.cs.akka.ConfigServiceClient
 import csw.services.events.{EventService, TelemetryService}
-import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService._
 import csw.services.loc._
 import csw.services.pkg.Component.AssemblyInfo
 import csw.services.pkg.{Assembly, Supervisor}
 import csw.util.config.Configurations.SetupConfigArg
 
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -34,55 +34,61 @@ import scala.language.postfixOps
 class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Assembly with AssemblyController {
 
   import Supervisor._
+  import TromboneAssembly._
 
-  // Get the assembly configuration from the config service or resource file (XXX TODO: Change to be non-blocking like the HCD version)
-  val (calculationConfig, controlConfig) = getAssemblyConfigs
-  implicit val ac = AssemblyContext(info, calculationConfig, controlConfig)
-
-  private val badHCDReference = None
   private var tromboneHCD: Option[ActorRef] = badHCDReference
 
-  //  private def isHCDAvailable: Boolean = tromboneHCD.isDefined
-
-  private val badEventService: Option[EventService] = None
-  //  private def isEventServiceAvailable: Boolean = eventService.isDefined
   private var eventService: Option[EventService] = badEventService
 
-  private val badTelemetryService: Option[TelemetryService] = None
-  //  private def isTelemetryServiceAvailable: Boolean = telemetryService.isDefined
   private var telemetryService: Option[TelemetryService] = badTelemetryService
 
-  private val badAlarmService: Option[AlarmService] = None
-  //  private def isAlarmServiceAvailable: Boolean = alarmService.isDefined
   private var alarmService: Option[AlarmService] = badAlarmService
 
-  def receive: Receive = initializingReceive
-
-  // Start tracking the components we command
-  log.info("Connections: " + info.connections)
-
   private val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
-  trackerSubscriber ! LocationSubscriberActor.Subscribe
-  // This tracks the HCD
-  LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
-  // This tracks required services
-  LocationSubscriberActor.trackConnection(EventService.eventServiceConnection(), trackerSubscriber)
-  LocationSubscriberActor.trackConnection(TelemetryService.telemetryServiceConnection(), trackerSubscriber)
-  LocationSubscriberActor.trackConnection(AlarmService.alarmServiceConnection(), trackerSubscriber)
 
-  // This actor handles all telemetry and system event publishing
-  private val eventPublisher = context.actorOf(TrombonePublisher.props(ac, None))
-  // This actor makes a single connection to the
-  //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
-  //log.info("CurrentStateReceiver: " + currentStateReceiver)
+  private var eventPublisher: ActorRef = _
 
-  // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
-  private val commandHandler = context.actorOf(TromboneCommandHandler.props(ac, tromboneHCD, Some(eventPublisher)))
+  private var commandHandler: ActorRef = _
 
-  // This sets up the diagnostic data publisher
-  val diagPublisher = context.actorOf(DiagPublisher.props(ac, tromboneHCD, Some(eventPublisher)))
+  implicit val ac: AssemblyContext = initialize()
 
-  supervisor ! Initialized
+  // Gets the assembly configuration from the config service or resource file and uses it to
+  // initialize the assembly
+  def initialize(): AssemblyContext = {
+    try {
+      // The following line could fail, if the config service is not running or the file is not found
+      val (calculationConfig, controlConfig) = Await.result(getAssemblyConfigs, 5.seconds)
+      val assemblyContext = AssemblyContext(info, calculationConfig, controlConfig)
+
+      // Start tracking the components we command
+      log.info("Connections: " + info.connections)
+      trackerSubscriber ! LocationSubscriberActor.Subscribe
+      // This tracks the HCD
+      LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
+      // This tracks required services
+      LocationSubscriberActor.trackConnection(EventService.eventServiceConnection(), trackerSubscriber)
+      LocationSubscriberActor.trackConnection(TelemetryService.telemetryServiceConnection(), trackerSubscriber)
+      LocationSubscriberActor.trackConnection(AlarmService.alarmServiceConnection(), trackerSubscriber)
+
+      // This actor handles all telemetry and system event publishing
+      eventPublisher = context.actorOf(TrombonePublisher.props(assemblyContext, None))
+
+      // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
+      commandHandler = context.actorOf(TromboneCommandHandler.props(assemblyContext, tromboneHCD, Some(eventPublisher)))
+
+      // This sets up the diagnostic data publisher
+      context.actorOf(DiagPublisher.props(assemblyContext, tromboneHCD, Some(eventPublisher)))
+
+      supervisor ! Initialized
+      assemblyContext
+    } catch {
+      case ex: Exception =>
+        supervisor ! InitializeFailure(ex.getMessage)
+        null
+    }
+  }
+
+  def receive: Receive = initializingReceive
 
   /**
    * This contains only commands that can be received during intialization
@@ -213,21 +219,15 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
 
   // Gets the assembly configurations from the config service, or a resource file, if not found and
   // returns the two parsed objects.
-  private def getAssemblyConfigs: (TromboneCalculationConfig, TromboneControlConfig) = {
+  private def getAssemblyConfigs: Future[(TromboneCalculationConfig, TromboneControlConfig)] = {
     // This is required by the ConfigServiceClient
     implicit val system = context.system
+    import system.dispatcher
 
-    // Get the trombone config file from the config service, or use the given resource file if that doesn't work
-    val tromboneConfigFile = new File("trombone/tromboneAssembly.conf")
-    val resource = new File("tromboneAssembly.conf")
-
-    //    implicit val timeout = Timeout(3.seconds)
-    //    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
-    //    // parse the future (optional) config (XXX waiting for the result for now, need to wait longer than the timeout: FIXME)
-    //    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), 2.seconds)
-
-    val config = ConfigFactory.parseResources(resource.getPath)
-    (TromboneCalculationConfig(config), TromboneControlConfig(config))
+    implicit val timeout = Timeout(3.seconds)
+    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
+    // parse the future
+    f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get)))
   }
 }
 
@@ -235,6 +235,10 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
  * All assembly messages are indicated here
  */
 object TromboneAssembly {
+
+  // Get the trombone config file from the config service, or use the given resource file if that doesn't work
+  val tromboneConfigFile = new File("trombone/tromboneAssembly.conf")
+  val resource = new File("tromboneAssembly.conf")
 
   def props(assemblyInfo: AssemblyInfo, supervisor: ActorRef) = Props(classOf[TromboneAssembly], assemblyInfo, supervisor)
 
@@ -246,4 +250,8 @@ object TromboneAssembly {
    */
   case class UpdateTromboneHCD(tromboneHCD: Option[ActorRef])
 
+  private val badEventService: Option[EventService] = None
+  private val badTelemetryService: Option[TelemetryService] = None
+  private val badAlarmService: Option[AlarmService] = None
+  private val badHCDReference = None
 }
