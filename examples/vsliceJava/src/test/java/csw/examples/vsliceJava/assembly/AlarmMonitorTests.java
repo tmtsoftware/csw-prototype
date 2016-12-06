@@ -8,6 +8,7 @@ import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
+import csw.examples.vsliceJava.TestEnv;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.alarms.AlarmKey;
 import csw.services.ccs.CommandStatus.CommandStatus;
@@ -84,6 +85,7 @@ public class AlarmMonitorTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
+    TestEnv.createTromboneAssemblyConfig(system);
     alarmService = IAlarmService.getAlarmService(system, timeout).get();
     alarmAdmin = new JAlarmServiceAdmin(alarmService, system);
     setupAlarms();

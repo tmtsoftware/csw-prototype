@@ -7,6 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
+import csw.examples.vsliceJava.TestEnv;
 import csw.services.apps.containerCmd.ContainerCmd;
 import csw.services.ccs.AssemblyController.Submit;
 import csw.services.ccs.CommandStatus.CommandResult;
@@ -56,6 +57,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
+    TestEnv.createTromboneAssemblyConfig(system);
 
     // Starts the HCD used in the test
     Map<String, String> configMap = Collections.singletonMap("", "tromboneHCD.conf");
@@ -86,7 +88,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
 
     tla.tell(new SubscribeLifecycleCallback(fakeSequencer.ref()), self());
     fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
-    fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+    fakeSequencer.expectMsg(duration("10 seconds"), new LifecycleStateChanged(LifecycleRunning));
     tla.tell(PoisonPill.getInstance(), self());
   }
 

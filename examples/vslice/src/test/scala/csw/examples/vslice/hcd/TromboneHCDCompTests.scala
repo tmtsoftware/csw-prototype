@@ -41,7 +41,6 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
   override def afterAll: Unit = system.terminate()
 
-
   val testInfo = HcdInfo(
     TromboneHCD.componentName,
     TromboneHCD.trombonePrefix,

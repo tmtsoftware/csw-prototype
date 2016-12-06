@@ -6,20 +6,18 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
+import akka.util.Timeout;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import csw.services.ccs.SequentialExecutor;
 import csw.services.ccs.Validation;
-import csw.services.loc.ComponentId;
-import csw.services.loc.Connection;
 import csw.services.loc.LocationService.*;
 import csw.services.loc.LocationSubscriberActor;
 import csw.services.pkg.Component;
 import csw.services.pkg.Supervisor;
 import javacsw.services.alarms.IAlarmService;
+import javacsw.services.cs.akka.JConfigServiceClient;
 import javacsw.services.events.IEventService;
 import javacsw.services.events.ITelemetryService;
-import javacsw.services.loc.JComponentType;
 import javacsw.services.loc.JLocationSubscriberActor;
 import javacsw.services.pkg.JAssemblyController;
 import scala.PartialFunction;
@@ -28,10 +26,10 @@ import scala.runtime.BoxedUnit;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneCalculationConfig;
 import static csw.examples.vsliceJava.assembly.AssemblyContext.TromboneControlConfig;
-import static csw.services.loc.Connection.TcpConnection;
 import static csw.util.config.Configurations.SetupConfigArg;
 import static javacsw.services.pkg.JSupervisor.*;
 
@@ -45,14 +43,14 @@ import static javacsw.services.pkg.JSupervisor.*;
  * handles locations for distribution throughout component
  * receives comamnds and forwards them to the CommandHandler by extending the AssemblyController
  */
-@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused"})
+@SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
 public class TromboneAssembly extends JAssemblyController {
 
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final ActorRef supervisor;
   private final AssemblyContext ac;
-  private final ActorRef commandHandler;
+  private ActorRef commandHandler;
 
   private Optional<ActorRef> badHCDReference = Optional.empty();
   private Optional<ActorRef> tromboneHCD = badHCDReference;
@@ -86,36 +84,44 @@ public class TromboneAssembly extends JAssemblyController {
     super(info);
     this.supervisor = supervisor;
 
-    System.out.println("INFO: " + info);
-//  // Start tracking the components we command
-    log.info("Connections: " + info.connections());
-
-    // Get the assembly configuration from the config service or resource file (XXX TODO: Change to be non-blocking like the HCD version)
-    TromboneConfigs configs = getAssemblyConfigs();
-    ac = new AssemblyContext(info, configs.calculationConfig, configs.controlConfig);
+    ac = initialize(info);
 
     // Initial receive - start with initial values
     receive(initializingReceive());
+  }
 
-    ActorRef trackerSubscriber = context().actorOf(LocationSubscriberActor.props());
-    trackerSubscriber.tell(JLocationSubscriberActor.Subscribe, self());
-    // This tracks the HCD
-    LocationSubscriberActor.trackConnections(info.connections(), trackerSubscriber);
-    // This tracks required services
-    LocationSubscriberActor.trackConnection(IEventService.eventServiceConnection(), trackerSubscriber);
-    LocationSubscriberActor.trackConnection(ITelemetryService.telemetryServiceConnection(), trackerSubscriber);
-    LocationSubscriberActor.trackConnection(IAlarmService.alarmServiceConnection(), trackerSubscriber);
+  private AssemblyContext initialize(Component.AssemblyInfo info) {
+    try {
+      // Get the assembly configuration from the config service or resource file
+      TromboneConfigs configs = getAssemblyConfigs();
+      AssemblyContext assemblyContext = new AssemblyContext(info, configs.calculationConfig, configs.controlConfig);
 
-    // This actor handles all telemetry and system event publishing
-    ActorRef eventPublisher = context().actorOf(TrombonePublisher.props(ac, Optional.empty(), Optional.empty()));
+      // Start tracking the components we command
+      log.info("Connections: " + info.connections());
 
-    // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
-    commandHandler = context().actorOf(TromboneCommandHandler.props(ac, tromboneHCD, Optional.of(eventPublisher)));
+      ActorRef trackerSubscriber = context().actorOf(LocationSubscriberActor.props());
+      trackerSubscriber.tell(JLocationSubscriberActor.Subscribe, self());
+      // This tracks the HCD
+      LocationSubscriberActor.trackConnections(info.connections(), trackerSubscriber);
+      // This tracks required services
+      LocationSubscriberActor.trackConnection(IEventService.eventServiceConnection(), trackerSubscriber);
+      LocationSubscriberActor.trackConnection(ITelemetryService.telemetryServiceConnection(), trackerSubscriber);
+      LocationSubscriberActor.trackConnection(IAlarmService.alarmServiceConnection(), trackerSubscriber);
 
-    // This sets up the diagnostic data publisher
-    ActorRef diagPublisher = context().actorOf(DiagPublisher.props(ac, tromboneHCD, Optional.of(eventPublisher)));
+      // This actor handles all telemetry and system event publishing
+      ActorRef eventPublisher = context().actorOf(TrombonePublisher.props(assemblyContext, Optional.empty(), Optional.empty()));
 
-    supervisor.tell(Initialized, self());
+      // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
+      commandHandler = context().actorOf(TromboneCommandHandler.props(assemblyContext, tromboneHCD, Optional.of(eventPublisher)));
+
+      // This sets up the diagnostic data publisher
+      context().actorOf(DiagPublisher.props(assemblyContext, tromboneHCD, Optional.of(eventPublisher)));
+      supervisor.tell(Initialized, self());
+      return assemblyContext;
+    } catch(Exception ex) {
+      supervisor.tell(new Supervisor.InitializeFailure(ex.getMessage()), self());
+      return null;
+    }
   }
 
 
@@ -225,13 +231,13 @@ public class TromboneAssembly extends JAssemblyController {
       build();
   }
 
-  @Override
   /**
    * Function that overrides AssemblyController setup processes incoming SetupConfigArg messages
    * @param sca received SetupConfgiArg
    * @param commandOriginator the sender of the command
    * @return a validation object that indicates if the received config is valid
    */
+  @Override
   public List<Validation.Validation> setup(SetupConfigArg sca, Optional<ActorRef> commandOriginator) {
     // Returns validations for all
     List<Validation.Validation> validations = validateSequenceConfigArg(sca);
@@ -274,22 +280,22 @@ public class TromboneAssembly extends JAssemblyController {
 
   // Gets the assembly configurations from the config service, or a resource file, if not found and
   // returns the two parsed objects.
-  private TromboneConfigs getAssemblyConfigs() {
+  private TromboneConfigs getAssemblyConfigs() throws Exception {
     // Get the trombone config file from the config service, or use the given resource file if that doesn't work
-    File tromboneConfigFile = new File("trombone/tromboneAssembly.conf");
-    File resource = new File("tromboneAssembly.conf");
-
-    //    implicit val timeout = Timeout(1.seconds)
-    //    val f = ConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, resource = Some(resource))
-    //    // parse the future (optional) config (XXX waiting for the result for now, need to wait longer than the timeout: FIXME)
-    //    Await.result(f.map(configOpt => (TromboneCalculationConfig(configOpt.get), TromboneControlConfig(configOpt.get))), 2.seconds)
-
-    Config config = ConfigFactory.parseResources(resource.getPath());
-    System.out.println("Config: " + config);
-    return new TromboneConfigs(new TromboneCalculationConfig(config), new TromboneControlConfig(config));
+    Timeout timeout = new Timeout(3, TimeUnit.SECONDS);
+    Optional<Config> configOpt = JConfigServiceClient.getConfigFromConfigService(tromboneConfigFile,
+      Optional.empty(), Optional.of(resource), context().system(), timeout).get();
+    if (configOpt.isPresent())
+      return new TromboneConfigs(new TromboneCalculationConfig(configOpt.get()),
+        new TromboneControlConfig(configOpt.get()));
+    throw new RuntimeException("Failed to get from config service: " + tromboneConfigFile);
   }
 
   // --- Static defs ---
+
+  public static File tromboneConfigFile = new File("trombone/tromboneAssembly.conf");
+  public static File resource = new File("tromboneAssembly.conf");
+
 
   public static Props props(Component.AssemblyInfo assemblyInfo, ActorRef supervisor) {
     return Props.create(new Creator<TromboneAssembly>() {

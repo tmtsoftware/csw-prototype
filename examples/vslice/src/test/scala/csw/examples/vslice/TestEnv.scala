@@ -11,8 +11,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Helper class for setting up the test environment
-  */
+ * Helper class for setting up the test environment
+ */
 object TestEnv {
 
   // For the tests, store the HCD's configuration in the config service (Normally, it would already be there)

@@ -9,6 +9,7 @@ import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
+import csw.examples.vsliceJava.TestEnv;
 import csw.services.apps.containerCmd.ContainerCmd;
 import csw.services.ccs.AssemblyController.Submit;
 import csw.services.ccs.CommandStatus.CommandResult;
@@ -58,6 +59,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
+    TestEnv.createTromboneAssemblyConfig(system);
     eventService = IEventService.getEventService(IEventService.defaultName, system, timeout)
       .get(5, TimeUnit.SECONDS);
 
