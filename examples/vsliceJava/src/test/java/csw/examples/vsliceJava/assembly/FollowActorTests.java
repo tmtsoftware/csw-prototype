@@ -39,7 +39,6 @@ import static csw.examples.vsliceJava.assembly.TromboneAssembly.UpdateTromboneHC
 import static csw.examples.vsliceJava.assembly.TromboneControl.GoToStagePosition;
 import static csw.examples.vsliceJava.assembly.TrombonePublisher.AOESWUpdate;
 import static csw.examples.vsliceJava.assembly.TrombonePublisher.EngrUpdate;
-import static csw.examples.vsliceJava.hcd.SingleAxisSimulator.AxisState.AXIS_IDLE;
 import static csw.examples.vsliceJava.hcd.TromboneHCD.*;
 import static csw.services.pkg.SupervisorExternal.LifecycleStateChanged;
 import static csw.services.pkg.SupervisorExternal.SubscribeLifecycleCallback;
@@ -374,11 +373,10 @@ public class FollowActorTests extends JavaTestKit {
    * This expect message will absorb CurrentState messages as long as the current is not equal the desired destination
    * Then it collects the one where it is the destination and the end message
    *
-   * @param tp   TestProbe that is receiving the CurrentState messages
    * @param dest a TestProbe acting as the assembly
    * @return A sequence of CurrentState messages
    */
-  List<CurrentState> expectMoveMsgsWithDest(TestProbe tp, int dest) {
+  List<CurrentState> expectMoveMsgsWithDest(int dest) {
     final CurrentState[] msgs =
       new ReceiveWhile<CurrentState>(CurrentState.class, duration("5 seconds")) {
         protected CurrentState match(Object in) {
@@ -392,9 +390,10 @@ public class FollowActorTests extends JavaTestKit {
         }
       }.get(); // this extracts the received messages
 
-    CurrentState fmsg1 = tp.expectMsgClass(CurrentState.class); // last one with current == target
-    CurrentState fmsg2 = tp.expectMsgClass(CurrentState.class); // the the end event with IDLE
-    List<CurrentState> allmsgs = Arrays.asList(msgs);
+    CurrentState fmsg1 = expectMsgClass(CurrentState.class); // last one with current == target
+    CurrentState fmsg2 = expectMsgClass(CurrentState.class); // the the end event with IDLE
+    List<CurrentState> allmsgs = new ArrayList<>();
+    allmsgs.addAll(Arrays.asList(msgs));
     allmsgs.add(fmsg1);
     allmsgs.add(fmsg2);
     return allmsgs;
@@ -414,14 +413,15 @@ public class FollowActorTests extends JavaTestKit {
     // creates fake TCS/RTC events with Event Service through FollowActor and back to HCD instance
     ActorRef tromboneHCD = startHCD();
 
-    TestProbe fakeAssembly = new TestProbe(system);
+//    TestProbe fakeAssembly = new TestProbe(system);
+    ActorRef fakeAssembly = self(); // Can't use TestProbe with ReceiveWhile in Java API
 
-    tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly.ref()), self());
-    fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
-    fakeAssembly.expectMsg(new LifecycleStateChanged(LifecycleRunning));
+    tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly), self());
+    expectMsgEquals(new LifecycleStateChanged(LifecycleInitialized));
+    expectMsgEquals(new LifecycleStateChanged(LifecycleRunning));
 
     // This has HCD sending updates back to this Assembly
-    fakeAssembly.send(tromboneHCD, Subscribe);
+    tromboneHCD.tell(Subscribe, fakeAssembly);
 
     // Ignoring the messages for TrombonePosition
     // Create the trombone publisher for publishing SystemEvents to AOESW
@@ -456,7 +456,7 @@ public class FollowActorTests extends JavaTestKit {
 
     // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
     List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f ->
-      new SystemEvent(zaConfigKey.prefix()).add(za(f))).collect(Collectors.toList());
+      jadd(new SystemEvent(zaConfigKey.prefix()), za(f))).collect(Collectors.toList());
 
     // This should result in the length of tcsEvents being published, which is 15
     tcsEvents.forEach(f -> {
@@ -484,7 +484,7 @@ public class FollowActorTests extends JavaTestKit {
     logger.info("encExpected1: " + encExpected);
 
     // This gets the first set of CurrentState messages for moving to the FE 10 mm position
-    List<CurrentState> msgs = expectMoveMsgsWithDest(fakeAssembly, encExpected);
+    List<CurrentState> msgs = expectMoveMsgsWithDest(encExpected);
     CurrentState last = msgs.get(msgs.size() - 1);
     assertEquals(JavaHelpers.jvalue(last, positionKey), Integer.valueOf(encExpected));
     assertEquals(JavaHelpers.jvalue(last, stateKey), AXIS_IDLE);
@@ -492,7 +492,7 @@ public class FollowActorTests extends JavaTestKit {
     assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
 
     // Check that nothing is happening - not needed
-    fakeAssembly.expectNoMsg(duration("200 milli"));
+    expectNoMsg(duration("200 milli"));
 
     resultSubscriber1.tell(new TestSubscriber.GetResults(), self());
     // Check the events received through the Event Service

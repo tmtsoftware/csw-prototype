@@ -38,14 +38,9 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
 
   private val badEventService = None
   var eventService: Option[EventService] = badEventService
-  //var eventService:EventService = _
-  //  private def isEventServiceAvailable: Boolean = eventService.isDefined
 
   // Set the default evaluation for use with the follow command
   private var setElevationItem = naElevation(calculationConfig.defaultInitialElevation)
-
-  //val currentStateReceiver = context.actorOf(CurrentStateReceiver.props)
-  //currentStateReceiver ! AddPublisher(tromboneHCD)
 
   // The actor for managing the persistent assembly state as defined in the spec is here, it is passed to each command
   private val tromboneStateActor = context.actorOf(TromboneStateActor.props())
@@ -64,7 +59,6 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
         // Verify that it is the event service
         if (t.connection == EventService.eventServiceConnection()) {
           log.info(s"Subscriber received connection: $t from ${sender()}")
-          //val eventService: EventService = EventService.get(t.host, t.port)
           // Setting var here!
           eventService = Some(EventService.get(t.host, t.port))
           log.info(s"Event Service at: $eventService")

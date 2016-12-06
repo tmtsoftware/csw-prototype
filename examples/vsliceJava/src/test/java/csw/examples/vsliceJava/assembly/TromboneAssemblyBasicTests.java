@@ -47,7 +47,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
   private static IEventService eventService;
 
   // List of top level actors that were created for the HCD (for clean up)
-  private static List<ActorRef> hcdActors;
+  private static List<ActorRef> hcdActors = Collections.emptyList();
 
 
   public TromboneAssemblyBasicTests() {
@@ -465,7 +465,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     TestProbe fakeClient = new TestProbe(system);
 
     fakeSupervisor.expectMsg(Initialized);
-    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectMsg(duration("10 seconds"), Started);
     fakeSupervisor.expectNoMsg(duration("200 milli"));
     fakeSupervisor.send(tromboneAssembly, Running);
 
@@ -568,7 +568,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     TestProbe fakeClient = new TestProbe(system);
 
     fakeSupervisor.expectMsg(Initialized);
-    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectMsg(duration("10 seconds"), Started);
     fakeSupervisor.expectNoMsg(duration("200 milli"));
     fakeSupervisor.send(tromboneAssembly, Running);
 
@@ -599,7 +599,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     //logger.info(s"AcceptedMsg: $acceptedMsg")
 
     // Second one is completion of the executed ones
-    completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    completeMsg = fakeClient.expectMsgClass(duration("10 seconds"), CommandResult.class);
     logger.info("completeMsg: " + completeMsg);
     assertEquals(completeMsg.overall(), AllCompleted);
 

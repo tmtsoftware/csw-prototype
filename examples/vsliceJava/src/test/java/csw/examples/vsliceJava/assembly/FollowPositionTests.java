@@ -324,7 +324,7 @@ public class FollowPositionTests extends JavaTestKit {
       .collect(Collectors.toList());
 
     // Expect one message for the setting fe
-    fakeTromboneControl.expectMsg(msgsExpected.get(0));
+    fakeTromboneControl.expectMsg(duration("10 seconds"), msgsExpected.get(0));
     // This collects the messages from the calculator setup above
     List<?> msgs = scala.collection.JavaConversions.asJavaCollection(
       fakeTromboneControl.receiveN(msgsExpected.size())).stream().collect(Collectors.toList());

@@ -41,7 +41,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
   private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
 
   // List of top level actors that were created for the HCD (for clean up)
-  private static List<ActorRef> hcdActors;
+  private static List<ActorRef> hcdActors = Collections.emptyList();
 
   // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
   ActorRef self() {
