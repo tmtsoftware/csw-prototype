@@ -2,9 +2,14 @@ package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.TestProbe
+import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.assembly.TromboneAssembly
+import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ConnectionType.AkkaType
+import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
@@ -19,14 +24,23 @@ import scala.concurrent.duration.{FiniteDuration, _}
 /**
  * TMT Source Code: 7/27/16.
  */
+object TromboneHCDCompTests {
+  LocationService.initInterface()
+  implicit val system = ActorSystem("TromboneHCDCompTests")
+}
+
 class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging with BeforeAndAfterAll {
 
+  import TromboneHCDCompTests._
   import TromboneHCD._
   import csw.services.ccs.HcdController._
 
+  override def beforeAll: Unit = {
+    TestEnv.createTromboneHcdConfig()
+  }
+
   override def afterAll: Unit = system.terminate()
 
-  implicit val system = ActorSystem("TestSystem")
 
   val testInfo = HcdInfo(
     TromboneHCD.componentName,

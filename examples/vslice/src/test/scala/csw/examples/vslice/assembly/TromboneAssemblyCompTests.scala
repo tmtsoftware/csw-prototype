@@ -6,6 +6,7 @@ package csw.examples.vslice.assembly
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.services.apps.containerCmd.ContainerCmd
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult, Completed}
@@ -39,6 +40,8 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
   var hcdActors: List[ActorRef] = Nil
 
   override def beforeAll: Unit = {
+    TestEnv.createTromboneAssemblyConfig()
+
     // Starts the HCD used in the test
     val cmd = ContainerCmd("vslice", Array("--standalone"), Map("" -> "tromboneHCD.conf"))
     hcdActors = cmd.actors

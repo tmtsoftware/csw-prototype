@@ -6,6 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.assembly.DiagPublisher.{DiagnosticState, OperationsState}
 import csw.examples.vslice.assembly.TrombonePublisher.{AxisStateUpdate, AxisStatsUpdate}
 import csw.examples.vslice.hcd.TromboneHCD
@@ -89,6 +90,10 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
   // Get the telemetry service by looking up the name with the location service.
   private implicit val timeout = Timeout(10.seconds)
   private val telemetryService: TelemetryService = Await.result(TelemetryService(), timeout.duration)
+
+  override def beforeAll(): Unit = {
+    TestEnv.createTromboneAssemblyConfig()
+  }
 
   override protected def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)

@@ -2,22 +2,36 @@ package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
+import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
+import csw.examples.vslice.TestEnv
+import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ConnectionType.AkkaType
+import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor._
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, FunSpecLike, ShouldMatchers}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
  * TMT Source Code: 7/18/16.
  */
-@DoNotDiscover
-class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneHCDBasicTests")) with ImplicitSender
+object TromboneHCDBasicTests {
+  LocationService.initInterface()
+
+  val system = ActorSystem("TromboneHCDBasicTests")
+}
+
+class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+
+  override def beforeAll: Unit = {
+    TestEnv.createTromboneHcdConfig()
+  }
 
   override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
@@ -86,8 +100,6 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneHCDBasicTests")
 
       val (_, tla) = newTestTrombone()
       val ua = tla.underlyingActor
-
-      Thread.sleep(3000) // XXX allow for timeout if config service not running
 
       ua.tromboneAxis should not be null
 
@@ -328,7 +340,7 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneHCDBasicTests")
         msgs.last(inHighLimitKey).head should equal(false)
 
         // Get the first one that is greater than the limit to see that it is false
-        var firstOffLimit = msgs.filter(cs => cs(positionKey).head >= tla.underlyingActor.axisConfig.lowUser)
+        val firstOffLimit = msgs.filter(cs => cs(positionKey).head >= tla.underlyingActor.axisConfig.lowUser)
         firstOffLimit.head(lowLimitKey).head shouldBe false
 
         tla ! Unsubscribe
@@ -480,24 +492,5 @@ class TromboneHCDBasicTests extends TestKit(ActorSystem("TromboneHCDBasicTests")
         system.stop(tla)
       }
     }
-
-    //      def startHCD: ActorRef = {
-    //        val testInfo = HcdInfo(TromboneHCD.componentName,
-    //          TromboneHCD.trombonePrefix,
-    //          TromboneHCD.componentClassName,
-    //          DoNotRegister, Set(AkkaType), 1.second)
-    //        Supervisor(testInfo)
-    //      }
-
-    //    def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration) = {
-    //      //system.scheduler.scheduleOnce(timeout) {
-    //      println("STOPPING")
-    //      Supervisor.haltComponent(supervisor)
-    //      Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-    //      system.terminate()
-    //      System.exit(0)
-    //      //}
-    //    }
-
   }
 }

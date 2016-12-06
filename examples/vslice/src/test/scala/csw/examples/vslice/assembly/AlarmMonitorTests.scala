@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.alarms.AlarmModel.SeverityLevel.{Okay, Warning}
@@ -49,20 +50,8 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   val alarmAdmin = AlarmServiceAdmin(alarmService)
 
   override def beforeAll(): Unit = {
-    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on a random free port.
-    // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Alarm Service Test" --command "redis-server --port %port"
-    //    logger.info("Starting alarm service")
-    //    AlarmServiceAdmin.startAlarmService(asName)
-    // Get the alarm service by looking up the name with the location service.
-    // (using a small value for refreshSecs for testing)
-    //    logger.info("Looking up alarm service")
-    //    alarmService = Await.result(AlarmService(asName), timeout.duration)
-    //    alarmAdmin = AlarmServiceAdmin(alarmService)
-
+    TestEnv.createTromboneAssemblyConfig()
     setupAlarms()
-
   }
 
   def setupAlarms(): Unit = {

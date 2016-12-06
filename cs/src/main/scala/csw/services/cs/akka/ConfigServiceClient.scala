@@ -5,7 +5,7 @@ import java.io.File
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigResolveOptions, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
 import csw.services.cs.akka.ConfigServiceActor._
 import csw.services.cs.core._
 
@@ -93,6 +93,28 @@ object ConfigServiceClient {
       case _ => getFromResource
     }
   }
+
+  /**
+   * Convenience method that stores the contents of a given Config object in the config service.
+   *
+   * @param path the path the file should have in the config service
+   * @param config the config to store
+   * @param system actor system needed to access config service
+   * @param timeout time to wait for a reply
+   * @return the future contents of the file as a ConfigData object, if found
+   */
+  def saveConfigToConfigService(path: File, config: Config)(implicit system: ActorSystem, timeout: Timeout): Future[ConfigId] = {
+    import system.dispatcher
+    val csName = if (system.settings.config.hasPath("csw.services.cs.name"))
+      system.settings.config.getString("csw.services.cs.name")
+    else ConfigServiceSettings.defaultName
+
+    for {
+      cs <- locateConfigService(csName)
+      configId <- ConfigServiceClient(cs, csName).createOrUpdate(path, ConfigData(config.root().render()))
+    } yield configId
+  }
+
 }
 
 /**

@@ -5,6 +5,7 @@ import java.net.URI
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.hcd.SingleAxisSimulator.AxisUpdate
 import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD.GetAxisUpdateNow
@@ -39,6 +40,10 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   import TromboneStateActor._
+
+  override def beforeAll(): Unit = {
+    TestEnv.createTromboneAssemblyConfig()
+  }
 
   override def afterAll = TestKit.shutdownActorSystem(system)
 

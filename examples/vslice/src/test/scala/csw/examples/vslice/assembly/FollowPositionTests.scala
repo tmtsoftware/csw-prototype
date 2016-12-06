@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
 import csw.examples.vslice.assembly.TromboneControl.GoToStagePosition
 import csw.examples.vslice.hcd.TromboneHCD
@@ -74,18 +75,8 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
   // Get the event service by looking up the name with the location service.
   val eventService = Await.result(EventService(), timeout.duration)
 
-  override def beforeAll() = {
-    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on a random free port.
-    // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
-    //    EventServiceAdmin.startEventService()
-
-    // Get the event service by looking it up the name with the location service.
-    //    eventService = Await.result(EventService(), timeout.duration)
-
-    // This is only used to stop the Redis instance that was started for this test
-    //    eventAdmin = EventServiceAdmin(eventService)
+  override def beforeAll(): Unit = {
+    TestEnv.createTromboneAssemblyConfig()
   }
 
   override protected def afterAll(): Unit = {
