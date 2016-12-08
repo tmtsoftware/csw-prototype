@@ -190,7 +190,7 @@ public class FollowCommandTests extends JavaTestKit {
         }
       }.get(); // this extracts the received messages
 
-    CurrentState fmsg1 = expectMsgClass(CurrentState.class); // last one with current == target
+    CurrentState fmsg1 = expectMsgClass(duration("10 seconds"), CurrentState.class); // last one with current == target
     CurrentState fmsg2 = expectMsgClass(CurrentState.class); // the the end event with IDLE
     List<CurrentState> allmsgs = new ArrayList<>();
     allmsgs.addAll(Arrays.asList(msgs));
