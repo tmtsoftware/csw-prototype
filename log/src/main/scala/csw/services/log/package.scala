@@ -18,7 +18,7 @@ package csw.services
  *
  * Applications that wish to log can add this project as a dependency, so that the logback.xml config file
  * will be found. This configures logging to go to the console and, if the system property "application-name" is
- * defined, to ${application-name}.log in the current directory.
+ * defined, to application-name.log in the current directory.
  */
 package object log {
 
