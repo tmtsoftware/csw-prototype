@@ -4,7 +4,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
-import csw.services.ccs.CommandStatus.CommandResult
+import csw.services.ccs.CommandStatus._
 import csw.util.config.Configurations.SetupConfigArg
 
 import scala.concurrent.{Await, Future}
@@ -22,7 +22,7 @@ case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val t
    * (Note: This assumes that the assembly will return a CommandResult for the given config)
    */
   def submit(config: SetupConfigArg): Future[CommandResult] = {
-    val wrapper = context.actorOf(AssemblyWrapper.props(assemblyController))
+    val wrapper = context.actorOf(AssemblyWrapper2.props(assemblyController))
     (wrapper ? Submit(config)).mapTo[CommandResult]
   }
 
@@ -103,3 +103,48 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
   }
 }
 
+
+
+private object AssemblyWrapper2 {
+  def props(assembly: ActorRef): Props =
+    Props(classOf[AssemblyWrapper2], assembly)
+}
+
+/**
+  * A simple wrapper to get a single response from an assembly for a single submit
+  * @param assembly the target assembly actor
+  */
+private case class AssemblyWrapper2(assembly: ActorRef) extends Actor with ActorLogging {
+
+  override def receive: Receive = {
+    case s: Submit =>
+      log.info(s"Sending: $s")
+      assembly ! s
+      context.become(waitingForAccept(sender()))
+
+    case x => log.error(s"Received unexpected message: $x")
+  }
+
+  def waitingForAccept(replyTo: ActorRef): Receive = {
+    case cr: CommandResult =>
+      cr.overall match {
+        case Accepted =>
+          println(s"Received accepted: $cr")
+          context.become(waitingForResult(replyTo))
+        case NotAccepted | AllCompleted | Incomplete =>
+          println(s"Received not accepted: $cr")
+          replyTo ! cr
+      }
+
+    case _ =>
+  }
+
+  def waitingForResult(replyTo: ActorRef): Receive = {
+    case r: CommandResult =>
+      println(s"Received final: $r")
+      replyTo ! r
+      context.stop(self)
+
+    case _ =>
+  }
+}
