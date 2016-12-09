@@ -77,6 +77,9 @@ Test Environment
 
 Since the csw software uses actors that communicate over the network, the firewall should be disabled.
 
+It is a good idea to allocate enough memory to sbt when compiling or testing: This can
+be done by passing the -mem option to sbt: For example: `sbt -mem 2048`.
+
 Some of the test cases and demos depend on the Event, Telemetry or Alarm services assume that they are running and
 registered with the Location Service. A script ([csw-services.sh](scripts/csw-services.sh)) is provided to start the 
 services needed by the tests. Usage: csw-services.sh [start|stop].
