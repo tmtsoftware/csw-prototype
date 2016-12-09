@@ -4,7 +4,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import csw.services.ccs.AssemblyController._
-import csw.services.ccs.CommandStatus.CommandResult
+import csw.services.ccs.CommandStatus._
 import csw.util.config.Configurations.SetupConfigArg
 
 import scala.concurrent.{Await, Future}
@@ -25,22 +25,6 @@ case class AssemblyControllerClient(assemblyController: ActorRef)(implicit val t
     val wrapper = context.actorOf(AssemblyWrapper.props(assemblyController))
     (wrapper ? Submit(config)).mapTo[CommandResult]
   }
-
-  //  /**
-  //   * Returns a future object containing the current state of the assembly.
-  //   */
-  //  def configGet(): Future[CurrentState] = {
-  //    (assemblyController ? RequestCurrent).mapTo[CurrentState]
-  //  }
-  //
-  //  /**
-  //   * Makes a request of the assembly and returns the result
-  //   * @param config describes the request
-  //   * @return the future result returned from the assembly
-  //   */
-  //  def request(config: SetupConfig): Future[RequestResult] = {
-  //    (assemblyController ? Request(config)).mapTo[RequestResult]
-  //  }
 }
 
 // --
@@ -55,22 +39,6 @@ case class BlockingAssemblyClient(client: AssemblyControllerClient)(implicit val
   def submit(config: SetupConfigArg): CommandResult = {
     Await.result(client.submit(config), timeout.duration)
   }
-
-  //  /**
-  //   * Returns an object containing the current state of the assembly
-  //   */
-  //  def configGet(): CurrentState = {
-  //    Await.result(client.configGet(), timeout.duration)
-  //  }
-  //
-  //  /**
-  //   * Makes a request of the assembly and returns the result
-  //   * @param config describes the request
-  //   * @return the future result returned from the assembly
-  //   */
-  //  def request(config: SetupConfig): RequestResult = {
-  //    Await.result(client.request(config), timeout.duration)
-  //  }
 }
 
 // --
@@ -88,18 +56,33 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
 
   override def receive: Receive = {
     case s: Submit =>
+      log.info(s"Sending: $s")
       assembly ! s
-      context.become(waitingForResult(sender()))
+      context.become(waitingForAccept(sender()))
 
     case x => log.error(s"Received unexpected message: $x")
   }
 
+  def waitingForAccept(replyTo: ActorRef): Receive = {
+    case cr: CommandResult =>
+      cr.overall match {
+        case Accepted =>
+          println(s"Received accepted: $cr")
+          context.become(waitingForResult(replyTo))
+        case NotAccepted | AllCompleted | Incomplete =>
+          println(s"Received not accepted: $cr")
+          replyTo ! cr
+      }
+
+    case _ =>
+  }
+
   def waitingForResult(replyTo: ActorRef): Receive = {
     case r: CommandResult =>
+      println(s"Received final: $r")
       replyTo ! r
       context.stop(self)
 
     case _ =>
   }
 }
-

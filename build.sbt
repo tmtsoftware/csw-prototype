@@ -160,6 +160,14 @@ lazy val javacsw = project
   ) dependsOn(util, support, log, events, loc, ccs, cs, pkg, event_old, ts, containerCmd,
   events % "test->test", alarms % "test->test;compile->compile", trackLocation % "test->test")
 
+// Runtime library for use in sequencer scripts
+lazy val seqSupport = project
+  .settings(defaultSettings: _*)
+  .settings(libraryDependencies ++=
+    compile(akkaActor) ++
+      test(akkaTestKit, junit, junitInterface, assertj)
+  ) dependsOn(util, support, pkg, ccs, cs, loc, log, ts, events, alarms, containerCmd, hcdExample)
+
 
 // -- Apps --
 
@@ -177,7 +185,7 @@ lazy val sequencer = Project(id = "sequencer", base = file("apps/sequencer"))
   .settings(packageSettings("sequencer", "CSW Sequencer", "Scala REPL for running sequences"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, scalaLibrary, scalaCompiler, scalaReflect, jline)
-  ) dependsOn(pkg, ccs, loc, log, hcdExample)
+  ) dependsOn(pkg, cs, ccs, loc, ts, events, util, alarms, containerCmd, seqSupport)
 
 // Build the config service annex application
 lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("apps/configServiceAnnex"))
@@ -224,6 +232,10 @@ lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
       test(scalaTest, specs2, akkaTestKit)
   ) dependsOn cs
 
+
+//  -- Example projects --
+
+
 // HCD Example project
 lazy val hcdExample = Project(id = "hcdExample", base = file("examples/hcdExample"))
   .enablePlugins(JavaAppPackaging)
@@ -244,7 +256,7 @@ lazy val vslice = Project(id = "vslice", base = file("examples/vslice"))
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
       test(scalaTest, specs2, akkaTestKit)
-  ).dependsOn(pkg, cs, ccs, loc, ts, events, util, alarms, containerCmd)
+  ).dependsOn(pkg, cs, ccs, loc, ts, events, util, alarms, containerCmd, seqSupport)
 
 // EndToEnd Example project Java version
 lazy val vsliceJava = Project(id = "vsliceJava", base = file("examples/vsliceJava"))

@@ -1,4 +1,4 @@
-package csw.services.apps.sequencer
+package csw.services.sequencer
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
