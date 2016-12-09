@@ -67,10 +67,10 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
     case cr: CommandResult =>
       cr.overall match {
         case Accepted =>
-          println(s"Received accepted: $cr")
+          println(s"Received accepted")
           context.become(waitingForResult(replyTo))
         case NotAccepted | AllCompleted | Incomplete =>
-          println(s"Received not accepted: $cr")
+          println(s"Received not accepted")
           replyTo ! cr
       }
 
@@ -79,7 +79,7 @@ private case class AssemblyWrapper(assembly: ActorRef) extends Actor with ActorL
 
   def waitingForResult(replyTo: ActorRef): Receive = {
     case r: CommandResult =>
-      println(s"Received final: $r")
+      println(s"Received final")
       replyTo ! r
       context.stop(self)
 
