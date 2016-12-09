@@ -9,6 +9,7 @@ import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
+import csw.examples.vsliceJava.TestEnv;
 import csw.services.apps.containerCmd.ContainerCmd;
 import csw.services.ccs.AssemblyController.Submit;
 import csw.services.ccs.CommandStatus.CommandResult;
@@ -46,7 +47,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
   private static IEventService eventService;
 
   // List of top level actors that were created for the HCD (for clean up)
-  private static List<ActorRef> hcdActors;
+  private static List<ActorRef> hcdActors = Collections.emptyList();
 
 
   public TromboneAssemblyBasicTests() {
@@ -58,6 +59,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
+    TestEnv.createTromboneAssemblyConfig(system);
     eventService = IEventService.getEventService(IEventService.defaultName, system, timeout)
       .get(5, TimeUnit.SECONDS);
 
@@ -463,7 +465,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     TestProbe fakeClient = new TestProbe(system);
 
     fakeSupervisor.expectMsg(Initialized);
-    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectMsg(duration("10 seconds"), Started);
     fakeSupervisor.expectNoMsg(duration("200 milli"));
     fakeSupervisor.send(tromboneAssembly, Running);
 
@@ -566,7 +568,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     TestProbe fakeClient = new TestProbe(system);
 
     fakeSupervisor.expectMsg(Initialized);
-    fakeSupervisor.expectMsg(Started);
+    fakeSupervisor.expectMsg(duration("10 seconds"), Started);
     fakeSupervisor.expectNoMsg(duration("200 milli"));
     fakeSupervisor.send(tromboneAssembly, Running);
 
@@ -597,7 +599,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     //logger.info(s"AcceptedMsg: $acceptedMsg")
 
     // Second one is completion of the executed ones
-    completeMsg = fakeClient.expectMsgClass(duration("3 seconds"), CommandResult.class);
+    completeMsg = fakeClient.expectMsgClass(duration("10 seconds"), CommandResult.class);
     logger.info("completeMsg: " + completeMsg);
     assertEquals(completeMsg.overall(), AllCompleted);
 

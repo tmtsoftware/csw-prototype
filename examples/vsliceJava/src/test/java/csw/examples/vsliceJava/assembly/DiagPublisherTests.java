@@ -9,6 +9,7 @@ import akka.testkit.JavaTestKit;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
+import csw.examples.vsliceJava.TestEnv;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.loc.Connection;
 import csw.services.loc.LocationService;
@@ -139,6 +140,7 @@ public class DiagPublisherTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
+    TestEnv.createTromboneAssemblyConfig(system);
     telemetryService = ITelemetryService.getTelemetryService(ITelemetryService.defaultName, system, timeout)
       .get(5, TimeUnit.SECONDS);
   }

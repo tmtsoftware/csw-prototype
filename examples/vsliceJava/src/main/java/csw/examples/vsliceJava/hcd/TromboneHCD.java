@@ -79,24 +79,28 @@ public class TromboneHCD extends JHcdController {
     // Note: The scala version initializes the following variables in a non-blocking way using a for comprehension.
     // It should be possible to do something similar in Java, but it would be more complicated.
 
-    // Initialize axis from ConfigService
-    axisConfig = getAxisConfig().get();
+    try {
+      // Initialize axis from ConfigService
+      axisConfig = getAxisConfig().get();
 
-    // Create an axis for simulating trombone motion
-    tromboneAxis = setupAxis(axisConfig);
+      // Create an axis for simulating trombone motion
+      tromboneAxis = setupAxis(axisConfig);
 
-    // The current axis position from the hardware axis, initialize to default value
-    current = (AxisUpdate) Await.result(Patterns.ask(tromboneAxis, InitialState.instance, timeout), timeout.duration());
-    stats = (AxisStatistics) Await.result(Patterns.ask(tromboneAxis, GetStatistics.instance, timeout), timeout.duration());
+      // The current axis position from the hardware axis, initialize to default value
+      current = (AxisUpdate) Await.result(Patterns.ask(tromboneAxis, InitialState.instance, timeout), timeout.duration());
+      stats = (AxisStatistics) Await.result(Patterns.ask(tromboneAxis, GetStatistics.instance, timeout), timeout.duration());
+
+      // Required setup for Lifecycle in order to get messages
+      supervisor.tell(Initialized, self());
+      supervisor.tell(Started, self());
+    } catch (Exception ex) {
+      supervisor.tell(new Supervisor.InitializeFailure(ex.getMessage()), self());
+    }
 
     // --
 
     // Receive actor messages
     receive(initializingReceive());
-
-    // Required setup for Lifecycle in order to get messages
-    supervisor.tell(Initialized, self());
-    supervisor.tell(Started, self());
   }
 
   private PartialFunction<Object, BoxedUnit> initializingReceive() {
@@ -216,15 +220,17 @@ public class TromboneHCD extends JHcdController {
 
   // Gets the trombone config file from the config service, or uses the trombone.conf resource file if that doesn't work
   private CompletableFuture<AxisConfig> getAxisConfig() {
-    File tromboneConfigFile = new File("trombone/hcd/trombone.conf");
-    File resource = new File("tromboneHCD.conf");
-
     //noinspection OptionalGetWithoutIsPresent
-    return JConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, Optional.empty(), Optional.of(resource), context().system(), timeout)
-      .thenApply(config -> new AxisConfig(config.get()));
+    return JConfigServiceClient.getConfigFromConfigService(tromboneConfigFile, Optional.empty(),
+      Optional.of(resource), context().system(), timeout).thenApply(config -> new AxisConfig(config.get()));
   }
 
   // --- Static defs ---
+
+  public static File tromboneConfigFile = new File("trombone/hcd/trombone.conf");
+  public static File resource = new File("tromboneHCD.conf");
+
+
 
   /**
    * Used to create the TromboneHCD actor

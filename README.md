@@ -68,15 +68,25 @@ The quick-install.sh script runs a bit faster, but does not generate the documen
 Runtime Dependencies
 --------------------
 
-The Event, Telemetry, and Alarm services assumes that redis-server is running (http://redis.io/).
+The Event, Telemetry, and Alarm services assumes that redis-server (at least vers. 3.2.5) is running (http://redis.io/).
 
 (The old event service (event_old) depends on an external Hornetq server running (http://hornetq.jboss.org/)).
 
 Test Environment
 ----------------
+
+Since the csw software uses actors that communicate over the network, the firewall should be disabled.
+
 Some of the test cases and demos depend on the Event, Telemetry or Alarm services assume that they are running and
 registered with the Location Service. A script ([csw-services.sh](scripts/csw-services.sh)) is provided to start the 
 services needed by the tests. Usage: csw-services.sh [start|stop].
+
+Note that the csw-services.sh script requires that the environment variable CSW_INSTALL point to the directory 
+in which the csw software is installed (../install/, relative to this file) 
+and that the redis-server version is at least 3.2.5.
+
+In the current version, it is common for some tests to fail when run together, but pass when run separately.
+We are working on a solution.
 
 Projects and Directories
 ------------------------

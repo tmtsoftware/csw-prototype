@@ -7,6 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
+import csw.examples.vsliceJava.TestEnv;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.ccs.CommandStatus.CommandStatus;
 import csw.services.ccs.SequentialExecutor;
@@ -71,6 +72,7 @@ public class CommandHandlerTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create("TromboneAssemblyCommandHandlerTests");
     logger = Logging.getLogger(system, system);
+    TestEnv.createTromboneAssemblyConfig(system);
   }
 
   @AfterClass

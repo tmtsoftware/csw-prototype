@@ -3,14 +3,12 @@ package csw.examples.vslice.assembly
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.TestEnv
 import csw.services.apps.containerCmd.ContainerCmd
 import csw.services.ccs.AssemblyController.Submit
 import csw.services.ccs.CommandStatus._
 import csw.services.ccs.Validation.WrongInternalStateIssue
-import csw.services.cs.akka.ConfigServiceClient
 import csw.services.events.EventService
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.AssemblyInfo

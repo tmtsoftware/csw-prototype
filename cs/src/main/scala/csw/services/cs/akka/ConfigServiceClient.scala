@@ -3,6 +3,7 @@ package csw.services.cs.akka
 import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory, ConfigResolveOptions}
@@ -75,18 +76,27 @@ object ConfigServiceClient {
   def getConfigFromConfigService(path: File, id: Option[ConfigId] = None, resource: Option[File] = None)(implicit system: ActorSystem, timeout: Timeout): Future[Option[Config]] = {
     import system.dispatcher
 
+    val log = Logging(system, this.getClass)
+
     def getFromResource: Option[Config] = try {
-      resource.map(f => ConfigFactory.parseResources(f.getPath))
+      val opt = resource.map(f => ConfigFactory.parseResources(f.getPath))
+      log.warning(s"Failed to get $path from config service: using resource $resource")
+      opt
     } catch {
-      case ex: Exception => None
+      case ex: Exception =>
+        log.error(s"Failed to get config from resource: $resource", ex)
+        None
     }
 
     val f = for {
       s <- getStringFromConfigService(path, id)
     } yield {
       s match {
-        case Some(x) => Some(ConfigFactory.parseString(x).resolve(ConfigResolveOptions.noSystem()))
-        case None    => getFromResource
+        case Some(x) =>
+          val configOpt = Some(ConfigFactory.parseString(x).resolve(ConfigResolveOptions.noSystem()))
+          log.info(s"Loaded config from config service file: $path")
+          configOpt
+        case None => getFromResource
       }
     }
     f.recover {

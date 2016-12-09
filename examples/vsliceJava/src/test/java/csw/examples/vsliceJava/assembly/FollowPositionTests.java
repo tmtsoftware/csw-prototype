@@ -10,6 +10,7 @@ import akka.testkit.JavaTestKit;
 import akka.testkit.TestActorRef;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
+import csw.examples.vsliceJava.TestEnv;
 import csw.examples.vsliceJava.assembly.TromboneAssembly.UpdateTromboneHCD;
 import csw.examples.vsliceJava.assembly.TromboneControl.GoToStagePosition;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
@@ -126,6 +127,7 @@ public class FollowPositionTests extends JavaTestKit {
     LocationService.initInterface();
     system = ActorSystem.create();
     logger = Logging.getLogger(system, system);
+    TestEnv.createTromboneAssemblyConfig(system);
 
     eventService = IEventService.getEventService(IEventService.defaultName, system, timeout)
       .get(5, TimeUnit.SECONDS);
@@ -322,7 +324,7 @@ public class FollowPositionTests extends JavaTestKit {
       .collect(Collectors.toList());
 
     // Expect one message for the setting fe
-    fakeTromboneControl.expectMsg(msgsExpected.get(0));
+    fakeTromboneControl.expectMsg(duration("10 seconds"), msgsExpected.get(0));
     // This collects the messages from the calculator setup above
     List<?> msgs = scala.collection.JavaConversions.asJavaCollection(
       fakeTromboneControl.receiveN(msgsExpected.size())).stream().collect(Collectors.toList());

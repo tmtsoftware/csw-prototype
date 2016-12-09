@@ -81,6 +81,19 @@ object JConfigServiceClient {
     import system.dispatcher
     ConfigServiceClient.getConfigFromConfigService(path, id.asScala, resource.asScala)(system, timeout).map(_.asJava).toJava.toCompletableFuture
   }
+
+  /**
+   * Convenience method that stores the contents of a given Config object in the config service.
+   *
+   * @param path    the path the file should have in the config service
+   * @param config  the config to store
+   * @param system  actor system needed to access config service
+   * @param timeout time to wait for a reply
+   * @return the future contents of the file as a ConfigData object, if found
+   */
+  def saveConfigToConfigService(path: File, config: Config, system: ActorSystem, timeout: Timeout): CompletableFuture[ConfigId] =
+    ConfigServiceClient.saveConfigToConfigService(path, config)(system, timeout).toJava.toCompletableFuture
+
 }
 
 /**

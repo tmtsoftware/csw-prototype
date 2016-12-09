@@ -7,6 +7,7 @@ import akka.actor.Props;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
 import akka.util.Timeout;
+import csw.examples.vsliceJava.TestEnv;
 import csw.services.loc.LocationService;
 import csw.services.pkg.Component.HcdInfo;
 import csw.util.config.Configurations.SetupConfig;
@@ -25,6 +26,7 @@ import static csw.examples.vsliceJava.hcd.TromboneHCD.TromboneEngineering.GetAxi
 import static javacsw.util.config.JItems.*;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static javacsw.services.pkg.JSupervisor.*;
@@ -50,9 +52,10 @@ public class TromboneHCDBasicTests extends JavaTestKit {
   }
 
   @BeforeClass
-  public static void setup() {
+  public static void setup() throws ExecutionException, InterruptedException {
     LocationService.initInterface();
     system = ActorSystem.create();
+    TestEnv.createTromboneHcdConfig(system);
   }
 
   @AfterClass

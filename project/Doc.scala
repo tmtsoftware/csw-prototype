@@ -13,7 +13,7 @@ import scala.annotation.tailrec
 object Scaladoc extends AutoPlugin {
 
   object CliOptions {
-    val scaladocDiagramsEnabled = CliOption("csw.scaladoc.diagrams", true)
+    val scaladocDiagramsEnabled = CliOption("csw.scaladoc.diagrams", false)
     val scaladocAutoAPI = CliOption("csw.scaladoc.autoapi", true)
   }
 

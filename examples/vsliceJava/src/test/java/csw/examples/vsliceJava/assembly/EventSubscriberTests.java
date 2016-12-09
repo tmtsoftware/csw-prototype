@@ -41,7 +41,7 @@ public class EventSubscriberTests extends JavaTestKit {
   private static ActorSystem system;
   private static LoggingAdapter logger;
 
-  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(20, TimeUnit.SECONDS));
+  private static Timeout timeout = new Timeout(20, TimeUnit.SECONDS);
 
   private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
 
@@ -121,7 +121,7 @@ public class EventSubscriberTests extends JavaTestKit {
     // Publish a single focus error. This will generate a published event
     tcsRtc.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE))).get(2, TimeUnit.SECONDS);
 
-    UpdatedEventData msg = fakeFollowActor.expectMsgClass(UpdatedEventData.class);
+    UpdatedEventData msg = fakeFollowActor.expectMsgClass(duration("10 seconds"), UpdatedEventData.class);
 
     assertEquals(msg.focusError, fe(testFE));
     // 0.0 is the default value as well as nssZenithAngle
@@ -260,7 +260,7 @@ public class EventSubscriberTests extends JavaTestKit {
 
     double testZA = 45.0;
     tcsRtc.publish(new SystemEvent(zenithAnglePrefix).add(za(testZA)));
-    UpdatedEventData one = fakeFollowActor.expectMsgClass(UpdatedEventData.class);
+    UpdatedEventData one = fakeFollowActor.expectMsgClass(duration("10 seconds"), UpdatedEventData.class);
     assertEquals(jvalue(one.zenithAngle), testZA);
 
     // Now follow with nssInUse and send feEvents, should have 0.0 as ZA

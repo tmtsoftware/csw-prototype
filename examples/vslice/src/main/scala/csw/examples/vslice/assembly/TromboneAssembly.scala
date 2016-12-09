@@ -46,8 +46,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
 
   private val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
 
-  private var eventPublisher: ActorRef = _
-
   private var commandHandler: ActorRef = _
 
   implicit val ac: AssemblyContext = initialize()
@@ -71,7 +69,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
       LocationSubscriberActor.trackConnection(AlarmService.alarmServiceConnection(), trackerSubscriber)
 
       // This actor handles all telemetry and system event publishing
-      eventPublisher = context.actorOf(TrombonePublisher.props(assemblyContext, None))
+      val eventPublisher = context.actorOf(TrombonePublisher.props(assemblyContext, None))
 
       // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
       commandHandler = context.actorOf(TromboneCommandHandler.props(assemblyContext, tromboneHCD, Some(eventPublisher)))
