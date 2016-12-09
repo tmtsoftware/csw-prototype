@@ -1,9 +1,10 @@
 package csw.examples.vslice.seq
 
 import akka.util.Timeout
-import csw.util.config.Configurations
+import csw.util.config.{Configurations, DoubleKey}
 import csw.util.config.Configurations.{ConfigKey, SetupConfig, SetupConfigArg}
 import csw.services.ccs.BlockingAssemblyClient
+import csw.util.config.UnitsOfMeasure.kilometers
 
 import scala.concurrent.duration._
 
@@ -31,7 +32,26 @@ object Demo {
   val datumPrefix = s"$componentPrefix.datum"
   val datumCK: ConfigKey = datumPrefix
 
-  val sca1: SetupConfigArg = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
+
+  val naRangeDistanceKey = DoubleKey("rangeDistance")
+  val naRangeDistanceUnits = kilometers
+
+  // Position submit command
+  val positionPrefix = s"$componentPrefix.position"
+  val positionCK: ConfigKey = positionPrefix
+
+  def positionSC(rangeDistance: Double): SetupConfig = SetupConfig(positionCK).add(naRangeDistanceKey -> rangeDistance withUnits naRangeDistanceUnits)
+
+
+  val sca1 = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
+
+  // This will send a config arg with 10 position commands
+  val testRangeDistance = 90 to 130 by 10
+  val positionConfigs = testRangeDistance.map(f => positionSC(f))
+
+  val sca2 = Configurations.createSetupConfigArg("testObsId", positionSC(100.0))
+
+  val sca3 = Configurations.createSetupConfigArg("testObsId", positionConfigs: _*)
 
   def getTrombone: BlockingAssemblyClient = resolveAssembly(taName)
 
