@@ -67,7 +67,6 @@ class DiagPublisher(assemblyContext: AssemblyContext, tromboneHCDIn: Option[Acto
   def operationsReceive(stateMessageCounter: Int, tromboneHCD: Option[ActorRef]): Receive = {
     case cs: CurrentState if cs.configKey == TromboneHCD.axisStateCK =>
       if (stateMessageCounter % operationsSkipCount == 0) publishStateUpdate(cs)
-      log.info(s"Got: $cs count $stateMessageCounter")
       context.become(operationsReceive(stateMessageCounter + 1, tromboneHCD))
 
     case cs: CurrentState if cs.configKey == TromboneHCD.axisStatsCK => // No nothing

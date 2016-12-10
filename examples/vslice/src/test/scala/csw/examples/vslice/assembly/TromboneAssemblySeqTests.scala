@@ -40,6 +40,9 @@ class TromboneAssemblySeqTests  extends TestKit(TromboneAssemblyCompTests.system
 
   implicit val timeout = Timeout(10.seconds)
 
+  val ac = AssemblyTestData.TestAssemblyContext
+  import ac._
+
   val taName = "lgsTrombone"
   val thName = "lgsTromboneHCD"
 
@@ -85,9 +88,6 @@ class TromboneAssemblySeqTests  extends TestKit(TromboneAssemblyCompTests.system
       val tlaClient = getTrombone
       val tla = tlaClient.client.assemblyController
 
-      val fakeSequencer = TestProbe()
-
-
       val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
       var completeMsg = tlaClient.submit(datum)
 
@@ -111,6 +111,28 @@ class TromboneAssemblySeqTests  extends TestKit(TromboneAssemblyCompTests.system
       expectNoMsg(5.seconds)
 
       tla ! PoisonPill
+    }
+
+    it("should allow a stop from follow mode") {
+      val tlaClient = getTrombone
+      val tla = tlaClient.client.assemblyController
+
+      val fakeSequencer = TestProbe()
+
+
+      val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
+      var completeMsg = tlaClient.submit(datum)
+      expectNoMsg(1.second)
+      logger.info("Datum complete: " + completeMsg)
+
+      val follow = Configurations.createSetupConfigArg("testobsId", setElevationSC(100.0), followSC(false))
+      completeMsg = tlaClient.submit(follow)
+      expectNoMsg(2.seconds)
+      logger.info("Follow complete: " + completeMsg)
+
+      val stop = Configurations.createSetupConfigArg("testObsId", SetupConfig(stopCK))
+      completeMsg = tlaClient.submit(stop)
+      logger.info("Stop complete: " + completeMsg)
     }
   }
 }

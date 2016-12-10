@@ -50,7 +50,7 @@ class MoveCommand(ac: AssemblyContext, sc: SetupConfig, tromboneHCD: ActorRef, s
       tromboneHCD ! HcdController.Submit(cancelSC)
   }
 
-  private def sendState(setState: SetState):Unit = {
+  private def sendState(setState: SetState): Unit = {
     log.debug(s"Move send state: $setState")
     stateActor.foreach(_ ! setState)
   }

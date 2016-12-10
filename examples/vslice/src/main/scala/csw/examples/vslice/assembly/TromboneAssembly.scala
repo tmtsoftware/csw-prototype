@@ -159,7 +159,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   }
 
   // Receive partial function used when in Running state
-  def runningReceive: Receive = locationReceive orElse diagReceive orElse controllerReceive  orElse lifecycleReceivePF orElse unhandledPF
+  def runningReceive: Receive = locationReceive orElse diagReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
 
   // Receive partial function for handling the diagnostic commands
   def diagReceive: Receive = {
@@ -206,14 +206,9 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     // Returns validations for all
     val validations: ValidationList = validateSequenceConfigArg(sca)
     if (Validation.isAllValid(validations)) {
-      if (sca.configs.size == 1 && sca.configs.head.configKey == ac.stopCK) {
-        // Special handling for stop which needs to interrupt the currently executing sequence
-        commandHandler ! ExecuteOne(sca.configs.head, commandOriginator)
-      } else {
-        // Create a SequentialExecutor to process all SetupConfigs
-        val executor = newExecutor(sca, commandOriginator)
-        executor ! StartTheSequence(commandHandler)
-      }
+      // Create a SequentialExecutor to process all SetupConfigs
+      val executor = newExecutor(sca, commandOriginator)
+      executor ! StartTheSequence(commandHandler)
     }
     validations
   }

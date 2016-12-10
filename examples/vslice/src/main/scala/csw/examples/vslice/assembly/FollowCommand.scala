@@ -60,9 +60,10 @@ class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssIn
 
   def followReceive(nssInUse: BooleanItem, followActor: ActorRef, eventSubscriber: ActorRef, tromboneHCD: Option[ActorRef]): Receive = {
     case StopFollowing =>
-      log.info("Receive stop following in Follow Command")
+      log.debug("Receive stop following in Follow Command")
       // Send this so that unsubscriptions happen, need to check if needed
       context.stop(eventSubscriber)
+      context.stop(followActor)
       context.stop(self)
 
     case UpdateNssInUse(nssInUseUpdate) =>
@@ -78,7 +79,7 @@ class FollowCommand(ac: AssemblyContext, initialElevation: DoubleItem, val nssIn
       }
 
     case m @ SetZenithAngle(zenithAngle) =>
-      log.info(s"Got angle: $zenithAngle")
+      log.debug(s"Got angle: $zenithAngle")
       followActor.forward(m)
 
     // Note that this is an option so it can be None

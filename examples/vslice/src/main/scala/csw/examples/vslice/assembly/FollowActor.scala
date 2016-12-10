@@ -79,7 +79,6 @@ class FollowActor(
 
         // Post a SystemEvent for AOESW if not inNSSMode according to spec
         if (!inNSSMode.head) {
-          log.info(">>>>>>>> PUBLISHING")
           sendAOESWUpdate(naElevationKey -> newElevation withUnits naElevationUnits, naRangeDistanceKey -> totalRangeDistance withUnits naRangeDistanceUnits)
         }
 
@@ -122,17 +121,17 @@ class FollowActor(
 
   //
   def sendTrombonePosition(controlConfig: TromboneControlConfig, stagePosition: DoubleItem): Unit = {
-    log.info(s"Sending position: $stagePosition")
+    log.debug(s"Sending position: $stagePosition")
     tromboneControl.foreach(_ ! GoToStagePosition(stagePosition))
   }
 
   def sendAOESWUpdate(elevationItem: DoubleItem, rangeItem: DoubleItem): Unit = {
-    log.info(s"Publish aoUpdate: $aoPublisher $elevationItem, $rangeItem")
+    log.debug(s"Publish aoUpdate: $aoPublisher $elevationItem, $rangeItem")
     aoPublisher.foreach(_ ! AOESWUpdate(elevationItem, rangeItem))
   }
 
   def sendEngrUpdate(focusError: DoubleItem, trombonePosition: DoubleItem, zenithAngle: DoubleItem): Unit = {
-    log.info(s"Publish engUpdate: " + engPublisher)
+    log.debug(s"Publish engUpdate: " + engPublisher)
     engPublisher.foreach(_ ! EngrUpdate(focusError, trombonePosition, zenithAngle))
   }
 }

@@ -183,7 +183,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
 
         case ac.stopCK =>
           // Stop the follower
-          log.info(s"Just received the stop")
+          log.debug(s"Stop received while following")
           followActor ! StopFollowing
           tromboneStateActor ! SetState(cmdReady, moveIndexed, sodiumLayer(currentState), nss(currentState))
 
@@ -209,13 +209,12 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
         context.become(noFollowReceive())
       }
 
-    case StopCurrentCommand =>
-      // This sends the Stop sc to the HCD
-      log.debug("actorExecutingReceive STOP STOP")
-      closeDownMotionCommand(currentCommand, commandOriginator)
-
     case SetupConfig(ac.stopCK, _) =>
       log.debug("actorExecutingReceive: Stop CK")
+      closeDownMotionCommand(currentCommand, commandOriginator)
+
+    case ExecuteOne(SetupConfig(ac.stopCK, _), _) =>
+      log.debug("actorExecutingReceive: ExecuteOneStop")
       closeDownMotionCommand(currentCommand, commandOriginator)
 
     case x => log.error(s"TromboneCommandHandler:actorExecutingReceive received an unknown message: $x")
