@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import csw.examples.vslice.assembly.TromboneAssembly.UpdateTromboneHCD
 import csw.examples.vslice.assembly.TrombonePublisher.{AxisStateUpdate, AxisStatsUpdate}
 import csw.examples.vslice.hcd.TromboneHCD
+import csw.services.ccs.HcdController
 import csw.services.loc.LocationService._
 import csw.services.loc.LocationSubscriberClient
 import csw.services.ts.TimeService.TimeServiceScheduler
@@ -35,7 +36,7 @@ import csw.util.config.StateVariable.CurrentState
  * @param tromboneHCDIn        initial actorRef of the tromboneHCD as a [[scala.Option]]
  * @param eventPublisher     initial actorRef of an instance of the TrombonePublisher as [[scala.Option]]
  */
-class DiagPublisher(assemblyContext: AssemblyContext, /*currentStateReceiver: ActorRef,*/ tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TimeServiceScheduler with LocationSubscriberClient {
+class DiagPublisher(assemblyContext: AssemblyContext, tromboneHCDIn: Option[ActorRef], eventPublisher: Option[ActorRef]) extends Actor with ActorLogging with TimeServiceScheduler with LocationSubscriberClient {
 
   import DiagPublisher._
   import TromboneHCD._
@@ -49,7 +50,7 @@ class DiagPublisher(assemblyContext: AssemblyContext, /*currentStateReceiver: Ac
   val hcdName: String = assemblyContext.info.connections.head.name
 
   // Start in operations mode - 0 is initial stateMessageCounter value
-  def receive: Receive = operationsReceive( /*currentStateReceiver,*/ 0, tromboneHCDIn)
+  def receive: Receive = operationsReceive(0, tromboneHCDIn)
 
   /**
    * The receive method in operations state.
@@ -66,6 +67,7 @@ class DiagPublisher(assemblyContext: AssemblyContext, /*currentStateReceiver: Ac
   def operationsReceive(stateMessageCounter: Int, tromboneHCD: Option[ActorRef]): Receive = {
     case cs: CurrentState if cs.configKey == TromboneHCD.axisStateCK =>
       if (stateMessageCounter % operationsSkipCount == 0) publishStateUpdate(cs)
+      log.info(s"Got: $cs count $stateMessageCounter")
       context.become(operationsReceive(stateMessageCounter + 1, tromboneHCD))
 
     case cs: CurrentState if cs.configKey == TromboneHCD.axisStatsCK => // No nothing
@@ -86,8 +88,9 @@ class DiagPublisher(assemblyContext: AssemblyContext, /*currentStateReceiver: Ac
         case rloc: ResolvedAkkaLocation =>
           if (rloc.connection.name == hcdName) {
             log.info(s"operationsReceive updated actorRef: ${rloc.actorRef}")
-            tromboneHCD.foreach(_ ! PublisherActor.Subscribe)
-            context.become(operationsReceive(stateMessageCounter, rloc.actorRef))
+            val newHcdActorRef = rloc.actorRef
+            newHcdActorRef.foreach(_ ! HcdController.Subscribe)
+            context.become(operationsReceive(stateMessageCounter, newHcdActorRef))
           }
         case Unresolved(connection) =>
           if (connection.name == hcdName) {
@@ -149,8 +152,9 @@ class DiagPublisher(assemblyContext: AssemblyContext, /*currentStateReceiver: Ac
           if (rloc.connection.name == hcdName) {
             log.info(s"diagnosticReceive updated actorRef: ${rloc.actorRef}")
             // Need to subscribe to CurrentState
-            tromboneHCD.foreach(_ ! PublisherActor.Subscribe)
-            context.become(diagnosticReceive(stateMessageCounter, rloc.actorRef, cancelToken))
+            val newHcdActorRef = rloc.actorRef
+            newHcdActorRef.foreach(_ ! HcdController.Subscribe)
+            context.become(diagnosticReceive(stateMessageCounter, newHcdActorRef, cancelToken))
           }
         case Unresolved(connection) =>
           if (connection.name == hcdName) {

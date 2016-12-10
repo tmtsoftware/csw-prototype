@@ -77,7 +77,6 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
   def noFollowReceive(): Receive = stateReceive orElse {
 
     case l: Location =>
-      log.info("CommandHandler: " + l)
       handleLocations(l)
 
     case ExecuteOne(sc, commandOriginator) =>
@@ -141,6 +140,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
             val props = FollowCommand.props(ac, setElevationItem, nssItem, Some(tromboneHCD), allEventPublisher, eventService.get)
             // Follow command runs the trombone when following
             val followCommandActor = context.actorOf(props)
+            log.info("Going to followReceive")
             context.become(followReceive(eventService.get, followCommandActor))
             // Note that this is where sodiumLayer is set allowing other commands that require this state
             tromboneStateActor ! SetState(cmdContinuous, moveMoving, sodiumLayer(currentState), nssItem.head)
@@ -192,8 +192,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
           commandOriginator.foreach(_ ! Completed)
       }
 
-    //    case commandStop =>
-
+     case x => log.error(s"TromboneCommandHandler:followReceive received an unknown message: $x")
   }
 
   def actorExecutingReceive(currentCommand: ActorRef, commandOriginator: Option[ActorRef]): Receive = stateReceive orElse {

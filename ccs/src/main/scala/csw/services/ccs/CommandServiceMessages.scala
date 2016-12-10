@@ -2,6 +2,7 @@ package csw.services.ccs
 
 import csw.util.config.Configurations.{ControlConfigArg, SetupConfig}
 
+
 /**
  * TMT Source Code: 10/9/16.
  */
@@ -29,6 +30,17 @@ object AssemblyMessages {
    * @param config the configuration to execute
    */
   case class OneWay(config: ControlConfigArg) extends AssemblyMessages
+
+  /**
+    * Message send to Assemblies to start a diagnostic mode
+    * @param hint
+    */
+  case class DiagnosticMode(hint: String = "")
+
+  /**
+    * Message sent to Assemblies to stop diagnostic mode and return to normal operations
+    */
+  case object OperationsMode
 }
 
 object HcdMessages {

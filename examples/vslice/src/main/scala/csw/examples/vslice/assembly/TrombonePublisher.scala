@@ -27,7 +27,7 @@ import csw.util.config.Events.{StatusEvent, SystemEvent}
  * @param eventServiceIn optional EventService for testing event service
  * @param telemetryServiceIn optional Telemetryservice for testing with telemetry service
  */
-class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option[EventService], telemetryServiceIn: Option[TelemetryService]) extends Actor with ActorLogging with LocationSubscriberClient {
+class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option[EventService], telemetryServiceIn: Option[TelemetryService]) extends Actor with ActorLogging with TromboneStateClient with LocationSubscriberClient {
   import assemblyContext._
   import TromboneStateActor._
 
@@ -50,7 +50,6 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
       publishState(telemetryService, ts)
 
     case AxisStateUpdate(axisName, position, state, inLowLimit, inHighLimit, inHome) =>
-      log.info("Got Axis State Update!")
       publishAxisState(telemetryService, axisName, position, state, inLowLimit, inHighLimit, inHome)
 
     case AxisStatsUpdate(axisName, datumCount, moveCount, homeCount, limitCount, successCount, failureCount, cancelCount) =>
@@ -105,7 +104,7 @@ class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option
   private def publishState(telemetryService: Option[TelemetryService], ts: TromboneState) = {
     // We can do this for convenience rather than using TromboneStateHandler's stateReceive
     val ste = StatusEvent(tromboneStateStatusEventPrefix).madd(ts.cmd, ts.move, ts.sodiumLayer, ts.nss)
-    log.debug(s"Status state publish of $tromboneStateStatusEventPrefix: $ste")
+    log.info(s"Status state publish of $tromboneStateStatusEventPrefix: $ste")
     telemetryService.foreach(_.publish(ste).onFailure {
       case ex => log.error(s"TrombonePublisher failed to publish trombone state: $ste", ex)
     })

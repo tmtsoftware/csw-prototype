@@ -2,8 +2,11 @@ package csw.services.sequencer
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
+import csw.services.alarms.AlarmService
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient}
+import csw.services.cs.akka.{BlockingConfigServiceClient, ConfigService, ConfigServiceActor, ConfigServiceClient}
+import csw.services.events.{EventService, TelemetryService}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
 import csw.services.loc.{ComponentId, ComponentType, Connection, LocationService}
@@ -19,7 +22,7 @@ import scala.concurrent.duration._
 object SequencerEnv {
   //  LocationService.initInterface()
   implicit val system = ActorSystem("Sequencer")
-  implicit val timeout: Timeout = 60.seconds
+  implicit val timeout: Timeout = 10.seconds
 
   private def getActorRef(locations: Set[Location], connection: Connection): ActorRef = {
     locations.collect {
@@ -87,6 +90,35 @@ object SequencerEnv {
     def submit(config: SetupConfig): Unit = {
       actorRef ! Submit(config)
     }
+  }
+
+  /**
+   * Returns an Event Service client assuming EventService has default name
+   * @return EventService instance
+   */
+  def getEventService: EventService = Await.result(EventService(), timeout.duration)
+
+  /**
+   * Returns a Telemetry Service assuming the Telemetry Service has the default name
+   * @return a TelemetryService instance
+   */
+  def getTelemetryService: TelemetryService = Await.result(TelemetryService(), timeout.duration)
+
+  /**
+   * Returns an Alarm Service with the default name
+   * @return a AlarmService instance
+   */
+  def getAlarmService: AlarmService = Await.result(AlarmService(), timeout.duration)
+
+  /**
+   * Returns a Configuration Service
+   * @param name the Configuration Service name, default is provided
+   * @return a BlockingConfigService instance
+   */
+  def getConfigService(name: String = ""): BlockingConfigServiceClient = {
+    val csRemote: ActorRef = Await.result(ConfigServiceActor.locateConfigService(name), timeout.duration)
+    val csClient: ConfigServiceClient = ConfigServiceClient(csRemote, name)
+    new BlockingConfigServiceClient(csClient)
   }
 
 }

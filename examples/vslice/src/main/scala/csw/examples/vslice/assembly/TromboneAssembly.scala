@@ -6,7 +6,8 @@ import akka.actor.{ActorRef, Props}
 import akka.util.Timeout
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.services.alarms.AlarmService
-import csw.services.ccs.SequentialExecutor.StartTheSequence
+import csw.services.ccs.AssemblyMessages.{DiagnosticMode, OperationsMode}
+import csw.services.ccs.SequentialExecutor.{ExecuteOne, StartTheSequence}
 import csw.services.ccs.Validation.ValidationList
 import csw.services.ccs.{AssemblyController, SequentialExecutor, Validation}
 import csw.services.cs.akka.ConfigServiceClient
@@ -46,6 +47,8 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
 
   private val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
 
+  private var diagPublsher: ActorRef = _
+
   private var commandHandler: ActorRef = _
 
   implicit val ac: AssemblyContext = initialize()
@@ -61,12 +64,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
       // Start tracking the components we command
       log.info("Connections: " + info.connections)
       trackerSubscriber ! LocationSubscriberActor.Subscribe
-      // This tracks the HCD
-      LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
-      // This tracks required services
-      LocationSubscriberActor.trackConnection(EventService.eventServiceConnection(), trackerSubscriber)
-      LocationSubscriberActor.trackConnection(TelemetryService.telemetryServiceConnection(), trackerSubscriber)
-      LocationSubscriberActor.trackConnection(AlarmService.alarmServiceConnection(), trackerSubscriber)
 
       // This actor handles all telemetry and system event publishing
       val eventPublisher = context.actorOf(TrombonePublisher.props(assemblyContext, None))
@@ -74,8 +71,15 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
       // Setup command handler for assembly - note that CommandHandler connects directly to tromboneHCD here, not state receiver
       commandHandler = context.actorOf(TromboneCommandHandler.props(assemblyContext, tromboneHCD, Some(eventPublisher)))
 
-      // This sets up the diagnostic data publisher
-      context.actorOf(DiagPublisher.props(assemblyContext, tromboneHCD, Some(eventPublisher)))
+      // This sets up the diagnostic data publisher - setting Var here
+      diagPublsher = context.actorOf(DiagPublisher.props(assemblyContext, tromboneHCD, Some(eventPublisher)))
+
+      // This tracks the HCD
+      LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
+      // This tracks required services
+      LocationSubscriberActor.trackConnection(EventService.eventServiceConnection(), trackerSubscriber)
+      LocationSubscriberActor.trackConnection(TelemetryService.telemetryServiceConnection(), trackerSubscriber)
+      LocationSubscriberActor.trackConnection(AlarmService.alarmServiceConnection(), trackerSubscriber)
 
       supervisor ! Initialized
       assemblyContext
@@ -134,7 +138,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
             log.info(s"Assembly received TS connection: $t")
             // Setting var here!
             telemetryService = Some(TelemetryService.get(t.host, t.port))
-            log.info(s"Event Service at: $telemetryService")
+            log.info(s"Telemetry Service at: $telemetryService")
           }
           if (t.connection == AlarmService.alarmServiceConnection()) {
             implicit val timeout = Timeout(10.seconds)
@@ -155,7 +159,18 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
   }
 
   // Receive partial function used when in Running state
-  def runningReceive: Receive = locationReceive orElse controllerReceive orElse lifecycleReceivePF orElse unhandledPF
+  def runningReceive: Receive = locationReceive orElse diagReceive orElse controllerReceive  orElse lifecycleReceivePF orElse unhandledPF
+
+  // Receive partial function for handling the diagnostic commands
+  def diagReceive: Receive = {
+    case DiagnosticMode(hint) =>
+      log.debug(s"Received diagnostic mode: $hint")
+      diagPublsher ! DiagPublisher.DiagnosticState
+    case OperationsMode => {
+      log.debug(s"Received operations mode")
+      diagPublsher ! DiagPublisher.OperationsState
+    }
+  }
 
   // Receive artial function to handle runtime lifecycle messages
   def lifecycleReceivePF: Receive = {
@@ -193,7 +208,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     if (Validation.isAllValid(validations)) {
       if (sca.configs.size == 1 && sca.configs.head.configKey == ac.stopCK) {
         // Special handling for stop which needs to interrupt the currently executing sequence
-        commandHandler ! sca.configs.head
+        commandHandler ! ExecuteOne(sca.configs.head, commandOriginator)
       } else {
         // Create a SequentialExecutor to process all SetupConfigs
         val executor = newExecutor(sca, commandOriginator)
