@@ -192,7 +192,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
           commandOriginator.foreach(_ ! Completed)
       }
 
-     case x => log.error(s"TromboneCommandHandler:followReceive received an unknown message: $x")
+    case x => log.error(s"TromboneCommandHandler:followReceive received an unknown message: $x")
   }
 
   def actorExecutingReceive(currentCommand: ActorRef, commandOriginator: Option[ActorRef]): Receive = stateReceive orElse {
