@@ -38,10 +38,22 @@ import static javacsw.util.config.JItems.jadd;
  * Values in received messages are assumed to be correct and ready for publishing.
  */
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-public class TrombonePublisher extends AbstractActor implements ILocationSubscriberClient {
+public class TrombonePublisher extends AbstractActor implements TromboneStateClient, ILocationSubscriberClient {
   LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
   private final AssemblyContext assemblyContext;
+
+  @SuppressWarnings("FieldCanBeLocal")
+  private TromboneStateActor.TromboneState internalState = TromboneStateActor.defaultTromboneState;
+
+  @Override
+  public void setCurrentState(TromboneStateActor.TromboneState ts) {
+    internalState = ts;
+  }
+
+  private TromboneStateActor.TromboneState currentState() {
+    return internalState;
+  }
 
   /**
    * An actor that provides the publishing interface to the TMT Event Service and Telemetry Service.
@@ -61,6 +73,7 @@ public class TrombonePublisher extends AbstractActor implements ILocationSubscri
    * @param telemetryServiceIn optional Telemetryservice for testing with telemetry service
    */
   public TrombonePublisher(AssemblyContext assemblyContext, Optional<IEventService> eventServiceIn, Optional<ITelemetryService> telemetryServiceIn) {
+    context().system().eventStream().subscribe(self(), TromboneState.class);
     subscribeToLocationUpdates();
     this.assemblyContext = assemblyContext;
 

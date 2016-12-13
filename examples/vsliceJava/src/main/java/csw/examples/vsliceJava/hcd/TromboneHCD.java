@@ -9,8 +9,10 @@ import akka.japi.pf.ReceiveBuilder;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
 import csw.services.loc.ComponentType;
+import csw.services.pkg.Component;
 import csw.services.pkg.Supervisor;
 import csw.util.config.*;
+import javacsw.services.ccs.JHcdController;
 import javacsw.services.cs.akka.JConfigServiceClient;
 import javacsw.services.loc.JComponentType;
 import javacsw.services.pkg.*;
@@ -71,8 +73,7 @@ public class TromboneHCD extends JHcdController {
 
 
   // Actor constructor: use the props() method to create the actor.
-  private TromboneHCD(final HcdInfo info, ActorRef supervisor) throws Exception {
-    super(info);
+  private TromboneHCD(final Component.HcdInfo info, ActorRef supervisor) throws Exception {
 
     this.supervisor = supervisor;
 
@@ -239,7 +240,7 @@ public class TromboneHCD extends JHcdController {
    * @param supervisor the supervisor for the HCD
    * @return the Props needed to create the actor
    */
-  public static Props props(final HcdInfo info, ActorRef supervisor) {
+  public static Props props(final Component.HcdInfo info, ActorRef supervisor) {
     return Props.create(new Creator<TromboneHCD>() {
       private static final long serialVersionUID = 1L;
 

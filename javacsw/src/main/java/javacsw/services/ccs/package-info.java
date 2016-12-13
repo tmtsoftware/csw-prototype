@@ -3,8 +3,8 @@
  * <p>
  * JHcdController and JAssemblyController are base classes for HCD and Assembly actors.
  * <p>
- * Note that in most cases you should use {@link javacsw.services.pkg.JHcdController} and
- * {@link javacsw.services.pkg.JAssemblyController} instead,
+ * Note that in most cases you should use {@link javacsw.services.ccs.JHcdController} and
+ * {@link javacsw.services.ccs.JAssemblyController} instead,
  * since they provide support for lifecycle management and location services.
  * <p>
  * Example JHcdController usage (See test cases in this package):

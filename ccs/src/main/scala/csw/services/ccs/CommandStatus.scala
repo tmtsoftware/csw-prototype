@@ -86,7 +86,6 @@ object CommandStatus {
    * The configuration or set of configurations was valid and started
    */
   case object Valid extends CommandStatus
-
   /**
    * The command was valid when received, but is no longer valid because of itervening activities
    */
@@ -125,7 +124,6 @@ object CommandStatus {
    * Cancelled means the command/actions were stopped at the next convenient place. This is usually appropriate for
    */
   case object Cancelled extends CommandStatus
-
   /**
    * The following describe the overall status of a config arg when sent as a group
    */

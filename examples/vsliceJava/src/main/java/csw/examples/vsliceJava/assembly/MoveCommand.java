@@ -75,6 +75,7 @@ public class MoveCommand extends AbstractActor {
   }
 
   private void sendState(SetState setState) {
+    log.debug("Move send state: " + setState);
     stateActor.ifPresent(actorRef -> actorRef.tell(setState, self()));
   }
 

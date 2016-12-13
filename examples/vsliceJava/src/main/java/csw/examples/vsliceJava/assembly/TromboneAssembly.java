@@ -8,6 +8,7 @@ import akka.japi.Creator;
 import akka.japi.pf.ReceiveBuilder;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
+import csw.services.ccs.AssemblyMessages;
 import csw.services.ccs.SequentialExecutor;
 import csw.services.ccs.Validation;
 import csw.services.loc.LocationService.*;
@@ -15,11 +16,12 @@ import csw.services.loc.LocationSubscriberActor;
 import csw.services.pkg.Component;
 import csw.services.pkg.Supervisor;
 import javacsw.services.alarms.IAlarmService;
+import javacsw.services.ccs.JAssemblyMessages;
 import javacsw.services.cs.akka.JConfigServiceClient;
 import javacsw.services.events.IEventService;
 import javacsw.services.events.ITelemetryService;
 import javacsw.services.loc.JLocationSubscriberActor;
-import javacsw.services.pkg.JAssemblyController;
+import javacsw.services.ccs.JAssemblyController;
 import scala.PartialFunction;
 import scala.runtime.BoxedUnit;
 
@@ -80,6 +82,8 @@ public class TromboneAssembly extends JAssemblyController {
     return alarmService.isPresent();
   }
 
+  private ActorRef diagPublsher;
+
   public TromboneAssembly(Component.AssemblyInfo info, ActorRef supervisor) {
     super(info);
     this.supervisor = supervisor;
@@ -101,12 +105,6 @@ public class TromboneAssembly extends JAssemblyController {
 
       ActorRef trackerSubscriber = context().actorOf(LocationSubscriberActor.props());
       trackerSubscriber.tell(JLocationSubscriberActor.Subscribe, self());
-      // This tracks the HCD
-      LocationSubscriberActor.trackConnections(info.connections(), trackerSubscriber);
-      // This tracks required services
-      LocationSubscriberActor.trackConnection(IEventService.eventServiceConnection(), trackerSubscriber);
-      LocationSubscriberActor.trackConnection(ITelemetryService.telemetryServiceConnection(), trackerSubscriber);
-      LocationSubscriberActor.trackConnection(IAlarmService.alarmServiceConnection(), trackerSubscriber);
 
       // This actor handles all telemetry and system event publishing
       ActorRef eventPublisher = context().actorOf(TrombonePublisher.props(assemblyContext, Optional.empty(), Optional.empty()));
@@ -115,9 +113,18 @@ public class TromboneAssembly extends JAssemblyController {
       commandHandler = context().actorOf(TromboneCommandHandler.props(assemblyContext, tromboneHCD, Optional.of(eventPublisher)));
 
       // This sets up the diagnostic data publisher
-      context().actorOf(DiagPublisher.props(assemblyContext, tromboneHCD, Optional.of(eventPublisher)));
+      diagPublsher = context().actorOf(DiagPublisher.props(assemblyContext, tromboneHCD, Optional.of(eventPublisher)));
+
+      // This tracks the HCD
+      LocationSubscriberActor.trackConnections(info.connections(), trackerSubscriber);
+      // This tracks required services
+      LocationSubscriberActor.trackConnection(IEventService.eventServiceConnection(), trackerSubscriber);
+      LocationSubscriberActor.trackConnection(ITelemetryService.telemetryServiceConnection(), trackerSubscriber);
+      LocationSubscriberActor.trackConnection(IAlarmService.alarmServiceConnection(), trackerSubscriber);
+
       supervisor.tell(Initialized, self());
       return assemblyContext;
+
     } catch(Exception ex) {
       supervisor.tell(new Supervisor.InitializeFailure(ex.getMessage()), self());
       return null;
@@ -198,8 +205,23 @@ public class TromboneAssembly extends JAssemblyController {
 
   // Receive partial function used when in Running state
   private PartialFunction<Object, BoxedUnit> runningReceive() {
-    return locationReceive().orElse(controllerReceive()).orElse(lifecycleReceivePF()).orElse(unhandledPF());
+    return locationReceive().orElse(diagReceive()).orElse(controllerReceive()).orElse(lifecycleReceivePF()).orElse(unhandledPF());
   }
+
+  // Receive partial function for handling the diagnostic commands
+  private PartialFunction<Object, BoxedUnit> diagReceive() {
+    return ReceiveBuilder.
+      match(AssemblyMessages.DiagnosticMode.class, t -> {
+        log.debug("Received diagnostic mode: " + t.hint());
+        diagPublsher.tell(new DiagPublisher.DiagnosticState(), self());
+      }).
+      matchEquals(JAssemblyMessages.OperationsMode, t -> {
+        log.debug("Received operations mode");
+        diagPublsher.tell(new DiagPublisher.OperationsState(), self());
+      }).
+      build();
+  }
+
 
   private PartialFunction<Object, BoxedUnit> lifecycleReceivePF() {
     return ReceiveBuilder.
@@ -242,14 +264,9 @@ public class TromboneAssembly extends JAssemblyController {
     // Returns validations for all
     List<Validation.Validation> validations = validateSequenceConfigArg(sca);
     if (Validation.isAllValid(validations)) {
-      if (sca.getConfigs().size() == 1 && sca.getConfigs().get(0).configKey().equals(ac.stopCK)) {
-        // Special handling for stop which needs to interrupt the currently executing sequence
-        commandHandler.tell(sca.getConfigs().get(0), self());
-      } else {
-        // Create a SequentialExecutor to process all SetupConfigs
-        ActorRef executor = newExecutor(sca, commandOriginator);
-        executor.tell(new SequentialExecutor.StartTheSequence(commandHandler), self());
-      }
+      // Create a SequentialExecutor to process all SetupConfigs
+      ActorRef executor = newExecutor(sca, commandOriginator);
+      executor.tell(new SequentialExecutor.StartTheSequence(commandHandler), self());
     }
     return validations;
   }

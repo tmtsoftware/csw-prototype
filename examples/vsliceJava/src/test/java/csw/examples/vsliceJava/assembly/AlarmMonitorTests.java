@@ -256,7 +256,7 @@ public class AlarmMonitorTests extends JavaTestKit {
     // This is checking that the value in the alarm service has been set using admin interface
     CurrentSeverity alarmValue2 = alarmAdmin.getSeverity(alarmKey).get(10, TimeUnit.SECONDS);
     // use the alarm service admin to see that it is cleared,
-    assertEquals(alarmValue2.reported(), Warning); // XXX
+    assertEquals(alarmValue2.reported(), Warning); // XXX TODO: Test failed here
 
     // Now move it out of the limit and see that the alarm is cleared
     ch.tell(JSequentialExecutor.ExecuteOne(ac.moveSC(clearPosition), Optional.of(fakeAssembly.ref())), self());

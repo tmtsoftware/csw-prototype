@@ -25,18 +25,17 @@ import scala.concurrent.duration._
 import csw.services.sequencer.SequencerEnv._
 import csw.util.config.UnitsOfMeasure.kilometers
 
-
 /**
-  * TMT Source Code: 12/9/16.
-  */
+ * TMT Source Code: 12/9/16.
+ */
 
 object TromboneAssemblySeqTests {
   LocationService.initInterface()
 
   val system = ActorSystem("TromboneAssemblySeqTests")
 }
-class TromboneAssemblySeqTests  extends TestKit(TromboneAssemblyCompTests.system) with ImplicitSender
-  with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+class TromboneAssemblySeqTests extends TestKit(TromboneAssemblyCompTests.system) with ImplicitSender
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   implicit val timeout = Timeout(10.seconds)
 
@@ -78,7 +77,6 @@ class TromboneAssemblySeqTests  extends TestKit(TromboneAssemblyCompTests.system
 
   val sca2 = Configurations.createSetupConfigArg("testObsId", positionSC(100.0))
 
-
   def getTrombone: BlockingAssemblyClient = resolveAssembly(taName)
 
   describe("Top Level Sequencer Tests") {
@@ -104,7 +102,6 @@ class TromboneAssemblySeqTests  extends TestKit(TromboneAssemblyCompTests.system
       val sca = Configurations.createSetupConfigArg("testobsId", positionConfigs: _*)
       completeMsg = tlaClient.submit(sca)
 
-
       logger.info("msg2: " + completeMsg)
       completeMsg.overall shouldBe AllCompleted
 
@@ -118,7 +115,6 @@ class TromboneAssemblySeqTests  extends TestKit(TromboneAssemblyCompTests.system
       val tla = tlaClient.client.assemblyController
 
       val fakeSequencer = TestProbe()
-
 
       val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
       var completeMsg = tlaClient.submit(datum)

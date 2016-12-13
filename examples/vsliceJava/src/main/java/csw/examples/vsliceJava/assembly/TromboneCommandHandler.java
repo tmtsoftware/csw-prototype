@@ -202,6 +202,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
             Props props = FollowCommand.props(ac, setElevationItem, nssItem, Optional.of(tromboneHCD), allEventPublisher, eventService.get());
             // Follow command runs the trombone when following
             ActorRef followCommandActor = context().actorOf(props);
+            log.info("Going to followReceive");
             context().become(followReceive(followCommandActor));
             // Note that this is where sodiumLayer is set allowing other commands that require this state
 //            state(cmdContinuous, moveMoving, sodiumLayer(), jvalue(nssItem));
@@ -255,7 +256,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           });
         } else if (configKey.equals(ac.stopCK)) {
           // Stop the follower
-          log.info("Just received the stop");
+          log.debug("Stop received while following");
           followActor.tell(new FollowCommand.StopFollowing(), self());
           tromboneStateActor.tell(new SetState(cmdReady, moveIndexed, sodiumLayer(currentState()), nss(currentState())), self());
 
@@ -264,6 +265,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
           commandOriginator.ifPresent(actorRef -> actorRef.tell(Completed, self()));
         }
       }).
+      matchAny(t -> log.warning("TromboneCommandHandler:followReceive received an unknown message: " + t)).
       build());
   }
 
@@ -283,17 +285,17 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
             return null;
           });
       }).
-      matchEquals(JSequentialExecutor.StopCurrentCommand(), t -> {
-        // This sends the Stop sc to the HCD
-        log.debug("actorExecutingReceive STOP STOP");
-        closeDownMotionCommand(currentCommand, commandOriginator);
-      }).
+
       match(SetupConfig.class, t -> t.configKey().equals(ac.stopCK), t -> {
-        // This sends the Stop sc to the HCD
         log.debug("actorExecutingReceive: Stop CK");
         closeDownMotionCommand(currentCommand, commandOriginator);
       }).
-      matchAny(t -> log.warning("TromboneCommandHandler2:actorExecutingReceive received an unknown message: " + t + " from " + sender())).
+
+      match(ExecuteOne.class, t -> {
+        log.debug("actorExecutingReceive: ExecuteOneStop");
+        closeDownMotionCommand(currentCommand, commandOriginator);
+      }).
+      matchAny(t -> log.warning("TromboneCommandHandler:actorExecutingReceive received an unknown message: " + t)).
       build());
   }
 

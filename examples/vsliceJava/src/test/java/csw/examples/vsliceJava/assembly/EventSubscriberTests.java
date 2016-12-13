@@ -15,7 +15,6 @@ import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import scala.concurrent.duration.FiniteDuration;
 
 import java.util.List;
 import java.util.Optional;
@@ -90,13 +89,13 @@ public class EventSubscriberTests extends JavaTestKit {
     // should be created with no issues
     TestProbe fakeFollowActor = new TestProbe(system);
 
-    TestActorRef<TromboneEventSubscriber> es = newTestEventSubscriber(assemblyContext.setNssInUse(false),
+    TestActorRef<TromboneEventSubscriber> es = newTestEventSubscriber(setNssInUse(false),
       Optional.of(fakeFollowActor.ref()), eventService);
 
     assertEquals(es.underlyingActor().nssZenithAngle, za(0.0));
     assertEquals(es.underlyingActor().initialFocusError, fe(0.0));
     assertEquals(es.underlyingActor().initialZenithAngle, za(0.0));
-    assertEquals(es.underlyingActor().nssInUseGlobal, assemblyContext.setNssInUse(false));
+    assertEquals(es.underlyingActor().nssInUseGlobal, setNssInUse(false));
 
     es.tell(new StopFollowing(), self());
     fakeFollowActor.expectNoMsg(duration("20 milli"));
@@ -110,7 +109,7 @@ public class EventSubscriberTests extends JavaTestKit {
     // should make one event for an fe publish nssInUse
     TestProbe fakeFollowActor = new TestProbe(system);
 
-    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(true), Optional.of(fakeFollowActor.ref()), eventService);
+    ActorRef es = newEventSubscriber(setNssInUse(true), Optional.of(fakeFollowActor.ref()), eventService);
 
     // first test that events are created for published focus error events
     // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -138,7 +137,7 @@ public class EventSubscriberTests extends JavaTestKit {
     // should make several events for an fe list publish with nssInUse but no ZA
     TestProbe fakeFollowActor = new TestProbe(system);
 
-    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(true), Optional.of(fakeFollowActor.ref()), eventService);
+    ActorRef es = newEventSubscriber(setNssInUse(true), Optional.of(fakeFollowActor.ref()), eventService);
 
     // first test that events are created for published focus error events
     // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -244,7 +243,7 @@ public class EventSubscriberTests extends JavaTestKit {
     TestProbe fakeFollowActor = new TestProbe(system);
 
     // Create with nssNotInuse so we get za events
-    ActorRef es = newEventSubscriber(assemblyContext.setNssInUse(false), Optional.of(fakeFollowActor.ref()), eventService);
+    ActorRef es = newEventSubscriber(setNssInUse(false), Optional.of(fakeFollowActor.ref()), eventService);
 
     // first test that events are created for published focus error events
     // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error

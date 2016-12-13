@@ -33,11 +33,6 @@ public interface ILocationSubscriberClient extends Actor {
    */
   default void subscribeToLocationUpdates() {
     context().system().eventStream().subscribe(self(), Location.class);
-//    context().system().eventStream().subscribe(self(), LocationService.UnTrackedLocation.class);
-//    context().system().eventStream().subscribe(self(), LocationService.Unresolved.class);
-//    context().system().eventStream().subscribe(self(), LocationService.ResolvedAkkaLocation.class);
-//    context().system().eventStream().subscribe(self(), LocationService.ResolvedHttpLocation.class);
-//    context().system().eventStream().subscribe(self(), LocationService.ResolvedTcpLocation.class);
   }
 
   /**

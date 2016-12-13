@@ -92,5 +92,5 @@ object Validation {
   /**
    * The configuration or set of configurations was valid and started
    */
-  final case object Valid extends Validation
+  case object Valid extends Validation
 }

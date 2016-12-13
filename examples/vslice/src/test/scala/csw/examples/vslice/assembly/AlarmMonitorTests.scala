@@ -228,7 +228,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     // This is checking that the value in the alarm service has been set using admin interface
     val alarmValue2 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     // use the alarm service admin to see that it is cleared,
-    alarmValue2.reported shouldBe Warning // XXX
+    alarmValue2.reported shouldBe Warning // XXX TODO: Test failed here
 
     // Now move it out of the limit and see that the alarm is cleared
     ch ! ExecuteOne(moveSC(clearPosition), Some(fakeAssembly.ref))

@@ -7,7 +7,7 @@ import akka.util.Timeout
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.services.alarms.AlarmService
 import csw.services.ccs.AssemblyMessages.{DiagnosticMode, OperationsMode}
-import csw.services.ccs.SequentialExecutor.{ExecuteOne, StartTheSequence}
+import csw.services.ccs.SequentialExecutor.StartTheSequence
 import csw.services.ccs.Validation.ValidationList
 import csw.services.ccs.{AssemblyController, SequentialExecutor, Validation}
 import csw.services.cs.akka.ConfigServiceClient
@@ -18,8 +18,8 @@ import csw.services.pkg.Component.AssemblyInfo
 import csw.services.pkg.{Assembly, Supervisor}
 import csw.util.config.Configurations.SetupConfigArg
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
 /**
@@ -166,10 +166,9 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     case DiagnosticMode(hint) =>
       log.debug(s"Received diagnostic mode: $hint")
       diagPublsher ! DiagPublisher.DiagnosticState
-    case OperationsMode => {
+    case OperationsMode =>
       log.debug(s"Received operations mode")
       diagPublsher ! DiagPublisher.OperationsState
-    }
   }
 
   // Receive artial function to handle runtime lifecycle messages

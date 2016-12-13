@@ -104,6 +104,7 @@ class FollowCommand extends AbstractActor {
         log.info("Receive stop following in Follow Command");
         // Send this so that unsubscriptions happen, need to check if needed
         context().stop(eventSubscriber);
+        context().stop(followActor);
         context().stop(self());
       }).
       match(UpdateNssInUse.class, t -> {
@@ -119,7 +120,7 @@ class FollowCommand extends AbstractActor {
         }
       }).
       match(SetZenithAngle.class, t -> {
-        log.info("Got angle: " + t.zenithAngle);
+        log.debug("Got angle: " + t.zenithAngle);
         followActor.tell(t, sender());
 
       }).match(TromboneAssembly.UpdateTromboneHCD.class, upd -> {

@@ -259,7 +259,7 @@ public class FollowCommandTests extends JavaTestKit {
     ActorRef tromboneHCD = startHCD();
 
 //    TestProbe fakeAssembly = new TestProbe(system);
-    // XXX Using self() here in the Java version, since you can't easily call receiveWhile on a TestProbe from Java
+    // XXX Using self() here in the Java version, since you can't call receiveWhile on a TestProbe from Java
     ActorRef fakeAssembly = self();
 
     tromboneHCD.tell(new SubscribeLifecycleCallback(fakeAssembly), self());
@@ -286,7 +286,7 @@ public class FollowCommandTests extends JavaTestKit {
     ActorRef resultSubscriber2 = system.actorOf(TestSubscriber.props());
     eventService.subscribe(resultSubscriber2, false, assemblyContext.engStatusEventPrefix);
 
-//    expectNoMsg(duration("1 second")); // Wait for subscriptions to happen
+    expectNoMsg(duration("1 second")); // Wait for subscriptions to happen
 
     // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
     List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
@@ -327,7 +327,7 @@ public class FollowCommandTests extends JavaTestKit {
     assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
 
     // Check that nothing is happening - not needed
-//    expectNoMsg(duration("200 milli"));
+    expectNoMsg(duration("200 milli"));
 
     // Stop this follow command
     system.stop(fc);

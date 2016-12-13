@@ -11,6 +11,7 @@ import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.loc.LocationService;
 import csw.services.ts.AbstractTimeServiceScheduler;
 import csw.util.config.StateVariable.CurrentState;
+import javacsw.services.ccs.JHcdController;
 import javacsw.services.pkg.ILocationSubscriberClient;
 import javacsw.util.config.JPublisherActor;
 import scala.PartialFunction;
@@ -64,7 +65,7 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
    * @param tromboneHCDIn        initial actorRef of the tromboneHCD as a [[scala.Option]]
    * @param eventPublisher     initial actorRef of an instance of the TrombonePublisher as [[scala.Option]]
    */
-  private DiagPublisher(AssemblyContext assemblyContext, /*ActorRef currentStateReceiver,*/ Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
+  private DiagPublisher(AssemblyContext assemblyContext, Optional<ActorRef> tromboneHCDIn, Optional<ActorRef> eventPublisher) {
 //    this.currentStateReceiver = currentStateReceiver;
     this.eventPublisher = eventPublisher;
 
@@ -120,8 +121,9 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
           if (Objects.equals(location.connection().name(), hcdName)) {
             LocationService.ResolvedAkkaLocation rloc = (LocationService.ResolvedAkkaLocation) location;
             log.info("operationsReceive updated actorRef: " + rloc.getActorRef());
-            tromboneHCD.ifPresent(actorRef -> actorRef.tell(JPublisherActor.Subscribe, self()));
-            context().become(operationsReceive(stateMessageCounter, rloc.getActorRef()));
+            Optional<ActorRef> newHcdActorRef = rloc.getActorRef();
+            newHcdActorRef.ifPresent(actorRef -> actorRef.tell(JHcdController.Subscribe, self()));
+            context().become(operationsReceive(stateMessageCounter, newHcdActorRef));
           }
 
         } else if (location instanceof LocationService.Unresolved) {
@@ -186,8 +188,9 @@ public class DiagPublisher extends AbstractTimeServiceScheduler implements ILoca
           if (Objects.equals(location.connection().name(), hcdName)) {
             LocationService.ResolvedAkkaLocation rloc = (LocationService.ResolvedAkkaLocation) location;
             log.info("diagnosticReceive updated actorRef: " + rloc.getActorRef());
-            tromboneHCD.ifPresent(actorRef -> actorRef.tell(JPublisherActor.Subscribe, self()));
-            context().become(diagnosticReceive(stateMessageCounter, rloc.getActorRef(), cancelToken));
+            Optional<ActorRef> newHcdActorRef = rloc.getActorRef();
+            newHcdActorRef.ifPresent(actorRef -> actorRef.tell(JHcdController.Subscribe, self()));
+            context().become(diagnosticReceive(stateMessageCounter, newHcdActorRef, cancelToken));
           }
 
         } else if (location instanceof LocationService.Unresolved) {

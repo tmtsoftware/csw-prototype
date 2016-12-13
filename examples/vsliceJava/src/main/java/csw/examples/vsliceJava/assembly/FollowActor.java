@@ -110,7 +110,6 @@ public class FollowActor extends AbstractActor {
 
           // Post a SystemEvent for AOESW if not inNSSMode according to spec
           if (!jvalue(inNSSMode)) {
-            log.info(">>>>>>>> PUBLISHING");
             sendAOESWUpdate(jset(ac.naElevationKey, newElevation).withUnits(ac.naElevationUnits),
               jset(ac.naRangeDistanceKey, totalRangeDistance).withUnits(ac.naRangeDistanceUnits));
           }
@@ -157,17 +156,17 @@ public class FollowActor extends AbstractActor {
 
   //
   private void sendTrombonePosition(TromboneControlConfig controlConfig, DoubleItem stagePosition) {
-    log.info("Sending position: " + stagePosition);
+    log.debug("Sending position: " + stagePosition);
     tromboneControl.ifPresent(actorRef -> actorRef.tell(new TromboneControl.GoToStagePosition(stagePosition), self()));
   }
 
   private void sendAOESWUpdate(DoubleItem elevationItem, DoubleItem rangeItem) {
-    log.info("Publish aoUpdate: $aoPublisher " + elevationItem + ", " + rangeItem);
+    log.debug("Publish aoUpdate: $aoPublisher " + elevationItem + ", " + rangeItem);
     aoPublisher.ifPresent(actorRef -> actorRef.tell(new AOESWUpdate(elevationItem, rangeItem), self()));
   }
 
   private void sendEngrUpdate(DoubleItem focusError, DoubleItem trombonePosition, DoubleItem zenithAngle) {
-    log.info("Publish engUpdate: " + engPublisher);
+    log.debug("Publish engUpdate: " + engPublisher);
     engPublisher.ifPresent(actorRef -> actorRef.tell(new EngrUpdate(focusError, trombonePosition, zenithAngle), self()));
   }
 

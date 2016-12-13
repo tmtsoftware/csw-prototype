@@ -65,7 +65,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
   }
 
   // The default supervision behavior will normally restart the component automatically.
-  // (Choice allan: check this: needs to be properly configured)
+  // (allan: check this: needs to be properly configured)
   // The Terminated message should only be received if we manually stop the component, or a
   // system error occurs (Exceptions don't cause termination).
   private def terminated(actorRef: ActorRef): Unit = {
