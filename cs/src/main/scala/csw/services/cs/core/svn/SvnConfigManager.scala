@@ -343,11 +343,13 @@ class SvnConfigManager(val url: SVNURL, override val name: String)(implicit cont
         new ISVNLogEntryHandler() {
           override def handleLogEntry(logEntry: SVNLogEntry): Unit = logEntries = logEntry :: logEntries
         })
+      logEntries.sortWith(_.getRevision > _.getRevision)
+        .map(e => ConfigFileHistory(ConfigId(e.getRevision), e.getMessage, e.getDate))
+    } catch {
+      case ex: SVNException => Nil
     } finally {
       clientManager.dispose()
     }
-    logEntries.sortWith(_.getRevision > _.getRevision)
-      .map(e => ConfigFileHistory(ConfigId(e.getRevision), e.getMessage, e.getDate))
   }
 
   // XXX Temp placeholder for future login name handling
