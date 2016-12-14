@@ -87,12 +87,12 @@ object ConfigManagerTestHelper extends FunSuite {
     }
 
     // Test delete
-//    manager.delete(path1)
-//    assert(manager.get(path1).isEmpty)
+    //    manager.delete(path1)
+    //    assert(manager.get(path1).isEmpty)
     // XXX TODO: Fix getting previous versions of deleted file using the svn implementation
-//    assert(manager.get(path1, Some(createId1)).get.toString == contents1)
-//    assert(manager.get(path1, Some(updateId1)).get.toString == contents2)
-//    assert(manager.getDefault(path1).get.toString == contents3)
+    //    assert(manager.get(path1, Some(createId1)).get.toString == contents1)
+    //    assert(manager.get(path1, Some(updateId1)).get.toString == contents2)
+    //    assert(manager.getDefault(path1).get.toString == contents3)
   }
 
   // Verify that a second config service can still see all the files that were checked in by the first

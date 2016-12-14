@@ -88,7 +88,8 @@ It continues to run and executes the given shell command whenever there are chan
 alarm's severity or the health value.
 
 In the above example, the "echo" shell command was passed to print out the alarm's severity or the health value.
-You can pass any shell command here. The --monitor-alarms option takes four arguments: *subsystem component name severity*.
+You can pass any shell command here. The --monitor-alarms option is a script that takes five arguments: 
+*subsystem component name latched-severity reported-severity*.
 The --monitor-health option is a script that takes just one option: the health value: _Good, Ill or Bad_.
 
 To change the severity of the alarm to Critical, use this command:

@@ -263,7 +263,7 @@ object AsConsole extends App {
     import scala.sys.process._
     if (cmd.nonEmpty) {
       val a = alarmStatus.alarmKey
-      s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.currentSeverity.latched}".run()
+      s"$cmd ${a.subsystem} ${a.component} ${a.name} ${alarmStatus.currentSeverity.latched} ${alarmStatus.currentSeverity.reported}".run()
     }
   }
 
