@@ -176,241 +176,243 @@ public class TromboneHCDBasicTests extends JavaTestKit {
   }
 
   @Test
-  public void lowLevelInstrumentedTromboneHcdTests() throws Exception {
-
+  public void shouldInitializeTheTromboneAxisSimulator() throws Exception {
     it("should initialize the trombone axis simulator");
-    {
-      TestActorRef<TromboneHCD> tla = newTestTrombone().testActorRef;
-      TromboneHCD ua = tla.underlyingActor();
+    TestActorRef<TromboneHCD> tla = newTestTrombone().testActorRef;
+    TromboneHCD ua = tla.underlyingActor();
 
-      assertNotNull(ua.tromboneAxis);
+    assertNotNull(ua.tromboneAxis);
 
-      // Should have initialized the current values in HCD from Axis
-      assertEquals(ua.current.current, ua.axisConfig.startPosition);
-      assertEquals(ua.current.state, SingleAxisSimulator.AxisState.AXIS_IDLE); // This is simulator value
-      assertEquals(ua.current.inHighLimit, false);
-      assertEquals(ua.current.inLowLimit, false);
-      assertEquals(ua.current.inHomed, false);
+    // Should have initialized the current values in HCD from Axis
+    assertEquals(ua.current.current, ua.axisConfig.startPosition);
+    assertEquals(ua.current.state, SingleAxisSimulator.AxisState.AXIS_IDLE); // This is simulator value
+    assertEquals(ua.current.inHighLimit, false);
+    assertEquals(ua.current.inLowLimit, false);
+    assertEquals(ua.current.inHomed, false);
 
-      // Should initialize the statistics
-      assertEquals(ua.stats.limitCount, 0);
-      assertEquals(ua.stats.cancelCount, 0);
-      assertEquals(ua.stats.failureCount, 0);
-      assertEquals(ua.stats.homeCount, 0);
-      assertEquals(ua.stats.initCount, 0);
-      assertEquals(ua.stats.moveCount, 0);
-      assertEquals(ua.stats.successCount, 0);
-    }
-
-    it("should lifecycle properly with a fake supervisor");
-    {
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
-
-      supervisor.expectMsg(Initialized);
-      supervisor.expectMsg(Started);
-
-      supervisor.send(tla, Running);
-
-      supervisor.send(tla, DoShutdown);
-      supervisor.expectMsg(ShutdownComplete);
-    }
-
-    it("should allow fetching config");
-    {
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
-
-      lifecycleStart(supervisor, tla);
-
-      tla.tell(JHcdController.Subscribe, self());
-      tla.tell(GetAxisConfig, self());
-
-      CurrentState config = expectMsgClass(CurrentState.class);
-      //System.out.println("AxisStats: " + config)
-      assertEquals(jvalue(jitem(config, axisNameKey)), tla.underlyingActor().axisConfig.axisName);
-      assertEquals(jvalue(jitem(config, lowLimitKey)).intValue(), tla.underlyingActor().axisConfig.lowLimit);
-      assertEquals(jvalue(jitem(config, highUserKey)).intValue(), tla.underlyingActor().axisConfig.highUser);
-      assertEquals(jvalue(jitem(config, highLimitKey)).intValue(), tla.underlyingActor().axisConfig.highLimit);
-      assertEquals(jvalue(jitem(config, homeValueKey)).intValue(), tla.underlyingActor().axisConfig.home);
-      assertEquals(jvalue(jitem(config, startValueKey)).intValue(), tla.underlyingActor().axisConfig.startPosition);
-      assertEquals(jvalue(jitem(config, stepDelayMSKey)).intValue(), tla.underlyingActor().axisConfig.stepDelayMS);
-
-      tla.tell(JHcdController.Unsubscribe, self());
-
-      tla.underlyingActor().context().stop(tla);
-    }
-
-    it("should allow fetching stats");
-    {
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
-
-      lifecycleStart(supervisor, tla);
-
-      tla.tell(JHcdController.Subscribe, self());
-      tla.tell(GetAxisStats, self());
-
-      CurrentState stats = expectMsgClass(CurrentState.class);
-      //System.out.println("AxisStats: " + stats);
-      assertEquals(jvalue(jitem(stats, datumCountKey)).intValue(), 0);
-      assertEquals(jvalue(jitem(stats, moveCountKey)).intValue(), 0);
-      assertEquals(jvalue(jitem(stats, homeCountKey)).intValue(), 0);
-      assertEquals(jvalue(jitem(stats, limitCountKey)).intValue(), 0);
-      assertEquals(jvalue(jitem(stats, successCountKey)).intValue(), 0);
-      assertEquals(jvalue(jitem(stats, failureCountKey)).intValue(), 0);
-      assertEquals(jvalue(jitem(stats, cancelCountKey)).intValue(), 0);
-
-      tla.tell(JHcdController.Unsubscribe, self());
-
-      tla.underlyingActor().context().stop(tla);
-    }
-
-    it("should allow external init when running");
-    {
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
-
-      lifecycleStart(supervisor, tla);
-
-      tla.tell(JHcdController.Subscribe, self());
-      tla.tell(new Submit(datumSC), self());
-
-      Vector<CurrentState> msgs = waitForMoveMsgs();
-      assertEquals(
-        jvalue(jitem(msgs.lastElement(), positionKey)).intValue(),
-        tla.underlyingActor().axisConfig.startPosition + 1); // Init position is one off the start position
-      //info("Msgs: " + msgs)
-
-      tla.tell(GetAxisStats, self());
-      CurrentState stats = expectMsgClass(CurrentState.class);
-      //println("Stats: " + stats)
-      assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
-      assertEquals(stats.item(datumCountKey).head(), 1);
-      assertEquals(stats.item(moveCountKey).head(), 1);
-
-      tla.tell(JHcdController.Unsubscribe, self());
-      system.stop(tla);
-    }
-
-    it("should allow homing");
-    {
-      // Note there is no test actor ref
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
-
-      lifecycleStart(supervisor, tla);
-
-      tla.tell(JHcdController.Subscribe, self());
-      // Being done this way to ensure ConfigKey equality works
-      SetupConfig sc = SetupConfig(axisHomePrefix);
-      tla.tell(new Submit(sc), self());
-
-      Vector<CurrentState> msgs = waitForMoveMsgs();
-      //info("Msgs: " + msgs)
-
-      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), 300);
-      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
-      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
-      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
-
-      tla.tell(GetAxisStats, self());
-      CurrentState stats = expectMsgClass(CurrentState.class);
-      //info(s"Stats: $stats")
-      assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
-      assertEquals(stats.item(homeCountKey).head(), 1);
-      assertEquals(stats.item(moveCountKey).head(), 1);
-
-      tla.tell(JHcdController.Unsubscribe, self());
-      system.stop(tla);
-    }
-
-    it("should allow a short move");
-    {
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
-
-      lifecycleStart(supervisor, tla);
-
-      int testPos = 500;
-
-      tla.tell(JHcdController.Subscribe, self());
-      tla.tell(new Submit(positionSC(testPos)), self());
-
-      Vector<CurrentState> msgs = waitForMoveMsgs();
-      // Check the last message
-      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
-      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
-
-
-      //info("Msgs: " + msgs)
-      tla.tell(JHcdController.Unsubscribe, self());
-      system.stop(tla);
-    }
-
-
-    it("should allow continuous short values");
-    {
-      int[] encoderTestValues = new int[]{460, 465, 470, 475, 480, 485, 490, 400};
-
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
-
-      lifecycleStart(supervisor, tla);
-
-      tla.tell(JHcdController.Subscribe, self());
-      // Move 2
-      tla.tell(new Submit(homeSC), self());
-      Vector<CurrentState> msgs = waitForMoveMsgs();
-      assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
-
-      for (int testPos : encoderTestValues) {
-        tla.tell(new Submit(positionSC(testPos)), self());
-        //val msgs = waitForMoveMsgs
-      }
-      waitForMoveMsgs();
-
-      tla.tell(JHcdController.Unsubscribe, self());
-      system.stop(tla);
-    }
+    // Should initialize the statistics
+    assertEquals(ua.stats.limitCount, 0);
+    assertEquals(ua.stats.cancelCount, 0);
+    assertEquals(ua.stats.failureCount, 0);
+    assertEquals(ua.stats.homeCount, 0);
+    assertEquals(ua.stats.initCount, 0);
+    assertEquals(ua.stats.moveCount, 0);
+    assertEquals(ua.stats.successCount, 0);
   }
 
   @Test
-  public void placeIntoTheLowLimit() throws Exception {
+  public void shouldLifecycleProperlyWithAFakeSupervisor() throws Exception {
+    it("should lifecycle properly with a fake supervisor");
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
 
-    it("should show entering a low limit");
-    {
-      TestProbeTestActorRefPair t = newTestTrombone();
-      TestProbe supervisor = t.testProbe;
-      TestActorRef<TromboneHCD> tla = t.testActorRef;
+    supervisor.expectMsg(Initialized);
+    supervisor.expectMsg(Started);
 
-      lifecycleStart(supervisor, tla);
+    supervisor.send(tla, Running);
 
-      int testPos = 0;
-      int testActual = tla.underlyingActor().axisConfig.lowLimit;
-
-      tla.tell(JHcdController.Subscribe, self());
-      tla.tell(new Submit(positionSC(testPos)), self());
-
-      Vector<CurrentState> msgs = waitForMoveMsgs();
-      // Check the last message
-      assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
-      assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
-      assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), true);
-      assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
-
-      //info("Msgs: " + msgs)
-      tla.tell(JHcdController.Unsubscribe, self());
-      system.stop(tla);
-    }
+    supervisor.send(tla, DoShutdown);
+    supervisor.expectMsg(ShutdownComplete);
   }
+
+  @Test
+  public void shouldAllowFetchingConfig() throws Exception {
+    it("should allow fetching config");
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+    lifecycleStart(supervisor, tla);
+
+    tla.tell(JHcdController.Subscribe, self());
+    tla.tell(GetAxisConfig, self());
+
+    CurrentState config = expectMsgClass(CurrentState.class);
+    //System.out.println("AxisStats: " + config)
+    assertEquals(jvalue(jitem(config, axisNameKey)), tla.underlyingActor().axisConfig.axisName);
+    assertEquals(jvalue(jitem(config, lowLimitKey)).intValue(), tla.underlyingActor().axisConfig.lowLimit);
+    assertEquals(jvalue(jitem(config, highUserKey)).intValue(), tla.underlyingActor().axisConfig.highUser);
+    assertEquals(jvalue(jitem(config, highLimitKey)).intValue(), tla.underlyingActor().axisConfig.highLimit);
+    assertEquals(jvalue(jitem(config, homeValueKey)).intValue(), tla.underlyingActor().axisConfig.home);
+    assertEquals(jvalue(jitem(config, startValueKey)).intValue(), tla.underlyingActor().axisConfig.startPosition);
+    assertEquals(jvalue(jitem(config, stepDelayMSKey)).intValue(), tla.underlyingActor().axisConfig.stepDelayMS);
+
+    tla.tell(JHcdController.Unsubscribe, self());
+
+    tla.underlyingActor().context().stop(tla);
+  }
+
+  @Test
+  public void shouldAllowFetchingStats() throws Exception {
+    it("should allow fetching stats");
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+    lifecycleStart(supervisor, tla);
+
+    tla.tell(JHcdController.Subscribe, self());
+    tla.tell(GetAxisStats, self());
+
+    CurrentState stats = expectMsgClass(CurrentState.class);
+    //System.out.println("AxisStats: " + stats);
+    assertEquals(jvalue(jitem(stats, datumCountKey)).intValue(), 0);
+    assertEquals(jvalue(jitem(stats, moveCountKey)).intValue(), 0);
+    assertEquals(jvalue(jitem(stats, homeCountKey)).intValue(), 0);
+    assertEquals(jvalue(jitem(stats, limitCountKey)).intValue(), 0);
+    assertEquals(jvalue(jitem(stats, successCountKey)).intValue(), 0);
+    assertEquals(jvalue(jitem(stats, failureCountKey)).intValue(), 0);
+    assertEquals(jvalue(jitem(stats, cancelCountKey)).intValue(), 0);
+
+    tla.tell(JHcdController.Unsubscribe, self());
+
+    tla.underlyingActor().context().stop(tla);
+  }
+
+  @Test
+  public void shouldAllowExternalInitWhenRunning() throws Exception {
+    it("should allow external init when running");
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+    lifecycleStart(supervisor, tla);
+
+    tla.tell(JHcdController.Subscribe, self());
+    tla.tell(new Submit(datumSC), self());
+
+    Vector<CurrentState> msgs = waitForMoveMsgs();
+    assertEquals(
+      jvalue(jitem(msgs.lastElement(), positionKey)).intValue(),
+      tla.underlyingActor().axisConfig.startPosition + 1); // Init position is one off the start position
+    //info("Msgs: " + msgs)
+
+    tla.tell(GetAxisStats, self());
+    CurrentState stats = expectMsgClass(CurrentState.class);
+    //println("Stats: " + stats)
+    assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+    assertEquals(stats.item(datumCountKey).head(), 1);
+    assertEquals(stats.item(moveCountKey).head(), 1);
+
+    tla.tell(JHcdController.Unsubscribe, self());
+    system.stop(tla);
+  }
+
+  @Test
+  public void shouldAllowHoming() throws Exception {
+    it("should allow homing");
+    // Note there is no test actor ref
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+    lifecycleStart(supervisor, tla);
+
+    tla.tell(JHcdController.Subscribe, self());
+    // Being done this way to ensure ConfigKey equality works
+    SetupConfig sc = SetupConfig(axisHomePrefix);
+    tla.tell(new Submit(sc), self());
+
+    Vector<CurrentState> msgs = waitForMoveMsgs();
+    //info("Msgs: " + msgs)
+
+    assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), 300);
+    assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+    assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), false);
+    assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+
+    tla.tell(GetAxisStats, self());
+    CurrentState stats = expectMsgClass(CurrentState.class);
+    //info(s"Stats: $stats")
+    assertEquals(stats.configKey(), TromboneHCD.axisStatsCK);
+    assertEquals(stats.item(homeCountKey).head(), 1);
+    assertEquals(stats.item(moveCountKey).head(), 1);
+
+    tla.tell(JHcdController.Unsubscribe, self());
+    system.stop(tla);
+  }
+
+  @Test
+  public void shouldAllowAShortMove() throws Exception {
+    it("should allow a short move");
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+    lifecycleStart(supervisor, tla);
+
+    int testPos = 500;
+
+    tla.tell(JHcdController.Subscribe, self());
+    tla.tell(new Submit(positionSC(testPos)), self());
+
+    Vector<CurrentState> msgs = waitForMoveMsgs();
+    // Check the last message
+    assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testPos);
+    assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+
+
+    //info("Msgs: " + msgs)
+    tla.tell(JHcdController.Unsubscribe, self());
+    system.stop(tla);
+  }
+
+
+  @Test
+  public void shouldAllowContinuousShortValues() throws Exception {
+    it("should allow continuous short values");
+    int[] encoderTestValues = new int[]{460, 465, 470, 475, 480, 485, 490, 400};
+
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+    lifecycleStart(supervisor, tla);
+
+    tla.tell(JHcdController.Subscribe, self());
+    // Move 2
+    tla.tell(new Submit(homeSC), self());
+    Vector<CurrentState> msgs = waitForMoveMsgs();
+    assertEquals(jvalue(jitem(msgs.lastElement(), inHomeKey)), true);
+
+    for (int testPos : encoderTestValues) {
+      tla.tell(new Submit(positionSC(testPos)), self());
+      //val msgs = waitForMoveMsgs
+    }
+    waitForMoveMsgs();
+
+    tla.tell(JHcdController.Unsubscribe, self());
+    system.stop(tla);
+  }
+
+  @Test
+  public void shouldShowEnteringALowLimit() throws Exception {
+    it("should show entering a low limit");
+    TestProbeTestActorRefPair t = newTestTrombone();
+    TestProbe supervisor = t.testProbe;
+    TestActorRef<TromboneHCD> tla = t.testActorRef;
+
+    lifecycleStart(supervisor, tla);
+
+    int testPos = 0;
+    int testActual = tla.underlyingActor().axisConfig.lowLimit;
+
+    tla.tell(JHcdController.Subscribe, self());
+    tla.tell(new Submit(positionSC(testPos)), self());
+
+    Vector<CurrentState> msgs = waitForMoveMsgs();
+    // Check the last message
+    assertEquals(jvalue(jitem(msgs.lastElement(), stateKey)), AXIS_IDLE);
+    assertEquals(jvalue(jitem(msgs.lastElement(), positionKey)).intValue(), testActual);
+    assertEquals(jvalue(jitem(msgs.lastElement(), inLowLimitKey)), true);
+    assertEquals(jvalue(jitem(msgs.lastElement(), inHighLimitKey)), false);
+
+    //info("Msgs: " + msgs)
+    tla.tell(JHcdController.Unsubscribe, self());
+    system.stop(tla);
+  }
+
 
   @Test
   public void placeIntoTheHighLimit() throws Exception {
