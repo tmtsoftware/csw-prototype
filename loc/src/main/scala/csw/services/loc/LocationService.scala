@@ -494,7 +494,8 @@ object LocationService {
 
     private def getAkkaUri(uriStr: String, userInfo: String): Option[URI] = try {
       val uri = new URI(uriStr)
-      Some(new URI("akka", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment))
+      //      Some(new URI("akka", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment)) // aeron uses akka:
+      Some(new URI("akka.tcp", userInfo, uri.getHost, uri.getPort, uri.getPath, uri.getQuery, uri.getFragment)) // netty uses akka.tcp
     } catch {
       case e: Exception =>
         // some issue with ipv6 addresses?
