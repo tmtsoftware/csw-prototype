@@ -121,7 +121,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
       handleLifecycleFailure(LifecycleWaitingForInitialized, reason)
       lifecycleState = LifecycleFailure
       context.become(lifecycleFailure)
-    case Started | HaltComponent | ExComponentRestart | ExComponentOnline | ExComponentOffline | ExComponentShutdown =>
+    case Started | ExComponentRestart | ExComponentOnline | ExComponentOffline | ExComponentShutdown =>
     // Stay
   }
 
@@ -145,7 +145,7 @@ class Supervisor(val componentInfo: ComponentInfo, testComponent: Option[ActorRe
       handleLifecycleFailure(LifecycleInitialized, reason)
       lifecycleState = LifecycleFailure
       context.become(lifecycleFailure)
-    case Initialized | HaltComponent | ExComponentRestart | ExComponentOnline | ExComponentOffline | ExComponentShutdown =>
+    case Initialized | ExComponentRestart | ExComponentOnline | ExComponentOffline | ExComponentShutdown =>
     // Stay
   }
 

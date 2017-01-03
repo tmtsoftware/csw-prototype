@@ -18,17 +18,17 @@ import collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 
 /**
-  * Location Service based on Multicast DNS (AppleTalk, Bonjour).
-  *
-  * The Location Service is based on Multicast DNS (AppleTalk, Bonjour) and can be used to register and lookup
-  * akka and http based services in the local network.
-  *
-  * Every application using the location service should call the initInterface() method once at startup,
-  * before creating any actors.
-  *
-  * Note: On a mac, you can use the command line tool dns-sd to browse the registered services.
-  * On Linux use avahi-browse.
-  */
+ * Location Service based on Multicast DNS (AppleTalk, Bonjour).
+ *
+ * The Location Service is based on Multicast DNS (AppleTalk, Bonjour) and can be used to register and lookup
+ * akka and http based services in the local network.
+ *
+ * Every application using the location service should call the initInterface() method once at startup,
+ * before creating any actors.
+ *
+ * Note: On a mac, you can use the command line tool dns-sd to browse the registered services.
+ * On Linux use avahi-browse.
+ */
 object LocationService {
 
   private val logger = Logger(LoggerFactory.getLogger(LocationService.getClass))
@@ -41,14 +41,14 @@ object LocationService {
   private var initialized = false
 
   /**
-    * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
-    * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
-    * This method should be called before creating any actors or web services that depend on the location service.
-    *
-    * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
-    * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
-    * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
-    */
+   * Sets the "akka.remote.netty.tcp.hostname" and net.mdns.interface system properties, if not already
+   * set on the command line (with -D), so that any services or akka actors created will use and publish the correct IP address.
+   * This method should be called before creating any actors or web services that depend on the location service.
+   *
+   * Note that calling this method overrides any setting for akka.remote.netty.tcp.hostname in the akka config file.
+   * Since the application config is immutable and cached once it is loaded, I can't think of a way to take the config
+   * setting into account here. This should not be a problem, since we don't want to hard code host names anyway.
+   */
   def initInterface(): Unit = {
     if (!initialized) {
       initialized = true
@@ -104,20 +104,20 @@ object LocationService {
   }
 
   /**
-    * Represents a registered connection to a service
-    */
+   * Represents a registered connection to a service
+   */
   sealed trait Registration {
     def connection: Connection
   }
 
   /**
-    * Represents a registered connection to an Akka service
-    */
+   * Represents a registered connection to an Akka service
+   */
   final case class AkkaRegistration(connection: AkkaConnection, component: ActorRef, prefix: String = "") extends Registration
 
   /**
-    * Represents a registered connection to a HTTP based service
-    */
+   * Represents a registered connection to a HTTP based service
+   */
   final case class HttpRegistration(connection: HttpConnection, port: Int, path: String) extends Registration
 
   /**
@@ -182,18 +182,18 @@ object LocationService {
   }
 
   /**
-    * Returned from register calls so that client can close the connection and deregister the service
-    */
+   * Returned from register calls so that client can close the connection and deregister the service
+   */
   trait RegistrationResult {
     /**
-      * Unregisters the previously registered service.
-      * Note that all services are automatically unregistered on shutdown.
-      */
+     * Unregisters the previously registered service.
+     * Note that all services are automatically unregistered on shutdown.
+     */
     def unregister(): Unit
 
     /**
-      * Identifies the registered component
-      */
+     * Identifies the registered component
+     */
     val componentId: ComponentId
   }
 
@@ -202,14 +202,14 @@ object LocationService {
   }
 
   /**
-    * Registers a component connection with the location sevice.
-    * The component will automatically be unregistered when the vm exists or when
-    * unregister() is called on the result of this method.
-    *
-    * @param reg    component registration information
-    * @param system akka system
-    * @return a future result that completes when the registration has completed and can be used to unregister later
-    */
+   * Registers a component connection with the location sevice.
+   * The component will automatically be unregistered when the vm exists or when
+   * unregister() is called on the result of this method.
+   *
+   * @param reg    component registration information
+   * @param system akka system
+   * @return a future result that completes when the registration has completed and can be used to unregister later
+   */
   def register(reg: Registration)(implicit system: ActorSystem): Future[RegistrationResult] = {
     reg match {
       case AkkaRegistration(connection, component, prefix) =>
@@ -218,18 +218,18 @@ object LocationService {
       case HttpRegistration(connection, port, path) =>
         registerHttpConnection(connection.componentId, port, path)
 
-      case TcpRegistration(connection, port)               => registerTcpConnection(connection.componentId, port)
+      case TcpRegistration(connection, port) => registerTcpConnection(connection.componentId, port)
     }
   }
 
   /**
-    * Registers the given service for the local host and the given port
-    * (The full name of the local host will be used)
-    *
-    * @param componentId describes the component or service
-    * @param actorRef    the actor reference for the actor being registered
-    * @param prefix      indicates the part of a command service config that this service is interested in
-    */
+   * Registers the given service for the local host and the given port
+   * (The full name of the local host will be used)
+   *
+   * @param componentId describes the component or service
+   * @param actorRef    the actor reference for the actor being registered
+   * @param prefix      indicates the part of a command service config that this service is interested in
+   */
 
   def registerAkkaConnection(componentId: ComponentId, actorRef: ActorRef, prefix: String = "")(implicit system: ActorSystem): Future[RegistrationResult] = {
     import system.dispatcher
@@ -249,14 +249,14 @@ object LocationService {
   }
 
   /**
-    * Registers the given service for the local host and the given port
-    * (The full name of the local host will be used)
-    *
-    * @param componentId describes the component or service
-    * @param port        the port the service is running on
-    * @param path        the path part of the URI (default: empty)
-    * @return an object that can be used to close the connection and unregister the service
-    */
+   * Registers the given service for the local host and the given port
+   * (The full name of the local host will be used)
+   *
+   * @param componentId describes the component or service
+   * @param port        the port the service is running on
+   * @param path        the path part of the URI (default: empty)
+   * @return an object that can be used to close the connection and unregister the service
+   */
   def registerHttpConnection(componentId: ComponentId, port: Int, path: String = "")(implicit system: ActorSystem): Future[RegistrationResult] = {
     import system.dispatcher
     val connection = HttpConnection(componentId)
@@ -295,10 +295,10 @@ object LocationService {
   }
 
   /**
-    * Unregisters the connection from the location service
-    * (Note: it can take some time before the service is removed from the list: see
-    * comments in registry.unregisterService())
-    */
+   * Unregisters the connection from the location service
+   * (Note: it can take some time before the service is removed from the list: see
+   * comments in registry.unregisterService())
+   */
   def unregisterConnection(connection: Connection): Unit = {
     import scala.collection.JavaConverters._
     logger.debug(s"Unregistered connection: $connection")
@@ -318,12 +318,12 @@ object LocationService {
     new URI(actorRef.path.toStringWithAddress(RemoteAddressExtension(system).address))
 
   /**
-    * Convenience method that gets the location service information for a given set of services.
-    *
-    * @param connections set of requested connections
-    * @param system      the caller's actor system
-    * @return a future object describing the services found
-    */
+   * Convenience method that gets the location service information for a given set of services.
+   *
+   * @param connections set of requested connections
+   * @param system      the caller's actor system
+   * @return a future object describing the services found
+   */
   def resolve(connections: Set[Connection])(implicit system: ActorRefFactory, timeout: Timeout): Future[LocationsReady] = {
     import akka.pattern.ask
     val actorRef = system.actorOf(LocationTrackerWorker.props(None))
@@ -332,34 +332,35 @@ object LocationService {
 
   object RegistrationTracker {
     /**
-      * Used to create the RegistrationTracker actor
-      *
-      * @param registration Set of registrations to be registered with Location Service
-      * @param replyTo      optional actorRef to reply to (default: parent of this actor)
-      */
+     * Used to create the RegistrationTracker actor
+     *
+     * @param registration Set of registrations to be registered with Location Service
+     * @param replyTo      optional actorRef to reply to (default: parent of this actor)
+     */
     def props(registration: Set[Registration], replyTo: Option[ActorRef] = None): Props = Props(classOf[RegistrationTracker], registration, replyTo)
   }
 
   /**
-    * An actor that tracks registration of one or more connections and replies with a
-    * ComponentRegistered message when done.
-    *
-    * @param registration Set of registrations to be registered with Location Service
-    * @param replyTo      optional actorRef to reply to (default: parent of this actor)
-    */
+   * An actor that tracks registration of one or more connections and replies with a
+   * ComponentRegistered message when done.
+   *
+   * @param registration Set of registrations to be registered with Location Service
+   * @param replyTo      optional actorRef to reply to (default: parent of this actor)
+   */
   case class RegistrationTracker(registration: Set[Registration], replyTo: Option[ActorRef]) extends Actor with ActorLogging {
 
     import context.dispatcher
 
     implicit val system = context.system
 
-    val a = self
+    private val a = self
+    private val actorRef = replyTo.getOrElse(context.parent)
     Future.sequence(registration.toList.map(LocationService.register)).onComplete {
       case Success(list) => registration.foreach { r =>
         val c = r.connection
         log.debug(s"Successful register of connection: $c")
         list.find(_.componentId == c.componentId).foreach { result =>
-          replyTo.getOrElse(context.parent) ! ComponentRegistered(c, result)
+          actorRef ! ComponentRegistered(c, result)
         }
         system.stop(a)
       }
@@ -376,20 +377,20 @@ object LocationService {
 
   object LocationTracker {
     /**
-      * Used to create the LocationTracker actor
-      *
-      * @param replyTo optional actorRef to reply to (default: parent of this actor)
-      */
+     * Used to create the LocationTracker actor
+     *
+     * @param replyTo optional actorRef to reply to (default: parent of this actor)
+     */
     def props(replyTo: Option[ActorRef] = None): Props = Props(classOf[LocationTracker], replyTo)
   }
 
   /**
-    * An actor that notifies the replyTo actor when all the requested services are available.
-    * If all services are available, a ServicesReady message is sent. If any of the requested
-    * services stops being available, a Disconnected messages is sent.
-    *
-    * @param replyTo optional actorRef to reply to (default: parent of this actor)
-    */
+   * An actor that notifies the replyTo actor when all the requested services are available.
+   * If all services are available, a ServicesReady message is sent. If any of the requested
+   * services stops being available, a Disconnected messages is sent.
+   *
+   * @param replyTo optional actorRef to reply to (default: parent of this actor)
+   */
   case class LocationTracker(replyTo: Option[ActorRef]) extends Actor with ActorLogging with ServiceListener {
 
     // Set of resolved services (Needs to be a var, since the ServiceListener callbacks prevent using akka state)
@@ -560,9 +561,9 @@ object LocationService {
           // There is a chance that it has already been resolved since this is shared across the JVM?
           connections(connection) match {
             case UnTrackedLocation(_) =>
-          val unc = Unresolved(connection)
+              val unc = Unresolved(connection)
               connections += (connection -> unc)
-        tryToResolve(connection)
+              tryToResolve(connection)
             case u: Unresolved =>
               log.error("Should not have an Unresolved connection when initiating tracking: " + u)
             case r @ _ =>

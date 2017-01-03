@@ -18,6 +18,7 @@ import csw.services.loc.LocationSubscriberClient
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.DemandState
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
@@ -206,6 +207,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
       } {
         commandOriginator.foreach(_ ! cs)
         currentCommand ! PoisonPill
+        // XXX FIXME: context should not escape to other thread (Replace with message to self?)
         context.become(noFollowReceive())
       }
 

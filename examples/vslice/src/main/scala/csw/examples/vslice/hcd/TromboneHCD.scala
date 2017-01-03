@@ -84,6 +84,8 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
       log.debug("received Running")
       context.become(runningReceive)
 
+    case ShutdownComplete => log.info(s"${info.componentName} shutdown complete")
+
     case x => log.error(s"Unexpected message in TromboneHCD (Not running yet): $x")
   }
 
@@ -158,6 +160,8 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
         cancelCountKey -> as.cancelCount
       )
       notifySubscribers(tromboneStats)
+
+    case ShutdownComplete => log.info(s"${info.componentName} shutdown complete")
 
     case x => log.error(s"Unexpected message in TromboneHCD (running state): $x")
   }

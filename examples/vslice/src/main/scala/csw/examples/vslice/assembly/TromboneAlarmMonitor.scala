@@ -9,6 +9,7 @@ import csw.services.alarms.{AlarmKey, AlarmModel, AlarmService}
 import csw.services.ccs.HcdController
 import csw.util.config.StateVariable.CurrentState
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -22,7 +23,7 @@ import scala.util.{Failure, Success}
  * CurrentStateReceiver actor, which uses the same message for subscribing.
  *
  * The AlarmMonitor has two states, one for normal operation with no alarms and one for when trombone is in an alarm state. This is possible
- * because the axis can't be in the high and low alarm state simulatenously. While in the normal state, the monitor looks for high or low
+ * because the axis can't be in the high and low alarm state simultaneously. While in the normal state, the monitor looks for high or low
  * limits set in the CurrentState data from the HCD.  When in the alarm state, it looks for the alarm to return to the normal state so that
  * the alarm can be cleared. A CSW client must not only set its alarms when they go to an alarm state, but also clear them when the
  * conditions causing the alarm are removed.
@@ -104,27 +105,33 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef, alarmService: AlarmSe
   }
 
   /**
-   * Send the low limit severity to the Alarm Service
-   * @param alarmService the instance of the Alarm Service
-   * @param severity the severity that is used to set the lowLimitAlarm
-   */
-  def sendLowLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel) = {
-    alarmService.setSeverity(lowLimitAlarm, severity).onComplete {
+    * Send the low limit severity to the Alarm Service
+    *
+    * @param alarmService the instance of the Alarm Service
+    * @param severity     the severity that is used to set the lowLimitAlarm
+    */
+  private def sendLowLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel): Unit = {
+    val f = alarmService.setSeverity(lowLimitAlarm, severity)
+    f.onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $lowLimitAlarm to $severity: $ex")
-      case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the low limit alarm")
+      case Success(s) => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the low limit alarm")
     }
+    Await.ready(f, 3.seconds)
   }
 
   /**
-   * Send the high limit severity to the Alarm Service
-   * @param alarmService the instance of the Alarm Service
-   * @param severity the severity that is used to set the highLimitAlarm
-   */
-  def sendHighLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel) = {
-    alarmService.setSeverity(highLimitAlarm, severity).onComplete {
+    * Send the high limit severity to the Alarm Service
+    *
+    * @param alarmService the instance of the Alarm Service
+    * @param severity     the severity that is used to set the highLimitAlarm
+    */
+  private def sendHighLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel): Unit = {
+    val f = alarmService.setSeverity(highLimitAlarm, severity)
+    f.onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $highLimitAlarm to: $severity: $ex")
-      case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the high limit alarm")
+      case Success(s) => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the high limit alarm")
     }
+    Await.ready(f, 3.seconds)
   }
 
 }

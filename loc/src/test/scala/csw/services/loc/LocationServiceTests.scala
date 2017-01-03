@@ -196,7 +196,7 @@ class LocationServiceTests extends TestKit(LocationServiceTests.system)
     //    testProbe.expectNoMsg(5.seconds)
 
     val f = Future.sequence(fList)
-    val resultList = Await.result(f, 1.second)
+    val resultList = Await.result(f, 10.seconds)
     resultList.foreach(_.unregister())
     system.stop(tracker)
   }

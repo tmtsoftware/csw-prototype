@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill, Terminated}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -9,13 +9,13 @@ import csw.examples.vslice.hcd.TromboneHCD
 import csw.examples.vslice.hcd.TromboneHCD._
 import csw.services.alarms.AlarmModel.SeverityLevel.{Okay, Warning}
 import csw.services.alarms.{AlarmKey, AlarmService, AlarmServiceAdmin}
-import csw.services.ccs.CommandStatus.CommandStatus
+import csw.services.ccs.CommandStatus.{CommandStatus, Completed}
 import csw.services.ccs.SequentialExecutor.ExecuteOne
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor
-import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.UnitsOfMeasure.encoder
@@ -61,22 +61,12 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   }
 
   override def afterAll(): Unit = {
-    // Shutdown Redis (Only do this in tests that also started the server)
-    //    if (alarmAdmin != null) Await.ready(alarmAdmin.shutdown(), timeout.duration)
     TestKit.shutdownActorSystem(system)
   }
 
   val ac = AssemblyTestData.TestAssemblyContext
 
   import ac._
-
-  //  def setupState(ts: TromboneState) = {
-  //    // These times are important to allow time for test actors to get and process the state updates when running tests
-  //    expectNoMsg(20.milli)
-  //    system.eventStream.publish(ts)
-  //    // This is here to allow the destination to run and set its state
-  //    expectNoMsg(20.milli)
-  //  }
 
   // Initialize HCD for testing
   def startHCD: ActorRef = {
@@ -184,7 +174,9 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     val alarmValue2 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     alarmValue2.reported shouldBe Okay
 
+    watch(am)
     system.stop(am)
+    expectMsgType[Terminated]
   }
 
   def testLimitAlarm(alarmKey: AlarmKey, limitPosition: Double, clearPosition: Double) {
@@ -212,6 +204,8 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
     // The command handler sends commands to the trombone HCD
     val ch = newCommandHandler(tromboneHCD)
+    // Give command handler time to subscribe to command state!
+    expectNoMsg(1.second)
 
     val needToSetStateForMoveCommand = system.actorOf(TromboneStateActor.props())
     needToSetStateForMoveCommand ! SetState(cmdReady, moveIndexed, sodiumLayer = false, nss = false)
@@ -222,13 +216,14 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     // Watch for command completion
     val result = fakeAssembly.expectMsgClass(5.seconds, classOf[CommandStatus])
     logger.info("Result: " + result)
+    assert(Completed == result)
 
     expectNoMsg(1.second) // A bit of time for processing and update of AlarmService
 
     // This is checking that the value in the alarm service has been set using admin interface
     val alarmValue2 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     // use the alarm service admin to see that it is cleared,
-    alarmValue2.reported shouldBe Warning // XXX TODO: Test failed here
+    alarmValue2.reported shouldBe Warning
 
     // Now move it out of the limit and see that the alarm is cleared
     ch ! ExecuteOne(moveSC(clearPosition), Some(fakeAssembly.ref))
@@ -240,9 +235,20 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     val alarmValue3 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     alarmValue3.reported shouldBe Okay
 
+    watch(ch)
     system.stop(ch)
+    expectMsgType[Terminated]
+
+    watch(needToSetStateForMoveCommand)
     system.stop(needToSetStateForMoveCommand)
+    expectMsgType[Terminated]
+
+    watch(am)
     system.stop(am)
-    tromboneHCD ! PoisonPill
+    expectMsgType[Terminated]
+
+    watch(tromboneHCD)
+    tromboneHCD ! HaltComponent
+    expectMsgType[Terminated]
   }
 }
