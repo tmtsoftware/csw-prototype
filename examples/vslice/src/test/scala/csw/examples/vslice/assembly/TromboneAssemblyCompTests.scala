@@ -36,6 +36,14 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
     Supervisor(assemblyInfo)
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(component: ActorRef): Unit = {
+    val monitor = TestProbe()
+    monitor.watch(component)
+    component ! HaltComponent
+    monitor.expectTerminated(component)
+  }
+
   // List of top level actors that were created for the HCD (for clean up)
   var hcdActors: List[ActorRef] = Nil
 
@@ -48,12 +56,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
   }
 
   override def afterAll: Unit = {
-    hcdActors.foreach {
-      actorRef =>
-        actorRef ! HaltComponent
-        watch(actorRef)
-        expectMsgType[Terminated]
-    }
+    hcdActors.foreach(cleanup)
     TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
   }
 
@@ -66,9 +69,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       tla ! SubscribeLifecycleCallback(fakeSequencer.ref)
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleInitialized))
       fakeSequencer.expectMsg(LifecycleStateChanged(LifecycleRunning))
-      tla ! HaltComponent
-      watch(tla)
-      expectMsgType[Terminated]
+      cleanup(tla)
     }
 
     it("should allow a datum") {
@@ -95,9 +96,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       // Wait a bit to see if there is any spurious messages
       fakeSequencer.expectNoMsg(250.milli)
       info("Msg: " + completeMsg)
-      tla ! HaltComponent
-      watch(tla)
-      expectMsgType[Terminated]
+      cleanup(tla)
     }
 
     it("should allow a datum then a set of positions as separate sca") {
@@ -140,9 +139,7 @@ class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system
       logger.info("msg2: " + completeMsg)
       completeMsg.overall shouldBe AllCompleted
       completeMsg.details.results.size shouldBe sca.configs.size
-      tla ! HaltComponent
-      watch(tla)
-      expectMsgType[Terminated]
+      cleanup(tla)
     }
   }
 

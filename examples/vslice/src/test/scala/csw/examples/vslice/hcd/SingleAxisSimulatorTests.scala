@@ -15,7 +15,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
 
   import SingleAxisSimulator._
 
-  override def afterAll = TestKit.shutdownActorSystem(system)
+  override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
   def expectLLMoveMsgs(diagFlag: Boolean = false): Vector[MotionWorkerMsgs] = {
     // Get AxisStarted
@@ -95,6 +95,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       under.start should equal(testStart)
       under.destination should equal(testDestination)
       under.delayInNanoSeconds should equal(testDelay * 1000000)
+      system.stop(ms)
     }
   }
 
@@ -109,6 +110,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       ms ! Start
       val msgs = expectLLMoveMsgs()
       msgs.last should be(End(testDestination))
+      system.stop(ms)
     }
   }
 
@@ -123,6 +125,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       ms ! Start
       val msgs = expectLLMoveMsgs(false)
       msgs.last should be(End(testDestination))
+      system.stop(ms)
     }
   }
 
@@ -136,6 +139,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       ms ! Start
       val msgs = expectLLMoveMsgs(false)
       msgs.last should be(End(testDestination))
+      system.stop(ms)
     }
   }
 
@@ -155,6 +159,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       // One more move
       receiveN(1)
       expectMsgClass(classOf[End])
+      system.stop(ms)
     }
   }
 

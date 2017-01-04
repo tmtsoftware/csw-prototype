@@ -172,6 +172,7 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
     tsub ! GetResults
     val result = expectMsgClass(classOf[TestSubscriber.Results])
     info("Result: " + result)
+    system.stop(tsub)
   }
 
 }

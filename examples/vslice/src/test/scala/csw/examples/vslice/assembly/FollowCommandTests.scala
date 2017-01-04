@@ -14,7 +14,7 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor
-import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.BooleanItem
 import csw.util.config.Events.{StatusEvent, SystemEvent}
@@ -68,9 +68,6 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
   implicit val timeout = Timeout(10.seconds)
 
-  // Used to start and stop the event service Redis instance used for the test
-  //  var eventAdmin: EventServiceAdmin = _
-
   // Get the event service by looking up the name with the location service.
   val eventService = Await.result(EventService(), timeout.duration)
 
@@ -82,8 +79,6 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
   }
 
   override protected def afterAll(): Unit = {
-    // Shutdown Redis (Only do this in tests that also started the server)
-    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
     TestKit.shutdownActorSystem(system)
   }
 
@@ -153,6 +148,22 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
     allmsgs
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(hcd: Option[ActorRef], a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+
+    hcd.foreach { tromboneHCD =>
+      monitor.watch(tromboneHCD)
+      tromboneHCD ! HaltComponent
+      monitor.expectTerminated(tromboneHCD)
+    }
+  }
+
   describe("basic event command setup") {
 
     it("should be created with no issues") {
@@ -166,6 +177,8 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
       fc ! StopFollowing
       fakeTromboneHCD.expectNoMsg(250.milli)
+
+      cleanup(None, fc)
     }
   }
 
@@ -286,9 +299,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       val engExpected = firstEng +: zaEngExpected
       result2.msgs should equal(engExpected)
 
-      tromboneHCD ! PoisonPill
-      system.stop(resultSubscriber1)
-      system.stop(resultSubscriber2)
+      cleanup(Some(tromboneHCD), resultSubscriber1, resultSubscriber2)
     }
 
     /**
@@ -391,9 +402,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       // Verify that the za is always 0.0 when inNssMode
       engs.map(f => f.item(zenithAngleKey).head).filter(_ != 0.0) shouldBe empty
 
-      tromboneHCD ! PoisonPill
-      system.stop(resultSubscriber1)
-      system.stop(resultSubscriber2)
+      cleanup(Some(tromboneHCD), resultSubscriber1, resultSubscriber2)
     }
 
     /**
@@ -460,9 +469,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       fakeAssembly.expectNoMsg(200.milli)
 
       // Stop this follow command
-      system.stop(fc)
-      system.stop(eventPublisher)
-      tromboneHCD ! PoisonPill
+      cleanup(Some(tromboneHCD), fc, eventPublisher)
     }
 
   }

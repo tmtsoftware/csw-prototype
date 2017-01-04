@@ -111,6 +111,20 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     inHomeKey -> false
   )
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(tromboneHCD: ActorRef, a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+
+    monitor.watch(tromboneHCD)
+    tromboneHCD ! HaltComponent
+    monitor.expectTerminated(tromboneHCD)
+  }
+
   describe("Basic alarm monitor tests with test alarm service running") {
     /**
      * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
@@ -176,7 +190,7 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
 
     watch(am)
     system.stop(am)
-    expectMsgType[Terminated]
+    expectTerminated(am)
   }
 
   def testLimitAlarm(alarmKey: AlarmKey, limitPosition: Double, clearPosition: Double) {
@@ -235,20 +249,6 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
     val alarmValue3 = Await.result(alarmAdmin.getSeverity(alarmKey), timeout.duration)
     alarmValue3.reported shouldBe Okay
 
-    watch(ch)
-    system.stop(ch)
-    expectMsgType[Terminated]
-
-    watch(needToSetStateForMoveCommand)
-    system.stop(needToSetStateForMoveCommand)
-    expectMsgType[Terminated]
-
-    watch(am)
-    system.stop(am)
-    expectMsgType[Terminated]
-
-    watch(tromboneHCD)
-    tromboneHCD ! HaltComponent
-    expectMsgType[Terminated]
+    cleanup(tromboneHCD, ch, needToSetStateForMoveCommand, am)
   }
 }

@@ -18,7 +18,7 @@ import csw.services.loc.LocationService
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation, Unresolved}
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor
-import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.Events.{StatusEvent, SystemEvent}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
@@ -76,6 +76,25 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
   import DiagPublisherTests._
 
+  // Get the telemetry service by looking up the name with the location service.
+  private implicit val timeout = Timeout(10.seconds)
+  private val telemetryService: TelemetryService = Await.result(TelemetryService(), timeout.duration)
+
+  private val assemblyContext = AssemblyTestData.TestAssemblyContext
+
+  import assemblyContext._
+
+  // This is possible since trombone HCD has only one HCD
+  val tromboneHCDConnection: AkkaConnection = assemblyContext.info.connections.head.asInstanceOf[AkkaConnection]
+
+  override def beforeAll(): Unit = {
+    TestEnv.createTromboneAssemblyConfig()
+  }
+
+  override protected def afterAll(): Unit = {
+    TestKit.shutdownActorSystem(system)
+  }
+
   def startHCD: ActorRef = {
     val testInfo = HcdInfo(
       TromboneHCD.componentName,
@@ -87,28 +106,23 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
     Supervisor(testInfo)
   }
 
-  // Get the telemetry service by looking up the name with the location service.
-  private implicit val timeout = Timeout(10.seconds)
-  private val telemetryService: TelemetryService = Await.result(TelemetryService(), timeout.duration)
-
-  override def beforeAll(): Unit = {
-    TestEnv.createTromboneAssemblyConfig()
-  }
-
-  override protected def afterAll(): Unit = {
-    TestKit.shutdownActorSystem(system)
-  }
-
-  private val assemblyContext = AssemblyTestData.TestAssemblyContext
-
-  import assemblyContext._
-
-  // This is possible since trombone HCD has only one HCD
-  val tromboneHCDConnection: AkkaConnection = assemblyContext.info.connections.head.asInstanceOf[AkkaConnection]
-
   def newDiagPublisher(currentStateReceiver: ActorRef, tromboneHCD: Option[ActorRef], eventPublisher: Option[ActorRef]): TestActorRef[DiagPublisher] = {
     val props = DiagPublisher.props(assemblyContext, tromboneHCD, eventPublisher)
     TestActorRef[DiagPublisher](props)
+  }
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(tromboneHCD: ActorRef, a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+
+    monitor.watch(tromboneHCD)
+    tromboneHCD ! HaltComponent
+    monitor.expectTerminated(tromboneHCD)
   }
 
   describe("basic diag tests") {
@@ -142,8 +156,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       tromboneHCD ! GetAxisUpdate
       fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
 
     /**
@@ -181,8 +194,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       tromboneHCD ! GetAxisUpdate
       msg = fakePublisher.expectMsgClass(classOf[AxisStateUpdate])
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
 
     /**
@@ -222,8 +234,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       tromboneHCD ! GetAxisUpdate
       fakePublisher.expectNoMsg(20.milli)
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
 
     /**
@@ -252,8 +263,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       // Because timeout is 3 seconds, we get the one stats event after 1 second
       fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
 
     /**
@@ -289,8 +299,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       // A delay to see that no messages arrive after one second to ensure timer is off
       fakeEventPublisher.expectNoMsg(1200.milli)
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
 
     def setLocation(loc: Location) = {
@@ -336,8 +345,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       // Wait for one update message
       fakePublisher.expectMsgClass(classOf[AxisStatsUpdate])
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
   }
 
@@ -394,8 +402,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       result.msgs.size shouldBe 2
       //info("result: " + result)
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
 
     /**
@@ -459,9 +466,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       //result.msgs.size shouldBe 4
       info("result: " + result)
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
-      //      expectNoMsg(5.seconds)
+      cleanup(tromboneHCD, dp)
     }
 
     /**
@@ -529,8 +534,7 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
       result2.msgs.size should be >= 2
       //info("result: " + result2)
 
-      system.stop(dp)
-      tromboneHCD ! PoisonPill
+      cleanup(tromboneHCD, dp)
     }
   }
 

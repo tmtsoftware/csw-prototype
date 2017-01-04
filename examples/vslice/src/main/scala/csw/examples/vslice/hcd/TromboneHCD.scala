@@ -86,7 +86,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
 
     case ShutdownComplete => log.info(s"${info.componentName} shutdown complete")
 
-    case x => log.error(s"Unexpected message in TromboneHCD (Not running yet): $x")
+    case x                => log.error(s"Unexpected message in TromboneHCD (Not running yet): $x")
   }
 
   // Receive partial function to handle runtime lifecycle meessages
@@ -163,7 +163,7 @@ class TromboneHCD(override val info: HcdInfo, supervisor: ActorRef) extends Hcd 
 
     case ShutdownComplete => log.info(s"${info.componentName} shutdown complete")
 
-    case x => log.error(s"Unexpected message in TromboneHCD (running state): $x")
+    case x                => log.error(s"Unexpected message in TromboneHCD (running state): $x")
   }
 
   protected def process(sc: SetupConfig): Unit = {

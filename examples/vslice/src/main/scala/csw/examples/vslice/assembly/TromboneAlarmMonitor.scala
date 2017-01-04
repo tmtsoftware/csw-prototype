@@ -105,31 +105,31 @@ class TromboneAlarmMonitor(currentStateReceiver: ActorRef, alarmService: AlarmSe
   }
 
   /**
-    * Send the low limit severity to the Alarm Service
-    *
-    * @param alarmService the instance of the Alarm Service
-    * @param severity     the severity that is used to set the lowLimitAlarm
-    */
+   * Send the low limit severity to the Alarm Service
+   *
+   * @param alarmService the instance of the Alarm Service
+   * @param severity     the severity that is used to set the lowLimitAlarm
+   */
   private def sendLowLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel): Unit = {
     val f = alarmService.setSeverity(lowLimitAlarm, severity)
     f.onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $lowLimitAlarm to $severity: $ex")
-      case Success(s) => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the low limit alarm")
+      case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the low limit alarm")
     }
     Await.ready(f, 3.seconds)
   }
 
   /**
-    * Send the high limit severity to the Alarm Service
-    *
-    * @param alarmService the instance of the Alarm Service
-    * @param severity     the severity that is used to set the highLimitAlarm
-    */
+   * Send the high limit severity to the Alarm Service
+   *
+   * @param alarmService the instance of the Alarm Service
+   * @param severity     the severity that is used to set the highLimitAlarm
+   */
   private def sendHighLimitAlarm(alarmService: AlarmService, severity: AlarmModel.SeverityLevel): Unit = {
     val f = alarmService.setSeverity(highLimitAlarm, severity)
     f.onComplete {
       case Failure(ex) => log.error(s"TromboneAlarmMonitor failed to set $highLimitAlarm to: $severity: $ex")
-      case Success(s) => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the high limit alarm")
+      case Success(s)  => log.info(s"TromboneAlarmMonitor successfully posted: $severity to the high limit alarm")
     }
     Await.ready(f, 3.seconds)
   }

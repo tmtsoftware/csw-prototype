@@ -15,7 +15,7 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor
-import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.DoubleItem
@@ -69,9 +69,6 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
   implicit val timeout = Timeout(10.seconds)
 
-  // Used to start and stop the event service Redis instance used for the test
-  //  var eventAdmin: EventServiceAdmin = _
-
   // Get the event service by looking up the name with the location service.
   val eventService = Await.result(EventService(), timeout.duration)
 
@@ -80,8 +77,6 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
   }
 
   override protected def afterAll(): Unit = {
-    // Shutdown Redis (Only do this in tests that also started the server)
-    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
     TestKit.shutdownActorSystem(system)
   }
 
@@ -118,6 +113,22 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
    * @return DoubleItem with value and millimeters units
    */
   def fe(error: Double): DoubleItem = focusErrorKey -> error withUnits micrometers
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(hcd: Option[ActorRef], a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+
+    hcd.foreach { tromboneHCD =>
+      monitor.watch(tromboneHCD)
+      tromboneHCD ! HaltComponent
+      monitor.expectTerminated(tromboneHCD)
+    }
+  }
 
   /**
    * Test Description: This test tests the CalculatorActor to a fake TromboneHCD to inspect the messages
@@ -169,7 +180,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       val msg = fakeTromboneControl.expectMsgClass(classOf[GoToStagePosition])
       msg should equal(GoToStagePosition(stagePositionKey -> calculationConfig.defaultInitialElevation withUnits stagePositionUnits))
 
-      system.stop(followActor)
+      cleanup(None, followActor)
     }
 
     /**
@@ -208,7 +219,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       // The two should be equal
       msgsExpected should equal(msgs)
 
-      system.stop(followActor)
+      cleanup(None, followActor)
     }
 
     /**
@@ -259,8 +270,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       // The two should be equal
       msgsExpected should equal(msgs)
 
-      system.stop(followActor)
-      system.stop(tromboneEventSubscriber)
+      cleanup(None, followActor, tromboneEventSubscriber)
     }
   }
 
@@ -299,8 +309,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       val msg = fakeTromboneHCD.expectMsgClass(classOf[Submit])
       msg should equal(Submit(SetupConfig(axisMoveCK).add(positionKey -> expectedEnc withUnits positionUnits)))
 
-      system.stop(tromboneControl)
-      system.stop(followActor)
+      cleanup(None, tromboneControl, followActor)
     }
 
     /**
@@ -346,8 +355,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       // The two should be equal
       msgsExpected should equal(msgs)
 
-      system.stop(tromboneControl)
-      system.stop(followActor)
+      cleanup(None, tromboneControl, followActor)
     }
 
     // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
@@ -464,9 +472,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       msgs.last(inLowLimitKey).head should equal(false)
       msgs.last(inHighLimitKey).head should equal(false)
 
-      system.stop(tromboneControl)
-      system.stop(followActor)
-      tromboneHCD ! PoisonPill
+      cleanup(Some(tromboneHCD), tromboneControl, followActor)
     }
 
     /**
@@ -532,9 +538,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       msgs.last(inLowLimitKey).head should equal(false)
       msgs.last(inHighLimitKey).head should equal(false)
 
-      system.stop(tromboneControl)
-      system.stop(followActor)
-      tromboneHCD ! PoisonPill
+      cleanup(Some(tromboneHCD), tromboneControl, followActor)
     }
 
     /**
@@ -619,10 +623,7 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
       msgs.last(inLowLimitKey).head should equal(false)
       msgs.last(inHighLimitKey).head should equal(false)
 
-      system.stop(tromboneEventSubscriber)
-      system.stop(tromboneControl)
-      system.stop(followActor)
-      tromboneHCD ! PoisonPill
+      cleanup(Some(tromboneHCD), tromboneEventSubscriber, tromboneControl, followActor)
     }
 
   }

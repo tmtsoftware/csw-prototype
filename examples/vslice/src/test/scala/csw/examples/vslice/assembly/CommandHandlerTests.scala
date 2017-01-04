@@ -20,7 +20,7 @@ import csw.services.loc.LocationService
 import csw.services.loc.LocationService.{ResolvedAkkaLocation, ResolvedTcpLocation, Unresolved}
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor
-import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.Configurations
 import csw.util.config.Configurations.SetupConfig
@@ -74,6 +74,20 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     system.actorOf(TromboneCommandHandler.props(ac, Some(tromboneHCD), allEventPublisher))
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(tromboneHCD: ActorRef, a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+
+    monitor.watch(tromboneHCD)
+    tromboneHCD ! HaltComponent
+    monitor.expectTerminated(tromboneHCD)
+  }
+
   it("should allow running datum directly to CommandHandler") {
     val tromboneHCD = startHCD
     val fakeAssembly = TestProbe()
@@ -106,10 +120,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     val errMsg = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
     errMsg shouldBe a[NoLongerValid]
 
-    val monitor = TestProbe()
-    monitor.watch(ch)
-    ch ! PoisonPill
-    monitor.expectTerminated(ch)
+    cleanup(tromboneHCD, ch)
   }
 
   it("datum should handle change in HCD") {
@@ -154,10 +165,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     val msg2: CommandStatus = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandStatus])
     msg2 shouldBe Completed
 
-    val monitor = TestProbe()
-    monitor.watch(ch)
-    ch ! PoisonPill
-    monitor.expectTerminated(ch)
+    cleanup(tromboneHCD, ch)
   }
 
   it("should allow running datum through SequentialExecutor") {
@@ -200,13 +208,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     //info("Final: " + errMsg)
 
-    val monitor = TestProbe()
-    monitor.watch(ch)
-    monitor.watch(tromboneHCD)
-    system.stop(ch) // ch ! PoisonPill
-    monitor.expectTerminated(ch)
-    tromboneHCD ! PoisonPill
-    monitor.expectTerminated(tromboneHCD, 4.seconds)
+    cleanup(tromboneHCD, ch)
   }
 
   it("should allow running move") {
@@ -239,9 +241,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
-    ch ! PoisonPill
-    tromboneHCD ! PoisonPill
-    system.stop(se2)
+
+    cleanup(tromboneHCD, ch, se2)
   }
 
   it("should allow running a move without sequence") {
@@ -271,8 +272,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
-    ch ! PoisonPill
-    tromboneHCD ! PoisonPill
+
+    cleanup(tromboneHCD, ch)
   }
 
   it("should allow two moves") {
@@ -305,8 +306,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
-    system.stop(ch)
-    tromboneHCD ! PoisonPill
+
+    cleanup(tromboneHCD, se2, ch)
   }
 
   it("should allow a move with a stop") {
@@ -345,8 +346,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     msg.overall shouldBe Incomplete
     msg.details.status(0) shouldBe Cancelled
     info(s"result: $msg")
-    system.stop(ch)
-    tromboneHCD ! PoisonPill
+
+    cleanup(tromboneHCD, se, ch)
   }
 
   it("should allow a single position command") {
@@ -379,8 +380,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
-    system.stop(ch)
-    tromboneHCD ! PoisonPill
+
+    cleanup(tromboneHCD, se2, ch)
   }
 
   it("should allow a set of positions for the fun of it") {
@@ -416,8 +417,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     upd.current should equal(finalPos)
-    system.stop(ch)
-    tromboneHCD ! PoisonPill
+
+    cleanup(tromboneHCD, se2, ch)
   }
 
   it("should allow running a setElevation without sequence") {
@@ -447,8 +448,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     upd.current should equal(finalPos)
     info("Upd: " + upd)
 
-    ch ! PoisonPill
-    tromboneHCD ! PoisonPill
+    cleanup(tromboneHCD, ch)
   }
 
   it("should get error for setAngle when not following") {
@@ -475,8 +475,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     errMsg.overall should equal(Incomplete)
     errMsg.details.results.head.status shouldBe a[NoLongerValid]
 
-    system.stop(ch)
-    tromboneHCD ! PoisonPill
+    cleanup(tromboneHCD, se2, ch)
   }
 
   it("should allow follow and a stop") {
@@ -505,8 +504,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
 
     val msg2 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
     info("Msg: " + msg2)
-    system.stop(ch)
-    tromboneHCD ! PoisonPill
+
+    cleanup(tromboneHCD, se, ch)
   }
 
   it("should allow follow, with two SetAngles and stop") {
@@ -586,9 +585,8 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     val msg5 = fakeAssembly.expectMsgClass(10.seconds, classOf[CommandResult])
     logger.info("Msg: " + msg5)
     fakeAssembly.expectNoMsg(1.seconds)
-    system.stop(ch)
-    tromboneHCD ! PoisonPill
 
+    cleanup(tromboneHCD, ch, se, se2, se3, se4)
   }
 
   it("should allow one Arg with setElevation, follow, SetAngle and stop as a single sequence") {
@@ -636,12 +634,7 @@ class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     val upd = fakeAssembly.expectMsgClass(classOf[AxisUpdate])
     logger.info(s"Upd2: $upd")
 
-    // Cleanup
-    tromboneHCD ! PoisonPill
-    val monitor = TestProbe()
-    monitor.watch(ch)
-    ch ! PoisonPill
-    monitor.expectTerminated(ch)
+    cleanup(tromboneHCD, se, ch)
   }
 
 }

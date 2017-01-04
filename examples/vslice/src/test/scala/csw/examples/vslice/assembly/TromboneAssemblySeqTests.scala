@@ -34,34 +34,35 @@ object TromboneAssemblySeqTests {
 
   val system = ActorSystem("TromboneAssemblySeqTests")
 }
+
 class TromboneAssemblySeqTests extends TestKit(TromboneAssemblyCompTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   implicit val timeout = Timeout(10.seconds)
 
-  val ac = AssemblyTestData.TestAssemblyContext
+  private val ac = AssemblyTestData.TestAssemblyContext
   import ac._
 
-  val taName = "lgsTrombone"
-  val thName = "lgsTromboneHCD"
+  private val taName = "lgsTrombone"
+  private val thName = "lgsTromboneHCD"
 
-  val componentPrefix: String = "nfiraos.ncc.trombone"
+  private val componentPrefix: String = "nfiraos.ncc.trombone"
 
   // Public command configurations
   // Init submit command
-  val initPrefix = s"$componentPrefix.init"
-  val initCK: ConfigKey = initPrefix
+  private val initPrefix = s"$componentPrefix.init"
+  private val initCK: ConfigKey = initPrefix
 
   // Datum submit command
-  val datumPrefix = s"$componentPrefix.datum"
-  val datumCK: ConfigKey = datumPrefix
+  private val datumPrefix = s"$componentPrefix.datum"
+  private val datumCK: ConfigKey = datumPrefix
 
-  val naRangeDistanceKey = DoubleKey("rangeDistance")
-  val naRangeDistanceUnits = kilometers
+  private val naRangeDistanceKey = DoubleKey("rangeDistance")
+  private val naRangeDistanceUnits = kilometers
 
   // Position submit command
-  val positionPrefix = s"$componentPrefix.position"
-  val positionCK: ConfigKey = positionPrefix
+  private val positionPrefix = s"$componentPrefix.position"
+  private val positionCK: ConfigKey = positionPrefix
 
   def positionSC(rangeDistance: Double): SetupConfig = SetupConfig(positionCK).add(naRangeDistanceKey -> rangeDistance withUnits naRangeDistanceUnits)
 
@@ -69,13 +70,37 @@ class TromboneAssemblySeqTests extends TestKit(TromboneAssemblyCompTests.system)
     logger.info(s"EventReceived: $ev")
   }
 
-  val sca1 = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
+  private val sca1 = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
 
   // This will send a config arg with 10 position commands
-  val testRangeDistance = 90 to 130 by 10
-  val positionConfigs = testRangeDistance.map(f => positionSC(f))
+  private val testRangeDistance = 90 to 130 by 10
+  private val positionConfigs = testRangeDistance.map(f => positionSC(f))
 
-  val sca2 = Configurations.createSetupConfigArg("testObsId", positionSC(100.0))
+  private val sca2 = Configurations.createSetupConfigArg("testObsId", positionSC(100.0))
+
+  // List of top level actors that were created for the HCD (for clean up)
+  var containerActors: List[ActorRef] = Nil
+
+  override def beforeAll: Unit = {
+    TestEnv.createTromboneAssemblyConfig()
+
+    // Starts the assembly and HCD used in the test
+    val cmd = ContainerCmd("vslice", Array("--standalone"), Map("" -> "tromboneContainer.conf"))
+    containerActors = cmd.actors
+  }
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(component: ActorRef): Unit = {
+    val monitor = TestProbe()
+    monitor.watch(component)
+    component ! HaltComponent
+    monitor.expectTerminated(component)
+  }
+
+  override def afterAll: Unit = {
+    containerActors.foreach(cleanup)
+    TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
+  }
 
   def getTrombone: BlockingAssemblyClient = resolveAssembly(taName)
 
@@ -106,8 +131,6 @@ class TromboneAssemblySeqTests extends TestKit(TromboneAssemblyCompTests.system)
       completeMsg.overall shouldBe AllCompleted
 
       expectNoMsg(5.seconds)
-
-      tla ! PoisonPill
     }
 
     it("should allow a stop from follow mode") {

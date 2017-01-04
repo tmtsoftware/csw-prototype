@@ -1,11 +1,10 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
-import csw.examples.vslice.assembly.TromboneStateActor.TromboneState
 import csw.services.events.{Event, EventService, TelemetryService}
 import csw.services.loc.LocationService
 import csw.services.loc.LocationService.ResolvedTcpLocation
@@ -61,36 +60,27 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
   implicit val timeout = Timeout(10.seconds)
 
-  // Used to start and stop the event service Redis instance used for the test
-  //  var eventAdmin: EventServiceAdmin = _
-
   // Get the event and telemetry service by looking up the name with the location service.
-  val eventService = Await.result(EventService(), timeout.duration)
+  private val eventService = Await.result(EventService(), timeout.duration)
 
-  val telemetryService = Await.result(TelemetryService(), timeout.duration)
-
-  override def beforeAll() = {
-    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on a random free port.
-    // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
-    //    EventServiceAdmin.startEventService()
-
-    // Get the event service by looking it up the name with the location service.
-    //    eventService = Await.result(EventService(), timeout.duration)
-
-    // This is only used to stop the Redis instance that was started for this test
-    //    eventAdmin = EventServiceAdmin(eventService)
-  }
+  private val telemetryService = Await.result(TelemetryService(), timeout.duration)
 
   override protected def afterAll(): Unit = {
-    // Shutdown Redis (Only do this in tests that also started the server)
-    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
     TestKit.shutdownActorSystem(system)
   }
 
   // Used for creating followers
-  val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
+  private val initialElevation = naElevation(assemblyContext.calculationConfig.defaultInitialElevation)
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+  }
 
   // Publisher behaves the same whether nss is in use or not so always nssNotInUse
   def newTestFollower(tromboneControl: Option[ActorRef], publisher: Option[ActorRef]): ActorRef = {
@@ -137,6 +127,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       val result = expectMsgClass(classOf[Results])
       result.msgs.size should be(1)
       result.msgs should equal(Vector(SystemEvent(aoSystemEventPrefix).madd(naElevation(calculationConfig.defaultInitialElevation), rd(calculationConfig.defaultInitialElevation))))
+
+      cleanup(pub, fol)
     }
 
     /**
@@ -180,6 +172,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
       //info("aowes: " + aoeswExpected)
 
       aoeswExpected should equal(result.msgs)
+
+      cleanup(pub, fol)
     }
 
     /**
@@ -253,6 +247,8 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       // Here is the test for equality - total 16 messages
       aoeswExpected should equal(result.msgs)
+
+      cleanup(publisherActorRef, followActorRef, es, resultSubscriber)
     }
 
     /**
@@ -292,7 +288,9 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
       val result = expectMsgClass(classOf[Results])
       result.msgs.size should be(4)
-      result.msgs should equal(Seq(s1, s2, s3, s4).map(makeStatusEvent(_)))
+      result.msgs should equal(Seq(s1, s2, s3, s4).map(makeStatusEvent))
+
+      cleanup(tp, resultSubscriber)
     }
   }
 

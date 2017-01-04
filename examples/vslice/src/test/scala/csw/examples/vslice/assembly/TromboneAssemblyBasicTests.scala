@@ -46,7 +46,11 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
   }
 
   override def afterAll: Unit = {
-    hcdActors.foreach(_ ! PoisonPill)
+    hcdActors.foreach { actorRef =>
+      watch(actorRef)
+      actorRef ! HaltComponent
+      expectTerminated(actorRef)
+    }
     TestKit.shutdownActorSystem(TromboneAssemblyBasicTests.system)
   }
 
@@ -70,6 +74,16 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
     system.actorOf(props)
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+  }
+
   describe("low-level instrumented trombone assembly tests") {
 
     it("should lifecycle properly with a fake supervisor") {
@@ -85,7 +99,8 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       fakeSupervisor.send(tla, DoShutdown)
       fakeSupervisor.expectMsg(ShutdownComplete)
       logger.info("Shutdown Complete")
-      system.stop(tla)
+
+      cleanup(tla)
     }
 
     it("datum without an init should fail") {
@@ -114,10 +129,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.details.status(0) shouldBe a[NoLongerValid]
       completeMsg.details.status(0).asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should allow a datum") {
@@ -146,10 +158,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       fakeClient.expectNoMsg(250.milli)
       //logger.info("Completed: " + completeMsg)
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should show a move without a datum as an error because trombone in wrong state") {
@@ -183,10 +192,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.details.status(1) shouldBe a[NoLongerValid]
       completeMsg.details.status(1).asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should allow an init, datum then 2 moves") {
@@ -216,10 +222,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.overall shouldBe AllCompleted
       completeMsg.details.results.size shouldBe sca.configs.size
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should allow an init, datum then a position") {
@@ -250,10 +253,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.overall shouldBe AllCompleted
       completeMsg.details.results.size shouldBe sca.configs.size
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should allow an init, datum then a set of positions as separate sca") {
@@ -299,10 +299,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.overall shouldBe AllCompleted
       completeMsg.details.results.size shouldBe sca.configs.size
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should allow an init, datum then move and stop") {
@@ -357,10 +354,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       // Checking that no talking
       fakeClient.expectNoMsg(100.milli)
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should allow an init, setElevation") {
@@ -402,10 +396,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.overall shouldBe AllCompleted
       completeMsg.details.results.size shouldBe sca.configs.size
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should get an error for SetAngle without fillowing after good setup") {
@@ -454,10 +445,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.details.status(0) shouldBe a[NoLongerValid]
       completeMsg.details.status(0).asInstanceOf[NoLongerValid].issue shouldBe a[WrongInternalStateIssue]
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
 
     it("should allow an init, setElevation, follow, stop") {
@@ -499,10 +487,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
       completeMsg.overall shouldBe AllCompleted
       completeMsg.details.results.size shouldBe sca.configs.size
 
-      val monitor = TestProbe()
-      monitor.watch(tromboneAssembly)
-      system.stop(tromboneAssembly)
-      monitor.expectTerminated(tromboneAssembly)
+      cleanup(tromboneAssembly)
     }
   }
 
@@ -565,11 +550,7 @@ class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.syst
 
     expectNoMsg(10.seconds)
 
-    val monitor = TestProbe()
-    monitor.watch(tromboneAssembly)
-    system.stop(tromboneAssembly)
-    monitor.expectTerminated(tromboneAssembly)
-
+    cleanup(tromboneAssembly)
   }
 
 }

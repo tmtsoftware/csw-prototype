@@ -29,30 +29,11 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
   implicit val timeout = Timeout(20.seconds)
 
-  // Used to start and stop the event service Redis instance used for the test
-  //  var eventAdmin: EventServiceAdmin = _
-
   // Get the event service by looking up the name with the location service.
   val eventService: EventService = Await.result(EventService(), timeout.duration)
   logger.info("Got Event Service!")
 
-  override def beforeAll() = {
-    // Note: This is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on a random free port.
-    // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Event Service Test" --command "redis-server --port %port"
-    //    EventServiceAdmin.startEventService()
-
-    // Get the event service by looking it up the name with the location service.
-    //    eventService = Await.result(EventService(), timeout.duration)
-
-    // This is only used to stop the Redis instance that was started for this test
-    //    eventAdmin = EventServiceAdmin(eventService)
-  }
-
   override protected def afterAll(): Unit = {
-    // Shutdown Redis (Only do this in tests that also started the server)
-    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
     TestKit.shutdownActorSystem(system)
   }
 
@@ -67,6 +48,16 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
   def newEventSubscriber(nssInUse: BooleanItem, followActor: Option[ActorRef], eventService: EventService): ActorRef = {
     val props = TromboneEventSubscriber.props(assemblyContext, nssInUse, followActor, eventService)
     system.actorOf(props)
+  }
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
   }
 
   describe("basic event subscriber tests") {
@@ -84,7 +75,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       es ! StopFollowing
       fakeFollowActor.expectNoMsg(20.milli)
-      system.stop(es)
+      cleanup(es)
     }
   }
 
@@ -96,9 +87,6 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), eventService)
-      // This injects the event service location
-      //val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-      //es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -117,7 +105,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
-      system.stop(es)
+      cleanup(es)
     }
 
     it("should make several events for an fe list publish with nssInUse but no ZA") {
@@ -125,8 +113,6 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(true), Some(fakeFollowActor.ref), eventService)
-      //val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-      //es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -150,15 +136,13 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       fakeFollowActor.expectNoMsg(100.milli)
-      system.stop(es)
+      cleanup(es)
     }
 
     it("now enable follow should make several events for za and fe list publish nssNotInUse") {
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), eventService)
-      //val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-      //es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -204,7 +188,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
 
-      system.stop(es)
+      cleanup(es)
     }
 
     it("alter nssInUse to see switch to nssZenithAngles") {
@@ -213,8 +197,6 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       // Create with nssNotInuse so we get za events
       val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), eventService)
-      //val evLocation = ResolvedTcpLocation(EventService.eventServiceConnection(), "localhost", 7777)
-      //es ! evLocation
 
       // first test that events are created for published focus error events
       // This eventService is used to simulate the TCS and RTC publishing zentith angle and focus error
@@ -225,9 +207,6 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       // These are fake messages for the FollowActor that will be sent to simulate the TCS
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
-
-      // Start following with nssInUse to send one event with a non zero zenith angle
-      //es ! UpdateNssInUse(nssInUse)
 
       val testZA = 45.0
       tcsRtc.publish(SystemEvent(zenithAnglePrefix).add(za(testZA)))
@@ -267,7 +246,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // No more messages please
       fakeFollowActor.expectNoMsg(100.milli)
 
-      system.stop(es)
+      cleanup(es)
     }
   }
 

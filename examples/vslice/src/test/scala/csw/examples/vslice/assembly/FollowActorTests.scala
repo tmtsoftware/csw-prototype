@@ -17,7 +17,7 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
 import csw.services.pkg.Supervisor
-import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.util.config.BooleanItem
 import csw.util.config.Events.{EventTime, StatusEvent, SystemEvent}
@@ -74,9 +74,6 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
   implicit val timeout = Timeout(10.seconds)
 
-  // Used to start and stop the event service Redis instance used for the test
-  //  var eventAdmin: EventServiceAdmin = _
-
   // Get the event service by looking up the name with the location service.
   val eventService: EventService = Await.result(EventService(), timeout.duration)
 
@@ -88,8 +85,6 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
   }
 
   override protected def afterAll(): Unit = {
-    // Shutdown Redis (Only do this in tests that also started the server)
-    //    Try(if (eventAdmin != null) Await.ready(eventAdmin.shutdown(), timeout.duration))
     TestKit.shutdownActorSystem(system)
   }
 
@@ -106,6 +101,22 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
     TestActorRef(props)
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(hcd: Option[ActorRef], a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+
+    hcd.foreach { tromboneHCD =>
+      monitor.watch(tromboneHCD)
+      tromboneHCD ! HaltComponent
+      monitor.expectTerminated(tromboneHCD)
+    }
+  }
+
   describe("Basic tests for connectivity") {
     val fakeTC = TestProbe()
     val fakePub = TestProbe()
@@ -118,7 +129,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
 
       fakeTC.expectNoMsg(1.seconds)
-      system.stop(cal)
+      cleanup(None, cal)
     }
   }
 
@@ -132,7 +143,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       val cal = newFollower(setNssInUse(false), fakeTC.ref, fakePub.ref, fakeEng.ref)
 
       cal.underlyingActor.initialElevation should be(iElevation(calculationConfig.defaultInitialElevation))
-      system.stop(cal)
+      cleanup(None, cal)
     }
 
     /*
@@ -175,7 +186,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       fakeTC.expectMsgClass(classOf[GoToStagePosition])
       fakePub.expectMsgClass(classOf[AOESWUpdate])
-      system.stop(cal)
+      cleanup(None, cal)
     }
 
     it("should ignore if units wrong") {
@@ -187,7 +198,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       cal ! UpdatedEventData(zenithAngleKey -> 0, focusErrorKey -> 0, EventTime())
 
       fakeTC.expectNoMsg(100.milli)
-      system.stop(cal)
+      cleanup(None, cal)
     }
 
     it("should ignore if inputs out of range") {
@@ -201,7 +212,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       cal ! UpdatedEventData(za(0.0), fe(42.0), EventTime())
       fakeTC.expectNoMsg(100.milli)
-      system.stop(cal)
+      cleanup(None, cal)
     }
   }
 
@@ -261,7 +272,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       val engExpected = calcTestData.map(f => EngrUpdate(focusErrorKey -> testFocusError withUnits micrometers, stagePositionKey -> rangeDistanceToStagePosition(gettrd(f)) withUnits millimeters, zenithAngleKey -> getza(f) withUnits degrees))
       engExpected should equal(engMsgs)
-      system.stop(follower)
+      cleanup(None, follower)
     }
 
     it("should get other events when nssInUse but not aoesw events") {
@@ -299,7 +310,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
       val engExpected = calcTestData.map(f => EngrUpdate(focusErrorKey -> testFocusError withUnits micrometers, stagePositionKey -> rangeDistanceToStagePosition(gettrd(f)) withUnits millimeters, zenithAngleKey -> getza(f) withUnits degrees))
       engExpected should equal(engMsgs)
-      system.stop(follower)
+      cleanup(None, follower)
     }
 
     /**
@@ -446,13 +457,7 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
       val engExpected = firstEng +: zaEngExpected
       result2.msgs should equal(engExpected)
 
-      tromboneHCD ! PoisonPill
-      system.stop(publisherActorRef)
-      system.stop(tromboneControl)
-      system.stop(followActor)
-      system.stop(tromboneEventSubscriber)
-      system.stop(resultSubscriber1)
-      system.stop(resultSubscriber2)
+      cleanup(Some(tromboneHCD), publisherActorRef, tromboneControl, followActor, tromboneEventSubscriber, resultSubscriber1, resultSubscriber2)
     }
   }
 
