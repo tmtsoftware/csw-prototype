@@ -1,7 +1,7 @@
 package csw.examples.vslice.hcd
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.examples.vslice.hcd.MotionWorker._
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
@@ -59,6 +59,16 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
   // Calculates the time to wait for messages with a little extra
   def calcDelay(numberSteps: Int, delayInSseconds: Int): FiniteDuration = (numberSteps + 1) * delayInSseconds * 1000.seconds
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+  }
+
   describe("Testing steps calc") {
 
     // Note that putting functions in the companion object allows them to be easily tested!
@@ -95,7 +105,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       under.start should equal(testStart)
       under.destination should equal(testDestination)
       under.delayInNanoSeconds should equal(testDelay * 1000000)
-      system.stop(ms)
+      cleanup(ms)
     }
   }
 
@@ -110,7 +120,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       ms ! Start
       val msgs = expectLLMoveMsgs()
       msgs.last should be(End(testDestination))
-      system.stop(ms)
+      cleanup(ms)
     }
   }
 
@@ -123,9 +133,9 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef(props)
       ms ! Start
-      val msgs = expectLLMoveMsgs(false)
+      val msgs = expectLLMoveMsgs()
       msgs.last should be(End(testDestination))
-      system.stop(ms)
+      cleanup(ms)
     }
   }
 
@@ -137,9 +147,9 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       val props = MotionWorker.props(testStart, testDestination, testDelay, self, diagFlag = false)
       val ms = TestActorRef(props)
       ms ! Start
-      val msgs = expectLLMoveMsgs(false)
+      val msgs = expectLLMoveMsgs()
       msgs.last should be(End(testDestination))
-      system.stop(ms)
+      cleanup(ms)
     }
   }
 
@@ -159,7 +169,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       // One more move
       receiveN(1)
       expectMsgClass(classOf[End])
-      system.stop(ms)
+      cleanup(ms)
     }
   }
 
@@ -249,7 +259,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       stats1.failureCount should be(0)
       stats1.cancelCount should be(0)
 
-      sa ! PoisonPill
+      cleanup(sa)
     }
 
     it("Should home properly") {
@@ -276,7 +286,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       stats1.failureCount should be(0)
       stats1.cancelCount should be(0)
 
-      sa ! PoisonPill
+      cleanup(sa)
     }
 
     it("Should move properly") {
@@ -293,7 +303,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
 
       sa.underlyingActor.current should be(500)
 
-      sa ! PoisonPill
+      cleanup(sa)
     }
 
     it("Should move and update") {
@@ -316,7 +326,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       last.state should be(AXIS_IDLE)
       last.current should be(425)
 
-      sa ! PoisonPill
+      cleanup(sa)
     }
 
     it("Should allow a cancel") {
@@ -337,7 +347,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       end.state should be(AXIS_IDLE)
       end.current should be(650)
 
-      sa ! PoisonPill
+      cleanup(sa)
     }
 
     it("should limit out-of-range moves") {
@@ -389,7 +399,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       stats2.failureCount should be(0)
       stats2.cancelCount should be(0)
 
-      sa ! PoisonPill
+      cleanup(sa)
     }
 
     it("should unset limit as soon as it is not in limit -- BUG found!") {
@@ -436,6 +446,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       // Get the first one that is greater than the limit to see that it is false
       firstOffLimit = msgs.filter(_.current <= defaultAxisConfig.highUser).head
       firstOffLimit.inHighLimit shouldBe false
+      cleanup(sa)
     }
 
     it("should support a complex example") {
@@ -484,7 +495,7 @@ class SingleAxisSimulatorTests extends TestKit(ActorSystem("TromboneHCDTests")) 
       stats2.failureCount should be(0)
       stats2.cancelCount should be(0)
 
-      sa ! PoisonPill
+      cleanup(sa)
     }
   }
 }

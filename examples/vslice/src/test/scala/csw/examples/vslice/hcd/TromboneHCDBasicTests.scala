@@ -35,6 +35,16 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
 
   override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+  }
+
   val troboneAssemblyPrefix = "nfiraos.ncc.trombone"
 
   val testInfo = HcdInfo(
@@ -118,6 +128,8 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
       ua.stats.initCount should be(0)
       ua.stats.moveCount should be(0)
       ua.stats.successCount should be(0)
+
+      cleanup(tla)
     }
 
     it("should lifecycle properly with a fake supervisor") {
@@ -131,6 +143,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
       supervisor.send(tla, DoShutdown)
       supervisor.expectMsg(ShutdownComplete)
 
+      cleanup(tla)
     }
 
     it("should allow fetching config") {
@@ -154,7 +167,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
 
       tla ! Unsubscribe
 
-      tla.underlyingActor.context.stop(tla)
+      cleanup(tla)
     }
 
     it("should allow fetching stats") {
@@ -177,7 +190,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
 
       tla ! Unsubscribe
 
-      tla.underlyingActor.context.stop(tla)
+      cleanup(tla)
     }
 
     it("should allow external init when running") {
@@ -200,7 +213,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
       stats.item(moveCountKey).head should equal(1)
 
       tla ! Unsubscribe
-      system.stop(tla)
+      cleanup(tla)
     }
 
     it("should allow homing") {
@@ -230,7 +243,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
 
       tla ! Unsubscribe
 
-      system.stop(tla)
+      cleanup(tla)
     }
 
     it("should allow a short move") {
@@ -251,7 +264,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
       //info("Msgs: " + msgs)
       tla ! Unsubscribe
 
-      system.stop(tla)
+      cleanup(tla)
     }
 
     it("should allow continuous short values") {
@@ -274,7 +287,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
         //val msgs = waitForMoveMsgs
       }
       waitForMoveMsgs
-
+      cleanup(tla)
     }
 
     describe("place into the low limit") {
@@ -302,7 +315,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
         //info("Msgs: " + msgs)
         tla ! Unsubscribe
 
-        system.stop(tla)
+        cleanup(tla)
       }
     }
 
@@ -345,7 +358,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
 
         tla ! Unsubscribe
 
-        system.stop(tla)
+        cleanup(tla)
       }
     }
 
@@ -374,7 +387,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
         //info("Msgs: " + msgs)
         tla ! Unsubscribe
 
-        system.stop(tla)
+        cleanup(tla)
       }
     }
 
@@ -452,7 +465,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
 
         tla ! Unsubscribe
 
-        system.stop(tla)
+        cleanup(tla)
       }
     }
 
@@ -489,7 +502,7 @@ class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with I
 
         tla ! Unsubscribe
 
-        system.stop(tla)
+        cleanup(tla)
       }
     }
   }
