@@ -1,7 +1,7 @@
 package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import csw.examples.vslice.assembly.TromboneStateActor.TromboneState
 import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Inspectors, _}
@@ -53,6 +53,16 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
 
   import TromboneStateActorTests._
   import TromboneStateActor._
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(a: ActorRef*): Unit = {
+    val monitor = TestProbe()
+    a.foreach { actorRef =>
+      monitor.watch(actorRef)
+      system.stop(actorRef)
+      monitor.expectTerminated(actorRef)
+    }
+  }
 
   describe("Testing state item") {
 
@@ -141,6 +151,7 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
     result.msgs.size shouldBe 4
     result shouldEqual Results(Vector(ts2, ts3, ts4, ts5))
     //info("Result: " + result.msgs)
+    cleanup(tsa, tsub)
   }
 
   def setupState(ts: TromboneState) = {
@@ -172,7 +183,7 @@ class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) wi
     tsub ! GetResults
     val result = expectMsgClass(classOf[TestSubscriber.Results])
     info("Result: " + result)
-    system.stop(tsub)
+    cleanup(tsub)
   }
 
 }

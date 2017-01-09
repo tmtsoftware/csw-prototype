@@ -266,8 +266,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       fakeAssembly.expectNoMsg(200.milli)
 
       // Stop this follow command
-      system.stop(fc)
-      system.stop(eventPublisher)
+      cleanup(None, fc, eventPublisher)
 
       resultSubscriber1 ! GetResults
       // Check the events received through the Event Service
