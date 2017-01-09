@@ -11,7 +11,7 @@ import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}
-import csw.services.pkg.Supervisor.{LifecycleInitialized, LifecycleRunning}
+import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
 import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback}
 import csw.services.pkg.Supervisor
 import csw.util.config.Configurations.SetupConfig
@@ -61,6 +61,14 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     Supervisor(testInfo)
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private def cleanup(component: ActorRef): Unit = {
+    val monitor = TestProbe()
+    monitor.watch(component)
+    component ! HaltComponent
+    monitor.expectTerminated(component)
+  }
+
   def waitForMoveMsgs(tp: TestProbe): Seq[CurrentState] = {
     val msgs = tp.receiveWhile(5.seconds) {
       case m @ CurrentState(ck, _) if ck.prefix.contains(TromboneHCD.axisStatePrefix) && m(TromboneHCD.stateKey).head == TromboneHCD.AXIS_MOVING => m
@@ -100,7 +108,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
       hcd ! Unsubscribe
 
-      hcd ! PoisonPill
+      cleanup(hcd)
       info("Done")
     }
 
@@ -129,6 +137,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       config(startValueKey).head should be(350)
 
       fakeAssembly.send(hcd, Unsubscribe)
+      cleanup(hcd)
     }
 
     it("should accept an init") {
@@ -157,12 +166,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       stats.item(moveCountKey).head should equal(1)
 
       fakeAssembly.send(hcd, Unsubscribe)
-      /*
-            val probe = TestProbe()
-            probe watch hcd
-            hcd ! PoisonPill
-            probe.expectTerminated(hcd)
-            */
+      cleanup(hcd)
       info("Done")
     }
 
@@ -198,6 +202,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
       stats.item(moveCountKey).head should equal(1)
 
       fakeAssembly.send(hcd, Unsubscribe)
+      cleanup(hcd)
     }
   }
 
@@ -223,6 +228,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     msgs.last(stateKey).head should be(AXIS_IDLE)
 
     fakeAssembly.send(hcd, Unsubscribe)
+    cleanup(hcd)
   }
 
   it("should show entering a low limit") {
@@ -249,7 +255,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
     //info("Msgs: " + msgs)
     fakeAssembly.send(hcd, Unsubscribe)
-
+    cleanup(hcd)
   }
 
   it("should show entering a high limit") {
@@ -277,6 +283,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
 
     //info("Msgs: " + msgs)
     fakeAssembly.send(hcd, Unsubscribe)
+    cleanup(hcd)
   }
 
   it("should allow complex series of moves") {
@@ -351,6 +358,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     stats.item(cancelCountKey).head should be(0)
 
     fakeAssembly.send(hcd, Unsubscribe)
+    cleanup(hcd)
   }
 
   it("start up a move and cancel it") {
@@ -385,6 +393,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     stats.item(cancelCountKey).head should be(1)
 
     fakeAssembly.send(hcd, Unsubscribe)
+    cleanup(hcd)
   }
 
   it("should allow repetitive moves") {
@@ -419,6 +428,7 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
         msgs = waitForMoveMsgs(fakeAssembly)
       }
     }
+    cleanup(hcd)
   }
 
   it("should drive into limits") {
@@ -460,16 +470,17 @@ class TromboneHCDCompTests extends FunSpec with ShouldMatchers with LazyLogging 
     msgs.last(stateKey).head should be(AXIS_IDLE)
     msgs.last(inLowLimitKey).head should be(false)
     msgs.last(inHighLimitKey).head should be(true)
+    cleanup(hcd)
   }
 
-  def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration): Unit = {
-    //system.scheduler.scheduleOnce(timeout) {
-    println("STOPPING")
-    Supervisor.haltComponent(supervisor)
-    Await.ready(supervisorSystem.whenTerminated, 5.seconds)
-    //system.terminate()
-    System.exit(0)
-    //}
-  }
+  //  def stopComponent(supervisorSystem: ActorSystem, supervisor: ActorRef, timeout: FiniteDuration): Unit = {
+  //    //system.scheduler.scheduleOnce(timeout) {
+  //    println("STOPPING")
+  //    Supervisor.haltComponent(supervisor)
+  //    Await.ready(supervisorSystem.whenTerminated, 5.seconds)
+  //    //system.terminate()
+  //    System.exit(0)
+  //    //}
+  //  }
 
 }
