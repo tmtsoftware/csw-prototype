@@ -145,9 +145,11 @@ private class SubscribeActor(subscriber: ActorRef, redisHost: String, redisPort:
 
     reply match {
       case MultiBulk(Some(list)) if list.length == 3 && list.head.toByteString.utf8String == "message" =>
-        subscriber ! formatter.deserialize(list(2).toByteString)
+        val event = formatter.deserialize(list(2).toByteString)
+        subscriber ! event
       case MultiBulk(Some(list)) if list.length == 4 && list.head.toByteString.utf8String == "pmessage" =>
-        subscriber ! formatter.deserialize(list(3).toByteString)
+        val event = formatter.deserialize(list(3).toByteString)
+        subscriber ! event
       case _ => // subscribe or psubscribe
     }
   }

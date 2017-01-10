@@ -19,6 +19,11 @@ object TelemetryService {
   val defaultName = "Telemetry Service"
 
   /**
+   * Used to make the redis keys for the telemetry service unique
+   */
+  val defaultScope = "telem"
+
+  /**
    * Returns the TelemetryService ComponentId for the given, or default name
    */
   def telemetryServiceComponentId(name: String = defaultName): ComponentId = ComponentId(name, ComponentType.Service)
@@ -178,7 +183,7 @@ case class TelemetryServiceImpl(redisClient: RedisClient)(implicit _system: Acto
   import _system.dispatcher
   import TelemetryService._
 
-  private val eventService = EventServiceImpl(redisClient)
+  private val eventService = EventServiceImpl(redisClient, defaultScope)
 
   override def publish(status: StatusEvent, history: Int = 0): Future[Unit] =
     eventService.publish(status, history)

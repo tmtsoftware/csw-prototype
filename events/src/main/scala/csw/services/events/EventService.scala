@@ -21,6 +21,11 @@ object EventService {
   val defaultName = "Event Service"
 
   /**
+   * Used to make the redis keys for the event service unique
+   */
+  val defaultScope = "event"
+
+  /**
    * Returns the EventService ComponentId for the given, or default name
    */
   def eventServiceComponentId(name: String = defaultName): ComponentId = ComponentId(name, ComponentType.Service)
@@ -55,7 +60,7 @@ object EventService {
     for {
       redisClient <- locateEventService(name)
     } yield {
-      EventServiceImpl(redisClient)
+      EventServiceImpl(redisClient, defaultScope)
     }
   }
 
@@ -78,7 +83,7 @@ object EventService {
    */
   def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorRefFactory): EventService = {
     val redisClient = RedisClient(host, port)
-    EventServiceImpl(redisClient)
+    EventServiceImpl(redisClient, defaultScope)
   }
 
   /**
@@ -209,19 +214,23 @@ private[events] object EventServiceImpl {
   }
 
   // Implement value returned from subscribe method
-  private[events] case class EventMonitorImpl(actorRef: ActorRef) extends EventMonitor {
+  private[events] case class EventMonitorImpl(actorRef: ActorRef, scope: String) extends EventMonitor {
     import EventMonitorActor._
+
+    private def scopedKey(key: String) = {
+      if (key.startsWith(scope)) key else s"$scope:$key"
+    }
 
     override def stop(): Unit = {
       actorRef ! PoisonPill
     }
 
     override def subscribe(prefixes: String*): Unit = {
-      actorRef ! Subscribe(prefixes: _*)
+      actorRef ! Subscribe(prefixes.map(scopedKey): _*)
     }
 
     override def unsubscribe(prefixes: String*): Unit = {
-      actorRef ! Unsubscribe(prefixes: _*)
+      actorRef ! Unsubscribe(prefixes.map(scopedKey): _*)
     }
   }
 
@@ -293,12 +302,17 @@ private[events] object EventServiceImpl {
  * An implementation of the EventService trait based on Redis.
  *
  * @param redisClient used to talk to Redis
+ * @param scope a string used to make the keys unique for this class (for example: "telem" or "event")
  * @param _system     Akka env required by RedisClient
  */
-private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _system: ActorRefFactory) extends EventService {
+private[events] case class EventServiceImpl(redisClient: RedisClient, scope: String)(implicit _system: ActorRefFactory) extends EventService {
 
   import EventServiceImpl._
   import _system.dispatcher
+
+  private def scopedKey(key: String) = {
+    if (key.startsWith(scope)) key else s"$scope:$key"
+  }
 
   override def publish(event: Event): Future[Unit] = publish(event, 0)
 
@@ -311,7 +325,7 @@ private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _
     val h = if (history >= 0) history else 0
     // Use a transaction to send all commands at once
     val redisTransaction = redisClient.transaction()
-    val key = event.prefix
+    val key = scopedKey(event.prefix)
     redisTransaction.watch(key)
     val f1 = redisTransaction.lpush(key, bs)
     val f2 = redisTransaction.ltrim(key, 0, h + 1)
@@ -322,24 +336,24 @@ private[events] case class EventServiceImpl(redisClient: RedisClient)(implicit _
 
   override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
     val actorRef = _system.actorOf(EventMonitorActor.props(Some(subscriber), None, this, postLastEvents))
-    val monitor = EventMonitorImpl(actorRef)
-    monitor.subscribe(prefixes: _*)
+    val monitor = EventMonitorImpl(actorRef, scope)
+    monitor.subscribe(prefixes.map(scopedKey): _*)
     monitor
   }
 
   override def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
     val actorRef = _system.actorOf(EventMonitorActor.props(None, Some(callback), this, postLastEvents))
-    val monitor = EventMonitorImpl(actorRef)
-    monitor.subscribe(prefixes: _*)
+    val monitor = EventMonitorImpl(actorRef, scope)
+    monitor.subscribe(prefixes.map(scopedKey): _*)
     monitor
   }
 
   // gets the current value for the given prefix
-  def get(prefix: String): Future[Option[Event]] = redisClient.lindex(prefix, 0)
+  def get(prefix: String): Future[Option[Event]] = redisClient.lindex(scopedKey(prefix), 0)
 
   // Gets the last n values for the given prefix
-  def getHistory(prefix: String, n: Int): Future[Seq[Event]] = redisClient.lrange(prefix, 0, n - 1)
+  def getHistory(prefix: String, n: Int): Future[Seq[Event]] = redisClient.lrange(scopedKey(prefix), 0, n - 1)
 
-  // deletes the saved value for the given prefix
-  def delete(prefix: String*): Future[Long] = redisClient.del(prefix: _*)
+  // deletes the saved values for the given prefixes
+  def delete(prefixes: String*): Future[Long] = redisClient.del(prefixes.map(scopedKey): _*)
 }
