@@ -100,7 +100,9 @@ object ConfigServiceClient {
       }
     }
     f.recover {
-      case _ => getFromResource
+      case ex =>
+        log.error(ex, s"Failed to get $path ($id) from config service")
+        getFromResource
     }
   }
 

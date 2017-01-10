@@ -74,11 +74,11 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
 
   // Stop any actors created for a test to avoid conflict with other tests
   private def cleanup(a: ActorRef*): Unit = {
-    val monitor = TestProbe()
+    //    val monitor = TestProbe()
     a.foreach { actorRef =>
-      monitor.watch(actorRef)
+      //      monitor.watch(actorRef)
       system.stop(actorRef)
-      monitor.expectTerminated(actorRef)
+      //      monitor.expectTerminated(actorRef)
     }
   }
 
