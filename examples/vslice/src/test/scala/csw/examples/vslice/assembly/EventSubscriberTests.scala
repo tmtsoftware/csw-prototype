@@ -104,7 +104,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       msg.zenithAngle should equal(za(0.0))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(100.milli)
+      fakeFollowActor.expectNoMsg(1000.milli)
       cleanup(es)
     }
 
@@ -135,7 +135,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // Should get no tcsEvents because not following
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
-      fakeFollowActor.expectNoMsg(100.milli)
+      fakeFollowActor.expectNoMsg(1000.milli)
       cleanup(es)
     }
 
@@ -186,7 +186,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(100.milli)
+      fakeFollowActor.expectNoMsg(1000.milli)
 
       cleanup(es)
     }
@@ -244,7 +244,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(100.milli)
+      fakeFollowActor.expectNoMsg(1000.milli)
 
       cleanup(es)
     }
