@@ -207,8 +207,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
       } {
         commandOriginator.foreach(_ ! cs)
         currentCommand ! PoisonPill
-        // XXX FIXME: context should not escape to other thread (Replace with message to self?)
-        context.become(noFollowReceive())
+        self ! CommandDone
       }
 
     case SetupConfig(ac.stopCK, _) =>
@@ -218,6 +217,9 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
     case ExecuteOne(SetupConfig(ac.stopCK, _), _) =>
       log.debug("actorExecutingReceive: ExecuteOneStop")
       closeDownMotionCommand(currentCommand, commandOriginator)
+
+    case CommandDone =>
+      context.become(noFollowReceive())
 
     case x => log.error(s"TromboneCommandHandler:actorExecutingReceive received an unknown message: $x")
   }
@@ -255,5 +257,7 @@ object TromboneCommandHandler {
   def posMatcher(position: Int): DemandMatcher =
     DemandMatcher(DemandState(axisStateCK).madd(stateKey -> TromboneHCD.AXIS_IDLE, positionKey -> position))
 
+  // message sent to self when a command completes
+  private case object CommandDone
 }
 

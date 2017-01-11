@@ -29,6 +29,9 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
   implicit val timeout = Timeout(20.seconds)
 
+  // amount of time to wait until all pending events have been received or ignored...
+  private val eventsTimeout = 1000.milli
+
   // Get the event service by looking up the name with the location service.
   val eventService: EventService = Await.result(EventService(), timeout.duration)
   logger.info("Got Event Service!")
@@ -104,7 +107,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       msg.zenithAngle should equal(za(0.0))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(1000.milli)
+      fakeFollowActor.expectNoMsg(eventsTimeout)
       cleanup(es)
     }
 
@@ -135,7 +138,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // Should get no tcsEvents because not following
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
-      fakeFollowActor.expectNoMsg(1000.milli)
+      fakeFollowActor.expectNoMsg(eventsTimeout)
       cleanup(es)
     }
 
@@ -186,7 +189,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(1000.milli)
+      fakeFollowActor.expectNoMsg(eventsTimeout)
 
       cleanup(es)
     }
@@ -244,7 +247,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(1000.milli)
+      fakeFollowActor.expectNoMsg(eventsTimeout)
 
       cleanup(es)
     }
