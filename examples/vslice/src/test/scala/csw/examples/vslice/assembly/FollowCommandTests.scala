@@ -217,17 +217,17 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       val tcsRtc = eventService
 
       val testFE = 20.0
-      // Publish a single focus error. This will generate a published event
-      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
-
       // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
       val resultSubscriber1 = system.actorOf(TestSubscriber.props())
       eventService.subscribe(resultSubscriber1, postLastEvents = false, aoSystemEventPrefix)
 
       val resultSubscriber2 = system.actorOf(TestSubscriber.props())
-      eventService.subscribe(resultSubscriber2, postLastEvents = false, engStatusEventPrefix)
+      telemetryService.subscribe(resultSubscriber2, postLastEvents = false, engStatusEventPrefix)
 
       expectNoMsg(1.second) // Wait for subscriptions to happen
+
+      // Publish a single focus error. This will generate a published event
+      tcsRtc.publish(SystemEvent(focusErrorPrefix).add(fe(testFE)))
 
       // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
