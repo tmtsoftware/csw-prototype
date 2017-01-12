@@ -5,6 +5,7 @@ import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData
 import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
 import csw.services.events.EventService
 import csw.services.events.EventService.EventMonitor
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.services.loc.LocationSubscriberClient
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.Events.{EventTime, SystemEvent}
@@ -75,6 +76,7 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
 
     case StopFollowing =>
       // Kill this subscriber
+      subscribeMonitor.stop()
       context.stop(self)
 
     // This is an engineering command to allow checking subscriber
@@ -87,9 +89,19 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
           subscribeKeys(subscribeMonitor, zaConfigKey)
           context.become(subscribeReceive(nssInUseUpdate, cZenithAngle, cFocusError))
         }
-        // Need to update the global for shutting down event subscriptions
+        // Need to update the global for shutting down event subscriptions (XXX not used anywhere but in the test!)
         nssInUseGlobal = nssInUseUpdate
       }
+
+    case t: ResolvedTcpLocation =>
+      log.info(s"Received TCP Location: ${t.connection}")
+//      // Verify that it is the event service
+//      if (t.connection == EventService.eventServiceConnection()) {
+//        log.info(s"received ES connection: $t")
+//        // Setting var here!
+//        eventService = Some(EventService.get(t.host, t.port))
+//        log.info(s"Event Service at: $eventService")
+//      }
 
     case x => log.error(s"Unexpected message received in TromboneEventSubscriber:subscribeReceive: $x")
   }

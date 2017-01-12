@@ -26,7 +26,7 @@ case object JBlockingTelemetryService {
    */
   def lookup(name: String, sys: ActorRefFactory, timeout: Timeout): IBlockingTelemetryService = {
     import sys.dispatcher
-    val ts = Await.result(TelemetryService(name)(sys, timeout).map(BlockingTelemetryService(_, timeout.duration)(sys)), timeout.duration)
+    val ts = Await.result(TelemetryService(name)(sys, timeout).map(BlockingTelemetryService(_, timeout.duration)), timeout.duration)
     JBlockingTelemetryService(ts, sys, timeout.duration)
   }
 }
@@ -41,7 +41,9 @@ case object JBlockingTelemetryService {
 case class JBlockingTelemetryService(ts: BlockingTelemetryService, system: ActorRefFactory, timeout: FiniteDuration)
     extends IBlockingTelemetryService {
 
+  // XXX TODO FIXME: Change to be method parameters
   private implicit val _system: ActorRefFactory = system
+  import system._
 
   /**
    * Returns a JTelemetryService instance using the Redis instance at the given host and port
@@ -51,7 +53,7 @@ case class JBlockingTelemetryService(ts: BlockingTelemetryService, system: Actor
    * @return a new JTelemetryService instance
    */
   def this(host: String, port: Int, sys: ActorRefFactory, timeout: Timeout) {
-    this(BlockingTelemetryService(TelemetryService.get(host, port)(sys), timeout.duration)(sys), sys, timeout.duration)
+    this(BlockingTelemetryService(TelemetryService.get(host, port)(sys), timeout.duration), sys, timeout.duration)
   }
 
   def publish(status: StatusEvent): Unit = ts.publish(status)

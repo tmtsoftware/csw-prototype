@@ -53,6 +53,7 @@ object EventPublishTests {
 class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
+  import system._
   import EventPublishTests._
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext

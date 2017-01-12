@@ -27,10 +27,8 @@ object EventSubscriberTests {
 class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
+  import system._
   implicit val timeout = Timeout(20.seconds)
-
-  // amount of time to wait until all pending events have been received or ignored...
-  private val eventsTimeout = 1000.milli
 
   // Get the event service by looking up the name with the location service.
   val eventService: EventService = Await.result(EventService(), timeout.duration)
@@ -77,7 +75,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       es.underlyingActor.nssInUseGlobal shouldBe setNssInUse(false)
 
       es ! StopFollowing
-      fakeFollowActor.expectNoMsg(20.milli)
+      fakeFollowActor.expectNoMsg(500.milli)
       cleanup(es)
     }
   }
@@ -107,7 +105,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       msg.zenithAngle should equal(za(0.0))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(eventsTimeout)
+      fakeFollowActor.expectNoMsg(500.milli)
       cleanup(es)
     }
 
@@ -138,7 +136,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // Should get no tcsEvents because not following
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
-      fakeFollowActor.expectNoMsg(eventsTimeout)
+      fakeFollowActor.expectNoMsg(500.milli)
       cleanup(es)
     }
 
@@ -183,13 +181,13 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       // Now turn it off
       es ! StopFollowing
       // Give a little wait for the usubscribe to kick in before the publish events
-      fakeFollowActor.expectNoMsg(20.milli)
+      fakeFollowActor.expectNoMsg(200.milli)
 
       // Should get no tcsEvents because not following
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(eventsTimeout)
+      fakeFollowActor.expectNoMsg(500.milli)
 
       cleanup(es)
     }
@@ -212,7 +210,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       val tcsEvents = testZenithAngles.map(f => SystemEvent(zaConfigKey.prefix).add(za(f)))
 
       val testZA = 45.0
-      tcsRtc.publish(SystemEvent(zenithAnglePrefix).add(za(testZA)))
+      tcsRtc.publish(SystemEvent(zaConfigKey.prefix).add(za(testZA)))
       val one = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
       one.zenithAngle.head shouldBe testZA
 
@@ -241,13 +239,13 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       es ! StopFollowing
 
       // Give a little wait for the usubscribe to kick in before the publish events
-      fakeFollowActor.expectNoMsg(20.milli)
+      fakeFollowActor.expectNoMsg(200.milli)
 
       // Should get no tcsEvents because not following
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // No more messages please
-      fakeFollowActor.expectNoMsg(eventsTimeout)
+      fakeFollowActor.expectNoMsg(200.milli)
 
       cleanup(es)
     }

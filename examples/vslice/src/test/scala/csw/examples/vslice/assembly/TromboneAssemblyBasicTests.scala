@@ -34,6 +34,8 @@ object TromboneAssemblyBasicTests {
 class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
+  import system._
+
   // List of top level actors that were created for the HCD (for clean up)
   var hcdActors: List[ActorRef] = Nil
 

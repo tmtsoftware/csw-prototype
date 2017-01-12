@@ -70,6 +70,7 @@ object FollowActorTests {
 class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
+  import system._
   import FollowActorTests._
 
   implicit val timeout = Timeout(10.seconds)

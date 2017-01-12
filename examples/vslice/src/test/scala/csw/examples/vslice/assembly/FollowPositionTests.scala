@@ -64,6 +64,7 @@ object FollowPositionTests {
  */
 class FollowPositionTests extends TestKit(FollowPositionTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+  import system._
   import Algorithms._
   import TromboneAssembly._
 

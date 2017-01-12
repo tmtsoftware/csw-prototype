@@ -11,7 +11,7 @@ import csw.util.config.ConfigSerializer._
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.annotation.varargs
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
 object EventService {
 
@@ -148,7 +148,7 @@ trait EventService {
    * @param event the event to publish
    * @return the future result (indicates if and when the operation completed, may be ignored)
    */
-  def publish(event: Event): Future[Unit]
+  def publish(event: Event)(implicit ec: ExecutionContext): Future[Unit]
 
   /**
    * Subscribes an actor to events matching the given prefixes.
@@ -162,7 +162,7 @@ trait EventService {
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
   @varargs
-  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor
+  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor
 
   /**
    * Subscribes a callback function to events matching the given prefixes.
@@ -176,7 +176,7 @@ trait EventService {
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
   @varargs
-  def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor
+  def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor
 
   /**
    * Creates an EventMonitorActor and subscribes the given actor to it.
@@ -186,7 +186,7 @@ trait EventService {
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events first
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def createEventMonitor(subscriber: ActorRef, postLastEvents: Boolean): EventMonitor = subscribe(subscriber, postLastEvents)
+  def createEventMonitor(subscriber: ActorRef, postLastEvents: Boolean)(implicit _system: ActorRefFactory): EventMonitor = subscribe(subscriber, postLastEvents)
 
   /**
    * Creates an EventMonitorActor and subscribes the given actor to it.
@@ -196,7 +196,7 @@ trait EventService {
    * @param postLastEvents if true, the callback receives the last known values of any subscribed events first
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def createEventMonitor(callback: Event => Unit, postLastEvents: Boolean): EventMonitor = subscribe(callback, postLastEvents)
+  def createEventMonitor(callback: Event => Unit, postLastEvents: Boolean)(implicit _system: ActorRefFactory): EventMonitor = subscribe(callback, postLastEvents)
 }
 
 private[events] object EventServiceImpl {
@@ -303,21 +303,19 @@ private[events] object EventServiceImpl {
  *
  * @param redisClient used to talk to Redis
  * @param scope a string used to make the keys unique for this class (for example: "telem" or "event")
- * @param _system     Akka env required by RedisClient
  */
-private[events] case class EventServiceImpl(redisClient: RedisClient, scope: String)(implicit _system: ActorRefFactory) extends EventService {
+private[events] case class EventServiceImpl(redisClient: RedisClient, scope: String) extends EventService {
 
   import EventServiceImpl._
-  import _system.dispatcher
 
   private def scopedKey(key: String) = {
     if (key.startsWith(scope)) key else s"$scope:$key"
   }
 
-  override def publish(event: Event): Future[Unit] = publish(event, 0)
+  override def publish(event: Event)(implicit ec: ExecutionContext): Future[Unit] = publish(event, 0)
 
   // Publishes the event and keeps the given number of previous values
-  def publish(event: Event, history: Int): Future[Unit] = {
+  def publish(event: Event, history: Int)(implicit ec: ExecutionContext): Future[Unit] = {
     // Serialize the event
     val formatter = implicitly[ByteStringFormatter[Event]]
     val bs = formatter.serialize(event)
@@ -334,14 +332,14 @@ private[events] case class EventServiceImpl(redisClient: RedisClient, scope: Str
     Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
   }
 
-  override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
+  override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor = {
     val actorRef = _system.actorOf(EventMonitorActor.props(Some(subscriber), None, this, postLastEvents))
     val monitor = EventMonitorImpl(actorRef, scope)
     monitor.subscribe(prefixes.map(scopedKey): _*)
     monitor
   }
 
-  override def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*): EventMonitor = {
+  override def subscribe(callback: Event => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor = {
     val actorRef = _system.actorOf(EventMonitorActor.props(None, Some(callback), this, postLastEvents))
     val monitor = EventMonitorImpl(actorRef, scope)
     monitor.subscribe(prefixes.map(scopedKey): _*)
