@@ -103,7 +103,7 @@ lazy val ccs = project
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaSse) ++
       test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
-  ) dependsOn(log, loc, events, util)
+  ) dependsOn(log, loc, util)
 
 // Config Service
 lazy val cs = project
@@ -123,7 +123,7 @@ lazy val cs = project
 lazy val pkg = project
   .settings(defaultSettings: _*)
   .settings(SbtMultiJvm.multiJvmSettings: _*)
-  .dependsOn(log, loc, ccs, util, ts % "test")
+  .dependsOn(log, loc, util, ccs % "test")
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
       test(scalaTest, akkaTestKit, akkaMultiNodeTest)
@@ -241,13 +241,13 @@ lazy val hcdExample = Project(id = "hcdExample", base = file("examples/hcdExampl
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("hcdExample", "HCD Example", "Simple HCD example application"): _*)
   .settings(mainClass in Compile := Some("csw.examples.HCDExampleApp"))
-  .dependsOn(pkg, ts, events)
+  .dependsOn(pkg, ccs, ts, events)
 
 // Assembly Example project
 lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples/assemblyExample"))
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
-  .dependsOn(pkg, ts, hcdExample)
+  .dependsOn(pkg, ccs, ts, hcdExample)
 
 // EndToEnd Example project
 lazy val vslice = Project(id = "vslice", base = file("examples/vslice"))
