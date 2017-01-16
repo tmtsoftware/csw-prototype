@@ -2,7 +2,7 @@ package javacsw.services.events
 
 import java.util.Optional
 
-import akka.actor.{ActorRef, ActorRefFactory}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.events._
 import csw.util.config.Events.StatusEvent
@@ -24,7 +24,7 @@ case object JBlockingTelemetryService {
    * @param sys required Akka environment
    * @param timeout amount of time to wait looking up name with the location service before giving up with an error
    */
-  def lookup(name: String, sys: ActorRefFactory, timeout: Timeout): IBlockingTelemetryService = {
+  def lookup(name: String, sys: ActorSystem, timeout: Timeout): IBlockingTelemetryService = {
     import sys.dispatcher
     val ts = Await.result(TelemetryService(name)(sys, timeout).map(BlockingTelemetryService(_, timeout.duration)), timeout.duration)
     JBlockingTelemetryService(ts, sys, timeout.duration)
@@ -52,7 +52,7 @@ case class JBlockingTelemetryService(ts: BlockingTelemetryService, system: Actor
    * @param port the Redis port
    * @return a new JTelemetryService instance
    */
-  def this(host: String, port: Int, sys: ActorRefFactory, timeout: Timeout) {
+  def this(host: String, port: Int, sys: ActorSystem, timeout: Timeout) {
     this(BlockingTelemetryService(TelemetryService.get(host, port)(sys), timeout.duration), sys, timeout.duration)
   }
 

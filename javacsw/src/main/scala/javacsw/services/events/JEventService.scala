@@ -3,7 +3,7 @@ package javacsw.services.events
 import java.util.concurrent.CompletableFuture
 import javacsw.services.events.IEventService.EventHandler
 
-import akka.actor.{ActorRef, ActorRefFactory}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.events.EventService.EventMonitor
 import csw.services.events.{EventService, EventServiceSettings}
@@ -24,7 +24,7 @@ case object JEventService {
    * @param timeout amount of time to wait looking up name with the location service before giving up with an error
    * @return a future JEventService instance
    */
-  def lookup(name: String, sys: ActorRefFactory, timeout: Timeout): CompletableFuture[IEventService] = {
+  def lookup(name: String, sys: ActorSystem, timeout: Timeout): CompletableFuture[IEventService] = {
     import sys.dispatcher
     EventService(name)(sys, timeout).map(JEventService(_, sys).asInstanceOf[IEventService]).toJava.toCompletableFuture
   }
@@ -49,7 +49,7 @@ case class JEventService(eventService: EventService, system: ActorRefFactory)
    * @param port the Redis port
    * @return a new JEventService instance
    */
-  def this(host: String, port: Int, sys: ActorRefFactory) {
+  def this(host: String, port: Int, sys: ActorSystem) {
     this(EventService.get(host, port)(sys), sys)
   }
 
@@ -59,7 +59,7 @@ case class JEventService(eventService: EventService, system: ActorRefFactory)
    * @param settings contains the host and port settings from reference.conf, or application.conf
    * @param sys  Akka env required for RedisClient
    */
-  def this(settings: EventServiceSettings, sys: ActorRefFactory) {
+  def this(settings: EventServiceSettings, sys: ActorSystem) {
     this(EventService(settings)(sys), sys)
   }
 

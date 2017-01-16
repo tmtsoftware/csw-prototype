@@ -1,6 +1,6 @@
 package csw.services.alarms
 
-import akka.actor.{ActorRef, ActorRefFactory, PoisonPill}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.Logger
 import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
@@ -47,7 +47,7 @@ object AlarmService {
   val maxMissedRefresh = 3
 
   // Lookup the alarm service redis instance with the location service
-  private def locateAlarmService(asName: String = "")(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
+  private def locateAlarmService(asName: String = "")(implicit system: ActorSystem, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
     logger.debug(s"Looking up '$asName' with the Location Service (timeout: ${timeout.duration})")
     val connection = alarmServiceConnection(asName)
@@ -68,7 +68,7 @@ object AlarmService {
    * @param autoRefresh  if true, keep refreshing the severity of alarms after setSeverity is called (using the AlarmRefreshActor)
    * @return a new AlarmService instance
    */
-  def apply(asName: String = defaultName, autoRefresh: Boolean = false)(implicit system: ActorRefFactory, timeout: Timeout): Future[AlarmService] = {
+  def apply(asName: String = defaultName, autoRefresh: Boolean = false)(implicit system: ActorSystem, timeout: Timeout): Future[AlarmService] = {
     import system.dispatcher
     for {
       redisClient <- locateAlarmService(asName)
@@ -88,7 +88,7 @@ object AlarmService {
    * @param autoRefresh  if true, keep refreshing the severity of alarms after setSeverity is called (using the AlarmRefreshActor)
    * @return a new AlarmService instance
    */
-  def get(host: String = "127.0.0.1", port: Int = 6379, autoRefresh: Boolean = false)(implicit system: ActorRefFactory, timeout: Timeout): AlarmService = {
+  def get(host: String = "127.0.0.1", port: Int = 6379, autoRefresh: Boolean = false)(implicit system: ActorSystem, timeout: Timeout): AlarmService = {
     val redisClient = RedisClient(host, port)
     try {
       val ok = Await.result(redisClient.configSet("notify-keyspace-events", "KEA"), timeout.duration)

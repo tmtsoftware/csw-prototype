@@ -72,7 +72,7 @@ object DiagPublisherTests {
 }
 
 class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfter with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 
   import DiagPublisherTests._
 
@@ -86,6 +86,10 @@ class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with Implici
 
   // This is possible since trombone HCD has only one HCD
   val tromboneHCDConnection: AkkaConnection = assemblyContext.info.connections.head.asInstanceOf[AkkaConnection]
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   override def beforeAll(): Unit = {
     TestEnv.createTromboneAssemblyConfig()

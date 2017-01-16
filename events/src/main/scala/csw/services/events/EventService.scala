@@ -4,14 +4,15 @@ import akka.util.Timeout
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
-import akka.actor.{ActorRef, ActorRefFactory, PoisonPill, Props}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill, Props}
 import akka.util.ByteString
 import csw.services.events.EventService.EventMonitor
 import csw.util.config.ConfigSerializer._
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.annotation.varargs
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 
 object EventService {
 
@@ -36,7 +37,7 @@ object EventService {
   def eventServiceConnection(name: String = defaultName): TcpConnection = TcpConnection(eventServiceComponentId(name))
 
   // Lookup the event service redis instance with the location service
-  private def locateEventService(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
+  private def locateEventService(name: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
     val connection = eventServiceConnection(name)
     LocationService.resolve(Set(connection)).map { locationsReady =>
@@ -55,7 +56,7 @@ object EventService {
    * @param name name used to register the Redis instance with the Location Service (default: "Event Service")
    * @return a new EventService instance
    */
-  def apply(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[EventService] = {
+  def apply(name: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[EventService] = {
     import system.dispatcher
     for {
       redisClient <- locateEventService(name)
@@ -70,7 +71,7 @@ object EventService {
    * @param settings contains the host and port settings from reference.conf, or application.conf
    * @param _system  Akka env required for RedisClient
    */
-  def apply(settings: EventServiceSettings)(implicit _system: ActorRefFactory): EventService =
+  def apply(settings: EventServiceSettings)(implicit _system: ActorSystem): EventService =
     get(settings.redisHostname, settings.redisPort)
 
   /**
@@ -81,7 +82,7 @@ object EventService {
    * @param port the Redis port
    * @return a new EventService instance
    */
-  def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorRefFactory): EventService = {
+  def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorSystem): EventService = {
     val redisClient = RedisClient(host, port)
     EventServiceImpl(redisClient, defaultScope)
   }

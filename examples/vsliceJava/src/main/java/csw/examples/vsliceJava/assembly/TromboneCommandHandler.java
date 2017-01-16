@@ -113,7 +113,7 @@ class TromboneCommandHandler extends AbstractActor implements TromboneStateClien
       if (location.connection().equals(IEventService.eventServiceConnection())) {
         log.info("Assembly received ES connection: " + t);
         // Setting var here!
-        eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
+        eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context().system()));
         log.info("Event Service at: " + eventService);
       }
 

@@ -1,6 +1,6 @@
 package csw.examples
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, Props}
 import akka.util.Timeout
 import csw.services.ccs.HcdController
 import csw.services.events.TelemetryService
@@ -52,6 +52,7 @@ object HCDExample {
   protected class PosGenerator(name: String, prefix: String) extends Actor with TimeService.TimeServiceScheduler {
 
     import java.time._
+    implicit val system: ActorSystem = context.system
 
     import PosGenerator._
     import TimeService._

@@ -1,13 +1,9 @@
 package csw.examples.vslice.hcd
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.TestProbe
-import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.TestEnv
-import csw.examples.vslice.assembly.TromboneAssembly
-import csw.services.cs.akka.ConfigServiceClient
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{DoNotRegister, HcdInfo}

@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.assembly.FollowActor.UpdatedEventData
 import csw.services.events.{Event, EventService, TelemetryService}
 import csw.services.loc.LocationService
@@ -51,7 +52,7 @@ object EventPublishTests {
  * TMT Source Code: 8/17/16.
  */
 class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 
   import system._
   import EventPublishTests._
@@ -65,6 +66,10 @@ class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitS
   private val eventService = Await.result(EventService(), timeout.duration)
 
   private val telemetryService = Await.result(TelemetryService(), timeout.duration)
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   override protected def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)

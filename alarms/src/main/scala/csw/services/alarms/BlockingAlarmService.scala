@@ -1,6 +1,6 @@
 package csw.services.alarms
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.alarms.AlarmModel.SeverityLevel
 import AlarmService._
@@ -21,7 +21,7 @@ object BlockingAlarmService {
    * @param asName      name used to register the Redis instance with the Location Service (default: "Alarm Service")
    * @return a new BlockingAlarmService instance
    */
-  def apply(asName: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): BlockingAlarmService = {
+  def apply(asName: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): BlockingAlarmService = {
     val alarmService = Await.result(AlarmService(asName), timeout.duration)
     BlockingAlarmService(alarmService)
   }

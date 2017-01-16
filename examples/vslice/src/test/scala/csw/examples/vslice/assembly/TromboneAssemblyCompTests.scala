@@ -3,7 +3,8 @@ package csw.examples.vslice.assembly
 /**
  * TMT Source Code: 10/10/16.
  */
-import akka.actor.{ActorRef, ActorSystem, Terminated}
+
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import com.typesafe.scalalogging.slf4j.LazyLogging
 import csw.examples.vslice.TestEnv
@@ -26,10 +27,12 @@ object TromboneAssemblyCompTests {
 
   val system = ActorSystem("TromboneAssemblyCompTests")
 }
+
 class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 
   val assemblyContext = AssemblyTestData.TestAssemblyContext
+
   import assemblyContext._
 
   def newTrombone(assemblyInfo: AssemblyInfo = assemblyContext.info): ActorRef = {

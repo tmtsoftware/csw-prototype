@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import csw.examples.vslice.assembly.TrombonePublisher.{AOESWUpdate, AxisStateUpdate, AxisStatsUpdate, EngrUpdate}
 import csw.services.events.{EventService, TelemetryService}
 import csw.services.loc.LocationService.{Location, ResolvedTcpLocation, Unresolved}
@@ -30,6 +30,7 @@ import csw.util.config.Events.{StatusEvent, SystemEvent}
 class TrombonePublisher(assemblyContext: AssemblyContext, eventServiceIn: Option[EventService], telemetryServiceIn: Option[TelemetryService]) extends Actor with ActorLogging with TromboneStateClient with LocationSubscriberClient {
   import assemblyContext._
   import TromboneStateActor._
+  implicit val system: ActorSystem = context.system
 
   // Needed for future onFailure
   import context.dispatcher

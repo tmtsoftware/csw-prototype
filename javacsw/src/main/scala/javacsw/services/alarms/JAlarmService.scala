@@ -4,14 +4,14 @@ import java.util
 import java.util.Optional
 import java.util.concurrent.CompletableFuture
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.alarms.AlarmModel.{AlarmType, Health, SeverityLevel}
 import csw.services.alarms._
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.alarms.AscfValidation.Problem
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.collection.JavaConverters._
 import scala.compat.java8.FutureConverters._
 import scala.compat.java8.OptionConverters._
@@ -32,7 +32,7 @@ private[alarms] object JAlarmService {
    * @param timeout amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
    */
-  def lookup(asName: String, system: ActorRefFactory, timeout: Timeout): CompletableFuture[IAlarmService] = {
+  def lookup(asName: String, system: ActorSystem, timeout: Timeout): CompletableFuture[IAlarmService] = {
     import system.dispatcher
     implicit val sys = system
     implicit val t = timeout
@@ -53,7 +53,7 @@ private[alarms] object JAlarmService {
    * @param timeout amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
    */
-  def lookup(asName: String, refreshSecs: Int, system: ActorRefFactory, timeout: Timeout): CompletableFuture[IAlarmService] = {
+  def lookup(asName: String, refreshSecs: Int, system: ActorSystem, timeout: Timeout): CompletableFuture[IAlarmService] = {
     import system.dispatcher
     implicit val sys = system
     implicit val t = timeout
@@ -164,7 +164,7 @@ case class JAlarmService(alarmService: AlarmService, system: ActorRefFactory) ex
    * @param port the Redis port
    * @return a new JAlarmService instance
    */
-  def this(host: String, port: Int, sys: ActorRefFactory) {
+  def this(host: String, port: Int, sys: ActorSystem) {
     this(AlarmService.get(host, port)(sys, Timeout(5.seconds)), sys)
   }
 

@@ -61,7 +61,7 @@ object FollowCommandTests {
  */
 //noinspection TypeAnnotation
 class FollowCommandTests extends TestKit(FollowCommandTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 
   import FollowCommandTests._
   import system.dispatcher
@@ -73,6 +73,10 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
 
   // Get the telemetry service by looking up the name with the location service.
   val telemetryService = Await.result(TelemetryService(), timeout.duration)
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   override def beforeAll(): Unit = {
     TestEnv.createTromboneAssemblyConfig()

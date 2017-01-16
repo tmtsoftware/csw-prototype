@@ -41,6 +41,7 @@ class TromboneAssemblySeqTests extends TestKit(TromboneAssemblyCompTests.system)
   implicit val timeout = Timeout(10.seconds)
 
   private val ac = AssemblyTestData.TestAssemblyContext
+
   import ac._
 
   private val taName = "lgsTrombone"
@@ -109,7 +110,6 @@ class TromboneAssemblySeqTests extends TestKit(TromboneAssemblyCompTests.system)
     it("should allow a datum then a set of positions as separate sca") {
 
       val tlaClient = getTrombone
-      val tla = tlaClient.client.assemblyController
 
       val datum = Configurations.createSetupConfigArg("testobsId", SetupConfig(initCK), SetupConfig(datumCK))
       var completeMsg = tlaClient.submit(datum)
@@ -135,7 +135,6 @@ class TromboneAssemblySeqTests extends TestKit(TromboneAssemblyCompTests.system)
 
     it("should allow a stop from follow mode") {
       val tlaClient = getTrombone
-      val tla = tlaClient.client.assemblyController
 
       val fakeSequencer = TestProbe()
 

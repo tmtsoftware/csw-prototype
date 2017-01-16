@@ -2,11 +2,12 @@ import sbt._
 
 // Dependencies
 
+//noinspection TypeAnnotation
 object Dependencies {
 
   val scalaVersion = "2.11.8"
 
-  val akkaVersion = "2.4.14"
+  val akkaVersion = "2.4.16"
   val akkaHttpVersion = "10.0.0"
   val akkaStreamsVersion = "2.4.14"
 
@@ -45,7 +46,7 @@ object Dependencies {
   val postgresql = "org.postgresql" % "postgresql" % "9.4.1211" // POSTGRESQL
   val HikariCP = "com.zaxxer" % "HikariCP" % "2.5.1" // ApacheV2
 
-  val redisScala = "com.github.etaty" %% "rediscala" % "1.6.0" // ApacheV2
+  val redisScala = "com.github.etaty" %% "rediscala" % "1.8.0" // ApacheV2
 
   val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion // ApacheV2
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"

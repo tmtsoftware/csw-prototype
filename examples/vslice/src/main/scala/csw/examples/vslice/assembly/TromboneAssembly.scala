@@ -2,7 +2,7 @@ package csw.examples.vslice.assembly
 
 import java.io.File
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.Timeout
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.services.alarms.AlarmService
@@ -36,6 +36,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
 
   import Supervisor._
   import TromboneAssembly._
+  implicit val system: ActorSystem = context.system
 
   private var tromboneHCD: Option[ActorRef] = badHCDReference
 

@@ -169,21 +169,21 @@ public class TromboneAssembly extends JAssemblyController {
             if (location.connection().equals(IEventService.eventServiceConnection())) {
               log.info("Assembly received ES connection: " + t);
               // Setting var here!
-              eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
+              eventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context().system()));
               log.info("Event Service at: " + eventService);
             }
 
             if (location.connection().equals(ITelemetryService.telemetryServiceConnection())) {
               log.info("Assembly received TS connection: " + t);
               // Setting var here!
-              telemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context()));
+              telemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context().system()));
               log.info("Telemetry Service at: " + telemetryService);
             }
 
             if (location.connection().equals(IAlarmService.alarmServiceConnection(IAlarmService.defaultName))) {
               log.info("Assembly received AS connection: " + t);
               // Setting var here!
-              alarmService = Optional.of(IAlarmService.getAlarmService(t.host(), t.port(), context()));
+              alarmService = Optional.of(IAlarmService.getAlarmService(t.host(), t.port(), context().system()));
               log.info("Alarm Service at: " + alarmService);
             }
 

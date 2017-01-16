@@ -1,6 +1,6 @@
 package csw.services.events
 
-import akka.actor.{ActorRef, ActorRefFactory}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.events.EventService.EventMonitor
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
@@ -34,7 +34,7 @@ object TelemetryService {
   def telemetryServiceConnection(name: String = defaultName): TcpConnection = TcpConnection(telemetryServiceComponentId(name))
 
   // Lookup the telemetry service redis instance with the location service
-  private def locateTelemetryService(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[RedisClient] = {
+  private def locateTelemetryService(name: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[RedisClient] = {
     import system.dispatcher
     val connection = telemetryServiceConnection(name)
     LocationService.resolve(Set(connection)).map { locationsReady =>
@@ -53,7 +53,7 @@ object TelemetryService {
    * @param name name used to register the Redis instance with the Location Service (default: "Telemetry Service")
    * @return a new TelemetryService instance
    */
-  def apply(name: String = defaultName)(implicit system: ActorRefFactory, timeout: Timeout): Future[TelemetryService] = {
+  def apply(name: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[TelemetryService] = {
     import system.dispatcher
     for {
       redisClient <- locateTelemetryService(name)
@@ -68,7 +68,7 @@ object TelemetryService {
    * @param settings contains the host and port settings from reference.conf, or application.conf
    * @param _system  Akka env required for RedisClient
    */
-  def apply(settings: EventServiceSettings)(implicit _system: ActorRefFactory): TelemetryService =
+  def apply(settings: EventServiceSettings)(implicit _system: ActorSystem): TelemetryService =
     get(settings.redisHostname, settings.redisPort)
 
   /**
@@ -79,7 +79,7 @@ object TelemetryService {
    * @param port the Redis port
    * @return a new TelemetryService instance
    */
-  def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorRefFactory): TelemetryService = {
+  def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorSystem): TelemetryService = {
     val redisClient = RedisClient(host, port)
     TelemetryServiceImpl(redisClient)
   }

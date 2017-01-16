@@ -95,13 +95,13 @@ class TromboneEventSubscriber(ac: AssemblyContext, nssInUseIn: BooleanItem, foll
 
     case t: ResolvedTcpLocation =>
       log.info(s"Received TCP Location: ${t.connection}")
-//      // Verify that it is the event service
-//      if (t.connection == EventService.eventServiceConnection()) {
-//        log.info(s"received ES connection: $t")
-//        // Setting var here!
-//        eventService = Some(EventService.get(t.host, t.port))
-//        log.info(s"Event Service at: $eventService")
-//      }
+    //      // Verify that it is the event service
+    //      if (t.connection == EventService.eventServiceConnection()) {
+    //        log.info(s"received ES connection: $t")
+    //        // Setting var here!
+    //        eventService = Some(EventService.get(t.host, t.port))
+    //        log.info(s"Event Service at: $eventService")
+    //      }
 
     case x => log.error(s"Unexpected message received in TromboneEventSubscriber:subscribeReceive: $x")
   }

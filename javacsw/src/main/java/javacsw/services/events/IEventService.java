@@ -121,7 +121,7 @@ public interface IEventService {
    * @param timeout amount of time to wait looking up name with the location service before giving up with an error
    * @return a future IEventService instance
    */
-  static CompletableFuture<IEventService> getEventService(String name, ActorRefFactory sys, Timeout timeout) {
+  static CompletableFuture<IEventService> getEventService(String name, ActorSystem sys, Timeout timeout) {
     return JEventService.lookup(name, sys, timeout);
   }
 
@@ -132,7 +132,7 @@ public interface IEventService {
    * @param port the Redis port
    * @return a new IEventService instance
    */
-  static IEventService getEventService(String host, int port, ActorRefFactory sys) {
+  static IEventService getEventService(String host, int port, ActorSystem sys) {
     return new JEventService(host, port, sys);
   }
 
@@ -149,7 +149,7 @@ public interface IEventService {
    * @param system   Akka env required by RedisClient
    * @return a new IEventService
    */
-  static IEventService getEventService(EventServiceSettings settings, ActorRefFactory system) {
+  static IEventService getEventService(EventServiceSettings settings, ActorSystem system) {
     return new JEventService(settings, system);
   }
 

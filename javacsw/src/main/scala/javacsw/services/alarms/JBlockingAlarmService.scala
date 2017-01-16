@@ -1,6 +1,6 @@
 package javacsw.services.alarms
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.alarms.AlarmModel.SeverityLevel
 import csw.services.alarms.{AlarmKey, AlarmService}
@@ -23,7 +23,7 @@ private[alarms] object JBlockingAlarmService {
    * @param timeout amount of time to wait when looking up the alarm service with the location service
    * @return a new IBlockingAlarmService instance
    */
-  def lookup(asName: String, system: ActorRefFactory, timeout: Timeout): IBlockingAlarmService = {
+  def lookup(asName: String, system: ActorSystem, timeout: Timeout): IBlockingAlarmService = {
     import system.dispatcher
     implicit val sys = system
     implicit val t = timeout

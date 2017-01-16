@@ -2,6 +2,7 @@ package csw.examples.vslice.assembly
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.assembly.TromboneStateActor.TromboneState
 import csw.services.loc.LocationService
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Inspectors, _}
@@ -49,10 +50,14 @@ object TromboneStateActorTests {
 }
 
 class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterAll {
+    with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterEach {
 
   import TromboneStateActorTests._
   import TromboneStateActor._
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   // Stop any actors created for a test to avoid conflict with other tests
   private def cleanup(a: ActorRef*): Unit = {

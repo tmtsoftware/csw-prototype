@@ -117,14 +117,14 @@ public class TrombonePublisher extends AbstractActor implements TromboneStateCli
       // Verify that it is the event service
       if (location.connection().equals(IEventService.eventServiceConnection())) {
         log.debug("TrombonePublisher received connection: " + t);
-        Optional<IEventService> newEventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context()));
+        Optional<IEventService> newEventService = Optional.of(IEventService.getEventService(t.host(), t.port(), context().system()));
         log.debug("Event Service at: " + newEventService);
         context().become(publishingEnabled(newEventService, currentTelemetryService));
       }
 
       if (location.connection().equals(ITelemetryService.telemetryServiceConnection())) {
         log.debug("TrombonePublisher received connection: " + t);
-        Optional<ITelemetryService> newTelemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context()));
+        Optional<ITelemetryService> newTelemetryService = Optional.of(ITelemetryService.getTelemetryService(t.host(), t.port(), context().system()));
         log.debug("Telemetry Service at: " + newTelemetryService);
         context().become(publishingEnabled(currentEventService, newTelemetryService));
       }

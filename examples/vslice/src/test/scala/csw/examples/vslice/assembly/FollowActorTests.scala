@@ -23,7 +23,7 @@ import csw.util.config.BooleanItem
 import csw.util.config.Events.{EventTime, StatusEvent, SystemEvent}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.UnitsOfMeasure.{degrees, kilometers, micrometers, millimeters}
-import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -68,7 +68,7 @@ object FollowActorTests {
  * TMT Source Code: 8/12/16.
  */
 class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 
   import system._
   import FollowActorTests._
@@ -80,6 +80,10 @@ class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSen
 
   // Get the telemetry service by looking up the name with the location service. -- Used in the last test
   val telemetryService: TelemetryService = Await.result(TelemetryService(), timeout.duration)
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   override def beforeAll(): Unit = {
     TestEnv.createTromboneAssemblyConfig()

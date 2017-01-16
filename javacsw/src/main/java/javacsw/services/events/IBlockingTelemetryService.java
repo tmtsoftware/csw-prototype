@@ -2,6 +2,7 @@ package javacsw.services.events;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorRefFactory;
+import akka.actor.ActorSystem;
 import akka.util.Timeout;
 import csw.services.events.EventService;
 import csw.services.events.TelemetryService$;
@@ -100,7 +101,7 @@ public interface IBlockingTelemetryService {
      * @param timeout amount of time to wait looking up name with the location service before giving up with an error
      * @return a future ITelemetryService instance
      */
-    static IBlockingTelemetryService getTelemetryService(String name, ActorRefFactory sys, Timeout timeout) {
+    static IBlockingTelemetryService getTelemetryService(String name, ActorSystem sys, Timeout timeout) {
         return JBlockingTelemetryService.lookup(name, sys, timeout);
     }
 
@@ -111,7 +112,7 @@ public interface IBlockingTelemetryService {
      * @param port the Redis port
      * @return a new ITelemetryService instance
      */
-    static IBlockingTelemetryService getTelemetryService(String host, int port, ActorRefFactory sys, Timeout timeout) {
+    static IBlockingTelemetryService getTelemetryService(String host, int port, ActorSystem sys, Timeout timeout) {
         return new JBlockingTelemetryService(host, port, sys, timeout);
     }
 }

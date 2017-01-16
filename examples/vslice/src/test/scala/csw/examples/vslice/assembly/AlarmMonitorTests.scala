@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill, Terminated}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -36,7 +36,7 @@ object AlarmMonitorTests {
  * AlarmMonitorTests
  */
 class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 
   import TromboneAlarmMonitor._
   import TromboneStateActor._
@@ -49,9 +49,14 @@ class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitS
   // Used to start and stop the alarm service Redis instance used for the test
   val alarmAdmin = AlarmServiceAdmin(alarmService)
 
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+    setupAlarms()
+  }
+
   override def beforeAll(): Unit = {
     TestEnv.createTromboneAssemblyConfig()
-    setupAlarms()
+    //    setupAlarms()
   }
 
   def setupAlarms(): Unit = {

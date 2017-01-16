@@ -1,6 +1,7 @@
 package javacsw.services.alarms;
 
 import akka.actor.ActorRefFactory;
+import akka.actor.ActorSystem;
 import akka.util.Timeout;
 import csw.services.alarms.*;
 import csw.services.alarms.AlarmModel.*;
@@ -35,7 +36,7 @@ public interface IBlockingAlarmService {
    * @param timeout     amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
    */
-  static IBlockingAlarmService getAlarmService(String asName, ActorRefFactory system, Timeout timeout) {
+  static IBlockingAlarmService getAlarmService(String asName, ActorSystem system, Timeout timeout) {
     return JBlockingAlarmService.lookup(asName, system, timeout);
   }
 
@@ -50,7 +51,7 @@ public interface IBlockingAlarmService {
    * @param timeout amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
    */
-  static IBlockingAlarmService getAlarmService(ActorRefFactory system, Timeout timeout) {
+  static IBlockingAlarmService getAlarmService(ActorSystem system, Timeout timeout) {
     return JBlockingAlarmService.lookup(defaultName, system, timeout);
   }
 

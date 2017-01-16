@@ -4,11 +4,11 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
+import csw.examples.vslice.TestEnv
 import csw.examples.vslice.assembly.FollowActor.{StopFollowing, UpdatedEventData}
 import csw.examples.vslice.assembly.TromboneEventSubscriber.UpdateNssInUse
 import csw.services.events.EventService
 import csw.services.loc.LocationService
-import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.util.config.BooleanItem
 import csw.util.config.Events.SystemEvent
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, _}
@@ -25,14 +25,18 @@ object EventSubscriberTests {
  * TMT Source Code: 9/17/16.
  */
 class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 
   import system._
   implicit val timeout = Timeout(20.seconds)
 
   // Get the event service by looking up the name with the location service.
-  val eventService: EventService = Await.result(EventService(), timeout.duration)
+  private val eventService = Await.result(EventService(), timeout.duration)
   logger.info("Got Event Service!")
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   override protected def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
@@ -157,7 +161,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       feEvents.foreach(f => tcsRtc.publish(f))
 
-      val feEventMsgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size).asInstanceOf[Vector[UpdatedEventData]]
+      val feEventMsgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(feEvents.size, timeout.duration).asInstanceOf[Vector[UpdatedEventData]]
       feEventMsgs.size should equal(feEvents.size)
       val fevals = feEventMsgs.map(f => f.focusError.head)
       // Should equal test vals
@@ -170,7 +174,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
       tcsEvents.foreach(f => tcsRtc.publish(f))
 
       // Should get several and the zenith angles should match since nssInUse was false
-      val msgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(tcsEvents.size).asInstanceOf[Vector[UpdatedEventData]]
+      val msgs: Vector[UpdatedEventData] = fakeFollowActor.receiveN(tcsEvents.size, timeout.duration).asInstanceOf[Vector[UpdatedEventData]]
       val zavals = msgs.map(f => f.zenithAngle.head)
       // Should equal input za
       zavals should equal(testZenithAngles)
@@ -211,7 +215,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
 
       val testZA = 45.0
       tcsRtc.publish(SystemEvent(zaConfigKey.prefix).add(za(testZA)))
-      val one = fakeFollowActor.expectMsgClass(classOf[UpdatedEventData])
+      val one = fakeFollowActor.expectMsgClass(timeout.duration, classOf[UpdatedEventData])
       one.zenithAngle.head shouldBe testZA
 
       // Now follow with nssInUse and send feEvents, should have 0.0 as ZA

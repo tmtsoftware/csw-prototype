@@ -4,7 +4,7 @@ import java.util.Optional
 import java.util.concurrent.CompletableFuture
 import javacsw.services.events.IEventService.EventHandler
 
-import akka.actor.{ActorRef, ActorRefFactory}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.events.EventService.EventMonitor
 import csw.services.events.{EventServiceSettings, TelemetryService}
@@ -27,7 +27,7 @@ case object JTelemetryService {
    * @param timeout amount of time to wait looking up name with the location service before giving up with an error
    * @return a future JTelemetryService instance
    */
-  def lookup(name: String, sys: ActorRefFactory, timeout: Timeout): CompletableFuture[ITelemetryService] = {
+  def lookup(name: String, sys: ActorSystem, timeout: Timeout): CompletableFuture[ITelemetryService] = {
     import sys.dispatcher
     TelemetryService(name)(sys, timeout).map(JTelemetryService(_, sys).asInstanceOf[ITelemetryService]).toJava.toCompletableFuture
   }
@@ -52,7 +52,7 @@ case class JTelemetryService(ts: TelemetryService, system: ActorRefFactory)
    * @param port the Redis port
    * @return a new JTelemetryService instance
    */
-  def this(host: String, port: Int, sys: ActorRefFactory) {
+  def this(host: String, port: Int, sys: ActorSystem) {
     this(TelemetryService.get(host, port)(sys), sys)
   }
 

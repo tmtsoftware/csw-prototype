@@ -5,7 +5,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSpec, Inspectors, ShouldMatchers}
 /**
  * These are tests of the calculations in the Calculation Actor
  */
-class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors with BeforeAndAfterAll {
+class AlgorithmTests extends FunSpec with ShouldMatchers with Inspectors {
   import Algorithms._
   import AssemblyTestData._
 

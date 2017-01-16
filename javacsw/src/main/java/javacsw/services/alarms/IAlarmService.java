@@ -1,6 +1,7 @@
 package javacsw.services.alarms;
 
 import akka.actor.ActorRefFactory;
+import akka.actor.ActorSystem;
 import akka.util.Timeout;
 import csw.services.alarms.*;
 import csw.services.alarms.AlarmModel.*;
@@ -39,7 +40,7 @@ public interface IAlarmService {
    * @param timeout     amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
    */
-  static CompletableFuture<IAlarmService> getAlarmService(String asName, ActorRefFactory system, Timeout timeout) {
+  static CompletableFuture<IAlarmService> getAlarmService(String asName, ActorSystem system, Timeout timeout) {
     return JAlarmService.lookup(asName, system, timeout);
   }
 
@@ -50,7 +51,7 @@ public interface IAlarmService {
    * @param port the Redis port
    * @return a new IAlarmService instance
    */
-  static IAlarmService getAlarmService(String host, int port, ActorRefFactory sys) {
+  static IAlarmService getAlarmService(String host, int port, ActorSystem sys) {
     return new JAlarmService(host, port, sys);
   }
 
@@ -66,7 +67,7 @@ public interface IAlarmService {
    * @param timeout amount of time to wait when looking up the alarm service with the location service
    * @return a new JAlarmService instance
    */
-  static CompletableFuture<IAlarmService> getAlarmService(ActorRefFactory system, Timeout timeout) {
+  static CompletableFuture<IAlarmService> getAlarmService(ActorSystem system, Timeout timeout) {
     return JAlarmService.lookup(defaultName, system, timeout);
   }
 

@@ -1,6 +1,6 @@
 package csw.examples.vslice.assembly
 
-import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, PoisonPill, Props}
+import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import csw.examples.vslice.assembly.FollowActor.SetZenithAngle
@@ -30,6 +30,7 @@ class TromboneCommandHandler(ac: AssemblyContext, tromboneHCDIn: Option[ActorRef
   import TromboneStateActor._
   import TromboneCommandHandler._
   import ac._
+  implicit val system: ActorSystem = context.system
 
   //override val prefix = ac.info.prefix
   private val badHCDReference = context.system.deadLetters

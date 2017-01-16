@@ -37,9 +37,13 @@ object CommandHandlerTests {
  * TMT Source Code: 9/21/16.
  */
 class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 
   import TromboneStateActor._
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   override def beforeAll(): Unit = {
     TestEnv.createTromboneAssemblyConfig()

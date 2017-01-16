@@ -63,7 +63,7 @@ object FollowPositionTests {
  * These tests are about testing the calculated values for the trombone position when following.
  */
 class FollowPositionTests extends TestKit(FollowPositionTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
   import system._
   import Algorithms._
   import TromboneAssembly._
@@ -72,6 +72,10 @@ class FollowPositionTests extends TestKit(FollowPositionTests.system) with Impli
 
   // Get the event service by looking up the name with the location service.
   val eventService = Await.result(EventService(), timeout.duration)
+
+  override protected def beforeEach(): Unit = {
+    TestEnv.resetRedisServices()
+  }
 
   override def beforeAll(): Unit = {
     TestEnv.createTromboneAssemblyConfig()
