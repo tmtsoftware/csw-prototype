@@ -9,16 +9,15 @@ import org.scalatest.FunSpec
 import spray.json._
 
 /**
-  * TMT Source Code: 12/18/16.
-  */
+ * TMT Source Code: 12/18/16.
+ */
 class CommandsJSONTests extends FunSpec with LazyLogging {
   import CommandsJSON._
-
 
   describe("Overall Tests") {
     it("should work with validation issues") {
 
-      val vi:ValidationIssue = Validation.SingleConfigOnlyIssue("testing 1, 2, 3")
+      val vi: ValidationIssue = Validation.SingleConfigOnlyIssue("testing 1, 2, 3")
 
       logger.info(s"Its: $vi")
 
@@ -26,12 +25,12 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
 
       logger.info(s"json: $json")
 
-      val v:ValidationIssue = json.convertTo[ValidationIssue]
+      val v: ValidationIssue = json.convertTo[ValidationIssue]
 
     }
 
     it("should work with command status") {
-      var csIn:CommandStatus = CommandStatus.Invalid(OtherIssue("No Good reasons"))
+      var csIn: CommandStatus = CommandStatus.Invalid(OtherIssue("No Good reasons"))
       var json = csIn.toJson
       //logger.info(s"json: ${json.prettyPrint}")
       var csOut = json.convertTo[CommandStatus]
@@ -98,7 +97,7 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("MyDouble")
       val i2 = k2.set(1000.34)
-      val scIn:SequenceConfig = SetupConfig("wfos.blue.det").madd(i1, i2)
+      val scIn: SequenceConfig = SetupConfig("wfos.blue.det").madd(i1, i2)
 
       val json = scIn.toJson
       logger.info(s"json: ${json.prettyPrint}")
@@ -112,7 +111,7 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("MyDouble")
       val i2 = k2.set(1000.34)
-      val sc:SequenceConfig = SetupConfig("wfos.blue.det").madd(i1, i2)
+      val sc: SequenceConfig = SetupConfig("wfos.blue.det").madd(i1, i2)
 
       val crIn = CommandResultPair(CommandStatus.Completed, sc)
 
@@ -130,11 +129,13 @@ class CommandsJSONTests extends FunSpec with LazyLogging {
       val i1 = k1.set("testv1", "testv2").withUnits(UnitsOfMeasure.degrees)
       val k2 = DoubleKey("test2")
       val i2 = k2.set(1000.34)
-      val cr = CommandResults(List(CommandResultPair(Completed, SetupConfig("wfos.blue").add(i1)),
-                                   CommandResultPair(Invalid(OtherIssue("What the fuck")), ObserveConfig("wfos.blue.det").madd(i1, i2))))
-      val crIn:CommandResult = CommandResult(r, o, cr)
+      val cr = CommandResults(List(
+        CommandResultPair(Completed, SetupConfig("wfos.blue").add(i1)),
+        CommandResultPair(Invalid(OtherIssue("What the fuck")), ObserveConfig("wfos.blue.det").madd(i1, i2))
+      ))
+      val crIn: CommandResult = CommandResult(r, o, cr)
 
-      val json:JsValue = crIn.toJson
+      val json: JsValue = crIn.toJson
 
       logger.info(s"json: ${json.prettyPrint}")
 
