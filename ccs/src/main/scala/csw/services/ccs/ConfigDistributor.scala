@@ -10,8 +10,10 @@ import csw.util.config.{RunId, StateVariable}
 
 import scala.concurrent.duration._
 
+// XXX allan: TODO: Needs to be updated to reply with CommandResult instead of CommandStatus
+
 /**
- * Created by abrighto on 02/12/16.
+ * Distribute configs to HCDs based on the config's prefix and the prefix the HCD was registered with in the location service.
  */
 case class ConfigDistributor(context: ActorContext, locations: Set[ResolvedAkkaLocation]) {
 
@@ -59,7 +61,7 @@ case class ConfigDistributor(context: ActorContext, locations: Set[ResolvedAkkaL
    * @param replyTo   send the command status (Completed) to this actor when all the configs are "matched" or an error status if a timeout occurs
    * @return Valid if locationsResolved, otherwise Invalid
    */
-  def distributeSetupConfigs(configArg: SetupConfigArg, replyTo: Option[ActorRef] = None): Validation = {
+  def distributeSetupConfigs(configArg: SetupConfigArg, replyTo: Option[ActorRef] = None): Unit = {
     val pairs = for {
       config <- configArg.configs
       actorRef <- getActorRefs(config.prefix)
@@ -70,6 +72,5 @@ case class ConfigDistributor(context: ActorContext, locations: Set[ResolvedAkkaL
     val hcds = pairs.map(_._1).toSet
     val demandStates = pairs.map(_._2)
     matchDemandStates(demandStates, hcds, replyTo, configArg.info.runId)
-    Valid
   }
 }

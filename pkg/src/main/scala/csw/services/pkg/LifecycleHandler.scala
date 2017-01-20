@@ -19,7 +19,10 @@ object LifecycleHandler {
 
 /**
  * Containers and Components can override these to handle lifecycle changes.
+ *
+ * @deprecated This class will be removed in a future version
  */
+@Deprecated
 trait LifecycleHandler {
   this: Component =>
 

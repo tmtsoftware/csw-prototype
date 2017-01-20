@@ -7,7 +7,6 @@ import akka.util.Timeout
 import csw.examples.vslice.assembly.AssemblyContext.{TromboneCalculationConfig, TromboneControlConfig}
 import csw.services.alarms.AlarmService
 import csw.services.ccs.AssemblyMessages.{DiagnosticMode, OperationsMode}
-import csw.services.ccs.SequentialExecutor.StartTheSequence
 import csw.services.ccs.Validation.ValidationList
 import csw.services.ccs.{AssemblyController, SequentialExecutor, Validation}
 import csw.services.cs.akka.ConfigServiceClient
@@ -207,8 +206,7 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     val validations: ValidationList = validateSequenceConfigArg(sca)
     if (Validation.isAllValid(validations)) {
       // Create a SequentialExecutor to process all SetupConfigs
-      val executor = newExecutor(sca, commandOriginator)
-      executor ! StartTheSequence(commandHandler)
+      context.actorOf(SequentialExecutor.props(commandHandler, sca, commandOriginator))
     }
     validations
   }
@@ -220,10 +218,6 @@ class TromboneAssembly(val info: AssemblyInfo, supervisor: ActorRef) extends Ass
     // Are all of the configs really for us and correctly formatted, etc?
     ConfigValidation.validateTromboneSetupConfigArg(sca)
   }
-
-  // Convenience method to create a new SequentialExecutor
-  private def newExecutor(sca: SetupConfigArg, commandOriginator: Option[ActorRef]): ActorRef =
-    context.actorOf(SequentialExecutor.props(sca, commandOriginator))
 
   // Gets the assembly configurations from the config service, or a resource file, if not found and
   // returns the two parsed objects.

@@ -24,7 +24,7 @@ object HcdControllerTests {
   class TestHcdController extends HcdController with Actor with ActorLogging {
     // Use single worker actor to do work in the background
     // (could also use a worker per job/message if needed)
-    val worker = context.actorOf(TestWorker.props())
+    private val worker = context.actorOf(TestWorker.props())
 
     // Send the config to the worker for processing
     override protected def process(config: SetupConfig): Unit = {
@@ -58,10 +58,10 @@ object HcdControllerTests {
     import context.dispatcher
 
     // Simulate getting the initial state from the device
-    val initialState = CurrentState(testPrefix).add(position.set("None"))
+    private val initialState = CurrentState(testPrefix).add(position.set("None"))
 
     // Simulated current state
-    var currentState = initialState
+    private var currentState = initialState
 
     def receive: Receive = {
       case Work(config) =>
@@ -103,7 +103,7 @@ class HcdControllerTests extends TestKit(HcdControllerTests.system)
     hcdController ! Submit(config)
     system.actorOf(HcdStatusMatcherActor.props(List(config), Set(hcdController), self))
     within(10.seconds) {
-      val status = expectMsgType[CommandStatusOld.Completed]
+      val status = expectMsgType[CommandStatus.Completed.type]
       logger.debug(s"Done (2). Received reply from matcher with current state: $status")
     }
   }

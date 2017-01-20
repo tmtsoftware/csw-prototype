@@ -28,6 +28,9 @@ object HcdStatusMatcherActor {
     Props(classOf[HcdStatusMatcherActor], demands, hcds, replyTo, runId, timeout, matcher)
 }
 
+// XXX FIXME TODO: Constructor should probably be changed to take a single DemandState and HCD
+// XXX (Need to update or remove CommandDistributor)
+
 /**
  * Subscribes to the current state values of a set of HCDs and notifies the
  * replyTo actor with the command status when they all match the respective demand states,
@@ -43,7 +46,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
   context.become(waiting(Set[CurrentState]()))
 
   hcds.foreach(_ ! PublisherActor.Subscribe)
-  val timer = context.system.scheduler.scheduleOnce(timeout.duration, self, timeout)
+  private val timer = context.system.scheduler.scheduleOnce(timeout.duration, self, timeout)
 
   override def receive: Receive = Actor.emptyBehavior
 
@@ -57,7 +60,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
           val set = results + current
           if (set.size == demands.size) {
             timer.cancel()
-            replyTo ! CommandStatusOld.Completed(runId)
+            replyTo ! CommandStatus.Completed
             hcds.foreach(_ ! PublisherActor.Unsubscribe)
             context.stop(self)
           } else context.become(waiting(set))
@@ -66,7 +69,7 @@ class HcdStatusMatcherActor(demands: List[DemandState], hcds: Set[ActorRef], rep
 
     case `timeout` =>
       log.debug(s"received timeout")
-      replyTo ! CommandStatusOld.Error(runId, "Command timed out")
+      replyTo ! CommandStatus.Error("Command timed out")
       hcds.foreach(_ ! PublisherActor.Unsubscribe)
       context.stop(self)
 

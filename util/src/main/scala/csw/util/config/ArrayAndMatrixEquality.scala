@@ -24,7 +24,7 @@ object ArrayAndMatrixEquality {
 
   def arraySizeEqual(one: Array[_], two: Array[_]): Boolean = one.length == two.length
 
-  def deepArrayEquals[T](one: Array[T], two: Array[T]) = arraySizeEqual(one, two) && deepArrayValueEquals(one, two)
+  def deepArrayEquals[T](one: Array[T], two: Array[T]): Boolean = arraySizeEqual(one, two) && deepArrayValueEquals(one, two)
 
   /**
    * This function takes Vectors of values from two items of the same type to compare their elements.

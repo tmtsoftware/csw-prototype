@@ -13,10 +13,9 @@ import scala.compat.java8.OptionConverters._
  */
 object JSequentialExecutor {
 
-  def props(sca: SetupConfigArg, commandOriginator: Optional[ActorRef]): Props = SequentialExecutor.props(sca, commandOriginator.asScala)
+  def props(commandProcessor: ActorRef, sca: SetupConfigArg, commandOriginator: Optional[ActorRef]): Props =
+    SequentialExecutor.props(commandProcessor, sca, commandOriginator.asScala)
 
-  def StartTheSequence(commandProcessor: ActorRef) = SequentialExecutor.StartTheSequence(commandProcessor)
-  def SequentialExecute(sc: SetupConfig) = SequentialExecutor.SequentialExecute(sc)
   def ExecuteOne(sc: SetupConfig, commandOriginator: Optional[ActorRef]) = SequentialExecutor.ExecuteOne(sc, commandOriginator.asScala)
   def StopCurrentCommand = SequentialExecutor.StopCurrentCommand
   def CommandStart = SequentialExecutor.CommandStart

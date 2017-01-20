@@ -14,6 +14,7 @@ import com.typesafe.sbt.packager.docker._
 
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 
+//noinspection TypeAnnotation
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
   val Version = "0.3-SNAPSHOT"
@@ -56,7 +57,6 @@ object Settings {
     scalacOptions ++= Seq("-target:jvm-1.8", "-encoding", "UTF-8", "-feature", "-deprecation", "-unchecked"),
     scalacOptions in(Compile, unidoc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt"),
     scalacOptions in(Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt", "-no-link-warnings"),
-//    scalacOptions in Test ++= Seq("-Yrangepos"), // For specs2
     javacOptions in Compile ++= Seq("-source", "1.8"),
     javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint:unchecked", "-Xlint:deprecation"),
     javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),

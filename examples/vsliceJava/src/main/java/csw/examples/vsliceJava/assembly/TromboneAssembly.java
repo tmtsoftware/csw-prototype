@@ -265,8 +265,7 @@ public class TromboneAssembly extends JAssemblyController {
     List<Validation.Validation> validations = validateSequenceConfigArg(sca);
     if (Validation.isAllValid(validations)) {
       // Create a SequentialExecutor to process all SetupConfigs
-      ActorRef executor = newExecutor(sca, commandOriginator);
-      executor.tell(new SequentialExecutor.StartTheSequence(commandHandler), self());
+      ActorRef executor = newExecutor(commandHandler, sca, commandOriginator);
     }
     return validations;
   }
@@ -280,8 +279,8 @@ public class TromboneAssembly extends JAssemblyController {
   }
 
   // Convenience method to create a new SequentialExecutor
-  private ActorRef newExecutor(SetupConfigArg sca, Optional<ActorRef> commandOriginator) {
-    return context().actorOf(SequentialExecutor.props(sca, commandOriginator));
+  private ActorRef newExecutor(ActorRef commandHandler, SetupConfigArg sca, Optional<ActorRef> commandOriginator) {
+    return context().actorOf(SequentialExecutor.props(commandHandler, sca, commandOriginator));
   }
 
   // Holds the assembly configurations

@@ -1,13 +1,14 @@
 package csw.services.pkg
 
 import akka.actor._
+import akka.remote.testconductor.RoleName
 import akka.remote.testkit._
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient, CommandStatusOld}
+import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient}
 import csw.services.ccs.AssemblyController._
-import csw.services.ccs.CommandStatus.AllCompleted
+import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult}
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}
@@ -23,9 +24,9 @@ import scala.concurrent.duration._
 object ContainerConfig extends MultiNodeConfig {
   LocationService.initInterface()
 
-  val container1 = role("container1")
+  val container1: RoleName = role("container1")
 
-  val container2 = role("container2")
+  val container2: RoleName = role("container2")
 
   // Note: The "multinode.host" system property needs to be set to empty so that the MultiNodeSpec
   // base class below will use the actual host name.
@@ -71,8 +72,13 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
 
             // Use actor API
             assembly1 ! Submit(TestConfig.testConfigArg)
-            expectMsgType[CommandStatusOld.Accepted]
-            expectMsgType[CommandStatusOld.Completed]
+
+            val validationResult = expectMsgType[CommandResult]
+            assert(validationResult.overall == Accepted)
+
+            val commandResult = expectMsgType[CommandResult]
+            assert(commandResult.details.results.size == 2)
+            assert(commandResult.overall == AllCompleted)
 
             // Use client wrapper
             val client = AssemblyControllerClient(assembly1)
