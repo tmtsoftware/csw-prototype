@@ -7,6 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
+import akka.util.Timeout;
 import csw.examples.vsliceJava.TestEnv;
 import csw.examples.vsliceJava.hcd.TromboneHCD;
 import csw.services.ccs.CommandStatus.CommandStatus;
@@ -47,6 +48,7 @@ import static javacsw.services.ccs.JCommandStatus.*;
 import static javacsw.services.ccs.JSequentialExecutor.ExecuteOne;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.services.pkg.JSupervisor.HaltComponent;
 import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
 import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static junit.framework.TestCase.assertTrue;
@@ -56,6 +58,7 @@ import static org.junit.Assert.assertEquals;
 public class CommandHandlerTests extends JavaTestKit {
   private static ActorSystem system;
   private static LoggingAdapter logger;
+  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(10, TimeUnit.SECONDS));
 
   // This def helps to make the test code look more like normal production code, where self() is defined in an actor class
   ActorRef self() {
@@ -78,6 +81,20 @@ public class CommandHandlerTests extends JavaTestKit {
   public static void teardown() {
     JavaTestKit.shutdownActorSystem(system);
     system = null;
+  }
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(ActorRef tromboneHCD, ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+
+    monitor.watch(tromboneHCD);
+    tromboneHCD.tell(HaltComponent, self());
+    monitor.expectTerminated(tromboneHCD, timeout.duration());
   }
 
   static final AssemblyContext ac = AssemblyTestData.TestAssemblyContext;
@@ -140,11 +157,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     assertTrue(errMsg instanceof NoLongerValid);
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(ch);
-    system.stop(ch);
-//    system.stop(tsa);
-    monitor.expectTerminated(ch, FiniteDuration.create(1, TimeUnit.SECONDS));
+    cleanup(tromboneHCD, ch);
   }
 
   @Test
@@ -191,10 +204,7 @@ public class CommandHandlerTests extends JavaTestKit {
     CommandStatus msg2 = fakeAssembly.expectMsgClass(duration("10 seconds"), CommandStatus.class);
     assertEquals(msg2, Completed);
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(ch);
-    system.stop(ch);
-    monitor.expectTerminated(ch, FiniteDuration.create(1, TimeUnit.SECONDS));
+    cleanup(tromboneHCD, ch);
   }
 
 
@@ -236,13 +246,7 @@ public class CommandHandlerTests extends JavaTestKit {
 
     //info("Final: " + errMsg)
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(ch);
-    monitor.watch(tromboneHCD);
-    system.stop(ch); // ch ! PoisonPill
-    monitor.expectTerminated(ch, FiniteDuration.create(1, TimeUnit.SECONDS));
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender()); //tromboneHCD ! PoisonPill
-    monitor.expectTerminated(tromboneHCD, FiniteDuration.create(4, TimeUnit.SECONDS));
+    cleanup(tromboneHCD, ch);
   }
 
   @Test
@@ -276,9 +280,8 @@ public class CommandHandlerTests extends JavaTestKit {
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow);
     AxisUpdate upd = fakeAssembly.expectMsgClass(AxisUpdate.class);
     assertEquals(upd.current, finalPos);
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
-    system.stop(se2);
+
+    cleanup(tromboneHCD, ch, se2);
   }
 
   @Test
@@ -309,8 +312,8 @@ public class CommandHandlerTests extends JavaTestKit {
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow);
     AxisUpdate upd = fakeAssembly.expectMsgClass(AxisUpdate.class);
     assertEquals(upd.current, finalPos);
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+    cleanup(tromboneHCD, ch);
   }
 
   @Test
@@ -345,8 +348,8 @@ public class CommandHandlerTests extends JavaTestKit {
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow);
     AxisUpdate upd = fakeAssembly.expectMsgClass(AxisUpdate.class);
     assertEquals(upd.current, finalPos);
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+    cleanup(tromboneHCD, se2, ch);
   }
 
   @Test
@@ -390,8 +393,8 @@ public class CommandHandlerTests extends JavaTestKit {
     assertEquals(msg.overall(), Incomplete);
     assertEquals(msg.details().status(0), Cancelled);
     logger.info("result: " + msg);
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+    cleanup(tromboneHCD, se, ch);
   }
 
   @Test
@@ -424,8 +427,8 @@ public class CommandHandlerTests extends JavaTestKit {
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow);
     AxisUpdate upd = fakeAssembly.expectMsgClass(AxisUpdate.class);
     assertEquals(upd.current, finalPos);
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+    cleanup(tromboneHCD, se2, ch);
   }
 
   @Test
@@ -463,8 +466,8 @@ public class CommandHandlerTests extends JavaTestKit {
     fakeAssembly.send(tromboneHCD, GetAxisUpdateNow);
     AxisUpdate upd = fakeAssembly.expectMsgClass(AxisUpdate.class);
     assertEquals(upd.current, finalPos);
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+    cleanup(tromboneHCD, se2, ch);
   }
 
   @Test
@@ -495,8 +498,7 @@ public class CommandHandlerTests extends JavaTestKit {
     assertEquals(upd.current, finalPos);
     logger.info("Upd: " + upd);
 
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, ch);
   }
 
   @Test
@@ -523,8 +525,7 @@ public class CommandHandlerTests extends JavaTestKit {
     assertEquals(errMsg.overall(), Incomplete);
     assertTrue(errMsg.details().getResults().get(0).first() instanceof NoLongerValid);
 
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, se2, ch);
   }
 
   @Test
@@ -554,8 +555,8 @@ public class CommandHandlerTests extends JavaTestKit {
 
     CommandResult msg2 = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS), CommandResult.class);
     logger.info("Msg: " + msg2);
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+    cleanup(tromboneHCD, se, ch);
   }
 
   @Test
@@ -633,8 +634,8 @@ public class CommandHandlerTests extends JavaTestKit {
     CommandResult msg5 = fakeAssembly.expectMsgClass(FiniteDuration.create(10, TimeUnit.SECONDS), CommandResult.class);
     logger.info("Msg: " + msg5);
     fakeAssembly.expectNoMsg(FiniteDuration.apply(1, TimeUnit.SECONDS));
-    system.stop(ch);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+
+    cleanup(tromboneHCD, ch, se, se2, se3, se4);
   }
 
   @Test
@@ -683,12 +684,7 @@ public class CommandHandlerTests extends JavaTestKit {
     AxisUpdate upd = fakeAssembly.expectMsgClass(AxisUpdate.class);
     logger.info("Upd2: " + upd);
 
-    // Cleanup
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(ch);
-    system.stop(ch);
-    monitor.expectTerminated(ch, FiniteDuration.apply(1, TimeUnit.SECONDS));
+    cleanup(tromboneHCD, se, ch);
   }
 
 }

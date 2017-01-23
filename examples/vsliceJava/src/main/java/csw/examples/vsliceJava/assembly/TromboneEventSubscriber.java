@@ -111,6 +111,7 @@ public class TromboneEventSubscriber extends AbstractActor implements ILocationS
       }).
 
       match(FollowActor.StopFollowing.class, t -> {
+        subscribeMonitor.stop();
         // Kill this subscriber
         context().stop(self());
       }).
