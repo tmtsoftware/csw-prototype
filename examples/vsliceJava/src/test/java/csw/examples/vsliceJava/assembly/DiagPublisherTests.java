@@ -44,6 +44,7 @@ import static csw.util.config.Events.StatusEvent;
 import static csw.util.config.Events.SystemEvent;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.services.pkg.JSupervisor.HaltComponent;
 import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
 import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static junit.framework.TestCase.assertEquals;
@@ -162,6 +163,21 @@ public class DiagPublisherTests extends JavaTestKit {
     return Supervisor.apply(testInfo);
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(ActorRef tromboneHCD, ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+
+    monitor.watch(tromboneHCD);
+    tromboneHCD.tell(HaltComponent, self());
+    monitor.expectTerminated(tromboneHCD, timeout.duration());
+  }
+
+
   // This is possible since trombone HCD has only one HCD
   Connection.AkkaConnection tromboneHCDConnection = (AkkaConnection) assemblyContext.info.getConnections().get(0);
 
@@ -203,8 +219,7 @@ public class DiagPublisherTests extends JavaTestKit {
     tromboneHCD.tell(GetAxisUpdate, self());
     fakePublisher.expectMsgClass(AxisStateUpdate.class);
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 
   /**
@@ -243,8 +258,7 @@ public class DiagPublisherTests extends JavaTestKit {
     tromboneHCD.tell(GetAxisUpdate, self());
     fakePublisher.expectMsgClass(AxisStateUpdate.class);
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 
   /**
@@ -285,8 +299,7 @@ public class DiagPublisherTests extends JavaTestKit {
     tromboneHCD.tell(GetAxisUpdate, self());
     fakePublisher.expectNoMsg(FiniteDuration.apply(20, TimeUnit.MILLISECONDS));
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 
   /**
@@ -316,8 +329,7 @@ public class DiagPublisherTests extends JavaTestKit {
     // Because timeout is 3 seconds, we get the one stats event after 1 second
     fakePublisher.expectMsgClass(AxisStatsUpdate.class);
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 
   /**
@@ -365,8 +377,7 @@ public class DiagPublisherTests extends JavaTestKit {
     // A delay to see that no messages arrive after one second to ensure timer is off
     expectNoMsg(duration("1200 milliseconds"));
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 
   void setLocation(Location loc) {
@@ -413,8 +424,7 @@ public class DiagPublisherTests extends JavaTestKit {
     // Wait for one update message
     fakePublisher.expectMsgClass(AxisStatsUpdate.class);
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 
   /*
@@ -471,8 +481,7 @@ public class DiagPublisherTests extends JavaTestKit {
     assertEquals(result.msgs.size(), 2);
     //info("result: " + result)
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 
   /**
@@ -536,9 +545,7 @@ public class DiagPublisherTests extends JavaTestKit {
     //result.msgs.size shouldBe 4
     logger.info("result: " + result);
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
-//      expectNoMsg(duration("5 second"));
+    cleanup(tromboneHCD, dp);
   }
 
   /**
@@ -607,7 +614,6 @@ public class DiagPublisherTests extends JavaTestKit {
     assertTrue(result2.msgs.size() >= 2);
     //info("result: " + result2)
 
-    system.stop(dp);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, dp);
   }
 }
