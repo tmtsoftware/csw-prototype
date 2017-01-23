@@ -2,7 +2,6 @@ package csw.examples.vsliceJava.assembly;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
-import akka.actor.PoisonPill;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
@@ -39,8 +38,10 @@ import static csw.services.pkg.SupervisorExternal.SubscribeLifecycleCallback;
 import static csw.util.config.StateVariable.CurrentState;
 import static javacsw.services.alarms.JAlarmModel.JSeverityLevel.Okay;
 import static javacsw.services.alarms.JAlarmModel.JSeverityLevel.Warning;
+import static javacsw.services.ccs.JCommandStatus.Completed;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.services.pkg.JSupervisor.HaltComponent;
 import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
 import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static javacsw.util.config.JConfigDSL.cs;
@@ -73,7 +74,7 @@ public class AlarmMonitorTests extends JavaTestKit {
 
   // For compatibility with Scala tests
   static void it(String s) {
-    System.out.println(s);
+    System.out.println(" ======> " + s);
   }
 
   public AlarmMonitorTests() {
@@ -144,6 +145,21 @@ public class AlarmMonitorTests extends JavaTestKit {
     jset(inHighLimitKey, false),
     jset(inHomeKey, false));
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(ActorRef tromboneHCD, ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+
+    monitor.watch(tromboneHCD);
+    tromboneHCD.tell(HaltComponent, self());
+    monitor.expectTerminated(tromboneHCD, timeout.duration());
+  }
+
+
   /*
    * Test Description: this uses a fake trombone HCD to send  a CurrentState with low limit set.
    * This causes the monitor to send the warning severity to the Alarm Service
@@ -213,7 +229,9 @@ public class AlarmMonitorTests extends JavaTestKit {
     CurrentSeverity alarmValue2 = alarmAdmin.getSeverity(alarmKey).get(10, TimeUnit.SECONDS);
     assertEquals(alarmValue2.reported(), Okay);
 
+    watch(am);
     system.stop(am);
+    expectTerminated(am);
   }
 
   void testLimitAlarm(AlarmKey alarmKey, double limitPosition, double clearPosition) throws Exception {
@@ -240,16 +258,19 @@ public class AlarmMonitorTests extends JavaTestKit {
 
     // The command handler sends commands to the trombone HCD
     ActorRef ch = newCommandHandler(tromboneHCD, Optional.empty());
+    // Give command handler time to subscribe to command state!
+    expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS));
 
     ActorRef needToSetStateForMoveCommand = system.actorOf(TromboneStateActor.props());
     needToSetStateForMoveCommand.tell(new SetState(cmdReady, moveIndexed, false, false), self());
     expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS));
 
+    // Move to the 0 position
     ch.tell(JSequentialExecutor.ExecuteOne(ac.moveSC(limitPosition), Optional.of(fakeAssembly.ref())), self());
     // Watch for command completion
-    CommandStatus result = fakeAssembly.expectMsgClass(FiniteDuration.create(35, TimeUnit.SECONDS),
-      CommandStatus.class);
+    CommandStatus result = fakeAssembly.expectMsgClass(FiniteDuration.create(5, TimeUnit.SECONDS), CommandStatus.class);
     logger.info("Result: " + result);
+    assert(Completed.equals(result));
 
     expectNoMsg(FiniteDuration.create(1, TimeUnit.SECONDS)); // A bit of time for processing and update of AlarmService due to move
 
@@ -268,10 +289,7 @@ public class AlarmMonitorTests extends JavaTestKit {
     CurrentSeverity alarmValue3 = alarmAdmin.getSeverity(alarmKey).get(10, TimeUnit.SECONDS);
     assertEquals(alarmValue3.reported(), Okay);
 
-    system.stop(ch);
-    system.stop(needToSetStateForMoveCommand);
-    system.stop(am);
-    tromboneHCD.tell(PoisonPill.getInstance(), ActorRef.noSender());
+    cleanup(tromboneHCD, ch, needToSetStateForMoveCommand, am);
   }
 }
 

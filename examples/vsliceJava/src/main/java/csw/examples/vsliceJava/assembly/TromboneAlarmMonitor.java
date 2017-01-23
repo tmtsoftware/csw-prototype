@@ -13,11 +13,12 @@ import csw.services.alarms.AlarmKey;
 import csw.services.alarms.AlarmModel;
 import csw.util.config.JavaHelpers;
 import javacsw.services.alarms.IAlarmService;
-import javacsw.services.alarms.JAlarmService;
 import javacsw.services.ccs.JHcdController;
 import scala.PartialFunction;
+import scala.Unit;
 import scala.runtime.BoxedUnit;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static csw.examples.vsliceJava.hcd.TromboneHCD.inHighLimitKey;
@@ -130,10 +131,16 @@ public class TromboneAlarmMonitor extends AbstractActor {
    * @param severity the severity that is used to set the lowLimitAlarm
    */
   private void sendLowLimitAlarm(IAlarmService alarmService, AlarmModel.SeverityLevel severity) {
-    alarmService.setSeverity(lowLimitAlarm, severity).exceptionally(ex -> {
+    CompletableFuture<Unit> f = alarmService.setSeverity(lowLimitAlarm, severity);
+    f.exceptionally(ex -> {
       log.error("TromboneAlarmMonitor failed to set " + lowLimitAlarm + " to " + severity + ": " + ex);
       return null;
     }).thenAccept(t -> log.info("TromboneAlarmMonitor successfully posted: $severity to the low limit alarm"));
+    try {
+      f.get(3, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      log.error(e, "TromboneAlarmMonitor failed");
+    }
   }
 
   /**
@@ -142,10 +149,16 @@ public class TromboneAlarmMonitor extends AbstractActor {
    * @param severity the severity that is used to set the highLimitAlarm
    */
   private void sendHighLimitAlarm(IAlarmService alarmService, AlarmModel.SeverityLevel severity) {
-    alarmService.setSeverity(highLimitAlarm, severity).exceptionally(ex -> {
+    CompletableFuture<Unit> f = alarmService.setSeverity(highLimitAlarm, severity);
+    f.exceptionally(ex -> {
       log.error("TromboneAlarmMonitor failed to set " + highLimitAlarm + " to " + severity + ": " + ex);
       return null;
     }).thenAccept(t -> log.info("TromboneAlarmMonitor successfully posted: $severity to the low limit alarm"));
+    try {
+      f.get(3, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      log.error(e, "TromboneAlarmMonitor failed");
+    }
   }
 
   // --- static defs ---

@@ -41,4 +41,5 @@ class JEventServiceAdmin(eventService: IEventService, system: ActorRefFactory) e
   val eventAdmin = EventServiceAdmin(eventService.asInstanceOf[JEventService].eventService)
 
   override def shutdown(): CompletableFuture[Unit] = eventAdmin.shutdown().toJava.toCompletableFuture
+  override def reset(): CompletableFuture[Unit] = eventAdmin.reset().toJava.toCompletableFuture
 }

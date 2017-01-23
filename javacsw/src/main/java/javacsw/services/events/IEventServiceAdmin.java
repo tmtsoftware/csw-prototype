@@ -18,6 +18,12 @@ public interface IEventServiceAdmin {
   CompletableFuture<Unit> shutdown();
 
   /**
+   * For use in testing: Deletes all keys in all databases in the Redis instance
+   */
+  CompletableFuture<Unit> reset();
+
+
+  /**
    * Starts a redis instance on a random free port (redis-server must be in your shell path)
    * and registers it with the location service.
    * This is the equivalent of running this from the command line:
