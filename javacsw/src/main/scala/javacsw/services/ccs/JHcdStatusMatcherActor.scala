@@ -12,6 +12,18 @@ object JHcdStatusMatcherActor {
   /**
    * Props used to create the HcdStatusMatcherActor actor from Java.
    *
+   * @param demand the target state that will be compared to the current state
+   * @param hcd    the target HCD actor
+   * @param replyTo the actor to reply to
+   */
+  def props(demand: DemandState, hcd: ActorRef, replyTo: ActorRef): Props = {
+    Props(classOf[HcdStatusMatcherActor], List(demand), Set(hcd), replyTo, RunId(), Timeout(60.seconds),
+      StateVariable.defaultMatcher _)
+  }
+
+  /**
+   * Props used to create the HcdStatusMatcherActor actor from Java.
+   *
    * @param demands the target states that will be compared to their current states
    * @param hcds    the target HCD actors
    * @param replyTo the actor to reply to

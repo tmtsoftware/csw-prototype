@@ -1,11 +1,11 @@
 package javacsw.util.config;
 
-import csw.util.akka.PublisherActor;
 import csw.util.akka.PublisherActor.*;
 
 /**
  * Java API for PublisherActor messages
  */
+@SuppressWarnings("unused")
 public class JPublisherActor {
   /**
    * Subscribes the sender
