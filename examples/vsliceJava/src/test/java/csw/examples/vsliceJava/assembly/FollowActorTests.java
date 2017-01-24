@@ -46,6 +46,7 @@ import static csw.util.config.Events.*;
 import static csw.util.config.StateVariable.CurrentState;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.services.pkg.JSupervisor.HaltComponent;
 import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
 import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static javacsw.util.config.JItems.jadd;
@@ -158,6 +159,22 @@ public class FollowActorTests extends JavaTestKit {
     return TestActorRef.create(system, props);
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(Optional<ActorRef> tromboneHCDOpt, ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+
+    tromboneHCDOpt.ifPresent(tromboneHCD -> {
+      monitor.watch(tromboneHCD);
+      tromboneHCD.tell(HaltComponent, self());
+      monitor.expectTerminated(tromboneHCD, timeout.duration());
+    });
+  }
+
   // --- Basic tests for connectivity ----
 
   TestProbe fakeTC = new TestProbe(system);
@@ -172,7 +189,7 @@ public class FollowActorTests extends JavaTestKit {
     assertEquals(cal.underlyingActor().initialElevation, iElevation(calculationConfig.defaultInitialElevation));
 
     fakeTC.expectNoMsg(duration("1 seconds"));
-    system.stop(cal);
+    cleanup(Optional.empty(), cal);
   }
 
   // --- Test set initial elevation ---
@@ -184,7 +201,7 @@ public class FollowActorTests extends JavaTestKit {
 
     assertEquals(cal.underlyingActor().initialElevation, iElevation(calculationConfig.defaultInitialElevation));
 
-    system.stop(cal);
+    cleanup(Optional.empty(), cal);
   }
 
 
@@ -213,7 +230,7 @@ public class FollowActorTests extends JavaTestKit {
 
     fakeTC.expectMsgClass(GoToStagePosition.class);
     fakePub.expectMsgClass(AOESWUpdate.class);
-    system.stop(cal);
+    cleanup(Optional.empty(), cal);
   }
 
   @Test
@@ -227,7 +244,7 @@ public class FollowActorTests extends JavaTestKit {
       Events.getEventTime()), self());
 
     fakeTC.expectNoMsg(duration("100 milli"));
-    system.stop(cal);
+    cleanup(Optional.empty(), cal);
   }
 
   @Test
@@ -242,7 +259,7 @@ public class FollowActorTests extends JavaTestKit {
 
     cal.tell(new UpdatedEventData(za(0.0), fe(42.0), Events.getEventTime()), self());
     fakeTC.expectNoMsg(duration("100 milli"));
-    system.stop(cal);
+    cleanup(Optional.empty(), cal);
   }
 
   /*
@@ -314,7 +331,7 @@ public class FollowActorTests extends JavaTestKit {
       .collect(Collectors.toList());
 
     assertEquals(engExpected, engMsgs);
-    system.stop(follower);
+    cleanup(Optional.empty(), follower);
   }
 
   @Test
@@ -366,7 +383,7 @@ public class FollowActorTests extends JavaTestKit {
       .collect(Collectors.toList());
 
     assertEquals(engExpected, engMsgs);
-    system.stop(follower);
+    cleanup(Optional.empty(), follower);
   }
 
   /**
@@ -444,15 +461,16 @@ public class FollowActorTests extends JavaTestKit {
     Optional<IEventService> tcsRtc = Optional.of(eventService);
 
     double testFE = 20.0;
-    // Publish a single focus error. This will generate a published event
-    tcsRtc.ifPresent(f -> f.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE))));
 
     // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
     ActorRef resultSubscriber1 = system.actorOf(TestSubscriber.props());
     eventService.subscribe(resultSubscriber1, false, assemblyContext.aoSystemEventPrefix);
 
     ActorRef resultSubscriber2 = system.actorOf(TestSubscriber.props());
-    eventService.subscribe(resultSubscriber2, false, assemblyContext.engStatusEventPrefix);
+    telemetryService.subscribe(resultSubscriber2, false, assemblyContext.engStatusEventPrefix);
+
+    // Publish a single focus error. This will generate a published event
+    tcsRtc.ifPresent(f -> f.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE))));
 
     // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
     List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f ->
@@ -543,12 +561,6 @@ public class FollowActorTests extends JavaTestKit {
     engExpected.addAll(zaEngExpected);
     assertEquals(result2.msgs, engExpected);
 
-    tromboneHCD.tell(PoisonPill.getInstance(), self());
-    system.stop(publisherActorRef);
-    system.stop(tromboneControl);
-    system.stop(followActor);
-    system.stop(tromboneEventSubscriber);
-    system.stop(resultSubscriber1);
-    system.stop(resultSubscriber2);
+    cleanup(Optional.of(tromboneHCD), publisherActorRef, tromboneControl, followActor, tromboneEventSubscriber, resultSubscriber1, resultSubscriber2);
   }
 }

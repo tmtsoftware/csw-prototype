@@ -72,7 +72,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
 
   @AfterClass
   public static void teardown() {
-    hcdActors.forEach(actorRef -> actorRef.tell(PoisonPill.getInstance(), ActorRef.noSender()));
+    hcdActors.forEach(TromboneAssemblyBasicTests::cleanup);
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }
@@ -85,6 +85,16 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
   ActorRef newTrombone(ActorRef supervisor) {
     Props props = getTromboneProps(assemblyContext.info, Optional.of(supervisor));
     return system.actorOf(props);
+  }
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private static void cleanup(ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
   }
 
   // --- low-level instrumented trombone assembly tests ---
@@ -104,7 +114,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     fakeSupervisor.expectMsg(ShutdownComplete);
 
     logger.info("Shutdown Complete");
-    system.stop(tla);
+    cleanup(tla);
   }
 
   @Test
@@ -135,10 +145,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertTrue(completeMsg.details().status(0) instanceof NoLongerValid);
     assertTrue(((NoLongerValid) completeMsg.details().status(0)).issue() instanceof WrongInternalStateIssue);
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -170,10 +177,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     fakeClient.expectNoMsg(duration("250 milli"));
     //logger.info("Completed: " + completeMsg)
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -209,10 +213,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertTrue(completeMsg.details().status(1) instanceof NoLongerValid);
     assertTrue(((NoLongerValid) completeMsg.details().status(1)).issue() instanceof WrongInternalStateIssue);
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -247,10 +248,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -284,10 +282,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -336,10 +331,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -399,10 +391,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     // Checking that no talking
     fakeClient.expectNoMsg(duration("100 milli"));
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -451,10 +440,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -503,10 +489,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertTrue(completeMsg.details().status(0) instanceof NoLongerValid);
     assertTrue(((NoLongerValid) completeMsg.details().status(0)).issue() instanceof WrongInternalStateIssue);
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -554,10 +537,7 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 
   @Test
@@ -624,9 +604,6 @@ public class TromboneAssemblyBasicTests extends JavaTestKit {
 
     expectNoMsg(duration("10 seconds"));
 
-    TestProbe monitor = new TestProbe(system);
-    monitor.watch(tromboneAssembly);
-    system.stop(tromboneAssembly);
-    monitor.expectTerminated(tromboneAssembly, duration("3 seconds"));
+    cleanup(tromboneAssembly);
   }
 }

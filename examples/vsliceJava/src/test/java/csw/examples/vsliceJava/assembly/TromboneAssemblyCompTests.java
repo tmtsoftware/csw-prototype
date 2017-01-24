@@ -7,6 +7,7 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.testkit.JavaTestKit;
 import akka.testkit.TestProbe;
+import akka.util.Timeout;
 import csw.examples.vsliceJava.TestEnv;
 import csw.services.apps.containerCmd.ContainerCmd;
 import csw.services.ccs.AssemblyController.Submit;
@@ -20,11 +21,13 @@ import javacsw.services.pkg.JSupervisor;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static csw.services.pkg.SupervisorExternal.LifecycleStateChanged;
@@ -39,6 +42,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
   private static LoggingAdapter logger;
 
   private static AssemblyContext assemblyContext = AssemblyTestData.TestAssemblyContext;
+  private static Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(10, TimeUnit.SECONDS));
 
   // List of top level actors that were created for the HCD (for clean up)
   private static List<ActorRef> hcdActors = Collections.emptyList();
@@ -69,13 +73,23 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
 
   @AfterClass
   public static void teardown() {
-    hcdActors.forEach(actorRef -> actorRef.tell(PoisonPill.getInstance(), ActorRef.noSender()));
+    hcdActors.forEach(TromboneAssemblyCompTests::cleanup);
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }
 
   ActorRef newTrombone() {
     return JSupervisor.create(assemblyContext.info);
+  }
+
+  // Stop any actors created for a test to avoid conflict with other tests
+  private static void cleanup(ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
   }
 
   // --- comp tests ---
@@ -89,7 +103,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     tla.tell(new SubscribeLifecycleCallback(fakeSequencer.ref()), self());
     fakeSequencer.expectMsg(new LifecycleStateChanged(LifecycleInitialized));
     fakeSequencer.expectMsg(duration("10 seconds"), new LifecycleStateChanged(LifecycleRunning));
-    tla.tell(PoisonPill.getInstance(), self());
+    cleanup(tla);
   }
 
   @Test
@@ -119,7 +133,7 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     // Wait a bit to see if there is any spurious messages
     fakeSequencer.expectNoMsg(duration("250 milli"));
     logger.info("Msg: " + completeMsg);
-    tla.tell(PoisonPill.getInstance(), self());
+    cleanup(tla);
   }
 
   @Test
@@ -166,6 +180,6 @@ public class TromboneAssemblyCompTests extends JavaTestKit {
     logger.info("msg2: " + completeMsg);
     assertEquals(completeMsg.overall(), AllCompleted);
     assertEquals(completeMsg.details().results().size(), sca.configs().size());
-    tla.tell(PoisonPill.getInstance(), self());
+    cleanup(tla);
   }
 }

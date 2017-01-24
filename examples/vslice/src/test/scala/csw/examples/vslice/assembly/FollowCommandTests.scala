@@ -390,8 +390,7 @@ class FollowCommandTests extends TestKit(FollowCommandTests.system) with Implici
       msgs.last(inHighLimitKey).head should equal(false)
 
       // Stop this follow command
-      system.stop(fc)
-      system.stop(eventPublisher)
+      cleanup(None, fc, eventPublisher)
 
       // verify that the eng messages are the right number and that za is always 0
       // Still no AOESW events

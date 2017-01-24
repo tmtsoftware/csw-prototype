@@ -41,6 +41,7 @@ import static csw.util.config.Events.*;
 import static csw.util.config.StateVariable.CurrentState;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.services.pkg.JSupervisor.HaltComponent;
 import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
 import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static javacsw.util.config.JItems.jadd;
@@ -226,6 +227,23 @@ public class FollowCommandTests extends JavaTestKit {
     return allmsgs;
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(Optional<ActorRef> tromboneHCDOpt, ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+
+    tromboneHCDOpt.ifPresent(tromboneHCD -> {
+      monitor.watch(tromboneHCD);
+      tromboneHCD.tell(HaltComponent, self());
+      monitor.expectTerminated(tromboneHCD, timeout.duration());
+    });
+  }
+
+
   // --- basic event command setup ---
 
   @Test
@@ -240,6 +258,8 @@ public class FollowCommandTests extends JavaTestKit {
 
     fc.tell(new FollowCommand.StopFollowing(), self());
     fakeTromboneHCD.expectNoMsg(duration("250 milli"));
+
+    cleanup(Optional.empty(), fc);
   }
 
   // --- Tests of the overall collection of actors in follow commmand ---
@@ -276,17 +296,17 @@ public class FollowCommandTests extends JavaTestKit {
     IEventService tcsRtc = eventService;
 
     double testFE = 20.0;
-    // Publish a single focus error. This will generate a published event
-    tcsRtc.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE)));
-
     // This creates a subscriber to get all aoSystemEventPrefix SystemEvents published
     ActorRef resultSubscriber1 = system.actorOf(TestSubscriber.props());
     eventService.subscribe(resultSubscriber1, false, assemblyContext.aoSystemEventPrefix);
 
     ActorRef resultSubscriber2 = system.actorOf(TestSubscriber.props());
-    eventService.subscribe(resultSubscriber2, false, assemblyContext.engStatusEventPrefix);
+    telemetryService.subscribe(resultSubscriber2, false, assemblyContext.engStatusEventPrefix);
 
     expectNoMsg(duration("1 second")); // Wait for subscriptions to happen
+
+    // Publish a single focus error. This will generate a published event
+    tcsRtc.publish(new SystemEvent(focusErrorPrefix).add(fe(testFE)));
 
     // These are fake messages for the FollowActor that will be sent to simulate the TCS updating ZA
     List<SystemEvent> tcsEvents = testZenithAngles.stream().map(f -> new SystemEvent(zaConfigKey.prefix()).add(za(f)))
@@ -330,8 +350,7 @@ public class FollowCommandTests extends JavaTestKit {
     expectNoMsg(duration("200 milli"));
 
     // Stop this follow command
-    system.stop(fc);
-    system.stop(eventPublisher);
+    cleanup(Optional.empty(), fc, eventPublisher);
 
     resultSubscriber1.tell(new TestSubscriber.GetResults(), self());
     // Check the events received through the Event Service
@@ -383,9 +402,7 @@ public class FollowCommandTests extends JavaTestKit {
     engExpected.addAll(zaEngExpected);
     assertEquals(result2.msgs, engExpected);
 
-    tromboneHCD.tell(PoisonPill.getInstance(), self());
-    system.stop(resultSubscriber1);
-    system.stop(resultSubscriber2);
+    cleanup(Optional.of(tromboneHCD), resultSubscriber1, resultSubscriber2);
   }
 
   /**
@@ -487,8 +504,7 @@ public class FollowCommandTests extends JavaTestKit {
     assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
 
     // Stop this follow command
-    system.stop(fc);
-    system.stop(eventPublisher);
+    cleanup(Optional.empty(), fc, eventPublisher);
 
     // verify that the eng messages are the right number and that za is always 0
     // Still no AOESW events
@@ -508,9 +524,7 @@ public class FollowCommandTests extends JavaTestKit {
 
     assertTrue(l.isEmpty());
 
-    tromboneHCD.tell(PoisonPill.getInstance(), self());
-    system.stop(resultSubscriber1);
-    system.stop(resultSubscriber2);
+    cleanup(Optional.of(tromboneHCD), resultSubscriber1, resultSubscriber2);
   }
 
   /**
@@ -588,9 +602,7 @@ public class FollowCommandTests extends JavaTestKit {
 //    fakeAssembly.expectNoMsg(duration("200 milli"));
 
     // Stop this follow command
-    system.stop(fc);
-    system.stop(eventPublisher);
-    tromboneHCD.tell(PoisonPill.getInstance(), self());
+    cleanup(Optional.of(tromboneHCD), fc, eventPublisher);
   }
 
 }

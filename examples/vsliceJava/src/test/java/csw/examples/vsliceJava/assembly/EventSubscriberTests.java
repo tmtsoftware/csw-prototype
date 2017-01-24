@@ -82,6 +82,16 @@ public class EventSubscriberTests extends JavaTestKit {
     return system.actorOf(props);
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+  }
+
   // --- basic event subscriber tests ---
 
   @Test
@@ -98,8 +108,8 @@ public class EventSubscriberTests extends JavaTestKit {
     assertEquals(es.underlyingActor().nssInUseGlobal, setNssInUse(false));
 
     es.tell(new StopFollowing(), self());
-    fakeFollowActor.expectNoMsg(duration("20 milli"));
-    system.stop(es);
+    fakeFollowActor.expectNoMsg(duration("500 milli"));
+    cleanup(es);
   }
 
   // --- tests for proper operation ---
@@ -127,8 +137,8 @@ public class EventSubscriberTests extends JavaTestKit {
     assertEquals(msg.zenithAngle, za(0.0));
 
     // No more messages please
-    fakeFollowActor.expectNoMsg(duration("100 milli"));
-    system.stop(es);
+    fakeFollowActor.expectNoMsg(duration("500 milli"));
+    cleanup(es);
   }
 
 
@@ -162,9 +172,9 @@ public class EventSubscriberTests extends JavaTestKit {
     tcsEvents.forEach(tcsRtc::publish);
 
     // No more messages please
-    fakeFollowActor.expectNoMsg(duration("100 milli"));
+    fakeFollowActor.expectNoMsg(duration("500 milli"));
 
-    system.stop(es);
+    cleanup(es);
   }
 
   @Test
@@ -191,7 +201,7 @@ public class EventSubscriberTests extends JavaTestKit {
     // XXX Note: The Scala version of this test uses TestKit.receiveN, which returns a Scala Seq, so we need to convert here
     // (I didn't find a Java API for this)
     List<UpdatedEventData> feEventMsgs =
-      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size(), duration("10 seconds")))
+      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size(), timeout.duration()))
         .stream().map(f -> (UpdatedEventData) f)
         .collect(Collectors.toList());
 
@@ -210,7 +220,7 @@ public class EventSubscriberTests extends JavaTestKit {
 
     // Should get several and the zenith angles should match since nssInUse was false
     List<UpdatedEventData> msgs =
-      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(tcsEvents.size()))
+      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(tcsEvents.size(), timeout.duration()))
         .stream().map(f -> (UpdatedEventData) f)
         .collect(Collectors.toList());
 
@@ -226,15 +236,15 @@ public class EventSubscriberTests extends JavaTestKit {
     // Now turn it off
     es.tell(new StopFollowing(), self());
     // Give a little wait for the usubscribe to kick in before the publish events
-    fakeFollowActor.expectNoMsg(duration("20 milli"));
+    fakeFollowActor.expectNoMsg(duration("200 milli"));
 
     // Should get no tcsEvents because not following
     tcsEvents.forEach(tcsRtc::publish);
 
     // No more messages please
-    fakeFollowActor.expectNoMsg(duration("100 milli"));
+    fakeFollowActor.expectNoMsg(duration("500 milli"));
 
-    system.stop(es);
+    cleanup(es);
   }
 
   @Test
@@ -258,8 +268,8 @@ public class EventSubscriberTests extends JavaTestKit {
       .collect(Collectors.toList());
 
     double testZA = 45.0;
-    tcsRtc.publish(new SystemEvent(zenithAnglePrefix).add(za(testZA)));
-    UpdatedEventData one = fakeFollowActor.expectMsgClass(duration("10 seconds"), UpdatedEventData.class);
+    tcsRtc.publish(new SystemEvent(zaConfigKey.prefix()).add(za(testZA)));
+    UpdatedEventData one = fakeFollowActor.expectMsgClass(timeout.duration(), UpdatedEventData.class);
     assertEquals(jvalue(one.zenithAngle), testZA);
 
     // Now follow with nssInUse and send feEvents, should have 0.0 as ZA
@@ -269,7 +279,7 @@ public class EventSubscriberTests extends JavaTestKit {
     feEvents.forEach(tcsRtc::publish);
 
     List<UpdatedEventData> msgs2 =
-      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size()))
+      scala.collection.JavaConversions.asJavaCollection(fakeFollowActor.receiveN(feEvents.size(), timeout.duration()))
         .stream().map(f -> (UpdatedEventData) f)
         .collect(Collectors.toList());
 
@@ -292,14 +302,14 @@ public class EventSubscriberTests extends JavaTestKit {
     es.tell(new StopFollowing(), self());
 
     // Give a little wait for the usubscribe to kick in before the publish events
-    fakeFollowActor.expectNoMsg(duration("20 milli"));
+    fakeFollowActor.expectNoMsg(duration("200 milli"));
 
     // Should get no tcsEvents because not following
     tcsEvents.forEach(tcsRtc::publish);
 
     // No more messages please
-    fakeFollowActor.expectNoMsg(duration("100 milli"));
+    fakeFollowActor.expectNoMsg(duration("200 milli"));
 
-    system.stop(es);
+    cleanup(es);
   }
 }

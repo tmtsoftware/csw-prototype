@@ -145,6 +145,7 @@ class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with Implic
     }
 
     it("now enable follow should make several events for za and fe list publish nssNotInUse") {
+      // test4
       val fakeFollowActor = TestProbe()
 
       val es = newEventSubscriber(setNssInUse(false), Some(fakeFollowActor.ref), eventService)

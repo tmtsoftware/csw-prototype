@@ -45,6 +45,7 @@ import static csw.util.config.Events.EventServiceEvent;
 import static csw.util.config.Events.SystemEvent;
 import static javacsw.services.loc.JConnectionType.AkkaType;
 import static javacsw.services.pkg.JComponent.DoNotRegister;
+import static javacsw.services.pkg.JSupervisor.HaltComponent;
 import static javacsw.services.pkg.JSupervisor.LifecycleInitialized;
 import static javacsw.services.pkg.JSupervisor.LifecycleRunning;
 import static javacsw.util.config.JItems.jadd;
@@ -177,6 +178,22 @@ public class FollowPositionTests extends JavaTestKit {
     return jset(focusErrorKey, error).withUnits(micrometers);
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(Optional<ActorRef> tromboneHCDOpt, ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+      monitor.watch(actorRef);
+      system.stop(actorRef);
+      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+
+    tromboneHCDOpt.ifPresent(tromboneHCD -> {
+      monitor.watch(tromboneHCD);
+      tromboneHCD.tell(HaltComponent, self());
+      monitor.expectTerminated(tromboneHCD, timeout.duration());
+    });
+  }
+
   /*
    * Test Description: This test tests the CalculatorActor to a fake TromboneHCD to inspect the messages
    * provided by the CalculatorActor.  fakeTromboneEventSubscriber sends an UpdatedEventData event to
@@ -231,7 +248,7 @@ public class FollowPositionTests extends JavaTestKit {
     GoToStagePosition msg = fakeTromboneControl.expectMsgClass(GoToStagePosition.class);
     assertEquals(msg, new GoToStagePosition(jset(stagePositionKey, calculationConfig.defaultInitialElevation).withUnits(stagePositionUnits)));
 
-    system.stop(followActor);
+    cleanup(Optional.empty(), followActor);
   }
 
   /**
@@ -275,7 +292,7 @@ public class FollowPositionTests extends JavaTestKit {
     // The two should be equal
     assertEquals(msgsExpected, msgs);
 
-    system.stop(followActor);
+    cleanup(Optional.empty(), followActor);
   }
 
   /**
@@ -332,8 +349,7 @@ public class FollowPositionTests extends JavaTestKit {
     // The two should be equal
     assertEquals(msgsExpected, msgs);
 
-    system.stop(followActor);
-    system.stop(tromboneEventSubscriber);
+    cleanup(Optional.empty(), followActor, tromboneEventSubscriber);
   }
 
   /**
@@ -372,8 +388,7 @@ public class FollowPositionTests extends JavaTestKit {
     assertEquals(msg, new Submit(jadd(new SetupConfig(axisMoveCK.prefix()),
       jset(positionKey, expectedEnc).withUnits(TromboneHCD.positionUnits))));
 
-    system.stop(tromboneControl);
-    system.stop(followActor);
+    cleanup(Optional.empty(), tromboneControl, followActor);
   }
 
   /**
@@ -429,8 +444,7 @@ public class FollowPositionTests extends JavaTestKit {
     // The two should be equal
     assertEquals(msgsExpected, msgs);
 
-    system.stop(tromboneControl);
-    system.stop(followActor);
+    cleanup(Optional.empty(), tromboneControl, followActor);
   }
 
   // -------------- The following set of tests use an actual tromboneHCD for testing  --------------------
@@ -576,9 +590,7 @@ public class FollowPositionTests extends JavaTestKit {
     assertEquals(JavaHelpers.jvalue(last, inLowLimitKey), Boolean.valueOf(false));
     assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
 
-    system.stop(tromboneControl);
-    system.stop(followActor);
-    tromboneHCD.tell(PoisonPill.getInstance(), self());
+    cleanup(Optional.of(tromboneHCD), tromboneControl, followActor);
   }
 
 
@@ -657,9 +669,7 @@ public class FollowPositionTests extends JavaTestKit {
     assertEquals(JavaHelpers.jvalue(last, inLowLimitKey), Boolean.valueOf(false));
     assertEquals(JavaHelpers.jvalue(last, inHighLimitKey), Boolean.valueOf(false));
 
-    system.stop(tromboneControl);
-    system.stop(followActor);
-    tromboneHCD.tell(PoisonPill.getInstance(), self());
+    cleanup(Optional.of(tromboneHCD), tromboneControl, followActor);
   }
 
   /**
@@ -757,10 +767,7 @@ public class FollowPositionTests extends JavaTestKit {
     assertEquals(JavaHelpers.jvalue(last2, inLowLimitKey), Boolean.valueOf(false));
     assertEquals(JavaHelpers.jvalue(last2, inHighLimitKey), Boolean.valueOf(false));
 
-    system.stop(tromboneEventSubscriber);
-    system.stop(tromboneControl);
-    system.stop(followActor);
-    tromboneHCD.tell(PoisonPill.getInstance(), self());
+    cleanup(Optional.of(tromboneHCD), tromboneEventSubscriber, tromboneControl, followActor);
   }
 
 }

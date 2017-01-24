@@ -33,6 +33,7 @@ import static csw.examples.vsliceJava.assembly.FollowActor.UpdatedEventData;
 import static csw.examples.vsliceJava.assembly.TromboneStateActor.*;
 import static csw.services.loc.LocationService.ResolvedTcpLocation;
 import static csw.util.config.Events.*;
+import static javacsw.services.pkg.JSupervisor.HaltComponent;
 import static javacsw.util.config.JItems.jadd;
 import static javacsw.util.config.JItems.jset;
 import static junit.framework.TestCase.assertEquals;
@@ -143,6 +144,16 @@ public class EventPublishTests extends JavaTestKit {
     return system.actorOf(testEventPublisherProps);
   }
 
+  // Stop any actors created for a test to avoid conflict with other tests
+  private void cleanup(ActorRef... a) {
+    TestProbe monitor = new TestProbe(system);
+    for(ActorRef actorRef : a) {
+//      monitor.watch(actorRef);
+      system.stop(actorRef);
+//      monitor.expectTerminated(actorRef, timeout.duration());
+    }
+  }
+
   // --- Create follow actor with publisher and subscriber ---
 
 
@@ -185,6 +196,7 @@ public class EventPublishTests extends JavaTestKit {
     Vector<SystemEvent> v = new Vector<>();
     v.add(se);
     assertEquals(result.msgs, v);
+    cleanup(pub, fol);
   }
 
   /**
@@ -234,6 +246,7 @@ public class EventPublishTests extends JavaTestKit {
     //info("aowes: " + aoeswExpected)
 
     assertEquals(aoeswExpected, result.msgs);
+    cleanup(pub, fol);
   }
 
   /**
@@ -313,6 +326,8 @@ public class EventPublishTests extends JavaTestKit {
 
     // Here is the test for equality - total 16 messages
     assertEquals(aoeswExpected, result.msgs);
+
+    cleanup(publisherActorRef, followActorRef, es, resultSubscriber);
   }
 
   static StatusEvent makeStatusEvent(TromboneState ts) {
@@ -356,6 +371,7 @@ public class EventPublishTests extends JavaTestKit {
     TestSubscriber.Results result = expectMsgClass(TestSubscriber.Results.class);
     assertEquals(result.msgs.size(), 4);
     assertEquals(result.msgs, Arrays.stream(new TromboneState[]{s1, s2, s3, s4}).map(EventPublishTests::makeStatusEvent).collect(Collectors.toList()));
+    cleanup(tp, resultSubscriber);
   }
 }
 
