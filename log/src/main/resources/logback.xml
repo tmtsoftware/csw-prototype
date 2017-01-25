@@ -6,7 +6,6 @@
     <logger name="akka" level="INFO"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="akka.remote" level="ERROR"/>
-    <logger name="com.digitalpetri.opcua" level="ERROR"/>
     <logger name="com.google.inject" level="ERROR"/>
     <logger name="com.prosysopc.ua" level="INFO"/>
     <logger name="com.romix.akka.serialization.kryo" level="WARN"/>
@@ -15,7 +14,8 @@
     <logger name="io.netty" level="ERROR"/>
     <logger name="javax.jmdns" level="ERROR"/>
     <logger name="org.hornetq" level="ERROR"/>
-    <logger name="org.opcfoundation.ua" level="ERROR"/>
+    <logger name="org.opcfoundation.ua" level="INFO"/>
+    <logger name="org.eclipse.milo" level="INFO"/>
     <logger name="redis.actors" level="ERROR"/>
     <logger name="spray" level="INFO"/>
 
