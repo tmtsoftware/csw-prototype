@@ -35,6 +35,7 @@ object AlarmMonitorTests {
 /**
  * AlarmMonitorTests
  */
+@DoNotDiscover
 class AlarmMonitorTests extends TestKit(AlarmMonitorTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 

@@ -19,6 +19,7 @@ import javacsw.services.events.IEventService;
 import javacsw.services.events.ITelemetryService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -39,6 +40,7 @@ import static javacsw.util.config.JItems.jset;
 import static junit.framework.TestCase.assertEquals;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
+@Ignore
 public class EventPublishTests extends JavaTestKit {
 
   @SuppressWarnings("WeakerAccess")

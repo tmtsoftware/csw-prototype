@@ -28,6 +28,7 @@ object TromboneAssemblyCompTests {
   val system = ActorSystem("TromboneAssemblyCompTests")
 }
 
+@DoNotDiscover
 class TromboneAssemblyCompTests extends TestKit(TromboneAssemblyCompTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 

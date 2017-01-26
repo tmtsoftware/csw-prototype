@@ -21,6 +21,7 @@ import javacsw.services.loc.JConnectionType;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -37,6 +38,7 @@ import static javacsw.services.pkg.JSupervisor.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
+@Ignore
 public class TromboneHCDCompTests extends JavaTestKit {
   private static LoggingAdapter log;
   private static ActorSystem system;

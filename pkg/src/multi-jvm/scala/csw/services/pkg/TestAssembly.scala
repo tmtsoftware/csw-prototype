@@ -64,9 +64,6 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
     case LifecycleFailureInfo(state: LifecycleState, reason: String) =>
       log.info(s"Received failed state: $state for reason: $reason")
 
-    case Uninitialize =>
-      log.info("Received Uninitialize")
-
     // Message from SequentialExecutor (used below) to execute a single setup config
     case ExecuteOne(sc, commandOriginator) =>
       for (hcdActorRef <- getActorRefs(sc.prefix)) {

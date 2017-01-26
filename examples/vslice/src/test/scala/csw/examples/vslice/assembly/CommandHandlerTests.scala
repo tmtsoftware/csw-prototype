@@ -36,6 +36,7 @@ object CommandHandlerTests {
 /**
  * TMT Source Code: 9/21/16.
  */
+@DoNotDiscover
 class CommandHandlerTests extends TestKit(CommandHandlerTests.system)
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 

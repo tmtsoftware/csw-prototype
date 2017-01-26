@@ -51,6 +51,7 @@ object EventPublishTests {
 /**
  * TMT Source Code: 8/17/16.
  */
+@DoNotDiscover
 class EventPublishTests extends TestKit(EventPublishTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 

@@ -26,6 +26,7 @@ object TromboneHCDBasicTests {
   val system = ActorSystem("TromboneHCDBasicTests")
 }
 
+@DoNotDiscover
 class TromboneHCDBasicTests extends TestKit(TromboneHCDBasicTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
 

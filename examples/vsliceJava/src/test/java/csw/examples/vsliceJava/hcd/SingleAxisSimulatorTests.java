@@ -7,6 +7,7 @@ import akka.util.Timeout;
 import csw.services.loc.LocationService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 import csw.examples.vsliceJava.hcd.SingleAxisSimulator.*;
@@ -24,6 +25,7 @@ import static csw.examples.vsliceJava.hcd.MotionWorker.*;
 
 
 @SuppressWarnings({"unused", "SameParameterValue", "WeakerAccess"})
+@Ignore
 public class SingleAxisSimulatorTests extends JavaTestKit {
   private static ActorSystem system;
   Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));

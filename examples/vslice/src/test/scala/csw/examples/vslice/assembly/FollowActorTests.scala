@@ -23,7 +23,7 @@ import csw.util.config.BooleanItem
 import csw.util.config.Events.{EventTime, StatusEvent, SystemEvent}
 import csw.util.config.StateVariable.CurrentState
 import csw.util.config.UnitsOfMeasure.{degrees, kilometers, micrometers, millimeters}
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSpecLike, ShouldMatchers}
+import org.scalatest._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -67,6 +67,7 @@ object FollowActorTests {
 /**
  * TMT Source Code: 8/12/16.
  */
+@DoNotDiscover
 class FollowActorTests extends TestKit(FollowActorTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 

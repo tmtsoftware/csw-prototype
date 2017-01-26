@@ -138,8 +138,8 @@ object ContainerComponent {
   case object GoOnline extends ContainerMessage
 
   /**
-    * Tells the container to make all its components go offline
-    */
+   * Tells the container to make all its components go offline
+   */
   case object GoOffline extends ContainerMessage
 
   /**
@@ -346,13 +346,13 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
   // Receive messages
   private def runningReceive(supervisors: List[SupervisorInfo]): Receive = {
     case LifecycleToAll(cmd: SupervisorExternalMessage) => sendAllComponents(cmd, supervisors)
-    case GetComponents                         => sender() ! Components(supervisors)
-    case Shutdown                                       => shutdown(supervisors)
-    case GoOffline                                      => goOffline(supervisors)
-    case GoOnline                                       => goOnline(supervisors)
-    case Restart                               => restart(supervisors)
-    case Terminated(actorRef)                  => componentDied(actorRef)
-    case x                                     => log.debug(s"Unhandled command in runningReceive: $x")
+    case GetComponents => sender() ! Components(supervisors)
+    case Shutdown => shutdown(supervisors)
+    case GoOffline => goOffline(supervisors)
+    case GoOnline => goOnline(supervisors)
+    case Restart => restart(supervisors)
+    case Terminated(actorRef) => componentDied(actorRef)
+    case x => log.debug(s"Unhandled command in runningReceive: $x")
   }
 
   private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {

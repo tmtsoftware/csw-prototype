@@ -21,6 +21,7 @@ import javacsw.services.ccs.JSequentialExecutor;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -54,6 +55,7 @@ import static org.junit.Assert.assertEquals;
  * These tests are for the Trombone AlarmMonitor.
  */
 @SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType", "WeakerAccess"})
+@Ignore
 public class AlarmMonitorTests extends JavaTestKit {
   private static ActorSystem system;
   private static LoggingAdapter logger;

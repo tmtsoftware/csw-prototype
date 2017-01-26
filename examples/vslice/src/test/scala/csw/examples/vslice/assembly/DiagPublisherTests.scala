@@ -71,6 +71,7 @@ object DiagPublisherTests {
   }
 }
 
+@DoNotDiscover
 class DiagPublisherTests extends TestKit(DiagPublisherTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 

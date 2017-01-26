@@ -17,6 +17,7 @@ import javacsw.services.loc.JConnectionType;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -33,6 +34,7 @@ import static javacsw.services.pkg.JSupervisor.*;
 import static org.junit.Assert.*;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "WeakerAccess"})
+@Ignore
 public class TromboneHCDBasicTests extends JavaTestKit {
   private static ActorSystem system;
   Timeout timeout = Timeout.durationToTimeout(FiniteDuration.apply(60, TimeUnit.SECONDS));

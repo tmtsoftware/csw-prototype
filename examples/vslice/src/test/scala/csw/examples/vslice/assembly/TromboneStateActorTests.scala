@@ -49,6 +49,7 @@ object TromboneStateActorTests {
   }
 }
 
+@DoNotDiscover
 class TromboneStateActorTests extends TestKit(TromboneStateActorTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with Inspectors with BeforeAndAfterEach {
 

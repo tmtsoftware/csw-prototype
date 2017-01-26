@@ -14,6 +14,7 @@ import csw.util.config.BooleanItem;
 import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -35,6 +36,7 @@ import static junit.framework.TestCase.assertTrue;
 import static csw.examples.vsliceJava.assembly.TromboneEventSubscriber.UpdateNssInUse;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
+@Ignore
 public class EventSubscriberTests extends JavaTestKit {
 
   private static ActorSystem system;

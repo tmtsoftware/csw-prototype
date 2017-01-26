@@ -20,6 +20,7 @@ import javacsw.services.events.ITelemetryService;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -54,6 +55,7 @@ import static junit.framework.TestCase.assertTrue;
  * Diag Pubisher Tests
  */
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
+@Ignore
 public class DiagPublisherTests extends JavaTestKit {
 
   @SuppressWarnings("WeakerAccess")

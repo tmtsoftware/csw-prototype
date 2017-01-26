@@ -31,6 +31,7 @@ object TromboneAssemblyBasicTests {
  * This test assumes an HCD is running.
  * It creates an Assembly for direct interaction, not using the Supervisor
  */
+@DoNotDiscover
 class TromboneAssemblyBasicTests extends TestKit(TromboneAssemblyBasicTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
 

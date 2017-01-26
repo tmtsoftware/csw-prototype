@@ -24,6 +24,7 @@ import csw.util.config.Events.SystemEvent;
 import javacsw.services.events.IEventService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -38,6 +39,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 @SuppressWarnings({"WeakerAccess", "OptionalUsedAsFieldOrParameterType", "MismatchedReadAndWriteOfArray"})
+@Ignore
 public class TromboneAssemblyBasicTests extends JavaTestKit {
   private static ActorSystem system;
   private static LoggingAdapter logger;

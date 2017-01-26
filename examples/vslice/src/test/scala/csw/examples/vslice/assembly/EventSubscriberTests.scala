@@ -24,6 +24,7 @@ object EventSubscriberTests {
 /**
  * TMT Source Code: 9/17/16.
  */
+@DoNotDiscover
 class EventSubscriberTests extends TestKit(EventSubscriberTests.sys) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 

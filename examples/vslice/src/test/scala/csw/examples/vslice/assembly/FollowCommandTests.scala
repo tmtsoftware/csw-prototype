@@ -60,6 +60,7 @@ object FollowCommandTests {
  * TMT Source Code: 9/21/16.
  */
 //noinspection TypeAnnotation
+@DoNotDiscover
 class FollowCommandTests extends TestKit(FollowCommandTests.system) with ImplicitSender
     with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with BeforeAndAfterEach with LazyLogging {
 

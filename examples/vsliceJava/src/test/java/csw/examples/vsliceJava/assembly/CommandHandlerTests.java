@@ -25,6 +25,7 @@ import javacsw.services.events.IEventService;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -55,6 +56,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings({"WeakerAccess", "OptionalUsedAsFieldOrParameterType", "MismatchedReadAndWriteOfArray"})
+@Ignore
 public class CommandHandlerTests extends JavaTestKit {
   private static ActorSystem system;
   private static LoggingAdapter logger;

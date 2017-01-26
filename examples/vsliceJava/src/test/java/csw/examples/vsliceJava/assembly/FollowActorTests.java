@@ -24,6 +24,7 @@ import javacsw.services.events.ITelemetryService;
 import javacsw.services.pkg.JComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -56,6 +57,7 @@ import static javacsw.util.config.JUnitsOfMeasure.*;
 import static junit.framework.TestCase.assertEquals;
 
 @SuppressWarnings({"OptionalUsedAsFieldOrParameterType", "unused", "FieldCanBeLocal", "WeakerAccess"})
+@Ignore
 public class FollowActorTests extends JavaTestKit {
 
   @SuppressWarnings("WeakerAccess")
