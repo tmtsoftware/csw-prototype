@@ -16,9 +16,6 @@ Components are controlled by a [Supervisor](src/main/scala/csw/services/pkg/Supe
 handles *lifecycle* messages to determine the state of the component
 (Components that are not in the *Running* state, do not receive commands, for example).
 
-Components can implement the [LifecycleHandler](src/main/scala/csw/services/pkg/LifecycleHandler.scala)
-trait to be notified about lifecycle changes, such as when the component is initialized, started and stopped.
-
 A demo/test can be found in the [multi-jvm](src/multi-jvm) directory and run with:
 ```sbt "project pkg" multi-jvm:test```
 

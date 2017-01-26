@@ -1,18 +1,18 @@
 package csw.services.pkg
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.services.pkg.Component.{AssemblyInfo, HcdInfo, RegisterOnly}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
 
-case class SimpleTestHcd(override val info: HcdInfo, val supervisor: ActorRef) extends Hcd with LifecycleHandler {
-  def receive = lifecycleHandlerReceive
+case class SimpleTestHcd(override val info: HcdInfo, val supervisor: ActorRef) extends Hcd {
+  def receive = Actor.emptyBehavior
 }
 
-case class SimpleTestAssembly(override val info: AssemblyInfo, val supervisor: ActorRef) extends Assembly with LifecycleHandler {
-  def receive = lifecycleHandlerReceive
+case class SimpleTestAssembly(override val info: AssemblyInfo, val supervisor: ActorRef) extends Assembly {
+  def receive = Actor.emptyBehavior
 }
 
 class SupervisorTests() extends TestKit(ActorSystem("mytests")) with ImplicitSender

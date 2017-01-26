@@ -4,9 +4,8 @@ import java.util.Optional
 
 import akka.actor.{AbstractActor, ActorRef}
 import csw.services.ccs.AssemblyController
-import csw.services.pkg.{Assembly, LifecycleHandler}
+import csw.services.pkg.Assembly
 import csw.util.config.Configurations.{ObserveConfigArg, SetupConfigArg}
-import csw.util.config.StateVariable.CurrentStates
 import csw.services.ccs.Validation.Validation
 import csw.services.pkg.Component.AssemblyInfo
 

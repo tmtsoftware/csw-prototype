@@ -20,14 +20,14 @@ object TestHcd {
  * Test HCD
  */
 case class TestHcd(info: HcdInfo, supervisor: ActorRef)
-  extends Hcd with HcdController with LifecycleHandler {
+  extends Hcd with HcdController {
 
   supervisor ! Initialized
   supervisor ! Started
 
   log.info("Message from TestHcd")
 
-  override def receive: Receive = controllerReceive orElse lifecycleHandlerReceive orElse {
+  override def receive: Receive = controllerReceive orElse {
     case Running =>
     case x => log.error(s"Unexpected message: ${x.getClass}")
   }

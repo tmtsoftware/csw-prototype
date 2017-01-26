@@ -1,6 +1,6 @@
 package csw.services.pkg
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
 import com.typesafe.scalalogging.slf4j.LazyLogging
@@ -114,12 +114,12 @@ object ContainerComponentTests {
       |}
     """.stripMargin
 
-  case class SimpleTestHcd(override val info: HcdInfo) extends Hcd with LifecycleHandler {
-    def receive = lifecycleHandlerReceive
+  case class SimpleTestHcd(override val info: HcdInfo) extends Hcd {
+    def receive = Actor.emptyBehavior
   }
 
-  case class SimpleTestAssembly(override val info: AssemblyInfo) extends Assembly with LifecycleHandler {
-    def receive = lifecycleHandlerReceive
+  case class SimpleTestAssembly(override val info: AssemblyInfo) extends Assembly {
+    def receive = Actor.emptyBehavior
   }
 
   private def testParseStringConfig(s: String) = {

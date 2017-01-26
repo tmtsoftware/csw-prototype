@@ -8,9 +8,6 @@ package csw.services
  * to determine the state of the component (Components that are not in the ''Running'' state, do not
  * receive commands, for example).
  *
- * Conponents can implement the [[csw.services.pkg.LifecycleHandler]] trait to be notified about
- * lifecycle changes, such as when the component is initialized, started and stopped.
- *
  * A demo/test can be found in the multi-jvm directory and run with:
  * {{{sbt "project pkg" multi-jvm:test}}}
  *
