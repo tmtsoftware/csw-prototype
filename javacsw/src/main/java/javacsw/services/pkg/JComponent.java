@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * Java API to CSW components, such as an assembly, HCD (Hardware Control Daemon) or SC (Sequence Component).
  * <p>
- * Each component has its own ActorSystem, LifecycleManager and name.
+ * Each component has its own ActorSystem and name.
  */
 @SuppressWarnings({"unused", "SameParameterValue", "OptionalUsedAsFieldOrParameterType"})
 public interface JComponent {

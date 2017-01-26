@@ -8,7 +8,6 @@ import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.services.loc.LocationSubscriberActor
 import csw.services.pkg.Component.AssemblyInfo
-import csw.services.pkg.LifecycleManager.Uninitialize
 import csw.services.pkg.Supervisor._
 import csw.util.akka.PublisherActor
 import csw.util.akka.PublisherActor.Subscribe

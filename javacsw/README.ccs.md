@@ -6,9 +6,6 @@ See the [ccs](../ccs) project for an overview.
 * [JAssemblyController](src/main/java/javacsw/services/ccs/JAssemblyController.java) - parent class
                         for an Assembly actor that accepts configurations and communicates with
                         one or more HCDs or other assemblies before replying with a command status.
-                        Note: You usually will want to use
-                        [JAssemblyControllerWithLifecycleHandler](src/main/java/javacsw/services/pkg/JHcdControllerWithLifecycleHandler.java)
-                        instead, since it adds in supervisor/lifecycle support.
 
 * [JHcdController](src/main/java/javacsw/services/ccs/JHcdController.java) - parent class for an HCD actor
 

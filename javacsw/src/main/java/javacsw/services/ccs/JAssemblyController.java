@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Supports Java subclasses of AssemblyController and LifecycleHandler
+ * Supports Java subclasses of AssemblyController
  */
 @SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
 public abstract class JAssemblyController extends AbstractAssemblyController {

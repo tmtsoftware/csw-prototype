@@ -17,9 +17,6 @@
  * handles <em>lifecycle messages</em> to determine the state of the component
  * (Components that are not in the *Running* state, do not receive commands, for example).
  * <p>
- * Scala based components can extend the {@link csw.services.pkg.LifecycleHandler} trait to be notified
- * about lifecycle changes, such as when the component is initialized, started and stopped.
- * <p>
  * Java based components should extend an abstract actor based class that includes that trait, such as
  * {@link javacsw.services.ccs.JAssemblyController} for assemblies or
  * {@link javacsw.services.ccs.JHcdController} for HCDs and then override

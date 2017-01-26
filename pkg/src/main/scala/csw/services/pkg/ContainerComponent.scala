@@ -9,9 +9,8 @@ import csw.services.loc._
 import csw.services.loc.ComponentType.{Assembly, HCD}
 import csw.services.loc.ConnectionType.AkkaType
 import csw.services.pkg.Component._
-import csw.services.pkg.LifecycleManager._
-import csw.services.pkg.Supervisor.{HaltComponent, LifecycleInitialized, LifecycleRunning}
-import csw.services.pkg.SupervisorExternal.{LifecycleStateChanged, SubscribeLifecycleCallback, UnsubscribeLifecycleCallback}
+import csw.services.pkg.Supervisor.LifecycleRunning
+import csw.services.pkg.SupervisorExternal._
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConversions._
@@ -129,14 +128,19 @@ object ContainerComponent {
   case object GetComponents extends ContainerMessage
 
   /**
-   * Tells the container to uninitialize all of its components.
+   * Tells the container to shutdown all of its components.
    */
-  case object Stop extends ContainerMessage
+  case object Shutdown extends ContainerMessage
 
   /**
-   * Tells the container to stop all its components and then quit, ending execution of the container process.
+   * Tells the container to make all its components go online
    */
-  case object Halt extends ContainerMessage
+  case object GoOnline extends ContainerMessage
+
+  /**
+    * Tells the container to make all its components go offline
+    */
+  case object GoOffline extends ContainerMessage
 
   /**
    * Indicates the container should take all its component to uninitialized and then to running.
@@ -145,7 +149,7 @@ object ContainerComponent {
 
   case class CreateComponents(infos: Set[ComponentInfo]) extends ContainerMessage
 
-  case class LifecycleToAll(cmd: LifecycleCommand) extends ContainerMessage
+  case class LifecycleToAll(cmd: SupervisorExternalMessage) extends ContainerMessage
 
   /**
    * Reply messages.
@@ -341,10 +345,11 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
 
   // Receive messages
   private def runningReceive(supervisors: List[SupervisorInfo]): Receive = {
-    case LifecycleToAll(cmd: LifecycleCommand) => sendAllComponents(cmd, supervisors)
+    case LifecycleToAll(cmd: SupervisorExternalMessage) => sendAllComponents(cmd, supervisors)
     case GetComponents                         => sender() ! Components(supervisors)
-    case Stop                                  => stop(supervisors)
-    case Halt                                  => halt(supervisors)
+    case Shutdown                                       => shutdown(supervisors)
+    case GoOffline                                      => goOffline(supervisors)
+    case GoOnline                                       => goOnline(supervisors)
     case Restart                               => restart(supervisors)
     case Terminated(actorRef)                  => componentDied(actorRef)
     case x                                     => log.debug(s"Unhandled command in runningReceive: $x")
@@ -352,12 +357,12 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
 
   private def restartReceive(supervisors: List[SupervisorInfo], restarted: List[SupervisorInfo]): Receive = {
     case LifecycleStateChanged(state) =>
-      if (state == LifecycleInitialized) {
+      if (state == LifecycleRunning) {
         sender() ! UnsubscribeLifecycleCallback(self)
         val reloaded = (supervisors.find(_.supervisor == sender()) ++ restarted).toList
         if (reloaded.size == supervisors.size) {
           context.become(runningReceive(reloaded))
-          sendAllComponents(Startup, supervisors)
+          //sendAllComponents(ExComponentRestart, supervisors)
         } else {
           context.become(restartReceive(supervisors, reloaded))
         }
@@ -370,9 +375,9 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
   private def restart(supervisors: List[SupervisorInfo]): Unit = {
     context.become(restartReceive(supervisors, Nil))
     supervisors.foreach(_.supervisor ! SubscribeLifecycleCallback(self))
-    sendAllComponents(Uninitialize, supervisors)
+    sendAllComponents(ExComponentRestart, supervisors)
     // XXX allan: If the container is already stopped, this ensures that we get a message with the current state
-    sendAllComponents(Heartbeat, supervisors)
+    //sendAllComponents(Heartbeat, supervisors)
   }
 
   private def createComponents(cinfos: Set[ComponentInfo], supervisors: List[SupervisorInfo]): Unit = {
@@ -422,7 +427,7 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
     }
   }
 
-  private def sendAllComponents(cmd: Any, infos: List[SupervisorInfo]) = {
+  private def sendAllComponents(cmd: SupervisorExternalMessage, infos: List[SupervisorInfo]) = {
     var sinfos = infos
     stagedCommand(sinfos.nonEmpty, info.creationDelay) {
       val sinfo: SupervisorInfo = sinfos.head
@@ -447,8 +452,8 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
   }
 
   // Tell all components to uninitialize
-  private def stop(supervisors: List[SupervisorInfo]): Unit = {
-    sendAllComponents(Uninitialize, supervisors)
+  private def shutdown(supervisors: List[SupervisorInfo]): Unit = {
+    sendAllComponents(ExComponentShutdown, supervisors)
   }
 
   def staged[A, B, C](in: List[A], f: A => Option[B], f2: (List[A]) => C)(delay: FiniteDuration = 0.seconds) = {
@@ -462,8 +467,13 @@ final case class ContainerComponent(override val info: ContainerInfo) extends Co
     }
   }
 
-  private def halt(supervisors: List[SupervisorInfo]): Unit = {
-    log.debug("Halting")
-    sendAllComponents(HaltComponent, supervisors)
+  private def goOnline(supervisors: List[SupervisorInfo]): Unit = {
+    log.debug("container goOnline")
+    sendAllComponents(ExComponentOnline, supervisors)
+  }
+
+  private def goOffline(supervisors: List[SupervisorInfo]): Unit = {
+    log.debug("container goOffline")
+    sendAllComponents(ExComponentOffline, supervisors)
   }
 }

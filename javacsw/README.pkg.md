@@ -20,13 +20,9 @@ Components are controlled by a Supervisor actor ()[JSupervisor](src/main/java/ja
 handles *lifecycle messages* to determine the state of the component
 (Components that are not in the *Running* state, do not receive commands, for example).
 
-Scala based components can extend the `LifecycleHandler` trait to be notified
-about lifecycle changes, such as when the component is initialized, started and stopped.
-
 Java based components should extend an abstract actor based class that includes that trait, such as
-[JAssemblyControllerWithLifecycleHandler](src/main/java/javacsw/services/pkg/JAssemblyControllerWithLifecycleHandler.java) for assemblies or
-[JHcdControllerWithLifecycleHandler](src/main/java/javacsw/services/pkg/JHcdControllerWithLifecycleHandler.java) for HCDs and then override
-the lifecycle methods, such as startup(), initialize(), shutdown().
+[JAssemblyController](src/main/java/javacsw/services/pkg/JAssemblyController.java) for assemblies or
+[JHcdController](src/main/java/javacsw/services/pkg/JHcdController.java) for HCDs.
 
 ###Container Config Files
 

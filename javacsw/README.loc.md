@@ -50,8 +50,7 @@ Using the Location Service as a Client
 
 In Java, the easiest way to use the location service in an actor to keep track of connections to other applications
 is to inherit from a class that inherits the Scala `LocationTrackerClientActor`
-trait (such as [AbstractLocationTrackerClientActor](src/main/scala/javacsw/services/loc/AbstractLocationTrackerClientActor.scala)
-or [JAssemblyControllerWithLifecycleHandler](src/main/java/javacsw/services/pkg/JAssemblyControllerWithLifecycleHandler.java).
+trait (such as [AbstractLocationTrackerClientActor](src/main/scala/javacsw/services/loc/AbstractLocationTrackerClientActor.scala).
 Then you can override the `allResolved` method to be notified with connection details once (and whenever)
 all connections have been resolved.
 

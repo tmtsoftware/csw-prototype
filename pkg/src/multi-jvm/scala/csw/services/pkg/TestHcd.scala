@@ -3,7 +3,7 @@ package csw.services.pkg
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.ccs.HcdController
 import csw.services.pkg.Component.HcdInfo
-import csw.services.pkg.Supervisor.{Initialized, Started}
+import csw.services.pkg.Supervisor.{Initialized, Running, Started}
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 
@@ -27,7 +27,10 @@ case class TestHcd(info: HcdInfo, supervisor: ActorRef)
 
   log.info("Message from TestHcd")
 
-  override def receive: Receive = controllerReceive
+  override def receive: Receive = controllerReceive orElse {
+    case Running =>
+    case x => log.error(s"Unexpected message: ${x.getClass}")
+  }
 
   // Send the config to the worker for processing
   override protected def process(config: SetupConfig): Unit = {

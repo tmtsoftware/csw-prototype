@@ -12,7 +12,7 @@ import csw.services.ccs.CommandStatus.{Accepted, AllCompleted, CommandResult}
 import csw.services.loc.ComponentType.HCD
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.{ComponentId, Connection, LocationService}
-import csw.services.pkg.ContainerComponent.Stop
+import csw.services.pkg.SupervisorExternal.ExComponentShutdown
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -92,7 +92,7 @@ class ContainerSpec extends MultiNodeSpec(ContainerConfig) with STMultiNodeSpec 
           }
         }
         println("\nContainer1 tests passed\n")
-        container ! Stop
+        container ! ExComponentShutdown
         enterBarrier("done")
       }
 

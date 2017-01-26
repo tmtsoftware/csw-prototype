@@ -5,7 +5,7 @@ import akka.util.Timeout
 import csw.services.alarms.AlarmService
 import csw.services.ccs.HcdController.Submit
 import csw.services.ccs.{AssemblyControllerClient, BlockingAssemblyClient}
-import csw.services.cs.akka.{BlockingConfigServiceClient, ConfigService, ConfigServiceActor, ConfigServiceClient}
+import csw.services.cs.akka.{BlockingConfigServiceClient, ConfigServiceActor, ConfigServiceClient}
 import csw.services.events.{EventService, TelemetryService}
 import csw.services.loc.Connection.AkkaConnection
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation}
@@ -75,8 +75,7 @@ object SequencerEnv {
    * @param actorRef the container actor
    */
   case class ContainerClient(actorRef: ActorRef) {
-    def stop(): Unit = actorRef ! ContainerComponent.Stop
-    def halt(): Unit = actorRef ! ContainerComponent.Halt
+    def shtudown(): Unit = actorRef ! ContainerComponent.Shutdown
     def restart(): Unit = actorRef ! ContainerComponent.Restart
     // TODO: add more...
   }

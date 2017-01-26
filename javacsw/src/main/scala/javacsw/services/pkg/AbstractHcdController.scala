@@ -9,7 +9,7 @@ import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState
 
 /**
- * Supports Java subclasses of AssemblyController and LifecycleHandler
+ * Supports Java subclasses of AssemblyController
  */
 abstract class AbstractHcdController(override val info: HcdInfo) extends AbstractActor
     with Hcd with HcdController with PublisherActor[CurrentState] {

@@ -4,8 +4,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.util.Timeout
 import csw.services.loc.LocationService.{Location, ResolvedAkkaLocation, ResolvedHttpLocation}
 import csw.services.loc._
-import csw.services.pkg.LifecycleManager
-import csw.services.pkg.LifecycleManager.LifecycleCommand
+import csw.services.pkg.SupervisorExternal
+import csw.services.pkg.SupervisorExternal.SupervisorExternalMessage
 import csw.util.akka.SetLogLevelActor.SetLogLevel
 
 import scala.concurrent.Await
@@ -29,14 +29,11 @@ object SysControl extends App {
   private val connectionTypes = Set("akka", "http")
   private val logLevels = Set("OFF", "ERROR", "WARN", "INFO", "DEBUG", "TRACE", "ALL")
 
-  private val lifecycleCommands: Map[String, LifecycleCommand] = Map(
-    "Load" -> LifecycleManager.Load,
-    "Initialize" -> LifecycleManager.Initialize,
-    "Startup" -> LifecycleManager.Startup,
-    "Shutdown" -> LifecycleManager.Shutdown,
-    "Uninitialize" -> LifecycleManager.Uninitialize,
-    "Remove" -> LifecycleManager.Uninitialize,
-    "Heartbeat" -> LifecycleManager.Heartbeat
+  private val lifecycleCommands: Map[String, SupervisorExternalMessage] = Map(
+    "Restart" -> SupervisorExternal.ExComponentRestart,
+    "Shutdown" -> SupervisorExternal.ExComponentShutdown,
+    "Offline" -> SupervisorExternal.ExComponentOffline,
+    "Online" -> SupervisorExternal.ExComponentOnline
   )
 
   /**
@@ -166,7 +163,7 @@ object SysControl extends App {
   }
 
   // Sends the given lifecycle command to the component
-  private def sendLifecycleCommand(location: Location, lifecycleCommand: LifecycleCommand): Unit = {
+  private def sendLifecycleCommand(location: Location, lifecycleCommand: SupervisorExternalMessage): Unit = {
     location match {
       case a: ResolvedAkkaLocation => a.actorRef.foreach(sendLifecycleCommand(_, lifecycleCommand))
       case h: ResolvedHttpLocation => error("HTTP target components not yet supported") // XXX TODO
@@ -175,7 +172,7 @@ object SysControl extends App {
   }
 
   // Sends the given lifecycle command to the actorRef
-  private def sendLifecycleCommand(actorRef: ActorRef, lifecycleCommand: LifecycleCommand): Unit = {
+  private def sendLifecycleCommand(actorRef: ActorRef, lifecycleCommand: SupervisorExternalMessage): Unit = {
     actorRef ! lifecycleCommand
   }
 
