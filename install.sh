@@ -29,9 +29,6 @@ done
 cp scripts/*.sh $dir/bin
 chmod +x $dir/bin/*.sh
 
-# XXX FIXME: Get the real alarms.conf file from somewhere
-cp examples/vslice/src/test/resources/test-alarms.conf $dir/conf/alarms.conf
-
 rm -rf $dir/doc/*
 cp -r target/javaunidoc/ $dir/doc/java
 cp -r target/scala-2.11/unidoc/ $dir/doc/scala

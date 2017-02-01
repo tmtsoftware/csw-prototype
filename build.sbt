@@ -31,7 +31,7 @@ val csw = (project in file("."))
     )
   ).aggregate(util, support, log, loc, events, event_old, alarms, ccs, cs, pkg, ts,
   containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample,
-  trackLocation, asConsole, sysControl, seqSupport, javacsw, vslice, vsliceJava
+  trackLocation, asConsole, sysControl, seqSupport, javacsw
 )
 
 // Utility classes
@@ -249,20 +249,3 @@ lazy val assemblyExample = Project(id = "assemblyExample", base = file("examples
   .settings(packageSettings("assemblyExample", "Assembly Example", "Simple Assembly example application"): _*)
   .dependsOn(pkg, ccs, ts, hcdExample)
 
-// EndToEnd Example project
-lazy val vslice = Project(id = "vslice", base = file("examples/vslice"))
-  .enablePlugins(JavaAppPackaging)
-  .settings(packageSettings("VerticalSlice", "Vertical Slice Example", "More complicated example showing CSW features"): _*)
-  .settings(libraryDependencies ++=
-    compile(akkaActor, akkaRemote, akkaHttp) ++
-      test(scalaTest, specs2, akkaTestKit)
-  ).dependsOn(pkg, cs, ccs, loc, ts, events, util, alarms, containerCmd, seqSupport)
-
-// EndToEnd Example project Java version
-lazy val vsliceJava = Project(id = "vsliceJava", base = file("examples/vsliceJava"))
-  .enablePlugins(JavaAppPackaging)
-  .settings(packageSettings("VerticalSliceJava", "Vertical Slice Java Example", "More complicated example showing CSW Java features"): _*)
-  .settings(libraryDependencies ++=
-    compile(akkaActor, akkaRemote, akkaHttp) ++
-      test(akkaTestKit, junit, junitInterface, scalaJava8Compat)
-  ).dependsOn(javacsw)

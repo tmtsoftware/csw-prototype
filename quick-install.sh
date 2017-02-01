@@ -23,9 +23,6 @@ done
 cp scripts/*.sh $dir/bin
 chmod +x $dir/bin/*.sh
 
-# XXX FIXME: Get the real alarms.conf file from somewhere
-cp examples/vslice/src/test/resources/test-alarms.conf $dir/conf/alarms.conf
-
 rm -f $dir/bin/*.log.* $dir/bin/*.bat
 
 # create the scalas script, for scala scriping (see http://www.scala-sbt.org/release/docs/Scripts.html)
