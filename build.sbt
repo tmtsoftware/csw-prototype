@@ -31,7 +31,7 @@ val csw = (project in file("."))
     )
   ).aggregate(util, support, log, loc, events, event_old, alarms, ccs, cs, pkg, ts,
   containerCmd, sequencer, configServiceAnnex, csClient, hcdExample, assemblyExample,
-  trackLocation, asConsole, sysControl, javacsw, vslice, vsliceJava
+  trackLocation, asConsole, sysControl, seqSupport, javacsw, vslice, vsliceJava
 )
 
 // Utility classes
