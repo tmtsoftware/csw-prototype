@@ -39,20 +39,7 @@ class BlockingTelemetryServiceTests
   val ts = Await.result(TelemetryService(), timeout.duration)
   val tsAdmin = TelemetryServiceAdmin(ts)
 
-  override protected def beforeAll(): Unit = {
-    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis and register it with the location service on a random free port.
-    // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Telemetry service Test" --command "redis-server --port %port"
-    //    TelemetryServiceAdmin.startTelemetryService(tsName)
-    // Get the telemetry service by looking up the name with the location service.
-    //    ts = Await.result(TelemetryService(tsName), timeout.duration)
-    //    tsAdmin = TelemetryServiceAdmin(ts)
-  }
-
   override protected def afterAll(): Unit = {
-    // Shutdown Redis (Only do this in tests that also started the server)
-    //    if (tsAdmin != null) Await.ready(tsAdmin.shutdown(), timeout.duration)
     system.terminate()
   }
 

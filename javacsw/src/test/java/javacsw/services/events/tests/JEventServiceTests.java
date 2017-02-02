@@ -44,23 +44,12 @@ public class JEventServiceTests {
     LocationService.initInterface();
     system = ActorSystem.create();
 
-//    String esName = "Event Service Test";
-//
-//    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-//    // Start redis on a random port and register it with the location service.
-//    // The following is the equivalent of running this from the command line:
-//    //   tracklocation --name "Event Service Test" --command "redis-server --port %port" --no-exit
-//    IEventServiceAdmin.startEventService(esName, true, system.dispatcher());
-
-    // Later, in another JVM...,
     // Get the event service by looking up the name with the location service
     eventService = IEventService.getEventService(IEventService.defaultName, system, timeout).get();
   }
 
   @AfterClass
   public static void teardown() {
-//    IEventServiceAdmin admin = new JEventServiceAdmin(eventService, system);
-//    admin.shutdown();
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }

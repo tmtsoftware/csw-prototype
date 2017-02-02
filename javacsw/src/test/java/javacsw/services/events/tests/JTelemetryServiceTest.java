@@ -46,14 +46,6 @@ public class JTelemetryServiceTest {
     LocationService.initInterface();
     system = ActorSystem.create();
 
-//    String tsName = "Telemetry Service Test";
-
-    // Note: This part is only for testing: Normally Redis would already be running and registered with the location service.
-    // Start redis on a random port and register it with the location service.
-    // The following is the equivalent of running this from the command line:
-    //   tracklocation --name "Telemetry Service Test" --command "redis-server --port %port" --no-exit
-//    ITelemetryServiceAdmin.startTelemetryService(tsName, true, system.dispatcher());
-
     // Later, in another JVM...,
     // Get the telemetry service by looking up the name with the location service
     ts = ITelemetryService.getTelemetryService(ITelemetryService.defaultName, system, timeout).get();
@@ -61,8 +53,6 @@ public class JTelemetryServiceTest {
 
   @AfterClass
   public static void teardown() {
-//    ITelemetryServiceAdmin admin = new JTelemetryServiceAdmin(ts, system);
-//    admin.shutdown();
     JavaTestKit.shutdownActorSystem(system);
     system = null;
   }
