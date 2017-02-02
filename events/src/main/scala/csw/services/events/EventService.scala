@@ -303,7 +303,7 @@ private[events] object EventServiceImpl {
  * An implementation of the EventService trait based on Redis.
  *
  * @param redisClient used to talk to Redis
- * @param scope a string used to make the keys unique for this class (for example: "telem" or "event")
+ * @param scope a string used to make the keys unique for this class (for example: "event")
  */
 private[events] case class EventServiceImpl(redisClient: RedisClient, scope: String) extends EventService {
 
@@ -313,24 +313,12 @@ private[events] case class EventServiceImpl(redisClient: RedisClient, scope: Str
     if (key.startsWith(scope)) key else s"$scope:$key"
   }
 
-  override def publish(event: Event)(implicit ec: ExecutionContext): Future[Unit] = publish(event, 0)
-
-  // Publishes the event and keeps the given number of previous values
-  def publish(event: Event, history: Int)(implicit ec: ExecutionContext): Future[Unit] = {
+  override def publish(event: Event)(implicit ec: ExecutionContext): Future[Unit] = {
     // Serialize the event
     val formatter = implicitly[ByteStringFormatter[Event]]
     val bs = formatter.serialize(event)
-    // only do this once
-    val h = if (history >= 0) history else 0
-    // Use a transaction to send all commands at once
-    val redisTransaction = redisClient.transaction()
     val key = scopedKey(event.prefix)
-    redisTransaction.watch(key)
-    val f1 = redisTransaction.lpush(key, bs)
-    val f2 = redisTransaction.ltrim(key, 0, h + 1)
-    val f3 = redisTransaction.publish(key, bs)
-    val f4 = redisTransaction.exec()
-    Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
+    Future.sequence(List(redisClient.publish(key, bs), redisClient.set(key, bs))).map(_ => ())
   }
 
   override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor = {
@@ -348,11 +336,5 @@ private[events] case class EventServiceImpl(redisClient: RedisClient, scope: Str
   }
 
   // gets the current value for the given prefix
-  def get(prefix: String): Future[Option[Event]] = redisClient.lindex(scopedKey(prefix), 0)
-
-  // Gets the last n values for the given prefix
-  def getHistory(prefix: String, n: Int): Future[Seq[Event]] = redisClient.lrange(scopedKey(prefix), 0, n - 1)
-
-  // deletes the saved values for the given prefixes
-  def delete(prefixes: String*): Future[Long] = redisClient.del(prefixes.map(scopedKey): _*)
+  def get(prefix: String): Future[Option[Event]] = redisClient.get(scopedKey(prefix))
 }

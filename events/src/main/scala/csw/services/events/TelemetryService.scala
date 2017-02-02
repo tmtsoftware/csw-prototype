@@ -1,13 +1,14 @@
 package csw.services.events
 
-import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
-import akka.util.Timeout
-import csw.services.events.EventService.EventMonitor
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill, Props}
+import akka.util.{ByteString, Timeout}
+import csw.services.events.TelemetryService.TelemetryMonitor
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService.ResolvedTcpLocation
+import csw.util.config.ConfigSerializer.{read, write}
 import csw.util.config.Events.StatusEvent
-import redis.RedisClient
+import redis.{ByteStringFormatter, RedisClient}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -58,12 +59,12 @@ object TelemetryService {
     for {
       redisClient <- locateTelemetryService(name)
     } yield {
-      TelemetryServiceImpl(redisClient)
+      TelemetryServiceImpl(redisClient, defaultScope)
     }
   }
 
   /**
-   * Returns aan instancee of the TelemetryService (based on Redis)
+   * Returns a concrete implementation of the TelemetryService trait (based on Redis)
    *
    * @param settings contains the host and port settings from reference.conf, or application.conf
    * @param _system  Akka env required for RedisClient
@@ -81,21 +82,71 @@ object TelemetryService {
    */
   def get(host: String = "127.0.0.1", port: Int = 6379)(implicit system: ActorSystem): TelemetryService = {
     val redisClient = RedisClient(host, port)
-    TelemetryServiceImpl(redisClient)
+    TelemetryServiceImpl(redisClient, defaultScope)
   }
 
   // Converts a callback that takes an Telemetry to one that takes a StatusEvent
-  private[events] def callbackConverter(telemCallback: StatusEvent => Unit)(event: Event): Unit =
+  private[events] def callbackConverter(telemCallback: StatusEvent => Unit)(event: StatusEvent): Unit =
     event match {
       case s: StatusEvent => telemCallback(s)
       case _              =>
     }
+
+  /**
+   * Type of return value from the subscribe method
+   */
+  trait TelemetryMonitor {
+    /**
+     * Stops the subscribing actor
+     */
+    def stop(): Unit
+
+    /**
+     * Adds events matching the given prefixes to the current subscription.
+     * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param prefixes one or more prefixes of events, may include wildcard
+     */
+    def subscribe(prefixes: String*): Unit
+
+    /**
+     * Adds events matching the given prefix to the current subscription.
+     * The prefix may be followed by a '*' wildcard to subscribe to all matching events.
+     *
+     * @param prefix one or more prefixes of events, may include wildcard
+     */
+    def subscribeTo(prefix: String): Unit = subscribe(prefix) // Note: Needed to avoid varargs issues in Java
+
+    /**
+     * Ubsubscribes from events matching the given prefixes.
+     *
+     * @param prefixes one or more prefixes of events, may include wildcard
+     */
+    def unsubscribe(prefixes: String*): Unit
+
+    /**
+     * Ubsubscribes from events matching the given prefix.
+     *
+     * @param prefix one or more prefixes of events, may include wildcard
+     */
+    def unsubscribeFrom(prefix: String): Unit = unsubscribe(prefix) // Note: Needed to avoid varargs issues in Java
+
+    /**
+     * A reference to the subscribing actor (could be used to watch the actor to detect if it stops for some reason)
+     *
+     * @return
+     */
+    def actorRef: ActorRef
+  }
+
 }
 
 /**
  * API for publishing, getting and subscribing to telemetry (StatusEvent objects).
  */
 trait TelemetryService {
+  import TelemetryService._
+
   /**
    * Publishes the status event (key is based on the event's prefix)
    *
@@ -109,43 +160,43 @@ trait TelemetryService {
    * Subscribes an actor to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param subscriber an actor to receive Event messages
+   * @param subscriber     an actor to receive StatusEvent messages
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
-   * @param prefixes   one or more prefixes of events, may include wildcard
+   * @param prefixes       one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor
+  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): TelemetryMonitor
 
   /**
    * Subscribes a callback function to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param callback an callback which will be called with Event objects (in another thread)
+   * @param callback       an callback which will be called with StatusEvent objects (in another thread)
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
-   * @param prefixes one or more prefixes of events, may include wildcard
+   * @param prefixes       one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor
+  def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): TelemetryMonitor
 
   /**
-   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * Creates an TelemetryMonitorActor and subscribes the given actor to it.
    * The return value can be used to stop the actor or subscribe and unsubscribe to events.
    *
-   * @param subscriber an actor to receive Event messages
+   * @param subscriber     an actor to receive StatusEvent messages
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events first
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def createEventMonitor(subscriber: ActorRef, postLastEvents: Boolean)(implicit _system: ActorRefFactory): EventMonitor = subscribe(subscriber, postLastEvents)
+  def createEventMonitor(subscriber: ActorRef, postLastEvents: Boolean)(implicit _system: ActorRefFactory): TelemetryMonitor = subscribe(subscriber, postLastEvents)
 
   /**
-   * Creates an EventMonitorActor and subscribes the given actor to it.
+   * Creates an TelemetryMonitorActor and subscribes the given actor to it.
    * The return value can be used to stop the actor or subscribe and unsubscribe to events.
    *
-   * @param callback   an callback which will be called with Event objects (in another thread)
+   * @param callback       an callback which will be called with StatusEvent objects (in another thread)
    * @param postLastEvents if true, the callback receives the last known values of any subscribed events first
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def createEventMonitor(callback: Event => Unit, postLastEvents: Boolean)(implicit _system: ActorRefFactory): EventMonitor = subscribe(callback, postLastEvents)
+  def createEventMonitor(callback: StatusEvent => Unit, postLastEvents: Boolean)(implicit _system: ActorRefFactory): TelemetryMonitor = subscribe(callback, postLastEvents)
 
   /**
    * Gets the value for the given status event prefix
@@ -153,7 +204,7 @@ trait TelemetryService {
    * @param prefix the prefix (key) for the event to get
    * @return the status event, if (and when) found
    */
-  def get(prefix: String)(implicit _system: ActorRefFactory): Future[Option[StatusEvent]]
+  def get(prefix: String): Future[Option[StatusEvent]]
 
   /**
    * Gets a list of the n most recent status event values for the given prefix
@@ -165,40 +216,169 @@ trait TelemetryService {
   def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]]
 
   /**
-   * Deletes the given  status event from the store
+   * Deletes the saved status events matching the given prefixes from the server
    *
    * @return a future indicating if/when the operation has completed
    */
-  def delete(prefix: String)(implicit ec: ExecutionContext): Future[Unit]
+  def delete(prefix: String*)(implicit ec: ExecutionContext): Future[Unit]
+}
+
+object TelemetryServiceImpl {
+
+  // Implement value returned from subscribe method
+  private[events] case class TelemetryMonitorImpl(actorRef: ActorRef, scope: String) extends TelemetryMonitor {
+    import TelemetryMonitorActor._
+
+    private def scopedKey(key: String) = {
+      if (key.startsWith(scope)) key else s"$scope:$key"
+    }
+
+    override def stop(): Unit = {
+      actorRef ! PoisonPill
+    }
+
+    override def subscribe(prefixes: String*): Unit = {
+      actorRef ! Subscribe(prefixes.map(scopedKey): _*)
+    }
+
+    override def unsubscribe(prefixes: String*): Unit = {
+      actorRef ! Unsubscribe(prefixes.map(scopedKey): _*)
+    }
+  }
+
+  // Actor used to subscribe to events for given prefixes and then notify the actor or call the function
+  private object TelemetryMonitorActor {
+    def props(
+      subscriber:       Option[ActorRef],
+      callback:         Option[StatusEvent => Unit],
+      telemetryService: TelemetryServiceImpl,
+      postLastEvents:   Boolean
+    ): Props =
+      Props(classOf[TelemetryMonitorActor], subscriber, callback, telemetryService, postLastEvents)
+
+    // Message sent to subscribe to more prefixes
+    case class Subscribe(prefixes: String*)
+
+    // Message sent to unsubscribe to prefixes
+    case class Unsubscribe(prefixes: String*)
+
+  }
+
+  private class TelemetryMonitorActor(
+      subscriber:       Option[ActorRef],
+      callback:         Option[StatusEvent => Unit],
+      telemetryService: TelemetryServiceImpl,
+      postLastEvents:   Boolean
+  ) extends EventSubscriber(telemetryService.redisClient.host, telemetryService.redisClient.port) {
+
+    import context.dispatcher
+    import TelemetryMonitorActor._
+
+    def receive: Receive = {
+      case event: StatusEvent =>
+        notifySubscribers(event)
+
+      case s: Subscribe =>
+        if (postLastEvents) {
+          // Notify the subscriber of the current event values
+          for {
+            currentEvents <- Future.sequence(s.prefixes.map(telemetryService.get)).map(_.flatten)
+          } {
+            currentEvents.foreach(notifySubscribers)
+            subscribe(s.prefixes: _*)
+          }
+        } else {
+          // Just subscribe to future values
+          subscribe(s.prefixes: _*)
+        }
+
+      case u: Unsubscribe =>
+        unsubscribe(u.prefixes: _*)
+    }
+
+    private def notifySubscribers(event: StatusEvent): Unit = {
+      subscriber.foreach(_ ! event)
+      callback.foreach { f =>
+        Future {
+          f(event)
+        }.onFailure {
+          case ex => log.error("StatusEvent callback failed: ", ex)
+        }
+      }
+    }
+  }
+
 }
 
 /**
  * A class for publishing, getting and subscribing to telemetry (StatusEvent objects).
  *
  * @param redisClient used to talk to Redis
+ * @param scope       a string used to make the keys unique for this class (for example: "telem")
  */
-case class TelemetryServiceImpl(redisClient: RedisClient) extends TelemetryService {
+case class TelemetryServiceImpl(redisClient: RedisClient, scope: String) extends TelemetryService {
 
   import TelemetryService._
+  import TelemetryServiceImpl._
 
-  private val eventService = EventServiceImpl(redisClient, defaultScope)
+  // Implicit conversion between ByteString and StatusEvent, for the Redis API
+  implicit val statusEventFormatter = new ByteStringFormatter[StatusEvent] {
+    def serialize(e: StatusEvent): ByteString = {
+      ByteString(write(e))
+    }
 
-  override def publish(status: StatusEvent, history: Int = 0)(implicit ec: ExecutionContext): Future[Unit] =
-    eventService.publish(status, history)
+    def deserialize(bs: ByteString): StatusEvent = {
+      val ar = Array.ofDim[Byte](bs.length)
+      bs.asByteBuffer.get(ar)
+      read[StatusEvent](ar)
+    }
+  }
 
-  override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor =
-    eventService.subscribe(subscriber, postLastEvents, prefixes: _*)
+  private def scopedKey(key: String) = {
+    if (key.startsWith(scope)) key else s"$scope:$key"
+  }
 
-  override def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor =
-    eventService.subscribe(callbackConverter(callback) _, postLastEvents, prefixes: _*)
+  // Publishes the event and keeps the given number of previous values
+  override def publish(event: StatusEvent, history: Int = 0)(implicit ec: ExecutionContext): Future[Unit] = {
+    // Serialize the event
+    val formatter = implicitly[ByteStringFormatter[StatusEvent]]
+    val bs = formatter.serialize(event)
+    // only do this once
+    val h = if (history >= 0) history else 0
+    // Use a transaction to send all commands at once
+    val redisTransaction = redisClient.transaction()
+    val key = scopedKey(event.prefix)
+    redisTransaction.watch(key)
+    val f1 = redisTransaction.lpush(key, bs)
+    val f2 = redisTransaction.ltrim(key, 0, h + 1)
+    val f3 = redisTransaction.publish(key, bs)
+    val f4 = redisTransaction.exec()
+    Future.sequence(List(f1, f2, f3, f4)).map(_ => ())
+  }
 
-  override def get(prefix: String)(implicit _system: ActorRefFactory): Future[Option[StatusEvent]] =
-    eventService.get(prefix).mapTo[Option[StatusEvent]]
+  override def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): TelemetryMonitor = {
+    val actorRef = _system.actorOf(TelemetryMonitorActor.props(Some(subscriber), None, this, postLastEvents))
+    val monitor = TelemetryMonitorImpl(actorRef, scope)
+    monitor.subscribe(prefixes.map(scopedKey): _*)
+    monitor
+  }
 
-  override def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]] =
-    eventService.getHistory(prefix, n).mapTo[Seq[StatusEvent]]
+  override def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): TelemetryMonitor = {
+    val actorRef = _system.actorOf(TelemetryMonitorActor.props(None, Some(callback), this, postLastEvents))
+    val monitor = TelemetryMonitorImpl(actorRef, scope)
+    monitor.subscribe(prefixes.map(scopedKey): _*)
+    monitor
+  }
 
-  override def delete(prefix: String)(implicit ec: ExecutionContext): Future[Unit] = eventService.delete(prefix).map(_ => ())
+  // gets the current value for the given prefix
+  override def get(prefix: String): Future[Option[StatusEvent]] = redisClient.lindex(scopedKey(prefix), 0)
+
+  // Gets the last n values for the given prefix
+  override def getHistory(prefix: String, n: Int): Future[Seq[StatusEvent]] = redisClient.lrange(scopedKey(prefix), 0, n - 1)
+
+  // deletes the saved values for the given prefixes
+  override def delete(prefixes: String*)(implicit ec: ExecutionContext): Future[Unit] = redisClient.del(prefixes.map(scopedKey): _*).map(_ => ())
+
 }
 
 /**
@@ -222,24 +402,24 @@ case class BlockingTelemetryService(ts: TelemetryService, timeout: Duration) {
    * Subscribes an actor to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param subscriber an actor to receive Event messages
+   * @param subscriber     an actor to receive StatusEvent messages
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
-   * @param prefixes   one or more prefixes of events, may include wildcard
+   * @param prefixes       one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor =
+  def subscribe(subscriber: ActorRef, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): TelemetryMonitor =
     ts.subscribe(subscriber, postLastEvents, prefixes: _*)
 
   /**
    * Subscribes an actor or callback function to events matching the given prefixes
    * Each prefix may be followed by a '*' wildcard to subscribe to all matching events.
    *
-   * @param callback an callback which will be called with Event objects (in another thread)
+   * @param callback       an callback which will be called with StatusEvent objects (in another thread)
    * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
-   * @param prefixes one or more prefixes of events, may include wildcard
+   * @param prefixes       one or more prefixes of events, may include wildcard
    * @return an object containing an actorRef that can be used to subscribe and unsubscribe or stop the actor
    */
-  def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): EventMonitor =
+  def subscribe(callback: StatusEvent => Unit, postLastEvents: Boolean, prefixes: String*)(implicit _system: ActorRefFactory): TelemetryMonitor =
     ts.subscribe(callback, postLastEvents, prefixes: _*)
 
   /**

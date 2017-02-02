@@ -5,6 +5,7 @@ import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
 import akka.util.Timeout;
 import csw.services.events.EventService;
+import csw.services.events.TelemetryService;
 import csw.services.events.TelemetryService$;
 import csw.util.config.Events.StatusEvent;
 
@@ -52,7 +53,7 @@ public interface IBlockingTelemetryService {
      * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventService.EventMonitor subscribe(ActorRef subscriber, boolean postLastEvents, String... prefixes);
+    TelemetryService.TelemetryMonitor subscribe(ActorRef subscriber, boolean postLastEvents, String... prefixes);
 
     /**
      * Subscribes a callback function to telemetry events matching the given prefixes
@@ -62,7 +63,7 @@ public interface IBlockingTelemetryService {
      * @param postLastEvents if true, the subscriber receives the last known values of any subscribed events
      * @param prefixes   one or more prefixes of events, may include wildcard
      */
-    EventService.EventMonitor subscribe(TelemetryHandler callback, boolean postLastEvents, String... prefixes);
+    TelemetryService.TelemetryMonitor subscribe(TelemetryHandler callback, boolean postLastEvents, String... prefixes);
 
 
     /**
