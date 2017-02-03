@@ -7,7 +7,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import csw.services.alarms.AlarmModel.{AlarmStatus, Health, HealthStatus}
 import redis.{ByteStringDeserializer, ByteStringSerializerLowPriority}
 import redis.actors.RedisSubscriberActor
-import redis.api.pubsub.{Message, PMessage}
+import redis.api.pubsub.{Message, PMessage, PUNSUBSCRIBE, UNSUBSCRIBE}
 
 import scala.util.{Failure, Success}
 import AlarmMonitorActor._
@@ -73,6 +73,15 @@ private class AlarmMonitorActor(
 
   // Initialize the complete map once at startup, and then keep it up to date by subscribing to the Redis key pattern
   initAlarmMap()
+
+  // Unsubscribe on actor stop
+  override def postStop(): Unit = {
+    super.postStop()
+    if (patternsSubscribed.nonEmpty) {
+      write(PUNSUBSCRIBE(patternsSubscribed.toSeq: _*).toByteString)
+      log.debug(s"Unsubscribed to patterns ${patternsSubscribed.mkString(", ")}")
+    }
+  }
 
   override def onMessage(m: Message): Unit = {
     log.error(s"Unexpected call to onMessage with message: $m")

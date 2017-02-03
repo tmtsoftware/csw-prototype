@@ -4,7 +4,7 @@ import akka.util.Timeout
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
-import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill, Props}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill, Props, Terminated}
 import akka.util.ByteString
 import csw.services.events.EventService.EventMonitor
 import csw.util.config.ConfigSerializer._
@@ -263,7 +263,13 @@ private[events] object EventServiceImpl {
     import context.dispatcher
     import EventMonitorActor._
 
+    subscriber.foreach(context.watch)
+
     def receive: Receive = {
+      // Stop if the subscriber terminates
+      case Terminated(actorRef) =>
+        context.stop(self)
+
       case event: Event =>
         notifySubscribers(event)
 

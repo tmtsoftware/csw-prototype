@@ -1,6 +1,6 @@
 package csw.services.events
 
-import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill, Props}
+import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill, Props, Terminated}
 import akka.util.{ByteString, Timeout}
 import csw.services.events.TelemetryService.TelemetryMonitor
 import csw.services.loc.{ComponentId, ComponentType, LocationService}
@@ -274,7 +274,13 @@ object TelemetryServiceImpl {
     import context.dispatcher
     import TelemetryMonitorActor._
 
+    subscriber.foreach(context.watch)
+
     def receive: Receive = {
+      // Stop if the subscriber terminates
+      case Terminated(actorRef) =>
+        context.stop(self)
+
       case event: StatusEvent =>
         notifySubscribers(event)
 
