@@ -1,14 +1,11 @@
 package csw.services.trackLocation
 
-import java.io.File
 import java.nio.file.Paths
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.scalalogging.slf4j.LazyLogging
-import csw.services.cs.akka._
-import csw.services.cs.core.ConfigData
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.ConnectionType.TcpType
 import csw.services.loc.LocationService.ResolvedTcpLocation
@@ -28,7 +25,7 @@ object TrackLocationTest {
  * Test the trackLocation app in-line
  */
 class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteLike with LazyLogging {
-  implicit val sys = TrackLocationTest.system
+  implicit val sys: ActorSystem = TrackLocationTest.system
 
   import system.dispatcher
 
@@ -86,42 +83,43 @@ class TrackLocationTest extends TestKit(TrackLocationTest.system) with FunSuiteL
     logger.debug("Test2 done")
   }
 
-  test("Test with config service") {
-    logger.debug("Test3 started")
-    val name = "test3"
-    val path = "test3/test3.conf"
-    val port = 8888
-
-    // create a test repository and use it to create the actor
-    val settings = ConfigServiceSettings(system)
-    val manager = TestRepo.getTestRepoConfigManager(settings)
-    val csActor = system.actorOf(ConfigServiceActor.props(manager, registerWithLocationService = true), name = "configService")
-    val csClient = new BlockingConfigServiceClient(ConfigServiceClient(csActor, settings.name))
-    val appConfigStr =
-      s"""
-        |$name {
-        |  command = sleep 10
-        |  port = $port
-        |}
-      """.stripMargin
-    csClient.create(new File(path), ConfigData(appConfigStr), oversize = false, "test")
-
-    Future {
-      TrackLocation.main(Array("--name", name, "--no-exit", path))
-    }
-
-    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
-    val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
-    logger.debug(s"Found $locationsReady")
-    assert(locationsReady.locations.size == 1)
-    val loc = locationsReady.locations.head
-    assert(loc.isResolved)
-    assert(loc.connection.connectionType == TcpType)
-    assert(loc.connection.componentId.name == name)
-    val tcpLoc = loc.asInstanceOf[ResolvedTcpLocation]
-    assert(tcpLoc.port == port)
-    logger.debug(s"$name passed")
-    logger.debug("Test3 done")
-  }
+  // XXX: This test is no longer valid, since the config service is expected to be already running in the test environment
+  //  test("Test with config service") {
+  //    logger.debug("Test3 started")
+  //    val name = "test3"
+  //    val path = "test3/test3.conf"
+  //    val port = 8888
+  //
+  //    // create a test repository and use it to create the actor
+  //    val settings = ConfigServiceSettings(system)
+  //    val manager = TestRepo.getTestRepoConfigManager(settings)
+  //    val csActor = system.actorOf(ConfigServiceActor.props(manager, registerWithLocationService = true), name = "configService")
+  //    val csClient = new BlockingConfigServiceClient(ConfigServiceClient(csActor, settings.name))
+  //    val appConfigStr =
+  //      s"""
+  //        |$name {
+  //        |  command = sleep 10
+  //        |  port = $port
+  //        |}
+  //      """.stripMargin
+  //    csClient.create(new File(path), ConfigData(appConfigStr), oversize = false, "test")
+  //
+  //    Future {
+  //      TrackLocation.main(Array("--name", name, "--no-exit", path))
+  //    }
+  //
+  //    val connection = TcpConnection(ComponentId(name, ComponentType.Service))
+  //    val locationsReady = Await.result(LocationService.resolve(Set(connection)), timeout.duration)
+  //    logger.debug(s"Found $locationsReady")
+  //    assert(locationsReady.locations.size == 1)
+  //    val loc = locationsReady.locations.head
+  //    assert(loc.isResolved)
+  //    assert(loc.connection.connectionType == TcpType)
+  //    assert(loc.connection.componentId.name == name)
+  //    val tcpLoc = loc.asInstanceOf[ResolvedTcpLocation]
+  //    assert(tcpLoc.port == port)
+  //    logger.debug(s"$name passed")
+  //    logger.debug("Test3 done")
+  //  }
 }
 

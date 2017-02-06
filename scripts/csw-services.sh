@@ -48,13 +48,25 @@ REDIS_CLIENT=`echo $REDIS_SERVER | sed -e 's/-server/-cli/'`
 # Set to yes to start the config service
 START_CONFIG_SERVICE=yes
 
-REDIS_PORT=7777
+# Get a random, unused port
+function random_unused_port {
+    local port=$(shuf -i 2000-65000 -n 1)
+    netstat -lat | grep $port > /dev/null
+    if [[ $? == 1 ]] ; then
+        export RANDOM_PORT=$port
+    else
+        random_unused_port
+    fi
+}
+random_unused_port
+
+REDIS_PORT=$RANDOM_PORT
 REDIS_SERVICES="Event Service,Alarm Service,Telemetry Service"
 
 OS=`uname`
 
 # Dir to hold pid and log files, svn repo
-CSW_DATA_DIR=/tmp/csw
+CSW_DATA_DIR=/tmp/csw/`whoami`
 test -d $CSW_DATA_DIR || mkdir -p $CSW_DATA_DIR
 
 # Config Service pid and log files
@@ -111,7 +123,7 @@ case "$1" in
                 sleep 1
             done
             echo "Redis stopped"
-            rm -f $REG_PID_FILE $REG_LOG_FILE $REDIS_LOG_FILE $REDIS_PID_FILE
+            rm -f $REDIS_LOG_FILE $REDIS_PID_FILE
         fi
         # Stop Config Service
         if [ "$START_CONFIG_SERVICE" == "yes" ] ; then

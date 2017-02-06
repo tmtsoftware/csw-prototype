@@ -16,22 +16,27 @@ sealed trait Connection {
   /**
    * Returns a connection's name
    */
-  def name = componentId.name
+  def name: String = componentId.name
 
   /**
    * Indicates how the component is accessed (http, akka)
    */
   def connectionType: ConnectionType
 
-  override def toString = s"$componentId-$connectionType"
+  override def toString = s"${Connection.user}-$componentId-$connectionType"
 
-  override def equals(that: Any) = that match {
+  override def equals(that: Any): Boolean = that match {
     case (that: Connection) => this.toString == that.toString
     case _                  => false
   }
 }
 
 object Connection {
+
+  /**
+   * Holds the user name, used to make services unique for each user
+   */
+  private val user: String = Option(System.getProperty("user.name")).getOrElse("unknown")
 
   /**
    * A connection to a remote akka actor based component
@@ -58,12 +63,18 @@ object Connection {
    * Gets a Connection from a string as output by toString
    */
   def apply(s: String): Try[Connection] = {
-    val (id, typ) = s.splitAt(s.lastIndexOf('-')) // To strings
-    ConnectionType(typ.drop(1)) match {
-      case Success(AkkaType) => ComponentId(id).map(AkkaConnection)
-      case Success(HttpType) => ComponentId(id).map(HttpConnection)
-      case Success(TcpType)  => ComponentId(id).map(TcpConnection)
-      case Failure(ex)       => Failure(ex)
+    // s is in a format like: $user-$name-Assembly-akka
+    if (s.startsWith(s"$user-")) {
+      val ss = s.splitAt(s.indexOf('-') + 1)._2
+      val (id, typ) = ss.splitAt(ss.lastIndexOf('-'))
+      ConnectionType(typ.drop(1)) match {
+        case Success(AkkaType) => ComponentId(id).map(AkkaConnection)
+        case Success(HttpType) => ComponentId(id).map(HttpConnection)
+        case Success(TcpType)  => ComponentId(id).map(TcpConnection)
+        case Failure(ex)       => Failure(ex)
+      }
+    } else {
+      Failure(new RuntimeException("wrong user"))
     }
   }
 
