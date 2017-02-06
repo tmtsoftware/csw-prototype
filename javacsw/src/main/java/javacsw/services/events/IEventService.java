@@ -1,7 +1,6 @@
 package javacsw.services.events;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorRefFactory;
 import akka.actor.ActorSystem;
 import akka.util.Timeout;
 import csw.services.events.EventService$;
@@ -9,6 +8,7 @@ import csw.services.events.EventService.*;
 import csw.services.events.EventServiceSettings;
 import csw.services.loc.ComponentId;
 import csw.services.loc.Connection;
+import csw.services.loc.LocationService;
 import csw.util.config.Events.EventServiceEvent;
 import scala.Unit;
 
@@ -123,6 +123,17 @@ public interface IEventService {
    */
   static CompletableFuture<IEventService> getEventService(String name, ActorSystem sys, Timeout timeout) {
     return JEventService.lookup(name, sys, timeout);
+  }
+
+    /**
+   * Resolves the location of the event service with the given (or default) name.
+   * @param name name used to register the Redis instance with the Location Service (default: "Event Service")
+   * @param sys the actor system to use for the future
+   * @param timeout timeout for the lookup with the location service
+   * @return the future resolved location
+   */
+  static CompletableFuture<LocationService.ResolvedTcpLocation> getEventServiceLocation(String name, ActorSystem sys, Timeout timeout) {
+    return JEventService.getEventServiceLocation(name, sys, timeout);
   }
 
   /**

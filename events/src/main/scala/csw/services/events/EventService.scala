@@ -11,8 +11,7 @@ import csw.util.config.ConfigSerializer._
 import redis.{ByteStringFormatter, RedisClient}
 
 import scala.annotation.varargs
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 object EventService {
 
@@ -36,12 +35,25 @@ object EventService {
    */
   def eventServiceConnection(name: String = defaultName): TcpConnection = TcpConnection(eventServiceComponentId(name))
 
-  // Lookup the event service redis instance with the location service
-  private def locateEventService(name: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[RedisClient] = {
+  /**
+   * Resolves the location of the event service with the given (or default) name.
+   * @param name name used to register the Redis instance with the Location Service (default: "Event Service")
+   * @param system the actor system to use for the future
+   * @param timeout timeout for the lookup with the location service
+   * @return the future resolved location
+   */
+  def getEventServiceLocation(name: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[ResolvedTcpLocation] = {
     import system.dispatcher
     val connection = eventServiceConnection(name)
     LocationService.resolve(Set(connection)).map { locationsReady =>
-      val loc = locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
+      locationsReady.locations.head.asInstanceOf[ResolvedTcpLocation]
+    }
+  }
+
+  // Lookup the event service redis instance with the location service
+  private def locateEventService(name: String = defaultName)(implicit system: ActorSystem, timeout: Timeout): Future[RedisClient] = {
+    import system.dispatcher
+    getEventServiceLocation(name).map { loc =>
       RedisClient(loc.host, loc.port)
     }
   }

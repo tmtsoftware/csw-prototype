@@ -58,9 +58,7 @@ function random_unused_port {
         random_unused_port
     fi
 }
-random_unused_port
 
-REDIS_PORT=$RANDOM_PORT
 REDIS_SERVICES="Event Service,Alarm Service,Telemetry Service"
 
 OS=`uname`
@@ -76,8 +74,9 @@ CS_LOG_FILE=$CSW_DATA_DIR/cs.log
 CS_OPTIONS="--init --nohttp --noannex"
 
 # Redis pid and log files
-REDIS_PID_FILE=$CSW_DATA_DIR/redis1.pid
-REDIS_LOG_FILE=$CSW_DATA_DIR/redis1.log
+REDIS_PID_FILE=$CSW_DATA_DIR/redis.pid
+REDIS_LOG_FILE=$CSW_DATA_DIR/redis.log
+REDIS_PORT_FILE=$CSW_DATA_DIR/redis_port.log
 
 case "$1" in
     start)
@@ -101,8 +100,10 @@ case "$1" in
             if [ -f $REDIS_PID_FILE ] ; then
                 echo "Redis pid file $REDIS_PID_FILE exists, process is already running or crashed?"
             else
-                $CSW_INSTALL/bin/tracklocation --name "$REDIS_SERVICES" --port $REDIS_PORT --command "$REDIS_SERVER --protected-mode no --port $REDIS_PORT" > $REDIS_LOG_FILE 2>&1 &
+               random_unused_port
+               $CSW_INSTALL/bin/tracklocation --name "$REDIS_SERVICES" --port $RANDOM_PORT --command "$REDIS_SERVER --protected-mode no --port $RANDOM_PORT" > $REDIS_LOG_FILE 2>&1 &
                 echo $! > $REDIS_PID_FILE
+                echo $RANDOM_PORT > $REDIS_PORT_FILE
 				# Load the default alarms in to the Alarm Service Redis instance
 				$CSW_INSTALL/bin/asconsole --init $CSW_INSTALL/conf/alarms.conf >> $REDIS_LOG_FILE 2>&1 &
 			fi
@@ -115,6 +116,7 @@ case "$1" in
             echo "Redis $REDIS_PID_FILE does not exist, process is not running"
         else
             PID=$(cat $REDIS_PID_FILE)
+            REDIS_PORT=$(cat $REDIS_PORT_FILE)
             echo "Stopping Redis..."
             $REDIS_CLIENT -p $REDIS_PORT shutdown
             while [ -x /proc/${PID} ]
@@ -123,7 +125,7 @@ case "$1" in
                 sleep 1
             done
             echo "Redis stopped"
-            rm -f $REDIS_LOG_FILE $REDIS_PID_FILE
+            rm -f $REDIS_LOG_FILE $REDIS_PID_FILE $REDIS_PORT_FILE
         fi
         # Stop Config Service
         if [ "$START_CONFIG_SERVICE" == "yes" ] ; then

@@ -7,6 +7,7 @@ import akka.actor.{ActorRef, ActorRefFactory, ActorSystem}
 import akka.util.Timeout
 import csw.services.events.EventService.EventMonitor
 import csw.services.events.{EventService, EventServiceSettings}
+import csw.services.loc.LocationService.ResolvedTcpLocation
 import csw.util.config.Events.EventServiceEvent
 
 import scala.compat.java8.FutureConverters._
@@ -27,6 +28,17 @@ case object JEventService {
   def lookup(name: String, sys: ActorSystem, timeout: Timeout): CompletableFuture[IEventService] = {
     import sys.dispatcher
     EventService(name)(sys, timeout).map(JEventService(_, sys).asInstanceOf[IEventService]).toJava.toCompletableFuture
+  }
+
+  /**
+   * Returns location information about the event service with the given name
+   * @param name name used to register the Redis instance with the Location Service (default: "Event Service")
+   * @param sys required Akka environment
+   * @param timeout amount of time to wait looking up name with the location service before giving up with an error
+   * @return a future resolved tcp location
+   */
+  def getEventServiceLocation(name: String, sys: ActorSystem, timeout: Timeout): CompletableFuture[ResolvedTcpLocation] = {
+    EventService.getEventServiceLocation(name)(sys, timeout).toJava.toCompletableFuture
   }
 }
 
