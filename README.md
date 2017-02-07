@@ -88,8 +88,8 @@ Note that the csw-services.sh script requires that the environment variable CSW_
 in which the csw software is installed (../install/, relative to this file) 
 and that the redis-server version is at least 3.2.5.
 
-In the current version, it is common for some tests to fail when run together, but pass when run separately.
-We are working on a solution.
+See also the location service [README](loc/README.md) for two other environment variables that can be used to
+force the use of a given IP address for the local host and optionally use unique names for services during testing.
 
 Projects and Directories
 ------------------------

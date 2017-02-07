@@ -17,15 +17,6 @@ object LocationSubscriberTests {
   LocationService.initInterface()
 
   val system = ActorSystem("TrackerSubscriberTests")
-}
-class LocationSubscriberTests extends TestKit(LocationSubscriberTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
-
-  override def afterAll = TestKit.shutdownActorSystem(LocationSubscriberTests.system)
-
-  val c1Name = "My Alarm Service"
-  val c1Id = ComponentId(c1Name, ComponentType.Service)
-  val c1 = TcpConnection(c1Id)
 
   // Test subscriber actor for telemetry
   object TestSubscriber {
@@ -44,7 +35,6 @@ class LocationSubscriberTests extends TestKit(LocationSubscriberTests.system) wi
     var msgs = Vector.empty[Location]
 
     subscribeToLocationUpdates()
-    info(s"Test subscriber started")
 
     def receive: Receive = {
       case event: Location =>
@@ -66,6 +56,18 @@ class LocationSubscriberTests extends TestKit(LocationSubscriberTests.system) wi
       case GetResults => sender() ! Results(msgs)
     }
   }
+}
+
+class LocationSubscriberTests extends TestKit(LocationSubscriberTests.system) with ImplicitSender
+    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+
+  import LocationSubscriberTests._
+
+  override def afterAll = TestKit.shutdownActorSystem(LocationSubscriberTests.system)
+
+  val c1Name = "My Alarm Service"
+  val c1Id = ComponentId(c1Name, ComponentType.Service)
+  val c1 = TcpConnection(c1Id)
 
   /**
    * Test description, should allow creation and get no messages
