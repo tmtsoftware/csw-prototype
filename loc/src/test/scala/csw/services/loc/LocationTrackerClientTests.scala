@@ -176,25 +176,20 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val testPrefix = "test.prefix"
     val testPort = 1000
     val testProbe = TestProbe("probe5")
+    implicit val timeout: Timeout = 40.seconds
 
-    val f = Future.sequence(
-      List(
-        LocationService.registerAkkaConnection(componentId, testProbe.ref, testPrefix),
-        LocationService.registerHttpConnection(componentId, testPort)
-      )
-    )
+    val reg1 = Await.result(LocationService.registerAkkaConnection(componentId, testProbe.ref, testPrefix), timeout.duration)
+    val reg2 = Await.result(LocationService.registerHttpConnection(componentId, testPort), timeout.duration)
 
     val ac = AkkaConnection(componentId)
     val hc = HttpConnection(componentId)
 
-    implicit val timeout: Timeout = 40.seconds
     val future = LocationService.resolve(Set(hc, ac))
     val result = Await.result(future, timeout.duration)
     logger.debug(s" Got it: ${result.locations}")
     assert(result.locations.size == 2)
-
-    val resultList = Await.result(f, t)
-    resultList.foreach(_.unregister())
+    reg1.unregister()
+    reg2.unregister()
   }
 
   test("Try to do like Allan") {

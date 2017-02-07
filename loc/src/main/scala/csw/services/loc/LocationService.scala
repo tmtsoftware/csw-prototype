@@ -73,15 +73,14 @@ object LocationService {
         addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
       }
 
+      val cswHost = Option(System.getenv("CSW_HOST"))
       val akkaKey = "akka.remote.netty.tcp.hostname"
       val mdnsKey = "net.mdns.interface"
-      //    val config = ConfigFactory.load()
       val mdnsHost = Option(System.getProperty(mdnsKey))
       mdnsHost.foreach(h => logger.debug(s"Found system property for $mdnsKey: $h"))
-      //    val akkaHost = if (config.hasPath(akkaKey) && config.getString(akkaKey).nonEmpty) Some(config.getString(akkaKey)) else None
       val akkaHost = Option(System.getProperty(akkaKey))
       akkaHost.foreach(h => logger.debug(s"Found system property for: $akkaKey: $h"))
-      val host = akkaHost.getOrElse(mdnsHost.getOrElse(getIpAddress))
+      val host = cswHost.getOrElse(akkaHost.getOrElse(mdnsHost.getOrElse(getIpAddress)))
       logger.debug(s"Using $host as listening IP address")
       System.setProperty(akkaKey, host)
       System.setProperty(mdnsKey, host)

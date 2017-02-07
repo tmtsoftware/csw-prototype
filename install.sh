@@ -26,6 +26,9 @@ for i in bin lib ; do
     done
 done
 
+# XXX FIXME: Get the real alarms.conf file from somewhere
+cp alarms/src/test/resources/test-alarms.conf $dir/conf/alarms.conf
+
 cp scripts/*.sh $dir/bin
 chmod +x $dir/bin/*.sh
 
