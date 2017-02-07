@@ -19,6 +19,11 @@ This determines the primary IP address of the local host and sets some system va
 control which IP address is used. If you forget to call this method, there is a chance that 
 the wrong IP address will be advertised (there is often more than one).
 
+If, for some reason, the wrong IP address is being used by the location service to register services, 
+you can override the IP address by setting the environment variable CSW_HOST to the correct IP address to use.
+This might be necessary if the server has multiple IP addresses and you want to use a specific one that is
+not chosen automatically.
+
 IPv6 Addresses
 --------------
 
