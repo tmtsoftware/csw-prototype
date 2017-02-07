@@ -91,8 +91,8 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
     println(s"Total map: $map1")
     //    assert(map1.size == 3)
 
-    val map2 = Await.result(alarmService.asInstanceOf[AlarmServiceImpl].getHealthInfoMap(AlarmKey(Some("NFIRAOS"))), timeout.duration)
-    println(s"NFIRAOS map: $map2")
+    val map2 = Await.result(alarmService.asInstanceOf[AlarmServiceImpl].getHealthInfoMap(AlarmKey(Some("nfiraos"))), timeout.duration)
+    println(s"nfiraos map: $map2")
     assert(map2.size == 2)
 
     // For testing callback
@@ -115,8 +115,8 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
 
     // Test working with an alarm and monitoring the alarm severity level
     val key1 = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
-    val key2 = AlarmKey("NFIRAOS", "envCtrl", "minTemperature")
-    val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
+    val key2 = AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisHighLimitAlarm")
+    val key3 = AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisLowLimitAlarm")
     val badKey = AlarmKey("XXX", "xxx", "xxx")
 
     val alarmMonitor = alarmAdmin.monitorAlarms(key1, printAlarmStatus, printHealthStatus, notifyAll = false)
@@ -185,7 +185,7 @@ class AlarmServiceTests extends TestKit(AlarmServiceTests.system) with FunSuiteL
     // Test health monitor
     alarmMonitor.stop()
     Thread.sleep(shortDelayMs)
-    val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
+    val nfKey = AlarmKey(subsystemOpt = Some("nfiraos"))
     val healthMonitor = alarmAdmin.monitorAlarms(nfKey, printAlarmStatus, printHealthStatus, notifyAll = false)
     Thread.sleep(shortDelayMs) // make sure actor has started
     Await.ready(alarmService.setSeverity(key2, SeverityLevel.Okay), timeout.duration)

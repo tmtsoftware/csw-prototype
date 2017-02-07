@@ -109,8 +109,8 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
 
     // Test working with an alarm and monitoring the alarm severity level
     val key1 = AlarmKey("TCS", "tcsPk", "cpuExceededAlarm")
-    val key2 = AlarmKey("NFIRAOS", "envCtrl", "minTemperature")
-    val key3 = AlarmKey("NFIRAOS", "envCtrl", "maxTemperature")
+    val key2 = AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisHighLimitAlarm")
+    val key3 = AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisLowLimitAlarm")
     val badKey = AlarmKey("XXX", "xxx", "xxx")
 
     val alarmMonitor = basAdmin.monitorAlarms(key1, printAlarmStatus, printHealthStatus, notifyAll = false)
@@ -177,7 +177,7 @@ class BlockingAlarmServiceTests extends TestKit(BlockingAlarmServiceTests.system
     // Test health monitor
     alarmMonitor.stop()
     Thread.sleep(shortDelayMs)
-    val nfKey = AlarmKey(subsystemOpt = Some("NFIRAOS"))
+    val nfKey = AlarmKey(subsystemOpt = Some("nfiraos"))
     val healthMonitor = basAdmin.monitorAlarms(nfKey, printAlarmStatus, printHealthStatus, notifyAll = false)
     Thread.sleep(shortDelayMs) // make sure actor has started
     bas.setSeverity(key2, SeverityLevel.Okay)
