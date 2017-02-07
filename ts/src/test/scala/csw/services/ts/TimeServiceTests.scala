@@ -10,8 +10,36 @@ import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 /**
  * Tests the TimeService
  */
+object TimeServiceTests {
+  case class TestScheduler(name: String, caller: ActorRef) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
+
+    import TimeService._
+
+    var count = 0
+
+    def receive: Receive = {
+      case "once" =>
+        log.debug("Received once start")
+        scheduleOnce(localTimeNow.plusSeconds(5), context.self, "once-done")
+      case "five" =>
+        log.debug("Received multi start")
+        val c = schedule(localTimeNow.plusSeconds(1), java.time.Duration.ofSeconds(1), context.self, "count")
+        caller ! c //Return the cancellable
+      case "count" =>
+        count = count + 1
+        log.debug(s"Count: $count")
+        if (count >= 5) caller ! count
+      case "once-done" =>
+        log.debug("Received Done")
+        caller ! "done"
+    }
+  }
+}
+
 class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender with FunSuiteLike
     with LazyLogging with BeforeAndAfterAll {
+
+  import TimeServiceTests._
 
   test("Basic Java Time Tests") {
     import TimeService._
@@ -39,7 +67,7 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
   test("Call scheduler once") {
     import scala.concurrent.duration._
 
-    val timerTest = system.actorOf(Props(new TestScheduler("tester", self)))
+    val timerTest = system.actorOf(Props(TestScheduler("tester", self)))
     timerTest ! "once"
 
     within(10.seconds) {
@@ -51,7 +79,7 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
   test("Call scheduler (with 5 counts in 5 seconds)") {
     import scala.concurrent.duration._
 
-    val timerTest = system.actorOf(Props(new TestScheduler("tester", self)))
+    val timerTest = system.actorOf(Props(TestScheduler("tester", self)))
     timerTest ! "five"
 
     within(10.seconds) {
@@ -63,30 +91,6 @@ class TimeServiceTests extends TestKit(ActorSystem("Test")) with ImplicitSender 
       cancellable.cancel()
     }
 
-  }
-
-  case class TestScheduler(name: String, caller: ActorRef) extends Actor with ActorLogging with TimeService.TimeServiceScheduler {
-
-    import TimeService._
-
-    var count = 0
-
-    def receive: Receive = {
-      case "once" =>
-        log.debug("Received once start")
-        scheduleOnce(localTimeNow.plusSeconds(5), context.self, "once-done")
-      case "five" =>
-        log.debug("Received multi start")
-        val c = schedule(localTimeNow.plusSeconds(1), java.time.Duration.ofSeconds(1), context.self, "count")
-        caller ! c //Return the cancellable
-      case "count" =>
-        count = count + 1
-        log.debug(s"Count: $count")
-        if (count >= 5) caller ! count
-      case "once-done" =>
-        log.debug("Received Done")
-        caller ! "done"
-    }
   }
 
 }
