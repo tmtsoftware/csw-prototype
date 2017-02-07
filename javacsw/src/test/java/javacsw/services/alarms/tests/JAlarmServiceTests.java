@@ -125,8 +125,8 @@ public class JAlarmServiceTests {
 
     // Test working with an alarm and monitoring the alarm severity level
     AlarmKey key1 = new AlarmKey("TCS", "tcsPk", "cpuExceededAlarm");
-    AlarmKey key2 = new AlarmKey("NFIRAOS", "envCtrl", "minTemperature");
-    AlarmKey key3 = new AlarmKey("NFIRAOS", "envCtrl", "maxTemperature");
+    AlarmKey key2 = new AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisHighLimitAlarm");
+    AlarmKey key3 = new AlarmKey("nfiraos", "nfiraos.cc.trombone", "tromboneAxisLowLimitAlarm");
 
     AlarmMonitor alarmMonitor = admin.monitorAlarms(key1, alarmHandler, healthHandler, false);
     Thread.sleep(shortDelayMs); // make sure actor has started
@@ -190,7 +190,7 @@ public class JAlarmServiceTests {
 
     // Test health monitor
     alarmMonitor.stop();
-    AlarmKey nfKey = JAlarmKey.create(Optional.of("NFIRAOS"));
+    AlarmKey nfKey = JAlarmKey.create(Optional.of("nfiraos"));
     AlarmMonitor healthMonitor = admin.monitorAlarms(nfKey, alarmHandler, healthHandler, false);
     Thread.sleep(shortDelayMs); // make sure actor has started
     alarmService.setSeverity(key2, JSeverityLevel.Okay).get();
