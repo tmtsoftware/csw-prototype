@@ -44,7 +44,7 @@ object Connection {
    * same name is used, use it. The value, if set, is prepended to the name used to register with mDNS.
    * The name should not contain a '-' (If it does, it will be replaced with a _).
    */
-  private val servicePrefix: String = {
+  val servicePrefix: String = {
     Option(System.getProperty("CSW_SERVICE_PREFIX")).getOrElse(
       Option(System.getenv("CSW_SERVICE_PREFIX")).getOrElse("")
     ).replace('-', '_')

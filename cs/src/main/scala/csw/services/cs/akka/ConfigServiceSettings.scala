@@ -13,6 +13,7 @@ import java.net.URI
 import csw.services.cs.core.ConfigManager
 import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.svn.SvnConfigManager
+import csw.services.loc.Connection
 
 import scala.concurrent.duration._
 
@@ -40,7 +41,7 @@ case class ConfigServiceSettings(config: Config) extends Extension {
   /**
    * URI for the main svn or git repository to use
    */
-  val mainRepository = new URI(config.getString(s"$prefix.main-repository"))
+  val mainRepository = new URI(subst(config.getString(s"$prefix.main-repository")))
 
   /**
    * Directory to use for the local git repository
@@ -69,7 +70,7 @@ case class ConfigServiceSettings(config: Config) extends Extension {
 
   // Do any required substitution on the setting values
   def subst(s: String): String = {
-    s.replaceFirst("~", System.getProperty("user.home"))
+    s.replaceFirst("~", System.getProperty("user.home")).replace("$CSW_SERVICE_PREFIX", Connection.servicePrefix)
   }
 
   /**

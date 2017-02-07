@@ -61,8 +61,8 @@ function random_unused_port {
 
 redisServices="Event Service,Alarm Service,Telemetry Service"
 
-# Dir to hold pid and log files, svn repo
-cswDataDir=/tmp/csw-`whoami`
+# Dir to hold pid and log files, svn repo (CSW_SERVICE_PREFIX is used if set to make the dir unique - see csw/loc/README.md)
+cswDataDir=/tmp/csw$CSW_SERVICE_PREFIX
 test -d $cswDataDir || mkdir -p $cswDataDir
 
 # Config Service pid and log files

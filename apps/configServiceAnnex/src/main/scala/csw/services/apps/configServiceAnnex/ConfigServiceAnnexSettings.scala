@@ -5,6 +5,7 @@ import java.io.File
 import akka.actor.{ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import akka.util.Timeout
 import com.typesafe.config.Config
+import csw.services.loc.Connection
 
 import scala.concurrent.duration._
 
@@ -32,7 +33,7 @@ class ConfigServiceAnnexSettings(config: Config) extends Extension {
 
   // Do any required substitution on the setting values
   def subst(s: String): String = {
-    s.replaceFirst("~", System.getProperty("user.home"))
+    s.replaceFirst("~", System.getProperty("user.home")).replace("$CSW_SERVICE_PREFIX", Connection.servicePrefix)
   }
 }
 
