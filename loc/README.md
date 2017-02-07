@@ -30,6 +30,14 @@ To avoid problems, add this option when running applications using the Location 
 Note that it is not enough to just set the system property once the application is running.
 It needs to be on the command line to the application.
 
+Avoiding Conflicts During Development
+--------------------------------------
+
+When a service is registered with the location service, it is registered for the entire local network.
+In order to avoid conflicts when multiple developers are testing in the same network, you can define
+the environment variable or system property `CSW_SERVICE_PREFIX` for all clients and services. This prepends
+the given string to the name used to register and look up services.
+
 Service Types
 -------------
 

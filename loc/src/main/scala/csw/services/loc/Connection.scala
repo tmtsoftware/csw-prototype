@@ -23,7 +23,12 @@ sealed trait Connection {
    */
   def connectionType: ConnectionType
 
-  override def toString = s"${Connection.user}-$componentId-$connectionType"
+  override def toString = {
+    if (Connection.servicePrefix.nonEmpty)
+      s"${Connection.servicePrefix}-$componentId-$connectionType"
+    else
+      s"$componentId-$connectionType"
+  }
 
   override def equals(that: Any): Boolean = that match {
     case (that: Connection) => this.toString == that.toString
@@ -34,9 +39,16 @@ sealed trait Connection {
 object Connection {
 
   /**
-   * Holds the user name, used to make services unique for each user
+   * Holds a string that can be used to make the services unique (for example, during development).
+   * If the system property CSW_SERVICE_PREFIX is set, use it, otherwise if an environment variable of the
+   * same name is used, use it. The value, if set, is prepended to the name used to register with mDNS.
+   * The name should not contain a '-' (If it does, it will be replaced with a _).
    */
-  private val user: String = Option(System.getProperty("user.name")).getOrElse("unknown")
+  private val servicePrefix: String = {
+    Option(System.getProperty("CSW_SERVICE_PREFIX")).getOrElse(
+      Option(System.getenv("CSW_SERVICE_PREFIX")).getOrElse("")
+    ).replace('-', '_')
+  }
 
   /**
    * A connection to a remote akka actor based component
@@ -64,8 +76,8 @@ object Connection {
    */
   def apply(s: String): Try[Connection] = {
     // s is in a format like: $user-$name-Assembly-akka
-    if (s.startsWith(s"$user-")) {
-      val ss = s.splitAt(s.indexOf('-') + 1)._2
+    if (servicePrefix.isEmpty || s.startsWith(s"$servicePrefix-")) {
+      val ss = if (servicePrefix.isEmpty) s else s.splitAt(s.indexOf('-') + 1)._2
       val (id, typ) = ss.splitAt(ss.lastIndexOf('-'))
       ConnectionType(typ.drop(1)) match {
         case Success(AkkaType) => ComponentId(id).map(AkkaConnection)
@@ -74,7 +86,7 @@ object Connection {
         case Failure(ex)       => Failure(ex)
       }
     } else {
-      Failure(new RuntimeException("wrong user"))
+      Failure(new RuntimeException("Wrong csw service prefix"))
     }
   }
 

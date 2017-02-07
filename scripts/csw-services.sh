@@ -19,36 +19,36 @@
 # (This is usually ../install relative to the csw sources and is created by the install.sh script).
 #
 
-REDIS_SERVER=/usr/local/bin/redis-server
+redisServer=/usr/local/bin/redis-server
 
 # We need at least this version of Redis
-MIN_REDIS_VERSION=3.2.5
+minRedisVersion=3.2.5
 
 # Look in the default location first, since installing from the source puts it there, otherwise look in the path
-if test ! -x $REDIS_SERVER ; then
-    REDIS_SERVER=redis-server
+if test ! -x $redisServer ; then
+    redisServer=redis-server
 fi
-if ! type $REDIS_SERVER &> /dev/null; then
-  echo "Can't find $REDIS_SERVER. Please install Redis version $MIN_REDIS_VERSION or greater"
+if ! type $redisServer &> /dev/null; then
+  echo "Can't find $redisServer. Please install Redis version $minRedisVersion or greater"
   exit 1
 fi
 
-SORT_VERSION="sort -V"
-test `uname` == Darwin && SORT_VERSION="sort"
+sortVersion="sort -V"
+test `uname` == Darwin && sortVersion="sort"
 
 # Make sure we have the min redis version
-function version_gt() { test "$(printf '%s\n' "$@" | $SORT_VERSION | head -n 1)" != "$1"; }
-redis_version=`$REDIS_SERVER --version | awk '{sub(/-.*/,"",$3);print $3}' | sed -e 's/v=//'`
-if version_gt $MIN_REDIS_VERSION $redis_version; then
-     echo "Error: required Redis version is $MIN_REDIS_VERSION, but only version $redis_version was found"
+function version_gt() { test "$(printf '%s\n' "$@" | $sortVersion | head -n 1)" != "$1"; }
+redis_version=`$redisServer --version | awk '{sub(/-.*/,"",$3);print $3}' | sed -e 's/v=//'`
+if version_gt $minRedisVersion $redis_version; then
+     echo "Error: required Redis version is $minRedisVersion, but only version $redis_version was found"
      exit 1
 fi
-REDIS_CLIENT=`echo $REDIS_SERVER | sed -e 's/-server/-cli/'`
+redisClient=`echo $redisServer | sed -e 's/-server/-cli/'`
 
 # Set to yes to start the config service
-START_CONFIG_SERVICE=yes
+startConfigService=yes
 
-# Get a random, unused port
+# Gets a random, unused port and sets the RANDOM_PORT variable
 function random_unused_port {
     local port=$(shuf -i 2000-65000 -n 1)
     netstat -lat | grep $port > /dev/null
@@ -59,24 +59,25 @@ function random_unused_port {
     fi
 }
 
-REDIS_SERVICES="Event Service,Alarm Service,Telemetry Service"
-
-OS=`uname`
+redisServices="Event Service,Alarm Service,Telemetry Service"
 
 # Dir to hold pid and log files, svn repo
-CSW_DATA_DIR=/tmp/csw/`whoami`
-test -d $CSW_DATA_DIR || mkdir -p $CSW_DATA_DIR
+cswDataDir=/tmp/csw-`whoami`
+test -d $cswDataDir || mkdir -p $cswDataDir
 
 # Config Service pid and log files
-CS_PID_FILE=$CSW_DATA_DIR/cs.pid
-CS_LOG_FILE=$CSW_DATA_DIR/cs.log
+csPidFile=$cswDataDir/cs.pid
+csLogFile=$cswDataDir/cs.log
 # Config Service options
-CS_OPTIONS="--init --nohttp --noannex"
+csOptions="--init --nohttp --noannex"
 
 # Redis pid and log files
-REDIS_PID_FILE=$CSW_DATA_DIR/redis.pid
-REDIS_LOG_FILE=$CSW_DATA_DIR/redis.log
-REDIS_PORT_FILE=$CSW_DATA_DIR/redis_port.log
+redisPidFile=$cswDataDir/redis.pid
+redisLogFile=$cswDataDir/redis.log
+redisPortFile=$cswDataDir/redis.port
+
+# Required to be installed in $CSW_INSTALL
+cswRequired="bin/cs bin/tracklocation bin/asconsole conf/alarms.conf"
 
 case "$1" in
     start)
@@ -86,56 +87,62 @@ case "$1" in
             echo "Please set CSW_INSTALL to the root directory where the csw software is installed"
             exit 1
         else
+            for i in $cswRequired; do
+                if [ ! -f $CSW_INSTALL/$i ] ; then
+                    echo "Missing required file under \$CSW_INSTALL: $i"
+                    exit 1
+                fi
+            done
             # Start Config Service
-            if [ "$START_CONFIG_SERVICE" == "yes" ] ; then
-                if [ -f $CS_PID_FILE ] ; then
-                    echo "Config Service pid file $CS_PID_FILE exists, process is already running or crashed?"
+            if [ "$startConfigService" == "yes" ] ; then
+                if [ -f $csPidFile ] ; then
+                    echo "Config Service pid file $csPidFile exists, process is already running or crashed?"
                 else
-                    $CSW_INSTALL/bin/cs $CS_OPTIONS > $CS_LOG_FILE 2>&1 &
-                    echo $! > $CS_PID_FILE
+                    $CSW_INSTALL/bin/cs $csOptions > $csLogFile 2>&1 &
+                    echo $! > $csPidFile
                 fi
             fi
 
             # Start Redis based services using trackLocation
-            if [ -f $REDIS_PID_FILE ] ; then
-                echo "Redis pid file $REDIS_PID_FILE exists, process is already running or crashed?"
+            if [ -f $redisPidFile ] ; then
+                echo "Redis pid file $redisPidFile exists, process is already running or crashed?"
             else
                random_unused_port
-               $CSW_INSTALL/bin/tracklocation --name "$REDIS_SERVICES" --port $RANDOM_PORT --command "$REDIS_SERVER --protected-mode no --port $RANDOM_PORT" > $REDIS_LOG_FILE 2>&1 &
-                echo $! > $REDIS_PID_FILE
-                echo $RANDOM_PORT > $REDIS_PORT_FILE
+               $CSW_INSTALL/bin/tracklocation --name "$redisServices" --port $RANDOM_PORT --command "$redisServer --protected-mode no --port $RANDOM_PORT" > $redisLogFile 2>&1 &
+                echo $! > $redisPidFile
+                echo $RANDOM_PORT > $redisPortFile
 				# Load the default alarms in to the Alarm Service Redis instance
-				$CSW_INSTALL/bin/asconsole --init $CSW_INSTALL/conf/alarms.conf >> $REDIS_LOG_FILE 2>&1 &
+				$CSW_INSTALL/bin/asconsole --init $CSW_INSTALL/conf/alarms.conf >> $redisLogFile 2>&1 &
 			fi
         fi
         ;;
     stop)
         # Stop Redis
-        if [ ! -f $REDIS_PID_FILE ]
+        if [ ! -f $redisPidFile ]
         then
-            echo "Redis $REDIS_PID_FILE does not exist, process is not running"
+            echo "Redis $redisPidFile does not exist, process is not running"
         else
-            PID=$(cat $REDIS_PID_FILE)
-            REDIS_PORT=$(cat $REDIS_PORT_FILE)
+            PID=$(cat $redisPidFile)
+            redisPort=$(cat $redisPortFile)
             echo "Stopping Redis..."
-            $REDIS_CLIENT -p $REDIS_PORT shutdown
+            $redisClient -p $redisPort shutdown
             while [ -x /proc/${PID} ]
             do
                 echo "Waiting for Redis to shutdown ..."
                 sleep 1
             done
             echo "Redis stopped"
-            rm -f $REDIS_LOG_FILE $REDIS_PID_FILE $REDIS_PORT_FILE
+            rm -f $redisLogFile $redisPidFile $redisPortFile
         fi
         # Stop Config Service
-        if [ "$START_CONFIG_SERVICE" == "yes" ] ; then
-            if [ ! -f $CS_PID_FILE ]; then
-				echo "Config Service $CS_PID_FILE does not exist, process is not running"
+        if [ "$startConfigService" == "yes" ] ; then
+            if [ ! -f $csPidFile ]; then
+				echo "Config Service $csPidFile does not exist, process is not running"
             else
-				PID=$(cat $CS_PID_FILE)
+				PID=$(cat $csPidFile)
 				echo "Stopping Config Service..."
 				kill $PID
-				rm -f $CS_PID_FILE $CS_LOG_FILE
+				rm -f $csPidFile $csLogFile
             fi
         fi
         ;;
