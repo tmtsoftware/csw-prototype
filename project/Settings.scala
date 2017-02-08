@@ -17,7 +17,7 @@ import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.{ MultiJvm, jvmOptions }
 //noinspection TypeAnnotation
 // Defines the global build settings so they don't need to be edited everywhere
 object Settings {
-  val Version = "0.3-SNAPSHOT"
+  val Version = "0.4-SNAPSHOT"
 
   val buildSettings = Seq(
     organization := "org.tmt",

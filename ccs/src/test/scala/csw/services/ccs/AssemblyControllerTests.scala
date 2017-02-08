@@ -4,7 +4,7 @@
 //
 //import akka.actor._
 //import akka.testkit.{ImplicitSender, TestKit}
-//import com.typesafe.scalalogging.slf4j.LazyLogging
+//import com.typesafe.scalalogging.LazyLogging
 //import csw.services.ccs.AssemblyController.{Submit, Valid, Validation}
 //import csw.util.config.Configurations.{ConfigInfo, SetupConfig, SetupConfigArg}
 //import csw.util.config.StateVariable.CurrentState

@@ -3,13 +3,13 @@ package csw.services.ccs
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.CommandStatus.{CommandStatus, Completed, Error}
 import csw.services.ccs.CurrentStateReceiver.{AddPublisher, RemovePublisher}
 import csw.util.config.Configurations.ConfigKey
 import csw.util.config.IntKey
 import csw.util.config.UnitsOfMeasure.encoder
-import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
+import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
 import csw.util.config.StateVariable.{CurrentState, DemandState}
 import akka.pattern.{ask, pipe}
 import csw.util.akka.PublisherActor.Subscribe
@@ -21,7 +21,7 @@ import scala.concurrent.duration._
  * TMT Source Code: 9/1/16.
  */
 class StateMatcherTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests")) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll with LazyLogging {
+    with FunSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
   override def afterAll: Unit = TestKit.shutdownActorSystem(system)
 
   // Needed for futures

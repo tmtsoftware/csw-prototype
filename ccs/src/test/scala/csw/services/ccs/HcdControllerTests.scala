@@ -2,7 +2,7 @@ package csw.services.ccs
 
 import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit}
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.ccs.HcdController.Submit
 import csw.util.config.Configurations.SetupConfig
 import csw.util.config.StateVariable.CurrentState

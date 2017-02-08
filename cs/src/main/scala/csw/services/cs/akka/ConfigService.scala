@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor._
 import com.typesafe.config.ConfigFactory
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.apps.configServiceAnnex.{ConfigServiceAnnexServer, ConfigServiceAnnexServerApp}
 import csw.services.cs.core.git.GitConfigManager
 import csw.services.cs.core.svn.SvnConfigManager

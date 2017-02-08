@@ -4,7 +4,7 @@
 //
 //import akka.actor.ActorSystem
 //import akka.testkit.TestKit
-//import com.typesafe.scalalogging.slf4j.LazyLogging
+//import com.typesafe.scalalogging.LazyLogging
 //import csw.services.loc.LocationService
 //import csw.services.trackLocation.TrackLocation
 //import org.scalatest.FunSuiteLike

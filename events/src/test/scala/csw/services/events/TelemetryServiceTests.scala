@@ -6,7 +6,7 @@ import akka.util.Timeout
 import csw.util.config.Events.StatusEvent
 import csw.util.config.{BooleanKey, DoubleKey, IntKey, StringKey}
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -40,8 +40,8 @@ class TelemetryServiceTests
   implicit val timeout = Timeout(10.seconds)
 
   // Used to start and stop the telemetry service Redis instance used for the test
-  val ts = Await.result(TelemetryService(), timeout.duration)
-  val tsAdmin = TelemetryServiceAdmin(ts)
+  private val ts = Await.result(TelemetryService(), timeout.duration)
+  //  private val tsAdmin = TelemetryServiceAdmin(ts)
 
   override protected def afterAll(): Unit = {
     system.terminate()
@@ -166,16 +166,11 @@ class TelemetryServiceTests
       .add(infoStr.set("info 2"))
       .add(boolValue.set(true))
 
-    ts.publish(event).onSuccess {
-      case _ =>
-        ts.get(prefix).onSuccess {
-          case Some(statusEvent: StatusEvent) =>
-            assert(statusEvent(infoValue).head == 2)
-            assert(statusEvent(infoStr).head == "info 2")
-            assert(statusEvent(boolValue).head)
-            statusEvent
-        }
-    }
+    Await.ready(ts.publish(event), timeout.duration)
+    val statusEvent = Await.result(ts.get(prefix), timeout.duration).get
+    assert(statusEvent(infoValue).head == 2)
+    assert(statusEvent(infoStr).head == "info 2")
+    assert(statusEvent(boolValue).head)
   }
 
   test("Test subscribing to events via subscribe method") {

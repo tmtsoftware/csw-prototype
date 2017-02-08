@@ -1,6 +1,6 @@
 package csw.services.apps.configServiceAnnex
 
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.loc.LocationService
 import org.slf4j.LoggerFactory
 

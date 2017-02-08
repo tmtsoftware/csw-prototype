@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor._
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.loc._
 import csw.services.loc.ComponentType.{Assembly, HCD}
 import csw.services.loc.ConnectionType.AkkaType
@@ -13,7 +13,7 @@ import csw.services.pkg.Supervisor.LifecycleRunning
 import csw.services.pkg.SupervisorExternal._
 import org.slf4j.LoggerFactory
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.language.higherKinds
 import scala.util.{Failure, Success, Try}
@@ -168,7 +168,7 @@ object ContainerComponent {
   private[pkg] def parseConfig(config: Config): Try[Set[ComponentInfo]] = {
     Try {
       val conf = config.getConfig("container.components")
-      val names = conf.root.keySet().toList
+      val names = conf.root.keySet().asScala.toList
       val entries = for {
         key <- names
         value <- parseComponentConfig(key, conf.getConfig(key))
@@ -218,7 +218,7 @@ object ContainerComponent {
       Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNECTION_TYPE< for component: $name"))
     else Try {
       // Note that conf.getStringList can throw an exception...
-      val set = conf.getStringList(CONNECTION_TYPE).map(ctype => ConnectionType(ctype)).toSet
+      val set = conf.getStringList(CONNECTION_TYPE).asScala.map(ctype => ConnectionType(ctype)).toSet
       if (set.exists(_.isFailure))
         throw ConfigurationParsingException(s"Unknown component type in list: >${conf.getStringList(CONNECTION_TYPE)}< for component: $name")
       set.map(_.asInstanceOf[Success[ConnectionType]].get)
@@ -251,7 +251,7 @@ object ContainerComponent {
       Failure(ConfigurationParsingException(s"Missing configuration field: >$CONNECTIONS< for Assembly: $name"))
     else Try {
       // Note: config.getConfigList could throw an exception...
-      val list = config.getConfigList(CONNECTIONS).toList.map { conf: Config =>
+      val list = config.getConfigList(CONNECTIONS).asScala.toList.map { conf: Config =>
         for {
           connName <- parseName(name, conf)
           componentId <- parseComponentId(connName, conf)

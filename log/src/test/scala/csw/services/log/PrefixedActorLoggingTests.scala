@@ -2,7 +2,7 @@ package csw.services.log
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 object TestLogging {

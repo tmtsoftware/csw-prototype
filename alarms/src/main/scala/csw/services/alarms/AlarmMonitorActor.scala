@@ -101,7 +101,10 @@ private class AlarmMonitorActor(
       } yield {
         worker ! HealthInfo(key, sev, state)
       }
-      f.onFailure { case t => log.error(t, s"Failed to get severity for key: $key") }
+      f.onComplete {
+        case Failure(t) => log.error(t, s"Failed to get severity for key: $key")
+        case _          =>
+      }
     }
   }
 
@@ -206,8 +209,9 @@ private class AlarmMonitorWorkorActor(
     notifyHealth.foreach { f =>
       Future {
         f(healthStatus)
-      }.onFailure {
-        case ex => log.error("Health notification callback failed: ", ex)
+      }.onComplete {
+        case Failure(ex) => log.error("Health notification callback failed: ", ex)
+        case _           =>
       }
     }
   }
@@ -220,8 +224,9 @@ private class AlarmMonitorWorkorActor(
     notifyAlarm.foreach { f =>
       Future {
         f(alarmStatus)
-      }.onFailure {
-        case ex => log.error("Alarm notification callback failed: ", ex)
+      }.onComplete {
+        case Failure(ex) => log.error("Alarm notification callback failed: ", ex)
+        case _           =>
       }
     }
   }

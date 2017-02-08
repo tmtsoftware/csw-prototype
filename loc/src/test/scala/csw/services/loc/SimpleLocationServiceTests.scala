@@ -2,7 +2,7 @@ package csw.services.loc
 
 //import akka.actor.ActorSystem
 //import akka.testkit.{ImplicitSender, TestKit}
-//import com.typesafe.scalalogging.slf4j.LazyLogging
+//import com.typesafe.scalalogging.LazyLogging
 //import csw.services.loc.Connection.AkkaConnection
 //import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 //

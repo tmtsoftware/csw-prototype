@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.ActorRef
 import com.typesafe.config.{ConfigFactory, ConfigResolveOptions}
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.loc.LocationService
 import csw.services.pkg.ContainerComponent
 import org.slf4j.LoggerFactory

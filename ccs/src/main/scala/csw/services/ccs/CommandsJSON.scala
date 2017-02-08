@@ -1,6 +1,6 @@
 package csw.services.ccs
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.util.config.Configurations.{ObserveConfig, SequenceConfig, SetupConfig, WaitConfig}
 import csw.util.config.RunId
 import spray.json._

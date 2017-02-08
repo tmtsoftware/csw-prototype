@@ -5,7 +5,7 @@ import java.nio.file.Paths
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import akka.util.Timeout
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.Connection.TcpConnection
 import csw.services.loc.ConnectionType.TcpType
 import csw.services.loc.LocationService.ResolvedTcpLocation

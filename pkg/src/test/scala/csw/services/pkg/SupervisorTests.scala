@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{AssemblyInfo, HcdInfo, RegisterOnly}
-import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
+import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
 
 import scala.concurrent.duration._
 
@@ -22,7 +22,7 @@ case class SimpleTestAssembly(override val info: AssemblyInfo, supervisor: Actor
 }
 
 class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with Matchers with BeforeAndAfterAll {
 
   import SupervisorExternal._
 

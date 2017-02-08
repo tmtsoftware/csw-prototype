@@ -6,7 +6,7 @@ import javax.jmdns._
 
 import akka.actor._
 import akka.util.Timeout
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.loc.Connection.{AkkaConnection, HttpConnection, TcpConnection}
 import csw.services.loc.LocationTrackerWorker.LocationsReady
 import org.slf4j.LoggerFactory
@@ -65,10 +65,10 @@ object LocationService {
       // I'm assuming that the addresses are sorted by network interface priority (which seems to be the case),
       // although this is not documented anywhere.
       def getIpAddress: String = {
-        import scala.collection.JavaConversions._
+        import scala.collection.JavaConverters._
         val addresses = for {
-          i <- NetworkInterface.getNetworkInterfaces.filter(iface => iface.isUp && iface.supportsMulticast)
-          a <- i.getInetAddresses
+          i <- NetworkInterface.getNetworkInterfaces.asScala.filter(iface => iface.isUp && iface.supportsMulticast)
+          a <- i.getInetAddresses.asScala
         } yield Addr(i.getIndex, a)
         addresses.toList.sortWith(_.index < _.index).find(filter).getOrElse(defaultAddr).addr.getHostAddress
       }

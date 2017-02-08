@@ -12,7 +12,7 @@ import org.scalatest._
  * TMT Source Code: 8/30/16.
  */
 class CurrentStateReceiverTests extends TestKit(ActorSystem("TromboneAssemblyCommandHandlerTests")) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with Matchers with BeforeAndAfterAll {
 
   def stateReceiver = system.actorOf(CurrentStateReceiver.props)
 

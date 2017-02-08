@@ -5,7 +5,7 @@
 //import akka.actor.ActorSystem
 //import akka.testkit.TestKit
 //import akka.util.Timeout
-//import com.typesafe.scalalogging.slf4j.LazyLogging
+//import com.typesafe.scalalogging.LazyLogging
 //import csw.services.events.{BlockingTelemetryService, EventServiceSettings}
 //import csw.services.loc.Connection.HttpConnection
 //import csw.services.loc.ConnectionType.HttpType

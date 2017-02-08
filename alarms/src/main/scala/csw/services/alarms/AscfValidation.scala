@@ -92,7 +92,7 @@ object AscfValidation {
   // Formats the error message for display to user.
   // 'source' is the name of the original input file.
   private def formatMsg(msg: ProcessingMessage, source: String): String = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
     val file = new File(source).getPath
 
     // try to get a nicely formatted error message that includes the necessary info
@@ -107,8 +107,7 @@ object AscfValidation {
     val reports = json.get("reports")
     val messages = if (reports == null) ""
     else {
-      for (r <- reports.elements().toList) yield r
-      val msgElems = (for (r <- reports) yield r.elements().toList).flatten
+      val msgElems = (for (r <- reports.asScala) yield r.elements().asScala.toList).flatten
       val msgTexts = for (e <- msgElems) yield e.get("message").asText()
       "\n" + msgTexts.mkString("\n")
     }

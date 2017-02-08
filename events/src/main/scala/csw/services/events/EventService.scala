@@ -12,6 +12,7 @@ import redis.{ByteStringFormatter, RedisClient}
 
 import scala.annotation.varargs
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Failure
 
 object EventService {
 
@@ -308,8 +309,9 @@ private[events] object EventServiceImpl {
       callback.foreach { f =>
         Future {
           f(event)
-        }.onFailure {
-          case ex => log.error("Event callback failed: ", ex)
+        }.onComplete {
+          case Failure(ex) => log.error("Event callback failed: ", ex)
+          case _           =>
         }
       }
     }

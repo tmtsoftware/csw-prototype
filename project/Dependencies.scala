@@ -5,16 +5,15 @@ import sbt._
 //noinspection TypeAnnotation
 object Dependencies {
 
-  val scalaVersion = "2.11.8"
+  val scalaVersion = "2.12.1"
 
   val akkaVersion = "2.4.16"
-  val akkaHttpVersion = "10.0.0"
-  val akkaStreamsVersion = "2.4.14"
+  val akkaHttpVersion = "10.0.3"
 
   val hornetqVersion = "2.4.7.Final"
 
   // Required by javacsw, supports compatibility between Scala and Java
-  val scalaJava8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0"
+  val scalaJava8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
 
   // -- Akka actor support --
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion // all akka is ApacheV2
@@ -31,11 +30,11 @@ object Dependencies {
 
   // -- Logging --
   // Required by log project (and indirectly by most other projects)
-  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" // ApacheV2
-  val logback = "ch.qos.logback" % "logback-classic" % "1.1.1" // EPL v1.0 and the LGPL 2.1
-  val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1" // ApacheV2
+  val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0" // ApacheV2
+  val logback = "ch.qos.logback" % "logback-classic" % "1.1.10" // EPL v1.0 and the LGPL 2.1
+  val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "4.8" // ApacheV2
   // Required by logback (runtime dependency)
-  val janino = "org.codehaus.janino" % "janino" % "2.7.6" // BSD
+  val janino = "org.codehaus.janino" % "janino" % "3.0.6" // BSD
 
   // -- Version Control --
   // Required by cs project
@@ -56,11 +55,11 @@ object Dependencies {
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
 
   // Required by alarms, event_old (Functional API for reading config files)
-  val ficus = "com.iheart" %% "ficus" % "1.2.3" // MIT
+  val ficus = "com.iheart" %% "ficus" % "1.4.0" // MIT
 
   // -- Command line arg parsing support --
   // Required by cs, containerCmd, trackLoction, asConsole, sysControl, csClient
-  val scopt = "com.github.scopt" %% "scopt" % "3.3.0"//  MIT License
+  val scopt = "com.github.scopt" %% "scopt" % "3.5.0"//  MIT License
 
   // Rquired by alarms (validate JSON schema for alarms.conf)
   val jsonSchemaValidator = "com.github.fge" % "json-schema-validator" % "2.2.6"  // LGPL/ASL
@@ -75,17 +74,17 @@ object Dependencies {
   val akkaMultiNodeTest = "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion
 
   // Required for all Scala tests (except those using specs2)
-  val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" // ApacheV2
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" // ApacheV2
   // Required for all Java tests
   val junitInterface = "com.novocode" % "junit-interface" % "0.11"
   // Required by javacsw config tests
-  val assertj = "org.assertj" % "assertj-core" % "3.5.2" // ApacheV2
+  val assertj = "org.assertj" % "assertj-core" % "3.6.2" // ApacheV2
 
   // -- REPL dependencies --
   // Required by sequencer
   val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion // Scala License: BSD 3-Clause
   val scalaCompiler = "org.scala-lang" % "scala-compiler" % scalaVersion
   val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion
-  val jline = "jline" % "jline" % "2.13" // BSD
+  val jline = "jline" % "jline" % "2.14.3" // BSD
 }
 

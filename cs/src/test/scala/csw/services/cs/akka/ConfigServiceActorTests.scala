@@ -1,6 +1,6 @@
 package csw.services.cs.akka
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.apps.configServiceAnnex.ConfigServiceAnnexServer
 import org.scalatest.{FunSuiteLike, BeforeAndAfterAll}
 import java.io.{File, IOException}

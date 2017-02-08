@@ -2,7 +2,7 @@ package csw.services.alarms
 
 import akka.actor.{ActorRef, ActorRefFactory, ActorSystem, PoisonPill}
 import akka.util.Timeout
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.alarms.AlarmModel.{AlarmStatus, CurrentSeverity, Health, HealthStatus, SeverityLevel}
 import csw.services.alarms.AlarmState.{AcknowledgedState, ActivationState, LatchedState, ShelvedState}
 import csw.services.loc.{ComponentId, ComponentType, LocationService}

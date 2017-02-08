@@ -3,7 +3,7 @@ package csw.services.loc
 import akka.actor._
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import akka.util.Timeout
-import com.typesafe.scalalogging.slf4j.LazyLogging
+import com.typesafe.scalalogging.LazyLogging
 import csw.services.loc.ComponentType._
 import csw.services.loc.Connection._
 import csw.services.loc.LocationService._
@@ -12,6 +12,7 @@ import org.scalatest.{BeforeAndAfterAll, FunSuiteLike}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object LocationTrackerClientTests {
   // This needs to be called first!
@@ -204,8 +205,9 @@ class LocationTrackerClientTests extends TestKit(LocationTrackerClientTests.mySy
     val ac = AkkaConnection(componentId)
 
     val future = LocationService.resolve(Set(ac))
-    future.map(_.locations.head).mapTo[ResolvedAkkaLocation] onSuccess {
-      case ral => logger.debug("Its: " + ral.actorRef)
+    future.map(_.locations.head).mapTo[ResolvedAkkaLocation] onComplete {
+      case Success(ral) => logger.debug("Its: " + ral.actorRef)
+      case Failure(ex)  => logger.error("Resolve error", ex)
     }
     val result = Await.result(future, timeout.duration)
     logger.debug(s" Got it: ${result.locations}")

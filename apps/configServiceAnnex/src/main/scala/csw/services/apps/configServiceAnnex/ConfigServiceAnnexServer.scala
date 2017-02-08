@@ -11,7 +11,7 @@ import akka.stream.ActorMaterializer
 import akka.http.scaladsl.Http
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
-import com.typesafe.scalalogging.slf4j.Logger
+import com.typesafe.scalalogging.Logger
 import csw.services.loc.{LocationService, ComponentType, ComponentId}
 import org.slf4j.LoggerFactory
 import akka.actor.ActorSystem
