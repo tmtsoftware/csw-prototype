@@ -39,7 +39,7 @@ lazy val util = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaHttpSprayJson, scalaReflect) ++
-      test(scalaTest, junit)
+      test(scalaTest)
   ) dependsOn log
 
 // AAS- Authorization and Authentication service
@@ -47,7 +47,7 @@ lazy val aas = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
-      test(scalaTest, junit)
+      test(scalaTest)
   ) dependsOn log
 
 // Database service
@@ -55,7 +55,7 @@ lazy val dbs = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(slick, postgresql, HikariCP) ++
-      test(scalaTest, junit)
+      test(scalaTest)
   ) dependsOn log
 
 // Supporting classes
@@ -77,7 +77,7 @@ lazy val log = project
 lazy val events = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, redisScala, logback) ++
+    compile(akkaActor, redisScala) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn(util, log, loc, trackLocation)
 
@@ -93,7 +93,7 @@ lazy val alarms = project
 lazy val loc = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaRemote, jmdns, akkaHttp) ++
+    compile(akkaActor, akkaRemote, jmdns) ++
       test(scalaTest, akkaTestKit)
   ) dependsOn log
 
@@ -101,8 +101,8 @@ lazy val loc = project
 lazy val ccs = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaSse) ++
-      test(scalaTest, specs2, akkaTestKit, akkaStreamTestKit, akkaHttpTestKit)
+    compile(akkaActor) ++
+      test(scalaTest, akkaTestKit)
   ) dependsOn(log, loc, util)
 
 // Config Service
@@ -115,8 +115,8 @@ lazy val cs = project
   .dependsOn(log, loc, util, configServiceAnnex)
   .enablePlugins(DockerPlugin)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaHttpSprayJson, jgit, svnkit, logback, akkaHttp, scopt) ++
-      test(scalaTest, akkaTestKit, junit, akkaMultiNodeTest)
+    compile(akkaActor, akkaHttpSprayJson, jgit, svnkit, akkaHttp, scopt) ++
+      test(scalaTest, akkaTestKit, akkaMultiNodeTest)
   ) configs MultiJvm
 
 // Package (Container, Component) classes
@@ -143,7 +143,7 @@ lazy val ts = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
-      test(scalaTest, akkaTestKit, junit)
+      test(scalaTest, akkaTestKit)
   ) dependsOn log
 
 // Java APIs
@@ -156,7 +156,7 @@ lazy val javacsw = project
   )
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
-      test(akkaTestKit, junit, junitInterface, scalaJava8Compat, assertj)
+      test(akkaTestKit, junitInterface, scalaJava8Compat, assertj)
   ) dependsOn(util, support, log, events, loc, ccs, cs, pkg, event_old, ts, containerCmd,
   events % "test->test", alarms % "test->test;compile->compile", trackLocation % "test->test")
 
@@ -165,7 +165,7 @@ lazy val seqSupport = project
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
     compile(akkaActor) ++
-      test(akkaTestKit, junit, junitInterface, assertj)
+      test(akkaTestKit, assertj)
   ) dependsOn(util, support, pkg, ccs, cs, loc, log, ts, events, alarms, containerCmd, hcdExample)
 
 
@@ -175,8 +175,7 @@ lazy val seqSupport = project
 lazy val containerCmd = Project(id = "containerCmd", base = file("apps/containerCmd"))
   .settings(defaultSettings: _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaRemote, scopt) ++
-      test(scalaLogging, logback)
+    compile(akkaActor, akkaRemote, scopt)
   ) dependsOn(pkg, ccs, loc, log, cs)
 
 // Build the sequencer command line application
@@ -193,7 +192,7 @@ lazy val configServiceAnnex = Project(id = "configServiceAnnex", base = file("ap
   .settings(packageSettings("configServiceAnnex", "CSW Config Service Annex", "Store/retrieve large files for Config Service"): _*)
   .settings(libraryDependencies ++=
     compile(akkaActor, akkaRemote, akkaHttp) ++
-      test(scalaTest, specs2, akkaTestKit)
+      test(scalaTest, akkaTestKit)
   ) dependsOn(loc, log, util)
 
 // Track the location of an external application
@@ -223,13 +222,13 @@ lazy val sysControl = Project(id = "sysControl", base = file("apps/sysControl"))
       test(scalaTest, akkaTestKit)
   ) dependsOn(loc, log, pkg, cs)
 
-// Build the config service annex application
+// Build the config service client application
 lazy val csClient = Project(id = "csClient", base = file("apps/csClient"))
   .enablePlugins(JavaAppPackaging)
   .settings(packageSettings("csClient", "CSW Config Service Client", "Command line client for Config Service"): _*)
   .settings(libraryDependencies ++=
-    compile(akkaActor, akkaRemote, akkaStream, scopt) ++
-      test(scalaTest, specs2, akkaTestKit)
+    compile(akkaActor, akkaRemote, scopt) ++
+      test(scalaTest, akkaTestKit)
   ) dependsOn cs
 
 

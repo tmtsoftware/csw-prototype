@@ -13,66 +13,76 @@ object Dependencies {
 
   val hornetqVersion = "2.4.7.Final"
 
+  // Required by javacsw, supports compatibility between Scala and Java
   val scalaJava8Compat = "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0"
 
+  // -- Akka actor support --
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion // all akka is ApacheV2
-  val akkaKernel = "com.typesafe.akka" %% "akka-kernel" % akkaVersion
   val akkaRemote = "com.typesafe.akka" %% "akka-remote" % akkaVersion
+  // Required by log project
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
-  // Akka streams (experimental)
-  val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaStreamsVersion
+  // Akka HTTP
+  // Required by cs, configServiceAnnex for REST API
   val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
+
+  // Required by alarms, cs, util for JSON support
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
-  val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
 
-  val akkaSse = "de.heikoseeberger" %% "akka-sse" % "1.5.0" // ApacheV2
-//  val akkaKryo = "com.github.romix.akka" %% "akka-kryo-serialization" % "0.4.1" // ApacheV2
-
-  val jeromq = "org.zeromq" % "jeromq" % "0.3.5" // LGPL
+  // -- Logging --
+  // Required by log project (and indirectly by most other projects)
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" // ApacheV2
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.1" // EPL v1.0 and the LGPL 2.1
-  val janino = "org.codehaus.janino" % "janino" % "2.7.6" // BSD
   val logstashLogbackEncoder = "net.logstash.logback"   % "logstash-logback-encoder" % "3.1" // ApacheV2
+  // Required by logback (runtime dependency)
+  val janino = "org.codehaus.janino" % "janino" % "2.7.6" // BSD
 
-  val upickle = "com.lihaoyi" %% "upickle" % "0.4.0" // MIT
-  val scalaPickling = "org.scala-lang.modules" %% "scala-pickling" % "0.10.1" // SCALA LICENSE (BSD-like)
-//  val sprayJsonShapeless = "com.github.fommil" %% "spray-json-shapeless" % "1.2.0" // ApacheV2
-
+  // -- Version Control --
+  // Required by cs project
   val jgit = "org.eclipse.jgit" % "org.eclipse.jgit" % "3.5.1.201410131835-r" // EDL (new-style BSD)
   val svnkit = "org.tmatesoft.svnkit" % "svnkit" % "1.8.11" // TMate Open Source License
 
+  // -- Database --
+  // Required by dbs project (planned)
   val slick = "com.typesafe.slick" % "slick_2.11" % "3.1.1" // BSD 3-clause
   val postgresql = "org.postgresql" % "postgresql" % "9.4.1211" // POSTGRESQL
   val HikariCP = "com.zaxxer" % "HikariCP" % "2.5.1" // ApacheV2
 
+  // Required by alarms, events
   val redisScala = "com.github.etaty" %% "rediscala" % "1.8.0" // ApacheV2
 
+  // Required by event_old
   val hornetqServer = "org.hornetq" % "hornetq-server" % hornetqVersion // ApacheV2
   val hornetqNative = "org.hornetq" % "hornetq-native" % hornetqVersion from s"http://repo1.maven.org/maven2/org/hornetq/hornetq-native/$hornetqVersion/hornetq-native-$hornetqVersion.jar"
+
+  // Required by alarms, event_old (Functional API for reading config files)
   val ficus = "com.iheart" %% "ficus" % "1.2.3" // MIT
 
-  val protobufJava = "com.google.protobuf" % "protobuf-java" % "2.6.1" // New BSD license
-
+  // -- Command line arg parsing support --
+  // Required by cs, containerCmd, trackLoction, asConsole, sysControl, csClient
   val scopt = "com.github.scopt" %% "scopt" % "3.3.0"//  MIT License
+
+  // Rquired by alarms (validate JSON schema for alarms.conf)
   val jsonSchemaValidator = "com.github.fge" % "json-schema-validator" % "2.2.6"  // LGPL/ASL
 
+  // Required by loc (mDNS API for location service)
   val jmdns = "org.jmdns" % "jmdns" % "3.5.1" // ApacheV2
 
-  // Test dependencies
-  val akkaStreamTestKit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaStreamsVersion // ApacheV2
-  val akkaHttpTestKit = "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
-
+  // -- Test dependencies --
+  // Required by all projects that test actors
   val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion // ApacheV2
+  // Required for cs, pkg (test with multiple jvms)
   val akkaMultiNodeTest = "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion
 
+  // Required for all Scala tests (except those using specs2)
   val scalaTest = "org.scalatest" %% "scalatest" % "2.2.6" // ApacheV2
-  val junit = "com.novocode" % "junit-interface" % "0.11" // Two-clause BSD-style license
+  // Required for all Java tests
   val junitInterface = "com.novocode" % "junit-interface" % "0.11"
-  val specs2 = "org.specs2" %% "specs2-core" % "3.7" // MIT-style
+  // Required by javacsw config tests
   val assertj = "org.assertj" % "assertj-core" % "3.5.2" // ApacheV2
 
-  // REPL dependencies
+  // -- REPL dependencies --
+  // Required by sequencer
   val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion // Scala License: BSD 3-Clause
   val scalaCompiler = "org.scala-lang" % "scala-compiler" % scalaVersion
   val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion
