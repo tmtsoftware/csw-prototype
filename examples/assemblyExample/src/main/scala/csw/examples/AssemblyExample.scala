@@ -28,7 +28,7 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
   private val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
   trackerSubscriber ! LocationSubscriberActor.Subscribe
   LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
-  
+
   override def receive: Receive = controllerReceive orElse {
 
     // Receive the HCD's location

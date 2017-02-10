@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.services.loc.LocationService
 import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister, HcdInfo}
-import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
+import org.scalatest.{BeforeAndAfterAll, FunSpecLike, Matchers}
 
 import scala.concurrent.duration._
 
@@ -22,7 +22,7 @@ case class SimpleTestAssembly(override val info: AssemblyInfo, supervisor: Actor
 }
 
 class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSender
-    with FunSpecLike with ShouldMatchers with BeforeAndAfterAll {
+    with FunSpecLike with Matchers with BeforeAndAfterAll {
 
   import SupervisorExternal._
 
@@ -64,12 +64,12 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This function encpsulates the protocol when iniitalization succeeds to running state
-    * @param supervisor supervisor test actor
-    * @param component component test probe
-    * @return
-    */
-  private def successfulInitialize(supervisor: TestActorRef[Supervisor], component: TestProbe):Unit = {
+   * This function encpsulates the protocol when iniitalization succeeds to running state
+   * @param supervisor supervisor test actor
+   * @param component component test probe
+   * @return
+   */
+  private def successfulInitialize(supervisor: TestActorRef[Supervisor], component: TestProbe): Unit = {
     supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
 
     component.send(supervisor, Initialized)
@@ -80,11 +80,11 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This function encpsulates the protocol when iniitalization fails
-    * @param supervisor supervisor test actor
-    * @param component component test probe
-    */
-  private def failedInitialize(supervisor: TestSupervisor, component: TestProbe):Unit = {
+   * This function encpsulates the protocol when iniitalization fails
+   * @param supervisor supervisor test actor
+   * @param component component test probe
+   */
+  private def failedInitialize(supervisor: TestSupervisor, component: TestProbe): Unit = {
     supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
 
     component.send(supervisor, InitializeFailure("Failure"))
@@ -97,8 +97,8 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * Tests protocol between supervisor and commponent for successful initialization to Running
-    */
+   * Tests protocol between supervisor and commponent for successful initialization to Running
+   */
   it("in pendingInitialize should accept Initialized with Success") {
     val component = TestProbe()
     val supervisor = newHcdSupervisor(system, component.ref)
@@ -108,8 +108,8 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * Tests protocol between supervisor and component when component fails initialization
-    */
+   * Tests protocol between supervisor and component when component fails initialization
+   */
   it("in pendingInitialize should handle failure to Initialize") {
     val component = TestProbe()
     val supervisor = newHcdSupervisor(system, component.ref)
@@ -119,8 +119,8 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * Tests that external messages get through to the component when online/running and running offline
-    */
+   * Tests that external messages get through to the component when online/running and running offline
+   */
   it("Should get messages through when running and runningOffline") {
     val component = TestProbe()
     val supervisor = newHcdSupervisor(system, component.ref)
@@ -142,9 +142,9 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This test checks the protocol for shutdown.
-    * A component can start the shutdown itself by sending HaltComponent to supervisor
-    */
+   * This test checks the protocol for shutdown.
+   * A component can start the shutdown itself by sending HaltComponent to supervisor
+   */
   it("should allow halting") {
     val component = TestProbe()
     val supervisor = newHcdSupervisor(system, component.ref)
@@ -164,8 +164,8 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
 
   // Check outside requests
   /**
-    * This test checks that restart is handled from the outside when in Running state
-    */
+   * This test checks that restart is handled from the outside when in Running state
+   */
   it("should allow restart from outside") {
     val component = TestProbe()
     val supervisor = newHcdSupervisor(system, component.ref)
@@ -189,8 +189,8 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This tests if a component in Running state can go between offline and online
-    */
+   * This tests if a component in Running state can go between offline and online
+   */
   it("should allow toggling between online and offline") {
     val component = TestProbe()
     val supervisor = newHcdSupervisor(system, component.ref)
@@ -223,12 +223,12 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This function encapsulates supervisor and component interaction when successfully being requested to go
-    * from offline to online by an external actor
-    * @param supervisor supervisor actor
-    * @param component component test probe
-    */
-  private def successfulOnlineToOffline(supervisor: TestSupervisor, component: TestProbe):Unit = {
+   * This function encapsulates supervisor and component interaction when successfully being requested to go
+   * from offline to online by an external actor
+   * @param supervisor supervisor actor
+   * @param component component test probe
+   */
+  private def successfulOnlineToOffline(supervisor: TestSupervisor, component: TestProbe): Unit = {
     supervisor ! ExComponentOffline
     supervisor.underlyingActor.lifecycleState should be(LifecycleRunningOffline)
 
@@ -236,19 +236,18 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This function encapsulates supervisor and component interaction when successfully being requested to go
-    * from offline to running/online by an external actor
-    * @param supervisor supervisor actor
-    * @param component component test probe
-    */
-  private def successfulOfflineToOnline(supervisor: TestSupervisor, component: TestProbe):Unit = {
+   * This function encapsulates supervisor and component interaction when successfully being requested to go
+   * from offline to running/online by an external actor
+   * @param supervisor supervisor actor
+   * @param component component test probe
+   */
+  private def successfulOfflineToOnline(supervisor: TestSupervisor, component: TestProbe): Unit = {
     supervisor ! ExComponentOnline
     // No change
     supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
 
     component.expectMsg(Running)
   }
-
 
   // XXX TODO FIXME: THis test was failing on CentOS-7
   //   Check outside requests
@@ -272,11 +271,11 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This function encapsulates the protocol between supervisor and compoent when an external shutdown request is made
-    * @param supervisor test supervisor
-    * @param component component test probe
-    */
-  private def successfulExShutdownFromOnline(supervisor: TestSupervisor, component: TestProbe):Unit = {
+   * This function encapsulates the protocol between supervisor and compoent when an external shutdown request is made
+   * @param supervisor test supervisor
+   * @param component component test probe
+   */
+  private def successfulExShutdownFromOnline(supervisor: TestSupervisor, component: TestProbe): Unit = {
     supervisor ! ExComponentShutdown
     supervisor.underlyingActor.lifecycleState should be(LifecyclePreparingToShutdown)
 
@@ -287,8 +286,8 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This tests the receiving of lifecycle events by an actor outside/external to the supervisor
-    */
+   * This tests the receiving of lifecycle events by an actor outside/external to the supervisor
+   */
   it("Should get normal events for normal startup") {
     val component = TestProbe()
 
@@ -321,8 +320,8 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   }
 
   /**
-    * This tests external events from supervisor when external sends Shutdown to supervisor
-    */
+   * This tests external events from supervisor when external sends Shutdown to supervisor
+   */
   it("Should get normal events for shutdown") {
     val component = TestProbe()
 
@@ -368,7 +367,6 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   //    component.expectMsg(DoRestart)
   //  }
 
-
   it("shutdown should timeout after 5 seconds when no callback") {
     val component = TestProbe()
     val supervisor = newHcdSupervisor(system, component.ref)
@@ -409,6 +407,5 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
     supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
     cleanup(Some(supervisor))
   }
-
 
 }
