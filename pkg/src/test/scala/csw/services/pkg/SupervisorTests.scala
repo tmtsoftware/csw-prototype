@@ -3,7 +3,7 @@ package csw.services.pkg
 import akka.actor.{Actor, ActorRef, ActorSystem, PoisonPill}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import csw.services.loc.LocationService
-import csw.services.pkg.Component.{AssemblyInfo, HcdInfo, RegisterOnly}
+import csw.services.pkg.Component.{AssemblyInfo, DoNotRegister, HcdInfo}
 import org.scalatest.{BeforeAndAfterAll, FunSpecLike, ShouldMatchers}
 
 import scala.concurrent.duration._
@@ -49,245 +49,264 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
     }
   }
 
-  def newHcdFSM(implicit system: ActorSystem, component: ActorRef): TestSupervisor = {
+  def newHcdSupervisor(implicit system: ActorSystem, component: ActorRef): TestSupervisor = {
     import scala.concurrent.duration._
 
     val name = "test1"
     val prefix = "test1.prefix"
     val className = "csw.services.pkg.SimpleTestHcd"
 
-    val hcdInfo = HcdInfo(name, prefix, className, RegisterOnly, Set.empty, 1.second)
+    val hcdInfo = HcdInfo(name, prefix, className, DoNotRegister, Set.empty, 1.second)
 
     val props = Supervisor.props(hcdInfo, Some(component))
 
     TestActorRef(props)
   }
 
-  //  it("should be initialized in the Pending Initialized State") {
-  //    val name = "test1"
-  //    val prefix = "test1.prefix"
-  //    val className = "csw.services.pkg.SimpleTestHcd"
-  //
-  //    val hcdInfo = HcdInfo(name, prefix, className, RegisterOnly, Set.empty, 1.second)
-  //
-  //    val fsm = TestActorRef(Supervisor.props(hcdInfo))
-  //  }
+  /**
+    * This function encpsulates the protocol when iniitalization succeeds to running state
+    * @param supervisor supervisor test actor
+    * @param component component test probe
+    * @return
+    */
+  private def successfulInitialize(supervisor: TestActorRef[Supervisor], component: TestProbe):Unit = {
+    supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
 
-  it("in pendingInitialize should accept Initialized with Success") {
-    val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
+    component.send(supervisor, Initialized)
 
-    successfulInitialize(fsm, component)
-    cleanup(Some(fsm))
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
+
+    component.expectMsg(Running)
   }
 
-  private def successfulInitialize(fsm: TestActorRef[Supervisor], component: TestProbe) = {
-    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+  /**
+    * This function encpsulates the protocol when iniitalization fails
+    * @param supervisor supervisor test actor
+    * @param component component test probe
+    */
+  private def failedInitialize(supervisor: TestSupervisor, component: TestProbe):Unit = {
+    supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
 
-    component.send(fsm, Initialized)
-
-    fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
-  }
-
-  it("in pendingInitialize should handle failure to Initialize") {
-    val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
-
-    failedInitialize(fsm, component)
-    cleanup(Some(fsm))
-  }
-
-  it("successful sequential Initialized and Startup") {
-    val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
-
-    successfulInitialize(fsm, component)
-    successfulStartupFromInitilzed(fsm, component)
-    cleanup(Some(fsm))
-  }
-
-  it("should fail properly from initalize to startup") {
-    val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
-
-    successfulInitialize(fsm, component)
-    failedStartupFromInitialize(fsm, component)
-    cleanup(Some(fsm))
-  }
-
-  private def failedInitialize(fsm: TestSupervisor, component: TestProbe) = {
-    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
-
-    component.send(fsm, InitializeFailure("Failure"))
+    component.send(supervisor, InitializeFailure("Failure"))
 
     val failReason = "Failure"
 
-    fsm.underlyingActor.lifecycleState should be(LifecycleFailure)
-    //fsm.stateData should equal(FailureInfo(LifecycleWaitingForInitialized, failReason))
+    supervisor.underlyingActor.lifecycleState should be(LifecycleInitializeFailure)
 
     component.expectMsg(LifecycleFailureInfo(LifecycleWaitingForInitialized, failReason))
   }
 
-  private def successfulStartupFromInitilzed(fsm: TestSupervisor, component: TestProbe) = {
-    // First ensure we are in Initialized state
-    fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
+  /**
+    * Tests protocol between supervisor and commponent for successful initialization to Running
+    */
+  it("in pendingInitialize should accept Initialized with Success") {
+    val component = TestProbe()
+    val supervisor = newHcdSupervisor(system, component.ref)
 
-    component.send(fsm, Started)
-
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
-
-    component.expectMsg(Running)
+    successfulInitialize(supervisor, component)
+    cleanup(Some(supervisor))
   }
 
-  private def failedStartupFromInitialize(fsm: TestSupervisor, component: TestProbe) = {
-    fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
+  /**
+    * Tests protocol between supervisor and component when component fails initialization
+    */
+  it("in pendingInitialize should handle failure to Initialize") {
+    val component = TestProbe()
+    val supervisor = newHcdSupervisor(system, component.ref)
 
-    val failReason = "StartupFailure"
+    failedInitialize(supervisor, component)
+    cleanup(Some(supervisor))
+  }
 
-    component.send(fsm, StartupFailure(failReason))
+  /**
+    * Tests that external messages get through to the component when online/running and running offline
+    */
+  it("Should get messages through when running and runningOffline") {
+    val component = TestProbe()
+    val supervisor = newHcdSupervisor(system, component.ref)
 
-    fsm.underlyingActor.lifecycleState should be(LifecycleFailure)
+    successfulInitialize(supervisor, component)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
 
-    component.expectMsg(LifecycleFailureInfo(LifecycleInitialized, failReason))
+    // Check message in LifecycleRunnning
+    supervisor ! "msg"
+    component.expectMsg("msg")
+
+    successfulOnlineToOffline(supervisor, component)
+
+    // Check message gets through in offline state
+    supervisor ! "msg2"
+    component.expectMsg("msg2")
+
+    cleanup(Some(supervisor))
+  }
+
+  /**
+    * This test checks the protocol for shutdown.
+    * A component can start the shutdown itself by sending HaltComponent to supervisor
+    */
+  it("should allow halting") {
+    val component = TestProbe()
+    val supervisor = newHcdSupervisor(system, component.ref)
+
+    successfulInitialize(supervisor, component)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
+
+    // Request halt
+    component.send(supervisor, HaltComponent)
+
+    // Normal shutdown message from supervisor and component response
+    component.expectMsg(DoShutdown)
+    component.send(supervisor, ShutdownComplete)
+
+    cleanup(Some(supervisor))
   }
 
   // Check outside requests
+  /**
+    * This test checks that restart is handled from the outside when in Running state
+    */
   it("should allow restart from outside") {
     val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
+    val supervisor = newHcdSupervisor(system, component.ref)
 
-    fsm ! ExComponentRestart
-    // No change
-    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+    // When in LifecycleWaitingForInitialized external messages should be ignored
+    supervisor ! ExComponentRestart
+    // No change in LifecycleWaitingForInitialized
+    supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+    component.expectNoMsg()
 
-    successfulInitialize(fsm, component)
+    // Now move to Running
+    successfulInitialize(supervisor, component)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
 
-    fsm ! ExComponentRestart
-    // No change
-    fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
-
-    successfulStartupFromInitilzed(fsm, component)
-
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
-
-    successfulRestartFromRunning(fsm, component)
-    cleanup(Some(fsm))
-  }
-
-  private def successfulRestartFromRunning(fsm: TestSupervisor, component: TestProbe) = {
-    fsm ! ExComponentRestart
-
-    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
-
+    // Handle outside restart - supervisor goes back to waiting for inialized, and component gets message DoRestart
+    supervisor ! ExComponentRestart
+    supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
     component.expectMsg(DoRestart)
+
+    cleanup(Some(supervisor))
   }
 
+  /**
+    * This tests if a component in Running state can go between offline and online
+    */
   it("should allow toggling between online and offline") {
     val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
+    val supervisor = newHcdSupervisor(system, component.ref)
 
-    fsm ! ExComponentOnline
+    supervisor ! ExComponentOnline
     // No change
-    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+    component.expectNoMsg()
 
-    fsm ! ExComponentOffline
-    // No change
-    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+    // Now go to running state
+    successfulInitialize(supervisor, component)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
 
-    successfulInitialize(fsm, component)
+    // When sending online, it should stay in running state
+    supervisor ! ExComponentOnline
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
 
-    fsm ! ExComponentOnline
-    // No change
-    fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
+    // When getting offline, moves to RunningOffline and component gets message
+    successfulOnlineToOffline(supervisor, component)
 
-    fsm ! ExComponentOffline
-    // No change
-    fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
+    // Check for repeat message
+    supervisor ! ExComponentOffline
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunningOffline)
+    component.expectNoMsg()
 
-    successfulStartupFromInitilzed(fsm, component)
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
+    // When offline and online received, it goes to Running and component gets a message
+    successfulOfflineToOnline(supervisor, component)
 
-    fsm ! ExComponentOnline
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
+    cleanup(Some(supervisor))
+  }
 
-    fsm ! ExComponentOffline
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunningOffline)
+  /**
+    * This function encapsulates supervisor and component interaction when successfully being requested to go
+    * from offline to online by an external actor
+    * @param supervisor supervisor actor
+    * @param component component test probe
+    */
+  private def successfulOnlineToOffline(supervisor: TestSupervisor, component: TestProbe):Unit = {
+    supervisor ! ExComponentOffline
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunningOffline)
 
     component.expectMsg(RunningOffline)
+  }
 
-    fsm ! ExComponentOnline
+  /**
+    * This function encapsulates supervisor and component interaction when successfully being requested to go
+    * from offline to running/online by an external actor
+    * @param supervisor supervisor actor
+    * @param component component test probe
+    */
+  private def successfulOfflineToOnline(supervisor: TestSupervisor, component: TestProbe):Unit = {
+    supervisor ! ExComponentOnline
     // No change
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
 
     component.expectMsg(Running)
-    cleanup(Some(fsm))
   }
+
 
   // XXX TODO FIXME: THis test was failing on CentOS-7
   //   Check outside requests
-  //  it("should allow shutdown from outside from LifecycleRunningOffline") {
-  //    val component = TestProbe()
-  //    val fsm = newHcdFSM(system, component.ref)
-  //
-  //    fsm ! ExComponentShutdown
-  //    // No change
-  //    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
-  //
-  //    successfulInitialize(fsm, component)
-  //
-  //    fsm ! ExComponentShutdown
-  //    // No change
-  //    fsm.underlyingActor.lifecycleState should be(LifecycleInitialized)
-  //
-  //    successfulStartupFromInitilzed(fsm, component)
-  //    // No change
-  //    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
-  //
-  //    fsm ! ExComponentOffline
-  //
-  //    fsm.underlyingActor.lifecycleState should be(LifecycleRunningOffline)
-  //
-  //    component.expectMsg(RunningOffline)
-  //
-  //    successfulExShutdownFromOnline(fsm, component)
-  //    fsm.underlyingActor.lifecycleState should be(LifecycleShutdown)
-  //    system.stop(fsm)
-  //    //      cleanup(Some(fsm))
-  //  }
+  it("should allow shutdown from outside from LifecycleRunningOffline") {
+    val component = TestProbe()
+    val supervisor = newHcdSupervisor(system, component.ref)
 
-  private def successfulExShutdownFromOnline(fsm: TestSupervisor, component: TestProbe) = {
-    fsm ! ExComponentShutdown
-    fsm.underlyingActor.lifecycleState should be(LifecyclePreparingToShutdown)
+    // Check for no change before initialization
+    supervisor ! ExComponentShutdown
+    // No change
+    supervisor.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
+
+    // Initilialize component
+    successfulInitialize(supervisor, component)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleRunning)
+
+    successfulExShutdownFromOnline(supervisor, component)
+    supervisor.underlyingActor.lifecycleState should be(LifecycleShutdown)
+
+    cleanup(Some(supervisor))
+  }
+
+  /**
+    * This function encapsulates the protocol between supervisor and compoent when an external shutdown request is made
+    * @param supervisor test supervisor
+    * @param component component test probe
+    */
+  private def successfulExShutdownFromOnline(supervisor: TestSupervisor, component: TestProbe):Unit = {
+    supervisor ! ExComponentShutdown
+    supervisor.underlyingActor.lifecycleState should be(LifecyclePreparingToShutdown)
 
     component.expectMsg(DoShutdown)
 
-    fsm ! ShutdownComplete
-    fsm.underlyingActor.lifecycleState should be(LifecycleShutdown)
+    supervisor ! ShutdownComplete
+    supervisor.underlyingActor.lifecycleState should be(LifecycleShutdown)
   }
 
+  /**
+    * This tests the receiving of lifecycle events by an actor outside/external to the supervisor
+    */
   it("Should get normal events for normal startup") {
     val component = TestProbe()
 
+    // This is the external entity that listens for lifecycle events from supervisor
     val stateProbe = TestProbe()
 
-    val supervisor = newHcdFSM(system, component.ref)
-    info(s"Supervisor: $supervisor")
-
+    val supervisor = newHcdSupervisor(system, component.ref)
+    // External subscribes to lifecycle events
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
 
     // Component Initializes
     component.send(supervisor, Initialized)
-
-    var msg = stateProbe.expectMsg(LifecycleStateChanged(LifecycleInitialized))
-
-    stateProbe.expectNoMsg(500.milli)
-
-    component.send(supervisor, Started)
-
-    msg = stateProbe.expectMsg(LifecycleStateChanged(LifecycleRunning))
-
+    // Component receives Running
     component.expectMsg(Running)
 
+    // External gets LifecycleRunning event when component is running
+    stateProbe.expectMsg(LifecycleStateChanged(LifecycleRunning))
+    // checking for no other messages
     stateProbe.expectNoMsg(500.milli)
 
     // All messages pass through in running mode
@@ -301,16 +320,20 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
     cleanup(Some(supervisor))
   }
 
+  /**
+    * This tests external events from supervisor when external sends Shutdown to supervisor
+    */
   it("Should get normal events for shutdown") {
     val component = TestProbe()
 
+    // External subscribes to lifecycle events
     val stateProbe = TestProbe()
 
-    val supervisor = newHcdFSM(system, component.ref)
+    val supervisor = newHcdSupervisor(system, component.ref)
     info(s"Supervisor: $supervisor")
+
     // Component Initializes
     component.send(supervisor, Initialized)
-    component.send(supervisor, Started)
     component.expectMsg(Running)
 
     stateProbe.expectNoMsg(500.milli)
@@ -318,14 +341,17 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
     // Start watching for shutdown
     supervisor ! SubscribeLifecycleCallback(stateProbe.ref)
 
-    supervisor ! ExComponentShutdown
+    // external sends shutdown request
+    stateProbe.send(supervisor, ExComponentShutdown)
 
+    // Response to shutdown
     component.expectMsg(DoShutdown)
-
     stateProbe.expectMsg(LifecycleStateChanged(LifecyclePreparingToShutdown))
 
+    // Component sends that it is ready to shutdown
     component.send(supervisor, ShutdownComplete)
 
+    // Supervisor updates external
     stateProbe.expectMsg(LifecycleStateChanged(LifecycleShutdown))
 
     // Component startup complete
@@ -335,13 +361,6 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
     cleanup(Some(supervisor))
   }
 
-  private def successfulOfflineFromOnline(fsm: TestSupervisor, component: TestProbe) = {
-    fsm ! ExComponentOffline
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunningOffline)
-
-    component.expectMsg(RunningOffline)
-  }
-
   //  private def successfulExRestartFromOnline(fsm: TestSupervisor, component: TestProbe) = {
   //    fsm ! ExComponentRestart
   //    fsm.underlyingActor.lifecycleState should be(LifecycleWaitingForInitialized)
@@ -349,43 +368,35 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
   //    component.expectMsg(DoRestart)
   //  }
 
-  //  private def successfulOnlineFromOffline(fsm: TestSupervisor, component: TestProbe) = {
-  //    fsm ! ExComponentOnline
-  //    // No change
-  //    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
-  //
-  //    component.expectMsg(Running)
-  //  }
 
   it("shutdown should timeout after 5 seconds when no callback") {
-
     val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
+    val supervisor = newHcdSupervisor(system, component.ref)
 
+    // External subscribes to lifecycle events
     val stateProbe = TestProbe()
 
-    fsm ! SubscribeLifecycleCallback(stateProbe.ref)
+    // State probe/external subscribes to events
+    stateProbe.send(supervisor, SubscribeLifecycleCallback(stateProbe.ref))
 
-    successfulInitialize(fsm, component)
+    // Component initializes and goes to running
+    successfulInitialize(supervisor, component)
 
-    // This transition is going from Waiting to Initialized
-    var msg = stateProbe.expectMsg(LifecycleStateChanged(LifecycleInitialized))
+    // External is updated
+    var msg = stateProbe.expectMsg(LifecycleStateChanged(LifecycleRunning))
+    // Check for no messages
     component.expectNoMsg(200.milliseconds)
     stateProbe.expectNoMsg(200.milliseconds)
 
-    successfulStartupFromInitilzed(fsm, component)
-    msg = stateProbe.expectMsg(LifecycleStateChanged(LifecycleRunning))
-    component.expectNoMsg(200.milliseconds)
-    stateProbe.expectNoMsg(200.milliseconds)
+    // Start the shutdown and timeout from external
+    stateProbe.send(supervisor, ExComponentShutdown)
 
-    // Start the shutdown and timeout
-    fsm ! ExComponentShutdown
     // Component gets message to DoShutdown
     component.expectMsg(DoShutdown)
 
     // Transition to waiting for shutdown
-    //stateProbe.expectMsg(Transition(fsm, LifecycleRunning, LifecyclePreparingToShutdown))
     msg = stateProbe.expectMsg(LifecycleStateChanged(LifecyclePreparingToShutdown))
+    // Check for no messages
     component.expectNoMsg(200.milliseconds)
     stateProbe.expectNoMsg(200.milliseconds)
 
@@ -395,44 +406,9 @@ class SupervisorTests() extends TestKit(SupervisorTests.system) with ImplicitSen
     // Component will get alerted of shutdown failure while transitioning to final state
     component.expectMsgClass(classOf[LifecycleFailureInfo])
 
-    fsm ! UnsubscribeLifecycleCallback(stateProbe.ref)
-    cleanup(Some(fsm))
+    supervisor ! UnsubscribeLifecycleCallback(stateProbe.ref)
+    cleanup(Some(supervisor))
   }
 
-  it("Should get messages through when running and runningOffline") {
-    val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
-
-    successfulInitialize(fsm, component)
-    successfulStartupFromInitilzed(fsm, component)
-
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
-
-    fsm ! "msg"
-    component.expectMsg("msg")
-
-    successfulOfflineFromOnline(fsm, component)
-
-    fsm ! "msg2"
-    component.expectMsg("msg2")
-    cleanup(Some(fsm))
-  }
-
-  it("should allow halting") {
-    val component = TestProbe()
-    val fsm = newHcdFSM(system, component.ref)
-
-    successfulInitialize(fsm, component)
-    successfulStartupFromInitilzed(fsm, component)
-
-    fsm.underlyingActor.lifecycleState should be(LifecycleRunning)
-
-    component.send(fsm, HaltComponent)
-
-    component.expectMsg(DoShutdown)
-    component.send(fsm, ShutdownComplete)
-
-    expectNoMsg(3.seconds)
-  }
 
 }

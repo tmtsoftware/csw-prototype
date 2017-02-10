@@ -124,7 +124,6 @@ class HCDExample(override val info: HcdInfo, supervisor: ActorRef) extends Hcd w
   log.info(s"Freq: ${context.system.scheduler.maxFrequency}")
   log.info(s"My Rate: ${info.rate}")
   supervisor ! Initialized
-  supervisor ! Started
 
   // Create an actor to generate position events
   private val posEventGenerator = context.actorOf(PosGenerator.props(info.prefix))

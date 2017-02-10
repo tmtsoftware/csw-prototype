@@ -8,7 +8,7 @@ import csw.services.loc.ConnectionType.AkkaType
 import csw.services.loc.LocationService.ResolvedAkkaLocation
 import csw.services.loc._
 import csw.services.pkg.Component.{AssemblyInfo, RegisterOnly}
-import csw.services.pkg.Supervisor.{Initialized, Running, Started}
+import csw.services.pkg.Supervisor.{Initialized, Running}
 import csw.services.pkg.{Assembly, Supervisor}
 import csw.util.config.Configurations.{SetupConfig, SetupConfigArg}
 
@@ -28,9 +28,7 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
   private val trackerSubscriber = context.actorOf(LocationSubscriberActor.props)
   trackerSubscriber ! LocationSubscriberActor.Subscribe
   LocationSubscriberActor.trackConnections(info.connections, trackerSubscriber)
-
-  supervisor ! Initialized
-
+  
   override def receive: Receive = controllerReceive orElse {
 
     // Receive the HCD's location
@@ -38,7 +36,7 @@ class AssemblyExample(override val info: AssemblyInfo, supervisor: ActorRef) ext
       if (l.actorRef.isDefined) {
         hcd = l.actorRef.get
         log.info(s"Got actorRef: $hcd")
-        supervisor ! Started
+        supervisor ! Initialized
       }
 
     case Running =>

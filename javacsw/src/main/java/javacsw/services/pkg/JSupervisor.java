@@ -32,7 +32,7 @@ public class JSupervisor {
    * State of the Supervisor when Initialized after receiving the [[csw.services.pkg.Supervisor.Initialized]]
    * message (first) from the component
    */
-  public static final LifecycleState LifecycleInitialized =  LifecycleInitialized$.MODULE$;
+ // public static final LifecycleState LifecycleInitialized =  LifecycleInitialized$.MODULE$;
 
   /**
    * State of the Supervisor after receiving the [[csw.services.pkg.Supervisor.Started]]
@@ -59,7 +59,7 @@ public class JSupervisor {
    * State of the Supervisor/component after the component has indicated it could not initialize or startup
    * successfully.
    */
-  public static final LifecycleState LifecycleFailure =  LifecycleFailure$.MODULE$;
+  public static final LifecycleState LifecycleFailure =  LifecycleInitializeFailure$.MODULE$;
 
   /**
    * State of the Supervisor/component after the component has indicated it is ready to shutdown after receiving
@@ -105,11 +105,6 @@ public class JSupervisor {
 //   * @param reason the reason for failing to initialize as a String
 //   */
 //  case class InitializeFailure(reason: String) extends FromComponentLifecycleMessage
-
-  /**
-   * Component indicates it has started successfully
-   */
-  public static final FromComponentLifecycleMessage Started = Started$.MODULE$;
 
 //  /**
 //   * Component indicates it failed to startup with the given reason

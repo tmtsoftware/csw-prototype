@@ -42,7 +42,7 @@ case class TestAssembly(info: AssemblyInfo, supervisor: ActorRef)
       if (l.actorRef.isDefined) {
         log.info(s"Got actorRef: ${l.actorRef.get}")
         if (connections.size == 2 && connections.values.forall(_.isResolved))
-          supervisor ! Started
+          supervisor ! Initialized
 
         // XXX TODO FIXME: replace with telemetry
         l.actorRef.get ! Subscribe
